@@ -7,6 +7,7 @@ import glob
 import requests
 from scipy.stats import mode
 import xgboost as xgb
+from sklearn.svm import SVR
 
 seasons=['2022-23', '2023-24']
 
@@ -161,11 +162,11 @@ def process_player_data(player_df, team, team_id2):
 
 def next_opp(team, n_future):
     fixtures=pd.read_csv("Raw_Data_24\Fantasy_season_2024_Fixtures.csv")
-    #fixtures=fixtures[(fixtures['finished']==False)].iloc[0:,:]
-    fixtures=fixtures[(fixtures['event']>32)].iloc[0:,:]
+    fixtures=fixtures[(fixtures['finished']==False)].iloc[0:,:]
+    #fixtures=fixtures[(fixtures['event']>33)].iloc[0:,:]
     filtered_fix = fixtures[(fixtures['team_a'] == team) | (fixtures['team_h'] == team)]
     filtered_fix=filtered_fix[filtered_fix["provisional_start_time"]==False]
-    #filtered_fix=filtered_fix[filtered_fix["finished_provisional"]==False]
+    filtered_fix=filtered_fix[filtered_fix["finished_provisional"]==False]
     teams_dataset=pd.read_csv("Team_data_newest2.csv")
     clusters=[]
     XGH=[]
@@ -623,8 +624,8 @@ def team_transformed2():
         train_df["XG"]=merged["XG"].values
         train_df["XGC"]=merged["XG"].values
         train_df[["Own_XG","Own_XGC","opp_XG","opp_XGC","XG","XGC","Own_avg_XG","Own_avg_XGC","opp_avg_XG","opp_avg_XGC"]].round(1)
-        train_df['XG'] = train_df['XG'].clip(lower=0.7, upper=2.5)
-        train_df['XGC'] = train_df['XGC'].clip(lower=0.7, upper=2.5)
+        train_df['XG'] = train_df['XG'].clip(lower=0.5, upper=2.5)
+        train_df['XGC'] = train_df['XGC'].clip(lower=0.5, upper=2.5)
         new_df=pd.concat([new_df, train_df], axis=0, ignore_index=True)
 
 
@@ -632,10 +633,13 @@ def team_transformed2():
     y_xg=new_df["XG"]
     model_xg = xgb.XGBRegressor(objective='reg:squarederror', n_estimators=50, learning_rate=0.1, max_depth=3,min_child_weight=4)
     model_xg.fit(train_xg, y_xg)
-
+    model_xg=SVR(kernel='rbf', C=0.1, epsilon=0.3,gamma=0.1)
+    model_xg.fit(train_xg, y_xg)
     train_xgc=new_df[["Own_XGC","opp_XG","Own_avg_XGC","opp_avg_XG"]]
     y_xgc=new_df["XGC"]
     model_xgc = xgb.XGBRegressor(objective='reg:squarederror', n_estimators=50, learning_rate=0.1, max_depth=3,min_child_weight=4)
+    model_xgc.fit(train_xgc, y_xgc)
+    model_xgc=SVR(kernel='rbf', C=0.1, epsilon=0.3,gamma=0.1)
     model_xgc.fit(train_xgc, y_xgc)
 
     df=pd.read_csv("Team_data_transformed.csv").iloc[:,1:]
@@ -656,8 +660,8 @@ def team_transformed2():
 
         # Optionally, drop the redundant 'code' column from the opponent side.
         merged.drop(columns='code_opp', inplace=True, errors='ignore')
-        merged['XG'] = merged['XG'].clip(lower=0.7, upper=2.5)
-        merged['XGC'] = merged['XGC'].clip(lower=0.7, upper=2.5)
+        merged['XG'] = merged['XG'].clip(lower=0.5, upper=2.5)
+        merged['XGC'] = merged['XGC'].clip(lower=0.5, upper=2.5)
         new_XGH=[]
         new_XGCH=[]
         new_XGA=[]
@@ -671,7 +675,7 @@ def team_transformed2():
         total_XG=1.5
         total_XGC=1.5
         smoothing_f=0.1
-        min_val=1
+        min_val=0.8
 
         for i in range(len(merged)):
             home=merged["was_home"].values[i]
@@ -760,10 +764,10 @@ def team_transformed2():
         team_df["XGCH"]=np.array(new_XGCH, dtype=float)
         team_df["XGA"]=np.array(new_XGA, dtype=float)
         team_df["XGCA"]=np.array(new_XGCA, dtype=float)
-        team_df["XG_avg"]=np.array(new_XG_avg, dtype=float)*0.5+team_df["XG_avg"].values*0.5 
-        team_df["XGC_avg"]=np.array(new_XGC_avg, dtype=float)*0.5+team_df["XGC_avg"].values*0.5
-        team_df['XG_slope']=team_df['XG_avg'].rolling(window=8, min_periods=1).apply(rolling_slope, raw=True)
-        team_df['XGC_slope']=team_df['XGC_avg'].rolling(window=8, min_periods=1).apply(rolling_slope, raw=True)
+        team_df["XG_avg"]=np.array(new_XG_avg, dtype=float)*1+team_df["XG_avg"].values*0.0 
+        team_df["XGC_avg"]=np.array(new_XGC_avg, dtype=float)*1+team_df["XGC_avg"].values*0.0
+        team_df['XG_slope']=team_df['XG_avg'].rolling(window=6, min_periods=1).apply(rolling_slope, raw=True)
+        team_df['XGC_slope']=team_df['XGC_avg'].rolling(window=6, min_periods=1).apply(rolling_slope, raw=True)
     
         new_team_df=pd.concat([new_team_df, team_df.iloc[-1:,:]], axis=0, ignore_index=True)
         team_df["XGCH"]=team_df["XGCH"].shift(1, fill_value=1.5)
@@ -833,7 +837,7 @@ def main():
     unique_players = df_all[["name", "team_code2"]].drop_duplicates()
     
     training_df = pd.DataFrame()
-    Future = 6
+    Future = 5
     training_df=pd.DataFrame()
     player_pred = []
     element_map = []
@@ -858,6 +862,14 @@ def main():
         
 
         clusters, home, n_matches, opp_off_a, opp_off_h, opp_def_h, opp_def_a,XGC_DEF,XGC_FWD,XGC_MID,own_XG = next_opp(team_id, Future)
+        if len(home) < Future:
+            home.extend([True] * (Future - len(home)))
+        lists = [clusters, home, n_matches, opp_off_a, opp_off_h, opp_def_h, opp_def_a,
+         XGC_DEF, XGC_FWD, XGC_MID, own_XG]
+
+        lists = [pad_to_length(lst, Future) for lst in lists]
+        (clusters, home, n_matches, opp_off_a, opp_off_h,
+        opp_def_h, opp_def_a, XGC_DEF, XGC_FWD, XGC_MID, own_XG) = lists
 
         player_df=process_player_data(player_df, team, team_id)
 
@@ -1093,7 +1105,7 @@ def adjust_measure(df, measure_name):
     new_expected_goals=[]
     current_expected_goals_start_value=player_df[measure_name].mean()
     current_expected_goals=current_expected_goals_start_value
-    smoothing_f=0.15
+    smoothing_f=0.1
     min_val=std
     count=0
     for i in range(len(player_df)):
@@ -1101,13 +1113,19 @@ def adjust_measure(df, measure_name):
         offset=max(1,2-count*0.05)
         home=player_df["was_home"].values[i]
         if home:
-            pred_scored=current_expected_goals*player_df["XGCA"].values[i]
+            pred_scored=current_expected_goals*player_df["XGCA"].values[i]*np.minimum(1, player_df['minutes'].values[i] / 70)
+
             new_expected_goals.append(min(clipper_val,current_expected_goals+offset*smoothing_f*min(min_val,max(-min_val,player_df[measure_name].values[i]-pred_scored))))
             current_expected_goals=new_expected_goals[-1]
                 
         else:
-            pred_scored=current_expected_goals*player_df["XGCH"].values[i]
+            pred_scored=current_expected_goals*player_df["XGCH"].values[i]*np.minimum(1, player_df['minutes'].values[i] / 70)
+
             new_expected_goals.append(min(clipper_val,current_expected_goals+offset*smoothing_f*min(min_val,max(-min_val,player_df[measure_name].values[i]-pred_scored))))
             current_expected_goals=new_expected_goals[-1]
-    return new_expected_goals       
+    return new_expected_goals  
+def pad_to_length(lst, length):
+    if len(lst) < length:
+        lst.extend([0] * (length - len(lst)))
+    return lst     
 a=main()
