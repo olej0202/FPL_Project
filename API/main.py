@@ -15,14 +15,20 @@ app.add_middleware(
 )
 
 # Load and combine the 4 CSV files
-def load_and_transform():
+def load_and_transform(endpoint):
     current_dir = os.path.dirname(__file__)
     
     # Go one directory up
     parent_dir = os.path.abspath(os.path.join(current_dir, ".."))
     
     # Build the full path to the CSV file in the parent folder
-    csv_path = os.path.join(parent_dir, "All_Predictions.csv")
+    if(endpoint=="Predictions"):
+        csv_path = os.path.join(parent_dir, "All_Predictions.csv")
+    elif(endpoint=="Team_Predictions"):
+        csv_path = os.path.join(parent_dir, "Team_prediction.csv")
+    elif(endpoint=="ALL_Data"):
+        csv_path = os.path.join(parent_dir, "ML_training2.csv")
+        
 
     # Load the CSV
     df = pd.read_csv(csv_path).iloc[:,1:]
@@ -32,5 +38,19 @@ def load_and_transform():
 
 @app.get("/Predictions")
 def get_data():
-    df = load_and_transform()
+    df = load_and_transform("Predictions")
     return df.to_dict(orient="records")
+
+@app.get("/Team_Predictions")
+def get_data():
+    df = load_and_transform("Team_Predictions")
+    return df.to_dict(orient="records")
+
+@app.get("/ALL_Data")
+def get_data():
+    df = load_and_transform("ALL_Data")
+    return df.to_dict(orient="records")
+
+@app.get("/")
+def root():
+    return {"status": "API is up"}
