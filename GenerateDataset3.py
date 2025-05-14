@@ -955,7 +955,7 @@ def main():
         opp_def_h, opp_def_a, XGC_DEF, XGC_FWD, XGC_MID, own_XG) = lists
 
         player_df=process_player_data(player_df, team, team_id)
-
+        mid_table=pd.DataFrame()
         if (len(player_df) > (4)) and (player_df["minutes"].sum() > 100):
             print("**************************************************")
             lookback=12
@@ -978,9 +978,17 @@ def main():
             player_df["rolling_bps"] = player_df['bps'].ewm(span=lookback, adjust=False).mean()
             player_df["rolling_GS"] = player_df['goals_scored'].clip(upper=2).ewm(span=lookback, adjust=False).mean()
             player_df["rolling_shots"] = player_df['shots'].ewm(span=lookback, adjust=False).mean()
+            mid_table["XG_min"]=(player_df['expected_goals']/player_df['minutes']).copy()*90
+            mid_table["XA_min"]=(player_df['expected_assists']/player_df['minutes']).copy()*90
+            mid_table["Threat_min"]=(player_df['Threat']/player_df['minutes']).copy()*90
+            mid_table["Creativity_min"]=(player_df['creativity']/player_df['minutes']).copy()*90
+            
             player_df["rolling_key_passes"] = player_df['key_passes'].ewm(span=lookback, adjust=False).mean()
             player_df["rolling_XG_historic"] = player_df['expected_goals'].rolling(window=30, min_periods=1).mean()
             player_df["rolling_XA_historic"] = player_df['expected_assists'].rolling(window=30, min_periods=1).mean()
+            player_df["rolling_Threat_historic"] = mid_table['Threat_min'].rolling(window=30, min_periods=1).mean()
+            player_df["rolling_Creativity_historic"] = mid_table['Creativity_min'].rolling(window=30, min_periods=1).mean()
+            
             player_df["rolling_bps_historic"] = player_df['bps'].rolling(window=30, min_periods=1).mean()
             player_df["rolling_bonus_historic"] = player_df['bonus'].rolling(window=30, min_periods=1).mean()
             player_df["rolling_bonus"] = player_df['bonus'].ewm(span=lookback, adjust=False).mean()
@@ -1058,8 +1066,8 @@ def main():
             cluster_df = player_df.sort_values(['Cluster', 'time']).copy()
             cluster_df['expected_goals'] = cluster_df['expected_goals'].clip(upper=1)
             cluster_df['expected_assists'] = cluster_df['expected_assists'].clip(upper=1)
-            cluster_df['Cluster_XG'] = (cluster_df.groupby('Cluster')['expected_goals'].transform(lambda x: x.rolling(window=8, min_periods=1).mean()))
-            cluster_df['Cluster_XA'] = (cluster_df.groupby('Cluster')['expected_assists'].transform(lambda x: x.rolling(window=8, min_periods=1).mean()))
+            cluster_df['Cluster_XG'] = (cluster_df.groupby('Cluster')['expected_goals'].transform(lambda x: x.shift(1).rolling(window=8, min_periods=1).mean()))
+            cluster_df['Cluster_XA'] = (cluster_df.groupby('Cluster')['expected_assists'].transform(lambda x: x.shift(1).rolling(window=8, min_periods=1).mean()))
             
             cluster_df['kickoff_time'] = pd.to_datetime(cluster_df['kickoff_time'])
             latest_rows = cluster_df.loc[cluster_df.groupby('Cluster')['kickoff_time'].idxmax()]
@@ -1232,22 +1240,37 @@ def adjust_measure(df, measure_name):
     current_expected_goals_start_value=player_df[measure_name].mean()
     current_expected_goals=current_expected_goals_start_value
     smoothing_f=0.08
-    min_val=std*1.5
+    min_val=std
     count=0
+    in_row=0
+    in_row_fac=1
     for i in range(len(player_df)):
         count+=1
         offset=max(1,2-count*0.05)
         home=player_df["was_home"].values[i]
         if home:
             pred_scored=current_expected_goals*player_df["XGCA"].values[i]*np.minimum(1, player_df['minutes'].values[i] / 70)
+            if(abs(player_df[measure_name].values[i]-pred_scored)>min_val):
+                in_row+=1   
+            else:
+                in_row=0
+                in_row_fac=1
+            if(in_row>=2):
+                in_row_fac=1.5
 
-            new_expected_goals.append(min(clipper_val,current_expected_goals+offset*smoothing_f*min(min_val,max(-min_val,player_df[measure_name].values[i]-pred_scored))))
+            new_expected_goals.append(min(clipper_val,current_expected_goals+in_row_fac*offset*smoothing_f*min(min_val,max(-min_val,player_df[measure_name].values[i]-pred_scored))))
             current_expected_goals=new_expected_goals[-1]
                 
         else:
             pred_scored=current_expected_goals*player_df["XGCH"].values[i]*np.minimum(1, player_df['minutes'].values[i] / 70)
-
-            new_expected_goals.append(min(clipper_val,current_expected_goals+offset*smoothing_f*min(min_val,max(-min_val,player_df[measure_name].values[i]-pred_scored))))
+            if(abs(player_df[measure_name].values[i]-pred_scored)>min_val):
+                in_row+=1   
+            else:
+                in_row=0
+                in_row_fac=1
+            if(in_row>=2):
+                in_row_fac=1.5
+            new_expected_goals.append(min(clipper_val,current_expected_goals+in_row_fac*offset*smoothing_f*min(min_val,max(-min_val,player_df[measure_name].values[i]-pred_scored))))
             current_expected_goals=new_expected_goals[-1]
     return new_expected_goals  
 def pad_to_length(lst, length):
