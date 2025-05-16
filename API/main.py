@@ -63,7 +63,10 @@ def get_all_data():
     return StreamingResponse(
         buffer,
         media_type="application/json",
-        headers={"Content-Encoding": "gzip"}
+        headers={
+            "Content-Encoding": "gzip",
+            "Access-Control-Allow-Origin": "*"
+        }
     )
 
 @app.get("/")
