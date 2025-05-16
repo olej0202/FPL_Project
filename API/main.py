@@ -2,6 +2,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import pandas as pd
 import os
+from fastapi.responses import StreamingResponse
+import gzip
+import io
+import json
 
 app = FastAPI()
 
@@ -47,9 +51,20 @@ def get_data():
     return df.to_dict(orient="records")
 
 @app.get("/ALL_Data")
-def get_data():
+def get_all_data():
     df = load_and_transform("ALL_Data")
-    return df.to_dict(orient="records")
+
+    # Convert to JSON and compress
+    buffer = io.BytesIO()
+    with gzip.GzipFile(fileobj=buffer, mode="w") as gz:
+        gz.write(json.dumps(df.to_dict(orient="records")).encode('utf-8'))
+    buffer.seek(0)
+
+    return StreamingResponse(
+        buffer,
+        media_type="application/json",
+        headers={"Content-Encoding": "gzip"}
+    )
 
 @app.get("/")
 def root():
