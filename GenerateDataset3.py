@@ -448,6 +448,7 @@ def Generate_team_data():
             XGCS=[]
             XGs=[]
             CSs=[]
+            wons=[]
             #washomes=team_data.groupby('kickoff_time')['was_home'].max().values
             washomes=team_data.groupby('kickoff_time').filter(lambda x: len(x) >= 5).groupby('kickoff_time')['was_home'].max().values
             opponents=team_data.groupby('kickoff_time').filter(lambda x: len(x) >= 5).groupby('kickoff_time')['opponent_code'].median().values
@@ -458,6 +459,13 @@ def Generate_team_data():
                     CSs.append(1)
                 else:
                     CSs.append(0)
+                if(GS.values[k]>GC.values[k]):
+                    wons.append(2)
+                elif(GS.values[k]==GC.values[k]):
+                    wons.append(1)
+                else:
+                    wons.append(0)
+                    
                 XGC1=XGC.values[k]
                 XG1=XG.values[k]
                 if(XGC1==0):
@@ -499,6 +507,7 @@ def Generate_team_data():
             New_team_df["was_home"]=washomes
             New_team_df["opponent"]=opponents
             New_team_df["Clean_Sheet"]=CSs
+            New_team_df["Result"]=wons
             New_team_df["Threat"]=Threat.values
             New_team_df["Threat_against"]=Threatagainst['threat'].values
             
@@ -596,7 +605,7 @@ def Generate_team_data():
     team_data.to_csv("Fantasy-Premier-League/Fantasy-Premier-League/data/2024-25/teams2.csv")
     
 def team_transformed2():
-    team_df=pd.read_csv("Team_data_transformed.csv").iloc[:,1:][["XGC_avg","XG_avg","code", "kickoff_time", "XG", "XGC","was_home", "opponent","Clean_Sheet"]]
+    team_df=pd.read_csv("Team_data_transformed.csv").iloc[:,1:][["XGC_avg","XG_avg","code", "kickoff_time", "XG", "XGC","was_home", "opponent","Clean_Sheet","Result"]]
     team_df['opponent'] = team_df['opponent'].astype(int)
     team_df['kickoff_time'] = pd.to_datetime(team_df['kickoff_time'])
     from sklearn.svm import SVR
@@ -701,6 +710,10 @@ def team_transformed2():
     def_rating_home_history = {team: [def_rating_home[team]] for team in teams}
     off_rating_away_history = {team: [off_rating_away[team]] for team in teams}
     def_rating_away_history = {team: [def_rating_away[team]] for team in teams}
+    
+    elo_rating = {team: 1000 for team in teams}
+    elo_history = {team: [1000] for team in teams}
+    k_elo = 35  # ELO update factor
 
     team_df = team_df.sort_values('kickoff_time')
 
@@ -826,7 +839,28 @@ def team_transformed2():
 
         off_rating_away_history[team].append(off_rating_away[team])
         def_rating_away_history[opponent].append(def_rating_away[opponent])
+        
+        team_elo = elo_rating[team]
+        opp_elo = elo_rating[opponent]
 
+        # Calculate expected result
+        expected_team = 1 / (1 + 10 ** ((opp_elo - team_elo) / 400))
+
+        # Convert match result to outcome (1 win, 0.5 draw, 0 loss)
+        if row['Result'] == 2:
+            actual_result = 1.0
+        elif row['Result'] == 1:
+            actual_result = 0.5
+        else:
+            actual_result = 0.0
+
+        new_factor=max(1,3-0.25*len(elo_history[team]))
+        # Update ratings
+        surprise_multiplier = abs(actual_result - expected_team) * 2  # tweakable
+        delta_elo = new_factor*k_elo * (actual_result - expected_team)*surprise_multiplier
+        elo_rating[team] += delta_elo
+        # Store history
+        elo_history[team].append(elo_rating[team])
 
     new_team_df=pd.read_csv("Team_data_transformed.csv").iloc[:,1:]
     new_team_df_newest=pd.read_csv("Team_data_newest.csv").iloc[:,1:]
@@ -851,6 +885,7 @@ def team_transformed2():
         selected_team_df["XGC_avg"]=def_rating_history[team][:-1]
         selected_team_df['XG_slope']=slope_df["XG_slope"].values[:-1]
         selected_team_df['XGC_slope']=slope_df["XGC_slope"].values[:-1]
+        selected_team_df["Elo_Rating"]=elo_history[team][:-1]
         team_transformed_df=pd.concat([team_transformed_df, selected_team_df], axis=0, ignore_index=True)
 
         newest_selected_team_df=new_team_df_newest[new_team_df_newest["code"]==team].copy()
@@ -862,6 +897,8 @@ def team_transformed2():
         newest_selected_team_df["XGC_avg"]=def_rating_history[team][-1]
         newest_selected_team_df['XG_slope']=slope_df["XG_slope"].values[-1]
         newest_selected_team_df['XGC_slope']=slope_df["XGC_slope"].values[-1]
+        newest_selected_team_df["Elo_Rating"]=elo_history[team][-1]
+
         team_transformed_df_newest=pd.concat([team_transformed_df_newest, newest_selected_team_df], axis=0, ignore_index=True)
 
     team_transformed_df.to_csv("Team_data_transformed2.csv")
@@ -920,7 +957,7 @@ def main():
     unique_players = df_all[["name", "team_code2"]].drop_duplicates()
     
     training_df = pd.DataFrame()
-    Future = 2
+    Future = 1
     training_df=pd.DataFrame()
     player_pred = []
     element_map = []
@@ -1027,7 +1064,7 @@ def main():
                     player_df["expected_goals"].clip(upper=1) / player_df["XGCA"],  # True: expected_goals / XGCA
                     player_df["expected_goals"].clip(upper=1) / player_df["XGCH"]  # False: expected_goals / XGCh
                     )
-            player_df["Rolling_adjusted_XG"]=player_df['Adjusted_XG'].ewm(span=lookback, adjust=False).mean()
+            player_df["Rolling_adjusted_XG_form"]=player_df['Adjusted_XG'].ewm(span=15, adjust=False).var()
             player_df["Rolling_adjusted_XG"]=adjust_measure(player_df, 'expected_goals')
             player_df["Adjusted_XGC"] = np.where(
                     player_df["was_home"] == 1,  # Condition: if was_home is 1
@@ -1040,7 +1077,7 @@ def main():
                     player_df["expected_assists"].clip(upper=1) / player_df["XGCA"],  # True: expected_goals / XGCA
                     player_df["expected_assists"].clip(upper=1) / player_df["XGCH"]  # False: expected_goals / XGCh
                     )
-            player_df["Rolling_adjusted_XA"]=player_df['Adjusted_XA'].ewm(span=lookback, adjust=False).mean()
+            player_df["Rolling_adjusted_XA_form"]=player_df['Adjusted_XA'].ewm(span=15, adjust=False).var()
             player_df["Rolling_adjusted_XA"]=adjust_measure(player_df, 'expected_assists')
             player_df["Adjusted_BPS"] = np.where(
                     player_df["was_home"] == 1,  # Condition: if was_home is 1
@@ -1111,6 +1148,8 @@ def main():
                 player_df["rolling_bonus"]=player_df["rolling_bonus"].shift(1)
                 player_df["rolling_form"]=player_df["rolling_form"].shift(1)
                 player_df["rolling_GS"]=player_df["rolling_GS"].shift(1)
+                player_df["Rolling_adjusted_XG_form"]=player_df["Rolling_adjusted_XG_form"].shift(1)
+                player_df["Rolling_adjusted_XA_form"]=player_df["Rolling_adjusted_XA_form"].shift(1)
                 player_df["XG_Mean"]=player_df["XG_Mean"].shift(1)
                 player_df["XA_Mean"]=player_df["XA_Mean"].shift(1)
                 player_df["Shots_Mean"]=player_df["Shots_Mean"].shift(1)
@@ -1185,7 +1224,8 @@ def main():
                 future["XA_slope"]=[future["XA_slope"].values[-1]] * Future
                 future["Threat_slope"]=[future["Threat_slope"].values[-1]] * Future
                 future["Influence_slope"]=[future["Influence_slope"].values[-1]] * Future
-                
+                future["Rolling_adjusted_XG_form"]=[future["Rolling_adjusted_XG_form"].values[-1]] * Future
+                future["Rolling_adjusted_XA_form"]=[future["Rolling_adjusted_XA_form"].values[-1]] * Future
                 xg_cluster_list=[]
                 xa_cluster_list=[]
                 for u in range(Future):
