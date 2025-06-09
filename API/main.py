@@ -77,7 +77,7 @@ def get_team_data(team: str = Query(None)):
     df = load_and_transform("Teams")
 
     if team:
-        df = df[df["Team"] == team]
+        df = df[df["name"] == team]
 
     # Replace non-JSON-compliant values
     df = df.replace([np.inf, -np.inf], np.nan)
