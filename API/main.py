@@ -81,6 +81,7 @@ def get_team_data(team: str = Query(None)):
 
     # Replace non-JSON-compliant values
     df = df.replace([np.inf, -np.inf], np.nan)
+    df=df.dropna()
 
     # Convert to dict
     records = df.to_dict(orient="records")
