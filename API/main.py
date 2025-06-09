@@ -79,6 +79,9 @@ def get_team_data(team: str = Query(None)):
     if team:
         df = df[df["Team"] == team]
         
+    df = df.replace([float('inf'), float('-inf')], None)
+    df = df.fillna(None)
+    
     return df.to_dict(orient="records")
 
 
