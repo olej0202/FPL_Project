@@ -91,6 +91,7 @@ def get_team_data(team: str = Query(None)):
     except ValueError as e:
         # Optional: Log or return an error if still invalid
         print("JSON serialization error:", e)
+        print(df[df.isin([np.nan, np.inf, -np.inf]).any(axis=1)])
         return {"error": "Data contains values that cannot be serialized to JSON."}
 
 
@@ -104,4 +105,3 @@ def get_team_data_unique():
 @app.get("/")
 def root():
     return {"status": "API is up"}
-
