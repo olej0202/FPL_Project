@@ -80,9 +80,10 @@ def get_team_data(team: str = Query(None)):
         df = df[df["Team"] == team]
         
     df = df.replace([float('inf'), float('-inf')], None)
-    df = df.fillna(None)
-    
-    return df.to_dict(orient="records")
+    records = df.to_dict(orient="records")
+    cleaned_records = json.loads(json.dumps(records, default=str))  # fallback for NaN/None serialization
+
+    return cleaned_records
 
 
 @app.get("/Teams_unique")
