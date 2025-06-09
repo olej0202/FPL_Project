@@ -957,7 +957,7 @@ def main():
     unique_players = df_all[["name", "team_code2"]].drop_duplicates()
     
     training_df = pd.DataFrame()
-    Future = 1
+    Future = 0
     training_df=pd.DataFrame()
     player_pred = []
     element_map = []
@@ -1244,13 +1244,41 @@ def main():
                     
                 future["Cluster_XG"]=xg_cluster_list
                 future["Cluster_XA"]=xa_cluster_list
+                player_df = pd.concat([player_df, future], axis=0, ignore_index=True)
+            else:
+                player_df["Rolling_adjusted_XA2"]=player_df["Rolling_adjusted_XA"].shift(1)
+                player_df["Rolling_adjusted_BPS2"]=player_df["Rolling_adjusted_BPS"].shift(1)
+                player_df["Rolling_adjusted_Fantasy2"]=player_df["Rolling_adjusted_Fantasy"].shift(1)
+                player_df["Rolling_creativity"]=player_df["Rolling_creativity"].shift(1)
+                player_df["Rolling_influence"]=player_df["Rolling_influence"].shift(1)
+                player_df["Rolling_adjusted_XG2"]=player_df["Rolling_adjusted_XG"].shift(1)
+                player_df["Rolling_adjusted_XGC2"]=player_df["Rolling_adjusted_XGC"].shift(1)
+                player_df["Rolling_BPS_per_90"]=player_df["Rolling_BPS_per_90"].shift(1)
+                player_df["rolling_shots"]=player_df["rolling_shots"].shift(1)
+                player_df["rolling_key_passes"]=player_df["rolling_key_passes"].shift(1)
+                player_df["rolling_Threat"]=player_df["rolling_Threat"].shift(1)
+                player_df["rolling_ICT"]=player_df["rolling_ICT"].shift(1)
+                player_df["rolling_bonus"]=player_df["rolling_bonus"].shift(1)
+                player_df["rolling_form"]=player_df["rolling_form"].shift(1)
+                player_df["rolling_GS"]=player_df["rolling_GS"].shift(1)
+                player_df["Rolling_adjusted_XG_form"]=player_df["Rolling_adjusted_XG_form"].shift(1)
+                player_df["Rolling_adjusted_XA_form"]=player_df["Rolling_adjusted_XA_form"].shift(1)
+                player_df["XG_Mean"]=player_df["XG_Mean"].shift(1)
+                player_df["XA_Mean"]=player_df["XA_Mean"].shift(1)
+                player_df["Shots_Mean"]=player_df["Shots_Mean"].shift(1)
+                player_df["Threat_Mean"]=player_df["Threat_Mean"].shift(1)
+                player_df["Adjusted_XG_Mean"]=player_df["Adjusted_XG_Mean"].shift(1)
+                player_df["XG_Mean_difference"]=(player_df["expected_goals"]-player_df["XG_Mean"])/player_df["XG_Mean"]
+                player_df["XA_Mean_difference"]=(player_df["expected_assists"]-player_df["XA_Mean"])/player_df["XA_Mean"]
+                player_df["Shot_Mean_difference"]=(player_df["rolling_shots"]-player_df["Shots_Mean"])/player_df["Shots_Mean"]
+                player_df["Threat_Mean_difference"]=(player_df["rolling_Threat"]-player_df["Threat_Mean"])/player_df["Threat_Mean"]
+                player_df["Adjusted_XG_Mean_difference"]=(player_df["Rolling_adjusted_XG2"]-player_df["Adjusted_XG_Mean"])/player_df["Adjusted_XG_Mean"]
                     
                     
                     
                 
 
 
-                player_df = pd.concat([player_df, future], axis=0, ignore_index=True)
                 
             #training_df['Own_Attacking_form'] = training_df['Own_Attacking_form'].ffill()
             training_df=pd.concat([training_df, player_df], axis=0, ignore_index=True)

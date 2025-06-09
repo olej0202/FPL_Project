@@ -6,6 +6,7 @@ from fastapi.responses import StreamingResponse
 import gzip
 import io
 import json
+from fastapi import Request, Query
 
 app = FastAPI()
 
@@ -32,6 +33,8 @@ def load_and_transform(endpoint):
         csv_path = os.path.join(parent_dir, "Team_prediction.csv")
     elif(endpoint=="ALL_Data"):
         csv_path = os.path.join(parent_dir, "ML_training2.csv")
+    elif(endpoint=="Teams"):
+        csv_path = os.path.join(parent_dir, "Team_data_transformed2.csv")
         
 
     # Load the CSV
@@ -68,6 +71,23 @@ def get_all_data():
             "Access-Control-Allow-Origin": "*"
         }
     )
+    
+@app.get("/Teams")
+def get_team_data(team: str = Query(None)):
+    df = load_and_transform("Teams")
+    # Filter by team if provided
+    if team:
+        df = df[df["Team"] == team]
+        
+    return df.to_dict(orient="records")
+
+
+@app.get("/Teams_unique")
+def get_team_data(team: str = Query(None)):
+    df = load_and_transform("Teams")
+    # Filter by team if provided
+    unique_teams = df["name"].dropna().unique().tolist()
+    return sorted(unique_teams)
 
 @app.get("/")
 def root():
