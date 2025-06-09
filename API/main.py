@@ -83,7 +83,7 @@ def get_team_data(team: str = Query(None)):
 
 
 @app.get("/Teams_unique")
-def get_team_data(team: str = Query(None)):
+def get_team_data():
     df = load_and_transform("Teams")
     # Filter by team if provided
     unique_teams = df["name"].dropna().unique().tolist()
