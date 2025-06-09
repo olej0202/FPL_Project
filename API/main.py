@@ -83,7 +83,7 @@ def get_team_data(team: str = Query(None)):
 
 
 @app.get("/Teams_unique")
-def get_team_data():
+def get_team_data_unique():
     df = load_and_transform("Teams")
     # Filter by team if provided
     unique_teams = df["name"].dropna().unique().tolist()
@@ -92,3 +92,4 @@ def get_team_data():
 @app.get("/")
 def root():
     return {"status": "API is up"}
+
