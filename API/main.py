@@ -7,7 +7,7 @@ import gzip
 import io
 import json
 from fastapi import Request, Query
-
+import numpy as np
 app = FastAPI()
 
 # Allow frontend to access backend
@@ -75,15 +75,23 @@ def get_all_data():
 @app.get("/Teams")
 def get_team_data(team: str = Query(None)):
     df = load_and_transform("Teams")
-    # Filter by team if provided
+
     if team:
         df = df[df["Team"] == team]
-        
-    df = df.replace([float('inf'), float('-inf')], None)
-    records = df.to_dict(orient="records")
-    cleaned_records = json.loads(json.dumps(records, default=str))  # fallback for NaN/None serialization
 
-    return cleaned_records
+    # Replace non-JSON-compliant values
+    df = df.replace([np.inf, -np.inf], np.nan)
+
+    # Convert to dict
+    records = df.to_dict(orient="records")
+
+    # Use allow_nan=False to force clean JSON
+    try:
+        return json.loads(json.dumps(records, allow_nan=False))
+    except ValueError as e:
+        # Optional: Log or return an error if still invalid
+        print("JSON serialization error:", e)
+        return {"error": "Data contains values that cannot be serialized to JSON."}
 
 
 @app.get("/Teams_unique")
