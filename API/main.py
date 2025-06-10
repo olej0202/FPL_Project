@@ -102,6 +102,36 @@ def get_team_data_unique():
     unique_teams = df["name"].dropna().unique().tolist()
     return sorted(unique_teams)
 
+@app.get("/Player_unique")
+def get_team_data_unique():
+    df = load_and_transform("ALL_Data")
+    # Filter by team if provided
+    unique_teams = df["name"].dropna().unique().tolist()
+    return sorted(unique_teams)
+
+@app.get("/Player")
+def get_team_data(player: str = Query(None)):
+    df = load_and_transform("ALL_Data")
+
+    if player:
+        df = df[df["name"] == player]
+
+    # Replace non-JSON-compliant values
+    df = df.replace([np.inf, -np.inf], np.nan)
+    df=df.dropna()
+
+    # Convert to dict
+    records = df.to_dict(orient="records")
+
+    # Use allow_nan=False to force clean JSON
+    try:
+        return json.loads(json.dumps(records, allow_nan=False))
+    except ValueError as e:
+        # Optional: Log or return an error if still invalid
+        print("JSON serialization error:", e)
+        print(df[df.isin([np.nan, np.inf, -np.inf]).any(axis=1)])
+        return {"error": "Data contains values that cannot be serialized to JSON."}
+    
 @app.get("/")
 def root():
     return {"status": "API is up"}
