@@ -30,13 +30,12 @@ def load_and_transform(endpoint):
     if(endpoint=="Predictions"):
         csv_path = os.path.join(parent_dir, "All_Predictions.csv")
     elif(endpoint=="Team_Predictions"):
-        csv_path = os.path.join(parent_dir, "Team_prediction.csv")
+        csv_path = os.path.join(parent_dir, "Team_prediction_visual.csv")
     elif(endpoint=="ALL_Data"):
         csv_path = os.path.join(parent_dir, "ML_training2.csv")
     elif(endpoint=="Teams"):
         csv_path = os.path.join(parent_dir, "Team_data_transformed2.csv")
         
-
     # Load the CSV
     df = pd.read_csv(csv_path).iloc[:,1:]
     
