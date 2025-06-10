@@ -105,6 +105,8 @@ def get_team_data_unique():
 @app.get("/Player_unique")
 def get_team_data_unique():
     df = load_and_transform("ALL_Data")
+    max_season=df["season"].max()
+    df=df[(df['season'] == max_season)]
     # Filter by team if provided
     unique_teams = df["name"].dropna().unique().tolist()
     return sorted(unique_teams)

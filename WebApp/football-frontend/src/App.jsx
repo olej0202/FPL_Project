@@ -1,6 +1,7 @@
 import React from "react";
 import Team_Analytics from "./Team_Analytics";
 import Team_Predictions from "./Team_Predictions";
+import PlayerAnalytics from "./Player_Analytics";
 import { Routes, Route, NavLink } from "react-router-dom";
 import logo from "./assets/FPL_analytics_logo.png"; // adjust path based on location
 
@@ -44,6 +45,16 @@ export default function App() {
       >
         Score Predictions
       </NavLink>
+      <NavLink
+        to="/Player_Analytics"
+        className={({ isActive }) =>
+          `px-4 py-2 rounded border border-royal-gold text-royal-gold font-semibold ${
+            isActive ? "bg-black hover:text-royal-gold " : "hover:bg-royal-gold hover:text-black"
+          }`
+        }
+      >
+        Player Analytics
+      </NavLink>
     </div>
   </div>
 </nav>
@@ -53,6 +64,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Team_Analytics />} />
         <Route path="/Score_Predictions" element={<Team_Predictions />} />
+        <Route path="/Player_Analytics" element={<PlayerAnalytics />} />
       </Routes>
     </div>
   );
