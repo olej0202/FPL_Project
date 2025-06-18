@@ -9,11 +9,11 @@ import logo from "./assets/FPL_analytics_logo.png"; // adjust path based on loca
 export default function App() {
   return (
     <div className="min-h-screen bg-black text-white">
-      <nav className="bg-royal-beige text-royal-gold px-6 py-4 shadow relative">
+      <nav className="bg-royal-beige text-royal-gold px-6 py-3 shadow relative">
   <div className="flex items-center justify-between w-full max-w-16xl mx-auto relative">
     
     {/* Left: Logo + Title */}
-    <div className="flex items-center space-x-3 absolute left-1 top-1/2 -translate-y-1/2">
+    <div className="flex items-center space-x-6 absolute left-1 top-1/2 -translate-y-1/2">
       <img
         src={logo}
         alt="FPL Logo"

@@ -168,7 +168,7 @@ const teamLogos = {
           onClick={() => setShowOffensive((prev) => !prev)}
           className="bg-royal-gold text-black px-4 py-1 rounded font-bold"
         >
-          {showOffensive ? "Show defensive stats" : "Show offensive stats"}
+          {showOffensive ? "Show defensive stats" : "Show attacking stats"}
         </button>
       </div>
 

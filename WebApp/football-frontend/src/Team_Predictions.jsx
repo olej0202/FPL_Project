@@ -68,11 +68,11 @@ export default function Team_Predictions() {
         </select>
       </div>
 
-     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
   {filteredData.map((match, idx) => (
     <div
       key={idx}
-      className="bg-royal-red border border-royal-gold p-4 rounded shadow text-royal-gold"
+      className="bg-royal-red border border-royal-gold p-4 rounded shadow text-royal-gold" 
     >
       <h2 className="text-lg font-bold text-center mb-4">GW {match.GW}</h2>
       <div className="flex items-center justify-between mb-2">

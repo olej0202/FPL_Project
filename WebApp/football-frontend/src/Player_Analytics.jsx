@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import Select from "react-select";
 import {
   LineChart,
   Line,
@@ -15,8 +16,32 @@ export default function PlayerAnalytics() {
   const [playerFilter, setPlayerFilter] = useState("");
   const [players, setPlayers] = useState([]);
   const [latestStats, setLatestStats] = useState({});
+  const [selectedMetric, setSelectedMetric] = useState("expected_goals");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
-  // Fetch unique player list
+  const playerOptions = players.map((player) => ({
+    value: player,
+    label: player
+  }));
+
+  const PlayerLogos = {
+    "Cole_Palmer0": "https://sportrenders.com/wp-content/uploads/2023/12/Cole-Palmer-Render-Png-Chelsea-Free-Image-Transaparent-Download.png",
+    "Erling_Haaland": "https://sportrenders.com/wp-content/uploads/2024/02/Erling-Haaland-Football-PNG-Manchester-City-Render-Sport-Renders.png",
+    "Alexander_Isak": "https://media.futbolfantasy.com/thumb/400x400/v202209261651/uploads/images/jugadores/ficha/3720.png",
+    "Bryan_Mbeumo":"https://www.thesportsdb.com/images/media/player/cutout/ox162o1631443956.png",
+    "Mohamed_Salah":"https://www.pngmart.com/files/22/Mo-Salah-PNG-Photo.png",
+    "Yoane_Wissa": "https://res.cloudinary.com/brentford-fc/image/upload/f_auto,q_auto:best,f_auto,c_fill,g_north,ar_1:1,h_800/wissa_2230_x_3000_tlibsm.png",
+    "Ismaïla_Sarr": "https://www.zerozero.pt/img/jogadores/new/29/04/522904_ismaila_sarr_20240818121031.png",
+    "Eberechi_Eze":"https://resources.premierleague.com/premierleague/photos/players/250x250/p232413.png",
+    "Jean-Philippe_Mateta":"https://static.sky.it/images/skysport/it/calcio/serie-a/probabili-formazioni/superscudetto/512/231747.png",
+    "Daniel_Muñoz":"https://cdn.futwiz.com/assets/img/fc25/faces/237646.png?25",
+    "Jarrod_Bowen":"https://www.thewesthamway.com/wp-content/uploads/2020/10/Bowen-Jarrod-900_0.png",
+    "Antoine_Semenyo":"https://resources.premierleague.com/premierleague/photos/players/110x140/p437730.png",
+    "Justin_Kluivert":"https://resources.premierleague.com/premierleague/photos/players/110x140/p222683.png"
+  };
+
+  // Fetch player list
   useEffect(() => {
     fetch(`${API_URL}_unique`)
       .then((res) => res.json())
@@ -37,7 +62,13 @@ export default function PlayerAnalytics() {
       const res = await fetch(`${API_URL}?player=${encodeURIComponent(playerFilter)}`);
       const raw = await res.json();
       const sorted = raw.sort((a, b) => new Date(a.kickoff_time) - new Date(b.kickoff_time));
-      setData(sorted);
+
+      // Add alias for expected assists
+      const withAlias = sorted.map((d) => ({
+        ...d
+      }));
+
+      setData(withAlias);
 
       if (sorted.length > 0) {
         const latest = sorted[sorted.length - 1];
@@ -45,37 +76,88 @@ export default function PlayerAnalytics() {
           Rolling_adjusted_XG2: latest.Rolling_adjusted_XG2 || 0,
           Rolling_adjusted_XA2: latest.Rolling_adjusted_XA2 || 0,
           Rolling_adjusted_BPS2: latest.Rolling_adjusted_BPS2 || 0,
-          XG_slope: latest.XG_slope || 0
+          Overcore: latest.Average_Overscore || 0
         });
       }
     };
     fetchData();
   }, [playerFilter]);
 
+  // Filter data based on date range
+  const filteredChartData = data.filter((d) => {
+    const date = new Date(d.kickoff_time);
+    const afterStart = !startDate || date >= new Date(startDate);
+    const beforeEnd = !endDate || date <= new Date(endDate);
+    return afterStart && beforeEnd;
+  });
+
   const statCards = [
-    { title: "Adj. Expected Goals", value: latestStats.Rolling_adjusted_XG2 },
-    { title: "Adj. Expected Assists", value: latestStats.Rolling_adjusted_XA2 },
-    { title: "Adj. Bonus Points", value: latestStats.Rolling_adjusted_BPS2 },
-    { title: "Attack Form (XG Slope)", value: latestStats.XG_slope }
+    { title: "XG Index", value: latestStats.Rolling_adjusted_XG2 },
+    { title: "XA Index", value: latestStats.Rolling_adjusted_XA2 },
+    { title: "BPS Index", value: latestStats.Rolling_adjusted_BPS2 },
+    { title: "Goals over XG", value: latestStats.Overcore }
   ];
 
+  const values = filteredChartData.map((d) => parseFloat(d[selectedMetric])).filter((v) => !isNaN(v));
+  const avgOfMetric = values.length > 0 ? values.reduce((acc, v) => acc + v, 0) / values.length : 0;
+
+
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col items-center px-4 py-8 space-y-10">
+    <div className="min-h-screen bg-black text-white flex flex-col items-center px-10 py-10 space-y-6">
       <h1 className="text-4xl font-bold text-center text-royal-beige">Player Analytics</h1>
+
 
       {/* Player Selector */}
       <div className="w-full max-w-sm">
-        <select
-          className="border border-royal-gold p-2 rounded w-full text-center bg-beige text-black"
-          value={playerFilter}
-          onChange={(e) => setPlayerFilter(e.target.value)}
-        >
-          {players.map((player) => (
-            <option key={player} value={player}>
-              {player}
-            </option>
-          ))}
-        </select>
+        <Select
+          options={playerOptions}
+          onChange={(option) => setPlayerFilter(option.value)}
+          value={{ label: playerFilter, value: playerFilter }}
+          placeholder="Select or search player..."
+          styles={{
+            control: (base) => ({
+              ...base,
+              backgroundColor: "#F5F5DC",
+              color: "black",
+              borderColor: "#FFD700",
+              boxShadow: "none",
+              "&:hover": {
+                borderColor: "#FFD700"
+              }
+            }),
+            menu: (base) => ({
+              ...base,
+              backgroundColor: "#1a1a1a",
+              zIndex: 9999
+            }),
+            option: (base, state) => ({
+              ...base,
+              backgroundColor: state.isSelected
+                ? "#FFD700"
+                : state.isFocused
+                ? "#333333"
+                : "#1a1a1a",
+              color: state.isSelected ? "#000" : "#fff",
+              borderBottom: "1px solid #333",
+              cursor: "pointer"
+            }),
+            singleValue: (base) => ({
+              ...base,
+              color: "black"
+            })
+          }}
+        />
+      </div>
+
+      {/* Player Logo */}
+      <div className="flex flex-col items-center justify-center mb-6">
+        {playerFilter && PlayerLogos[playerFilter] && (
+          <img
+            src={PlayerLogos[playerFilter]}
+            alt={`${playerFilter} logo`}
+            className="h-full w-full max-w-sm"
+          />
+        )}
       </div>
 
       {/* Stat Cards */}
@@ -103,46 +185,90 @@ export default function PlayerAnalytics() {
           );
         })}
       </div>
+      <div className="px-10 py-10 space-y-6"></div>
+      <h1 className="text-4xl font-bold text-center text-royal-beige">Historical Analysis</h1>
 
-      {/* Line Charts */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-6xl">
-        <div className="bg-royal-red p-4 rounded shadow border border-royal-gold">
-          <h2 className="text-xl font-semibold mb-4 text-center text-royal-gold">Expected Goals Over Time</h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={data}>
-              <CartesianGrid stroke="#333" />
-              <XAxis dataKey="kickoff_time" tick={{ fontSize: 10 }} stroke="#fff" />
-              <YAxis stroke="#fff" />
-              <Tooltip contentStyle={{ backgroundColor: "#5A0000", color: "#FFD700", border: "1px solid #FFD700" }} />
-              <Line
-                type="monotone"
-                dataKey="expected_goals"
-                stroke="#FFD700"
-                name="Expected Goals"
-                dot={false}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
+      {/* Metric Selector */}
+      <div className="flex flex-wrap justify-center gap-4 mt-10">
+        {[
+          { key: "expected_goals", label: "Expected Goals" },
+          { key: "expected_assists", label: "Expected Assists" },
+          { key: "total_points", label: "Total Points" },
+          { key: "goals_scored", label: "Goals Scored" },
+          { key: "assists", label: "Assists" },
+          
+        ].map((metric) => (
+          <button
+            key={metric.key}
+            onClick={() => setSelectedMetric(metric.key)}
+            className={`px-4 py-2 rounded font-bold border ${
+              selectedMetric === metric.key
+                ? "bg-royal-gold text-black border-royal-gold"
+                : "bg-royal-red text-royal-gold border-royal-gold"
+            }`}
+          >
+            {metric.label}
+          </button>
+        ))}
+      </div>
 
-        <div className="bg-royal-red p-4 rounded shadow border border-royal-gold">
-          <h2 className="text-xl font-semibold mb-4 text-center text-royal-gold">Total Points Over Time</h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={data}>
-              <CartesianGrid stroke="#333" />
-              <XAxis dataKey="kickoff_time" tick={{ fontSize: 10 }} stroke="#fff" />
-              <YAxis stroke="#fff" />
-              <Tooltip contentStyle={{ backgroundColor: "#5A0000", color: "#FFD700", border: "1px solid #FFD700" }} />
-              <Line
-                type="monotone"
-                dataKey="total_points"
-                stroke="#FFD700"
-                name="Total Points"
-                dot={false}
-              />
-            </LineChart>
-          </ResponsiveContainer>
+      {/* Date Slicer */}
+      <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-6 text-black">
+        <div>
+          <label className="text-white block mb-1">Start Date</label>
+          <input
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            className="p-2 rounded border border-royal-gold"
+          />
         </div>
+        <div>
+          <label className="text-white block mb-1">End Date</label>
+          <input
+            type="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            className="p-2 rounded border border-royal-gold"
+          />
+        </div>
+      </div>
+      <div className="bg-royal-red text-royal-gold p-4 border border-royal-gold rounded-lg shadow text-center w-full max-w-sm mt-4">
+  <h2 className="text-lg font-semibold mb-2 capitalize">
+    Avg. {selectedMetric.replace("_", " ")}
+  </h2>
+  <p className="text-3xl font-bold">
+    {avgOfMetric.toFixed(2)}
+  </p>
+</div>
+
+
+      {/* Dynamic Line Chart */}
+      <div className="bg-royal-red p-4 rounded shadow border border-royal-gold w-full max-w-6xl mt-8">
+        <h2 className="text-xl font-semibold mb-4 text-center text-royal-gold capitalize">
+          {selectedMetric.replace("_", " ")} Over Time
+        </h2>
+        <ResponsiveContainer width="100%" height={300}>
+          <LineChart data={filteredChartData}>
+            <CartesianGrid stroke="#333" />
+            <XAxis dataKey="kickoff_time" tick={{ fontSize: 10 }} stroke="#fff" />
+            <YAxis stroke="#fff" />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: "#5A0000",
+                color: "#FFD700",
+                border: "1px solid #FFD700"
+              }}
+            />
+            <Line
+              type="monotone"
+              dataKey={selectedMetric}
+              stroke="#FFD700"
+              name={selectedMetric.replace("_", " ").toUpperCase()}
+              dot={false}
+            />
+          </LineChart>
+        </ResponsiveContainer>
       </div>
     </div>
   );
