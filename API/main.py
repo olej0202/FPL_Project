@@ -36,6 +36,8 @@ def load_and_transform(endpoint):
         csv_path = os.path.join(parent_dir, "ML_training2.csv")
     elif(endpoint=="Teams"):
         csv_path = os.path.join(parent_dir, "Team_data_transformed2.csv")
+    elif(endpoint=="Current_players"):
+        csv_path = os.path.join(parent_dir, "Raw_Data_25/current_players.csv")
         
     # Load the CSV
     df = pd.read_csv(csv_path).iloc[:,1:]
@@ -105,7 +107,7 @@ def get_team_data_unique():
 
 @app.get("/Player_picture")
 def get_team_data_unique(player: str = Query(None)):
-    df = pd.read_csv("Raw_Data_25/current_players.csv")
+    df = load_and_transform("Current_players")
     player_df = df[df["name"] == player]
     
     if player_df.empty:
