@@ -23,21 +23,20 @@ app.add_middleware(
 # Load and combine the 4 CSV files
 def load_and_transform(endpoint):
     current_dir = os.path.dirname(__file__)
-    
-    # Go one directory up
     parent_dir = os.path.abspath(os.path.join(current_dir, ".."))
-    
-    # Build the full path to the CSV file in the parent folder
-    if(endpoint=="Predictions"):
+
+    if endpoint == "Predictions":
         csv_path = os.path.join(parent_dir, "All_Predictions.csv")
-    elif(endpoint=="Team_Predictions"):
+    elif endpoint == "Team_Predictions":
         csv_path = os.path.join(parent_dir, "Team_prediction_visual.csv")
-    elif(endpoint=="ALL_Data"):
+    elif endpoint == "ALL_Data":
         csv_path = os.path.join(parent_dir, "ML_training2.csv")
-    elif(endpoint=="Teams"):
+    elif endpoint == "Teams":
         csv_path = os.path.join(parent_dir, "Team_data_transformed2.csv")
-    elif(endpoint=="Current_players"):
-        csv_path = os.path.join(parent_dir, "Raw_Data_25/current_players.csv")
+    elif endpoint == "Current_players":
+        csv_path = os.path.join(parent_dir, "Raw_Data_25", "current_players.csv")
+    else:
+        raise ValueError(f"Unknown endpoint: {endpoint}")
         
     # Load the CSV
     df = pd.read_csv(csv_path).iloc[:,1:]
