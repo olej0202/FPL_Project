@@ -7,7 +7,12 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  ResponsiveContainer
+  ResponsiveContainer,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  Radar,
+  Legend
 } from "recharts";
 
 export default function PlayerAnalytics() {
@@ -20,29 +25,11 @@ export default function PlayerAnalytics() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [playerImageUrl, setPlayerImageUrl] = useState("");
+  const [comparePlayer, setComparePlayer] = useState("");
+  const [compareStats, setCompareStats] = useState({});
 
-  const playerOptions = players.map((player) => ({
-    value: player,
-    label: player
-  }));
+  const playerOptions = players.map((player) => ({ value: player, label: player }));
 
-  const PlayerLogos = {
-    "Cole_Palmer0": "https://sportrenders.com/wp-content/uploads/2023/12/Cole-Palmer-Render-Png-Chelsea-Free-Image-Transaparent-Download.png",
-    "Erling_Haaland": "https://sportrenders.com/wp-content/uploads/2024/02/Erling-Haaland-Football-PNG-Manchester-City-Render-Sport-Renders.png",
-    "Alexander_Isak": "https://media.futbolfantasy.com/thumb/400x400/v202209261651/uploads/images/jugadores/ficha/3720.png",
-    "Bryan_Mbeumo":"https://www.thesportsdb.com/images/media/player/cutout/ox162o1631443956.png",
-    "Mohamed_Salah":"https://www.pngmart.com/files/22/Mo-Salah-PNG-Photo.png",
-    "Yoane_Wissa": "https://res.cloudinary.com/brentford-fc/image/upload/f_auto,q_auto:best,f_auto,c_fill,g_north,ar_1:1,h_800/wissa_2230_x_3000_tlibsm.png",
-    "Ismaïla_Sarr": "https://www.zerozero.pt/img/jogadores/new/29/04/522904_ismaila_sarr_20240818121031.png",
-    "Eberechi_Eze":"https://resources.premierleague.com/premierleague/photos/players/250x250/p232413.png",
-    "Jean-Philippe_Mateta":"https://static.sky.it/images/skysport/it/calcio/serie-a/probabili-formazioni/superscudetto/512/231747.png",
-    "Daniel_Muñoz":"https://cdn.futwiz.com/assets/img/fc25/faces/237646.png?25",
-    "Jarrod_Bowen":"https://www.thewesthamway.com/wp-content/uploads/2020/10/Bowen-Jarrod-900_0.png",
-    "Antoine_Semenyo":"https://resources.premierleague.com/premierleague/photos/players/110x140/p437730.png",
-    "Justin_Kluivert":"https://resources.premierleague.com/premierleague/photos/players/110x140/p222683.png"
-  };
-
-  // Fetch player list
   useEffect(() => {
     fetch(`${API_URL}_unique`)
       .then((res) => res.json())
@@ -56,52 +43,49 @@ export default function PlayerAnalytics() {
       .catch((err) => console.error("Failed to fetch players:", err));
   }, []);
 
-  // Fetch selected player data
+  const fetchLatestStats = async (player, setter) => {
+    try {
+      const res = await fetch(`${API_URL}?player=${encodeURIComponent(player)}`);
+      const data = await res.json();
+      const sorted = data.sort((a, b) => new Date(a.kickoff_time) - new Date(b.kickoff_time));
+      const latest = sorted[sorted.length - 1];
+      setter({
+        Rolling_adjusted_XG2: latest.Rolling_adjusted_XG2 || 0,
+        Rolling_adjusted_XA2: latest.Rolling_adjusted_XA2 || 0,
+        Rolling_adjusted_BPS2: latest.Rolling_adjusted_BPS2 || 0,
+        Overcore: latest.Average_Overscore || 0
+      });
+    } catch (e) {
+      console.error("Error fetching player data:", e);
+    }
+  };
+
+  useEffect(() => {
+    if (playerFilter) {
+      fetchLatestStats(playerFilter, setLatestStats);
+      fetch(`https://fpl-project-t5e9.onrender.com/Player_picture?player=${encodeURIComponent(playerFilter)}`)
+        .then((res) => res.text())
+        .then((url) => setPlayerImageUrl(url))
+        .catch(() => setPlayerImageUrl(""));
+    }
+  }, [playerFilter]);
+
+  useEffect(() => {
+    if (comparePlayer) fetchLatestStats(comparePlayer, setCompareStats);
+  }, [comparePlayer]);
+
   useEffect(() => {
     if (!playerFilter) return;
     const fetchData = async () => {
       const res = await fetch(`${API_URL}?player=${encodeURIComponent(playerFilter)}`);
       const raw = await res.json();
       const sorted = raw.sort((a, b) => new Date(a.kickoff_time) - new Date(b.kickoff_time));
-
-      // Add alias for expected assists
-      const withAlias = sorted.map((d) => ({
-        ...d
-      }));
-
-      setData(withAlias);
-
-      if (sorted.length > 0) {
-        const latest = sorted[sorted.length - 1];
-        setLatestStats({
-          Rolling_adjusted_XG2: latest.Rolling_adjusted_XG2 || 0,
-          Rolling_adjusted_XA2: latest.Rolling_adjusted_XA2 || 0,
-          Rolling_adjusted_BPS2: latest.Rolling_adjusted_BPS2 || 0,
-          Overcore: latest.Average_Overscore || 0
-        });
-      }
+      setData(sorted);
     };
     fetchData();
   }, [playerFilter]);
+  console.log("Image URL:", playerImageUrl);
 
-  useEffect(() => {
-  if (!playerFilter) return;
-
-  const fetchPlayerImage = async () => {
-    try {
-      const response = await fetch(`https://fpl-project-t5e9.onrender.com/Player_picture?player=${encodeURIComponent(playerFilter)}`);
-      const imageUrl = await response.text(); // assuming plain string response
-      setPlayerImageUrl(imageUrl);
-    } catch (error) {
-      console.error("Failed to fetch player image:", error);
-      setPlayerImageUrl(""); // fallback or leave blank
-    }
-  };
-
-  fetchPlayerImage();
-}, [playerFilter]);
-
-  // Filter data based on date range
   const filteredChartData = data.filter((d) => {
     const date = new Date(d.kickoff_time);
     const afterStart = !startDate || date >= new Date(startDate);
@@ -119,118 +103,125 @@ export default function PlayerAnalytics() {
   const values = filteredChartData.map((d) => parseFloat(d[selectedMetric])).filter((v) => !isNaN(v));
   const avgOfMetric = values.length > 0 ? values.reduce((acc, v) => acc + v, 0) / values.length : 0;
 
+  const rawStats = [
+    { key: "Rolling_adjusted_XG2", label: "XG Index" },
+    { key: "Rolling_adjusted_XA2", label: "XA Index" },
+    { key: "Rolling_adjusted_BPS2", label: "BPS Index" },
+    { key: "Overcore", label: "Goals over XG" }
+  ];
+
+  const maxValues = {};
+  rawStats.forEach(({ key }) => {
+    const p1 = parseFloat(latestStats[key] || 0);
+    const p2 = parseFloat(compareStats[key] || 0);
+    maxValues[key] = Math.max(p1, p2, 1);
+  });
+
+  const scaleValue = (key, value) => {
+    if (key === "Rolling_adjusted_BPS2") return (value ) / 10;
+    if (key === "Overcore") return (value*1.5) / 10;
+    return value;
+  };
+
+  const comparisonData = rawStats.map(({ key, label }) => ({
+    metric: label,
+    [playerFilter]: ((scaleValue(key, latestStats[key]) || 0) / maxValues[key]) * 100,
+    [comparePlayer]: ((scaleValue(key, compareStats[key]) || 0) / maxValues[key]) * 100
+  }));
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center px-10 py-10 space-y-6">
       <h1 className="text-4xl font-bold text-center text-royal-beige">Player Analytics</h1>
 
-
-      {/* Player Selector */}
       <div className="w-full max-w-sm">
         <Select
           options={playerOptions}
           onChange={(option) => setPlayerFilter(option.value)}
           value={{ label: playerFilter, value: playerFilter }}
           placeholder="Select or search player..."
-          styles={{
-            control: (base) => ({
-              ...base,
-              backgroundColor: "#F5F5DC",
-              color: "black",
-              borderColor: "#FFD700",
-              boxShadow: "none",
-              "&:hover": {
-                borderColor: "#FFD700"
-              }
-            }),
-            menu: (base) => ({
-              ...base,
-              backgroundColor: "#1a1a1a",
-              zIndex: 9999
-            }),
-            option: (base, state) => ({
-              ...base,
-              backgroundColor: state.isSelected
-                ? "#FFD700"
-                : state.isFocused
-                ? "#333333"
-                : "#1a1a1a",
-              color: state.isSelected ? "#000" : "#fff",
-              borderBottom: "1px solid #333",
-              cursor: "pointer"
-            }),
-            singleValue: (base) => ({
-              ...base,
-              color: "black"
-            })
-          }}
         />
       </div>
+    
+      {playerFilter && playerImageUrl && (
+        <img
+          src={playerImageUrl}
+          alt={`${playerFilter} portrait`}
+          className="h-full w-full max-w-[140px] rounded shadow-lg border border-royal-gold"
+        />
+      )}
 
-      {/* Player Logo */}
-      <div className="flex flex-col items-center justify-center mb-6">
-        {playerFilter && playerImageUrl && (
-  <img
-    src={playerImageUrl}
-    alt={`${playerFilter} portrait`}
-    className="h-full w-full max-w-[140px] rounded shadow-lg border border-royal-gold"
-  />
-)}
-      </div>
-
-      {/* Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full max-w-6xl">
         {statCards.map((stat, idx) => {
           const value = parseFloat(stat.value);
           const displayValue = isNaN(value) ? "—" : value.toFixed(2);
-
-          let arrow = "";
-          if (stat.title.includes("Form")) {
-            if (value >= 0.03) arrow = "↑↑";
-            else if (value > 0) arrow = "↑";
-            else if (value <= -0.03) arrow = "↓↓";
-            else if (value < 0) arrow = "↓";
-          }
-
           return (
             <div
               key={idx}
               className="bg-royal-red text-royal-gold p-4 border border-royal-gold rounded-lg shadow text-center"
             >
               <h2 className="text-lg font-semibold mb-2">{stat.title}</h2>
-              <p className="text-3xl font-bold">{displayValue} {arrow}</p>
+              <p className="text-3xl font-bold">{displayValue}</p>
             </div>
           );
         })}
       </div>
-      <div className="px-10 py-10 space-y-6"></div>
-      <h1 className="text-4xl font-bold text-center text-royal-beige">Historical Analysis</h1>
 
-      {/* Metric Selector */}
+      <h1 className="text-3xl font-bold text-royal-beige mt-10">Compare Players</h1>
+      <div className="flex flex-wrap justify-center gap-6 w-full max-w-4xl">
+        <div className="w-64">
+          <Select
+            options={playerOptions}
+            onChange={(opt) => setComparePlayer(opt.value)}
+            value={{ label: comparePlayer, value: comparePlayer }}
+            placeholder="Compare with..."
+          />
+        </div>
+      </div>
+
+      {playerFilter && comparePlayer && (
+        <div className="w-full max-w-4xl h-[400px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <RadarChart cx="50%" cy="50%" outerRadius="80%" data={comparisonData}>
+              <PolarGrid stroke="#ccc" />
+              <PolarAngleAxis dataKey="metric" stroke="#FFD700" />
+              <Radar
+                name={playerFilter}
+                dataKey={playerFilter}
+                stroke="#FFD700"
+                fill="#FFD700"
+                fillOpacity={0.5}
+              />
+              <Radar
+                name={comparePlayer}
+                dataKey={comparePlayer}
+                stroke="#FF6347"
+                fill="#FF6347"
+                fillOpacity={0.5}
+              />
+              <Legend />
+            </RadarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+
+      <h1 className="text-4xl font-bold text-center text-royal-beige mt-10">Historical Analysis</h1>
+
       <div className="flex flex-wrap justify-center gap-4 mt-10">
-        {[
-          { key: "expected_goals", label: "Expected Goals" },
-          { key: "expected_assists", label: "Expected Assists" },
-          { key: "total_points", label: "Total Points" },
-          { key: "goals_scored", label: "Goals Scored" },
-          { key: "assists", label: "Assists" },
-          
-        ].map((metric) => (
+        {["expected_goals", "expected_assists", "total_points", "goals_scored", "assists"].map((metric) => (
           <button
-            key={metric.key}
-            onClick={() => setSelectedMetric(metric.key)}
+            key={metric}
+            onClick={() => setSelectedMetric(metric)}
             className={`px-4 py-2 rounded font-bold border ${
-              selectedMetric === metric.key
+              selectedMetric === metric
                 ? "bg-royal-gold text-black border-royal-gold"
                 : "bg-royal-red text-royal-gold border-royal-gold"
             }`}
           >
-            {metric.label}
+            {metric.replace("_", " ")}
           </button>
         ))}
       </div>
 
-      {/* Date Slicer */}
       <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-6 text-black">
         <div>
           <label className="text-white block mb-1">Start Date</label>
@@ -251,17 +242,14 @@ export default function PlayerAnalytics() {
           />
         </div>
       </div>
+
       <div className="bg-royal-red text-royal-gold p-4 border border-royal-gold rounded-lg shadow text-center w-full max-w-sm mt-4">
-  <h2 className="text-lg font-semibold mb-2 capitalize">
-    Avg. {selectedMetric.replace("_", " ")}
-  </h2>
-  <p className="text-3xl font-bold">
-    {avgOfMetric.toFixed(2)}
-  </p>
-</div>
+        <h2 className="text-lg font-semibold mb-2 capitalize">
+          Avg. {selectedMetric.replace("_", " ")}
+        </h2>
+        <p className="text-3xl font-bold">{avgOfMetric.toFixed(2)}</p>
+      </div>
 
-
-      {/* Dynamic Line Chart */}
       <div className="bg-royal-red p-4 rounded shadow border border-royal-gold w-full max-w-6xl mt-8">
         <h2 className="text-xl font-semibold mb-4 text-center text-royal-gold capitalize">
           {selectedMetric.replace("_", " ")} Over Time
@@ -282,7 +270,6 @@ export default function PlayerAnalytics() {
               type="monotone"
               dataKey={selectedMetric}
               stroke="#FFD700"
-              name={selectedMetric.replace("_", " ").toUpperCase()}
               dot={false}
             />
           </LineChart>

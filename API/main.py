@@ -9,6 +9,7 @@ import json
 from fastapi import Request, Query
 import numpy as np
 from fastapi import HTTPException
+from fastapi.responses import PlainTextResponse
 app = FastAPI()
 
 # Allow frontend to access backend
@@ -104,7 +105,7 @@ def get_team_data_unique():
     unique_teams = df["name"].dropna().unique().tolist()
     return sorted(unique_teams)
 
-@app.get("/Player_picture")
+@app.get("/Player_picture", response_class=PlainTextResponse)
 def get_team_data_unique(player: str = Query(None)):
     df = load_and_transform("Current_players")
     player_df = df[df["name"] == player]
