@@ -111,12 +111,12 @@ def process_player_data(player_df, team, team_id2):
         opponent = player_df["opponent_code"].values[i]
         kickoff_time=player_df["kickoff_time"].values[i]
         opp_row = teams_dataset[(teams_dataset["kickoff_time"] == kickoff_time) & (teams_dataset["code"] == opponent)]
-        own_row = teams_dataset[(teams_dataset["kickoff_time"] == kickoff_time) & (teams_dataset["code"] == team)]
+        own_row = teams_dataset[(teams_dataset["kickoff_time"] == kickoff_time) & (teams_dataset["code"] == player_df["team_code2"].values[i])]
         if(len(own_row)<1):
             kickoff_time = pd.to_datetime(kickoff_time)
             teams_dataset['kickoff_time'] = pd.to_datetime(teams_dataset['kickoff_time'], errors='coerce')
             own_row = (teams_dataset[(teams_dataset['kickoff_time'].dt.month == kickoff_time.month) & (teams_dataset['kickoff_time'].dt.year == kickoff_time.year) & 
-        (teams_dataset['code'] == team)].sort_values(by='kickoff_time', ascending=False).head(1))
+        (teams_dataset['code'] == player_df["team_code2"].values[i])].sort_values(by='kickoff_time', ascending=False).head(1))
 
       
         own_stat = [[own_row["XGH"].values[0],own_row["XGCH"].values[0],own_row["XGA"].values[0],own_row["XGCA"].values[0]]]
@@ -946,7 +946,6 @@ def main():
     df_25=pd.read_csv("Raw_Data_24/Fantasy_season_2024_data.csv").iloc[:,1:]
     df_25["name"]=df_25["first_name"]+" "+df_25["second_name"]
     df_25["season"]='25'
-    
     df_24=pd.read_csv("Raw_Data_23/Fantasy_season_2023_data.csv").iloc[:,1:]
     df_24["season"]='24'
     df_23=pd.read_csv("Raw_Data_22/Fantasy_season_2022_data.csv").iloc[:,1:]
@@ -954,7 +953,7 @@ def main():
 
     df_all = pd.concat([df_25,df_24, df_23], ignore_index=True)
     df_all.to_csv("Fantasy_Merged.csv")
-    unique_players = df_all[["name", "team_code2"]].drop_duplicates()
+    unique_players = df_all[["name"]].drop_duplicates()
     
     training_df = pd.DataFrame()
     Future = 0
@@ -968,10 +967,11 @@ def main():
         #web_name = slim_elements_df['web_name'].values[i]
         name = row['name']
         name_string=name.replace(" ", "_", 1)
-        team = row['team_code2']
-        player_df=df_all[(df_all["name"]==name) &(df_all["team_code2"]==team)]
+        
+        player_df=df_all[(df_all["name"]==name)]
         player_df["kickoff_time"] = pd.to_datetime(player_df["kickoff_time"])  # Convert to datetime
         player_df = player_df.sort_values(by="kickoff_time")  # Sort by datetime
+        team = player_df['team_code2'].values[-1]
         team_id=player_df['team_id'].values[-1]
         pos = player_df['position'].values[-1]
         positions=player_df['position'].values
@@ -979,7 +979,7 @@ def main():
         Own_team_name=player_df['team_name'].values[0]
         element_list=player_df['element'].unique()
         season_list=player_df['season'].unique()
-        
+        teamlist=player_df['team_code2'].values
 
         clusters, home, n_matches, opp_off_a, opp_off_h, opp_def_h, opp_def_a,XGC_DEF,XGC_FWD,XGC_MID,own_XG = next_opp(team_id, Future)
         if len(home) < Future:
@@ -998,7 +998,6 @@ def main():
             lookback=12
             lb2=12
             poslist = [pos] * len(player_df)
-            teamlist = [team] * len(player_df)
             namelist = [name_string] * len(player_df)
             player_df["position"] = positions
             player_df["name"] = namelist
