@@ -19,6 +19,7 @@ export default function PlayerAnalytics() {
   const [selectedMetric, setSelectedMetric] = useState("expected_goals");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [playerImageUrl, setPlayerImageUrl] = useState("");
 
   const playerOptions = players.map((player) => ({
     value: player,
@@ -82,6 +83,23 @@ export default function PlayerAnalytics() {
     };
     fetchData();
   }, [playerFilter]);
+
+  useEffect(() => {
+  if (!playerFilter) return;
+
+  const fetchPlayerImage = async () => {
+    try {
+      const response = await fetch(`https://fpl-project-t5e9.onrender.com/Player_picture?player=${encodeURIComponent(playerFilter)}`);
+      const imageUrl = await response.text(); // assuming plain string response
+      setPlayerImageUrl(imageUrl);
+    } catch (error) {
+      console.error("Failed to fetch player image:", error);
+      setPlayerImageUrl(""); // fallback or leave blank
+    }
+  };
+
+  fetchPlayerImage();
+}, [playerFilter]);
 
   // Filter data based on date range
   const filteredChartData = data.filter((d) => {
@@ -151,13 +169,13 @@ export default function PlayerAnalytics() {
 
       {/* Player Logo */}
       <div className="flex flex-col items-center justify-center mb-6">
-        {playerFilter && PlayerLogos[playerFilter] && (
-          <img
-            src={PlayerLogos[playerFilter]}
-            alt={`${playerFilter} logo`}
-            className="h-full w-full max-w-sm"
-          />
-        )}
+        {playerFilter && playerImageUrl && (
+  <img
+    src={playerImageUrl}
+    alt={`${playerFilter} portrait`}
+    className="h-full w-full max-w-[140px] rounded shadow-lg border border-royal-gold"
+  />
+)}
       </div>
 
       {/* Stat Cards */}

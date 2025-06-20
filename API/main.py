@@ -8,6 +8,7 @@ import io
 import json
 from fastapi import Request, Query
 import numpy as np
+from fastapi import HTTPException
 app = FastAPI()
 
 # Allow frontend to access backend
@@ -105,10 +106,14 @@ def get_team_data_unique():
 @app.get("/Player_picture")
 def get_team_data_unique(player: str = Query(None)):
     df = pd.read_csv("Raw_Data_25/current_players.csv")
-    player_df=df[df["name"]==player]
-    picture = player_df["photo"].values[0]
+    player_df = df[df["name"] == player]
     
+    if player_df.empty:
+        raise HTTPException(status_code=404, detail="Player not found")
+
+    picture = player_df["photo"].values[0]
     return f"https://resources.premierleague.com/premierleague/photos/players/110x140/{picture}"
+
 
 @app.get("/Player_unique")
 def get_team_data_unique():
