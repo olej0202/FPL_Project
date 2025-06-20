@@ -113,7 +113,7 @@ def get_team_data_unique(player: str = Query(None)):
         raise HTTPException(status_code=404, detail="Player not found")
 
     picture = player_df["code"].values[0]
-    return f"https://resources.premierleague.com/premierleague/photos/players/110x140/{picture}.png"
+    return f"https://resources.premierleague.com/premierleague/photos/players/110x140/p{picture}.png"
 
 
 @app.get("/Player_unique")
