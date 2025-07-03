@@ -27,6 +27,7 @@ export default function PlayerAnalytics() {
   const [playerImageUrl, setPlayerImageUrl] = useState("");
   const [comparePlayer, setComparePlayer] = useState("");
   const [compareStats, setCompareStats] = useState({});
+  const [compareImageUrl, setCompareImageUrl] = useState("");
 
   const playerOptions = players.map((player) => ({ value: player, label: player }));
 
@@ -65,13 +66,19 @@ export default function PlayerAnalytics() {
       fetchLatestStats(playerFilter, setLatestStats);
       fetch(`https://fpl-project-t5e9.onrender.com/Player_picture?player=${encodeURIComponent(playerFilter)}`)
         .then((res) => res.text())
-        .then((url) => setPlayerImageUrl(url))
+        .then((url) => setPlayerImageUrl(url.trim()))
         .catch(() => setPlayerImageUrl(""));
     }
   }, [playerFilter]);
 
   useEffect(() => {
-    if (comparePlayer) fetchLatestStats(comparePlayer, setCompareStats);
+    if (comparePlayer) {
+      fetchLatestStats(comparePlayer, setCompareStats);
+      fetch(`https://fpl-project-t5e9.onrender.com/Player_picture?player=${encodeURIComponent(comparePlayer)}`)
+        .then((res) => res.text())
+        .then((url) => setCompareImageUrl(url.trim()))
+        .catch(() => setCompareImageUrl(""));
+    }
   }, [comparePlayer]);
 
   useEffect(() => {
@@ -84,7 +91,6 @@ export default function PlayerAnalytics() {
     };
     fetchData();
   }, [playerFilter]);
-  console.log("Image URL:", playerImageUrl);
 
   const filteredChartData = data.filter((d) => {
     const date = new Date(d.kickoff_time);
@@ -99,9 +105,6 @@ export default function PlayerAnalytics() {
     { title: "BPS Index", value: latestStats.Rolling_adjusted_BPS2 },
     { title: "Goals over XG", value: latestStats.Overcore }
   ];
-
-  const values = filteredChartData.map((d) => parseFloat(d[selectedMetric])).filter((v) => !isNaN(v));
-  const avgOfMetric = values.length > 0 ? values.reduce((acc, v) => acc + v, 0) / values.length : 0;
 
   const rawStats = [
     { key: "Rolling_adjusted_XG2", label: "XG Index" },
@@ -118,8 +121,8 @@ export default function PlayerAnalytics() {
   });
 
   const scaleValue = (key, value) => {
-    if (key === "Rolling_adjusted_BPS2") return (value ) / 10;
-    if (key === "Overcore") return (value*1.5) / 10;
+    if (key === "Rolling_adjusted_BPS2") return value / 10;
+    if (key === "Overcore") return (value * 1.5) / 10;
     return value;
   };
 
@@ -128,6 +131,32 @@ export default function PlayerAnalytics() {
     [playerFilter]: ((scaleValue(key, latestStats[key]) || 0) / maxValues[key]) * 100,
     [comparePlayer]: ((scaleValue(key, compareStats[key]) || 0) / maxValues[key]) * 100
   }));
+
+  const values = filteredChartData.map((d) => parseFloat(d[selectedMetric])).filter((v) => !isNaN(v));
+  const avgOfMetric = values.length > 0 ? values.reduce((acc, v) => acc + v, 0) / values.length : 0;
+
+  const selectStyles = {
+    control: (base) => ({
+      ...base,
+      backgroundColor: "#F5F5DC",
+      color: "black",
+      borderColor: "#FFD700"
+    }),
+    singleValue: (base) => ({
+      ...base,
+      color: "black"
+    }),
+    option: (base, state) => ({
+      ...base,
+      backgroundColor: state.isSelected ? "#FFD700" : state.isFocused ? "#333333" : "#1a1a1a",
+      color: state.isSelected ? "#000" : "#fff",
+      cursor: "pointer"
+    }),
+    menu: (base) => ({
+      ...base,
+      backgroundColor: "#1a1a1a"
+    })
+  };
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center px-10 py-10 space-y-6">
@@ -138,44 +167,45 @@ export default function PlayerAnalytics() {
           options={playerOptions}
           onChange={(option) => setPlayerFilter(option.value)}
           value={{ label: playerFilter, value: playerFilter }}
+          styles={selectStyles}
           placeholder="Select or search player..."
         />
       </div>
+
+      <div className="flex gap-10 justify-center mt-6">
+        {playerFilter && playerImageUrl && (
+          <img src={playerImageUrl} alt={playerFilter} className="max-w-[140px] rounded shadow-lg" />
+        )}
     
-      {playerFilter && playerImageUrl && (
-        <img
-          src={playerImageUrl}
-          alt={`${playerFilter} portrait`}
-          className="h-full w-full max-w-[140px] rounded shadow-lg border border-royal-gold"
-        />
-      )}
+      </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full max-w-6xl">
-        {statCards.map((stat, idx) => {
-          const value = parseFloat(stat.value);
-          const displayValue = isNaN(value) ? "—" : value.toFixed(2);
-          return (
-            <div
-              key={idx}
-              className="bg-royal-red text-royal-gold p-4 border border-royal-gold rounded-lg shadow text-center"
-            >
-              <h2 className="text-lg font-semibold mb-2">{stat.title}</h2>
-              <p className="text-3xl font-bold">{displayValue}</p>
-            </div>
-          );
-        })}
+        {statCards.map((stat, idx) => (
+          <div
+            key={idx}
+            className="bg-royal-red text-royal-gold p-4 border border-royal-gold rounded-lg shadow text-center"
+          >
+            <h2 className="text-lg font-semibold mb-2">{stat.title}</h2>
+            <p className="text-3xl font-bold">{parseFloat(stat.value).toFixed(2)}</p>
+          </div>
+        ))}
       </div>
 
       <h1 className="text-3xl font-bold text-royal-beige mt-10">Compare Players</h1>
-      <div className="flex flex-wrap justify-center gap-6 w-full max-w-4xl">
-        <div className="w-64">
-          <Select
-            options={playerOptions}
-            onChange={(opt) => setComparePlayer(opt.value)}
-            value={{ label: comparePlayer, value: comparePlayer }}
-            placeholder="Compare with..."
-          />
-        </div>
+      <div className="flex gap-10 justify-center mt-6">
+      {comparePlayer && compareImageUrl && (
+          <img src={compareImageUrl} alt={comparePlayer} className="max-w-[140px] rounded shadow-lg" />
+        )}
+      </div>
+
+      <div className="w-64">
+        <Select
+          options={playerOptions}
+          onChange={(opt) => setComparePlayer(opt.value)}
+          value={{ label: comparePlayer, value: comparePlayer }}
+          styles={selectStyles}
+          placeholder="Compare with..."
+        />
       </div>
 
       {playerFilter && comparePlayer && (
@@ -184,20 +214,8 @@ export default function PlayerAnalytics() {
             <RadarChart cx="50%" cy="50%" outerRadius="80%" data={comparisonData}>
               <PolarGrid stroke="#ccc" />
               <PolarAngleAxis dataKey="metric" stroke="#FFD700" />
-              <Radar
-                name={playerFilter}
-                dataKey={playerFilter}
-                stroke="#FFD700"
-                fill="#FFD700"
-                fillOpacity={0.5}
-              />
-              <Radar
-                name={comparePlayer}
-                dataKey={comparePlayer}
-                stroke="#FF6347"
-                fill="#FF6347"
-                fillOpacity={0.5}
-              />
+              <Radar name={playerFilter} dataKey={playerFilter} stroke="#FFD700" fill="#FFD700" fillOpacity={0.5} />
+              <Radar name={comparePlayer} dataKey={comparePlayer} stroke="#FF6347" fill="#FF6347" fillOpacity={0.5} />
               <Legend />
             </RadarChart>
           </ResponsiveContainer>
@@ -244,9 +262,7 @@ export default function PlayerAnalytics() {
       </div>
 
       <div className="bg-royal-red text-royal-gold p-4 border border-royal-gold rounded-lg shadow text-center w-full max-w-sm mt-4">
-        <h2 className="text-lg font-semibold mb-2 capitalize">
-          Avg. {selectedMetric.replace("_", " ")}
-        </h2>
+        <h2 className="text-lg font-semibold mb-2 capitalize">Avg. {selectedMetric.replace("_", " ")}</h2>
         <p className="text-3xl font-bold">{avgOfMetric.toFixed(2)}</p>
       </div>
 
@@ -266,12 +282,7 @@ export default function PlayerAnalytics() {
                 border: "1px solid #FFD700"
               }}
             />
-            <Line
-              type="monotone"
-              dataKey={selectedMetric}
-              stroke="#FFD700"
-              dot={false}
-            />
+            <Line type="monotone" dataKey={selectedMetric} stroke="#FFD700" dot={false} />
           </LineChart>
         </ResponsiveContainer>
       </div>
