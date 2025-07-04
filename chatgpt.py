@@ -2,7 +2,7 @@ import os
 import requests
 from dotenv import load_dotenv
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from openai import OpenAI
 from dotenv import load_dotenv
 load_dotenv()
@@ -13,8 +13,19 @@ GNEWS_API_KEY = os.getenv("GNEWS_API_KEY")
 client = OpenAI(api_key=OPENAI_API_KEY)
 
 def fetch_premier_league_news():
-    query = "Premier League OR Arsenal OR Chelsea OR Liverpool OR Manchester United OR Tottenham OR Manchester City OR Newcastle United OR Aston Villa OR Brentford"
-    url = f"https://gnews.io/api/v4/search?q={query}&lang=en&country=gb&max=35&apikey={GNEWS_API_KEY}"
+    one_week_ago = (datetime.utcnow() - timedelta(days=20)).strftime('%Y-%m-%dT%H:%M:%SZ')
+    print(one_week_ago)
+
+    query = "Premier AND League OR Arsenal OR Manchester United OR Chelsea"
+
+    url = (
+    f"https://gnews.io/api/v4/search?"
+    f"q={query}"
+    f"&lang=en"
+    f"&max=50"
+    f"&from={one_week_ago}"
+    f"&apikey={GNEWS_API_KEY}"
+    )
     response = requests.get(url)
     print(response.status_code, response.text)
     articles = response.json().get("articles", [])
