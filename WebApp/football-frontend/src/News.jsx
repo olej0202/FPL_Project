@@ -28,15 +28,19 @@ export default function NewsBlog() {
           <h2 className="text-3xl font-bold text-royal-gold border-b border-royal-gold mb-6 pb-2">{topic}</h2>
           <div className="space-y-6">
             {entries.map((article, idx) => (
-              <div
+              <a
                 key={idx}
-                className="bg-royal-red border border-royal-gold p-4 rounded-lg shadow text-white"
+                href={article.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block bg-royal-red border border-royal-gold p-4 rounded-lg shadow text-white hover:bg-royal-red/80 transition duration-200"
               >
                 <p className="text-sm text-royal-beige mb-2">
                   {new Date(article.date).toLocaleString()}
+                  {article.source && <span className="ml-4 italic text-xs text-royal-gold">({article.source})</span>}
                 </p>
                 <p className="whitespace-pre-line">{article.content}</p>
-              </div>
+              </a>
             ))}
           </div>
         </div>

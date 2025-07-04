@@ -1,44 +1,39 @@
-header,content,topic,date,index
-Kyle Walker Nears Move to Burnley,"Kyle Walker is set to join Burnley from Manchester City after completing his medical. The transfer deal, reportedly valued at £5 million, involves a potential two-year contract at Turf Moor as Burnley prepares for their return to the Premier League.",Transfer News,2025-07-04 21:45,0
-Dominic Calvert-Lewin Rejects Leeds Move After Everton Exit,"Dominic Calvert-Lewin has become a free agent after his contract with Everton expired. Leeds United, initially interested in the striker, withdrew from negotiations due to Calvert-Lewin's wage demands.",Transfer News,2025-07-04 21:45,1
-Diogo Jota Mourned by Teammates Following Tragic Passing,Liverpool's Diogo Jota and his brother Andre Silva were honored by teammates Joao Moutinho and Andre Villa-Boas at a wake. The gathering was held following the tragic car accident in Spain that claimed the lives of Jota and his brother.,General News,2025-07-04 21:45,2
-Gabriel Heinze Set for Arsenal Role Amid Controversial Past,"Former Manchester United player Gabriel Heinze is on the verge of joining Arsenal in a coaching capacity. Heinze's career was marked by a contentious attempt to move from Manchester United to Liverpool, a saga that remains notable in Premier League history.",General News,2025-07-04 21:45,3
-Thomas Partey Charged with Serious Offenses,"Former Arsenal midfielder Thomas Partey faces multiple charges, including five counts of rape and one count of sexual assault. The allegations involve incidents reported between 2021 and 2022. Partey, who joined Arsenal in 2020, left the club after his contract expired.",General News,2025-07-04 21:45,4
-Takehiro Tomiyasu Leaves Arsenal After Contract Termination,"Arsenal and Takehiro Tomiyasu have mutually agreed to terminate the defender's contract. Tomiyasu, who has been sidelined due to a knee injury, made 84 appearances for the Gunners since joining from Bologna in 2021.",General News,2025-07-04 21:45,5
-Demarai Gray Returns to Birmingham City,"Demarai Gray has rejoined Birmingham City on a three-year contract. The former Premier League title winner returns to his boyhood club after leaving Al Ettifaq, with the Saudi Pro League side retaining a sell-on clause.",Transfer News,2025-07-04 21:45,6
-Arsenal Braces for Potential Record Offer for Gabriel Martinelli,"Saudi Pro League club Al Nassr is considering a £73 million bid for Arsenal forward Gabriel Martinelli. The move would be a record transfer for Arsenal, potentially funding new signings.",Transfer News,2025-07-04 21:45,7
-Manchester United Eyes Bryan Mbeumo Amid Transfer Push,"Manchester United is actively pursuing Brentford's Bryan Mbeumo, with multiple bids placed for the forward. Despite Brentford's resistance, United remains keen on securing Mbeumo's services as part of their summer transfer strategy.",Transfer News,2025-07-04 21:45,8
-Aston Villa and Chelsea Fined by UEFA for Financial Breaches,UEFA has imposed fines on Aston Villa and Chelsea for violations of financial regulations. The clubs are among several European teams facing penalties for breaches related to football earnings.,General News,2025-07-04 21:45,9
-Antoine Semenyo Commits Future to Bournemouth Amid Interest,"Bournemouth forward Antoine Semenyo has signed a new five-year contract, fending off interest from Manchester United, Liverpool, and Tottenham. Semenyo scored 13 goals last season, contributing to Bournemouth's ninth-place Premier League finish.",General News,2025-07-04 21:45,10
-Fantasy Premier League Tips,"**Fantasy Premier League Tips: Gameweek 36**
+header,content,topic,date,index,source
+Kyle Walker to Join Burnley in £5m Deal from Manchester City,"Kyle Walker is set to join newly promoted Premier League side Burnley after they agreed on a £5 million transfer deal with Manchester City. The experienced England defender has completed his medical and is expected to sign a two-year contract with the Clarets. Walker, a six-time Premier League champion, was in the final year of his contract with Manchester City. His move could have implications for Fantasy Premier League managers, given his potential for clean sheets and assists at Burnley.",Transfer News,2025-07-04 22:17,0,"{'name': 'Sky Sports', 'url': 'https://www.skysports.com'}"
+Dominic Calvert-Lewin and Leeds United Deal Falls Through Over Wage Demands,"Dominic Calvert-Lewin, who recently became a free agent after his contract with Everton expired, will not be joining Leeds United. The Championship club has withdrawn from negotiations due to the striker's wage demands. Calvert-Lewin's search for a new club continues as he explores his options ahead of the new season.",Transfer News,2025-07-04 22:17,1,"{'name': 'Manchester Evening News', 'url': 'https://www.manchestereveningnews.co.uk'}"
+Diogo Jota and Brother Andre Silva Tragically Killed in Car Accident,"Liverpool forward Diogo Jota and his brother, Andre Silva, have tragically died following a car accident in Spain. The football community, including teammates Joao Moutinho and Andre Villa-Boas, has paid their respects at a wake for the brothers. Liverpool's club activities, including pre-season preparations, have been affected by the loss, and several players have been granted compassionate leave. The incident has deeply affected fans and the football fraternity, with tributes pouring in from around the world.",General News,2025-07-04 22:17,2,"{'name': 'talkSPORT.com', 'url': 'https://talksport.com'}"
+Arsenal to Sign Former Man United Player Gabriel Heinze,"Gabriel Heinze, the former Manchester United defender, is reportedly set to join Arsenal in a coaching capacity. Heinze, who was involved in a controversial transfer saga during his playing days, will bring experience to Arsenal's backroom staff as they prepare for the upcoming season.",General News,2025-07-04 22:17,3,"{'name': 'talkSPORT.com', 'url': 'https://talksport.com'}"
+Thomas Partey Faces Serious Legal Charges After Arsenal Departure,"Former Arsenal midfielder Thomas Partey has been charged with five counts of rape and one count of sexual assault, with the alleged incidents occurring between 2021 and 2022. Partey, who joined Arsenal in 2020, left the club at the end of his contract. The legal proceedings are expected to begin soon, and Partey is due to appear in court next month.",General News,2025-07-04 22:17,4,"{'name': 'Liverpool Echo', 'url': 'https://www.liverpoolecho.co.uk'}"
+Takehiro Tomiyasu Leaves Arsenal After Mutual Contract Termination,"Arsenal and defender Takehiro Tomiyasu have mutually agreed to terminate his contract. The Japan international, who has been sidelined with a knee injury, decided to end his tenure with the Gunners to explore new opportunities. Tomiyasu's departure comes after being limited to just six minutes of game time last season.",General News,2025-07-04 22:17,5,"{'name': 'Manchester Evening News', 'url': 'https://www.manchestereveningnews.co.uk'}"
+Birmingham City Re-Sign Demarai Gray in Free Transfer,"Birmingham City have secured the return of Demarai Gray on a three-year contract. Gray, who began his career with the club, returns after a stint with Al Ettifaq in the Saudi Pro League. His signing marks the fourth addition to Birmingham's squad this summer as they aim for a return to the Premier League.",Transfer News,2025-07-04 22:17,6,"{'name': 'Manchester Evening News', 'url': 'https://www.manchestereveningnews.co.uk'}"
+Man United Linked with Aston Villa Players Amid UEFA Fine,Manchester United are reportedly interested in signing Aston Villa duo Emiliano Martinez and Ollie Watkins. This comes after Aston Villa was fined nearly £10 million by UEFA for breaching financial regulations. The potential transfers could bolster United's squad as they prepare for the new season.,Transfer News,2025-07-04 22:17,7,"{'name': 'Manchester Evening News', 'url': 'https://www.manchestereveningnews.co.uk'}"
+Chelsea Sign Brighton's Joao Pedro for £60m,Chelsea have completed the signing of forward Joao Pedro from Brighton for a deal worth up to £60 million. The Brazilian international has signed a seven-year contract and will join Chelsea's squad for the Club World Cup. His arrival adds to Chelsea's attacking options as they look to compete on multiple fronts this season.,Transfer News,2025-07-04 22:17,8,"{'name': 'talkSPORT.com', 'url': 'https://talksport.com'}"
+UEFA Sanctions Aston Villa and Chelsea Over Financial Breaches,"UEFA has imposed significant fines on Aston Villa and Chelsea for breaches of financial regulations. Aston Villa received an €11 million fine, while Chelsea was also sanctioned. The penalties could impact the clubs' financial strategies and potential player acquisitions during the transfer window.",General News,2025-07-04 22:17,9,"{'name': 'Birmingham Live', 'url': 'https://www.birminghammail.co.uk'}"
+Fantasy Premier League Tips,"As we approach Gameweek 36 in Fantasy Premier League, it's crucial to make strategic decisions regarding transfers, differentials, and captaincy picks to maximize your points haul. Here are some tips and suggestions based on the latest player predictions:
 
-As we approach Gameweek 36, FPL managers are on the hunt for strategic transfers, differential picks, and reliable captaincy choices. Here's a concise guide to help you make informed decisions.
+### Transfer Targets
+1. **Bukayo Saka (Arsenal, MID)** - With a high number of transfers in and a strong selection rate, Saka remains a top midfield option. Arsenal's favorable fixtures make him a must-have for managers looking to bolster their midfield.
+   
+2. **Jarrod Bowen (West Ham, MID)** - Bowen has seen a significant influx of transfers, indicating confidence in his potential to deliver. Consider him for a differential midfield option with a high upside.
 
-**Transfer Targets**
+3. **Ollie Watkins (Aston Villa, FWD)** - Watkins has been a popular transfer target, reflecting his consistent performances. He's a reliable forward choice for those seeking attacking returns.
 
-While Bukayo Saka and Mohamed Salah remain popular picks, consider these less-owned gems to gain an edge:
+### Differentials
+1. **Leandro Trossard (Arsenal, MID)** - With a moderate selection percentage, Trossard offers a potential differential for managers looking to capitalize on Arsenal's attacking prowess.
 
-1. **Kai Havertz (Arsenal, FWD):** With a lower ownership percentage, Havertz offers a promising attacking option from Arsenal's dynamic setup.
-2. **Mikel Merino (Arsenal, MID):** Another Arsenal player with potential, Merino can provide valuable points in midfield.
-3. **Marco Asensio (Aston Villa, MID):** Asensio is a promising option for those looking to diversify their midfield with a player from Aston Villa.
-4. **Phil Foden (Man City, MID):** Despite limited ownership, Foden's potential for explosive returns makes him a worthy consideration.
+2. **Justin Kluivert (Bournemouth, MID)** - Despite Bournemouth's struggles, Kluivert has attracted attention with his potential to deliver points. He could be a shrewd differential pick for those willing to take a risk.
 
-**Differential Picks**
+3. **Benjamin White (Arsenal, DEF)** - As a defender with attacking potential, White is a solid differential option to strengthen your backline while still offering the chance of clean sheet points.
 
-For those looking to outsmart their mini-league rivals, consider these differential picks:
+### Captaincy Picks
+1. **Bukayo Saka (Arsenal, MID)** - Given his form and fixture, Saka is a prime candidate for the captain's armband. His ability to contribute both goals and assists makes him a standout choice.
 
-1. **Richarlison de Andrade (Spurs, FWD):** With low ownership, Richarlison could be a surprise package if he finds his scoring boots.
-2. **Justin Kluivert (Bournemouth, MID):** Kluivert's attacking prowess and creativity make him an intriguing option.
-3. **Donyell Malen (Aston Villa, MID):** Another Aston Villa player, Malen can offer differential value in midfield.
-4. **Luis Sinisterra (Bournemouth, MID):** While currently injured, keep an eye on Sinisterra's return as a potential wildcard pick.
+2. **Mohamed Salah (Liverpool, MID)** - Always a reliable captaincy option, Salah's consistent performances and high ownership make him a safe bet for those looking to maintain their rank.
 
-**Captaincy Ideas**
+3. **Erling Haaland (Man City, FWD)** - Despite a slightly lower predicted output, Haaland's explosive potential and fixture appeal make him a worthy captaincy consideration.
 
-Choosing the right captain can make or break your gameweek. Here are some candidates to consider:
+### Injury Considerations
+- **Dango Ouattara (Bournemouth, MID)** and **Gabriel Jesus (Arsenal, FWD)** are both expected back by June 1st, so managers should avoid these players for the upcoming gameweek.
+- **Son Heung-min (Spurs, MID)** has a 25% chance of playing due to a foot injury, making him a risky pick.
 
-1. **Bukayo Saka (Arsenal, MID):** A consistent performer, Saka remains a reliable captaincy choice for those seeking stability.
-2. **Alexander Isak (Newcastle, FWD):** Isak's goal-scoring ability makes him a tempting captaincy option against favorable opponents.
-3. **Jarrod Bowen (West Ham, MID):** With a knack for finding the net, Bowen could be a rewarding captaincy pick.
-4. **Erling Haaland (Man City, FWD):** Despite his high ownership, Haaland's potential for explosive returns cannot be ignored.
-
-As always, keep an eye on team news and injury updates before finalizing your squad. Good luck with your selections for Gameweek 36!",FPL tips,2025-07-04 21:45,11
+In conclusion, focusing on players from Arsenal and Liverpool, given their favorable fixtures, seems to be a wise strategy. Balancing popular picks with a few differentials could give you the edge needed to climb the rankings in the final stretch of the season.",FPL tips,2025-07-04 22:17,10,Fantasy Model
