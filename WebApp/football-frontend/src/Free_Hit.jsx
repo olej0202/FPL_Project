@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import pitch from "./assets/pitch.png"; // Make sure this is a clean pitch image
+import pitch from "./assets/pitch.png"; // Ensure this is a clean pitch image
 
 export default function FreeHitTeam() {
   const [playingPlayers, setPlayingPlayers] = useState([]);
@@ -22,59 +22,56 @@ export default function FreeHitTeam() {
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center py-10 px-4 space-y-10">
-      <h1 className="text-4xl font-bold mb-4">AI Optimized Free-Hit Team</h1>
+      <h1 className="text-3xl md:text-4xl font-bold text-center mb-4">
+        AI Optimized Free-Hit Team
+      </h1>
 
-      {/* Pitch */}
+      {/* Responsive Pitch */}
       <div
-        className="relative w-full max-w-2xl h-[850px] bg-no-repeat bg-cover bg-center border-2 border-white rounded-lg"
+        className="w-full max-w-[700px] aspect-[2/3] bg-no-repeat bg-cover bg-center border-1 border-white rounded-lg px-1 py-3"
         style={{ backgroundImage: `url(${pitch})` }}
       >
-        {/* Forwards */}
-        <PlayerRow players={getPlayersByPosition("FWD")} top="10%" navigate={navigate}/>
-
-        {/* Midfielders */}
-        <PlayerRow players={getPlayersByPosition("MID")} top="30%" navigate={navigate}/>
-
-        {/* Defenders */}
-        <PlayerRow players={getPlayersByPosition("DEF")} top="50%" navigate={navigate} />
-
-        {/* Goalkeeper */}
-        <PlayerRow players={getPlayersByPosition("GK")} top="70%" navigate={navigate}/>
-
-        {/* Bench (on-pitch row below GK) */}
-        {benchPlayers.length > 0 && (
-          <PlayerRow players={benchPlayers} top="85%" isBench />
-        )}
+        <div className="flex flex-col justify-between h-full">
+          <PlayerRow players={getPlayersByPosition("FWD")} navigate={navigate} />
+          <PlayerRow players={getPlayersByPosition("MID")} navigate={navigate} />
+          <PlayerRow players={getPlayersByPosition("DEF")} navigate={navigate} />
+          <PlayerRow players={getPlayersByPosition("GK")} navigate={navigate} />
+          {benchPlayers.length > 0 && (
+            <div className="">
+              <PlayerRow players={benchPlayers} isBench />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
 }
 
-function PlayerRow({ players, top, isBench = false, navigate }) {
+function PlayerRow({ players, isBench = false, navigate }) {
   return (
-    <div
-      className="absolute left-1/2 transform -translate-x-1/2 flex gap-6"
-      style={{ top }}
-    >
+    <div className="flex justify-center flex-wrap gap-3 sm:gap-5 py-2">
       {players.map((player, idx) => (
         <div
           key={idx}
-          onClick={() => navigate("/Player_Analytics", { state: { selectedPlayer: player.Name } })}
-          className={`flex flex-col items-center ${
-            isBench ? "text-black" : "text-white"
-          }  cursor-pointer hover:scale-105 transition-transform ${
-            isBench ? "w-[80px] opacity-80" : "w-[100px]"
+          onClick={() =>
+            navigate("/Player_Analytics", {
+              state: { selectedPlayer: player.Name },
+            })
+          }
+          className={`flex flex-col items-center cursor-pointer hover:scale-105 transition-transform ${
+            isBench ? "text-black opacity-90" : "text-white"
           }`}
-          
         >
           <img
             src={player.photo}
             alt={player.Name}
-            className={`rounded-md border-1 ${
-              isBench ? "w-18 h-20 border-gray-400" : "w-20 h-24 border-white"
-            } shadow-lg`}
+            className={` ${
+              isBench
+                ? "w-16 h-18 "
+                : "w-16 h-18 border-white sm:w-24 sm:h-28"
+            }`}
           />
-          <span className="mt-2 text-center font-semibold text-sm">
+          <span className="mt-1 text-center font-medium text-sm sm:text-base leading-tight">
             {player.Name}
           </span>
           {isBench && (
