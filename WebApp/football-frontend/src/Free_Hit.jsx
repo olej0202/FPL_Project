@@ -62,18 +62,19 @@ function PlayerRow({ players, isBench = false, navigate }) {
             isBench ? "text-black opacity-90" : "text-white"
           }`}
         >
-          <img
-            src={player.photo}
-            alt={player.Name}
-            className={` ${
-              isBench
-                ? "w-16 h-18 "
-                : "w-16 h-18 border-white sm:w-24 sm:h-28"
-            }`}
-          />
-          <span className="mt-1 text-center font-medium text-sm sm:text-base leading-tight">
-            {player.Name}
-          </span>
+         <img
+  src={player.photo}
+  alt={player.Name}
+  className={`${
+    isBench
+      ? "w-14 h-18 sm:w-16 sm:h-20 md:w-20 md:h-24 border-gray-400"
+      : "w-16 h-20 sm:w-20 sm:h-24 md:w-24 md:h-28"
+  }`}
+/>
+
+<span className="mt-1 text-center font-medium text-xs sm:text-sm md:text-base leading-tight">
+  {player.Name}
+</span>
           {isBench && (
             <span className="text-xs text-black-300">{player.position}</span>
           )}
