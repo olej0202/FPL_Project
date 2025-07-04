@@ -38,6 +38,8 @@ def load_and_transform(endpoint):
         csv_path = os.path.join(parent_dir, "Raw_Data_25", "current_players.csv")
     elif endpoint == "free-hit":
         csv_path = os.path.join(parent_dir, "Free_hit_team.csv")
+    elif endpoint == "News":
+        csv_path = os.path.join(parent_dir, "PL_news.csv")
     else:
         raise ValueError(f"Unknown endpoint: {endpoint}")
         
@@ -50,6 +52,11 @@ def load_and_transform(endpoint):
 @app.get("/Predictions")
 def get_data():
     df = load_and_transform("Predictions")
+    return df.to_dict(orient="records")
+
+@app.get("/News")
+def get_data():
+    df = load_and_transform("News")
     return df.to_dict(orient="records")
 
 @app.get("/Team_Predictions")
@@ -104,7 +111,6 @@ def get_team_data(team: str = Query(None)):
         print(df[df.isin([np.nan, np.inf, -np.inf]).any(axis=1)])
         return {"error": "Data contains values that cannot be serialized to JSON."}
 
-
 @app.get("/Teams_unique")
 def get_team_data_unique():
     df = load_and_transform("Teams")
@@ -122,7 +128,6 @@ def get_team_data_unique(player: str = Query(None)):
 
     picture = player_df["code"].values[0]
     return f"https://resources.premierleague.com/premierleague/photos/players/110x140/p{picture}.png"
-
 
 @app.get("/Player_unique")
 def get_team_data_unique():
