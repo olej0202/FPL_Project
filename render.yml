@@ -1,0 +1,6 @@
+staticSites:
+  - name: vite-frontend
+    buildCommand: cd WebApp/football-frontend && npm install && npm run build
+    publishPath: WebApp/football-frontend/dist
+    environment: node
+    pullRequestPreviewsEnabled: true
