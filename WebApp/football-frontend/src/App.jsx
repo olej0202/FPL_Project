@@ -23,6 +23,18 @@ export default function App() {
           {/* Navigation */}
           <div className="flex flex-wrap justify-center gap-2 sm:gap-4 -translate-x-4">
             <NavLink
+              to="/news"
+              className={({ isActive }) =>
+                `flex items-center gap-2 px-4 py-2 rounded border border-royal-gold text-royal-gold font-semibold ${
+                  isActive
+                    ? "bg-black hover:text-royal-gold"
+                    : "hover:bg-royal-gold hover:text-black"
+                }`
+              }
+            >
+              <Newspaper size={18} /> News Blog
+            </NavLink>
+            <NavLink
               to="/"
               end
               className={({ isActive }) =>
@@ -34,6 +46,18 @@ export default function App() {
               }
             >
               <Users size={18} /> Team Analytics
+            </NavLink>
+            <NavLink
+              to="/Player_Analytics"
+              className={({ isActive }) =>
+                `flex items-center gap-2 px-4 py-2 rounded border border-royal-gold text-royal-gold font-semibold ${
+                  isActive
+                    ? "bg-black hover:text-royal-gold"
+                    : "hover:bg-royal-gold hover:text-black"
+                }`
+              }
+            >
+              <User size={18} /> Player Analytics
             </NavLink>
 
             <NavLink
@@ -59,34 +83,12 @@ export default function App() {
                 }`
               }
             >
-              <Brain size={18} /> Free Hit Team
+              <Brain size={18} /> AI Teams
             </NavLink>
 
-            <NavLink
-              to="/Player_Analytics"
-              className={({ isActive }) =>
-                `flex items-center gap-2 px-4 py-2 rounded border border-royal-gold text-royal-gold font-semibold ${
-                  isActive
-                    ? "bg-black hover:text-royal-gold"
-                    : "hover:bg-royal-gold hover:text-black"
-                }`
-              }
-            >
-              <User size={18} /> Player Analytics
-            </NavLink>
+            
 
-            <NavLink
-              to="/news"
-              className={({ isActive }) =>
-                `flex items-center gap-2 px-4 py-2 rounded border border-royal-gold text-royal-gold font-semibold ${
-                  isActive
-                    ? "bg-black hover:text-royal-gold"
-                    : "hover:bg-royal-gold hover:text-black"
-                }`
-              }
-            >
-              <Newspaper size={18} /> News Blog
-            </NavLink>
+            
           </div>
         </div>
       </nav>
