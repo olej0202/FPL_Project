@@ -13,8 +13,8 @@ GNEWS_API_KEY = os.getenv("GNEWS_API_KEY")
 client = OpenAI(api_key=OPENAI_API_KEY)
 
 def fetch_premier_league_news():
-    query = "Premier League"
-    url = f"https://gnews.io/api/v4/search?q={query}&lang=en&country=gb&max=20&apikey={GNEWS_API_KEY}"
+    query = "Premier League OR Arsenal OR Chelsea OR Liverpool OR Manchester United OR Tottenham OR Manchester City OR Newcastle United OR Aston Villa OR Brentford"
+    url = f"https://gnews.io/api/v4/search?q={query}&lang=en&country=gb&max=35&apikey={GNEWS_API_KEY}"
     response = requests.get(url)
     print(response.status_code, response.text)
     articles = response.json().get("articles", [])
@@ -37,6 +37,7 @@ Title: [A short headline]
 Content: [The body of the story]
 -Every short story is of relevance
 - Return multiple stories, separated by ###
+-Return as many distinct stories as possible
 - Do not duplicate content. Group similar topics together into a single story.
 - Keep tone journalistic, but note Fantasy Premier League relevance if applicable.
 - If a story involves death or sensitive topics, just report it respectfully.
@@ -54,7 +55,7 @@ Return only stories using the format described.
     response = client.chat.completions.create(
         model="gpt-4o",
         messages=messages,
-        temperature=0.5
+        temperature=0.7
     )
     return response.choices[0].message.content.strip().split("###")
 
@@ -79,7 +80,7 @@ Article: {story_content}"""}
     )
     return response.choices[0].message.content.strip()
 
-def generate_fpl_tips_from_csv(path="Model_Predictions.csv", top_n=30):
+def generate_fpl_tips_from_csv(path="Model_Predictions.csv", top_n=40):
     try:
         df = pd.read_csv(path)
         df = df.sort_values(by="Predictions", ascending=False).head(top_n)
@@ -107,6 +108,7 @@ def generate_fpl_tips_from_csv(path="Model_Predictions.csv", top_n=30):
         prompt = f"""
 Based on the following Fantasy Premier League (FPL) player predictions, write a list of FPL tips or suggestions.
 The tone should be informative and concise (journalistic), covering key transfer targets, differential picks, and captaincy ideas.
+For transfer targets, dont use players that are highly owned
 
 Players with predicted points:
 {player_summaries}
