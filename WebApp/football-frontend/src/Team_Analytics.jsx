@@ -104,7 +104,7 @@ const teamLogos = {
         const latestArray = Object.values(latestPerTeam)
           .map((row) => ({
             ...row,
-            Elo_Rating: parseFloat(row.Elo_Rating).toFixed(1),
+            Elo_Rating: Number(parseFloat(row.Elo_Rating).toFixed(1)),
             XG_avg: parseFloat(row.XG_avg).toFixed(2),
             XGC_avg: parseFloat(row.XGC_avg).toFixed(2)
           }))
@@ -246,14 +246,26 @@ const teamLogos = {
 
       {/* ELO Bar Chart */}
       <h2 className="text-3xl font-bold text-center text-royal-gold">ELO Rankings</h2>
-      <ResponsiveContainer width="80%" height={Math.max(allTeamStats.length * 30, 200)}>
+     <ResponsiveContainer width="80%" height={Math.max(allTeamStats.length * 30, 200)}>
         <BarChart
-          data={allTeamStats}
+          data={[...allTeamStats].sort((a, b) => b.Elo_Rating - a.Elo_Rating)}
           layout="vertical"
-          margin={{ top: 10, right: 170, left: 60, bottom: 20 }}
+          margin={{ top: 10, right: 150, left: 60, bottom: 20 }}
         >
           <CartesianGrid stroke="#333" />
-          <XAxis type="number" stroke="#fff" />
+          <XAxis
+  type="number"
+  stroke="#fff"
+  domain={[
+    (dataMin) => Math.floor(dataMin - 10),
+    (dataMax) => Math.ceil(dataMax + 10),
+  ]}
+  tick={{ fontSize: 12 }}
+/>
+<Tooltip
+  formatter={(value, name, props) => [`${value}`, name]}
+  labelFormatter={(label) => `Team: ${label}`}
+/>
           <YAxis
             dataKey="name"
             type="category"
@@ -262,9 +274,13 @@ const teamLogos = {
             width={100}
             interval={0}
           />
-          <Bar dataKey="Elo_Rating" fill="#5A0000">
-            <LabelList dataKey="Elo_Rating" position="right" fill="#fff" />
-          </Bar>
+          <Bar
+  dataKey="Elo_Rating"
+  fill="#5A0000"
+  activeBar={{ fill: "#B8860B"}} // Blue highlight
+>
+  <LabelList dataKey="Elo_Rating" position="right" fill="#fff" />
+</Bar>
         </BarChart>
       </ResponsiveContainer>
 
@@ -281,7 +297,15 @@ const teamLogos = {
           margin={{ top: 10, right: 150, left: 60, bottom: 20 }}
         >
           <CartesianGrid stroke="#333" />
-          <XAxis type="number" stroke="#fff" />
+          <XAxis
+  type="number"
+  stroke="#fff"
+  domain={['dataMin - 0.1', 'dataMax + 0.1']} // this is the key line
+/>
+<Tooltip
+  formatter={(value, name, props) => [`${value}`, name]}
+  labelFormatter={(label) => `Team: ${label}`}
+/>
           <YAxis
             dataKey="name"
             type="category"
@@ -290,7 +314,7 @@ const teamLogos = {
             width={100}
             interval={0}
           />
-          <Bar dataKey={showOffensive ? "XG_avg" : "XGC_avg"} fill="#5A0000">
+          <Bar dataKey={showOffensive ? "XG_avg" : "XGC_avg"} fill="#5A0000" activeBar={{ fill: "#B8860B" }}>
             <LabelList dataKey={showOffensive ? "XG_avg" : "XGC_avg"} position="right" fill="#fff" />
           </Bar>
         </BarChart>
@@ -298,5 +322,3 @@ const teamLogos = {
     </div>
   );
 }
-
-

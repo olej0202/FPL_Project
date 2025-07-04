@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Select from "react-select";
+import { useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   LineChart,
   Line,
@@ -18,7 +20,9 @@ import {
 export default function PlayerAnalytics() {
   const API_URL = "https://fpl-project-t5e9.onrender.com/Player";
   const [data, setData] = useState([]);
-  const [playerFilter, setPlayerFilter] = useState("");
+  const location = useLocation();
+  const initialPlayer = location.state?.selectedPlayer || "";
+  const [playerFilter, setPlayerFilter] = useState(initialPlayer);
   const [players, setPlayers] = useState([]);
   const [latestStats, setLatestStats] = useState({});
   const [selectedMetric, setSelectedMetric] = useState("expected_goals");
