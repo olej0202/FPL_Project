@@ -13,31 +13,49 @@ GNEWS_API_KEY = os.getenv("GNEWS_API_KEY")
 client = OpenAI(api_key=OPENAI_API_KEY)
 
 def fetch_premier_league_news():
-    one_week_ago = (datetime.utcnow() - timedelta(days=20)).strftime('%Y-%m-%dT%H:%M:%SZ')
-    print(one_week_ago)
+    one_week_ago = (datetime.utcnow() - timedelta(days=7)).strftime('%Y-%m-%dT%H:%M:%SZ')
+    print("📅 Fetching news since:", one_week_ago)
 
-    query = "Premier AND League OR Arsenal OR Manchester United OR Chelsea"
-
-    url = (
-    f"https://gnews.io/api/v4/search?"
-    f"q={query}"
-    f"&lang=en"
-    f"&max=50"
-    f"&from={one_week_ago}"
-    f"&apikey={GNEWS_API_KEY}"
-    )
-    response = requests.get(url)
-    print(response.status_code, response.text)
-    articles = response.json().get("articles", [])
-    return [
-        {
-            "title": a["title"],
-            "description": a.get("description", ""),
-            "content": a.get("content", ""),
-            "url": a["url"]
-        }
-        for a in articles
+    keywords = [
+        "Premier League", "Arsenal", "Manchester United", "Manchester City",
+        "Liverpool", "Chelsea", "Tottenham", "Newcastle United", "Aston Villa",
+        "Brighton", "West Ham", "Brentford"
     ]
+
+    all_articles = []
+    seen_urls = set()
+
+    for keyword in keywords:
+        query = keyword.replace(" ", "+")
+        url = (
+            f"https://gnews.io/api/v4/search?"
+            f"q={query}"
+            f"&lang=en"
+            f"&country=gb"
+            f"&max=10"
+            f"&from={one_week_ago}"
+            f"&apikey={GNEWS_API_KEY}"
+        )
+
+        response = requests.get(url)
+        print(f"🔍 {keyword}: {response.status_code}")
+        
+        if response.status_code == 200:
+            articles = response.json().get("articles", [])
+            for a in articles:
+                if a["url"] not in seen_urls:
+                    seen_urls.add(a["url"])
+                    all_articles.append({
+                        "title": a["title"],
+                        "description": a.get("description", ""),
+                        "content": a.get("content", ""),
+                        "url": a["url"]
+                    })
+        else:
+            print(f"⚠️ Error fetching {keyword}: {response.text}")
+
+    print(f"\n✅ Total unique articles: {len(all_articles)}")
+    return all_articles
 
 def extract_news_stories(all_articles_text):
     prompt = f"""
