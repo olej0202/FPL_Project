@@ -68,9 +68,13 @@ function PlayerRow({ players, isBench = false, navigate }) {
             }`}
           >
             <img
-              src={player.photo}
-              alt={player.Name}
-              className="w-[60px] h-[80px] sm:w-[70px] sm:h-[90px] object-contain"
+                src={player.photo}
+                alt={player.Name}
+                className={`object-contain ${
+                isBench
+                ? "w-[45px] h-[65px] sm:w-[55px] sm:h-[75px]"
+                : "w-[60px] h-[80px] sm:w-[70px] sm:h-[90px]"
+                }`}
             />
             <span className="mt-1 text-center font-small text-xs sm:text-sm leading-tight">
               {name}
