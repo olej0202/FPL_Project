@@ -23,8 +23,10 @@ export default function FreeHitTeam() {
 
   return (
     <>
-      <div className="min-h-screen bg-black text-white flex flex-col items-center py-10 px-4 space-y-6">
-        <h1 className="text-3xl md:text-4xl font-bold text-center mb-2">
+      <div className="min-h-screen bg-black text-white flex flex-col items-center py-10 px-4 space-y-10">
+        <h1 className="text-3xl md:text-4xl font-bold text-center mb-4">
+
+            
           AI Optimized Free-Hit Team
         </h1>
 
