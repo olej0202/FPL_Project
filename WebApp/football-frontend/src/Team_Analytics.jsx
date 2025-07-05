@@ -250,7 +250,7 @@ const teamLogos = {
   <BarChart
     data={[...allTeamStats].sort((a, b) => b.Elo_Rating - a.Elo_Rating)}
     layout="vertical"
-    margin={{ top: 5, right: 20, left: 5, bottom: 20 }}
+    margin={{ top: 5, right: 30, left: 0, bottom: 20 }}
     barSize={18} // 👈 adds fixed bar width
   >
     <CartesianGrid stroke="#333" />
@@ -297,7 +297,7 @@ const teamLogos = {
             showOffensive ? b.XG_avg - a.XG_avg : a.XGC_avg - b.XGC_avg
           )}
           layout="vertical"
-          margin={{ top: 10, right: 20, left: 10, bottom: 20 }}
+          margin={{ top: 10, right: 20, left: 0, bottom: 20 }}
         >
           <CartesianGrid stroke="#333" />
           <XAxis
