@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import pitch from "./assets/pitch.png";
-import Navbar from "./components/team_navigation";
+import Navbar from "./components/team_navigation"; // Optional: your custom navbar
 
 export default function FreeHitTeam() {
   const [playingPlayers, setPlayingPlayers] = useState([]);
@@ -22,36 +22,33 @@ export default function FreeHitTeam() {
     playingPlayers.filter((p) => p.position === pos);
 
   return (
-    <>
-      <div className="min-h-screen bg-black text-white flex flex-col items-center py-10 px-4 space-y-5">
-        <h1 className="text-3xl md:text-4xl font-bold text-center mb-4">
-          AI Optimized Free-Hit Team
-        </h1>
+    <div className="min-h-screen bg-black text-white flex flex-col items-center py-10 px-4 space-y-6">
+      <h1 className="text-3xl md:text-4xl font-bold text-center mb-4">
+        AI Optimized Free-Hit Team
+      </h1>
 
-        <div
-          className="w-full max-w-[600px] aspect-[4/5] bg-no-repeat bg-cover bg-center border border-white rounded-lg px-2 py-0"
-          style={{ backgroundImage: `url(${pitch})` }}
-        >
-          <div className="flex flex-col justify-between h-full">
-            <PlayerRow players={getPlayersByPosition("FWD")} navigate={navigate} />
-            <PlayerRow players={getPlayersByPosition("MID")} navigate={navigate} />
-            <PlayerRow players={getPlayersByPosition("DEF")} navigate={navigate} />
-            <PlayerRow players={getPlayersByPosition("GK")} navigate={navigate} />
-            {benchPlayers.length > 0 && (
-              <div>
-                <PlayerRow players={benchPlayers} isBench navigate={navigate}/>
-              </div>
-            )}
-          </div>
-        </div>
+      {/* Pitch Container with absolute positioning */}
+      <div
+        className="relative w-full max-w-[600px] aspect-[4/5] bg-no-repeat bg-cover bg-center border border-white rounded-lg"
+        style={{ backgroundImage: `url(${pitch})` }}
+      >
+        {/* Fixed-position player rows */}
+        <PlayerRow top="10%" players={getPlayersByPosition("FWD")} navigate={navigate} />
+        <PlayerRow top="28%" players={getPlayersByPosition("MID")} navigate={navigate} />
+        <PlayerRow top="46%" players={getPlayersByPosition("DEF")} navigate={navigate} />
+        <PlayerRow top="64%" players={getPlayersByPosition("GK")} navigate={navigate} />
+        <PlayerRow top="82%" players={benchPlayers} isBench navigate={navigate} />
       </div>
-    </>
+    </div>
   );
 }
 
-function PlayerRow({ players, isBench = false, navigate }) {
+function PlayerRow({ players, top, isBench = false, navigate }) {
   return (
-    <div className="flex justify-center gap-2 sm:gap-2 md:gap-4 py-3 overflow-x-auto whitespace-nowrap">
+    <div
+      className="absolute left-1/2 -translate-x-1/2 flex justify-center gap-1 sm:gap-3"
+      style={{ top }}
+    >
       {players.map((player, idx) => (
         <div
           key={idx}
@@ -67,14 +64,14 @@ function PlayerRow({ players, isBench = false, navigate }) {
           <img
             src={player.photo}
             alt={player.Name}
-            className={` ${
+            className={`${
               isBench
                 ? "w-14 h-18 sm:w-16 sm:h-20 md:w-20 md:h-24"
                 : "w-14 h-18 sm:w-16 sm:h-20 md:w-20 md:h-24"
             }`}
           />
-          <span className="mt-1 text-center font-medium text-xs sm:text-sm md:text-base leading-tight">
-
+          <span className="mt-0 text-center font-small text-xs sm:text-sm md:text-base leading-tight">
+            {player.Name}
           </span>
           {isBench && (
             <span className="text-xs text-black-300">{player.position}</span>
