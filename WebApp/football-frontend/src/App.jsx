@@ -17,7 +17,7 @@ export default function App() {
     <div className="min-h-screen bg-black text-white">
       {/* Primary Top Navbar */}
       <nav className="bg-royal-beige text-royal-gold shadow">
-        <div className="w-full max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between px-4 py-3">
+        <div className="w-full max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between px-2 py-3">
           {/* Left: Logo + Title */}
           <div className="flex items-center gap-3 mr-6">
             <img src={logo} alt="FPL Logo" className="h-14 w-14 object-contain" />
@@ -25,11 +25,11 @@ export default function App() {
           </div>
 
           {/* Main Navigation Links */}
-          <div className="flex flex-wrap justify-center gap-2 sm:gap-4 -translate-x-4">
+          <div className="flex flex-wrap justify-center gap-2 sm:gap-4 -translate-x-4 py-4" >
             <NavLink
               to="/news"
               className={({ isActive }) =>
-                `flex items-center gap-2 px-4 py-2 rounded border border-royal-gold text-royal-gold font-semibold ${
+                `flex items-center gap-3 px-4 py-3 rounded border border-royal-gold text-royal-gold font-semibold ${
                   isActive
                     ? "bg-black hover:text-royal-gold"
                     : "hover:bg-royal-gold hover:text-black"
