@@ -23,13 +23,13 @@ export default function FreeHitTeam() {
 
   return (
     <>
-      <div className="min-h-screen bg-black text-white flex flex-col items-center py-10 px-4 space-y-10">
+      <div className="min-h-screen bg-black text-white flex flex-col items-center py-10 px-4 space-y-5">
         <h1 className="text-3xl md:text-4xl font-bold text-center mb-4">
           AI Optimized Free-Hit Team
         </h1>
 
         <div
-          className="w-full max-w-[700px] aspect-[2/3] bg-no-repeat bg-cover bg-center border border-white rounded-lg px-1 py-3"
+          className="w-full max-w-[600px] aspect-[3/3] bg-no-repeat bg-cover bg-center border border-white rounded-lg px-1 py-2"
           style={{ backgroundImage: `url(${pitch})` }}
         >
           <div className="flex flex-col justify-between h-full">
@@ -39,7 +39,7 @@ export default function FreeHitTeam() {
             <PlayerRow players={getPlayersByPosition("GK")} navigate={navigate} />
             {benchPlayers.length > 0 && (
               <div>
-                <PlayerRow players={benchPlayers} isBench />
+                <PlayerRow players={benchPlayers} isBench navigate={navigate}/>
               </div>
             )}
           </div>
@@ -51,7 +51,7 @@ export default function FreeHitTeam() {
 
 function PlayerRow({ players, isBench = false, navigate }) {
   return (
-    <div className="flex justify-center gap-2 sm:gap-3 md:gap-5 py-2 overflow-x-auto whitespace-nowrap">
+    <div className="flex justify-center gap-1 sm:gap-1 md:gap-4 py-1 overflow-x-auto whitespace-nowrap">
       {players.map((player, idx) => (
         <div
           key={idx}
@@ -69,12 +69,12 @@ function PlayerRow({ players, isBench = false, navigate }) {
             alt={player.Name}
             className={` ${
               isBench
-                ? "w-14 h-18 sm:w-16 sm:h-20 md:w-20 md:h-24 border-gray-400"
-                : "w-16 h-18 sm:w-18 sm:h-20 md:w-20 md:h-28"
+                ? "w-14 h-18 sm:w-16 sm:h-20 md:w-20 md:h-24"
+                : "w-14 h-18 sm:w-16 sm:h-20 md:w-20 md:h-24"
             }`}
           />
           <span className="mt-1 text-center font-medium text-xs sm:text-sm md:text-base leading-tight">
-            {player.Name}
+
           </span>
           {isBench && (
             <span className="text-xs text-black-300">{player.position}</span>
