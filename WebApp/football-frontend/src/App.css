@@ -40,3 +40,12 @@
 .read-the-docs {
   color: #888;
 }
+
+/* Prevent bar outline highlight and background on click */
+.recharts-bar-rectangle:focus {
+  outline: none;
+}
+
+.recharts-tooltip-wrapper {
+  background-color: transparent !important;
+}

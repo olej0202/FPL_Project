@@ -243,58 +243,61 @@ const teamLogos = {
           </ResponsiveContainer>
         </div>
       </div>
-
-      {/* ELO Bar Chart */}
+{/* ELO Bar Chart */}
       <h2 className="text-3xl font-bold text-center text-royal-gold">ELO Rankings</h2>
-     <ResponsiveContainer width="80%" height={Math.max(allTeamStats.length * 30, 200)}>
-        <BarChart
-          data={[...allTeamStats].sort((a, b) => b.Elo_Rating - a.Elo_Rating)}
-          layout="vertical"
-          margin={{ top: 10, right: 150, left: 60, bottom: 20 }}
-        >
-          <CartesianGrid stroke="#333" />
-          <XAxis
-  type="number"
-  stroke="#fff"
-  domain={[
-    (dataMin) => Math.floor(dataMin - 10),
-    (dataMax) => Math.ceil(dataMax + 10),
-  ]}
-  tick={{ fontSize: 12 }}
-/>
-<Tooltip
-  formatter={(value, name, props) => [`${value}`, name]}
-  labelFormatter={(label) => `Team: ${label}`}
-/>
-          <YAxis
-            dataKey="name"
-            type="category"
-            stroke="#fff"
-            tick={{ fontSize: 10 }}
-            width={100}
-            interval={0}
-          />
-          <Bar
-  dataKey="Elo_Rating"
-  fill="#5A0000"
-  activeBar={{ fill: "#B8860B"}} // Blue highlight
->
-  <LabelList dataKey="Elo_Rating" position="right" fill="#fff" />
-</Bar>
-        </BarChart>
-      </ResponsiveContainer>
+      <div className="w-full overflow-x-auto">
+        <ResponsiveContainer width="100%" height={Math.max(allTeamStats.length * 25, 300)}>
+  <BarChart
+    data={[...allTeamStats].sort((a, b) => b.Elo_Rating - a.Elo_Rating)}
+    layout="vertical"
+    margin={{ top: 5, right: 20, left: 5, bottom: 20 }}
+    barSize={18} // 👈 adds fixed bar width
+  >
+    <CartesianGrid stroke="#333" />
+    <XAxis
+      type="number"
+      stroke="#fff"
+      domain={[
+        (dataMin) => Math.floor(dataMin - 10),
+        (dataMax) => Math.ceil(dataMax + 10),
+      ]}
+      tick={{ fontSize: 12 }}
+    />
+    <YAxis
+      dataKey="name"
+      type="category"
+      stroke="#fff"
+      tick={{ fontSize: 10 }}
+      width={100}
+      interval={0}
+    />
+    <Tooltip
+      formatter={(value, name) => [`${value}`, name]}
+      labelFormatter={(label) => `Team: ${label}`}
+    />
+    <Bar
+      dataKey="Elo_Rating"
+      fill="#5A0000"
+      activeBar={{ fill: "#B8860B" }}
+    >
+      <LabelList dataKey="Elo_Rating" position="right" fill="#fff" />
+    </Bar>
+  </BarChart>
+</ResponsiveContainer>
+
+      </div>
 
       {/* Avg Attack or Defence Ranking */}
       <h2 className="text-3xl font-bold text-center text-royal-gold mt-8">
         {showOffensive ? "Attack Rankings (XG Avg)" : "Defence Rankings (Overall)"}
       </h2>
-      <ResponsiveContainer width="80%" height={Math.max(allTeamStats.length * 30, 200)}>
+      <ResponsiveContainer width="100%" height={Math.max(allTeamStats.length * 30, 200)}>
         <BarChart
           data={[...allTeamStats].sort((a, b) =>
             showOffensive ? b.XG_avg - a.XG_avg : a.XGC_avg - b.XGC_avg
           )}
           layout="vertical"
-          margin={{ top: 10, right: 150, left: 60, bottom: 20 }}
+          margin={{ top: 10, right: 20, left: 10, bottom: 20 }}
         >
           <CartesianGrid stroke="#333" />
           <XAxis
