@@ -29,7 +29,7 @@ export default function FreeHitTeam() {
         </h1>
 
         <div
-          className="w-full max-w-[700px] aspect-[2/3] bg-no-repeat bg-cover bg-center border-1 border-white rounded-lg px-1 py-3"
+          className="w-full max-w-[700px] aspect-[2/3] bg-no-repeat bg-cover bg-center border border-white rounded-lg px-1 py-3"
           style={{ backgroundImage: `url(${pitch})` }}
         >
           <div className="flex flex-col justify-between h-full">
@@ -51,7 +51,7 @@ export default function FreeHitTeam() {
 
 function PlayerRow({ players, isBench = false, navigate }) {
   return (
-    <div className="flex justify-center flex-wrap gap-3 sm:gap-5 py-2">
+    <div className="flex justify-center gap-2 sm:gap-3 md:gap-5 py-2 overflow-x-auto whitespace-nowrap">
       {players.map((player, idx) => (
         <div
           key={idx}
@@ -67,10 +67,10 @@ function PlayerRow({ players, isBench = false, navigate }) {
           <img
             src={player.photo}
             alt={player.Name}
-            className={`${
+            className={` ${
               isBench
                 ? "w-14 h-18 sm:w-16 sm:h-20 md:w-20 md:h-24 border-gray-400"
-                : "w-16 h-20 sm:w-20 sm:h-24 md:w-24 md:h-28"
+                : "w-16 h-18 sm:w-18 sm:h-20 md:w-20 md:h-28"
             }`}
           />
           <span className="mt-1 text-center font-medium text-xs sm:text-sm md:text-base leading-tight">
