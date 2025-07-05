@@ -32,7 +32,7 @@ export default function FreeHitTeam() {
           className="w-full max-w-[500px] aspect-[3/4] bg-no-repeat bg-cover bg-center border border-white rounded-lg px-2 py-3 relative"
           style={{ backgroundImage: `url(${pitch})` }}
         >
-          <div className="flex flex-col justify-between h-full pt-3 pb-20 space-y-5">
+          <div className="flex flex-col justify-between h-full pt-3 pb-20 space-y-4">
             <PlayerRow players={getPlayersByPosition("FWD")} navigate={navigate} />
             <PlayerRow players={getPlayersByPosition("MID")} navigate={navigate} />
             <PlayerRow players={getPlayersByPosition("DEF")} navigate={navigate} />
@@ -40,7 +40,7 @@ export default function FreeHitTeam() {
           </div>
 
           {benchPlayers.length > 0 && (
-            <div className="absolute bottom-0 left-0 right-0 px-2">
+            <div className="absolute bottom-[-11px] left-0 right-0 px-2">
               <PlayerRow players={benchPlayers} isBench navigate={navigate} />
             </div>
           )}
@@ -54,7 +54,7 @@ function PlayerRow({ players, isBench = false, navigate }) {
   return (
     <div className="flex justify-center gap-2 py-2 overflow-x-auto">
       {players.map((player, idx) => {
-        const name = player.Name.split(/[_\s]+/).slice(-1)[0]; // Get last name after _ or space
+        const name = player.Name.match(/_([^ ]+)/)?.[1];// Get last name after _ or space
         return (
           <div
             key={idx}
