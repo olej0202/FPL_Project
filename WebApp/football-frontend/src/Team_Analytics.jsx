@@ -35,7 +35,7 @@ const teamLogos = {
   "Wolves": "https://logodownload.org/wp-content/uploads/2019/04/wolverhampton-logo-escudo.png",
   "Bournemouth": "https://logodownload.org/wp-content/uploads/2019/10/bournemouth-fc-logo-0.png",
   "Liverpool": "https://img.icons8.com/color/1600/liverpool-fc.png",
-  "Aston Villa": "https://brandlogo.org/wp-content/uploads/2024/09/Aston-Villa-Logo.png",
+  "Aston Villa": "https://logosmarcas.net/wp-content/uploads/2020/11/Aston-Villa-Logo.png",
   "Everton": "https://logodownload.org/wp-content/uploads/2019/04/everton-logo-escudo.png",
   "Brentford": "https://logodownload.org/wp-content/uploads/2022/09/brentford-fc-logo.png",
   "West Ham": "https://logodownload.org/wp-content/uploads/2019/05/west-ham-united-logo-0-300x300.png",

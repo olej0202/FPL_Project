@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import pitch from "./assets/pitch.png";
 import Navbar from "./components/team_navigation";
 
-export default function FreeHitTeam() {
+export default function WildcardTeam() {
   const [playingPlayers, setPlayingPlayers] = useState([]);
   const [benchPlayers, setBenchPlayers] = useState([]);
   const navigate = useNavigate();
@@ -25,7 +25,7 @@ export default function FreeHitTeam() {
     <>
       <div className="min-h-screen bg-black text-white flex flex-col items-center py-10 px-4 space-y-10">
         <h1 className="text-3xl md:text-4xl font-bold text-center mb-4">
-          AI Optimized Free-Hit Team
+          AI Optimized Wildcard Team
         </h1>
 
         <div
