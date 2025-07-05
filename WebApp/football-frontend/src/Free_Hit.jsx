@@ -40,7 +40,7 @@ export default function FreeHitTeam() {
           </div>
 
           {benchPlayers.length > 0 && (
-            <div className="absolute bottom-[-11px] left-0 right-0 px-2">
+            <div className="absolute bottom-[-12px] left-0 right-0 px-2">
               <PlayerRow players={benchPlayers} isBench navigate={navigate} />
             </div>
           )}
@@ -52,7 +52,7 @@ export default function FreeHitTeam() {
 
 function PlayerRow({ players, isBench = false, navigate }) {
   return (
-    <div className="flex justify-center gap-2 py-2 overflow-x-auto">
+    <div className="flex justify-center gap-3 py-2 overflow-x-auto">
       {players.map((player, idx) => {
         const name = player.Name.match(/_([^ ]+)/)?.[1];// Get last name after _ or space
         return (
