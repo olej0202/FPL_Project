@@ -130,11 +130,24 @@ export default function PlayerAnalytics() {
     return value;
   };
 
-  const comparisonData = rawStats.map(({ key, label }) => ({
-    metric: label,
-    [playerFilter]: ((scaleValue(key, latestStats[key]) || 0) / maxValues[key]) * 100,
-    [comparePlayer]: ((scaleValue(key, compareStats[key]) || 0) / maxValues[key]) * 100
-  }));
+ const comparisonData = rawStats.map(({ key, label }) => ({
+  metric: label,
+  [playerFilter]: scaleValue(key, latestStats[key]) || 0,
+  [comparePlayer]: scaleValue(key, compareStats[key]) || 0,
+  [`${playerFilter}_label`]: (latestStats[key] || 0).toFixed(2),
+  [`${comparePlayer}_label`]: (compareStats[key] || 0).toFixed(2)
+}));
+
+const scaledComparisonData = rawStats.map(({ key, label }) => ({
+  metric: label,
+  [playerFilter]: ((scaleValue(key, latestStats[key]) || 0) / maxValues[key]) * 100,
+  [comparePlayer]: ((scaleValue(key, compareStats[key]) || 0) / maxValues[key]) * 100,
+
+  // Add original values for tooltip
+  [`${playerFilter}_label`]: (latestStats[key] || 0).toFixed(2),
+  [`${comparePlayer}_label`]: (compareStats[key] || 0).toFixed(2),
+}));
+
 
   const values = filteredChartData.map((d) => parseFloat(d[selectedMetric])).filter((v) => !isNaN(v));
   const avgOfMetric = values.length > 0 ? values.reduce((acc, v) => acc + v, 0) / values.length : 0;
@@ -161,6 +174,25 @@ export default function PlayerAnalytics() {
       backgroundColor: "#1a1a1a"
     })
   };
+
+  const CustomRadarTooltip = ({ active, payload, label }) => {
+  if (active && payload && payload.length) {
+    const player1 = payload[0]?.name;
+    const player2 = payload[1]?.name;
+    const p1Label = payload[0]?.payload?.[`${player1}_label`];
+    const p2Label = payload[1]?.payload?.[`${player2}_label`];
+
+    return (
+      <div className="bg-black p-3 border border-yellow-400 rounded text-white text-sm">
+        <p className="font-bold mb-1">{label}</p>
+        <p>{player1}: <span className="text-yellow-400">{p1Label}</span></p>
+        <p>{player2}: <span className="text-red-400">{p2Label}</span></p>
+      </div>
+    );
+  }
+  return null;
+};
+
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center px-10 py-10 space-y-6">
@@ -210,19 +242,45 @@ export default function PlayerAnalytics() {
           styles={selectStyles}
           placeholder="Compare with..."
         />
+        {comparePlayer && (
+  <button
+    onClick={() => {
+      setComparePlayer("");
+      setCompareStats({});
+      setCompareImageUrl("");
+    }}
+    className="mt-5 ml-12 px-12 py-2 bg-red-700 text-white rounded border border-royal-gold hover:bg-red-800 transition"
+  >
+    Remove
+  </button>
+)}
       </div>
 
       {playerFilter && comparePlayer && (
         <div className="w-full max-w-4xl h-[400px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <RadarChart cx="50%" cy="50%" outerRadius="80%" data={comparisonData}>
-              <PolarGrid stroke="#ccc" />
+        <ResponsiveContainer width="100%" height={400}>
+            <RadarChart cx="50%" cy="50%" outerRadius="80%" data={scaledComparisonData}>
+              <PolarGrid stroke="#666" />
               <PolarAngleAxis dataKey="metric" stroke="#FFD700" />
-              <Radar name={playerFilter} dataKey={playerFilter} stroke="#FFD700" fill="#FFD700" fillOpacity={0.5} />
-              <Radar name={comparePlayer} dataKey={comparePlayer} stroke="#FF6347" fill="#FF6347" fillOpacity={0.5} />
+              <Radar
+                name={playerFilter}
+                dataKey={playerFilter}
+                stroke="#FFD700"
+                fill="#FFD700"
+                fillOpacity={0.5}
+              />
+              <Radar
+                name={comparePlayer}
+                dataKey={comparePlayer}
+                stroke="#FF6347"
+                fill="#FF6347"
+                fillOpacity={0.5}
+              />
+              <Tooltip content={<CustomRadarTooltip />} />
               <Legend />
             </RadarChart>
           </ResponsiveContainer>
+
         </div>
       )}
 
