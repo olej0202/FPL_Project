@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 import pandas as pd
 from datetime import datetime, timedelta
 from openai import OpenAI
-
+import time
 # Load environment variables
 load_dotenv()
 
@@ -52,6 +52,8 @@ def fetch_premier_league_news():
                     })
         else:
             print(f"⚠️ Error fetching {keyword}: {response.text}")
+            
+        time.sleep(1.2)  # 👈 wait ~1.2 seconds between requests
 
     print(f"\n✅ Total unique articles: {len(all_articles)}")
     return all_articles
