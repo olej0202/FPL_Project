@@ -1,0 +1,95 @@
+import pandas as pd
+import numpy as np
+def process_news(text):
+    if pd.isna(text) or text.strip() == "":  # Blank check
+        return 1
+    elif "%" in text:
+        # Extract number before %
+        import re
+        match = re.search(r"(\d+)%", text)
+        if match:
+            return int(match.group(1))/100  # Return the number before %
+    return 0  # Default to 0 if no %
+    
+def GenerateOptimizeSet(Current_data_path):
+    data_df=pd.read_csv(Current_data_path).iloc[:,1:]
+    result = data_df.loc[data_df.groupby('Full_Name')['kickoff_time'].idxmax(), ['first_name', 'second_name','Full_Name', 'value', 'kickoff_time',"team_code","news","selected"]]
+    result["name_prev"] = result["first_name"] + " " + result["second_name"]
+    result["Name2"] = result["name_prev"].str.replace(" ", "_", n=1)
+    prediction_data=pd.read_csv("Model_Predictions.csv").iloc[:,1:]
+    print(len(prediction_data))
+    
+    merge_cols = ['Name2', 'value', 'team_code', 'news', 'selected']
+    result = result[merge_cols]
+
+    merged_df = prediction_data.merge(result, how='left', left_on='name', right_on='Name2')
+
+    merged_df.drop(columns=['Name2'], inplace=True)
+
+    
+    
+    player_points = (
+    merged_df.groupby(['name', 'value','position'])['Points_prediction']
+    .sum()
+    .reset_index()
+    )
+    names=[]
+    positions=merged_df["position"].unique()
+    for r in range(len(positions)):
+        position=[positions[r]]
+        top_players_by_pos = (
+            player_points[player_points['position'].isin(position)]
+            .sort_values(['value', 'Points_prediction'], ascending=[True, False])
+            .groupby('value')
+            .head(25)
+            .reset_index(drop=True)
+        )
+        names.extend(top_players_by_pos["name"].tolist())
+        
+    # Define float values from 4.1 to 6.0 (step 0.1)
+    value_range = np.arange(38, 60, 1).round(1)
+    
+    for u in range(len(value_range)):
+        value=[value_range[u]]
+
+        top_players_by_value = (
+            player_points[player_points['value'].isin(value)]
+            .sort_values(['value', 'Points_prediction'], ascending=[True, False])
+            .groupby('value')
+            .head(3)
+            .reset_index(drop=True)
+        )
+        names.extend(top_players_by_value["name"].tolist())
+    # View result
+
+
+
+    optimized_player_set=merged_df[merged_df["name"].isin(names)]
+    print(names)
+    
+
+    
+
+    optimized_player_set['offset'] = optimized_player_set['news'].apply(process_news)
+    optimized_player_set["selected"] = optimized_player_set["selected"]/11000000
+    optimized_player_set["value"] = optimized_player_set["value"]/10
+    optimized_player_set["minutes_multiplier"] = np.minimum(1, optimized_player_set['average_minutes'] / 60)
+    optimized_player_set["0"] = 0
+
+    constant_cols = ["name", "position","value", 'team_code','selected','offset', 'minutes_multiplier','0']
+
+    pivoted_df = optimized_player_set.pivot_table(
+    index=constant_cols,             # Each player is one row
+    columns="GW",             # One column per Game Week (GW)
+    values="Points_prediction",    # Values to pivot
+    aggfunc="first"           # In case of duplicates, take the first
+    ).reset_index()
+    print(pivoted_df)
+
+    pivoted_df.to_csv("Model_Optimizer.csv")
+        
+    
+
+
+
+GenerateOptimizeSet("Raw_Data_24\Fantasy_season_2024_data.csv")

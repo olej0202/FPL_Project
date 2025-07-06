@@ -72,7 +72,8 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
             team_xg=team_stats["XG"].values[0]
             team_xgc=team_stats["XGC"].values[0]
             team_CS=team_stats["CS"].values[0]
-        
+
+            xggc=df["opposition_xgc"].values[h]
 
             attacking_factor=(df["opposition_xgc"].values[h]+team_xg)*0.5
             defensive_factor=(team_CS+0.3/team_xgc)*0.5
@@ -98,12 +99,13 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
                real_variable="total_points"
                player_preds.append(df['Rolling_adjusted_Fantasy'].values[h]*0.04)
             player_preds.append(df["position"].values[0])
+            player_preds.append(xggc)
             all_preds.append(player_preds)
             
         
-    columns=["Name", "GW", "pred", "position"]
+    columns=["Name", "GW", "pred", "position", "opp_stat"]
     data_f=pd.DataFrame(all_preds, columns=columns)
-    data_f.to_csv(f"STAT_{pred_variable}_preds2.csv", index=False)
+    data_f.to_csv(f"STAT_{pred_variable}.csv", index=False)
     #print(sum(MSE) / len(MSE))
 def XGB_Make_dataset(position,position2):
     df=pd.read_csv("ML_training2.csv").iloc[:,1:]
@@ -384,17 +386,20 @@ def XGB_Make_Pred(trainingdf,target_value,position2,column_list,predlength,posit
                 row_pred.append(y_pred[0])
             row_pred.append(filtered_df["position"].values[0])
             row_pred.append(gw)
+            row_pred.append(row["opposition_xgc"].values[0])
 
 
             total.append(row_pred)
 
-    column_list = ["Name", "pred", "position", "GW" ]
+    column_list = ["Name", "pred", "position", "GW","opp_stat" ]
 
     data_f=pd.DataFrame(total, columns=column_list)
-    data_f.to_csv(f"XGB_{position}_preds2.csv", index=False)
+    data_f.to_csv(f"XGB_{position}.csv", index=False)
     return data_f
     
 def XGB(position,position2,column_list,predlength):
+    if(position=="GC"):
+        return 0
     data,target_value,test_columns=XGB_Make_dataset(position,position2)
     pred=XGB_Make_Pred(data,target_value,position2,column_list,predlength,position,test_columns)
     return pred
@@ -433,7 +438,7 @@ def Generate_LSTM_preds(pred,column_list,predlength):
     
     unique_players=data["name"].unique()
     
-    column_list = ["Name", "pred", "position", "GW" ]
+    column_list = ["Name", "pred", "position", "GW","opp_stat" ]
 
 
     """model = DeepNN(input_dim)
@@ -465,12 +470,148 @@ def Generate_LSTM_preds(pred,column_list,predlength):
             preds.append(predictions[0])
             preds.append(position)
             preds.append(gw)
+            preds.append(row2["played_XGC"].values[0])
 
             total_preds.append(preds)
             
     pred_all_players=pd.DataFrame(total_preds,columns=column_list)
 
     pred_all_players.to_csv(f"DNN_{pred}.csv") 
+    
+def Generate_point_predictions():
+    players=pd.read_csv("Player_prediction_set.csv").iloc[:,1:]
+    unique_players=players["name"].unique()
+    xgb_goals = Get_rows("XGB", "GOALS").sort_values(by=["GW", "opp_stat"])
+    stat_goals = Get_rows("STAT", "GOALS").sort_values(by=["GW", "opp_stat"])
+    DNN_goals = Get_rows("DNN", "GOALS").sort_values(by=["GW", "opp_stat"])
+
+    xgb_assist = Get_rows("XGB", "Assist").sort_values(by=["GW", "opp_stat"])
+    stat_assist = Get_rows("STAT", "Assist").sort_values(by=["GW", "opp_stat"])
+    DNN_assist = Get_rows("DNN", "Assist").sort_values(by=["GW", "opp_stat"])
+
+    xgb_bps = Get_rows("XGB", "bps").sort_values(by=["GW", "opp_stat"])
+    stat_bps = Get_rows("STAT", "bps").sort_values(by=["GW", "opp_stat"])
+
+    stat_GC = Get_rows("STAT", "GC").sort_values(by=["GW", "opp_stat"])
+
+    xgb_fantasy= Get_rows("XGB", "Fantasy").sort_values(by=["GW", "opp_stat"])
+
+
+
+
+    
+    full_df=pd.DataFrame()
+    for j in range(len(unique_players)):
+        player=unique_players[j]
+        player_data=players[players["name"]==player].sort_values(by=["GW", "played_XGC"])
+        position=player_data["position"].values[0]
+        model_list=["STAT", "DNN", "XGB"]
+        positions=["GOALS", "Assist","GC","bps","Fantasy"]
+        
+        xgb_goals_player = xgb_goals[xgb_goals["Name"]==player].sort_values(by=["GW", "opp_stat"])
+        stat_goals_player = stat_goals[stat_goals["Name"]==player].sort_values(by=["GW", "opp_stat"])
+        DNN_goals_player = DNN_goals[DNN_goals["Name"]==player].sort_values(by=["GW", "opp_stat"])
+
+        xgb_assist_player = xgb_assist[xgb_assist["Name"]==player].sort_values(by=["GW", "opp_stat"])
+        stat_assist_player = stat_assist[stat_assist["Name"]==player].sort_values(by=["GW", "opp_stat"])
+        DNN_assist_player = DNN_assist[DNN_assist["Name"]==player].sort_values(by=["GW", "opp_stat"])
+
+        xgb_bps_player = xgb_bps[xgb_bps["Name"]==player].sort_values(by=["GW", "opp_stat"])
+        stat_bps_player = stat_bps[stat_bps["Name"]==player].sort_values(by=["GW", "opp_stat"])
+
+        stat_GC_player = stat_GC[stat_GC["Name"]==player].sort_values(by=["GW", "opp_stat"])
+
+        xgb_fantasy_player= xgb_fantasy[xgb_fantasy["Name"]==player].sort_values(by=["GW", "opp_stat"])
+
+        overscore=max(0.8,player_data["Average_Overscore"].values[0])
+        overscore=min(1.4,overscore)
+
+        overassist=max(0.8,player_data["Average_OverAssist"].values[0])
+        overassist=min(1.8,overassist)
+
+        goals=[]
+        assist=[]
+        bps=[]
+        gc=[]
+        fantasy=[]
+
+        for i in range(len(player_data)):
+            try:
+                goals.append((xgb_goals_player["pred"].values[i]*0.3
+                         +stat_goals_player["pred"].values[i]*0.4
+                         +DNN_goals_player["pred"].values[i]*0.3)*overscore)
+            except:
+                goals.append(0)
+
+            try:
+
+                assist.append((xgb_assist_player["pred"].values[i]*0.3
+                                    +stat_assist_player["pred"].values[i]*0.4
+                                    +DNN_assist_player["pred"].values[i]*0.3)*overassist)
+            except:
+                assist.append(0)
+
+            try:
+
+                bps.append((xgb_bps_player["pred"].values[i]*0.6
+                                   +stat_bps_player["pred"].values[i]*0.4)*0.9)
+            except:
+                bps.append(0)
+
+            try:
+                gc.append(stat_GC_player["pred"].values[i])
+            except:
+                gc.append(0)
+            try:
+
+                fantasy.append(xgb_fantasy_player["pred"].values[i])
+            except:
+                fantasy.append(0)
+
+        columns_to_include=["name","position", "GW", "Rolling_adjusted_XG", "Rolling_adjusted_XA","played_XGC","average_minutes"]
+            
+        New_dataset=player_data[columns_to_include]
+        New_dataset["Goal_pred"]=goals
+        
+        New_dataset["Assist_pred"]=assist
+        
+        New_dataset["Bonus_pred"]=bps
+        
+        New_dataset["GC_pred"]=gc
+        New_dataset["Fantasy_pred"]=fantasy
+
+        summary_dataset = New_dataset.groupby(columns_to_include)[["Goal_pred", "Assist_pred", "Bonus_pred", "GC_pred", "Fantasy_pred"]].sum().reset_index()
+        if(position=="FWD"):
+            summary_dataset["Points_prediction"]=(2+summary_dataset["Goal_pred"]*4
+                                                  +summary_dataset["Assist_pred"]*3
+                                                  +summary_dataset["Bonus_pred"])*0.8+0.2*summary_dataset["Fantasy_pred"]
+        elif(position=="MID"):
+            summary_dataset["Points_prediction"]=(2+summary_dataset["Goal_pred"]*5
+                                                  +summary_dataset["Assist_pred"]*3
+                                                  +summary_dataset["Bonus_pred"]
+                                                  +summary_dataset["GC_pred"])*0.8+0.2*summary_dataset["Fantasy_pred"]
+            
+        elif(position=="GKP"):
+            summary_dataset["Points_prediction"]=(2
+                                                  +summary_dataset["Bonus_pred"]
+                                                  +summary_dataset["GC_pred"]*4.5)*0.8+0.2*summary_dataset["Fantasy_pred"]
+
+        else:
+            summary_dataset["Points_prediction"]=(1+summary_dataset["Goal_pred"]*6
+                                                  +summary_dataset["Assist_pred"]*3
+                                                  +summary_dataset["Bonus_pred"]
+                                                  +summary_dataset["GC_pred"]*4.5)*0.8+0.2*summary_dataset["Fantasy_pred"]
+        
+        
+        full_df=pd.concat([full_df, summary_dataset], axis=0, ignore_index=True)
+    full_df.to_csv("Model_Predictions.csv")
+
+def Get_rows(model, metric):
+    string=model+"_"+metric+".csv"
+    file=pd.read_csv(string)
+    return file
+   
+
 def Make_Predictions ():
     predlength=2
     is_pred=1
@@ -483,10 +624,11 @@ def Make_Predictions ():
     for y in range(len(positions)):
         XGB_pred=pd.DataFrame()
         position_filter=positions[y]
-        #Stat_preds(is_pred, position_filter,column_list,predlength)
+        Stat_preds(is_pred, position_filter,column_list,predlength)
 
-        #pred2=XGB(position_filter,"FWD",column_list,predlength)        
+        pred2=XGB(position_filter,"FWD",column_list,predlength)        
         Generate_LSTM_preds(position_filter,column_list,predlength)
+    Generate_point_predictions()
 
 import torch
 import torch.nn as nn

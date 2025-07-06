@@ -96,6 +96,10 @@ def GeneratePlayerData(Future, fixture_path,current_player_path, current_teams_p
 
         team_id=player_row2["team"].values[0]
         team_code=player_row2["team_code"].values[0]
+        
+        element_type=player_row2["element_type"].values[0]
+        if(element_type==5):
+                continue
 
 
         if len(player_row)<1:
@@ -104,8 +108,7 @@ def GeneratePlayerData(Future, fixture_path,current_player_path, current_teams_p
                 position='GKP'
             elif(element_type==2):
                 position='DEF'
-            elif(element_type==5):
-                continue
+            
             elif(element_type==3):
                 position='MID'
             else:
@@ -129,6 +132,7 @@ def GeneratePlayerData(Future, fixture_path,current_player_path, current_teams_p
             columns_to_average = [col for col in player_cluster.columns if col not in exclude_columns]
 
             own_new_row[columns_to_average] = player_cluster[columns_to_average].mean()
+            own_new_row["average_minutes"]=80
             
             player_row = pd.DataFrame([own_new_row])
 
