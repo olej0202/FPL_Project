@@ -9,8 +9,9 @@ import PlayerAnalytics from "./Player_Analytics";
 import NewsBlog from "./News";
 import AITeamNav from "./components/team_navigation";
 import logo from "./assets/FPL_analytics_logo.png";
+import TeamPredictionsFuture from "./Fixture_Ticker"
 
-import { User, Brain, Trophy, Users, Newspaper } from "lucide-react";
+import { User, Brain, Trophy, Users, Newspaper, Calendar } from "lucide-react";
 
 export default function App() {
   return (
@@ -19,13 +20,13 @@ export default function App() {
       <nav className="bg-royal-beige text-royal-gold shadow">
         <div className="w-full max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between px-2 py-3">
           {/* Left: Logo + Title */}
-          <div className="flex items-center gap-3 mr-6">
-            <img src={logo} alt="FPL Logo" className="h-14 w-14 object-contain" />
-            <span className="text-2xl sm:text-3xl font-bold">FPL Analytics</span>
+          <div className="flex items-center gap-1 mr-6">
+            <img src={logo} alt="FPL Logo" className="h-16 w-16 object-contain" />
+            <span className="text-3xl sm:text-3xl font-bold">FPL Analytics</span>
           </div>
 
           {/* Main Navigation Links */}
-          <div className="flex flex-wrap justify-center gap-2 sm:gap-4 -translate-x-4 py-4" >
+          <div className="flex flex-wrap justify-center gap-2 sm:gap-2 -translate-x-4 py-4" >
             <NavLink
               to="/news"
               className={({ isActive }) =>
@@ -63,6 +64,20 @@ export default function App() {
             >
               <User size={18} /> Player Analytics
             </NavLink>
+
+            <NavLink
+              to="/TeamPredictionsFuture"
+              className={({ isActive }) =>
+                `flex items-center gap-2 px-4 py-2 rounded border border-royal-gold text-royal-gold font-semibold ${
+                  isActive
+                    ? "bg-black hover:text-royal-gold"
+                    : "hover:bg-royal-gold hover:text-black"
+                }`
+              }
+            >
+              <Calendar size={18} /> Fixtures
+            </NavLink>
+
             <NavLink
               to="/Score_Predictions"
               className={({ isActive }) =>
@@ -103,6 +118,7 @@ export default function App() {
         <Route path="/Wildcard_Team" element={<WildcardTeam />} />
         <Route path="/My_Team" element={<MyTeam />} />
         <Route path="/news" element={<NewsBlog />} />
+        <Route path="/TeamPredictionsFuture" element={<TeamPredictionsFuture />} />
       </Routes>
     </div>
   );
