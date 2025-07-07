@@ -2,6 +2,10 @@ import pandas as pd
 import numpy as np
 from pulp import LpMaximize, LpProblem, LpVariable, lpSum
 
+import pandas as pd
+import numpy as np
+from pulp import LpMaximize, LpProblem, LpVariable, lpSum
+
 def wildcard_optimize_team(sel_thresh, budget, columns, file_path="Model_Optimizer.csv", current_player_path="Raw_Data_25/current_players.csv"):
     # Load and preprocess data
     data = pd.read_csv(file_path)
@@ -103,7 +107,7 @@ def wildcard_optimize_team(sel_thresh, budget, columns, file_path="Model_Optimiz
             name = players[i]
             player_row_code=current_players[current_players["name"]==name]["code"].values[0]
             pos = positions[i]
-            gw = t + 1  # Gameweek numbering
+            gw =columns[ t] # Transfers affect upcoming GW
 
             if x[i, t].varValue > 0.5:
                 if bench[i, t].varValue > 0.5:
@@ -117,7 +121,7 @@ def wildcard_optimize_team(sel_thresh, budget, columns, file_path="Model_Optimiz
             name = players[i]
             player_row_code=current_players[current_players["name"]==name]["code"].values[0]
             pos = positions[i]
-            gw = t + 1  # Transfers affect upcoming GW
+            gw =columns[ t] # Transfers affect upcoming GW
 
             if transfer_in[i, t].varValue > 0.5:
                 records.append({"Name": name, "status": "transferred_in", "GW": gw, "position": pos, "photo":f"https://resources.premierleague.com/premierleague/photos/players/110x140/p{player_row_code}.png"})
@@ -128,6 +132,8 @@ def wildcard_optimize_team(sel_thresh, budget, columns, file_path="Model_Optimiz
     status_df = pd.DataFrame(records)
     status_df.to_csv("Wildcard_team.csv")
     print(status_df)
+
+    
 
     
 def freeHit_optimize_team(sel_thresh, budget, columns, file_path="Model_Optimizer.csv", current_player_path="Raw_Data_25/current_players.csv"):
@@ -222,8 +228,10 @@ def freeHit_optimize_team(sel_thresh, budget, columns, file_path="Model_Optimize
             player_set.append(positions[i])
             player_set.append(status)
             player_set.append(f"https://resources.premierleague.com/premierleague/photos/players/110x140/p{player_row}.png")
+            player_set.append(columns[0])
             result_set.append(player_set)
-    columns=["Name", "position", "status","photo"]
+            
+    columns=["Name", "position", "status","photo", "GW"]
 
     result_df=pd.DataFrame(result_set,columns=columns)
     result_df.to_csv("Free_hit_team.csv")

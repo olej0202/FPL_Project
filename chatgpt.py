@@ -116,24 +116,26 @@ Article: {story_content}"""}
 def generate_fpl_tips_from_csv(path="Model_Predictions.csv", top_n=40):
     try:
         df = pd.read_csv(path)
-        df = df.sort_values(by="Predictions", ascending=False).head(top_n)
+        df = df.sort_values(by="Points_prediction", ascending=False).head(top_n)
         
-        df["Name"] = df["Name"].str.replace(r'\d+$', '', regex=True).str.strip()
+        df["Name"] = df["name"].str.replace(r'\d+$', '', regex=True).str.strip()
         data = pd.read_csv("Raw_Data_24/Fantasy_season_2024_data.csv").iloc[:, 1:]
         data['kickoff_time'] = pd.to_datetime(data['kickoff_time'])
+        data["name_prev"] = data["first_name"] + " " + data["second_name"]
+        data["Name2"] = data["name_prev"].str.replace(" ", "_", n=1)
         latest_rows = data.loc[data.groupby("element")["kickoff_time"].idxmax()]
 
         merged = df.merge(
-            latest_rows[['Full_Name', 'team_name', 'selected', 'transfers_in', 'news']],
+            latest_rows[['Name2', 'team_name', 'selected', 'transfers_in', 'news']],
             how='left',
             left_on='Name',
-            right_on='Full_Name'
+            right_on='Name2'
         )
 
-        merged.drop(columns=['Full_Name'], inplace=True)
+        merged.drop(columns=['Name2'], inplace=True)
 
         player_summaries = "\n".join([
-            f"{row['Name']} ({row['position']}, {row['time_index']}) - {row['Predictions']} pts - {row['transfers_in']} transfers in - {row['team_name']} - {row['selected']} selected - {row['news']}"
+            f"{row['Name']} ({row['position']}, {row['GW']})- {row['Assist_pred']} pred assist- {row['Goal_pred']} pred goals - {row['Points_prediction']} pred pts - {row['transfers_in']} transfers in - {row['team_name']} - {row['selected']} selected - {row['news']}"
             for _, row in merged.iterrows()
         ])
 
