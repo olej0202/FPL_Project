@@ -40,6 +40,8 @@ def load_and_transform(endpoint):
         csv_path = os.path.join(parent_dir, "Free_hit_team.csv")
     elif endpoint == "News":
         csv_path = os.path.join(parent_dir, "PL_news.csv")
+    elif endpoint == "Team_Predictions_Future":
+        csv_path = os.path.join(parent_dir, "Team_prediction.csv")
     else:
         raise ValueError(f"Unknown endpoint: {endpoint}")
         
@@ -62,6 +64,11 @@ def get_data():
 @app.get("/Team_Predictions")
 def get_data():
     df = load_and_transform("Team_Predictions")
+    return df.to_dict(orient="records")
+
+@app.get("/Team_Predictions_Future")
+def get_data():
+    df = load_and_transform("Team_Predictions_Future")
     return df.to_dict(orient="records")
 
 @app.get("/free-hit")
