@@ -225,7 +225,7 @@ const API_URL = "https://fpl-project-t5e9.onrender.com/Teams";
       </div>
 {/* ELO Bar Chart */}
       <h2 className="text-3xl font-bold text-center text-royal-gold">ELO Rankings</h2>
-      <div className="w-full overflow-x-auto">
+      <div className="w-full max-w-6xl h-[600px] sm:h-[600px] md:h-[700px]">
         <ResponsiveContainer width="100%" height={Math.max(allTeamStats.length * 25, 300)}>
   <BarChart
     data={[...allTeamStats].sort((a, b) => b.Elo_Rating - a.Elo_Rating)}
@@ -263,6 +263,7 @@ const API_URL = "https://fpl-project-t5e9.onrender.com/Teams";
       <LabelList dataKey="Elo_Rating" position="right" fill="#fff" />
     </Bar>
   </BarChart>
+  
 </ResponsiveContainer>
 
       </div>
@@ -271,6 +272,7 @@ const API_URL = "https://fpl-project-t5e9.onrender.com/Teams";
       <h2 className="text-3xl font-bold text-center text-royal-gold mt-8">
         {showOffensive ? "Attack Rankings (XG Avg)" : "Defence Rankings (Overall)"}
       </h2>
+      <div className="w-full max-w-6xl h-[700px] sm:h-[600px] md:h-[700px]">
       <ResponsiveContainer width="100%" height={Math.max(allTeamStats.length * 30, 200)}>
         <BarChart
           data={[...allTeamStats].sort((a, b) =>
@@ -302,6 +304,7 @@ const API_URL = "https://fpl-project-t5e9.onrender.com/Teams";
           </Bar>
         </BarChart>
       </ResponsiveContainer>
+      </div>
     </div>
   );
 }
