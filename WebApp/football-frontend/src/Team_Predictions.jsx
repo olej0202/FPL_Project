@@ -35,8 +35,11 @@ useEffect(() => {
 
   return (
     <div className="min-h-screen bg-black text-white p-6">
-      <h1 className="text-4xl font-bold text-center text-royal-gold mb-6">
-        Team Score Predictions
+      <h1 className="text-4xl font-bold text-center text-white mb-6">
+        Score Predictions
+      </h1>
+      <h1 className="text-4xl font-bold text-center text-white mb-6">
+        GW {selectedGW}
       </h1>
 
       <div className="mb-6 text-center">
@@ -44,7 +47,7 @@ useEffect(() => {
         <select
           value={selectedGW || ""}
           onChange={(e) => setSelectedGW(Number(e.target.value))}
-          className="bg-black border border-royal-gold text-royal-gold p-2 rounded"
+          className="bg-royal-beige border-royal-gold text-royal-gold p-2 rounded"
         >
           {uniqueGWs.map((gw) => (
             <option key={gw} value={gw}>
