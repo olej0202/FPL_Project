@@ -35,6 +35,13 @@ export default function Player_analytics_rankings() {
   const [minGW, setMinGW] = useState(null);
   const [maxGW, setMaxGW] = useState(null);
   const navigate = useNavigate();
+  const minValue = Math.min(...filtered.map((d) => d.value));
+const maxValue = Math.max(...filtered.map((d) => d.value));
+
+const domain = [
+  minValue - minValue * 0.1,  // dataMin - 10%
+  maxValue + maxValue * 0.1   // dataMax + 10%
+];
 
 
   useEffect(() => {
@@ -154,7 +161,7 @@ export default function Player_analytics_rankings() {
         <BarChart
           layout="vertical"
           data={filtered}
-          margin={{ top: 10, right: 20, left: 20, bottom: 10 }}
+          margin={{ top: 10, right: 30, left: 20, bottom: 10 }}
         >
           <CartesianGrid stroke="#333" />
           <XAxis
@@ -162,6 +169,7 @@ export default function Player_analytics_rankings() {
             tick={false}
             axisLine={false}
             tickLine={false}
+            domain={domain} 
           />
           <YAxis
             type="category"
