@@ -32,6 +32,8 @@ def load_and_transform(endpoint):
         csv_path = os.path.join(parent_dir, "Team_prediction_visual.csv")
     elif endpoint == "ALL_Data":
         csv_path = os.path.join(parent_dir, "ML_training2.csv")
+    elif endpoint == "Player_rankings":
+        csv_path = os.path.join(parent_dir, "Model_Predictions.csv")
     elif endpoint == "Teams":
         csv_path = os.path.join(parent_dir, "Team_data_transformed2.csv")
     elif endpoint == "Current_players":
@@ -70,6 +72,13 @@ def get_data():
 def get_data():
     df = load_and_transform("Team_Predictions_Future")
     return df.to_dict(orient="records")
+
+
+@app.get("/Player_rankings")
+def get_data():
+    df = load_and_transform("Player_rankings")
+    return df.to_dict(orient="records")
+
 
 @app.get("/free-hit")
 def get_data():

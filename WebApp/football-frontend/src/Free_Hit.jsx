@@ -2,21 +2,23 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import pitch from "./assets/pitch.png";
 import Navbar from "./components/team_navigation"; // Optional team nav
+import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { useAITeamData } from "./Contexts/AITeamsContext";
 
 export default function FreeHitTeam() {
+  const { fetchIfNeeded, freeHitData, loading } = useAITeamData();
   const [playingPlayers, setPlayingPlayers] = useState([]);
   const [benchPlayers, setBenchPlayers] = useState([]);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    fetch("https://fpl-project-t5e9.onrender.com/free-hit")
-      .then((res) => res.json())
-      .then((data) => {
-        setPlayingPlayers(data.filter((p) => p.status === "Playing"));
-        setBenchPlayers(data.filter((p) => p.status === "Bench"));
-      })
-      .catch((err) => console.error("Failed to fetch free hit players:", err));
+   useEffect(() => {
+    fetchIfNeeded().then(() => {
+      const data = freeHitData.current || [];
+      setPlayingPlayers(data.filter(p => p.status === "Playing"));
+      setBenchPlayers(data.filter(p => p.status === "Bench"));
+    });
   }, []);
+   if (loading) return <div className="text-white">Loading...</div>;
 
   const getPlayersByPosition = (pos) =>
     playingPlayers.filter((p) => p.position === pos);

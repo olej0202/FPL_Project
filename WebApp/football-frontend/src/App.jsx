@@ -10,6 +10,7 @@ import NewsBlog from "./News";
 import AITeamNav from "./components/team_navigation";
 import logo from "./assets/FPL_analytics_logo.png";
 import TeamPredictionsFuture from "./Fixture_Ticker"
+import AITeams from "./AITeams"
 
 import { User, Brain, Trophy, Users, Newspaper, Calendar } from "lucide-react";
 
@@ -91,7 +92,7 @@ export default function App() {
               <Trophy size={18} /> Score Predictions
             </NavLink>
             <NavLink
-              to="/Free_Hit"
+              to="/AITeams"
               className={({ isActive }) =>
                 `flex items-center gap-2 px-4 py-2 rounded border border-royal-gold text-royal-gold font-semibold ${
                   isActive
@@ -114,12 +115,17 @@ export default function App() {
         <Route path="/" element={<Team_Analytics />} />
         <Route path="/Score_Predictions" element={<Team_Predictions />} />
         <Route path="/Player_Analytics" element={<PlayerAnalytics />} />
-        <Route path="/Free_Hit" element={<FreeHitTeam />} />
-        <Route path="/Wildcard_Team" element={<WildcardTeam />} />
-        <Route path="/My_Team" element={<MyTeam />} />
+        <Route path="/AITeams" element={<AITeams />}>
+              <Route index element={<FreeHitTeam />} /> {/* 👈 Default */}
+              <Route path="FreeHitTeam" element={<FreeHitTeam />} />
+              <Route path="Wildcard_Team" element={<WildcardTeam />} />
+              <Route path="My_Team" element={<MyTeam />} />
+        </Route>
         <Route path="/news" element={<NewsBlog />} />
         <Route path="/TeamPredictionsFuture" element={<TeamPredictionsFuture />} />
       </Routes>
     </div>
   );
 }
+
+
