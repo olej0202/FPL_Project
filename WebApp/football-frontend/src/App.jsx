@@ -125,7 +125,6 @@ export default function App() {
         </Route>
 
         <Route path="/Player_Analytics" element={<Player_analytics />}>
-              <Route index element={<Player_analytics_rankings />} /> {/* 👈 Default */}
               <Route path="Rankings" element={<Player_analytics_rankings />} />
               <Route path="Individual" element={<PlayerAnalyticsIndividual />} />
         </Route>

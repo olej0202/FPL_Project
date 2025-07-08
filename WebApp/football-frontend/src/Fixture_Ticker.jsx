@@ -113,10 +113,9 @@ export default function TeamPredictionRankings() {
             className={`text-sm sm:text-base font-bold px-4 py-2 rounded transition-all duration-200
         ${
           selectedMetric === metricKey
-            ? "bg-royal-beige text-royal-red underline underline-offset-4 hover:border-none"
-            : "bg-royal-beige text-royal-red hover:bg-royal-gold hover:text-black hover:border-none"
-        }
-        focus:outline-none`}
+            ? "bg-royal-beige text-royal-gold underline underline-offset-4 hover:border-none border-none"
+            : "bg-royal-beige text-black  hover:text-royal-gold  hover:border-none border-none"
+        } focus:outline-none` }
   
             onClick={() => setSelectedMetric(metricKey)}
           >

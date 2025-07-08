@@ -36,15 +36,15 @@ export default function FreeHitTeam() {
           className="w-full max-w-[500px] aspect-[3/4] bg-no-repeat bg-cover bg-center border border-white rounded-lg px-2 py-3 relative"
           style={{ backgroundImage: `url(${pitch})` }}
         >
-          <div className="flex flex-col justify-between h-full pt-3 pb-20 space-y-4">
-            <PlayerRow players={getPlayersByPosition("FWD")} navigate={navigate} />
-            <PlayerRow players={getPlayersByPosition("MID")} navigate={navigate} />
-            <PlayerRow players={getPlayersByPosition("DEF")} navigate={navigate} />
+          <div className="flex flex-col justify-between h-full pt-1 pb-24 space-y-1">
             <PlayerRow players={getPlayersByPosition("GK")} navigate={navigate} />
+            <PlayerRow players={getPlayersByPosition("DEF")} navigate={navigate} />
+            <PlayerRow players={getPlayersByPosition("MID")} navigate={navigate} />
+            <PlayerRow players={getPlayersByPosition("FWD")} navigate={navigate} />
           </div>
 
           {benchPlayers.length > 0 && (
-            <div className="absolute bottom-[-12px] left-0 right-0 px-2">
+            <div className="absolute bottom-[-10px] left-0 right-0 px-2">
               <PlayerRow players={benchPlayers} isBench navigate={navigate} />
             </div>
           )}

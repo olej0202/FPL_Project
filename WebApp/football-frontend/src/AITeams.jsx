@@ -2,6 +2,15 @@ import React, { useEffect, useState } from "react";
 import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
 
 export default function AITeams() {
+    const navigate = useNavigate();
+    const location = useLocation();
+    
+    // Redirect to Rankings if on /Player_Analytics
+    useEffect(() => {
+      if (location.pathname === "/AITeams") {
+        navigate("/AITeams/FreeHitTeam");
+      }
+    }, [location, navigate]);
 
   return (
  <div className="min-h-screen bg-black text-white px-4 py-6 space-y-6">
@@ -19,7 +28,7 @@ export default function AITeams() {
     }`
   }
 >
-  Free Hit Team
+  Free Hit
 </NavLink>
 
 <NavLink
@@ -32,7 +41,7 @@ export default function AITeams() {
     }`
   }
 >
-  Wildcard Team
+  Wildcard
 </NavLink>
 
 <NavLink
