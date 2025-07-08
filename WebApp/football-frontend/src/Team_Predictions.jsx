@@ -1,42 +1,28 @@
 import React, { useEffect, useState } from "react";
-
+import { useOtherData } from "./Contexts/OtherContext";
+import teamLogos from "./utils/team_logos"; // adjust path as needed
 export default function Team_Predictions() {
-  const [predictions, setPredictions] = useState([]);
-  const [selectedGW, setSelectedGW] = useState(null);
-  const [filteredData, setFilteredData] = useState([]);
-    const teamLogos = {
-  "Man City": "https://logodetimes.com/times/manchester-city/logo-manchester-city-4096.png",
-  "Arsenal": "https://pluspng.com/img-png/arsenal-png-arsenal-fc-icon-png-50-px-1600.png",
-  "Chelsea": "https://pluspng.com/img-png/chelsea-logo-png-chelsea-fc-logo-png-and-vector-logo-img-4096x4096.png",
-  "Nott'm Forest": "https://cdn.freebiesupply.com/logos/large/2x/nottingham-forest-fc-logo-png-transparent.png",
-  "Leicester": "https://logodownload.org/wp-content/uploads/2019/05/leicester-city-logo.png",
-  "Man Utd": "https://pngimg.com/uploads/manchester_united/manchester_united_PNG9.png",
-  "Brighton": "https://logodownload.org/wp-content/uploads/2019/10/brighton-hove-albion-logo.png",
-  "Newcastle": "https://cdn.freebiesupply.com/logos/large/2x/newcastle-united-logo-png-transparent.png",
-  "Southampton": "https://logodownload.org/wp-content/uploads/2019/10/southampton-fc-logo-0.png",
-  "Wolves": "https://logodownload.org/wp-content/uploads/2019/04/wolverhampton-logo-escudo.png",
-  "Bournemouth": "https://logodownload.org/wp-content/uploads/2019/10/bournemouth-fc-logo-0.png",
-  "Liverpool": "https://img.icons8.com/color/1600/liverpool-fc.png",
-  "Aston Villa": "https://brandlogo.org/wp-content/uploads/2024/09/Aston-Villa-Logo.png",
-  "Everton": "https://logodownload.org/wp-content/uploads/2019/04/everton-logo-escudo.png",
-  "Brentford": "https://logodownload.org/wp-content/uploads/2022/09/brentford-fc-logo.png",
-  "West Ham": "https://logodownload.org/wp-content/uploads/2019/05/west-ham-united-logo-0-300x300.png",
-  "Crystal Palace": "https://logodownload.org/wp-content/uploads/2019/05/crystal-palace-logo.png",
-  "Fulham": "https://logodownload.org/wp-content/uploads/2022/09/fulham-fc-logo-0.png",
-  "Ipswich": "https://cdn.freebiesupply.com/logos/large/2x/ipswich-logo-png-transparent.png",
-  "Spurs": "https://www.pngplay.com/wp-content/uploads/13/Tottenham-Hotspur-F.C-Transparent-PNG.png",
-};
 
-  useEffect(() => {
-    fetch("https://fpl-project-t5e9.onrender.com/Team_Predictions")
-      .then((res) => res.json())
-      .then((data) => {
-        setPredictions(data);
-        const latestGW = Math.max(...data.map((d) => d.GW));
-        setSelectedGW(latestGW);
-      })
-      .catch((err) => console.error("Failed to fetch predictions:", err));
-  }, []);
+const [predictions, setPredictions] = useState([]);
+const [selectedGW, setSelectedGW] = useState(null);
+const [filteredData, setFilteredData] = useState([]);
+
+const { fetchIfNeeded, ScorePredData } = useOtherData();
+
+useEffect(() => {
+  const loadData = async () => {
+    await fetchIfNeeded(); // ensures data is fetched once
+    const data = ScorePredData.current;
+
+    if (!data || !Array.isArray(data)) return;
+
+    setPredictions(data);
+    const latestGW = Math.max(...data.map((d) => d.GW));
+    setSelectedGW(latestGW);
+  };
+
+  loadData();
+}, [fetchIfNeeded, ScorePredData]);
 
   useEffect(() => {
     if (selectedGW !== null) {

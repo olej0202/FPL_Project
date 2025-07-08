@@ -63,7 +63,7 @@ function PlayerRow({ players, isBench = false, navigate }) {
           <div
             key={idx}
             onClick={() =>
-              navigate("/Player_Analytics", {
+              navigate("/Player_Analytics/Individual", {
                 state: { selectedPlayer: player.Name },
               })
             }

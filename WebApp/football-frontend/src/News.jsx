@@ -1,39 +1,45 @@
 import React, { useEffect, useState } from "react";
+import { useOtherData } from "./Contexts/OtherContext";
 
 export default function NewsBlog() {
-  const [articles, setArticles] = useState([]);
-  const [groupedNews, setGroupedNews] = useState({});
+const [articles, setArticles] = useState([]);
+const [groupedNews, setGroupedNews] = useState({});
+const { fetchIfNeeded, NewsData, loading } = useOtherData();
 
-  useEffect(() => {
-    fetch("https://fpl-project-t5e9.onrender.com/News")
-      .then((res) => res.json())
-      .then((data) => {
-        const parsed = data.map((article) => {
-          let sourceObj = {};
-          try {
-            sourceObj = JSON.parse(article.source.replace(/'/g, '"'));
-          } catch (e) {
-            console.warn("Invalid source format:", article.source);
-          }
+useEffect(() => {
+  const loadNews = async () => {
+    await fetchIfNeeded();
 
-          return {
-            ...article,
-            parsedSource: sourceObj,
-          };
-        });
+    if (!NewsData.current) return;
 
-        setArticles(parsed);
+    const parsed = NewsData.current.map((article) => {
+      let sourceObj = {};
+      try {
+        sourceObj = JSON.parse(article.source.replace(/'/g, '"'));
+      } catch (e) {
+        console.warn("Invalid source format:", article.source);
+      }
 
-        const grouped = parsed.reduce((acc, article) => {
-          if (!acc[article.topic]) acc[article.topic] = [];
-          acc[article.topic].push(article);
-          return acc;
-        }, {});
+      return {
+        ...article,
+        parsedSource: sourceObj,
+      };
+    });
 
-        setGroupedNews(grouped);
-      })
-      .catch((err) => console.error("Failed to fetch news:", err));
-  }, []);
+    setArticles(parsed);
+
+    const grouped = parsed.reduce((acc, article) => {
+      if (!acc[article.topic]) acc[article.topic] = [];
+      acc[article.topic].push(article);
+      return acc;
+    }, {});
+
+    setGroupedNews(grouped);
+  };
+
+  loadNews();
+}, [fetchIfNeeded, NewsData]);
+
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center px-4 sm:px-6 py-10 sm:py-12 space-y-10">

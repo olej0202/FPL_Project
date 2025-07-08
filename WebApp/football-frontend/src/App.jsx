@@ -5,12 +5,14 @@ import Team_Predictions from "./Team_Predictions";
 import FreeHitTeam from "./Free_Hit";
 import WildcardTeam from "./Wildcard_team";
 import MyTeam from "./My_team";
-import PlayerAnalytics from "./Player_Analytics";
+import Player_analytics from "./Player_Analytics";
 import NewsBlog from "./News";
 import AITeamNav from "./components/team_navigation";
 import logo from "./assets/FPL_analytics_logo.png";
 import TeamPredictionsFuture from "./Fixture_Ticker"
 import AITeams from "./AITeams"
+import Player_analytics_rankings from "./Player_Analytics_rankings"
+import PlayerAnalyticsIndividual from "./Player_Analytics_individual"
 
 import { User, Brain, Trophy, Users, Newspaper, Calendar } from "lucide-react";
 
@@ -114,12 +116,18 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Team_Analytics />} />
         <Route path="/Score_Predictions" element={<Team_Predictions />} />
-        <Route path="/Player_Analytics" element={<PlayerAnalytics />} />
+
         <Route path="/AITeams" element={<AITeams />}>
               <Route index element={<FreeHitTeam />} /> {/* 👈 Default */}
               <Route path="FreeHitTeam" element={<FreeHitTeam />} />
               <Route path="Wildcard_Team" element={<WildcardTeam />} />
               <Route path="My_Team" element={<MyTeam />} />
+        </Route>
+
+        <Route path="/Player_Analytics" element={<Player_analytics />}>
+              <Route index element={<Player_analytics_rankings />} /> {/* 👈 Default */}
+              <Route path="Rankings" element={<Player_analytics_rankings />} />
+              <Route path="Individual" element={<PlayerAnalyticsIndividual />} />
         </Route>
         <Route path="/news" element={<NewsBlog />} />
         <Route path="/TeamPredictionsFuture" element={<TeamPredictionsFuture />} />
