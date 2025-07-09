@@ -143,10 +143,10 @@ def generate_fpl_tips_from_csv(path="Model_Predictions_visual.csv", top_n=50):
 Based on the following Fantasy Premier League (FPL) player predictions, write a list of FPL tips or suggestions seen from the minimum GW.
 Cover transfer targets, differentials, and captaincy picks.
 Do not explicitly mention predicted points.
-Captaincy should only look at the minimum GW 
+Captaincy should only look at the minimum GW and should provide at least 3 alternatives
 For transfer targets dont mention the most higly owned players
 For transfer targets see more in the future
-For differential, players should be less than 0.1 owned 
+For differential, players should be less than 0.1 owned meaning 10%
 
 Structure the text not with #s and *s 
 

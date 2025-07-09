@@ -328,12 +328,12 @@ const scaledComparisonData = rawStats.map(({ key, label }) => ({
         <p className="text-3xl font-bold">{avgOfMetric.toFixed(2)}</p>
       </div>
 
-      <div className="bg-royal-red p-4 rounded shadow border border-royal-gold w-full max-w-6xl mt-8">
+      <div className="bg-royal-red p-1 rounded shadow border border-royal-gold w-full max-w-6xl mt-8">
         <h2 className="text-xl font-semibold mb-4 text-center text-royal-gold capitalize">
           {selectedMetric.replace("_", " ")} Over Time
         </h2>
         <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={filteredChartData}>
+          <LineChart data={filteredChartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
             <CartesianGrid stroke="#333" />
             <XAxis dataKey="kickoff_time" tick={{ fontSize: 10 }} stroke="#fff" />
             <YAxis stroke="#fff" />
