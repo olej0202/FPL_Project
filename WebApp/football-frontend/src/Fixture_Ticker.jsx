@@ -127,9 +127,13 @@ export default function TeamPredictionRankings() {
       {/* GW Slider */}
       {minGW !== null && maxGW !== null && (
         <Box sx={{ width: 300, color: "white" }}>
-          <Typography gutterBottom>
-            GW Range: From GW {GWRange[0]} to GW {GWRange[1]}
-          </Typography>
+<Typography
+  gutterBottom
+  align="center"
+  className="whitespace-pre-line"
+>
+  {`GW Range`}
+</Typography>
           <Slider
             value={GWRange}
             min={minGW}
@@ -142,9 +146,9 @@ export default function TeamPredictionRankings() {
               { value: maxGW, label: `GW ${maxGW}` },
             ]}
             sx={{
-              color: "#5A0000",
+              color: "#B8860B",
               "& .MuiSlider-thumb": {
-                backgroundColor: "#5A0000",
+                backgroundColor: "#B8860B",
               },
             }}
           />
