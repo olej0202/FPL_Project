@@ -21,6 +21,7 @@ const METRICS = {
   Assist_pred:"Assists Predicted",
   Rolling_adjusted_XG: "Goal Index",
   Rolling_adjusted_XA: "Assist Index",
+  Rolling_adjusted_BPS: "Bonus Index",
   
 };
 
@@ -150,7 +151,7 @@ const domain = [
             onChange={(e, newVal) => setGWRange(newVal)}
             valueLabelDisplay="auto"
             step={1}
-            sx={{ color: "#FFD700" }}
+            sx={{ color: "#B8860B" }}
           />
         </Box>
       )}

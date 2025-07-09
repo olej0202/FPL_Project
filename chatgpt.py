@@ -113,7 +113,7 @@ Article: {story_content}"""}
     return response.choices[0].message.content.strip()
 
 # === Generate FPL Tips ===
-def generate_fpl_tips_from_csv(path="Model_Predictions.csv", top_n=40):
+def generate_fpl_tips_from_csv(path="Model_Predictions_visual.csv", top_n=50):
     try:
         df = pd.read_csv(path)
         df = df.sort_values(by="Points_prediction", ascending=False).head(top_n)
@@ -140,9 +140,16 @@ def generate_fpl_tips_from_csv(path="Model_Predictions.csv", top_n=40):
         ])
 
         prompt = f"""
-Based on the following Fantasy Premier League (FPL) player predictions, write a list of FPL tips or suggestions.
+Based on the following Fantasy Premier League (FPL) player predictions, write a list of FPL tips or suggestions seen from the minimum GW.
 Cover transfer targets, differentials, and captaincy picks.
 Do not explicitly mention predicted points.
+Captaincy should only look at the minimum GW 
+For transfer targets dont mention the most higly owned players
+For transfer targets see more in the future
+For differential, players should be less than 0.1 owned 
+
+Structure the text not with #s and *s 
+
 
 Players:
 {player_summaries}
