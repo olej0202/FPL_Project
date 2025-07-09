@@ -33,6 +33,8 @@ def GenerateOptimizeSet(Current_data_path):
     visual_df["minutes_multiplier"] = np.minimum(1, visual_df['average_minutes'] / 70)
     visual_df["selected"] = visual_df["selected"].clip(lower=0.01)
     visual_df["minutes_multiplier"] = visual_df["minutes_multiplier"].clip(lower=0.01)
+    visual_df["news"] = visual_df["news"].fillna("No news")
+
     
     cols_to_offset=["Goal_pred","Assist_pred","Points_prediction"]
     for col in cols_to_offset:
@@ -69,7 +71,7 @@ def GenerateOptimizeSet(Current_data_path):
             player_points[player_points['value'].isin(value)]
             .sort_values(['value', 'Points_prediction'], ascending=[True, False])
             .groupby('value')
-            .head(3)
+            .head(2)
             .reset_index(drop=True)
         )
         names.extend(top_players_by_value["name"].tolist())
@@ -82,7 +84,6 @@ def GenerateOptimizeSet(Current_data_path):
     visual_df=visual_df[visual_df["name"].isin(names)]
     visual_df.to_csv("Model_Predictions_visual.csv")
     print(names)
-    
 
     
 
@@ -92,7 +93,6 @@ def GenerateOptimizeSet(Current_data_path):
     optimized_player_set["minutes_multiplier"] = np.minimum(1, optimized_player_set['average_minutes'] / 70)
     optimized_player_set["0"] = 0
     
-    print(optimized_player_set)
     
     
 
