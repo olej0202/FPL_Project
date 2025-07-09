@@ -1,22 +1,28 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import pitch from "./assets/pitch.png";
-import Navbar from "./components/team_navigation";
+import Navbar from "./components/team_navigation"; // Optional team nav
+import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { useAITeamData } from "./Contexts/AITeamsContext";
 
-export default function WildcardTeam() {
+export default function FreeHitTeam() {
+  const { fetchIfNeeded, freeHitData, loading } = useAITeamData();
   const [playingPlayers, setPlayingPlayers] = useState([]);
   const [benchPlayers, setBenchPlayers] = useState([]);
+  const [minGW, setMinGW] = useState(null);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    fetch("https://fpl-project-t5e9.onrender.com/free-hit")
-      .then((res) => res.json())
-      .then((data) => {
-        setPlayingPlayers(data.filter((p) => p.status === "Playing"));
-        setBenchPlayers(data.filter((p) => p.status === "Bench"));
-      })
-      .catch((err) => console.error("Failed to fetch free hit players:", err));
+   useEffect(() => {
+    fetchIfNeeded().then(() => {
+      const data = freeHitData.current || [];
+      setPlayingPlayers(data.filter(p => p.status === "Playing"));
+      setBenchPlayers(data.filter(p => p.status === "Bench"));
+
+      const gwList = data.map(p => Number(p.GW)).filter(gw => !isNaN(gw));
+      setMinGW(Math.min(...gwList));
+    });
   }, []);
+   if (loading) return <div className="text-white">Loading...</div>;
 
   const getPlayersByPosition = (pos) =>
     playingPlayers.filter((p) => p.position === pos);
@@ -25,67 +31,68 @@ export default function WildcardTeam() {
     <>
       <div className="min-h-screen bg-black text-white flex flex-col items-center py-10 px-4 space-y-10">
         <h1 className="text-3xl md:text-4xl font-bold text-center mb-4">
-          AI Optimized Wildcard Team
-         </h1>
- 
-         <div
-           className="w-full max-w-[500px] aspect-[3/4] bg-no-repeat bg-cover bg-center border border-white rounded-lg px-2 py-3 relative"
-           style={{ backgroundImage: `url(${pitch})` }}
-         >
-           <div className="flex flex-col justify-between h-full pt-3 pb-20 space-y-4">
-             <PlayerRow players={getPlayersByPosition("FWD")} navigate={navigate} />
-             <PlayerRow players={getPlayersByPosition("MID")} navigate={navigate} />
-             <PlayerRow players={getPlayersByPosition("DEF")} navigate={navigate} />
-             <PlayerRow players={getPlayersByPosition("GK")} navigate={navigate} />
-           </div>
- 
-           {benchPlayers.length > 0 && (
-             <div className="absolute bottom-[-12px] left-0 right-0 px-2">
-               <PlayerRow players={benchPlayers} isBench navigate={navigate} />
-             </div>
-           )}
-         </div>
-       </div>
-     </>
-   );
- }
- 
- function PlayerRow({ players, isBench = false, navigate }) {
-   return (
-     <div className="flex justify-center gap-3 py-2 overflow-x-auto">
-       {players.map((player, idx) => {
-         const name = player.Name.match(/_([^ ]+)/)?.[1];// Get last name after _ or space
-         return (
-           <div
-             key={idx}
-             onClick={() =>
-               navigate("/Player_Analytics", {
-                 state: { selectedPlayer: player.Name },
-               })
-             }
-             className={`flex flex-col items-center cursor-pointer hover:scale-105 transition-transform ${
-               isBench ? "text-black opacity-90" : "text-white"
-             }`}
-           >
-             <img
-                 src={player.photo}
-                 alt={player.Name}
-                 className={`object-contain ${
-                 isBench
-                 ? "w-[45px] h-[65px] sm:w-[55px] sm:h-[75px]"
-                 : "w-[60px] h-[80px] sm:w-[70px] sm:h-[90px]"
-                 }`}
-             />
-             <span className="mt-1 text-center font-small text-xs sm:text-sm leading-tight">
-               {name}
-             </span>
-             {isBench && (
-               <span className="text-xs text-black/60">{player.position}</span>
-             )}
-           </div>
-         );
-       })}
-     </div>
-   );
- }
- 
+
+            
+          Wildcard Team GW {minGW }
+        </h1>
+
+        <div
+          className="w-full max-w-[500px] aspect-[3/4] bg-no-repeat bg-cover bg-center border border-white rounded-lg px-2 py-3 relative"
+          style={{ backgroundImage: `url(${pitch})` }}
+        >
+          <div className="flex flex-col justify-between h-full pt-1 pb-24 space-y-1">
+            <PlayerRow players={getPlayersByPosition("GKP")} navigate={navigate} />
+            <PlayerRow players={getPlayersByPosition("DEF")} navigate={navigate} />
+            <PlayerRow players={getPlayersByPosition("MID")} navigate={navigate} />
+            <PlayerRow players={getPlayersByPosition("FWD")} navigate={navigate} />
+          </div>
+
+          {benchPlayers.length > 0 && (
+            <div className="absolute bottom-[-10px] left-0 right-0 px-2">
+              <PlayerRow players={benchPlayers} isBench navigate={navigate} />
+            </div>
+          )}
+        </div>
+      </div>
+    </>
+  );
+}
+
+function PlayerRow({ players, isBench = false, navigate }) {
+  return (
+    <div className="flex justify-center gap-3 py-2 overflow-x-auto">
+      {players.map((player, idx) => {
+        const name = player.Name.match(/_([^ ]+)/)?.[1];// Get last name after _ or space
+        return (
+          <div
+            key={idx}
+            onClick={() =>
+              navigate("/Player_Analytics/Individual", {
+                state: { selectedPlayer: player.Name },
+              })
+            }
+            className={`flex flex-col items-center cursor-pointer hover:scale-105 transition-transform ${
+              isBench ? "text-black opacity-90" : "text-white"
+            }`}
+          >
+            <img
+                src={player.photo}
+                alt={player.Name}
+                className={`object-contain ${
+                isBench
+                ? "w-[45px] h-[65px] sm:w-[55px] sm:h-[75px]"
+                : "w-[60px] h-[80px] sm:w-[70px] sm:h-[90px]"
+                }`}
+            />
+            <span className="mt-1 text-center font-small text-xs sm:text-sm leading-tight">
+              {name}
+            </span>
+            {isBench && (
+              <span className="text-xs text-black/60">{player.position}</span>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}

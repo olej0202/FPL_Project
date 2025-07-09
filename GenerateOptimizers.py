@@ -81,7 +81,7 @@ def wildcard_optimize_team(sel_thresh, budget, columns, file_path="Model_Optimiz
 
     # Solve
     model.solve()
-
+    records = []
     # Output
     print(f"Status: {model.status}")
     for t in gameweeks:
@@ -92,15 +92,32 @@ def wildcard_optimize_team(sel_thresh, budget, columns, file_path="Model_Optimiz
                 print(f"- {players[i]} ({positions[i]}) - {status}")
 
     for t in range(1, GW_range):
-        print(f"\nTransfers for Gameweek {t+1}:")
-        players_in = [players[i] for i in range(num_players) if transfer_in[i, t].varValue > 0.5]
-        players_out = [players[i] for i in range(num_players) if transfer_out[i, t].varValue > 0.5]
-        print(f"  In: {', '.join(players_in) if players_in else 'None'}")
-        print(f"  Out: {', '.join(players_out) if players_out else 'None'}")
+        for i in range(num_players):
+            name = players[i]
+            player_row_code = current_players[current_players["name"] == name]["code"].values[0]
+            pos = positions[i]
+            gw = columns[t]
 
+            # transferred in
+            if x[i, t].varValue > 0.5 and x[i, t-1].varValue < 0.5:
+                records.append({
+                    "Name": name,
+                    "status": "transferred_in",
+                    "GW": gw,
+                    "position": pos,
+                    "photo": f"https://resources.premierleague.com/premierleague/photos/players/110x140/p{player_row_code}.png"
+                })
 
+            # transferred out
+            if x[i, t].varValue < 0.5 and x[i, t-1].varValue > 0.5:
+                records.append({
+                    "Name": name,
+                    "status": "transferred_out",
+                    "GW": gw,
+                    "position": pos,
+                    "photo": f"https://resources.premierleague.com/premierleague/photos/players/110x140/p{player_row_code}.png"
+                })
 
-    records = []
 
     for t in gameweeks:
         for i in range(num_players):
@@ -115,7 +132,7 @@ def wildcard_optimize_team(sel_thresh, budget, columns, file_path="Model_Optimiz
                 else:
                     status = "playing"
                 records.append({"Name": name, "status": status, "GW": gw, "position": pos, "photo":f"https://resources.premierleague.com/premierleague/photos/players/110x140/p{player_row_code}.png"})
-
+    """
     for t in range(1, GW_range):
         for i in range(num_players):
             name = players[i]
@@ -126,7 +143,7 @@ def wildcard_optimize_team(sel_thresh, budget, columns, file_path="Model_Optimiz
             if transfer_in[i, t].varValue > 0.5:
                 records.append({"Name": name, "status": "transferred_in", "GW": gw, "position": pos, "photo":f"https://resources.premierleague.com/premierleague/photos/players/110x140/p{player_row_code}.png"})
             if transfer_out[i, t].varValue > 0.5:
-                records.append({"Name": name, "status": "transferred_out", "GW": gw, "position": pos, "photo":f"https://resources.premierleague.com/premierleague/photos/players/110x140/p{player_row_code}.png"})
+                records.append({"Name": name, "status": "transferred_out", "GW": gw, "position": pos, "photo":f"https://resources.premierleague.com/premierleague/photos/players/110x140/p{player_row_code}.png"})"""
 
     # Final structured DataFrame
     status_df = pd.DataFrame(records)
@@ -237,8 +254,8 @@ def freeHit_optimize_team(sel_thresh, budget, columns, file_path="Model_Optimize
 
 
 def generate_optimizers(ownership, budget, GW_list_wildcard, GW_list_freehit):
-    #wildcard_optimize_team(ownership, budget, GW_list_wildcard)
-    freeHit_optimize_team(ownership, budget, GW_list_freehit)
+    wildcard_optimize_team(ownership, budget, GW_list_wildcard)
+    #freeHit_optimize_team(ownership, budget, GW_list_freehit)
     
     
 if __name__ == "__main__":
