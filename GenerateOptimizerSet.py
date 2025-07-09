@@ -31,6 +31,8 @@ def GenerateOptimizeSet(Current_data_path):
     visual_df["selected"] = visual_df["selected"]/11000000
     visual_df["value"] = visual_df["value"]/10
     visual_df["minutes_multiplier"] = np.minimum(1, visual_df['average_minutes'] / 70)
+    visual_df["selected"] = visual_df["selected"].clip(lower=0.01)
+    visual_df["minutes_multiplier"] = visual_df["minutes_multiplier"].clip(lower=0.01)
     
     cols_to_offset=["Goal_pred","Assist_pred","Points_prediction"]
     for col in cols_to_offset:
