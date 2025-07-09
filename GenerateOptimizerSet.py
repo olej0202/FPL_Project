@@ -25,11 +25,22 @@ def GenerateOptimizeSet(Current_data_path):
     merged_df = prediction_data.merge(result, how='left', left_on='name', right_on='Name2')
 
     merged_df.drop(columns=['Name2'], inplace=True)
+    
+    visual_df=merged_df.copy()
+    visual_df['offset'] = visual_df['news'].apply(process_news)
+    visual_df["selected"] = visual_df["selected"]/11000000
+    visual_df["value"] = visual_df["value"]/10
+    visual_df["minutes_multiplier"] = np.minimum(1, visual_df['average_minutes'] / 70)
+    
+    cols_to_offset=["Goal_pred","Assist_pred","Points_prediction"]
+    for col in cols_to_offset:
+        visual_df[col] = np.where(visual_df["offset"] < 1, visual_df[col] * visual_df["offset"], visual_df[col] * visual_df["minutes_multiplier"])
+    
 
     
     
     player_points = (
-    merged_df.groupby(['name', 'value','position'])['Points_prediction']
+    visual_df.groupby(['name', 'value','position'])['Points_prediction']
     .sum()
     .reset_index()
     )
@@ -65,6 +76,9 @@ def GenerateOptimizeSet(Current_data_path):
 
 
     optimized_player_set=merged_df[merged_df["name"].isin(names)]
+    
+    visual_df=visual_df[visual_df["name"].isin(names)]
+    visual_df.to_csv("Model_Predictions_visual.csv")
     print(names)
     
 
@@ -75,6 +89,10 @@ def GenerateOptimizeSet(Current_data_path):
     optimized_player_set["value"] = optimized_player_set["value"]/10
     optimized_player_set["minutes_multiplier"] = np.minimum(1, optimized_player_set['average_minutes'] / 70)
     optimized_player_set["0"] = 0
+    
+    print(optimized_player_set)
+    
+    
 
     constant_cols = ["name", "position","value", 'team_code','selected','offset', 'minutes_multiplier','0']
 

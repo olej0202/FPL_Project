@@ -138,8 +138,6 @@ def wildcard_optimize_team(sel_thresh, budget, columns, file_path="Model_Optimiz
     
 def freeHit_optimize_team(sel_thresh, budget, columns, file_path="Model_Optimizer.csv", current_player_path="Raw_Data_25/current_players.csv"):
 
-
-# Load Data
     data = pd.read_csv(file_path)
     cols = columns
     for col in cols:
@@ -193,13 +191,13 @@ def freeHit_optimize_team(sel_thresh, budget, columns, file_path="Model_Optimize
 
     # Position Constraints
     model += lpSum(x[i] for i in range(num_players) if positions[i] == 'DEF') == 5  # 5 Defenders
-    model += lpSum(x[i] for i in range(num_players) if positions[i] == 'GK') == 2   # 2 Goalkeepers
+    model += lpSum(x[i] for i in range(num_players) if positions[i] == 'GKP') == 2   # 2 Goalkeepers
     model += lpSum(x[i] for i in range(num_players) if positions[i] == 'MID') == 5  # 5 Midfielders
     model += lpSum(x[i] for i in range(num_players) if positions[i] == 'FWD') == 3  # 3 Attackers
 
     # Bench Constraints
-    model += lpSum(bench[i] for i in range(num_players) if positions[i] == 'GK') == 1  # Exactly 1 GK on bench
-    model += lpSum(bench[i] for i in range(num_players) if positions[i] != 'GK') == 3  # Exactly 3 outfield players on bench
+    model += lpSum(bench[i] for i in range(num_players) if positions[i] == 'GKP') == 1  # Exactly 1 GK on bench
+    model += lpSum(bench[i] for i in range(num_players) if positions[i] != 'GKP') == 3  # Exactly 3 outfield players on bench
 
     # A player can only be benched if they are in the squad
     for i in range(num_players):
@@ -239,9 +237,9 @@ def freeHit_optimize_team(sel_thresh, budget, columns, file_path="Model_Optimize
 
 
 def generate_optimizers(ownership, budget, GW_list_wildcard, GW_list_freehit):
-    wildcard_optimize_team(ownership, budget, GW_list_wildcard)
+    #wildcard_optimize_team(ownership, budget, GW_list_wildcard)
     freeHit_optimize_team(ownership, budget, GW_list_freehit)
     
     
 if __name__ == "__main__":
-    generate_optimizers()
+    generate_optimizers(0.9,102,['37','38'],['37'] )
