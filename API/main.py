@@ -40,6 +40,8 @@ def load_and_transform(endpoint):
         csv_path = os.path.join(parent_dir, "Raw_Data_25", "current_players.csv")
     elif endpoint == "free-hit":
         csv_path = os.path.join(parent_dir, "Free_hit_team.csv")
+    elif endpoint == "wildcard":
+        csv_path = os.path.join(parent_dir, "Wildcard_team.csv")
     elif endpoint == "News":
         csv_path = os.path.join(parent_dir, "PL_news.csv")
     elif endpoint == "Team_Predictions_Future":
@@ -83,6 +85,11 @@ def get_data():
 @app.get("/free-hit")
 def get_data():
     df = load_and_transform("free-hit")
+    return df.to_dict(orient="records")
+
+@app.get("/wildcard")
+def get_data():
+    df = load_and_transform("wildcard")
     return df.to_dict(orient="records")
 
 @app.get("/ALL_Data")

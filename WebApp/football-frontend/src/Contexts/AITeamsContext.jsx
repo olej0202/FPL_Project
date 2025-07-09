@@ -18,6 +18,7 @@ export function AITeamDataProvider({ children }) {
     try {
       const [freeHitRes, wildcardRes, myTeamRes] = await Promise.all([
         fetch("https://fpl-project-t5e9.onrender.com/free-hit").then(res => res.json()),
+        fetch("https://fpl-project-t5e9.onrender.com/wildcard").then(res => res.json()),
       ]);
       freeHitRef.current = freeHitRes;
       wildcardRef.current = wildcardRes;
@@ -35,6 +36,7 @@ export function AITeamDataProvider({ children }) {
         fetchIfNeeded,
         loading,
         freeHitData: freeHitRef,
+        wildcardData:wildcardRef,
       }}
     >
       {children}
