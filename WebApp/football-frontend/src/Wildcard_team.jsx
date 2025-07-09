@@ -47,7 +47,7 @@ export default function WildcardTeam() {
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center py-10 px-4 space-y-10">
       <h1 className="text-3xl md:text-4xl font-bold text-center mb-4">
-        Wildcard Team GW {minGW}
+        AI Optimized Wildcard Team GW {minGW}
       </h1>
 
       {/* Team Pitch */}
@@ -70,8 +70,8 @@ export default function WildcardTeam() {
       </div>
 
       {/* Transfer History */}
-      <div className="w-full max-w-3xl mt-10">
-        <h2 className="text-2xl font-bold text-center mb-4">Transfer History</h2>
+      <div className="w-full max-w-2xl mt-10">
+        <h2 className="text-2xl font-bold text-center mb-4">Transfers</h2>
         {transfers.sort((a, b) => a.GW - b.GW).map((t, idx) => (
           <div key={idx} className="mb-6">
             <h3 className="text-lg font-semibold mb-2 text-center">GW {t.GW}</h3>
@@ -140,7 +140,7 @@ function TransferCard({ player, label }) {
       <img
         src={player.photo}
         alt={player.Name}
-        className="w-[50px] h-[70px] sm:w-[60px] sm:h-[80px] object-contain border-2 border-white rounded"
+        className="w-[50px] h-[70px] sm:w-[60px] sm:h-[80px] object-contain border-2 border-none rounded"
       />
       <span className="text-xs mt-1">{name}</span>
       <span className="text-xs text-gray-400">{label}</span>
