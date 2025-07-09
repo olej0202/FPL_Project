@@ -9,6 +9,7 @@ export default function FreeHitTeam() {
   const { fetchIfNeeded, freeHitData, loading } = useAITeamData();
   const [playingPlayers, setPlayingPlayers] = useState([]);
   const [benchPlayers, setBenchPlayers] = useState([]);
+  const [minGW, setMinGW] = useState(null);
   const navigate = useNavigate();
 
    useEffect(() => {
@@ -16,6 +17,9 @@ export default function FreeHitTeam() {
       const data = freeHitData.current || [];
       setPlayingPlayers(data.filter(p => p.status === "Playing"));
       setBenchPlayers(data.filter(p => p.status === "Bench"));
+
+      const gwList = data.map(p => Number(p.GW)).filter(gw => !isNaN(gw));
+      setMinGW(Math.min(...gwList));
     });
   }, []);
    if (loading) return <div className="text-white">Loading...</div>;
@@ -29,7 +33,7 @@ export default function FreeHitTeam() {
         <h1 className="text-3xl md:text-4xl font-bold text-center mb-4">
 
             
-          AI Optimized Free-Hit Team
+          AI Optimized Free-Hit Team GW {minGW }
         </h1>
 
         <div
@@ -37,7 +41,7 @@ export default function FreeHitTeam() {
           style={{ backgroundImage: `url(${pitch})` }}
         >
           <div className="flex flex-col justify-between h-full pt-1 pb-24 space-y-1">
-            <PlayerRow players={getPlayersByPosition("GK")} navigate={navigate} />
+            <PlayerRow players={getPlayersByPosition("GKP")} navigate={navigate} />
             <PlayerRow players={getPlayersByPosition("DEF")} navigate={navigate} />
             <PlayerRow players={getPlayersByPosition("MID")} navigate={navigate} />
             <PlayerRow players={getPlayersByPosition("FWD")} navigate={navigate} />
