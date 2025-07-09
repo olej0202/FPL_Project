@@ -73,7 +73,7 @@ def GenerateOptimizeSet(Current_data_path):
     optimized_player_set['offset'] = optimized_player_set['news'].apply(process_news)
     optimized_player_set["selected"] = optimized_player_set["selected"]/11000000
     optimized_player_set["value"] = optimized_player_set["value"]/10
-    optimized_player_set["minutes_multiplier"] = np.minimum(1, optimized_player_set['average_minutes'] / 60)
+    optimized_player_set["minutes_multiplier"] = np.minimum(1, optimized_player_set['average_minutes'] / 70)
     optimized_player_set["0"] = 0
 
     constant_cols = ["name", "position","value", 'team_code','selected','offset', 'minutes_multiplier','0']
@@ -91,5 +91,5 @@ def GenerateOptimizeSet(Current_data_path):
     
 
 
-
-GenerateOptimizeSet("Raw_Data_24\Fantasy_season_2024_data.csv")
+if __name__ == "__main__":
+    GenerateOptimizeSet("Raw_Data_24\Fantasy_season_2024_data.csv")

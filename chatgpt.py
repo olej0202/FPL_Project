@@ -164,7 +164,7 @@ Return a short, article-style summary.
         return None
 
 # === Main Execution ===
-def main():
+def main_GPT_News():
     news_df = pd.DataFrame(columns=["header", "content", "topic", "date", "index", "source"])
     articles = fetch_premier_league_news()
 
@@ -238,4 +238,4 @@ def main():
     print(news_df)
 
 if __name__ == "__main__":
-    main()
+    main_GPT_News()

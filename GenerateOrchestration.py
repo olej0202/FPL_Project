@@ -1,0 +1,82 @@
+from GenerateOptimizers import generate_optimizers #Lager optimert wildcard og freehit lag
+from FullLoad import main_Extract,current_players #Henter data fra fantasy-APIet
+from GenerateDataset5 import main_Transform #Hovedtransform av all historisk data, lag og spillere
+from GeneratePlayerData import GeneratePlayerData #Lager dataset for prediksjonene
+from FullLoad_Understat import main_Extract_Understat #Henter data fra understat
+from Generate_Team_Predictions import GenerateTeamPredictions #Prediksjoner for kamper
+from Generate_Player_Predictions import Make_Predictions #Lager prediksjoner og setter det sammen til et datatset
+from GenerateOptimizerSet import GenerateOptimizeSet #Lager dataset klart til å optimeres på
+from chatgpt import main_GPT_News
+
+import torch
+import torch.nn as nn
+from torch.utils.data import TensorDataset, DataLoader
+class DeepNN(nn.Module):
+        def __init__(self, input_dim):
+            super(DeepNN, self).__init__()
+            self.model = nn.Sequential(
+            nn.Linear(input_dim, 128),
+            nn.ReLU(),
+            nn.Dropout(0.1),
+            nn.Linear(128, 64),
+            nn.ReLU(),
+            nn.Dropout(0.1),
+            nn.Linear(64, 1)  # Output layer for regression
+        )
+
+        def forward(self, x):
+            return self.model(x)
+
+
+def Data_Extraction(season,is_new_season,has_been_error):
+    main_Extract(season, is_new_season, has_been_error)
+    current_players(season)
+    main_Extract_Understat(season)
+
+
+def Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path):
+    main_Transform()
+    GeneratePlayerData(n_points_in_future, current_fixture_path,current_player_path,current_team_path)
+
+    
+def Data_Predictions(current_fixture_path,current_team_path, n_points_in_future):
+    GenerateTeamPredictions( current_fixture_path,current_team_path, n_points_in_future)
+    Make_Predictions()
+    
+   
+def Data_Generation(current_raw_data_path,ownership,budget,GW_list_wildcard,GW_list_freehit ):
+    GenerateOptimizeSet(current_raw_data_path)
+    generate_optimizers(ownership=ownership,budget=budget,GW_list_wildcard=GW_list_wildcard,GW_list_freehit=GW_list_freehit  )
+    main_GPT_News()
+
+
+def Main_Orchestration():
+    season=25
+    is_new_season=1
+    has_been_error=0
+    n_points_in_future=2
+    
+    budget=101
+    ownership=0.9
+    GW_list_wildcard=['37', '38']
+    GW_list_freehit=['37'] 
+    
+    current_fixture_path="Raw_Data_25\Fantasy_season_2025_Fixtures.csv"
+    current_player_path="Raw_Data_25/current_players.csv"
+    current_team_path="Raw_Data_24\current_teams.csv"
+    current_raw_data_path="Raw_Data_24\Fantasy_season_2024_data.csv"
+    
+    #EXTARCT DATA
+    #Data_Extraction(season,is_new_season,has_been_error)
+    
+    
+    #Transform data
+    #Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path)
+    
+    #Predict data
+    Data_Predictions(current_fixture_path,current_team_path, n_points_in_future)
+    
+    Data_Generation(current_raw_data_path,ownership,budget,GW_list_wildcard,GW_list_freehit )
+    
+if __name__ == "__main__":
+    Main_Orchestration()

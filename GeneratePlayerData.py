@@ -83,7 +83,8 @@ def GeneratePlayerData(Future, fixture_path,current_player_path, current_teams_p
     current_data=pd.read_csv("Player_future.csv").iloc[:,1:]
     fixture_data=pd.read_csv(fixture_path).iloc[:,1:]
     current_players=pd.read_csv(current_player_path).iloc[:,1:]
-    current_teams=pd.read_csv(current_teams_path).iloc[:,1:]
+    current_teams=pd.read_csv(current_teams_path)
+    season_data=pd.read_csv("Unwanted_players.csv").iloc[:,1:]
     kmeans = joblib.load('kmeans_Groundmodel.pkl')
     relevant_players = current_players.copy()
     names=relevant_players["name"].unique()
@@ -103,6 +104,12 @@ def GeneratePlayerData(Future, fixture_path,current_player_path, current_teams_p
 
 
         if len(player_row)<1:
+            current_player_season=season_data[season_data["Name"]==name]
+            has_history=0
+            if(len(current_player_season)>1):
+                average_minutes =current_player_season["Average_minutes"].values[0]
+                has_history=1
+
             element_type=player_row2["element_type"].values[0]
             if(element_type==1):
                 position='GKP'
@@ -131,8 +138,11 @@ def GeneratePlayerData(Future, fixture_path,current_player_path, current_teams_p
 
             columns_to_average = [col for col in player_cluster.columns if col not in exclude_columns]
 
-            own_new_row[columns_to_average] = player_cluster[columns_to_average].mean()
-            own_new_row["average_minutes"]=80
+            own_new_row[columns_to_average] = player_cluster[columns_to_average].mean()*0.9
+            if has_history==1:
+                own_new_row["average_minutes"]=average_minutes
+            else:
+                own_new_row["average_minutes"]=60
             
             player_row = pd.DataFrame([own_new_row])
 
@@ -167,5 +177,5 @@ def GeneratePlayerData(Future, fixture_path,current_player_path, current_teams_p
     print("Missing players:", missing_names)
     print("Total missing:", len(missing_names))  
 
-
-GeneratePlayerData(2, "Raw_Data_25\Fantasy_season_2025_Fixtures.csv","Raw_Data_25/current_players.csv","Raw_Data_24\current_teams.csv")
+if __name__ == "__main__":
+    GeneratePlayerData(2, "Raw_Data_25\Fantasy_season_2025_Fixtures.csv","Raw_Data_25/current_players.csv","Raw_Data_24\current_teams.csv")

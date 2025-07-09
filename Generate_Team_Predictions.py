@@ -328,4 +328,7 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
     ALL_pred=pd.concat([home_df, away_df], axis=0, ignore_index=True)
     ALL_pred.to_csv("Team_prediction.csv")
 
-GenerateTeamPredictions("Raw_Data_25/Fantasy_season_2025_Fixtures.csv", "Fantasy-Premier-League/Fantasy-Premier-League/data/2024-25/teams2.csv",8)
+
+if __name__ == "__main__":
+    GenerateTeamPredictions( "Raw_Data_25\Fantasy_season_2025_Fixtures.csv","Raw_Data_24\current_teams.csv", 8)
+

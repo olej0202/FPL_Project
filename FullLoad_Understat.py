@@ -43,8 +43,8 @@ def get_player_data(id):
                 groupsData = json.loads(decoded_content)"""
     return matchesData
 
-def FullLoad():
-    scripts = get_data("https://understat.com/league/EPL/2024")
+def FullLoad(season):
+    scripts = get_data(f"https://understat.com/league/EPL/20{season}")
     teamData = {}
     playerData = {}
     for script in scripts:
@@ -74,10 +74,12 @@ def FullLoad():
         All_data=pd.concat([All_data, player_data_df], axis=0, ignore_index=True)
         print(player_data_df)
     
-    All_data.to_csv("Raw_Data_24/Understat_data.csv")
-def Add_index():
-    Unique_Fantasy_data=pd.read_csv("Raw_Data_24\Fantasy_season_2024_data.csv")[["element","first_name","second_name","Full_Name"]].drop_duplicates()
-    Understat_df=pd.read_csv("Raw_Data_24/Understat_data.csv").iloc[:,1:]
+    All_data.to_csv(f"Raw_Data_{season}/Understat_data.csv")
+def Add_index(season):
+    Unique_Fantasy_data=pd.read_csv(f"Raw_Data_{season}\Fantasy_season_20{season}_data.csv")[["element","first_name","second_name","Full_Name"]].drop_duplicates()
+    
+    Understat_df=pd.read_csv(f"Raw_Data_{season}/Understat_data.csv").iloc[:,1:]
+    
     All_data=pd.DataFrame()
     for i in range(len(Unique_Fantasy_data.values)):
         first_name=Unique_Fantasy_data.values[i][1]
@@ -125,9 +127,11 @@ def Add_index():
         filtered_df['element'] = filtered_df['element'].astype(str).str.split('.').str[0]
         All_data=pd.concat([All_data, filtered_df], axis=0, ignore_index=True)
         
-    All_data.to_csv("Raw_Data_24/Understat_data_with_element.csv")
-def main():
-    FullLoad()
-    Add_index()
-      
-a=main()
+    All_data.to_csv(f"Raw_Data_{season}/Understat_data_with_element.csv")
+    
+def main_Extract_Understat(season):
+    FullLoad(season)
+    Add_index(season)
+    
+if __name__ == "__main__":
+    main_Extract_Understat(25)       

@@ -15,6 +15,9 @@ from tensorflow.keras.models import load_model
 from tensorflow.keras.models import load_model
 from tensorflow.keras.losses import MeanSquaredError
 from sklearn.svm import SVR
+import torch
+import torch.nn as nn
+from torch.utils.data import TensorDataset, DataLoader
 
 criterion = nn.L1Loss()
 df=pd.read_csv("testML4.csv").iloc[:,1:]
@@ -444,7 +447,12 @@ def Generate_LSTM_preds(pred,column_list,predlength):
     """model = DeepNN(input_dim)
     model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))  # use 'cuda' if on GPU
     model.eval()"""
-    model = torch.load(model_path, map_location=torch.device('cpu'))
+    try:
+        model = torch.load(model_path, map_location=torch.device('cpu'))
+    except:
+        input_dim = len(features)  # or features_test if needed
+        model = DeepNN(input_dim)
+        model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
     model.eval()
     total_preds=[]
 
@@ -568,7 +576,7 @@ def Generate_point_predictions():
             except:
                 fantasy.append(0)
 
-        columns_to_include=["name","position", "GW", "Rolling_adjusted_XG", "Rolling_adjusted_XA","played_XGC","average_minutes"]
+        columns_to_include=["name","position", "GW","Rolling_adjusted_BPS","Average_Overscore", "Rolling_adjusted_XG", "Rolling_adjusted_XA","played_XGC","average_minutes"]
             
         New_dataset=player_data[columns_to_include]
         New_dataset["Goal_pred"]=goals
@@ -630,25 +638,9 @@ def Make_Predictions ():
         Generate_LSTM_preds(position_filter,column_list,predlength)
     Generate_point_predictions()
 
-import torch
-import torch.nn as nn
-from torch.utils.data import TensorDataset, DataLoader
 
-class DeepNN(nn.Module):
-    def __init__(self, input_dim):
-        super(DeepNN, self).__init__()
-        self.model = nn.Sequential(
-            nn.Linear(input_dim, 128),
-            nn.ReLU(),
-            nn.Dropout(0.1),
-            nn.Linear(128, 64),
-            nn.ReLU(),
-            nn.Dropout(0.1),
-            nn.Linear(64, 1)  # Output layer for regression
-        )
 
-    def forward(self, x):
-        return self.model(x)
+
 
 
 if __name__ == '__main__':

@@ -238,9 +238,10 @@ def freeHit_optimize_team(sel_thresh, budget, columns, file_path="Model_Optimize
     print(result_df)
 
 
-def generate_optimizers():
-    #wildcard_optimize_team(0.9, 100, ['37', '38'])
-    freeHit_optimize_team(0.9, 100, ['37'])
+def generate_optimizers(ownership, budget, GW_list_wildcard, GW_list_freehit):
+    wildcard_optimize_team(ownership, budget, GW_list_wildcard)
+    freeHit_optimize_team(ownership, budget, GW_list_freehit)
     
     
-generate_optimizers()
+if __name__ == "__main__":
+    generate_optimizers()

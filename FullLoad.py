@@ -173,10 +173,10 @@ def current_players(season):
 
     players_new.to_csv(f"Raw_Data_{season}/current_players.csv")
 
-def main():
-    season=25
-    new_season=1
-    Has_been_error=0
+def main_Extract(season, is_new_season, Has_been_error):
+    season=season
+    new_season=is_new_season
+    Has_been_error=Has_been_error
     #innføre refresh tider
     if new_season==1:
         Fulload(season)
@@ -184,5 +184,6 @@ def main():
         Incremental(Has_been_error,season)
     fixtures(season)
     current_players(season)
-      
-a=main()
+
+if __name__ == "__main__":
+    main_Extract()  

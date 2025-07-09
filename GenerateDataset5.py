@@ -10,36 +10,29 @@ import xgboost as xgb
 from sklearn.svm import SVR
 import joblib
 
-seasons=['2022-23', '2023-24']
+def make_Kmeans():
+    seasons=['2022-23', '2023-24']
 
-teams23=pd.read_csv("Fantasy-Premier-League/Fantasy-Premier-League/data/2022-23/teams2.csv")[["code","name", "XGH","XGCH","XGA","XGCA"]]
-teams24=pd.read_csv("Fantasy-Premier-League/Fantasy-Premier-League/data/2023-24/teams2.csv")[["code","name", "XGH","XGCH","XGA","XGCA"]]
-teams25=pd.read_csv("Fantasy-Premier-League/Fantasy-Premier-League/data/2024-25/teams2.csv")[["code","name", "XGH","XGCH","XGA","XGCA"]]
+    teams23=pd.read_csv("Fantasy-Premier-League/Fantasy-Premier-League/data/2022-23/teams2.csv")[["code","name", "XGH","XGCH","XGA","XGCA"]]
+    teams24=pd.read_csv("Fantasy-Premier-League/Fantasy-Premier-League/data/2023-24/teams2.csv")[["code","name", "XGH","XGCH","XGA","XGCA"]]
+    teams25=pd.read_csv("Fantasy-Premier-League/Fantasy-Premier-League/data/2024-25/teams2.csv")[["code","name", "XGH","XGCH","XGA","XGCA"]]
 
-a=pd.concat([teams23,teams24,teams25],
+    a=pd.concat([teams23,teams24,teams25],
                   axis = 0)
-cluster_data=a.iloc[:,2:].values
+    cluster_data=a.iloc[:,2:].values
 
 
-kmeans = KMeans(n_clusters=4, random_state=32)
-kmeans.fit(cluster_data)
-joblib.dump(kmeans, 'kmeans_Groundmodel.pkl')
+    kmeans = KMeans(n_clusters=4, random_state=32)
+    kmeans.fit(cluster_data)
+    joblib.dump(kmeans, 'kmeans_Groundmodel.pkl')
 
-a["predict"]=kmeans.predict(cluster_data)
-print(a)
-a.to_csv("team_clusters.csv")
-#plt.scatter(cluster_data[:, 0], cluster_data[:, 1], c=kmeans.labels_, s=10, cmap='viridis')
-#plt.scatter(kmeans.cluster_centers_[:, 0], kmeans.cluster_centers_[:, 1], marker='X', s=200, color='red')
-#plt.title("K-Means Clustering")
-#plt.show()
+    a["predict"]=kmeans.predict(cluster_data)
+    a.to_csv("team_clusters.csv")
+    return kmeans
 
 
 
-def get_fpl_data():
-    url = 'https://fantasy.premierleague.com/api/bootstrap-static/'
-    response = requests.get(url)
-    json_data = response.json()
-    return json_data
+
 
 def prepare_elements_df(json_data):
     players24=pd.read_csv("Fantasy-Premier-League/Fantasy-Premier-League/data/2023-24/gws/merged_gw.csv")[["name","position","team"]]
@@ -84,11 +77,8 @@ def prepare_elements_df(json_data):
     
     return slim_elements_df
 
-def read_team_ids(season):
-    team_ids = pd.read_csv("Fantasy-Premier-League/Fantasy-Premier-League/data/master_team_list.csv")
-    return team_ids[team_ids['season'].str.contains(season)]
 
-def process_player_data(player_df, team, team_id2):
+def process_player_data(player_df, team, team_id2,kmeans):
     df=player_df[['assists', 'bonus', 'bps', 'clean_sheets', 'element', 'expected_assists', 
                                  'expected_goal_involvements', 'expected_goals', "kickoff_time", 
                                  'expected_goals_conceded', 'fixture', 'goals_conceded', 'goals_scored', 'minutes', 
@@ -162,7 +152,7 @@ def process_player_data(player_df, team, team_id2):
 
     return df
 
-def next_opp(team, n_future):
+def next_opp(team, n_future,kmeans):
     fixtures=pd.read_csv("Raw_Data_24\Fantasy_season_2024_Fixtures.csv")
     fixtures=fixtures[(fixtures['finished']==False)].iloc[0:,:]
     #fixtures=fixtures[(fixtures['event']>34)].iloc[0:,:]
@@ -905,45 +895,11 @@ def team_transformed2():
 
     team_transformed_df.to_csv("Team_data_transformed2.csv")
     team_transformed_df_newest.to_csv("Team_data_newest2.csv")
-def generate_gws():
-    import glob
-    import os
 
-    # Path to the directory containing the files
-    path = "Fantasy-Premier-League/Fantasy-Premier-League/data/2024-25/gws/"
-
-    # Use glob to get all filenames matching the pattern "gw*.csv"
-    all_files = glob.glob(os.path.join(path, "gw*.csv"))
-
-    # Read all files, extract GW number, and concatenate them into a single DataFrame
-    dfs = []
-    for file in all_files:
-        try:
-            # Extract the GW number from the filename
-            gw_number = int(os.path.basename(file).split("gw")[-1].split(".csv")[0])
-        
-            # Read the CSV file
-            df = pd.read_csv(file)
-        
-            # Add the GW number as a new column
-            df["GW"] = gw_number
-        
-            # Append to the list
-            dfs.append(df)
-        except Exception as e:
-            print(f"Error reading {file}: {e}")
-
-    # Combine all DataFrames
-    df_25 = pd.concat(dfs, ignore_index=True)
-    df_25.to_csv("Combined_GW_24.csv")
-        
-def main():
-    generate_gws()
+def main_Transform():
+    kmeans=make_Kmeans()
     Generate_team_data()
     team_transformed2()
-    json_data = get_fpl_data()
-    slim_elements_df = prepare_elements_df(json_data)
-    slim_elements_df = pd.read_csv('all_players2.csv')
     
     df_25=pd.read_csv("Raw_Data_24/Fantasy_season_2024_data.csv").iloc[:,1:]
     df_25["name"]=df_25["first_name"]+" "+df_25["second_name"]
@@ -962,11 +918,11 @@ def main():
     training_df=pd.DataFrame()
     player_pred = []
     element_map = []
+    unwanted_players=[]
 
     for index, row in unique_players.iterrows():
         data = []
         elem = []
-        #web_name = slim_elements_df['web_name'].values[i]
         name = row['name']
         name_string=name.replace(" ", "_", 1)
         
@@ -983,7 +939,7 @@ def main():
         season_list=player_df['season'].unique()
         teamlist=player_df['team_code2'].values
 
-        clusters, home, n_matches, opp_off_a, opp_off_h, opp_def_h, opp_def_a,XGC_DEF,XGC_FWD,XGC_MID,own_XG = next_opp(team_id, Future)
+        clusters, home, n_matches, opp_off_a, opp_off_h, opp_def_h, opp_def_a,XGC_DEF,XGC_FWD,XGC_MID,own_XG = next_opp(team_id, Future,kmeans)
         if len(home) < Future:
             home.extend([True] * (Future - len(home)))
         lists = [clusters, home, n_matches, opp_off_a, opp_off_h, opp_def_h, opp_def_a,
@@ -993,8 +949,10 @@ def main():
         (clusters, home, n_matches, opp_off_a, opp_off_h,
         opp_def_h, opp_def_a, XGC_DEF, XGC_FWD, XGC_MID, own_XG) = lists
 
-        player_df=process_player_data(player_df, team, team_id)
+        player_df=process_player_data(player_df, team, team_id,kmeans)
         mid_table=pd.DataFrame()
+        if (player_df["minutes"].sum() < 100):
+            unwanted_players.append([name_string, len(player_df),player_df["minutes"].mean()])
         if (len(player_df) > (4)) and (player_df["minutes"].sum() > 100):
             print("**************************************************")
             lookback=12
@@ -1005,7 +963,7 @@ def main():
             player_df["name"] = namelist
             player_df["Team"] = teamlist
             player_df["available"] = player_df['minutes'].apply(lambda x: 1 if x > 0 else 0)
-            player_df["average_minutes"] = player_df['minutes'].ewm(span=4, adjust=False).mean()
+            player_df["average_minutes"] = player_df['minutes'].ewm(span=5, adjust=False).mean()
             minutes=player_df["average_minutes"].values[-1]
             player_df, most_common = get_understat(player_df,Own_team_name,pos,element_list,season_list,pos)
             player_df=player_df[player_df['minutes'] > 0]
@@ -1048,6 +1006,7 @@ def main():
             
             
             if(len(player_df)<4):
+                unwanted_players.append([name_string, len(player_df),player_df["minutes"].mean() ])
                 continue
             player_df["time"] = range(1, len(player_df) + 1)
             player_df["rolling_Chain"] = player_df['xGChain'].rolling(window=10, min_periods=1).mean()
@@ -1199,6 +1158,8 @@ def main():
     newest_df[float_cols2] = newest_df[float_cols2].round(2)
     training_df[float_cols] = training_df[float_cols].round(2)
     
+    unwanted_df=pd.DataFrame(unwanted_players, columns=["Name", "N_games", "Average_minutes"])
+    unwanted_df.to_csv("Unwanted_players.csv")
     training_df.to_csv("testML4.csv")
     newest_df.to_csv("Player_future.csv")
     
@@ -1238,14 +1199,14 @@ def adjust_measure(df, measure_name):
             else:
                 in_row=0
                 in_row_fac=1
-            if(in_row>=2):
+            if(in_row>2):
                 in_row_fac=1.5
 
             new_expected_goals.append(min(clipper_val,current_expected_goals+in_row_fac*offset*smoothing_f*min(min_val,max(-min_val,player_df[measure_name].values[i]-pred_scored))))
             current_expected_goals=new_expected_goals[-1]
                 
         else:
-            pred_scored=current_expected_goals*player_df["XGCH"].values[i]*np.minimum(1, player_df['minutes'].values[i] / 70)
+            pred_scored=current_expected_goals*player_df["XGCH"].values[i]*np.minimum(1, player_df['minutes'].values[i] / 60)
             if(abs(player_df[measure_name].values[i]-pred_scored)>min_val):
                 in_row+=1   
             else:
@@ -1259,5 +1220,7 @@ def adjust_measure(df, measure_name):
 def pad_to_length(lst, length):
     if len(lst) < length:
         lst.extend([0] * (length - len(lst)))
-    return lst     
-a=main()
+    return lst  
+
+if __name__ == "__main__":
+    main_Transform()   
