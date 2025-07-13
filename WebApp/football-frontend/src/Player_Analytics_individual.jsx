@@ -32,6 +32,8 @@ export default function PlayerAnalyticsIndividual() {
   const [comparePlayer, setComparePlayer] = useState("");
   const [compareStats, setCompareStats] = useState({});
   const [compareImageUrl, setCompareImageUrl] = useState("");
+  
+
 
   const playerOptions = players.map((player) => ({ value: player, label: player }));
 
@@ -107,14 +109,14 @@ export default function PlayerAnalyticsIndividual() {
     { title: "XG Index", value: latestStats.Rolling_adjusted_XG2 },
     { title: "XA Index", value: latestStats.Rolling_adjusted_XA2 },
     { title: "BPS Index", value: latestStats.Rolling_adjusted_BPS2 },
-    { title: "Goals over XG", value: latestStats.Overcore }
+    { title: "Goals/XG", value: latestStats.Overcore }
   ];
 
   const rawStats = [
     { key: "Rolling_adjusted_XG2", label: "XG Index" },
     { key: "Rolling_adjusted_XA2", label: "XA Index" },
     { key: "Rolling_adjusted_BPS2", label: "BPS Index" },
-    { key: "Overcore", label: "Goals over XG" }
+    { key: "Overcore", label: "Goals/XG" }
   ];
 
   const maxValues = {};
@@ -151,6 +153,9 @@ const scaledComparisonData = rawStats.map(({ key, label }) => ({
 
   const values = filteredChartData.map((d) => parseFloat(d[selectedMetric])).filter((v) => !isNaN(v));
   const avgOfMetric = values.length > 0 ? values.reduce((acc, v) => acc + v, 0) / values.length : 0;
+  const stdDeviation = values.length > 1
+  ? Math.sqrt(values.reduce((acc, v) => acc + Math.pow(v - avgOfMetric, 2), 0) / (values.length - 1))
+  : 0;
 
   const selectStyles = {
     control: (base) => ({
@@ -181,6 +186,7 @@ const scaledComparisonData = rawStats.map(({ key, label }) => ({
     const player2 = payload[1]?.name;
     const p1Label = payload[0]?.payload?.[`${player1}_label`];
     const p2Label = payload[1]?.payload?.[`${player2}_label`];
+
 
     return (
       <div className="bg-black p-3 border border-yellow-400 rounded text-white text-sm">
@@ -215,19 +221,19 @@ const scaledComparisonData = rawStats.map(({ key, label }) => ({
     
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full max-w-6xl">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full max-w-6xl">
         {statCards.map((stat, idx) => (
           <div
             key={idx}
-            className="bg-royal-red text-royal-gold p-4 border border-royal-gold rounded-lg shadow text-center"
+            className="bg-royal-red text-royal-beige p-4 border border-royal-gold rounded-lg shadow text-center"
           >
-            <h2 className="text-lg font-semibold mb-2">{stat.title}</h2>
-            <p className="text-3xl font-bold">{parseFloat(stat.value).toFixed(2)}</p>
+            <h2 className="text-1xl font-semibold mb-2">{stat.title}</h2>
+            <p className="text-2xl font-bold">{parseFloat(stat.value).toFixed(2)}</p>
           </div>
         ))}
       </div>
 
-      <h1 className="text-3xl font-bold text-royal-beige mt-10">Compare Players</h1>
+      <h1 className="text-3xl font-bold text-royal-beige mt-10">Compare Player</h1>
       <div className="flex gap-10 justify-center mt-6">
       {comparePlayer && compareImageUrl && (
           <img src={compareImageUrl} alt={comparePlayer} className="max-w-[140px] rounded shadow-lg" />
@@ -286,23 +292,27 @@ const scaledComparisonData = rawStats.map(({ key, label }) => ({
 
       <h1 className="text-4xl font-bold text-center text-royal-beige mt-10">Historical Analysis</h1>
 
-      <div className="flex flex-wrap justify-center gap-4 mt-10">
-        {["expected_goals", "expected_assists", "total_points", "goals_scored", "assists"].map((metric) => (
-          <button
-            key={metric}
-            onClick={() => setSelectedMetric(metric)}
-            className={`px-4 py-2 rounded font-bold border ${
-              selectedMetric === metric
-                ? "bg-royal-gold text-black border-royal-gold"
-                : "bg-royal-red text-royal-gold border-royal-gold"
-            }`}
-          >
-            {metric.replace("_", " ")}
-          </button>
-        ))}
-      </div>
+      <div className="mt-10">
+  <select
+    value={selectedMetric}
+    onChange={(e) => setSelectedMetric(e.target.value)}
+    className="px-4 py-2 rounded font-bold bg-royal-beige text-black border border-royal-gold focus:outline-none focus:ring-2 focus:ring-royal-gold"
+  >
+    {["expected_goals", "expected_assists", "total_points", "goals_scored", "assists"].map((metric) => (
+      <option key={metric} value={metric}>
+        {metric
+  .split("_")
+  .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+  .join(" ")}
 
-      <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-6 text-black">
+
+      </option>
+    ))}
+  </select>
+</div>
+
+
+      <div className="flex flex-col sm:flex-row gap-1 justify-center items-center mt-6 text-black">
         <div>
           <label className="text-white block mb-1">Start Date</label>
           <input
@@ -323,10 +333,20 @@ const scaledComparisonData = rawStats.map(({ key, label }) => ({
         </div>
       </div>
 
-      <div className="bg-royal-red text-royal-gold p-4 border border-royal-gold rounded-lg shadow text-center w-full max-w-sm mt-4">
-        <h2 className="text-lg font-semibold mb-2 capitalize">Avg. {selectedMetric.replace("_", " ")}</h2>
-        <p className="text-3xl font-bold">{avgOfMetric.toFixed(2)}</p>
-      </div>
+      <div className="flex flex-col sm:flex-row gap-4 justify-center mt-4">
+  {/* Avg Box */}
+  <div className="bg-royal-red text-royal-beige p-4 border border-royal-gold rounded-lg shadow text-center w-full max-w-sm">
+    <h2 className="text-lg font-semibold mb-2 capitalize">Avg. {selectedMetric.replace("_", " ")}</h2>
+    <p className="text-3xl font-bold">{avgOfMetric.toFixed(2)}</p>
+  </div>
+
+  {/* Std Dev Box */}
+  <div className="bg-royal-red text-royal-beige p-4 border border-royal-gold rounded-lg shadow text-center w-full max-w-sm">
+    <h2 className="text-lg font-semibold mb-2 capitalize">Std. Dev. {selectedMetric.replace("_", " ")}</h2>
+    <p className="text-3xl font-bold">{stdDeviation.toFixed(2)}</p>
+  </div>
+</div>
+
 
       <div className="bg-royal-red p-1 rounded shadow border border-royal-gold w-full max-w-6xl mt-8">
         <h2 className="text-xl font-semibold mb-4 text-center text-royal-gold capitalize">

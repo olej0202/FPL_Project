@@ -13,6 +13,8 @@ import Slider from "@mui/material/Slider";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { useNavigate } from "react-router-dom";
+import { useStatsData } from "./Contexts/StatsContext";
+
 
 
 const METRICS = {
@@ -45,17 +47,23 @@ const domain = [
 ];
 
 
-  useEffect(() => {
-    fetch("https://fpl-project-t5e9.onrender.com/Player_rankings")
-      .then((res) => res.json())
-      .then((data) => {
-        setRawData(data);
-        const GWs = data.map((d) => d.GW);
-        setMinGW(Math.min(...GWs));
-        setMaxGW(Math.max(...GWs));
-        setGWRange([Math.min(...GWs), Math.max(...GWs)]);
-      });
-  }, []);
+  const { fetchIfNeeded, loading, PlayersData } = useStatsData();
+
+useEffect(() => {
+  const loadData = async () => {
+    await fetchIfNeeded();
+    if (PlayersData.current) {
+      const data = PlayersData.current;
+      setRawData(data);
+      const GWs = data.map((d) => d.GW);
+      setMinGW(Math.min(...GWs));
+      setMaxGW(Math.max(...GWs));
+      setGWRange([Math.min(...GWs), Math.max(...GWs)]);
+    }
+  };
+  loadData();
+}, [fetchIfNeeded, PlayersData]);
+
 
   useEffect(() => {
     let data = [...rawData];
@@ -93,124 +101,111 @@ const domain = [
     setFiltered(aggregated.sort((a, b) => b.value - a.value).slice(0, 15));
 
   }, [rawData, selectedMetric, GWRange, selectedPos]);
+if (loading) return <div className="text-white">Loading...</div>;  
 
-  return (
-    <div className="min-h-screen bg-black text-white flex flex-col items-center py-10 px-4 space-y-6">
-      <h2 className="text-2xl font-bold text-center text-white">
-        {METRICS[selectedMetric]}
-      </h2>
+return (
+  <div className="min-h-screen bg-black text-white flex flex-col items-center py-10 px-4 space-y-6">
+    <h2 className="text-2xl font-bold text-center text-white">
+      {METRICS[selectedMetric]}
+    </h2>
 
-      {/* Metric Buttons */}
-      <div className="flex justify-center gap-2 flex-wrap">
-        {Object.entries(METRICS).map(([key, label]) => (
-          <button
-            key={key}
-            onClick={() => setSelectedMetric(key)}
-            className={`px-4 py-2 rounded font-semibold transition-all ${
-              selectedMetric === key
-                ? "underline underline-offset-4 text-royal-gold bg-royal-beige border-none"
-                : "text-black hover:text-royal-gold bg-royal-beige border-none"
-            } focus:outline-none` }
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+    {/* Metric Buttons */}
+    <div className="w-full max-w-xs mx-auto mt-4">
+  <select
+    value={selectedMetric}
+    onChange={(e) => setSelectedMetric(e.target.value)}
+    className="w-full px-4 py-2 rounded bg-royal-beige text-black font-semibold focus:outline-none"
+  >
+    {Object.entries(METRICS).map(([key, label]) => (
+      <option key={key} value={key}>
+        {label}
+      </option>
+    ))}
+  </select>
+</div>
 
-      {/* Position Filter */}
-      <Typography gutterBottom className="text-white text-center">
-            Positions
-          </Typography>
-      <div className="flex justify-center gap-1">
-        
-        {["ALL", "GKP", "DEF", "MID", "FWD"].map((pos) => (
-          <button
-            key={pos}
-            onClick={() => setSelectedPos(pos)}
-            className={`px-3 py-1 rounded border ${
-              selectedPos === pos
-                ? "underline underline-offset-4 text-royal-gold bg-royal-beige hover:border-none"
-                : "text-black hover:text-royal-gold bg-royal-beige hover:border-none"
-            } focus:outline-none`}
-          >
-            {pos}
-          </button>
-        ))}
-      </div>
 
-      {/* GW Range */}
-      {SUM_METRICS.includes(selectedMetric) && minGW !== null && maxGW !== null && (
-        <Box sx={{ width: 300, mx: "auto" }}>
-          <Typography gutterBottom className="text-white text-center">
-            GW Range: {GWRange[0]} - {GWRange[1]}
-          </Typography>
-          <Slider
-            value={GWRange}
-            min={minGW}
-            max={maxGW}
-            onChange={(e, newVal) => setGWRange(newVal)}
-            valueLabelDisplay="auto"
-            step={1}
-            sx={{ color: "#B8860B" }}
-          />
-        </Box>
-      )}
-
-      {/* Bar Chart */}
-      <div className="w-full max-w-6xl h-[600px] sm:h-[600px] md:h-[700px]">
-      <ResponsiveContainer width="95%" height={filtered.length * 40 || 400}>
-        <BarChart
-          layout="vertical"
-          data={filtered}
-          margin={{ top: 10, right: 30, left: 20, bottom: 10 }}
+    {/* Position Filter */}
+    <Typography gutterBottom className="text-white text-center">
+      Positions
+    </Typography>
+    <div className="flex justify-center gap-1">
+      {["ALL", "GKP", "DEF", "MID", "FWD"].map((pos) => (
+        <button
+          key={pos}
+          onClick={() => setSelectedPos(pos)}
+          className={`px-3 py-1 rounded border ${
+            selectedPos === pos
+              ? "underline underline-offset-4 text-royal-gold bg-royal-beige hover:border-none"
+              : "text-black hover:text-royal-gold bg-royal-beige hover:border-none"
+          } focus:outline-none`}
         >
-          <CartesianGrid stroke="#333" />
-          <XAxis
-            type="number"
-            tick={false}
-            axisLine={false}
-            tickLine={false}
-            domain={domain} 
-          />
-          <YAxis
-            type="category"
-            dataKey="name"
-            width={120}
-            stroke="#fff"
-            tick={{ fontSize: 10 }}
-          />
-          <Tooltip formatter={(val) => val.toFixed(2)} />
-
-          <Bar
-  dataKey="value"
-  shape={({ x, y, width, height, index }) => {
-    const player = filtered[index];
-    const handleClick = () => {
-      navigate("/Player_Analytics/Individual", {
-        state: { selectedPlayer: player.name },
-      });
-    };
-
-    return (
-      <g onClick={handleClick} style={{ cursor: "pointer" }}>
-        <rect x={x} y={y} width={width} height={height} fill="#5A0000" />
-        <text
-          x={x + width + 5}
-          y={y + height / 2}
-          alignmentBaseline="middle"
-          fill="#fff"
-          fontSize="10"
-        >
-          {player.value.toFixed(2)}
-        </text>
-      </g>
-    );
-  }}
-/>
-
-        </BarChart>
-      </ResponsiveContainer>
-      </div>
+          {pos}
+        </button>
+      ))}
     </div>
-  );
+
+    {/* GW Range */}
+    {SUM_METRICS.includes(selectedMetric) && minGW !== null && maxGW !== null && (
+      <Box sx={{ width: 300, mx: "auto" }}>
+        <Typography gutterBottom className="text-white text-center">
+          GW Range: {GWRange[0]} - {GWRange[1]}
+        </Typography>
+        <Slider
+          value={GWRange}
+          min={minGW}
+          max={maxGW}
+          onChange={(e, newVal) => setGWRange(newVal)}
+          valueLabelDisplay="auto"
+          step={1}
+          sx={{ color: "#B8860B" }}
+        />
+      </Box>
+    )}
+
+    {/* 📋 Ranking List with Bar Background */}
+    <ul className="w-full max-w-2xl divide-y divide-gray-700">
+      {(() => {
+        const minValue = Math.min(...filtered.map((d) => d.value));
+        const maxValue = Math.max(...filtered.map((d) => d.value));
+        return filtered.map((player, idx) => {
+          const percentage =
+            maxValue === minValue
+              ? 100
+              : ((player.value - minValue) / (maxValue - minValue)) * 100;
+
+          return (
+            <li
+              key={player.name}
+              className="relative py-3 px-4 cursor-pointer hover:bg-royal-red transition"
+              onClick={() =>
+                navigate("/Player_Analytics/Individual", {
+                  state: { selectedPlayer: player.name },
+                })
+              }
+            >
+              {/* Background bar */}
+              <div
+                className="absolute top-0 left-0 h-full bg-royal-gold opacity-30 rounded-r"
+                style={{ width: `${percentage}%` }}
+              ></div>
+
+              {/* Content */}
+              <div className="relative z-10 flex justify-between items-center">
+                <div className="flex items-center gap-3">
+                  <span className="text-royal-gold font-bold w-6 text-right">{idx + 1}.</span>
+                  <span className="text-white">{player.name}</span>
+                </div>
+                <span className="text-royal-gold font-semibold">
+                  {player.value.toFixed(2)}
+                </span>
+              </div>
+            </li>
+          );
+        });
+      })()}
+    </ul>
+  </div>
+);
+
 }

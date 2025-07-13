@@ -1,53 +1,74 @@
 import React, { useEffect, useState } from "react";
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-} from "recharts";
-import Typography from "@mui/material/Typography";
+import { useStatsData } from "./Contexts/StatsContext";
+import { useNavigate } from "react-router-dom";
 
 const METRICS = {
-  XG_avg: "Offensive Strength (XG)",
-  XGC_avg: "Defensive Strength (XGC)",
-  Elo_Rating: "Elo Rating",
-  "XGH-XGA": "Home Attack Effect",
+  XG_avg: "Offensive Index",
+  XGC_avg: "Defensive Index",
+  Elo_Rating: "ELO Rating",
+  "XGH-XGA": "Home Attacking Effect",
+  "XGCH-XGCA": "Home Defensive Effect",
 };
 
-export default function Team_Analytics_Rankings() {
-  const [rawData, setRawData] = useState([]);
+const METRIC_DESCRIPTIONS = {
+  XG_avg: "Offensive rating over time based on Goals and XG, adjusted for difficulty of opposition",
+  XGC_avg: "Defensive rating over time based on Goals conceded and XGC, adjusted for difficulty of opposition",
+  Elo_Rating: "Absolute rating over time based on result, adjusted for difficulty of opposition",
+  "XGH-XGA": "Difference in Attacking index at home and away. Positive values indicate better attack at home",
+  "XGCH-XGCA": "Difference in Defensive index at home and away. Positive values indicate worse defence at home",
+};
+
+const ASCENDING_METRICS = ["XGC_avg"];
+
+export default function TeamAnalyticsList() {
+  const { fetchIfNeeded, loading, TeamData } = useStatsData();
   const [selectedMetric, setSelectedMetric] = useState("XG_avg");
+  const [rankingData, setRankingData] = useState([]);
+  const navigate = useNavigate();
+  const minValue = Math.min(...rankingData.map((d) => d.value));
+  const maxValue = Math.max(...rankingData.map((d) => d.value));
 
   useEffect(() => {
-    fetch("https://fpl-project-t5e9.onrender.com/Team_current")
-      .then((res) => res.json())
-      .then((data) => {
-        setRawData(data);
-      });
+    const loadData = async () => {
+      await fetchIfNeeded();
+    };
+    loadData();
   }, []);
 
-  const sortedData = [...rawData]
-    .map((team) => ({
-      name: team.name,
-      value: parseFloat(team[selectedMetric] || 0),
-    }))
-    .sort((a, b) => b.value - a.value)
-    .slice(0, 20); // Top 20 teams
+  useEffect(() => {
+    if (!TeamData?.current || TeamData.current.length === 0) return;
 
-  const minValue = Math.min(...sortedData.map((d) => d.value));
-  const maxValue = Math.max(...sortedData.map((d) => d.value));
-  const domain = [minValue - minValue * 0.1, maxValue + maxValue * 0.1];
+    let data = TeamData.current.map((team) => {
+      let value;
+      if (selectedMetric === "XGH-XGA") {
+        value = parseFloat(team.XGH || 0) - parseFloat(team.XGA || 0);
+      } else if (selectedMetric === "XGCH-XGCA") {
+        value = parseFloat(team.XGCH || 0) - parseFloat(team.XGCA || 0);
+      } else {
+        value = parseFloat(team[selectedMetric] || 0);
+      }
+
+      return {
+        name: team.name,
+        value: Number(value.toFixed(2)),
+      };
+    }).filter((d) => !isNaN(d.value));
+
+    const sortFn = ASCENDING_METRICS.includes(selectedMetric)
+      ? (a, b) => a.value - b.value
+      : (a, b) => b.value - a.value;
+
+    setRankingData(data.sort(sortFn));
+  }, [TeamData?.current, selectedMetric]);
+
+  if (loading) return <div className="text-white">Loading team stats...</div>;
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col items-center py-10 px-4 space-y-6">
-      <h2 className="text-2xl font-bold text-center text-white">
-        {METRICS[selectedMetric]}
-      </h2>
+    <div className="min-h-screen bg-black text-white py-10 px-4 space-y-6 flex flex-col items-center">
+      <h2 className="text-2xl font-bold text-center">{METRICS[selectedMetric]}</h2>
+      <p className="text-sm text-center text-gray-400 max-w-xl">{METRIC_DESCRIPTIONS[selectedMetric]}</p>
 
-      {/* Metric Selection */}
+      {/* Metric Selector */}
       <div className="flex justify-center gap-2 flex-wrap">
         {Object.entries(METRICS).map(([key, label]) => (
           <button
@@ -57,45 +78,50 @@ export default function Team_Analytics_Rankings() {
               selectedMetric === key
                 ? "underline underline-offset-4 text-royal-gold bg-royal-beige"
                 : "text-black hover:text-royal-gold bg-royal-beige"
-            } focus:outline-none`}
+            }`}
           >
             {label}
           </button>
         ))}
       </div>
 
-      {/* Bar Chart */}
-      <div className="w-full max-w-6xl h-[700px]">
-        <ResponsiveContainer width="95%" height={sortedData.length * 40 || 400}>
-          <BarChart
-            layout="vertical"
-            data={sortedData}
-            margin={{ top: 10, right: 30, left: 20, bottom: 10 }}
-          >
-            <CartesianGrid stroke="#333" />
-            <XAxis
-              type="number"
-              tick={false}
-              axisLine={false}
-              tickLine={false}
-              domain={domain}
-            />
-            <YAxis
-              type="category"
-              dataKey="name"
-              width={120}
-              stroke="#fff"
-              tick={{ fontSize: 12 }}
-            />
-            <Tooltip formatter={(val) => val.toFixed(2)} />
-            <Bar
-              dataKey="value"
-              fill="#5A0000"
-              label={{ position: "right", fill: "#fff", fontSize: 10 }}
-            />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
+      {/* Ranking List */}
+      
+
+<ul className="w-full max-w-2xl divide-y divide-gray-700">
+  {rankingData.map((team, idx) => {
+    const percentage = ((team.value - minValue) / (maxValue - minValue)) * 100;
+
+    return (
+      <li
+        key={team.name}
+        className="relative py-3 px-4 cursor-pointer hover:bg-royal-red transition"
+        onClick={() =>
+          navigate("/Team_Analytics/Team_Individual", {
+            state: { selectedTeam: team.name },
+          })
+        }
+      >
+        {/* Background bar */}
+        <div
+          className="absolute top-0 left-0 h-full bg-royal-gold opacity-30 rounded-r"
+          style={{ width: `${percentage}%` }}
+        ></div>
+
+        {/* Content */}
+        <div className="relative z-10 flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <span className="text-royal-gold font-bold w-6 text-right">{idx + 1}.</span>
+            <span className="text-white">{team.name}</span>
+          </div>
+          <span className="text-royal-gold font-semibold">{team.value.toFixed(2)}</span>
+        </div>
+      </li>
+    );
+  })}
+</ul>
+
+
     </div>
   );
 }

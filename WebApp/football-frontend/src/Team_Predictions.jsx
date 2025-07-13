@@ -47,7 +47,7 @@ useEffect(() => {
         <select
           value={selectedGW || ""}
           onChange={(e) => setSelectedGW(Number(e.target.value))}
-          className="bg-royal-beige border-royal-gold  text-royal-gold p-2 rounded"
+          className="bg-royal-beige border-royal-gold  text-royal-red p-2 rounded"
         >
           {uniqueGWs.map((gw) => (
             <option key={gw} value={gw}>
@@ -61,7 +61,7 @@ useEffect(() => {
   {filteredData.map((match, idx) => (
     <div
       key={idx}
-      className="bg-royal-beige border border-royal-red border-3 p-6 rounded shadow text-royal-red" 
+      className="bg-royal-red border border-royal-beige border-3 p-6 rounded shadow text-royal-beige" 
     >
       <h2 className="text-lg font-bold text-center mb-4">GW {match.GW}</h2>
       <div className="flex items-center justify-between mb-2">
