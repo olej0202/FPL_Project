@@ -13,6 +13,9 @@ import TeamPredictionsFuture from "./Fixture_Ticker"
 import AITeams from "./AITeams"
 import Player_analytics_rankings from "./Player_Analytics_rankings"
 import PlayerAnalyticsIndividual from "./Player_Analytics_individual"
+import Team_Analytics_Rankings from "./Team_Analytics_rankings";
+import Team_Analytics_Individual from "./Team_Analytics_individual";
+
 
 import { User, Brain, Trophy, Users, Newspaper, Calendar } from "lucide-react";
 
@@ -31,7 +34,7 @@ export default function App() {
           {/* Main Navigation Links */}
           <div className="flex flex-wrap justify-center gap-2 sm:gap-2 -translate-x-4 py-4" >
             <NavLink
-              to="/news"
+              to="/"
               className={({ isActive }) =>
                 `flex items-center gap-3 px-4 py-3 rounded border border-royal-gold text-royal-gold font-semibold ${
                   isActive
@@ -43,8 +46,7 @@ export default function App() {
               <Newspaper size={18} /> News Blog
             </NavLink>
             <NavLink
-              to="/"
-              end
+              to="/Team_Analytics"
               className={({ isActive }) =>
                 `flex items-center gap-2 px-4 py-2 rounded border border-royal-gold text-royal-gold font-semibold ${
                   isActive
@@ -114,7 +116,12 @@ export default function App() {
 
       {/* Routes */}
       <Routes>
-        <Route path="/" element={<Team_Analytics />} />
+        <Route path="/Team_Analytics" element={<Team_Analytics />}>
+              <Route index element={<Team_Analytics_Rankings />} /> {/* 👈 Default */}
+              <Route path="Team_Individual" element={<Team_Analytics_Individual />} />
+              <Route path="Team_Rankings" element={<Team_Analytics_Rankings />} />
+        </Route>
+
         <Route path="/Score_Predictions" element={<Team_Predictions />} />
 
         <Route path="/AITeams" element={<AITeams />}>
@@ -128,7 +135,7 @@ export default function App() {
               <Route path="Rankings" element={<Player_analytics_rankings />} />
               <Route path="Individual" element={<PlayerAnalyticsIndividual />} />
         </Route>
-        <Route path="/news" element={<NewsBlog />} />
+        <Route path="/" element={<NewsBlog />} />
         <Route path="/TeamPredictionsFuture" element={<TeamPredictionsFuture />} />
       </Routes>
     </div>
