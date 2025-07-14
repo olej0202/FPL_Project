@@ -70,4 +70,28 @@ button:focus-visible {
 }
 
 
+.nav-card {
+  width: 10rem; /* 128px */
+  height: 3rem; /* 48px */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 0.375rem;
+  border: 1px solid #B8860B; /* royal-gold */
+  transition: background-color 0.2s, color 0.2s;
+  color:#B8860B;
+}
+.nav-card.active {
+  background-color: #000; /* black */
+  color: #B8860B;
+}
+.nav-card:hover {
+  background-color: #D4AF37;
+  color: #000;
+}
+
+.nav-card.active:hover {
+  background-color: #000; /* black */
+  color: #B8860B;}
 

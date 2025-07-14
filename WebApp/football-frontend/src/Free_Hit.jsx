@@ -29,7 +29,7 @@ export default function FreeHitTeam() {
 
   return (
     <>
-      <div className="min-h-screen bg-black text-white flex flex-col items-center py-10 px-4 space-y-10">
+      <div className="min-h-screen bg-black text-white flex flex-col items-center py-10 px-0 space-y-10">
         <h1 className="text-3xl md:text-4xl font-bold text-center mb-4">
 
             
