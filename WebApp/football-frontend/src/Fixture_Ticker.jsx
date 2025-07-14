@@ -132,7 +132,7 @@ export default function TeamPredictionRankings() {
   align="center"
   className="whitespace-pre-line"
 >
-  {`GW Range`}
+  {`GW Range:`} {GWRange[0]} - {GWRange[1]}
 </Typography>
           <Slider
             value={GWRange}
