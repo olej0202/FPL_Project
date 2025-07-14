@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import Select from "react-select";
 import { useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
+import { useStatsData } from "./Contexts/StatsContext";
+
 import {
   LineChart,
   Line,
@@ -18,78 +20,103 @@ import {
 } from "recharts";
 
 export default function PlayerAnalyticsIndividual() {
+  const { fetchIfNeeded, loading, PlayersData } = useStatsData();
   const API_URL = "https://fpl-project-t5e9.onrender.com/Player";
-  const [data, setData] = useState([]);
+
   const location = useLocation();
   const initialPlayer = location.state?.selectedPlayer || "";
   const [playerFilter, setPlayerFilter] = useState(initialPlayer);
   const [players, setPlayers] = useState([]);
-  const [latestStats, setLatestStats] = useState({});
+  const [data, setData] = useState([]);
   const [selectedMetric, setSelectedMetric] = useState("expected_goals");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [playerImageUrl, setPlayerImageUrl] = useState("");
   const [comparePlayer, setComparePlayer] = useState("");
+  const [latestStats, setLatestStats] = useState({});
   const [compareStats, setCompareStats] = useState({});
   const [compareImageUrl, setCompareImageUrl] = useState("");
-  
+  const [playerValue, setPlayerValue] = useState(null);
 
 
-  const playerOptions = players.map((player) => ({ value: player, label: player }));
 
-  useEffect(() => {
-    fetch(`${API_URL}_unique`)
-      .then((res) => res.json())
-      .then((raw) => {
-        const uniquePlayers = [...new Set(raw)].filter(Boolean).sort();
-        setPlayers(uniquePlayers);
-        if (!playerFilter && uniquePlayers.length > 0) {
-          setPlayerFilter(uniquePlayers[0]);
-        }
-      })
-      .catch((err) => console.error("Failed to fetch players:", err));
-  }, []);
-
-  const fetchLatestStats = async (player, setter) => {
-    try {
-      const res = await fetch(`${API_URL}?player=${encodeURIComponent(player)}`);
-      const data = await res.json();
-      const sorted = data.sort((a, b) => new Date(a.kickoff_time) - new Date(b.kickoff_time));
-      const latest = sorted[sorted.length - 1];
-      setter({
-        Rolling_adjusted_XG2: latest.Rolling_adjusted_XG2 || 0,
-        Rolling_adjusted_XA2: latest.Rolling_adjusted_XA2 || 0,
-        Rolling_adjusted_BPS2: latest.Rolling_adjusted_BPS2 || 0,
-        Overcore: latest.Average_Overscore || 0
-      });
-    } catch (e) {
-      console.error("Error fetching player data:", e);
+    useEffect(() => {
+  const init = async () => {
+    if (!PlayersData.current || PlayersData.current.length === 0) {
+      await fetchIfNeeded();
     }
   };
+  init();
+}, [fetchIfNeeded]);
 
-  useEffect(() => {
+useEffect(() => {
+  if (Array.isArray(PlayersData.current) && PlayersData.current.length > 0) {
+    const uniquePlayers = [...new Set(PlayersData.current.map((p) => p.name))].sort();
+    setPlayers(uniquePlayers);
+
+    if (!playerFilter && uniquePlayers.length > 0) {
+      setPlayerFilter(uniquePlayers[0]);
+    }
+
     if (playerFilter) {
-      fetchLatestStats(playerFilter, setLatestStats);
+      const playerData = PlayersData.current.filter((p) => p.name === playerFilter);
+      if (playerData.length) {
+        const latest = playerData[playerData.length - 1];
+
+        setLatestStats({
+          Rolling_adjusted_XG: latest.Rolling_adjusted_XG || 0,
+          Rolling_adjusted_XA: latest.Rolling_adjusted_XA || 0,
+          Rolling_adjusted_BPS: latest.Rolling_adjusted_BPS || 0,
+          Overcore: latest.Average_Overscore || 0,
+        });
+
+        setPlayerValue(latest.value || null);
+      }
+
       fetch(`https://fpl-project-t5e9.onrender.com/Player_picture?player=${encodeURIComponent(playerFilter)}`)
         .then((res) => res.text())
         .then((url) => setPlayerImageUrl(url.trim()))
         .catch(() => setPlayerImageUrl(""));
     }
-  }, [playerFilter]);
+  }
+}, [PlayersData.current, playerFilter]);
+
+
+
+  const playerOptions = players.map((player) => ({ value: player, label: player }));
+
+
+  const getLatestStatsFromContext = async (player, setter) => {
+    await fetchIfNeeded();
+    const playerData = PlayersData.current.filter((p) => p.name === player);
+    if (!playerData.length) return;
+    const sorted = playerData.sort((a, b) => new Date(a.kickoff_time) - new Date(b.kickoff_time));
+    const latest = playerData[playerData.length - 1];
+    setter({
+      Rolling_adjusted_XG: latest.Rolling_adjusted_XG || 0,
+      Rolling_adjusted_XA: latest.Rolling_adjusted_XA || 0,
+      Rolling_adjusted_BPS: latest.Rolling_adjusted_BPS || 0,
+      Overcore: latest.Average_Overscore || 0
+    });
+  };
+
+
 
   useEffect(() => {
     if (comparePlayer) {
-      fetchLatestStats(comparePlayer, setCompareStats);
+      getLatestStatsFromContext(comparePlayer, setCompareStats);
       fetch(`https://fpl-project-t5e9.onrender.com/Player_picture?player=${encodeURIComponent(comparePlayer)}`)
-        .then((res) => res.text())
-        .then((url) => setCompareImageUrl(url.trim()))
+        .then(res => res.text())
+        .then(url => setCompareImageUrl(url.trim()))
         .catch(() => setCompareImageUrl(""));
+
     }
-  }, [comparePlayer]);
+  }, [comparePlayer, PlayersData]);
 
   useEffect(() => {
     if (!playerFilter) return;
     const fetchData = async () => {
+      await fetchIfNeeded();  
       const res = await fetch(`${API_URL}?player=${encodeURIComponent(playerFilter)}`);
       const raw = await res.json();
       const sorted = raw.sort((a, b) => new Date(a.kickoff_time) - new Date(b.kickoff_time));
@@ -100,22 +127,20 @@ export default function PlayerAnalyticsIndividual() {
 
   const filteredChartData = data.filter((d) => {
     const date = new Date(d.kickoff_time);
-    const afterStart = !startDate || date >= new Date(startDate);
-    const beforeEnd = !endDate || date <= new Date(endDate);
-    return afterStart && beforeEnd;
+    return (!startDate || date >= new Date(startDate)) && (!endDate || date <= new Date(endDate));
   });
 
   const statCards = [
-    { title: "XG Index", value: latestStats.Rolling_adjusted_XG2 },
-    { title: "XA Index", value: latestStats.Rolling_adjusted_XA2 },
-    { title: "BPS Index", value: latestStats.Rolling_adjusted_BPS2 },
+    { title: "XG Index", value: latestStats.Rolling_adjusted_XG },
+    { title: "XA Index", value: latestStats.Rolling_adjusted_XA },
+    { title: "BPS Index", value: latestStats.Rolling_adjusted_BPS },
     { title: "Goals/XG", value: latestStats.Overcore }
   ];
 
   const rawStats = [
-    { key: "Rolling_adjusted_XG2", label: "XG Index" },
-    { key: "Rolling_adjusted_XA2", label: "XA Index" },
-    { key: "Rolling_adjusted_BPS2", label: "BPS Index" },
+    { key: "Rolling_adjusted_XG", label: "XG Index" },
+    { key: "Rolling_adjusted_XA", label: "XA Index" },
+    { key: "Rolling_adjusted_BPS", label: "BPS Index" },
     { key: "Overcore", label: "Goals/XG" }
   ];
 
@@ -127,35 +152,34 @@ export default function PlayerAnalyticsIndividual() {
   });
 
   const scaleValue = (key, value) => {
-    if (key === "Rolling_adjusted_BPS2") return value / 10;
-    if (key === "Overcore") return (value * 1.5) / 10;
-    return value;
-  };
+  if (!value) return 0;
 
- const comparisonData = rawStats.map(({ key, label }) => ({
+  switch (key) {
+    case "Rolling_adjusted_XG":
+        return value * 200; // assuming typical max ~4.0 → 100
+    case "Rolling_adjusted_XA":
+      return value * 230; // assuming typical max ~4.0 → 100
+    case "Rolling_adjusted_BPS":
+      return value *4; // typical max ~200 → 100
+    case "Overcore":
+      return value *30; 
+    default:
+      return value * 10;
+  }
+};
+
+ const scaledComparisonData = rawStats.map(({ key, label }) => ({
   metric: label,
-  [playerFilter]: scaleValue(key, latestStats[key]) || 0,
-  [comparePlayer]: scaleValue(key, compareStats[key]) || 0,
+  [playerFilter]: scaleValue(key, latestStats[key]),
+  [comparePlayer]: scaleValue(key, compareStats[key]),
   [`${playerFilter}_label`]: (latestStats[key] || 0).toFixed(2),
   [`${comparePlayer}_label`]: (compareStats[key] || 0).toFixed(2)
 }));
 
-const scaledComparisonData = rawStats.map(({ key, label }) => ({
-  metric: label,
-  [playerFilter]: ((scaleValue(key, latestStats[key]) || 0) / maxValues[key]) * 100,
-  [comparePlayer]: ((scaleValue(key, compareStats[key]) || 0) / maxValues[key]) * 100,
-
-  // Add original values for tooltip
-  [`${playerFilter}_label`]: (latestStats[key] || 0).toFixed(2),
-  [`${comparePlayer}_label`]: (compareStats[key] || 0).toFixed(2),
-}));
-
 
   const values = filteredChartData.map((d) => parseFloat(d[selectedMetric])).filter((v) => !isNaN(v));
-  const avgOfMetric = values.length > 0 ? values.reduce((acc, v) => acc + v, 0) / values.length : 0;
-  const stdDeviation = values.length > 1
-  ? Math.sqrt(values.reduce((acc, v) => acc + Math.pow(v - avgOfMetric, 2), 0) / (values.length - 1))
-  : 0;
+  const avgOfMetric = values.length ? values.reduce((acc, v) => acc + v, 0) / values.length : 0;
+  const stdDeviation = values.length > 1 ? Math.sqrt(values.reduce((acc, v) => acc + Math.pow(v - avgOfMetric, 2), 0)) / (values.length - 1) : 0;
 
   const selectStyles = {
     control: (base) => ({
@@ -217,8 +241,12 @@ const scaledComparisonData = rawStats.map(({ key, label }) => ({
       <div className="flex gap-10 justify-center mt-6">
         {playerFilter && playerImageUrl && (
           <img src={playerImageUrl} alt={playerFilter} className="max-w-[140px] rounded shadow-lg" />
+          
         )}
     
+      </div>
+      <div className="mt-2 bg-royal-beige text-black font-bold px-3 py-1 rounded border border-royal-gold">
+        Fantasy Price: {playerValue}M
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full max-w-6xl">
@@ -264,8 +292,8 @@ const scaledComparisonData = rawStats.map(({ key, label }) => ({
 
       {playerFilter && comparePlayer && (
         <div className="w-full max-w-4xl h-[400px]">
-        <ResponsiveContainer width="100%" height={400}>
-            <RadarChart cx="50%" cy="50%" outerRadius="80%" data={scaledComparisonData}>
+        <ResponsiveContainer width="100%" height={300}>
+            <RadarChart cx="50%" cy="50%" outerRadius="50%" data={scaledComparisonData}>
               <PolarGrid stroke="#666" />
               <PolarAngleAxis dataKey="metric" stroke="#FFD700" />
               <Radar
@@ -273,14 +301,14 @@ const scaledComparisonData = rawStats.map(({ key, label }) => ({
                 dataKey={playerFilter}
                 stroke="#FFD700"
                 fill="#FFD700"
-                fillOpacity={0.5}
+                fillOpacity={0.7}
               />
               <Radar
                 name={comparePlayer}
                 dataKey={comparePlayer}
                 stroke="#FF6347"
                 fill="#FF6347"
-                fillOpacity={0.5}
+                fillOpacity={0.7}
               />
               <Tooltip content={<CustomRadarTooltip />} />
               <Legend />
@@ -296,7 +324,7 @@ const scaledComparisonData = rawStats.map(({ key, label }) => ({
   <select
     value={selectedMetric}
     onChange={(e) => setSelectedMetric(e.target.value)}
-    className="px-4 py-2 rounded font-bold bg-royal-beige text-black border border-royal-gold focus:outline-none focus:ring-2 focus:ring-royal-gold"
+    className="px-4 py-3 rounded font-bold bg-royal-beige text-black border border-royal-gold focus:outline-none focus:ring-2 focus:ring-royal-gold"
   >
     {["expected_goals", "expected_assists", "total_points", "goals_scored", "assists"].map((metric) => (
       <option key={metric} value={metric}>

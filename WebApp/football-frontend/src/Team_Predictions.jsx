@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useOtherData } from "./Contexts/OtherContext";
 import teamLogos from "./utils/team_logos"; // adjust path as needed
+import { ChevronLeft, ChevronRight } from "lucide-react";
+
 export default function Team_Predictions() {
 
 const [predictions, setPredictions] = useState([]);
@@ -17,8 +19,9 @@ useEffect(() => {
     if (!data || !Array.isArray(data)) return;
 
     setPredictions(data);
-    const latestGW = Math.max(...data.map((d) => d.GW));
-    setSelectedGW(latestGW);
+    const earliestGW = Math.min(...data.map((d) => d.GW));
+  setSelectedGW(earliestGW);
+
   };
 
   loadData();
@@ -39,23 +42,50 @@ useEffect(() => {
         Score Predictions
       </h1>
       <h1 className="text-4xl font-bold text-center text-white mb-6">
-        GW {selectedGW}
+
       </h1>
 
-      <div className="mb-6 text-center">
-        <label className="text-lg mr-2">Select Gameweek:</label>
-        <select
-          value={selectedGW || ""}
-          onChange={(e) => setSelectedGW(Number(e.target.value))}
-          className="bg-royal-beige border-royal-gold  text-royal-red p-2 rounded"
-        >
-          {uniqueGWs.map((gw) => (
-            <option key={gw} value={gw}>
-              GW {gw}
-            </option>
-          ))}
-        </select>
-      </div>
+      {/* GW Navigation Arrows */}
+<div className="flex items-center justify-center mb-6 gap-6 text-royal-gold text-3xl font-bold">
+  {/* Left Arrow */}
+  <span
+    onClick={() =>
+      setSelectedGW((prev) =>
+        uniqueGWs.includes(prev - 1) ? prev - 1 : prev
+      )
+    }
+    className={`cursor-pointer ${
+      selectedGW === uniqueGWs[0]
+        ? "opacity-30 cursor-not-allowed"
+        : "hover:text-white"
+    }`}
+  >
+    <ChevronLeft size={32} />
+  </span>
+
+  {/* Gameweek Label */}
+  <span className="text-2xl text-royal-gold font-semibold">
+    Gameweek {selectedGW}
+  </span>
+
+  {/* Right Arrow */}
+  <span
+    onClick={() =>
+      setSelectedGW((prev) =>
+        uniqueGWs.includes(prev + 1) ? prev + 1 : prev
+      )
+    }
+    className={`cursor-pointer ${
+      selectedGW === uniqueGWs[uniqueGWs.length - 1]
+        ? "opacity-30 cursor-not-allowed"
+        : "hover:text-white"
+    }`}
+  >
+    <ChevronRight size={32} />
+  </span>
+</div>
+
+
 
      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
   {filteredData.map((match, idx) => (

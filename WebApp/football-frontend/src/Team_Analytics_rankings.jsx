@@ -69,21 +69,19 @@ export default function TeamAnalyticsList() {
       <p className="text-sm text-center text-gray-400 max-w-xl">{METRIC_DESCRIPTIONS[selectedMetric]}</p>
 
       {/* Metric Selector */}
-      <div className="flex justify-center gap-2 flex-wrap">
-        {Object.entries(METRICS).map(([key, label]) => (
-          <button
-            key={key}
-            onClick={() => setSelectedMetric(key)}
-            className={`px-4 py-2 rounded font-semibold transition-all ${
-              selectedMetric === key
-                ? "underline underline-offset-4 text-royal-gold bg-royal-beige"
-                : "text-black hover:text-royal-gold bg-royal-beige"
-            }`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+      <div className="w-full max-w-xs mx-auto mt-4">
+  <select
+    value={selectedMetric}
+    onChange={(e) => setSelectedMetric(e.target.value)}
+    className="w-full px-4 py-3 rounded bg-royal-beige text-black font-semibold focus:outline-none"
+  >
+    {Object.entries(METRICS).map(([key, label]) => (
+      <option key={key} value={key}>
+        {label}
+      </option>
+    ))}
+  </select>
+</div>
 
       {/* Ranking List */}
       
