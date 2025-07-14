@@ -52,22 +52,25 @@ export default function WildcardTeam() {
 
       {/* Team Pitch */}
       <div
-        className="w-full max-w-[500px] aspect-[2/4] bg-no-repeat bg-cover bg-center border-2 border-white rounded-lg px-2 py-3 relative"
-        style={{ backgroundImage: `url(${pitch})` }}
-      >
-        <div className="flex flex-col justify-between h-full pt-1 pb-24 space-y-1">
-          <PlayerRow players={getPlayersByPosition("GKP")} navigate={navigate} />
-          <PlayerRow players={getPlayersByPosition("DEF")} navigate={navigate} />
-          <PlayerRow players={getPlayersByPosition("MID")} navigate={navigate} />
-          <PlayerRow players={getPlayersByPosition("FWD")} navigate={navigate} />
-        </div>
-
-        {benchPlayers.length > 0 && (
-          <div className="absolute bottom-[-10px] left-0 right-0 px-2">
-            <PlayerRow players={benchPlayers} isBench navigate={navigate} />
-          </div>
-        )}
-      </div>
+                className="w-full max-w-[500px] aspect-[3/5] bg-no-repeat bg-cover bg-center border border-white rounded-lg px-2 py-3 relative"
+                style={{ backgroundImage: `url(${pitch})` }}
+              >
+                <div className="flex flex-col justify-between h-[700px] pt-1 space-y-1">
+                  <PlayerRow players={getPlayersByPosition("GKP")} navigate={navigate} />
+                  <PlayerRow players={getPlayersByPosition("DEF")} navigate={navigate} />
+                  <PlayerRow players={getPlayersByPosition("MID")} navigate={navigate} />
+                  <PlayerRow players={getPlayersByPosition("FWD")} navigate={navigate} />
+                  <div className="h-[115px]"/>
+      
+      
+                </div>
+      
+                {benchPlayers.length > 0 && (
+                  <div className="absolute bottom-[-6px] left-0 right-0 px-2">
+                    <PlayerRow players={benchPlayers} isBench navigate={navigate} />
+                  </div>
+                )}
+              </div>
 
       {/* Transfer History */}
       <div className="w-full max-w-2xl mt-10">

@@ -45,13 +45,13 @@ export default function FreeHitTeam() {
             <PlayerRow players={getPlayersByPosition("DEF")} navigate={navigate} />
             <PlayerRow players={getPlayersByPosition("MID")} navigate={navigate} />
             <PlayerRow players={getPlayersByPosition("FWD")} navigate={navigate} />
-            <div className="h-[100px]"/>
+            <div className="h-[115px]"/>
 
 
           </div>
 
           {benchPlayers.length > 0 && (
-            <div className="absolute bottom-[-4px] left-0 right-0 px-2">
+            <div className="absolute bottom-[-6px] left-0 right-0 px-2">
               <PlayerRow players={benchPlayers} isBench navigate={navigate} />
             </div>
           )}
