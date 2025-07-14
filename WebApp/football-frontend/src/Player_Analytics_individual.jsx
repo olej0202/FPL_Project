@@ -268,7 +268,7 @@ useEffect(() => {
         )}
       </div>
 
-      <div className="w-64">
+      <div className="w-full max-w-sm">
         <Select
           options={playerOptions}
           onChange={(opt) => setComparePlayer(opt.value)}
@@ -283,7 +283,7 @@ useEffect(() => {
       setCompareStats({});
       setCompareImageUrl("");
     }}
-    className="mt-5 ml-12 px-12 py-2 bg-red-700 text-white rounded border border-royal-gold hover:bg-red-800 transition"
+    className="mt-4 ml-28 px-10 py-2 bg-red-700 text-white rounded border border-royal-gold hover:bg-red-800 transition"
   >
     Remove
   </button>
@@ -324,7 +324,7 @@ useEffect(() => {
   <select
     value={selectedMetric}
     onChange={(e) => setSelectedMetric(e.target.value)}
-    className="px-4 py-3 rounded font-bold bg-royal-beige text-black border border-royal-gold focus:outline-none focus:ring-2 focus:ring-royal-gold"
+    className="px-20 py-3 rounded font-bold bg-royal-beige text-black border border-royal-gold focus:outline-none focus:ring-2 focus:ring-royal-gold"
   >
     {["expected_goals", "expected_assists", "total_points", "goals_scored", "assists"].map((metric) => (
       <option key={metric} value={metric}>
@@ -338,6 +338,8 @@ useEffect(() => {
     ))}
   </select>
 </div>
+
+
 
 
       <div className="flex flex-col sm:flex-row gap-1 justify-center items-center mt-6 text-black">
@@ -363,15 +365,15 @@ useEffect(() => {
 
       <div className="flex flex-col sm:flex-row gap-4 justify-center mt-4">
   {/* Avg Box */}
-  <div className="bg-royal-red text-royal-beige p-4 border border-royal-gold rounded-lg shadow text-center w-full max-w-sm">
-    <h2 className="text-lg font-semibold mb-2 capitalize">Avg. {selectedMetric.replace("_", " ")}</h2>
-    <p className="text-3xl font-bold">{avgOfMetric.toFixed(2)}</p>
+  <div className="bg-royal-red text-royal-beige p-4 border border-royal-gold rounded-lg shadow text-center">
+    <h2 className="text-1xl font-semibold mb-2 capitalize">Avg. {selectedMetric.replace("_", " ")}</h2>
+    <p className="text-2xl font-bold">{avgOfMetric.toFixed(2)}</p>
   </div>
 
   {/* Std Dev Box */}
-  <div className="bg-royal-red text-royal-beige p-4 border border-royal-gold rounded-lg shadow text-center w-full max-w-sm">
-    <h2 className="text-lg font-semibold mb-2 capitalize">Std. Dev. {selectedMetric.replace("_", " ")}</h2>
-    <p className="text-3xl font-bold">{stdDeviation.toFixed(2)}</p>
+  <div className="bg-royal-red text-royal-beige p-4 border border-royal-gold rounded-lg shadow text-center">
+    <h2 className="text-1xl font-semibold mb-2 capitalize">Std. Dev. {selectedMetric.replace("_", " ")}</h2>
+    <p className="text-2xl font-bold">{stdDeviation.toFixed(2)}</p>
   </div>
 </div>
 

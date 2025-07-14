@@ -52,7 +52,7 @@ export default function WildcardTeam() {
 
       {/* Team Pitch */}
       <div
-        className="w-full max-w-[500px] aspect-[3/4] bg-no-repeat bg-cover bg-center border-2 border-white rounded-lg px-2 py-3 relative"
+        className="w-full max-w-[500px] aspect-[2/4] bg-no-repeat bg-cover bg-center border-2 border-white rounded-lg px-2 py-3 relative"
         style={{ backgroundImage: `url(${pitch})` }}
       >
         <div className="flex flex-col justify-between h-full pt-1 pb-24 space-y-1">
