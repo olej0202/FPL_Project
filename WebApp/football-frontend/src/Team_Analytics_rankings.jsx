@@ -15,7 +15,7 @@ const METRIC_DESCRIPTIONS = {
   XGC_avg: "Defensive rating over time based on Goals conceded and XGC, adjusted for difficulty of opposition",
   Elo_Rating: "Absolute rating over time based on result, adjusted for difficulty of opposition",
   "XGH-XGA": "Difference in Attacking index at home and away. Positive values indicate better attack at home",
-  "XGCH-XGCA": "Difference in Defensive index at home and away. Positive values indicate worse defence at home",
+  "XGCH-XGCA": "Difference in Defensive index at home and away. Positive values indicate better defence at home",
 };
 
 const ASCENDING_METRICS = ["XGC_avg"];
@@ -43,7 +43,7 @@ export default function TeamAnalyticsList() {
       if (selectedMetric === "XGH-XGA") {
         value = parseFloat(team.XGH || 0) - parseFloat(team.XGA || 0);
       } else if (selectedMetric === "XGCH-XGCA") {
-        value = parseFloat(team.XGCH || 0) - parseFloat(team.XGCA || 0);
+        value = parseFloat(team.XGCA || 0) - parseFloat(team.XGCH || 0);
       } else {
         value = parseFloat(team[selectedMetric] || 0);
       }
@@ -73,7 +73,7 @@ export default function TeamAnalyticsList() {
   <select
     value={selectedMetric}
     onChange={(e) => setSelectedMetric(e.target.value)}
-    className="w-full px-4 py-3 rounded bg-royal-beige text-black font-semibold focus:outline-none"
+    className="w-full px-4 py-3 rounded bg-royal-beige text-black font-semibold focus:outline-none text-center"
   >
     {Object.entries(METRICS).map(([key, label]) => (
       <option key={key} value={key}>

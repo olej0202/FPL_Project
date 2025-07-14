@@ -37,6 +37,7 @@ export default function PlayerAnalyticsIndividual() {
   const [compareStats, setCompareStats] = useState({});
   const [compareImageUrl, setCompareImageUrl] = useState("");
   const [playerValue, setPlayerValue] = useState(null);
+  const [playerNews, setPlayerNews] = useState(null);
 
 
 
@@ -71,6 +72,7 @@ useEffect(() => {
         });
 
         setPlayerValue(latest.value || null);
+        setPlayerNews(latest.news || null);
       }
 
       fetch(`https://fpl-project-t5e9.onrender.com/Player_picture?player=${encodeURIComponent(playerFilter)}`)
@@ -225,10 +227,10 @@ useEffect(() => {
 
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col items-center px-10 py-10 space-y-6">
+    <div className="min-h-screen bg-black text-white flex flex-col items-center px-2 py-10 space-y-6">
       <h1 className="text-4xl font-bold text-center text-royal-beige">Player Analytics</h1>
 
-      <div className="w-full max-w-sm">
+      <div className="w-full max-w-sm text-center">
         <Select
           options={playerOptions}
           onChange={(option) => setPlayerFilter(option.value)}
@@ -247,7 +249,14 @@ useEffect(() => {
       </div>
       <div className="mt-2 bg-royal-beige text-black font-bold px-3 py-1 rounded border border-royal-gold">
         Fantasy Price: {playerValue}M
+        
       </div>
+
+      {playerNews && playerNews !== "No news" && (
+  <div className="mt-2 bg-red-700 text-royale-beige font-bold px-3 py-1 rounded border border-royal-red text-center">
+    {playerNews}
+  </div>
+)}
 
       <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full max-w-6xl">
         {statCards.map((stat, idx) => (
@@ -268,7 +277,7 @@ useEffect(() => {
         )}
       </div>
 
-      <div className="w-full max-w-sm">
+      <div className="w-full max-w-sm text-center">
         <Select
           options={playerOptions}
           onChange={(opt) => setComparePlayer(opt.value)}
@@ -276,23 +285,26 @@ useEffect(() => {
           styles={selectStyles}
           placeholder="Compare with..."
         />
+        </div>
         {comparePlayer && (
+  <div className="flex justify-center mt-4">
   <button
     onClick={() => {
       setComparePlayer("");
       setCompareStats({});
       setCompareImageUrl("");
     }}
-    className="mt-4 ml-28 px-10 py-2 bg-red-700 text-white rounded border border-royal-gold hover:bg-red-800 transition"
+    className="px-10 py-2 bg-red-700 text-white rounded border border-royal-gold hover:bg-red-800 transition"
   >
     Remove
   </button>
+</div>
 )}
-      </div>
+      
 
       {playerFilter && comparePlayer && (
-        <div className="w-full max-w-4xl h-[400px]">
-        <ResponsiveContainer width="100%" height={300}>
+        <div className="w-full max-w-4xl h-[500px]">
+        <ResponsiveContainer width="100%" height={400}>
             <RadarChart cx="50%" cy="50%" outerRadius="50%" data={scaledComparisonData}>
               <PolarGrid stroke="#666" />
               <PolarAngleAxis dataKey="metric" stroke="#FFD700" />

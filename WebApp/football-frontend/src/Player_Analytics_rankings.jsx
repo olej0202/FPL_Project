@@ -119,7 +119,7 @@ export default function Player_analytics_rankings() {
         <select
           value={selectedMetric}
           onChange={(e) => setSelectedMetric(e.target.value)}
-          className="w-full px-4 py-3 rounded bg-royal-beige text-black font-semibold focus:outline-none"
+          className="w-full px-4 py-3 rounded bg-royal-beige text-black font-semibold focus:outline-none text-center"
         >
           {Object.entries(METRICS).map(([key, label]) => (
             <option key={key} value={key}>
