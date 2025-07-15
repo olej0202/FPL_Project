@@ -1,8 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState,useMemo } from "react";
 import Select from "react-select";
 import { useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { useStatsData } from "./Contexts/StatsContext";
+import Slider from "@mui/material/Slider";
+import { Table, BarChart2 } from "lucide-react";
+import CustomTooltip from "./components/graphTooltip_player";
 
 import {
   LineChart,
@@ -28,9 +31,9 @@ export default function PlayerAnalyticsIndividual() {
   const [playerFilter, setPlayerFilter] = useState(initialPlayer);
   const [players, setPlayers] = useState([]);
   const [data, setData] = useState([]);
-  const [selectedMetric, setSelectedMetric] = useState("expected_goals");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [selectedMetric, setSelectedMetric] = useState("Expected Goals");
+ const [dateRange, setDateRange] = useState([0, 0]); 
+ const [bounds, setBounds] = useState([0, 0]); // [minTs, maxTs]
   const [playerImageUrl, setPlayerImageUrl] = useState("");
   const [comparePlayer, setComparePlayer] = useState("");
   const [latestStats, setLatestStats] = useState({});
@@ -38,6 +41,10 @@ export default function PlayerAnalyticsIndividual() {
   const [compareImageUrl, setCompareImageUrl] = useState("");
   const [playerValue, setPlayerValue] = useState(null);
   const [playerNews, setPlayerNews] = useState(null);
+  const [showTable, setShowTable] = useState(false);
+  const [seasonFilter, setSeasonFilter] = useState([]);
+  const [opponentFilter, setOpponentFilter] = useState([]);
+
 
 
 
@@ -121,16 +128,57 @@ useEffect(() => {
       await fetchIfNeeded();  
       const res = await fetch(`${API_URL}?player=${encodeURIComponent(playerFilter)}`);
       const raw = await res.json();
-      const sorted = raw.sort((a, b) => new Date(a.kickoff_time) - new Date(b.kickoff_time));
+      const sorted = raw.sort((a, b) => new Date(a["Kickoff time"]) - new Date(b["Kickoff time"]));
       setData(sorted);
     };
     fetchData();
   }, [playerFilter]);
 
-  const filteredChartData = data.filter((d) => {
-    const date = new Date(d.kickoff_time);
-    return (!startDate || date >= new Date(startDate)) && (!endDate || date <= new Date(endDate));
-  });
+
+   useEffect(() => {
+    if (!data.length) return;
+    const timestamps = data.map((d) => new Date(d["Kickoff time"]).getTime());
+    const minTs = Math.min(...timestamps);
+    const maxTs = Math.max(...timestamps);
+    setBounds([minTs, maxTs]);
+    // initialize the thumbs to cover the whole range
+    setDateRange([minTs, maxTs]);
+  }, [data]);
+
+  //Season filter
+    const seasonOptions = useMemo(() => {
+    const uniq = Array.from(new Set(data.map(d => d.Season))).sort();
+    return uniq.map(s => ({ value: s, label: s }));
+  }, [data]);
+
+  //Opponent filter
+  const opponentOptions = useMemo(() => {
+  const uniq = Array.from(new Set(data.map(d => d["Opponent Name"]))).sort();
+  return uniq.map(o => ({ value: o, label: o }));
+}, [data]);
+
+  // filter whenever dateRange changes
+    const filtered = useMemo(() => {
+        const [low, high] = dateRange;
+        // extract chosen season values:
+        const chosen = seasonFilter.map(s => s.value);
+        const chosenOpponents = opponentFilter.map(o => o.value);
+        return data.filter(d => {
+          const ts = new Date(d["Kickoff time"]).getTime();
+          const inDateRange = ts >= low && ts <= high;
+          const inSeason = chosen.length === 0 || chosen.includes(d.Season);
+          const inOpponent   = !chosenOpponents.length || chosenOpponents.includes(d["Opponent Name"]);
+          return inDateRange && inSeason && inOpponent;
+        });
+    }, [data, dateRange, seasonFilter,opponentFilter]);
+
+  // MUI-style date label
+  const valueLabelFormat = (ts) =>
+    new Date(ts).toLocaleDateString();
+
+  const handleSliderChange = (_, newValue) => {
+    setDateRange(newValue);
+  };
 
   const statCards = [
     { title: "XG Index", value: latestStats.Rolling_adjusted_XG },
@@ -179,9 +227,21 @@ useEffect(() => {
 }));
 
 
-  const values = filteredChartData.map((d) => parseFloat(d[selectedMetric])).filter((v) => !isNaN(v));
+  const values = filtered.map((d) => parseFloat(d[selectedMetric])).filter((v) => !isNaN(v));
   const avgOfMetric = values.length ? values.reduce((acc, v) => acc + v, 0) / values.length : 0;
+  const TotalOfMetric = values.length ? values.reduce((acc, v) => acc + v, 0): 0;
   const stdDeviation = values.length > 1 ? Math.sqrt(values.reduce((acc, v) => acc + Math.pow(v - avgOfMetric, 2), 0)) / (values.length - 1) : 0;
+  const historyMetrics = [
+    { value: "Expected Goals", label: "Expected Goals" },
+    { value: "Expected Assists", label: "Expected Assists" },
+    { value: "Goals Scored", label: "Goals Scored" },
+    { value: "Assists", label: "Assists" },
+    { value: "Bonus", label: "Bonus" },
+    { value: "Adjusted XG", label: "Adjusted XG" },
+    { value: "Adjusted XA", label: "Adjusted XA" },
+    { value: "ICT", label: "ICT Index" },
+  ];
+
 
   const selectStyles = {
     control: (base) => ({
@@ -332,84 +392,167 @@ useEffect(() => {
 
       <h1 className="text-4xl font-bold text-center text-royal-beige mt-10">Historical Analysis</h1>
 
-      <div className="mt-10">
-  <select
-    value={selectedMetric}
-    onChange={(e) => setSelectedMetric(e.target.value)}
-    className="px-20 py-3 rounded font-bold bg-royal-beige text-black border border-royal-gold focus:outline-none focus:ring-2 focus:ring-royal-gold"
-  >
-    {["expected_goals", "expected_assists", "total_points", "goals_scored", "assists"].map((metric) => (
-      <option key={metric} value={metric}>
-        {metric
-  .split("_")
-  .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-  .join(" ")}
 
+<div className="w-full max-w-sm text-center">
+    <h2 className="text-2xl text-royal-beige mb-4 text-center">
+  Choose Metric
+</h2>
+        <Select
+          options={historyMetrics}
+          value={historyMetrics.find(m => m.value === selectedMetric)}
+          onChange={o => setSelectedMetric(o.value)}
+          placeholder="Metric..."
+          styles={selectStyles}
 
-      </option>
-    ))}
-  </select>
-</div>
-
-
-
-
-      <div className="flex flex-col sm:flex-row gap-1 justify-center items-center mt-6 text-black">
-        <div>
-          <label className="text-white block mb-1">Start Date</label>
-          <input
-            type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            className="p-2 rounded border border-royal-gold"
-          />
+        />
+        
         </div>
-        <div>
-          <label className="text-white block mb-1">End Date</label>
-          <input
-            type="date"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-            className="p-2 rounded border border-royal-gold"
-          />
-        </div>
-      </div>
+    <div className="w-full max-w-sm text-center">
+        <h2 className="text-2xl text-royal-beige mb-4 text-center">
+  Season
+</h2>
+        <Select
+      options={seasonOptions}
+      value={seasonFilter}
+      onChange={opts => setSeasonFilter(opts || [])}
+      isMulti
+      isClearable
+      placeholder="Select Season(s)..."
+      styles={selectStyles}
+    />
+    </div>
+    <div className="w-full max-w-sm text-center">
+        <h2 className="text-2xl text-royal-beige mb-4 text-center">
+  Oppenents
+</h2>
+        <Select
+      options={opponentOptions}
+      value={opponentFilter}
+      onChange={opts => setOpponentFilter(opts || [])}
+      isMulti
+      isClearable
+      placeholder="Select Season(s)..."
+      styles={selectStyles}
+    />
+    </div>
+
+
+
+
+
+      <div className="px-4 my-8">
+      <h2 className="text-2xl text-royal-beige mb-4 text-center">
+  Date Range:<br/>{' '}
+  {dateRange[0] && dateRange[1]
+    ? `${new Date(dateRange[0]).toLocaleDateString()} – ${new Date(dateRange[1]).toLocaleDateString()}`
+    : ' Select a range'}
+</h2>
+    
+
+      <Slider
+        value={dateRange}
+        onChange={handleSliderChange}
+        valueLabelDisplay="auto"
+        valueLabelFormat={valueLabelFormat}
+        min={bounds[0]}
+        max={bounds[1]}
+        step={24 * 60 * 60 * 1000} // one-day steps
+        marks={[
+          { value: bounds[0], label: valueLabelFormat(bounds[0]) },
+          { value: bounds[1], label: valueLabelFormat(bounds[1]) }
+        ]}
+        getAriaLabel={() => "Date range"}
+        sx={{ color: "#B8860B" }}
+      />
+
+      {/* …now render your chart or table based on `filtered`… */}
+    </div>
 
       <div className="flex flex-col sm:flex-row gap-4 justify-center mt-4">
   {/* Avg Box */}
   <div className="bg-royal-red text-royal-beige p-4 border border-royal-gold rounded-lg shadow text-center">
+    
+    <h2 className="text-1xl font-semibold mb-2 capitalize">Total {selectedMetric.replace("_", " ")}</h2>
+    <p className="text-2xl font-bold mb-4">{TotalOfMetric.toFixed(2)}</p>
     <h2 className="text-1xl font-semibold mb-2 capitalize">Avg. {selectedMetric.replace("_", " ")}</h2>
-    <p className="text-2xl font-bold">{avgOfMetric.toFixed(2)}</p>
-  </div>
-
-  {/* Std Dev Box */}
-  <div className="bg-royal-red text-royal-beige p-4 border border-royal-gold rounded-lg shadow text-center">
-    <h2 className="text-1xl font-semibold mb-2 capitalize">Std. Dev. {selectedMetric.replace("_", " ")}</h2>
+    <p className="text-2xl font-bold mb-4">{avgOfMetric.toFixed(2)}</p>
+        <h2 className="text-1xl font-semibold mb-2 capitalize">Std. Dev. {selectedMetric.replace("_", " ")}</h2>
     <p className="text-2xl font-bold">{stdDeviation.toFixed(2)}</p>
   </div>
 </div>
+<div className="flex items-center gap-6 mb-4">
+      {/* Table icon */}
+      <Table
+        size={24}
+        className={`
+          cursor-pointer 
+          ${showTable 
+            ? "underline text-royal-gold" 
+            : "text-white hover:text-gray-300"
+          }
+        `}
+        onClick={() => setShowTable(true)}
+      />
+
+      {/* Chart icon */}
+      <BarChart2
+        size={24}
+        className={`
+          cursor-pointer 
+          ${!showTable 
+            ? "underline text-royal-gold border-royal-gold" 
+            : "text-white hover:text-gray-300"
+          }
+        `}
+        onClick={() => setShowTable(false)}
+      />
+    </div>
 
 
-      <div className="bg-royal-red p-1 rounded shadow border border-royal-gold w-full max-w-6xl mt-8">
+      {showTable ? (
+        <div className="overflow-auto bg-royal-red p-4 rounded shadow border border-royal-gold text-royal-gold">
+  <table className="w-full table-auto border-collapse">
+    <thead>
+      <tr>
+        <th className="border border-royal-beige px-2 py-1 text-royal-beige">Season</th>
+        <th className="border border-royal-beige px-2 py-1 text-royal-beige">Opponent Name</th>
+        <th className="border border-royal-beige px-2 py-1 text-royal-beige">Date</th>
+        <th className="border border-royal-beige px-2 py-1 text-royal-beige">
+          {historyMetrics.find(m => m.value === selectedMetric)?.label}
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      {filtered.map((row, i) => (
+        <tr key={i} className="hover:bg-gray-200">
+          <td className="border border-royal-beige px-2 py-1 text-royal-gold">{row.Season}</td>
+          <td className="border border-royal-beige px-2 py-1 text-royal-gold">{row["Opponent Name"]}</td>
+          <td className="border border-royal-beige px-2 py-1 text-royal-gold">{row["Kickoff time"]}</td>
+          <td className="border border-royal-beige px-2 py-1 text-royal-gold">{row[selectedMetric]}</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
+
+      ) : (
+              <div className="bg-royal-red p-1 rounded shadow border border-royal-gold w-full max-w-6xl mt-8">
         <h2 className="text-xl font-semibold mb-4 text-center text-royal-gold capitalize">
           {selectedMetric.replace("_", " ")} Over Time
         </h2>
         <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={filteredChartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+          <LineChart data={filtered} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
             <CartesianGrid stroke="#333" />
-            <XAxis dataKey="kickoff_time" tick={{ fontSize: 10 }} stroke="#fff" />
+            <XAxis dataKey="Kickoff time" tick={{ fontSize: 10 }} stroke="#fff" />
             <YAxis stroke="#fff" />
             <Tooltip
-              contentStyle={{
-                backgroundColor: "#5A0000",
-                color: "#FFD700",
-                border: "1px solid #FFD700"
-              }}
+              content={<CustomTooltip selectedMetric={selectedMetric} />}
             />
             <Line type="monotone" dataKey={selectedMetric} stroke="#FFD700" dot={false} />
           </LineChart>
         </ResponsiveContainer>
       </div>
+      )}
     </div>
   );
 }

@@ -75,9 +75,9 @@ def Main_Orchestration():
     Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path)
     
     #Predict data
-    Data_Predictions(current_fixture_path,current_team_path, n_points_in_future)
+    #Data_Predictions(current_fixture_path,current_team_path, n_points_in_future)
     
-    Data_Generation(current_raw_data_path,ownership,budget,GW_list_wildcard,GW_list_freehit )
+    #Data_Generation(current_raw_data_path,ownership,budget,GW_list_wildcard,GW_list_freehit )
     
 if __name__ == "__main__":
     Main_Orchestration()

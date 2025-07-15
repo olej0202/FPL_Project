@@ -149,6 +149,7 @@ def process_player_data(player_df, team, team_id2,kmeans):
     df["XGC_FWD"]=forXG
     df["XGC_MID"]=midXG
     df['Own_Attacking_form'] = own_att_stat
+    df['opponent_code'] = player_df['opponent_code'].values
 
     return df
 
