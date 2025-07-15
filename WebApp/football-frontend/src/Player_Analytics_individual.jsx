@@ -538,7 +538,7 @@ useEffect(() => {
         className={`
           cursor-pointer 
           ${showTable 
-            ? "" 
+            ? "underline text-royal-gold border-royal-gold" 
             : "text-white hover:text-gray-300"
           }
         `}
@@ -608,7 +608,7 @@ useEffect(() => {
       <div className="max-w-2xl mx-auto mt-6">
   <h2 className="text-xl text-royal-beige mb-2 text-center">Saved Analyses</h2>  
 </div>
-<div className="overflow-x-auto w-full max-w-4xl mx-auto mt-6">
+<div className="overflow-x-auto w-full max-w-4xl mx-auto mt-6 text-center">
   <table className="w-full table-auto bg-royal-red text-royal-beige rounded-lg shadow border border-royal-gold">
     <thead>
       <tr className="bg-royal-beige text-black">
@@ -617,7 +617,7 @@ useEffect(() => {
         <th className="px-4 py-2 border border-royal-gold">Metric</th>
         <th className="px-4 py-2 border border-royal-gold">Total</th>
         <th className="px-4 py-2 border border-royal-gold">Average</th>
-        <th className="px-4 py-2 border border-royal-gold">Remove</th>
+        <th className="px-4 py-2 border border-royal-gold"></th>
       </tr>
     </thead>
     <tbody>
@@ -628,10 +628,10 @@ useEffect(() => {
           <td className="px-4 py-2 border border-royal-gold">{a.metric}</td>
           <td className="px-4 py-2 border border-royal-gold">{a.TotalOfMetric.toFixed(2)}</td>
           <td className="px-4 py-2 border border-royal-gold">{a.avgOfMetric.toFixed(2)}</td>
-          <td className="px-4 py-2 border border-royal-gold text-center">
+          <td className="px-4 py-2 border border-royal-gold">
                  <Trash2
-                   size={18}
-                   className="cursor-pointer text-royal-gold hover:text-red-500"
+                   size={25}
+                   className="ml-0 px cursor-pointer text-royal-gold hover:text-red-500 text-center"
                    onClick={() => removeAnalysis(a.id)}
                  />
                </td>
