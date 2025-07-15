@@ -4,7 +4,7 @@ import { useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { useStatsData } from "./Contexts/StatsContext";
 import Slider from "@mui/material/Slider";
-import { Table, BarChart2, Trash2  } from "lucide-react";
+import { Table, BarChart2, Trash2 ,ChevronDown , Save } from "lucide-react";
 import CustomTooltip from "./components/graphTooltip_player";
 import NameModal from "./components/NameAnalysis";
 
@@ -46,6 +46,13 @@ export default function PlayerAnalyticsIndividual() {
   const [seasonFilter, setSeasonFilter] = useState([]);
   const [opponentFilter, setOpponentFilter] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
+
+     const scrollToBottom = () => {
+    window.scrollTo({
+      top: document.documentElement.scrollHeight,
+      behavior: 'smooth',
+    });
+  };
 
 
 
@@ -500,9 +507,11 @@ useEffect(() => {
 <div className="flex justify-center my-4">
         <button
           onClick={() => setModalOpen(true)}
-          className="px-4 py-2 border border-royal-gold text-royal-gold rounded hover:bg-royal-beige transition"
+           className="flex items-center gap-2 px-4 py-2 border border-royal-gold text-royal-gold rounded hover:bg-royal-beige transition"
         >
-          Save Analysis
+            <Save size={18}/>
+          Save Analysis 
+          
         </button>
       </div>
 
@@ -511,6 +520,14 @@ useEffect(() => {
        onConfirm={handleAddAnalysis}
        onCancel={() => setModalOpen(false)}
      />
+     <button
+          onClick={scrollToBottom}
+          className="flex items-center gap-2 px-4 py-2 text-black hover:underline transition border-none"
+        >
+            See Saved
+          <ChevronDown size={20} />
+          
+        </button>
 <div className="flex items-center gap-6 mb-4">
       {/* Table icon */}
       <Table
@@ -518,7 +535,7 @@ useEffect(() => {
         className={`
           cursor-pointer 
           ${showTable 
-            ? "underline text-royal-gold" 
+            ? "" 
             : "text-white hover:text-gray-300"
           }
         `}
@@ -541,25 +558,25 @@ useEffect(() => {
 
 
       {showTable ? (
-        <div className="overflow-auto bg-royal-red p-4 rounded shadow border border-royal-gold text-royal-gold">
+        <div className="overflow-auto bg-royal-red p-4 rounded shadow border border-royal-gold text-royal-beige">
   <table className="w-full table-auto border-collapse">
     <thead>
-      <tr>
-        <th className="border border-royal-beige px-2 py-1 text-royal-beige">Season</th>
-        <th className="border border-royal-beige px-2 py-1 text-royal-beige">Opponent Name</th>
-        <th className="border border-royal-beige px-2 py-1 text-royal-beige">Date</th>
-        <th className="border border-royal-beige px-2 py-1 text-royal-beige">
+      <tr className="bg-royal-beige text-black">
+        <th className="px-2 py-2 border border-royal-gold">Season</th>
+        <th className="px-2 py-2 border border-royal-gold">Opponent Name</th>
+        <th className="px-2 py-2 border border-royal-gold">Date</th>
+        <th className="px-2 py-2 border border-royal-gold">
           {historyMetrics.find(m => m.value === selectedMetric)?.label}
         </th>
       </tr>
     </thead>
     <tbody>
       {filtered.map((row, i) => (
-        <tr key={i} className="hover:bg-black hover:text-black">
-          <td className="border border-royal-beige px-2 py-1 text-royal-beige">{row.Season}</td>
-          <td className="border border-royal-beige px-2 py-1 text-royal-beige ">{row["Opponent Name"]}</td>
-          <td className="border border-royal-beige px-2 py-1 text-royal-beige ">{row["Kickoff time"]}</td>
-          <td className="border border-royal-beige px-2 py-1 text-royal-beige ">{row[selectedMetric]}</td>
+        <tr key={i} className="odd:bg-royal-red-dark hover:bg-royal-red-light">
+          <td className="px-3 py-1 border border-royal-gold">{row.Season}</td>
+          <td className="px-3 py-1 border border-royal-gold">{row["Opponent Name"]}</td>
+          <td className="px-3 py-1 border border-royal-gold">{row["Kickoff time"]}</td>
+          <td className="px-3 py-1 border border-royal-gold">{row[selectedMetric]}</td>
         </tr>
       ))}
     </tbody>
