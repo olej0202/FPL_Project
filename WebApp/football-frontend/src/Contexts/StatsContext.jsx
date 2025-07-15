@@ -9,6 +9,13 @@ export function StatsDataProvider({ children }) {
   const TeamRef = useRef(null);
 
   const [loading, setLoading] = useState(false);
+  const [analyses, setAnalyses] = useState([]);
+  const addAnalysis = (analysis) => {
+  setAnalyses((prev) => [...prev, analysis]);
+};
+const removeAnalysis = (id) => {
+  setAnalyses(prev => prev.filter(a => a.id !== id));
+};
 
   const fetchIfNeeded = async () => {
     if (PlayersRef.current && TeamRef.current) return;
@@ -35,6 +42,9 @@ export function StatsDataProvider({ children }) {
         loading,
         PlayersData: PlayersRef,
         TeamData: TeamRef,
+        analyses,
+        addAnalysis,
+        removeAnalysis,
       }}
     >
       {children}

@@ -4,8 +4,9 @@ import { useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { useStatsData } from "./Contexts/StatsContext";
 import Slider from "@mui/material/Slider";
-import { Table, BarChart2 } from "lucide-react";
+import { Table, BarChart2, Trash2  } from "lucide-react";
 import CustomTooltip from "./components/graphTooltip_player";
+import NameModal from "./components/NameAnalysis";
 
 import {
   LineChart,
@@ -23,7 +24,7 @@ import {
 } from "recharts";
 
 export default function PlayerAnalyticsIndividual() {
-  const { fetchIfNeeded, loading, PlayersData } = useStatsData();
+  const { fetchIfNeeded, loading, PlayersData,addAnalysis,analyses,removeAnalysis } = useStatsData();
   const API_URL = "https://fpl-project-t5e9.onrender.com/Player";
 
   const location = useLocation();
@@ -44,6 +45,7 @@ export default function PlayerAnalyticsIndividual() {
   const [showTable, setShowTable] = useState(false);
   const [seasonFilter, setSeasonFilter] = useState([]);
   const [opponentFilter, setOpponentFilter] = useState([]);
+  const [modalOpen, setModalOpen] = useState(false);
 
 
 
@@ -241,6 +243,18 @@ useEffect(() => {
     { value: "Adjusted XA", label: "Adjusted XA" },
     { value: "ICT", label: "ICT Index" },
   ];
+      const handleAddAnalysis = (name) => {
+    const id = name;
+    addAnalysis({
+      id,
+      name,
+      player: playerFilter,
+      metric: selectedMetric,
+      TotalOfMetric,
+      avgOfMetric
+    });
+    setModalOpen(false);
+  };
 
 
   const selectStyles = {
@@ -272,6 +286,7 @@ useEffect(() => {
     const player2 = payload[1]?.name;
     const p1Label = payload[0]?.payload?.[`${player1}_label`];
     const p2Label = payload[1]?.payload?.[`${player2}_label`];
+
 
 
     return (
@@ -423,7 +438,7 @@ useEffect(() => {
     </div>
     <div className="w-full max-w-sm text-center">
         <h2 className="text-2xl text-royal-beige mb-4 text-center">
-  Oppenents
+  Opponents
 </h2>
         <Select
       options={opponentOptions}
@@ -478,8 +493,24 @@ useEffect(() => {
     <p className="text-2xl font-bold mb-4">{avgOfMetric.toFixed(2)}</p>
         <h2 className="text-1xl font-semibold mb-2 capitalize">Std. Dev. {selectedMetric.replace("_", " ")}</h2>
     <p className="text-2xl font-bold">{stdDeviation.toFixed(2)}</p>
+
   </div>
+
 </div>
+<div className="flex justify-center my-4">
+        <button
+          onClick={() => setModalOpen(true)}
+          className="px-4 py-2 border border-royal-gold text-royal-gold rounded hover:bg-royal-beige transition"
+        >
+          Save Analysis
+        </button>
+      </div>
+
+     <NameModal
+       isOpen={modalOpen}
+       onConfirm={handleAddAnalysis}
+       onCancel={() => setModalOpen(false)}
+     />
 <div className="flex items-center gap-6 mb-4">
       {/* Table icon */}
       <Table
@@ -524,11 +555,11 @@ useEffect(() => {
     </thead>
     <tbody>
       {filtered.map((row, i) => (
-        <tr key={i} className="hover:bg-gray-200">
+        <tr key={i} className="hover:bg-black hover:text-black">
           <td className="border border-royal-beige px-2 py-1 text-royal-beige">{row.Season}</td>
-          <td className="border border-royal-beige px-2 py-1 text-royal-beige">{row["Opponent Name"]}</td>
-          <td className="border border-royal-beige px-2 py-1 text-royal-beige">{row["Kickoff time"]}</td>
-          <td className="border border-royal-beige px-2 py-1 text-royal-beige">{row[selectedMetric]}</td>
+          <td className="border border-royal-beige px-2 py-1 text-royal-beige ">{row["Opponent Name"]}</td>
+          <td className="border border-royal-beige px-2 py-1 text-royal-beige ">{row["Kickoff time"]}</td>
+          <td className="border border-royal-beige px-2 py-1 text-royal-beige ">{row[selectedMetric]}</td>
         </tr>
       ))}
     </tbody>
@@ -552,7 +583,44 @@ useEffect(() => {
           </LineChart>
         </ResponsiveContainer>
       </div>
+      
       )}
+      <div className="max-w-2xl mx-auto mt-6">
+  <h2 className="text-xl text-royal-beige mb-2 text-center">Saved Analyses</h2>  
+</div>
+<div className="overflow-x-auto w-full max-w-4xl mx-auto mt-6">
+  <table className="w-full table-auto bg-royal-red text-royal-beige rounded-lg shadow border border-royal-gold">
+    <thead>
+      <tr className="bg-royal-beige text-black">
+        <th className="px-4 py-2 border border-royal-gold">Analysis Name</th>
+        <th className="px-4 py-2 border border-royal-gold">Player</th>
+        <th className="px-4 py-2 border border-royal-gold">Metric</th>
+        <th className="px-4 py-2 border border-royal-gold">Total</th>
+        <th className="px-4 py-2 border border-royal-gold">Average</th>
+        <th className="px-4 py-2 border border-royal-gold">Remove</th>
+      </tr>
+    </thead>
+    <tbody>
+      {analyses.map((a) => (
+        <tr key={a.id} className="odd:bg-royal-red-dark hover:bg-royal-red-light">
+          <td className="px-4 py-2 border border-royal-gold">{a.id}</td>
+          <td className="px-4 py-2 border border-royal-gold">{a.player}</td>
+          <td className="px-4 py-2 border border-royal-gold">{a.metric}</td>
+          <td className="px-4 py-2 border border-royal-gold">{a.TotalOfMetric.toFixed(2)}</td>
+          <td className="px-4 py-2 border border-royal-gold">{a.avgOfMetric.toFixed(2)}</td>
+          <td className="px-4 py-2 border border-royal-gold text-center">
+                 <Trash2
+                   size={18}
+                   className="cursor-pointer text-royal-gold hover:text-red-500"
+                   onClick={() => removeAnalysis(a.id)}
+                 />
+               </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
+
     </div>
   );
 }
