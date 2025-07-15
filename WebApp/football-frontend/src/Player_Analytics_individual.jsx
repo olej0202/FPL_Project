@@ -245,10 +245,12 @@ useEffect(() => {
     { value: "Expected Assists", label: "Expected Assists" },
     { value: "Goals Scored", label: "Goals Scored" },
     { value: "Assists", label: "Assists" },
+    { value: "Fantasy Points", label: "Fantasy Points" },
     { value: "Bonus", label: "Bonus" },
     { value: "Adjusted XG", label: "Adjusted XG" },
     { value: "Adjusted XA", label: "Adjusted XA" },
     { value: "ICT", label: "ICT Index" },
+
   ];
       const handleAddAnalysis = (name) => {
     const id = name;
