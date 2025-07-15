@@ -102,7 +102,7 @@ export default function TeamPredictionRankings() {
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center py-10 px-4 space-y-6">
       <h1 className="text-3xl font-bold text-center text-white">
-        {METRIC_LABELS[selectedMetric]} GW {GWRange[0]} - {GWRange[1]}
+        {METRIC_LABELS[selectedMetric]}
       </h1>
 
       {/* Tile-Based Metric Selector */}

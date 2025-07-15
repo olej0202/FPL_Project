@@ -31,7 +31,7 @@ def load_and_transform(endpoint):
     elif endpoint == "Team_Predictions":
         csv_path = os.path.join(parent_dir, "Team_prediction_visual.csv")
     elif endpoint == "ALL_Data":
-        csv_path = os.path.join(parent_dir, "ML_training2.csv")
+        csv_path = os.path.join(parent_dir, "player_history.csv")
     elif endpoint == "Player_rankings":
         csv_path = os.path.join(parent_dir, "Model_Predictions_visual.csv")
     elif endpoint == "Teams":
@@ -173,7 +173,7 @@ def get_team_data(player: str = Query(None)):
     df = load_and_transform("ALL_Data")
 
     if player:
-        df = df[df["name"] == player]
+        df = df[df["Name"] == player]
 
     # Replace non-JSON-compliant values
     df = df.replace([np.inf, -np.inf], np.nan)

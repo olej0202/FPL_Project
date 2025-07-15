@@ -6,6 +6,7 @@ from FullLoad_Understat import main_Extract_Understat #Henter data fra understat
 from Generate_Team_Predictions import GenerateTeamPredictions #Prediksjoner for kamper
 from Generate_Player_Predictions import Make_Predictions #Lager prediksjoner og setter det sammen til et datatset
 from GenerateOptimizerSet import GenerateOptimizeSet #Lager dataset klart til å optimeres på
+from GenerateVisualDataset import Generate_ALL_datasets
 from chatgpt import main_GPT_News
 
 import torch
@@ -47,6 +48,7 @@ def Data_Predictions(current_fixture_path,current_team_path, n_points_in_future)
 def Data_Generation(current_raw_data_path,ownership,budget,GW_list_wildcard,GW_list_freehit ):
     GenerateOptimizeSet(current_raw_data_path)
     generate_optimizers(ownership=ownership,budget=budget,GW_list_wildcard=GW_list_wildcard,GW_list_freehit=GW_list_freehit  )
+    Generate_ALL_datasets()
     main_GPT_News()
 
 
@@ -55,7 +57,6 @@ def Main_Orchestration():
     is_new_season=1
     has_been_error=0
     n_points_in_future=2
-    
     budget=101
     ownership=0.9
     GW_list_wildcard=['37', '38']
