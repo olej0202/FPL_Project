@@ -17,7 +17,16 @@ import AITeams from "./AITeams";
 import AITeamNav from "./components/team_navigation";
 import logo from "./assets/FPL_analytics_logo.png";
 import "./index.css";
-import { User, Brain, Trophy, Users, Newspaper, Calendar, Menu } from "lucide-react";
+import {
+  User,
+  Brain,
+  Trophy,
+  Users,
+  Newspaper,
+  Calendar,
+  Menu,
+  X,
+} from "lucide-react";
 
 export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -32,23 +41,29 @@ export default function App() {
   ];
 
   return (
-    <div className="min-h-screen bg-black text-white relative">
-      {/* Primary Top Navbar */}
+    <div className="min-h-screen bg-black text-white">
+      {/* Top Navbar */}
       <nav className="relative bg-royal-beige text-royal-gold shadow">
-        <div className="w-full max-w-7xl mx-auto flex items-center justify-between px-4 py-3">
+        <div className="max-w-7xl mx-auto flex items-center justify-between px-5 py-3">
           {/* Logo + Title */}
           <div className="flex items-center gap-2">
-            <img src={logo} alt="FPL Logo" className="h-16 w-16 object-contain" />
+            <img
+              src={logo}
+              alt="FPL Logo"
+              className="h-16 w-16 object-contain"
+            />
             <span className="text-3xl font-bold">FPL Analytics</span>
           </div>
 
           {/* Desktop Nav (md+) */}
-          <div className="hidden md:flex flex-wrap gap-1 border-royale-gold">
+          <div className="hidden md:flex flex-wrap gap-2">
             {navItems.map(({ to, icon: Icon, label }) => (
               <NavLink
                 key={to}
                 to={to}
-                className={({ isActive }) => `nav-card ${isActive ? "active" : ""}`}
+                className={({ isActive }) =>
+                  `nav-card ${isActive ? "active" : ""}`
+                }
               >
                 <Icon size={18} />
                 <span className="text-sm truncate">{label}</span>
@@ -56,82 +71,89 @@ export default function App() {
             ))}
           </div>
 
-          {/* Mobile Menu Button (below md) */}
-          <div className="md:hidden border-royale-gold ">
-              <button
-    onClick={() => setMenuOpen(!menuOpen)}
-    className="p-2 rounded border border-royal-gold bg-royale-beige"   // <- added border here
-  >
-    <Menu size={28} />
-  </button>
+          {/* Mobile Menu Button */}
+          <div className="md:hidden">
+            <button
+              onClick={() => setMenuOpen(true)}
+              className="p-2 rounded border border-royal-gold"
+            >
+              <Menu size={28} />
+            </button>
           </div>
         </div>
 
-        {/* Mobile Dropdown (below md) */}
+        {/* Side-Drawer for Mobile */}
         {menuOpen && (
-              <div 
-    className="
-      md:hidden 
-      bg-royal-beige text-royal-gold 
-      shadow-lg absolute top-full right-4 
-      w-48 rounded z-50
-    "
-  >
-    <ul className="flex flex-col">
-      {navItems.map(({ to, icon: Icon, label }) => (
-        <li 
-          key={to} 
-          className="border-b border-black last:border-b-0"  // <-- black bottom border
-        >
-          <NavLink
-  to={to}
-  className={({ isActive }) =>
-    `flex items-center gap-2 px-4 py-2 border border-black rounded-sm
-    ${
-      isActive
-        ? "bg-black text-royal-gold"
-        : "bg-royal-beige text-royal-gold hover:bg-royal-gold hover:text-black"
-    }`
-  }
-  onClick={() => setMenuOpen(false)}
->
-  <Icon size={18} />
-  <span>{label}</span>
-</NavLink>
-        </li>
-      ))}
-    </ul>
-  </div>
+          <div className="md:hidden fixed inset-y-0 right-0 w-3/4 bg-royal-beige text-royal-gold z-50 flex flex-col">
+            {/* Close Button */}
+            <div className="flex justify-end p-4">
+              <button
+                onClick={() => setMenuOpen(false)}
+                className="p-2 rounded border border-black"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            {/* Nav Links */}
+            <nav className="flex-1 overflow-auto px-4 space-y-4">
+              {navItems.map(({ to, icon: Icon, label }) => (
+                <NavLink
+                  key={to}
+                  to={to}
+                  className={({ isActive }) =>
+                    `flex items-center gap-2 px-4 py-5 rounded border border-royal-gold ${
+                      isActive
+                        ? "bg-black text-royal-gold"
+                        : "bg-transparent text-royal-gold hover:bg-royal-gold hover:text-black"
+                    }`
+                  }
+                  onClick={() => setMenuOpen(false)}
+                >
+                  <Icon size={20} />
+                  <span className="text-lg">{label}</span>
+                </NavLink>
+              ))}
+            </nav>
+          </div>
         )}
       </nav>
 
-      {/* AI Sub-navigation */}
+      {/* AI sub-nav */}
       <AITeamNav />
 
-      {/* Routes */}
+      {/* Main Routes */}
       <Routes>
         <Route path="/Team_Analytics" element={<Team_Analytics />}>
           <Route index element={<Team_Analytics_Rankings />} />
           <Route path="Team_Individual" element={<Team_Analytics_Individual />} />
-          <Route path="Team_Rankings" element={<Team_Analytics_Rankings />} />
+          <Route
+            path="Team_Rankings"
+            element={<Team_Analytics_Rankings />}
+          />
         </Route>
-
         <Route path="/Score_Predictions" element={<Team_Predictions />} />
-
         <Route path="/AITeams" element={<AITeams />}>
           <Route index element={<FreeHitTeam />} />
           <Route path="FreeHitTeam" element={<FreeHitTeam />} />
           <Route path="Wildcard_Team" element={<WildcardTeam />} />
           <Route path="My_Team" element={<MyTeam />} />
         </Route>
-
         <Route path="/Player_Analytics" element={<Player_analytics />}>
-          <Route path="Rankings" element={<Player_analytics_rankings />} />
-          <Route path="Individual" element={<PlayerAnalyticsIndividual />} />
+          <Route
+            path="Rankings"
+            element={<Player_analytics_rankings />}
+          />
+          <Route
+            path="Individual"
+            element={<PlayerAnalyticsIndividual />}
+          />
         </Route>
-
         <Route path="/" element={<NewsBlog />} />
-        <Route path="/TeamPredictionsFuture" element={<TeamPredictionsFuture />} />
+        <Route
+          path="/TeamPredictionsFuture"
+          element={<TeamPredictionsFuture />}
+        />
       </Routes>
     </div>
   );
