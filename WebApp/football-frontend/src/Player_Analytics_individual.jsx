@@ -525,10 +525,10 @@ useEffect(() => {
     <tbody>
       {filtered.map((row, i) => (
         <tr key={i} className="hover:bg-gray-200">
-          <td className="border border-royal-beige px-2 py-1 text-royal-gold">{row.Season}</td>
-          <td className="border border-royal-beige px-2 py-1 text-royal-gold">{row["Opponent Name"]}</td>
-          <td className="border border-royal-beige px-2 py-1 text-royal-gold">{row["Kickoff time"]}</td>
-          <td className="border border-royal-beige px-2 py-1 text-royal-gold">{row[selectedMetric]}</td>
+          <td className="border border-royal-beige px-2 py-1 text-royal-beige">{row.Season}</td>
+          <td className="border border-royal-beige px-2 py-1 text-royal-beige">{row["Opponent Name"]}</td>
+          <td className="border border-royal-beige px-2 py-1 text-royal-beige">{row["Kickoff time"]}</td>
+          <td className="border border-royal-beige px-2 py-1 text-royal-beige">{row[selectedMetric]}</td>
         </tr>
       ))}
     </tbody>
@@ -537,7 +537,7 @@ useEffect(() => {
 
       ) : (
               <div className="bg-royal-red p-1 rounded shadow border border-royal-gold w-full max-w-6xl mt-8">
-        <h2 className="text-xl font-semibold mb-4 text-center text-royal-gold capitalize">
+        <h2 className="text-xl font-semibold mb-4 text-center text-royal-beige capitalize">
           {selectedMetric.replace("_", " ")} Over Time
         </h2>
         <ResponsiveContainer width="100%" height={300}>

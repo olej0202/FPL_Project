@@ -141,15 +141,15 @@ export default function Team_Analytics_Individual() {
 
       <div className="bg-royal-red p-4 rounded shadow border border-royal-gold w-full max-w-6xl">
         <h2 className="text-xl font-semibold text-center text-royal-gold">ELO Rating Over Time</h2>
-        <ResponsiveContainer width="100%" height={chartHeight}>
-          <LineChart data={eloChartData}>
-            <CartesianGrid stroke="#333" />
-            <XAxis dataKey="kickoff_time" tick={{ fontSize: 10 }} stroke="#fff" />
-            <YAxis stroke="#fff" domain={["dataMin", "dataMax"]} />
-            <Tooltip contentStyle={{ backgroundColor: "#5A0000", color: "#FFD700", border: "1px solid #FFD700" }} />
-            <Line type="monotone" dataKey="Elo_Rating" stroke="#FFD700" dot={false} />
-          </LineChart>
-        </ResponsiveContainer>
+        <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={eloChartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                  <CartesianGrid stroke="#333" />
+                  <XAxis dataKey="kickoff_time" tick={{ fontSize: 10 }} stroke="#fff" />
+                  <YAxis stroke="#fff" domain={["dataMin", "dataMax"]}/>
+                  <Tooltip contentStyle={{ backgroundColor: "#5A0000", color: "#FFD700", border: "1px solid #FFD700" }} />
+                  <Line type="monotone" dataKey="Elo_Rating" stroke="#FFD700" dot={false} />
+                </LineChart>
+              </ResponsiveContainer>
       </div>
     </div>
   );

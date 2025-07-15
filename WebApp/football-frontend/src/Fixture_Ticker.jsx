@@ -17,9 +17,10 @@ import { useOtherData } from "./Contexts/OtherContext";
 
 const METRIC_LABELS = {
   XG: "Predicted Goals Scored",
-  XGC: "Predicted Goals Conceded",
-  Opposition_XG: "Top Defensive Fixtures",
+  XGC: "Predicted Goals Against",
   Opposition_XGC: "Top Attacking Fixtures",
+  Opposition_XG: "Top Defensive Fixtures",
+  
 };
 
 const getGradientColor = (index, total) => {
@@ -110,7 +111,7 @@ export default function TeamPredictionRankings() {
         {Object.entries(METRIC_LABELS).map(([metricKey, label]) => (
           <button
             key={metricKey}
-            className={`text-sm sm:text-base font-bold px-4 py-2 rounded transition-all duration-200
+            className={` w-36 sm:w-40 text-sm sm:text-base font-bold px-3 py-2 rounded transition-all duration-200
         ${
           selectedMetric === metricKey
             ? "bg-royal-beige text-royal-gold underline underline-offset-4 hover:border-none border-none"

@@ -44,9 +44,9 @@ export default function App() {
     <div className="min-h-screen bg-black text-white">
       {/* Top Navbar */}
       <nav className="relative bg-royal-beige text-royal-gold shadow">
-        <div className="max-w-7xl mx-auto flex items-center justify-between px-5 py-3">
+        <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-3">
           {/* Logo + Title */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             <img
               src={logo}
               alt="FPL Logo"
@@ -56,7 +56,7 @@ export default function App() {
           </div>
 
           {/* Desktop Nav (md+) */}
-          <div className="hidden md:flex flex-wrap gap-2">
+          <div className="hidden md:flex flex-wrap gap-0">
             {navItems.map(({ to, icon: Icon, label }) => (
               <NavLink
                 key={to}
@@ -75,7 +75,7 @@ export default function App() {
           <div className="md:hidden">
             <button
               onClick={() => setMenuOpen(true)}
-              className="p-2 rounded border border-royal-gold"
+              className="p-3 rounded border border-royal-gold"
             >
               <Menu size={28} />
             </button>
