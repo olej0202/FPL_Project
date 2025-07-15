@@ -524,6 +524,7 @@ useEffect(() => {
           onClick={scrollToBottom}
           className="flex items-center gap-2 px-4 py-2 text-black hover:underline transition border-none"
         >
+            <ChevronDown size={20} />
             See Saved
           <ChevronDown size={20} />
           
