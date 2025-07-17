@@ -10,6 +10,7 @@ from fastapi import Request, Query
 import numpy as np
 from fastapi import HTTPException
 from fastapi.responses import PlainTextResponse
+from Optimize import optimize_my_team
 app = FastAPI()
 
 # Allow frontend to access backend
@@ -75,6 +76,11 @@ def get_data():
 @app.get("/Team_Predictions_Future")
 def get_data():
     df = load_and_transform("Team_Predictions_Future")
+    return df.to_dict(orient="records")
+
+@app.get("/My_Team_Optimize")
+def get_data():
+    df = optimize_my_team()
     return df.to_dict(orient="records")
 
 

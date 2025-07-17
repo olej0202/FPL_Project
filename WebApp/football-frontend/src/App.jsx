@@ -96,7 +96,7 @@ export default function App() {
             </div>
 
             {/* Nav Links */}
-            <nav className="flex-1 overflow-auto px-4 space-y-4">
+            <nav className="flex-1 overflow-auto px-4 space-y-2">
               {navItems.map(({ to, icon: Icon, label }) => (
                 <NavLink
                   key={to}

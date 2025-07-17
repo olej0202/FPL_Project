@@ -455,7 +455,7 @@ useEffect(() => {
       onChange={opts => setOpponentFilter(opts || [])}
       isMulti
       isClearable
-      placeholder="Select Season(s)..."
+      placeholder="Select Opponent(s)..."
       styles={selectStyles}
     />
     </div>
