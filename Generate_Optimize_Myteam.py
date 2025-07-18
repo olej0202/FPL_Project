@@ -117,7 +117,7 @@ def get_my_team(team_id=1,Last_GW=36):
             print(new_row)
             df = pd.concat([df, new_row], ignore_index=True)"""
 
-    data=pd.read_csv("Raw_Data_24\Fantasy_season_2024_data.csv")
+    data=pd.read_csv("Raw_Data_24/Fantasy_season_2024_data.csv")
     data=data[["Full_Name","element", "value", "kickoff_time"]]
     data['kickoff_time'] = pd.to_datetime(data['kickoff_time'])
     result = data.loc[data.groupby('Full_Name')['kickoff_time'].idxmax(), ['Full_Name','element', 'value', 'kickoff_time']]
