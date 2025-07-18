@@ -84,7 +84,7 @@ def get_data():
 @app.get("/My_Team_Optimize")
 def get_my_team_optimize(
     team_id: int,
-    banned_list: Optional[List[int]]        = Query(None, title="Player IDs to ban", alias="banned_list"),
+    banned_list: Optional[List[str]]        = Query(None, title="Player IDs to ban", alias="banned_list"),
     bb_round:     Optional[int]             = Query(None, title="Bench Boost round"),
     wildcard_round: Optional[int]           = Query(None, title="Wildcard round"),
 ):
