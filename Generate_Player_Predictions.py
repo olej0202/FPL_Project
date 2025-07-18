@@ -576,7 +576,7 @@ def Generate_point_predictions():
             except:
                 fantasy.append(0)
 
-        columns_to_include=["name","position", "GW","Rolling_adjusted_BPS","Average_Overscore", "Rolling_adjusted_XG", "Rolling_adjusted_XA","played_XGC","average_minutes"]
+        columns_to_include=["name","position", "GW","Rolling_adjusted_BPS", "Rolling_adjusted_XG", "Rolling_adjusted_XA","played_XGC","average_minutes"]
             
         New_dataset=player_data[columns_to_include]
         New_dataset["Goal_pred"]=goals
@@ -587,8 +587,14 @@ def Generate_point_predictions():
         
         New_dataset["GC_pred"]=gc
         New_dataset["Fantasy_pred"]=fantasy
+        
 
         summary_dataset = New_dataset.groupby(columns_to_include)[["Goal_pred", "Assist_pred", "Bonus_pred", "GC_pred", "Fantasy_pred"]].sum().reset_index()
+        summary_dataset["Average_Overscore"]=player_data["Average_Overscore"].values[0]
+        summary_dataset = summary_dataset.fillna(0)
+        if(New_dataset["name"].values[0]=='Alphonse_Areola'):
+            summary_dataset.to_csv("debug2.csv")
+            New_dataset.to_csv("debug1.csv")
         if(position=="FWD"):
             summary_dataset["Points_prediction"]=(2+summary_dataset["Goal_pred"]*4
                                                   +summary_dataset["Assist_pred"]*3

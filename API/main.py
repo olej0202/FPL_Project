@@ -11,6 +11,8 @@ import numpy as np
 from fastapi import HTTPException
 from fastapi.responses import PlainTextResponse
 from Generate_Optimize_Myteam import optimize_my_team
+from typing import List, Optional
+
 app = FastAPI()
 
 # Allow frontend to access backend
@@ -78,10 +80,40 @@ def get_data():
     df = load_and_transform("Team_Predictions_Future")
     return df.to_dict(orient="records")
 
+
 @app.get("/My_Team_Optimize")
-def get_data():
-    df = optimize_my_team()
+def get_my_team_optimize(
+    team_id: int,
+    banned_list: Optional[List[int]]        = Query(None, title="Player IDs to ban", alias="banned_list"),
+    bb_round:     Optional[int]             = Query(None, title="Bench Boost round"),
+    wildcard_round: Optional[int]           = Query(None, title="Wildcard round"),
+):
+    """
+    Optimize a team given:
+    - team_id (required)
+    - banned_list (optional list of player IDs)
+    - bb_round (optional Bench Boost round)
+    - wildcard_round (optional Wildcard round)
+    - Last_GW (optional last Gameweek to include)
+    - GW_list (optional list of Gameweeks)
+    - current_player_path (optional path override)
+    """
+    try:
+        df = optimize_my_team(
+            team_id=team_id,
+            banned_list=banned_list or [],
+            bb_round=bb_round,
+            wildcard_round=wildcard_round,
+            Last_GW=38,
+            GW_list=["0","37","38"],
+            current_player_path="Raw_Data_25/current_players.csv"
+        )
+    except ValueError as e:
+        # e.g. if team_id not found or invalid params
+        raise HTTPException(status_code=400, detail=str(e))
+
     return df.to_dict(orient="records")
+
 
 
 @app.get("/Player_rankings")

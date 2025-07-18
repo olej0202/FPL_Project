@@ -61,6 +61,7 @@ def get_my_team(team_id=1,Last_GW=36):
 
     free_hit_gw_played=played_free_hit(team_id)
 
+
     df=df[df["event"]!=free_hit_gw_played]
     
     transfers1 = df.groupby('event').size().reset_index(name='count')
@@ -75,15 +76,19 @@ def get_my_team(team_id=1,Last_GW=36):
     active=[]
     for i in range(len(df["element_in"])):
         element_in=df["element_in"].values[-i-1]
-        out_list=df["element_out"].iloc[0:-i-1].values
+        out_list=df["element_out"].values[0:-i-1]
+
         if(element_in in out_list):
             active.append(0)
         else:
             active.append(1)
     df["Active"]= list(reversed(active))
+    
     df=df[df["Active"]==1]
+    
 
     df=df[["element_in", "element_in_cost"]]
+    
 
     if(Last_GW==free_hit_gw_played):
         gameweek = Last_GW-1
@@ -106,9 +111,11 @@ def get_my_team(team_id=1,Last_GW=36):
     for g in range(len(pick_df)):
         element=pick_df["element"].values[g]
         
-        if(element not in df["element_in"].values):
+        """if(element not in df["element_in"].values):
             new_row = pd.DataFrame({'element_in': [element], 'element_in_cost': [np.nan]}, index=[len(df)])
-            df = pd.concat([df, new_row], ignore_index=True)
+            print("NewRow")
+            print(new_row)
+            df = pd.concat([df, new_row], ignore_index=True)"""
 
     data=pd.read_csv("Raw_Data_24\Fantasy_season_2024_data.csv")
     data=data[["Full_Name","element", "value", "kickoff_time"]]
@@ -127,7 +134,7 @@ def get_my_team(team_id=1,Last_GW=36):
 
 
 
-def optimize_my_team(team_id=1,wildcard_round=40, bb_round=40,Last_GW=36,banned_list=[],GW_list=["0","37", "38"], current_player_path="Raw_Data_25/current_players.csv"):
+def optimize_my_team(team_id=1,wildcard_round=40, bb_round=40,Last_GW=38,banned_list=[],GW_list=["0","37", "38"], current_player_path="Raw_Data_25/current_players.csv"):
 
     current_players = pd.read_csv(current_player_path)
     
@@ -143,15 +150,14 @@ def optimize_my_team(team_id=1,wildcard_round=40, bb_round=40,Last_GW=36,banned_
 # Load Data
     data = pd.read_csv("Model_Optimizer.csv")
     data = data[~data["name"].isin(banned_list)]
-    print(data)
     cols = GW_list
     for col in cols:
         data[col] = np.where(data["offset"] < 1, data[col] * data["offset"], data[col] * data["minutes_multiplier"])
     
-    #initial_saved,squad=get_my_team(team_id,Last_GW=36)
-    initial_saved=1
+    initial_saved,squad=get_my_team(team_id,Last_GW=36)
+    #initial_saved=1
 
-    """url = f"https://fantasy.premierleague.com/api/entry/{team_id}/"
+    url = f"https://fantasy.premierleague.com/api/entry/{team_id}/"
     response = requests.get(url)
     if response.status_code == 200:
         resonsep_data = response.json()
@@ -159,31 +165,32 @@ def optimize_my_team(team_id=1,wildcard_round=40, bb_round=40,Last_GW=36,banned_
     else:
         print(f"Error fetching data (Status Code: {response.status_code})")
 
-    money_in_bank_init = resonsep_data.get("last_deadline_bank", 0)/10  # Convert to actual value"""
-    money_in_bank_init=0 ## Fjern
+    money_in_bank_init = resonsep_data.get("last_deadline_bank", 0)/10  # Convert to actual value
+    #money_in_bank_init=0 ## Fjern
 
 
     players = data['name'].tolist()
     costs = data['value'].tolist()
-    """initial_squad=[]
+    initial_squad=[]
     for t in range (len(squad)):
         name=squad["Full_Name"].values[t]
-        initial_squad.append(players.index(name))"""
-    
+        initial_squad.append(players.index(name))
+    """
     initial_squad=[players.index('Ezri_Konsa Ngoyo'),players.index('Anthony_Gordon'),players.index('Bukayo_Saka'),players.index('Ibrahima_Konaté'),
                players.index('Ismaïla_Sarr'),players.index('David_Raya Martin'),players.index('Omar_Marmoush'),players.index('Tom_King'),
                players.index('Joško_Gvardiol'),players.index('Daniel_Muñoz'),players.index('Jurriën_Timber'),players.index('Jacob_Murphy'),
                players.index('Jean-Philippe_Mateta'),players.index('Alexander_Isak'),players.index('Mohamed_Salah')]
-
+    """
+    
     list1 = costs.copy()
-    """selling_cost = squad["selling_price"].values
+    selling_cost = squad["selling_price"].values
     budget_amount=sum(selling_cost)+money_in_bank_init
 
 
     for i in range(len(initial_squad)):
-        list1[initial_squad[i]] = selling_cost[i] """
+        list1[initial_squad[i]] = selling_cost[i]
         
-    budget_amount=105 ##Fjern
+    #budget_amount=105 ##Fjern
 
     positions = data['position'].tolist()
     costs = data['value'].tolist()
@@ -265,7 +272,7 @@ def optimize_my_team(team_id=1,wildcard_round=40, bb_round=40,Last_GW=36,banned_
                  lpSum(transfer_in[i, t] * costs[i] for i in range(num_players))
     # For each gameweek, squad value (using list1) plus money in bank equals available funds.
     for t in gameweeks:
-        model += lpSum(x[i, t] * list1[i] for i in range(num_players)) + money_in_bank_var[t] <= budget_amount ##Endre til ==
+        model += lpSum(x[i, t] * list1[i] for i in range(num_players)) + money_in_bank_var[t] == budget_amount ##Endre til ==
 
     # --- Maximum 3 Players per Team ---
     for t in gameweeks:
@@ -355,7 +362,6 @@ def optimize_my_team(team_id=1,wildcard_round=40, bb_round=40,Last_GW=36,banned_
 
     # Final structured DataFrame
     status_df = pd.DataFrame(records)
-    status_df.to_csv("My_team.csv")
     return status_df
     
     

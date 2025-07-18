@@ -50,7 +50,7 @@ def Data_Generation(current_raw_data_path,ownership,budget,GW_list_wildcard,GW_l
     GenerateOptimizeSet(current_raw_data_path)
     generate_optimizers(ownership=ownership,budget=budget,GW_list_wildcard=GW_list_wildcard,GW_list_freehit=GW_list_freehit  )
     Generate_ALL_datasets()
-    #main_GPT_News()
+    main_GPT_News()
 
 
 def Main_Orchestration():
@@ -76,7 +76,7 @@ def Main_Orchestration():
     #Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path)
     
     #Predict data
-    Data_Predictions(current_fixture_path,current_team_path, n_points_in_future)
+    #Data_Predictions(current_fixture_path,current_team_path, n_points_in_future)
     
     Data_Generation(current_raw_data_path,ownership,budget,GW_list_wildcard,GW_list_freehit )
     

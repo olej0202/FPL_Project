@@ -178,12 +178,12 @@ def main_Extract(season, is_new_season, Has_been_error):
     new_season=is_new_season
     Has_been_error=Has_been_error
     #innføre refresh tider
-    if new_season==1:
+    """if new_season==1:
         Fulload(season)
     else:
-        Incremental(Has_been_error,season)
+        Incremental(Has_been_error,season)"""
     fixtures(season)
     current_players(season)
 
 if __name__ == "__main__":
-    main_Extract()  
+    main_Extract(25,1,0)  
