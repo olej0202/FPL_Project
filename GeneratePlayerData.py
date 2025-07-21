@@ -153,8 +153,19 @@ def GeneratePlayerData(Future, fixture_path,current_player_path, current_teams_p
         team_code=player_row2["team_code"].values[0]
         
         element_type=player_row2["element_type"].values[0]
+        if(element_type==1):
+            position='GKP'
+        elif(element_type==2):
+            position='DEF'
+            
+        elif(element_type==3):
+            position='MID'
+        else:
+            position='FWD'
+                
         if(element_type==5):
                 continue
+        player_row["position"]=position
 
 
         if len(player_row)<1:
