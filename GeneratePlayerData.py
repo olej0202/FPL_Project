@@ -197,7 +197,10 @@ def GeneratePlayerData(Future, fixture_path,current_player_path, current_teams_p
             if has_history==1:
                 own_new_row["average_minutes"]=average_minutes
             else:
-                own_new_row["average_minutes"]=60
+                if(player_row2["now_cost"].values[0]>70):
+                    own_new_row["average_minutes"]=90
+                else:   
+                    own_new_row["average_minutes"]=40
             
             player_row = pd.DataFrame([own_new_row])
 

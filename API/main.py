@@ -119,7 +119,23 @@ def get_my_team_optimize(
 @app.get("/Player_rankings")
 def get_data():
     df = load_and_transform("Player_rankings")
-    return df.to_dict(orient="records")
+    df = df.replace([np.inf, -np.inf], np.nan)
+    df=df.dropna()
+
+    
+    buffer = io.BytesIO()
+    with gzip.GzipFile(fileobj=buffer, mode="w") as gz:
+        gz.write(json.dumps(df.to_dict(orient="records")).encode('utf-8'))
+    buffer.seek(0)
+
+    return StreamingResponse(
+        buffer,
+        media_type="application/json",
+        headers={
+            "Content-Encoding": "gzip",
+            "Access-Control-Allow-Origin": "*"
+        }
+    )
 
 @app.get("/Team_current")
 def get_data():
