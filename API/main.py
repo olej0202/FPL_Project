@@ -142,6 +142,7 @@ def get_player_rankings():
 @app.get("/Team_current")
 def get_data():
     df = load_and_transform("Team_current")
+    df=df.fillna(0)
     return df.to_dict(orient="records")
 
 
