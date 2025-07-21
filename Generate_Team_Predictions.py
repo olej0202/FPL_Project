@@ -178,7 +178,7 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
     fixture_data=pd.read_csv(fixture_path)[["event","team_a","team_h","finished"]]
     team_code_data=pd.read_csv(current_team_path)[["name","code","id"]]
 
-    team_data=pd.read_csv("Team_data_newest2.csv")[["code","XGA","XGCA","XGH","XGCH","XG_slope","XGC_slope","XG_avg","XGC_avg","Rolling_Threat","Rolling_Threat_Against"]]
+    team_data=pd.read_csv("Team_data_newest3.csv")[["code","XGA","XGCA","XGH","XGCH","XG_slope","XGC_slope","XG_avg","XGC_avg","Rolling_Threat","Rolling_Threat_Against"]]
     team_data["Cluster"]=kmeans.predict(team_data[["XG_avg","XGC_avg"]].values)
     cluster_data=pd.read_csv("Team_cluster_data.csv")[["code_team","Cluster_opp","Cluster_XG","Cluster_XGC"]]
 
@@ -215,6 +215,13 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
         'Cluster_XGC': 'Cluster_XGC_x'
     })
     df_merged = df_merged.drop(['code_team', 'Cluster_opp'], axis=1)
+    df_merged['Cluster_XG_y'] = df_merged['Cluster_XG_y'].fillna(0.9)
+    df_merged['Cluster_XG_x'] = df_merged['Cluster_XG_x'].fillna(0.9)
+    df_merged['Cluster_XGC_y'] = df_merged['Cluster_XGC_y'].fillna(1.9)
+    df_merged['Cluster_XGC_x'] = df_merged['Cluster_XGC_x'].fillna(1.9)
+    nan_rows = df_merged[df_merged.isna().any(axis=1)]
+
+    print(nan_rows)
 
 
 

@@ -13,9 +13,17 @@ def process_news(text):
     
 def GenerateOptimizeSet(Current_data_path):
     data_df=pd.read_csv(Current_data_path).iloc[:,1:]
-    result = data_df.loc[data_df.groupby('Full_Name')['kickoff_time'].idxmax(), ['first_name', 'second_name','Full_Name', 'value', 'kickoff_time',"team_code","news","selected"]]
-    result["name_prev"] = result["first_name"] + " " + result["second_name"]
-    result["Name2"] = result["name_prev"].str.replace(" ", "_", n=1)
+    result = (
+        data_df
+          .groupby("name")[["now_cost","team_code","news","selected_by_percent"]]
+          .first()                   # take the first row in each group
+          .reset_index()             # turn the group key back into a column
+    )    
+    result = result.rename(columns={
+        "name": "Name2",
+        "now_cost": "value",
+        "selected_by_percent": "selected"
+    })
     prediction_data=pd.read_csv("Model_Predictions.csv").iloc[:,1:]
     print(len(prediction_data))
     
@@ -28,7 +36,7 @@ def GenerateOptimizeSet(Current_data_path):
     
     visual_df=merged_df.copy()
     visual_df['offset'] = visual_df['news'].apply(process_news)
-    visual_df["selected"] = visual_df["selected"]/11000000
+    visual_df["selected"] = visual_df["selected"]/100
     visual_df["value"] = visual_df["value"]/10
     visual_df["minutes_multiplier"] = np.minimum(1, visual_df['average_minutes'] / 70)
     visual_df["selected"] = visual_df["selected"].clip(lower=0.01)
@@ -88,7 +96,7 @@ def GenerateOptimizeSet(Current_data_path):
     
 
     optimized_player_set['offset'] = optimized_player_set['news'].apply(process_news)
-    optimized_player_set["selected"] = optimized_player_set["selected"]/11000000
+    optimized_player_set["selected"] = optimized_player_set["selected"]/100
     optimized_player_set["value"] = optimized_player_set["value"]/10
     optimized_player_set["minutes_multiplier"] = np.minimum(1, optimized_player_set['average_minutes'] / 70)
     optimized_player_set["0"] = 0

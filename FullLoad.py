@@ -166,12 +166,22 @@ def current_players(season):
 
     team_mapping = {team["id"]: team["name"] for team in teams}
     players=pd.DataFrame(players)
-    players_new=players[["code","element_type", "photo","team_code","team","opta_code"]]
+    players_new=players[["code","element_type", "photo","team_code","team","opta_code","now_cost","selected_by_percent","expected_goals","web_name","news"]]
     players_new["name"]=players["first_name"]+" "+players["second_name"]
     players_new["name"]=players_new["name"].str.replace(" ", "_", n=1)
     players_new["chance_of_playing_this_round"]=players["chance_of_playing_this_round"]    
 
     players_new.to_csv(f"Raw_Data_{season}/current_players.csv")
+def current_teams(season):
+    url = "https://fantasy.premierleague.com/api/bootstrap-static/"
+    response = requests.get(url)
+    data = response.json()
+    
+
+    # Extract teams and players
+    teams = data["teams"]
+    df_teams=pd.DataFrame(teams)
+    df_teams.to_csv(f"Raw_Data_{season}/current_teams.csv")
 
 def main_Extract(season, is_new_season, Has_been_error):
     season=season
@@ -186,4 +196,4 @@ def main_Extract(season, is_new_season, Has_been_error):
     current_players(season)
 
 if __name__ == "__main__":
-    main_Extract(25,1,0)  
+    main_Extract(26,1,0)  

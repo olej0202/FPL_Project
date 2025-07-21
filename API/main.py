@@ -50,7 +50,7 @@ def load_and_transform(endpoint):
     elif endpoint == "Team_Predictions_Future":
         csv_path = os.path.join(parent_dir, "Team_prediction.csv")
     elif endpoint == "Team_current":
-        csv_path = os.path.join(parent_dir, "Team_data_newest2.csv")    
+        csv_path = os.path.join(parent_dir, "Team_data_newest3.csv")    
     else:
         raise ValueError(f"Unknown endpoint: {endpoint}")
         
