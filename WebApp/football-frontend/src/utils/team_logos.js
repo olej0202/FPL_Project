@@ -19,6 +19,9 @@ const teamLogos = {
   "Fulham": "https://logodownload.org/wp-content/uploads/2022/09/fulham-fc-logo-0.png",
   "Ipswich": "https://cdn.freebiesupply.com/logos/large/2x/ipswich-logo-png-transparent.png",
   "Spurs": "https://www.pngplay.com/wp-content/uploads/13/Tottenham-Hotspur-F.C-Transparent-PNG.png",
+  "Sunderland": "https://cdn.freebiesupply.com/logos/large/2x/sunderland-afc-logo-png-transparent.png",
+  "Burnley": "https://logodetimes.com/times/burnley-football-club/burnley-football-club-4096.png",
+  "Leeds": "https://cdn.freebiesupply.com/logos/large/2x/leeds-united-afc-3-logo-png-transparent.png"
 };
 
 export default teamLogos;

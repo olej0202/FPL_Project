@@ -2,7 +2,28 @@ import pandas as pd
 import joblib
 import numpy as np
 from datetime import datetime
+def Xmins(current_players):
+    xmins=pd.read_csv("GenerateXmins.csv").iloc[:,1:]
+    df=pd.read_csv(current_players)[["name"]]
 
+
+    xmins = pd.read_csv("GenerateXmins.csv")
+    if xmins.columns[0].startswith("Unnamed"):
+        xmins = xmins.iloc[:, 1:]
+
+    df = pd.read_csv(r"Raw_Data_25\current_players.csv")[["name"]]
+
+    existing_names = set(xmins["name"])
+    current_names  = set(df["name"])
+    missing_names  = current_names - existing_names
+
+    if missing_names:
+        missing_df = pd.DataFrame({
+            "name": list(missing_names),
+            "minutes": 0})
+        xmins_updated = pd.concat([xmins, missing_df], ignore_index=True)
+        xmins_updated.to_csv("GenerateXmins.csv", index=False)
+        
 def next_opp(team, n_future, fixtures,kmeans,team_code,current_teams):
     fixtures=fixtures.copy()
     fixtures=fixtures[(fixtures['finished']==False)].iloc[0:,:]
@@ -134,6 +155,7 @@ def team_data(current_teams):
     
     
 def GeneratePlayerData(Future, fixture_path,current_player_path, current_teams_path):
+    Xmins(current_player_path)
     current_data=pd.read_csv("Player_future.csv").iloc[:,1:]
     fixture_data=pd.read_csv(fixture_path).iloc[:,1:]
     current_players=pd.read_csv(current_player_path).iloc[:,1:]
@@ -141,11 +163,15 @@ def GeneratePlayerData(Future, fixture_path,current_player_path, current_teams_p
     season_data=pd.read_csv("Unwanted_players.csv").iloc[:,1:]
     kmeans = joblib.load('kmeans_Groundmodel.pkl')
     relevant_players = current_players.copy()
+    xmins=pd.read_csv("GenerateXmins.csv").iloc[:,1:]
     names=relevant_players["name"].unique()
     Future_dataframe=pd.DataFrame()
     for name in names:
         player_row=current_data[current_data["name"]==name]
         player_row2=current_players[current_players["name"]==name]
+        playerMins=xmins[xmins["name"]==name]
+        minutes=playerMins["minutes"].values[0]
+        
         print(player_row2)
         print(player_row)
 
@@ -239,6 +265,8 @@ def GeneratePlayerData(Future, fixture_path,current_player_path, current_teams_p
                 player_row["played_XGC"] = played_XGC[i]
                 player_row["played_XG"] = played_XG[i]
                 player_row["opp_code"] = opp_code[i]
+                player_row["average_minutes"] = minutes
+                
             
 
                 Future_dataframe=pd.concat([Future_dataframe, player_row], axis=0, ignore_index=True)

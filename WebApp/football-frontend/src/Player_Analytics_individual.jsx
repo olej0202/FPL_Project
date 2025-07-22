@@ -7,6 +7,8 @@ import Slider from "@mui/material/Slider";
 import { Table, BarChart2, Trash2 ,ChevronDown , Save } from "lucide-react";
 import CustomTooltip from "./components/graphTooltip_player";
 import NameModal from "./components/NameAnalysis";
+import teamLogos from "./utils/team_logos";
+
 
 import {
   LineChart,
@@ -65,6 +67,7 @@ export default function PlayerAnalyticsIndividual() {
   };
   init();
 }, [fetchIfNeeded]);
+
 
 useEffect(() => {
   if (Array.isArray(PlayersData.current) && PlayersData.current.length > 0) {
@@ -288,6 +291,16 @@ useEffect(() => {
       backgroundColor: "#1a1a1a"
     })
   };
+  // inside PlayerAnalyticsIndividual, before `return (`
+// 1) compute once for the current player
+const playerFixtures = useMemo(() => {
+  if (!Array.isArray(PlayersData.current)) return [];
+  return PlayersData.current
+    .filter((d) => d.name === playerFilter)
+    .sort((a, b) => a.GW - b.GW);
+}, [PlayersData.current, playerFilter]);
+
+
 
   const CustomRadarTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
@@ -311,8 +324,7 @@ useEffect(() => {
 
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col items-center px-2 py-10 space-y-6">
-      <h1 className="text-4xl font-bold text-center text-royal-beige">Player Analytics</h1>
+    <div className="min-h-screen bg-black text-white flex flex-col items-center px-2 py-0 space-y-4">
 
       <div className="w-full max-w-sm text-center">
         <Select
@@ -353,6 +365,30 @@ useEffect(() => {
           </div>
         ))}
       </div>
+<div className="w-full max-w-6xl mx-auto overflow-x-auto mt-6text-center">
+  <span className="flex items-center justify-center space-x-2 px-2 text-center">Fixtures</span>
+  <div className="flex items-center justify-center space-x-2 px-2 py-3 ">
+    {playerFixtures.map((row, idx) => (
+      <div
+        key={idx}
+        className="flex-shrink-0 flex flex-col items-center bg-royal-beige text-black p-2 rounded shadow-md"
+      >
+        <span className="text-xs font-semibold">GW {row.GW}</span>
+        {teamLogos[row["opponent_name"]] ? (
+  <img
+    src={teamLogos[row["opponent_name"]]}
+    alt={row["opponent_name"]}
+    className="h-8 w-8 object-contain"
+  />
+) : (
+  <span className="text-sm truncate">{row["Opponent Name"]}</span>
+)}
+
+      </div>
+    ))}
+  </div>
+</div>
+
 
       <h1 className="text-3xl font-bold text-royal-beige mt-10">Compare Player</h1>
       <div className="flex gap-10 justify-center mt-6">
