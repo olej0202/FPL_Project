@@ -171,7 +171,7 @@ def GeneratePlayerData(Future, fixture_path,current_player_path, current_teams_p
         if len(player_row)<1:
             current_player_season=season_data[season_data["Name"]==name]
             has_history=0
-            if(len(current_player_season)>1):
+            if(len(current_player_season)>4):
                 average_minutes =current_player_season["Average_minutes"].values[0]
                 has_history=1
 
@@ -189,7 +189,7 @@ def GeneratePlayerData(Future, fixture_path,current_player_path, current_teams_p
             player_cluster = current_data[
                     (current_data["position"] == position) & 
                         (current_data["Team"] == team_code)&
-                        (current_data["minutes"].sum() >= 500)
+                        (current_data["minutes"].sum() >= 1000)
                     ]
             if(len(player_cluster)==0):
                 player_cluster = current_data[
@@ -204,11 +204,13 @@ def GeneratePlayerData(Future, fixture_path,current_player_path, current_teams_p
 
             columns_to_average = [col for col in player_cluster.columns if col not in exclude_columns]
 
-            own_new_row[columns_to_average] = player_cluster[columns_to_average].mean()*0.9
+            own_new_row[columns_to_average] = player_cluster[columns_to_average].mean()*1
+            own_new_row["Average_Overscore"]=1
+            own_new_row["Average_OverAssist"]=1
             if has_history==1:
                 own_new_row["average_minutes"]=average_minutes
             else:
-                if(player_row2["now_cost"].values[0]>70):
+                if(player_row2["now_cost"].values[0]>65):
                     own_new_row["average_minutes"]=90
                 else:   
                     own_new_row["average_minutes"]=40
