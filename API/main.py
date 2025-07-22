@@ -36,7 +36,7 @@ def load_and_transform(endpoint):
     elif endpoint == "ALL_Data":
         csv_path = os.path.join(parent_dir, "player_history.csv")
     elif endpoint == "Player_rankings":
-        csv_path = os.path.join(parent_dir, "Model_Predictions_visual.csv")
+        csv_path = os.path.join(parent_dir, "Model_Predictions_visual2.csv")
     elif endpoint == "Teams":
         csv_path = os.path.join(parent_dir, "Team_data_transformed2.csv")
     elif endpoint == "Current_players":
