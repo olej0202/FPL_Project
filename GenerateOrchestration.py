@@ -48,10 +48,10 @@ def Data_Predictions(current_fixture_path,current_team_path, n_points_in_future)
     Generate_point_predictions()
     
    
-def Data_Generation(current_raw_data_path,ownership,budget,GW_list_wildcard,GW_list_freehit,current_player_path ):
+def Data_Generation(current_raw_data_path,ownership,budget,GW_list_wildcard,GW_list_freehit,current_player_path,current_team_path ):
     GenerateOptimizeSet(current_player_path)
     generate_optimizers(ownership=ownership,budget=budget,GW_list_wildcard=GW_list_wildcard,GW_list_freehit=GW_list_freehit  )
-    Generate_ALL_datasets()
+    Generate_ALL_datasets(current_team_path)
     #main_GPT_News()
 
 
@@ -80,7 +80,7 @@ def Main_Orchestration():
     #Predict data
     Data_Predictions(current_fixture_path,current_team_path, n_points_in_future)
     
-    Data_Generation(current_raw_data_path,ownership,budget,GW_list_wildcard,GW_list_freehit,current_player_path )
+    Data_Generation(current_raw_data_path,ownership,budget,GW_list_wildcard,GW_list_freehit,current_player_path,current_team_path )
     
 if __name__ == "__main__":
     Main_Orchestration()
