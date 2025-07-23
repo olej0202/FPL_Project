@@ -167,7 +167,9 @@ def GeneratePlayerData(Future, fixture_path,current_player_path, current_teams_p
     names=relevant_players["name"].unique()
     Future_dataframe=pd.DataFrame()
     for name in names:
-        player_row=current_data[current_data["name"]==name]
+        player_row = current_data[
+            current_data["name"].str.lower() == name.lower()
+        ]        
         player_row2=current_players[current_players["name"]==name]
         playerMins=xmins[xmins["name"]==name]
         minutes=playerMins["minutes"].values[0]

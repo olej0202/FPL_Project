@@ -37,7 +37,7 @@ def Data_Extraction(season,is_new_season,has_been_error):
 
 
 def Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path):
-    #main_Transform()
+    main_Transform()
     team_data(current_team_path)
     GeneratePlayerData(n_points_in_future, current_fixture_path,current_player_path,current_team_path)
 
@@ -52,7 +52,7 @@ def Data_Generation(current_raw_data_path,ownership,budget,GW_list_wildcard,GW_l
     GenerateOptimizeSet(current_player_path)
     generate_optimizers(ownership=ownership,budget=budget,GW_list_wildcard=GW_list_wildcard,GW_list_freehit=GW_list_freehit  )
     Generate_ALL_datasets(current_team_path)
-    #main_GPT_News()
+    main_GPT_News()
 
 
 def Main_Orchestration():
@@ -60,7 +60,7 @@ def Main_Orchestration():
     is_new_season=1
     has_been_error=0
     n_points_in_future=5
-    budget=101
+    budget=100
     ownership=0.9
     GW_list_wildcard=['1', '2','3', '4','5']
     GW_list_freehit=['1'] 
@@ -71,7 +71,7 @@ def Main_Orchestration():
     current_raw_data_path="Raw_Data_24\Fantasy_season_2024_data.csv"
     
     #EXTARCT DATA
-    #Data_Extraction(season,is_new_season,has_been_error)
+    Data_Extraction(season,is_new_season,has_been_error)
     
     
     #Transform data

@@ -1184,7 +1184,7 @@ def adjust_measure(df, measure_name):
     new_expected_goals=[]
     current_expected_goals_start_value=player_df[measure_name].mean()
     current_expected_goals=current_expected_goals_start_value
-    smoothing_f=0.08
+    smoothing_f=0.06
     min_val=std
     count=0
     in_row=0
@@ -1194,7 +1194,7 @@ def adjust_measure(df, measure_name):
         offset=max(1,2-count*0.05)
         home=player_df["was_home"].values[i]
         if home:
-            pred_scored=current_expected_goals*player_df["XGCA"].values[i]*np.minimum(1, player_df['minutes'].values[i] / 70)
+            pred_scored=current_expected_goals*player_df["XGCA"].values[i]*np.minimum(1, player_df['minutes'].values[i] / 60)
             if(abs(player_df[measure_name].values[i]-pred_scored)>min_val):
                 in_row+=1   
             else:
