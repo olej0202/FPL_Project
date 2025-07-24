@@ -49,7 +49,7 @@ def initial_transfers(df,max_event):
     return saved_transfers
     
 
-def get_my_team(team_id=1,Last_GW=36):
+def get_my_team(team_id=1,Last_GW=0):
     team_id=team_id
 
     Last_GW=Last_GW
@@ -134,7 +134,7 @@ def get_my_team(team_id=1,Last_GW=36):
 
 
 
-def optimize_my_team(team_id=1,wildcard_round=40, bb_round=40,Last_GW=38,banned_list=[],GW_list=["0","37", "38"], current_player_path="Raw_Data_25/current_players.csv"):
+def optimize_my_team(team_id=1,wildcard_round=40, bb_round=40,Last_GW=0,banned_list=[],GW_list=["0","1", "2","3","4","5"], current_player_path="Raw_Data_25/current_players.csv"):
 
     current_players = pd.read_csv(current_player_path)
     

@@ -79,7 +79,7 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
             xggc=df["opposition_xgc"].values[h]
 
             attacking_factor=(df["opposition_xgc"].values[h]+team_xg)*0.5
-            defensive_factor=(team_CS+0.3/team_xgc)*0.5
+            defensive_factor=(team_CS)
             print("Defensive_factor")
             print(defensive_factor)
             if(pred_variable=="GOALS"):
@@ -592,7 +592,7 @@ def Generate_point_predictions():
         summary_dataset = New_dataset.groupby(columns_to_include)[["Goal_pred", "Assist_pred", "Bonus_pred", "GC_pred", "Fantasy_pred"]].sum().reset_index()
         summary_dataset["Average_Overscore"]=player_data["Average_Overscore"].values[0]
         summary_dataset = summary_dataset.fillna(0)
-        if(New_dataset["name"].values[0]=='Alphonse_Areola'):
+        if(New_dataset["name"].values[0]=='Matheus_Santos Carneiro da Cunha'):
             summary_dataset.to_csv("debug2.csv")
             New_dataset.to_csv("debug1.csv")
         if(position=="FWD"):
