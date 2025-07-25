@@ -173,14 +173,26 @@ def GeneratePlayerData(Future, fixture_path,current_player_path, current_teams_p
     "Marcos_Senesi Barón":          "Marcos_Senesi",
     "Raúl_Jiménez Rodríguez":       "Raúl_Jiménez",
     "Robert_Lynch Sánchez":         "Robert_Sánchez",
-    "Rodrigo_'Rodri' Hernandez Cascante": "Rodrigo 'Rodri'_Hernandez",
+    "Rodrigo_'Rodri' Hernandez Cascante": "Rodrigo_'Rodri' Hernandez",
     "Rúben_dos Santos Gato Alves Dias":   "Rúben_Gato Alves Dias",
     "Kaoru_Mitoma":                 "Mitoma_Kaoru",
-    "Matheus_Santos Carneiro da Cunha": "Matheus_Santos Carneiro Da Cunha"
+    "Matheus_Santos Carneiro da Cunha": "Matheus_Santos Carneiro Da Cunha",
+    "David_Raya Martín":"David_Raya Martin",
+    "Kepa_Arrizabalaga Revuelta": "Kepa_Arrizabalaga",
+    "Idrissa_Gana Gueye": "Idrissa_Gueye",
+    "Alisson_Becker": "Alisson_Ramses Becker",
+    "Luis_Díaz Marulanda": "Luis_Díaz",
+    "Matheus_Nunes":"Matheus Luiz_Nunes",
+
+    
+    
 }
     relevant_players["name"] = relevant_players["name"].apply(lambda n: name_map.get(n, n))
 
     xmins=pd.read_csv("GenerateXmins.csv")
+    xmins["name"] = xmins["name"].apply(lambda n: name_map.get(n, n))
+    current_players["name"] = current_players["name"].apply(lambda n: name_map.get(n, n))
+
     names=relevant_players["name"].unique()
     Future_dataframe=pd.DataFrame()
     missing_player=[]
