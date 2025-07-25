@@ -163,9 +163,27 @@ def GeneratePlayerData(Future, fixture_path,current_player_path, current_teams_p
     season_data=pd.read_csv("Unwanted_players.csv").iloc[:,1:]
     kmeans = joblib.load('kmeans_Groundmodel.pkl')
     relevant_players = current_players.copy()
-    xmins=pd.read_csv("GenerateXmins.csv").iloc[:,1:]
+    name_map = {
+    "Pedro_Porro Sauceda":          "Pedro_Porro",
+    "Sávio_Moreira de Oliveira":    "Sávio_'Savinho' Moreira de Oliveira",
+    "Daniel_Muñoz Mejía":           "Daniel_Muñoz",
+    "Bernardo_Mota Veiga de Carvalho e Silva": "Bernardo_Veiga de Carvalho e Silva",
+    "Ederson_Santana de Moraes":    "Ederson_Santana de Moraes",
+    "Levi_Samuels Colwill":         "Levi_Colwill",
+    "Marcos_Senesi Barón":          "Marcos_Senesi",
+    "Raúl_Jiménez Rodríguez":       "Raúl_Jiménez",
+    "Robert_Lynch Sánchez":         "Robert_Sánchez",
+    "Rodrigo_'Rodri' Hernandez Cascante": "Rodrigo 'Rodri'_Hernandez",
+    "Rúben_dos Santos Gato Alves Dias":   "Rúben_Gato Alves Dias",
+    "Kaoru_Mitoma":                 "Mitoma_Kaoru",
+    "Matheus_Santos Carneiro da Cunha": "Matheus_Santos Carneiro Da Cunha"
+}
+    relevant_players["name"] = relevant_players["name"].apply(lambda n: name_map.get(n, n))
+
+    xmins=pd.read_csv("GenerateXmins.csv")
     names=relevant_players["name"].unique()
     Future_dataframe=pd.DataFrame()
+    missing_player=[]
     for name in names:
         player_row = current_data[
             current_data["name"].str.lower() == name.lower()
@@ -197,6 +215,7 @@ def GeneratePlayerData(Future, fixture_path,current_player_path, current_teams_p
 
 
         if len(player_row)<1:
+            missing_player.append(name)
             current_player_season=season_data[season_data["Name"]==name]
             has_history=0
             if(len(current_player_season)>4):
@@ -245,7 +264,7 @@ def GeneratePlayerData(Future, fixture_path,current_player_path, current_teams_p
             
             player_row = pd.DataFrame([own_new_row])
 
-
+        pd.DataFrame(missing_player).to_csv("MIssing_players.csv")
         print(player_row2)
         clusters,home,n_matches,XGH,XGCH,XGA,XGCA,XGC_DEF,XGC_FWD,XGC_MID,own_XG,GW,played_XGC,played_XG,opp_code=next_opp(team_id, Future, fixture_data,kmeans,team_code,current_teams)
         if(len(clusters)<2):
@@ -268,6 +287,7 @@ def GeneratePlayerData(Future, fixture_path,current_player_path, current_teams_p
                 player_row["played_XG"] = played_XG[i]
                 player_row["opp_code"] = opp_code[i]
                 player_row["average_minutes"] = minutes
+                player_row["Team"]=team_code
                 
             
 

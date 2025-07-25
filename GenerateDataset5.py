@@ -912,8 +912,10 @@ def main_Transform():
     df_23["season"]='23'
 
     df_all = pd.concat([df_25,df_24, df_23], ignore_index=True)
+    df_all["name"] = df_all["name"].str.replace(" ", "_", n=1, regex=False)
+    
     df_all.to_csv("Fantasy_Merged.csv")
-    unique_players = df_all[["name"]].drop_duplicates()
+    
     
     newest_df = pd.DataFrame()
     Future = 0
@@ -921,12 +923,29 @@ def main_Transform():
     player_pred = []
     element_map = []
     unwanted_players=[]
+    name_map = {
+    "Pedro_Porro Sauceda":          "Pedro_Porro",
+    "Sávio_Moreira de Oliveira":    "Sávio_'Savinho' Moreira de Oliveira",
+    "Daniel_Muñoz Mejía":           "Daniel_Muñoz",
+    "Bernardo_Mota Veiga de Carvalho e Silva": "Bernardo_Veiga de Carvalho e Silva",
+    "Ederson_Santana de Moraes":    "Ederson_Santana de Moraes",
+    "Levi_Samuels Colwill":         "Levi_Colwill",
+    "Marcos_Senesi Barón":          "Marcos_Senesi",
+    "Raúl_Jiménez Rodríguez":       "Raúl_Jiménez",
+    "Robert_Lynch Sánchez":         "Robert_Sánchez",
+    "Rodrigo_'Rodri' Hernandez Cascante": "Rodrigo 'Rodri'_Hernandez",
+    "Rúben_dos Santos Gato Alves Dias":   "Rúben_Gato Alves Dias",
+    "Kaoru_Mitoma":                 "Mitoma_Kaoru",
+    "Matheus_Santos Carneiro da Cunha": "Matheus_Santos Carneiro Da Cunha"
+}
+    df_all["name"] = df_all["name"].apply(lambda n: name_map.get(n, n))
+    unique_players = df_all[["name"]].drop_duplicates()
 
     for index, row in unique_players.iterrows():
         data = []
         elem = []
         name = row['name']
-        name_string=name.replace(" ", "_", 1)
+        name_string=name
         
         player_df=df_all[(df_all["name"]==name)]
         player_df["kickoff_time"] = pd.to_datetime(player_df["kickoff_time"])  # Convert to datetime

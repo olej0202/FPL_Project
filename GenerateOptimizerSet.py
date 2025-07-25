@@ -38,7 +38,7 @@ def GenerateOptimizeSet(Current_data_path):
     visual_df['offset'] = visual_df['news'].apply(process_news)
     visual_df["selected"] = visual_df["selected"]/100
     visual_df["value"] = visual_df["value"]/10
-    visual_df["minutes_multiplier"] = np.minimum(1, visual_df['average_minutes'] / 70)
+    visual_df["minutes_multiplier"] = np.minimum(1, visual_df['average_minutes'] / 80)
     visual_df["selected"] = visual_df["selected"].clip(lower=0.01)
     visual_df["minutes_multiplier"] = visual_df["minutes_multiplier"].clip(lower=0.01)
     visual_df["news"] = visual_df["news"].fillna("No news")
@@ -64,7 +64,7 @@ def GenerateOptimizeSet(Current_data_path):
             player_points[player_points['position'].isin(position)]
             .sort_values(['value', 'Points_prediction'], ascending=[True, False])
             .groupby('value')
-            .head(25)
+            .head(40)
             .reset_index(drop=True)
         )
         names.extend(top_players_by_pos["name"].tolist())
@@ -79,7 +79,7 @@ def GenerateOptimizeSet(Current_data_path):
             player_points[player_points['value'].isin(value)]
             .sort_values(['value', 'Points_prediction'], ascending=[True, False])
             .groupby('value')
-            .head(2)
+            .head(3)
             .reset_index(drop=True)
         )
         names.extend(top_players_by_value["name"].tolist())
@@ -98,7 +98,7 @@ def GenerateOptimizeSet(Current_data_path):
     optimized_player_set['offset'] = optimized_player_set['news'].apply(process_news)
     optimized_player_set["selected"] = optimized_player_set["selected"]/100
     optimized_player_set["value"] = optimized_player_set["value"]/10
-    optimized_player_set["minutes_multiplier"] = np.minimum(1, optimized_player_set['average_minutes'] / 70)
+    optimized_player_set["minutes_multiplier"] = np.minimum(1, optimized_player_set['average_minutes'] / 80)
     optimized_player_set["0"] = 0
     
     

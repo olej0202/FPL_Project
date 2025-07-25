@@ -37,7 +37,7 @@ def Data_Extraction(season,is_new_season,has_been_error):
 
 
 def Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path):
-    main_Transform()
+    #main_Transform()
     team_data(current_team_path)
     GeneratePlayerData(n_points_in_future, current_fixture_path,current_player_path,current_team_path)
 
@@ -59,10 +59,10 @@ def Main_Orchestration():
     season=25
     is_new_season=1
     has_been_error=0
-    n_points_in_future=5
+    n_points_in_future=7
     budget=100
     ownership=0.9
-    GW_list_wildcard=['1', '2','3', '4','5']
+    GW_list_wildcard=['1', '2','3', '4','5','6','7']
     GW_list_freehit=['1'] 
     
     current_fixture_path="Raw_Data_25\Fantasy_season_2025_Fixtures.csv"
