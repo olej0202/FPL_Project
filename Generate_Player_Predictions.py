@@ -545,17 +545,17 @@ def Generate_point_predictions():
 
         for i in range(len(player_data)):
             try:
-                goals.append((xgb_goals_player["pred"].values[i]*0.3
+                goals.append((xgb_goals_player["pred"].values[i]*0.4
                          +stat_goals_player["pred"].values[i]*0.4
-                         +DNN_goals_player["pred"].values[i]*0.3)*overscore)
+                         +DNN_goals_player["pred"].values[i]*0.2)*overscore)
             except:
                 goals.append(0)
 
             try:
 
-                assist.append((xgb_assist_player["pred"].values[i]*0.3
+                assist.append((xgb_assist_player["pred"].values[i]*0.4
                                     +stat_assist_player["pred"].values[i]*0.4
-                                    +DNN_assist_player["pred"].values[i]*0.3)*overassist)
+                                    +DNN_assist_player["pred"].values[i]*0.2)*overassist)
             except:
                 assist.append(0)
 
@@ -598,12 +598,12 @@ def Generate_point_predictions():
         if(position=="FWD"):
             summary_dataset["Points_prediction"]=(2+summary_dataset["Goal_pred"]*4
                                                   +summary_dataset["Assist_pred"]*3
-                                                  +summary_dataset["Bonus_pred"])*0.8+0.1*summary_dataset["Fantasy_pred"]
+                                                  +summary_dataset["Bonus_pred"])*0.9+0.1*summary_dataset["Fantasy_pred"]
         elif(position=="MID"):
             summary_dataset["Points_prediction"]=(2+summary_dataset["Goal_pred"]*5
                                                   +summary_dataset["Assist_pred"]*3
                                                   +summary_dataset["Bonus_pred"]
-                                                  +summary_dataset["GC_pred"])*0.8+0.1*summary_dataset["Fantasy_pred"]
+                                                  +summary_dataset["GC_pred"])*0.9+0.1*summary_dataset["Fantasy_pred"]
             
         elif(position=="GKP"):
             summary_dataset["Points_prediction"]=(2
