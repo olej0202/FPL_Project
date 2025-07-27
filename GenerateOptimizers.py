@@ -105,7 +105,8 @@ def wildcard_optimize_team(sel_thresh, budget, columns, file_path="Model_Optimiz
                     "status": "transferred_in",
                     "GW": gw,
                     "position": pos,
-                    "photo": f"https://resources.premierleague.com/premierleague/photos/players/110x140/p{player_row_code}.png"
+                    "photo": f"https://resources.premierleague.com/premierleague/photos/players/110x140/p{player_row_code}.png",
+                    "web_name": current_players[current_players["name"] == name]["web_name"].values[0]
                 })
 
             # transferred out
@@ -115,7 +116,8 @@ def wildcard_optimize_team(sel_thresh, budget, columns, file_path="Model_Optimiz
                     "status": "transferred_out",
                     "GW": gw,
                     "position": pos,
-                    "photo": f"https://resources.premierleague.com/premierleague/photos/players/110x140/p{player_row_code}.png"
+                    "photo": f"https://resources.premierleague.com/premierleague/photos/players/110x140/p{player_row_code}.png",
+                    "web_name": current_players[current_players["name"] == name]["web_name"].values[0]
                 })
 
 
@@ -131,7 +133,8 @@ def wildcard_optimize_team(sel_thresh, budget, columns, file_path="Model_Optimiz
                     status = "benched"
                 else:
                     status = "playing"
-                records.append({"Name": name, "status": status, "GW": gw, "position": pos, "photo":f"https://resources.premierleague.com/premierleague/photos/players/110x140/p{player_row_code}.png"})
+                records.append({"Name": name, "status": status, "GW": gw, "position": pos, "photo":f"https://resources.premierleague.com/premierleague/photos/players/110x140/p{player_row_code}.png"
+                                ,"web_name": current_players[current_players["name"] == name]["web_name"].values[0]})
     """
     for t in range(1, GW_range):
         for i in range(num_players):
@@ -244,9 +247,10 @@ def freeHit_optimize_team(sel_thresh, budget, columns, file_path="Model_Optimize
             player_set.append(status)
             player_set.append(f"https://resources.premierleague.com/premierleague/photos/players/110x140/p{player_row}.png")
             player_set.append(columns[0])
+            player_set.append(current_players[current_players["name"]==players[i][:-1]]["web_name"].values[0])
             result_set.append(player_set)
             
-    columns=["Name", "position", "status","photo", "GW"]
+    columns=["Name", "position", "status","photo", "GW","web_name"]
 
     result_df=pd.DataFrame(result_set,columns=columns)
     result_df.to_csv("Free_hit_team.csv")

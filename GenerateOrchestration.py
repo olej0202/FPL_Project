@@ -43,8 +43,8 @@ def Data_Transformation(n_points_in_future, current_fixture_path,current_player_
 
     
 def Data_Predictions(current_fixture_path,current_team_path, n_points_in_future):
-    #GenerateTeamPredictions( current_fixture_path,current_team_path, n_points_in_future)
-    #Make_Predictions()
+    GenerateTeamPredictions( current_fixture_path,current_team_path, n_points_in_future)
+    Make_Predictions()
     Generate_point_predictions()
     
    
@@ -52,7 +52,7 @@ def Data_Generation(current_raw_data_path,ownership,budget,GW_list_wildcard,GW_l
     GenerateOptimizeSet(current_player_path)
     generate_optimizers(ownership=ownership,budget=budget,GW_list_wildcard=GW_list_wildcard,GW_list_freehit=GW_list_freehit  )
     Generate_ALL_datasets(current_team_path)
-    main_GPT_News()
+    #main_GPT_News()
 
 
 def Main_Orchestration():
@@ -75,7 +75,7 @@ def Main_Orchestration():
     
     
     #Transform data
-    #Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path)
+    Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path)
     
     #Predict data
     Data_Predictions(current_fixture_path,current_team_path, n_points_in_future)

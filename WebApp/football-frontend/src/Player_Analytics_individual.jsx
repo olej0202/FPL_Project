@@ -83,7 +83,7 @@ useEffect(() => {
       const playerData = PlayersData.current.filter((p) => p.name === playerFilter);
       if (playerData.length) {
         const totalPredictions = playerData.reduce(
-    (sum, row) => sum + (parseFloat(row.points_predictions) || 0),
+    (sum, row) => sum + (parseFloat(row.Points_prediction) || 0),
       0
       );
         const latest = playerData[playerData.length - 1];
@@ -94,7 +94,7 @@ useEffect(() => {
           Rolling_adjusted_BPS: latest.Rolling_adjusted_BPS || 0,
           Overcore: latest.Average_Overscore || 0,
           rolling_ICT: latest.rolling_ICT || 0,
-          points_predictions: totalPredictions.toFixed(2),
+          points_predictions: totalPredictions || 0,
           
         });
 
@@ -120,7 +120,7 @@ useEffect(() => {
     const playerData = PlayersData.current.filter((p) => p.name === player);
     if (!playerData.length) return;
     const totalPredictions = playerData.reduce(
-    (sum, row) => sum + (parseFloat(row.points_predictions) || 0),
+    (sum, row) => sum + (row.Points_prediction),
       0
       );
     const sorted = playerData.sort((a, b) => new Date(a.kickoff_time) - new Date(b.kickoff_time));
@@ -132,7 +132,7 @@ useEffect(() => {
       Rolling_adjusted_BPS: latest.Rolling_adjusted_BPS || 0,
       Overcore: latest.Average_Overscore || 0,
       rolling_ICT:latest.rolling_ICT || 0,
-      points_predictions: totalPredictions.toFixed(2),
+      points_predictions: totalPredictions || 0,
     });
   };
 
@@ -213,6 +213,7 @@ useEffect(() => {
     { title: "BPS Index", value: latestStats.Rolling_adjusted_BPS },
     { title: "ICT Index", value: latestStats.rolling_ICT },
     { title: "Goals/XG", value: latestStats.Overcore },
+    {title: "XPoints", value: latestStats.points_predictions }
   ];
 
   const rawStats = [
@@ -221,6 +222,7 @@ useEffect(() => {
     { key: "Rolling_adjusted_BPS", label: "BPS Index" },
     { key: "rolling_ICT", label: "ICT Index" },
     { key: "Overcore", label: "Goals/XG" },
+    { key: "points_predictions", label: "XPoints" },
   ];
 
   const maxValues = {};
@@ -244,6 +246,8 @@ useEffect(() => {
       return value *6; // typical max ~200 → 100
     case "Overcore":
       return value *30; 
+    case "points_predictions":
+      return value /1.5; 
     default:
       return value * 10;
   }

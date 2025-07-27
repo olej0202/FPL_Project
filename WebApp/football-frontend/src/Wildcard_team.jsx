@@ -83,9 +83,9 @@ export default function WildcardTeam() {
                 const inPlayer = t.in[i];
                 return (
                   <div key={i} className="flex items-center gap-2">
-                    <TransferCard player={outPlayer} label="Out" />
+                    <TransferCard player={outPlayer} label="Out" navigate={navigate} />
                     <ArrowRight className="text-royal-gold" />
-                    {inPlayer ? <TransferCard player={inPlayer} label="In" /> : null}
+                    {inPlayer ? <TransferCard player={inPlayer} label="In" navigate={navigate} /> : null}
                   </div>
                 );
               })}
@@ -136,10 +136,14 @@ function PlayerRow({ players, isBench = false, navigate }) {
   );
 }
 
-function TransferCard({ player, label }) {
+function TransferCard({ player, label, navigate }) {
   const name = player.Name.match(/_([^ ]+)/)?.[1] || player.Name;
   return (
-    <div className="flex flex-col items-center">
+    <div className="flex flex-col items-center" onClick={() =>
+              navigate("/Player_Analytics/Individual", {
+                state: { selectedPlayer: player.Name },
+              })
+            }>
       <img
         src={player.photo}
         alt={player.Name}
