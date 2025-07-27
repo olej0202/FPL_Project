@@ -93,6 +93,7 @@ useEffect(() => {
           Rolling_adjusted_XA: latest.Rolling_adjusted_XA || 0,
           Rolling_adjusted_BPS: latest.Rolling_adjusted_BPS || 0,
           Overcore: latest.Average_Overscore || 0,
+          rolling_ICT: latest.rolling_ICT || 0,
           points_predictions: totalPredictions.toFixed(2),
           
         });
@@ -130,6 +131,7 @@ useEffect(() => {
       Rolling_adjusted_XA: latest.Rolling_adjusted_XA || 0,
       Rolling_adjusted_BPS: latest.Rolling_adjusted_BPS || 0,
       Overcore: latest.Average_Overscore || 0,
+      rolling_ICT:latest.rolling_ICT || 0,
       points_predictions: totalPredictions.toFixed(2),
     });
   };
@@ -209,13 +211,15 @@ useEffect(() => {
     { title: "XG Index", value: latestStats.Rolling_adjusted_XG },
     { title: "XA Index", value: latestStats.Rolling_adjusted_XA },
     { title: "BPS Index", value: latestStats.Rolling_adjusted_BPS },
-    { title: "Goals /XG", value: latestStats.Overcore },
+    { title: "ICT Index", value: latestStats.rolling_ICT },
+    { title: "Goals/XG", value: latestStats.Overcore },
   ];
 
   const rawStats = [
     { key: "Rolling_adjusted_XG", label: "XG Index" },
     { key: "Rolling_adjusted_XA", label: "XA Index" },
     { key: "Rolling_adjusted_BPS", label: "BPS Index" },
+    { key: "rolling_ICT", label: "ICT Index" },
     { key: "Overcore", label: "Goals/XG" },
   ];
 
@@ -236,6 +240,8 @@ useEffect(() => {
       return value * 230; // assuming typical max ~4.0 → 100
     case "Rolling_adjusted_BPS":
       return value *4; // typical max ~200 → 100
+    case "rolling_ICT":
+      return value *6; // typical max ~200 → 100
     case "Overcore":
       return value *30; 
     default:
@@ -376,11 +382,11 @@ const playerFixtures = useMemo(() => {
   </div>
 )}
 
-      <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-4 gap-1 w-1xl ">
+      <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-4 gap-1 w-1xl mr-2">
         {statCards.map((stat, idx) => (
           <div
             key={idx}
-            className="bg-royal-red text-royal-beige p-1 border border-royal-gold rounded-lg shadow text-center"
+            className="bg-royal-red text-royal-beige p-2 border border-royal-gold rounded-lg shadow text-center mr-1 mt-1"
           >
             <h2 className="text-1xl font-semibold mb-2">{stat.title}</h2>
             <p className="text-2xl font-bold">{parseFloat(stat.value).toFixed(2)}</p>
@@ -463,9 +469,9 @@ const playerFixtures = useMemo(() => {
       
 
       {playerFilter && comparePlayer && (
-        <div className="w-full max-w-4xl h-[500px]">
-        <ResponsiveContainer width="100%" height={400}>
-            <RadarChart cx="50%" cy="50%" outerRadius="50%" data={scaledComparisonData}>
+        <div className="w-full max-w-4xl">
+        <ResponsiveContainer width="100%" height={300}>
+            <RadarChart cx="50%" cy="40%" outerRadius="60%" data={scaledComparisonData}>
               <PolarGrid stroke="#666" />
               <PolarAngleAxis dataKey="metric" stroke="#FFD700" />
               <Radar
@@ -490,7 +496,7 @@ const playerFixtures = useMemo(() => {
         </div>
       )}
 
-      <h1 className="text-4xl font-bold text-center text-royal-beige mt-10">Historical Analysis</h1>
+      <h1 className="text-4xl font-bold text-center text-royal-beige mt-10 py-5">Historical Analysis</h1>
 
 
 <div className="w-full max-w-sm text-center">
