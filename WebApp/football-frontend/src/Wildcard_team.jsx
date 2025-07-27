@@ -11,6 +11,8 @@ export default function WildcardTeam() {
   const [benchPlayers, setBenchPlayers] = useState([]);
   const [transfers, setTransfers] = useState([]);
   const navigate = useNavigate();
+  const fallbackUrl = "https://d2kq0urxkarztv.cloudfront.net/51812cad594df29a1a0003f0/661303/upload-643ff5d9-840e-4bbb-b099-07c26ef505c9.png?w=578";
+
 
   useEffect(() => {
     fetchIfNeeded().then(() => {
@@ -56,10 +58,10 @@ export default function WildcardTeam() {
                 style={{ backgroundImage: `url(${pitch})` }}
               >
                 <div className="flex flex-col justify-between h-[700px] pt-1 space-y-1">
-                  <PlayerRow players={getPlayersByPosition("GKP")} navigate={navigate} />
-                  <PlayerRow players={getPlayersByPosition("DEF")} navigate={navigate} />
-                  <PlayerRow players={getPlayersByPosition("MID")} navigate={navigate} />
-                  <PlayerRow players={getPlayersByPosition("FWD")} navigate={navigate} />
+                  <PlayerRow players={getPlayersByPosition("GKP")} navigate={navigate} fallbackUrl={fallbackUrl} />
+                  <PlayerRow players={getPlayersByPosition("DEF")} navigate={navigate} fallbackUrl={fallbackUrl} />
+                  <PlayerRow players={getPlayersByPosition("MID")} navigate={navigate} fallbackUrl={fallbackUrl} />
+                  <PlayerRow players={getPlayersByPosition("FWD")} navigate={navigate} fallbackUrl={fallbackUrl} />
                   <div className="h-[115px]"/>
       
       
@@ -67,7 +69,7 @@ export default function WildcardTeam() {
       
                 {benchPlayers.length > 0 && (
                   <div className="absolute bottom-[-6px] left-0 right-0 px-2">
-                    <PlayerRow players={benchPlayers} isBench navigate={navigate} />
+                    <PlayerRow players={benchPlayers} isBench navigate={navigate} fallbackUrl={fallbackUrl} />
                   </div>
                 )}
               </div>
@@ -97,7 +99,7 @@ export default function WildcardTeam() {
   );
 }
 
-function PlayerRow({ players, isBench = false, navigate }) {
+function PlayerRow({ players, isBench = false, navigate,fallbackUrl }) {
   return (
     <div className="flex justify-center gap-3 py-2 overflow-x-auto">
       {players.map((player, idx) => {
@@ -117,6 +119,10 @@ function PlayerRow({ players, isBench = false, navigate }) {
             <img
               src={player.photo}
               alt={player.Name}
+              onError={(e) => {
+            e.currentTarget.onerror = null;       // prevent loop
+            e.currentTarget.src = fallbackUrl;    // use fallback
+          }}
               className={`object-contain ${
                 isBench
                   ? "w-[45px] h-[65px] sm:w-[55px] sm:h-[75px]"
@@ -136,7 +142,7 @@ function PlayerRow({ players, isBench = false, navigate }) {
   );
 }
 
-function TransferCard({ player, label, navigate }) {
+function TransferCard({ player, label, navigate,fallbackUrl }) {
   const name = player.Name.match(/_([^ ]+)/)?.[1] || player.Name;
   return (
     <div className="flex flex-col items-center" onClick={() =>
@@ -146,7 +152,11 @@ function TransferCard({ player, label, navigate }) {
             }>
       <img
         src={player.photo}
-        alt={player.Name}
+        alt={name}
+        onError={(e) => {
+            e.currentTarget.onerror = null;       // prevent loop
+            e.currentTarget.src = fallbackUrl;    // use fallback
+          }}
         className="w-[50px] h-[70px] sm:w-[60px] sm:h-[80px] object-contain border-2 border-none rounded"
       />
       <span className="text-xs mt-1">{name}</span>

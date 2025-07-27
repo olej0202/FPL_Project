@@ -43,10 +43,10 @@ export default function FreeHitTeam() {
           style={{ backgroundImage: `url(${pitch})` }}
         >
           <div className="flex flex-col justify-between h-[700px] pt-1 space-y-1">
-            <PlayerRow players={getPlayersByPosition("GKP")} navigate={navigate} />
-            <PlayerRow players={getPlayersByPosition("DEF")} navigate={navigate} />
-            <PlayerRow players={getPlayersByPosition("MID")} navigate={navigate} />
-            <PlayerRow players={getPlayersByPosition("FWD")} navigate={navigate} />
+            <PlayerRow players={getPlayersByPosition("GKP")} navigate={navigate} fallbackUrl={fallbackUrl}/>
+            <PlayerRow players={getPlayersByPosition("DEF")} navigate={navigate} fallbackUrl={fallbackUrl}/>
+            <PlayerRow players={getPlayersByPosition("MID")} navigate={navigate} fallbackUrl={fallbackUrl}/>
+            <PlayerRow players={getPlayersByPosition("FWD")} navigate={navigate} fallbackUrl={fallbackUrl} />
             <div className="h-[115px]"/>
 
 
@@ -54,7 +54,7 @@ export default function FreeHitTeam() {
 
           {benchPlayers.length > 0 && (
             <div className="absolute bottom-[-6px] left-0 right-0 px-2">
-              <PlayerRow players={benchPlayers} isBench navigate={navigate} />
+              <PlayerRow players={benchPlayers} isBench navigate={navigate} fallbackUrl={fallbackUrl}/>
             </div>
           )}
         </div>
@@ -63,7 +63,7 @@ export default function FreeHitTeam() {
   );
 }
 
-function PlayerRow({ players, isBench = false, navigate }) {
+function PlayerRow({ players, isBench = false, navigate,fallbackUrl }) {
   return (
     <div className="flex justify-center gap-3 py-2 overflow-x-auto">
       {players.map((player, idx) => {

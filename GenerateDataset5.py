@@ -706,7 +706,7 @@ def team_transformed2():
     
     elo_rating = {team: 1000 for team in teams}
     elo_history = {team: [1000] for team in teams}
-    k_elo = 35  # ELO update factor
+    k_elo = 30  # ELO update factor
 
     team_df = team_df.sort_values('kickoff_time')
 
@@ -744,9 +744,9 @@ def team_transformed2():
 
 
 
-        k_def = 0.08
-        k_off=0.08
-        min_val=0.8
+        k_def = 0.06
+        k_off=0.06
+        min_val=0.6
 
         actual_goals = xg
         if was_home==1:

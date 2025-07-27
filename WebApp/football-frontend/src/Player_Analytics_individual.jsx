@@ -27,6 +27,7 @@ import {
 
 export default function PlayerAnalyticsIndividual() {
   const { fetchIfNeeded, loading, PlayersData,addAnalysis,analyses,removeAnalysis } = useStatsData();
+  const navigate = useNavigate();
   const API_URL = "https://fpl-project-t5e9.onrender.com/Player";
   const fallbackUrl = "https://d2kq0urxkarztv.cloudfront.net/51812cad594df29a1a0003f0/661303/upload-643ff5d9-840e-4bbb-b099-07c26ef505c9.png?w=578";
 
@@ -44,6 +45,7 @@ export default function PlayerAnalyticsIndividual() {
   const [compareStats, setCompareStats] = useState({});
   const [compareImageUrl, setCompareImageUrl] = useState("");
   const [playerValue, setPlayerValue] = useState(null);
+  const [playerSelected, setplayerSelected] = useState(null);
   const [playerNews, setPlayerNews] = useState(null);
   const [showTable, setShowTable] = useState(false);
   const [seasonFilter, setSeasonFilter] = useState([]);
@@ -100,6 +102,7 @@ useEffect(() => {
 
         setPlayerValue(latest.value || null);
         setPlayerNews(latest.news || null);
+        setplayerSelected(latest.selected.toFixed(3)*100 || null);
       }
 
       fetch(`https://fpl-project-t5e9.onrender.com/Player_picture?player=${encodeURIComponent(playerFilter)}`)
@@ -243,11 +246,11 @@ useEffect(() => {
     case "Rolling_adjusted_BPS":
       return value *4; // typical max ~200 → 100
     case "rolling_ICT":
-      return value *6; // typical max ~200 → 100
+      return value *10; // typical max ~200 → 100
     case "Overcore":
       return value *30; 
     case "points_predictions":
-      return value /1.5; 
+      return value ; 
     default:
       return value * 10;
   }
@@ -374,8 +377,13 @@ const playerFixtures = useMemo(() => {
 
       {/* Price badge in top‑right */}
       <div className="absolute top-1 -right-10 bg-royal-beige text-black text-xs font-bold px-1 py-1 rounded">
-        ${playerValue} M
+        ${playerValue}
       </div>
+      <div className="absolute top-1 -left-10 bg-royal-beige text-black text-xs font-bold px-1 py-1 rounded">
+        {parseFloat(playerSelected).toFixed(1)}%
+        
+      </div>
+
     </div>
   )}
 </div>
@@ -386,19 +394,19 @@ const playerFixtures = useMemo(() => {
   </div>
 )}
 
-      <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-4 gap-1 w-1xl mr-2">
+      <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-4 gap-1 w-1xl mr-0">
         {statCards.map((stat, idx) => (
           <div
             key={idx}
-            className="bg-royal-red text-royal-beige p-2 border border-royal-gold rounded-lg shadow text-center mr-1 mt-1"
+            className="bg-royal-red text-royal-beige p-3 border border-royal-gold rounded-lg shadow text-center mr-1 mt-1"
           >
-            <h2 className="text-1xl font-semibold mb-2">{stat.title}</h2>
+            <h2 className="text-1xl font-semibold mb-0">{stat.title}</h2>
             <p className="text-2xl font-bold">{parseFloat(stat.value).toFixed(2)}</p>
           </div>
         ))}
       </div>
 <div className="w-full max-w-6xl mx-auto mt-6 text-center">
-      <h3 className="text-lg font-semibold mb-2">Fixtures</h3>
+      <h3 className="text-lg font-semibold mb-2">Fixtures next {playerFixtures.length} Gws</h3>
 
       {/* Scrollable on xs, wrap & center on sm+ */}
       <div
@@ -416,6 +424,13 @@ const playerFixtures = useMemo(() => {
         {playerFixtures.map((row, idx) => (
           <div
             key={idx}
+
+            onClick={() =>
+          navigate("/Team_Analytics/Team_Individual", {
+            state: { selectedTeam: row.opponent_name },
+          })
+        }
+
             className="
               flex-shrink-0 
               flex flex-col items-center
@@ -429,16 +444,64 @@ const playerFixtures = useMemo(() => {
               <img
                 src={teamLogos[row.opponent_name]}
                 alt={row.opponent_name}
-                className="h-7 w-7 object-contain"
+                className="h-10 w-11 object-contain"
               />
             ) : (
               <span className="text-sm truncate">{row.opponent_name}</span>
             )}
+             <span className="text-xs font-semibold mt-0">
+        {row.was_home ? "(H)" : "(A)"}
+      </span>
           </div>
         ))}
       </div>
     </div>
 
+
+
+    {/* Predicted Points*/}
+ {/* ─── Predicted Points Over Upcoming GWs ─── */}
+ <h3 className="text-lg font-semibold mb-2 text-center">Predicted Points</h3>
+<div className="w-full max-w-6xl mx-auto mt-6 border border-royal-gold">
+  
+  <div className="h-52 bg-royal-red rounded shadow-md p-1">
+    <ResponsiveContainer width="100%" height="100%">
+      <LineChart
+        data={playerFixtures}
+        margin={{ top: 0, right: 5, left: 0, bottom: 5 }}
+      >
+        <CartesianGrid stroke="#444" strokeDasharray="3 3" />
+
+        <XAxis
+          dataKey="GW"
+          tick={{ fill: "#fff" }}
+        />
+
+        {/* YAxis without a label, dynamic auto‐scaling */}
+        <YAxis
+          tick={{ fill: "#fff"  }}
+          domain={["auto", "auto"]}
+        />
+
+        <Tooltip
+          contentStyle={{ backgroundColor: "#222", borderColor: "#FFD700" }}
+          itemStyle={{ color: "#fff"  }}
+          labelStyle={{ color: "#fff" }}
+          formatter={(value) => value.toFixed(1)}        // 1 decimal place
+          labelFormatter={(label) => `GW ${label}`}
+        />
+
+        <Line
+          type="monotone"
+          dataKey="Points_prediction"
+          stroke="#fff" 
+          dot={{ fill: "#FFD700" }}
+          activeDot={{ r: 6 }}
+        />
+      </LineChart>
+    </ResponsiveContainer>
+  </div>
+</div>
 
       <h1 className="text-3xl font-bold text-royal-beige mt-10">Compare Player</h1>
       <div className="flex gap-10 justify-center mt-6">

@@ -183,9 +183,6 @@ def GeneratePlayerData(Future, fixture_path,current_player_path, current_teams_p
     "Alisson_Becker": "Alisson_Ramses Becker",
     "Luis_Díaz Marulanda": "Luis_Díaz",
     "Matheus_Nunes":"Matheus Luiz_Nunes",
-
-    
-    
 }
     relevant_players["name"] = relevant_players["name"].apply(lambda n: name_map.get(n, n))
 
