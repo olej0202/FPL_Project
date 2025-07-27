@@ -32,27 +32,28 @@ export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   const navItems = [
-    { to: "/", icon: Newspaper, label: "News Blog" },
+    { to: "/AITeams", icon: Brain, label: "AI Teams" },
+    
     { to: "/Team_Analytics", icon: Users, label: "Team Analytics" },
     { to: "/Player_Analytics", icon: User, label: "Player Analytics" },
     { to: "/TeamPredictionsFuture", icon: Calendar, label: "Fixtures" },
     { to: "/Score_Predictions", icon: Trophy, label: "Score Predictions" },
-    { to: "/AITeams", icon: Brain, label: "AI Teams" },
+    { to: "/", icon: Newspaper, label: "News Blog" },
   ];
 
   return (
     <div className="min-h-screen bg-black text-white">
       {/* Top Navbar */}
       <nav className="relative bg-royal-beige text-royal-gold shadow">
-        <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-3">
+        <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-1">
           {/* Logo + Title */}
           <div className="flex items-center gap-1">
             <img
               src={logo}
               alt="FPL Logo"
-              className="h-16 w-16 object-contain"
+              className="h-14 w-14 object-contain"
             />
-            <span className="text-3xl font-bold">FPL Analytics</span>
+            <span className="px-2 text-2xl font-bold">FPL Analytics</span>
           </div>
 
           {/* Desktop Nav (md+) */}
@@ -75,9 +76,9 @@ export default function App() {
           <div className="md:hidden">
             <button
               onClick={() => setMenuOpen(true)}
-              className="p-3 rounded border border-royal-gold"
+              className="p-2 rounded border border-royal-gold"
             >
-              <Menu size={28} />
+              <Menu size={22} />
             </button>
           </div>
         </div>
@@ -86,12 +87,12 @@ export default function App() {
         {menuOpen && (
           <div className="md:hidden fixed inset-y-0 right-0 w-3/4 bg-royal-beige text-royal-gold z-50 flex flex-col">
             {/* Close Button */}
-            <div className="flex justify-end p-4">
+            <div className="flex justify-end p-2">
               <button
                 onClick={() => setMenuOpen(false)}
                 className="p-2 rounded border border-black"
               >
-                <X size={24} />
+                <X size={22} />
               </button>
             </div>
 

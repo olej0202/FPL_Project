@@ -1033,8 +1033,9 @@ def main_Transform():
             player_df["rolling_Chain"] = player_df['xGChain'].rolling(window=10, min_periods=1).mean()
             player_df["Overscore"] = player_df["rolling_GS"]/player_df["rolling_XG"]
             #player_df["Average_Overscore"]=player_df["Overscore"].rolling(window=12, min_periods=1).mean()
-            player_df["Average_Overscore"]=player_df['goals_scored'].rolling(window=15, min_periods=1).sum()/player_df['expected_goals'].rolling(window=15, min_periods=1).sum()
+            player_df["Average_Overscore"]=player_df['goals_scored'].rolling(window=25, min_periods=1).sum()/player_df['expected_goals'].rolling(window=25, min_periods=1).sum()
             player_df["rolling_ICT"] = player_df['ICT'].ewm(span=lookback, adjust=False).mean()
+            player_df["rolling_ICT"] = adjust_measure(player_df, 'ICT')
             #player_df["rolling_Threat"] = player_df['Threat'].ewm(span=lookback, adjust=False).mean()
             player_df["rolling_Threat"]=adjust_measure(player_df, 'Threat')
             player_df["Threat_Mean"] = player_df['Threat'].ewm(span=15, adjust=False).mean()
@@ -1204,7 +1205,7 @@ def adjust_measure(df, measure_name):
     new_expected_goals=[]
     current_expected_goals_start_value=player_df[measure_name].mean()
     current_expected_goals=current_expected_goals_start_value
-    smoothing_f=0.06
+    smoothing_f=0.08
     min_val=std
     count=0
     in_row=0

@@ -21,6 +21,7 @@ const METRICS = {
   Rolling_adjusted_XG: "Goal Index",
   Rolling_adjusted_XA: "Assist Index",
   Rolling_adjusted_BPS: "Bonus Index",
+  rolling_ICT: "ICT Index"
 };
 
 const SUM_METRICS = ["Points_prediction", "Goal_pred"];
@@ -110,7 +111,7 @@ export default function Player_analytics_rankings() {
   const maxValue = Math.max(...filtered.map((d) => d.value));
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col items-center py-10 px-4 space-y-6">
+    <div className="min-h-screen bg-black text-white flex flex-col items-center py-1 px-4 space-y-2">
       <h2 className="text-2xl font-bold text-center text-white">
         {METRICS[selectedMetric]}
       </h2>
@@ -119,7 +120,7 @@ export default function Player_analytics_rankings() {
         <select
           value={selectedMetric}
           onChange={(e) => setSelectedMetric(e.target.value)}
-          className="w-full px-4 py-3 rounded bg-royal-beige text-black font-semibold focus:outline-none text-center"
+          className="w-full px-4 py-1 rounded bg-royal-beige text-black font-semibold focus:outline-none text-center"
         >
           {Object.entries(METRICS).map(([key, label]) => (
             <option key={key} value={key}>
@@ -152,7 +153,7 @@ export default function Player_analytics_rankings() {
       {SUM_METRICS.includes(selectedMetric) &&
         minGW !== null &&
         maxGW !== null && (
-          <Box sx={{ width: 300, mx: "auto", mt: 2 }}>
+          <Box sx={{ width: 300, mx: "auto", mt: 1 }}>
             <Typography gutterBottom className="text-white text-center">
               GW Range: {GWRange[0]} - {GWRange[1]}
             </Typography>
@@ -170,9 +171,9 @@ export default function Player_analytics_rankings() {
 
       {/* Price Slider */}
       {minValuePrice !== null && maxValuePrice !== null && (
-        <Box sx={{ width: 300, mx: "auto", mt: 4 }}>
-          <Typography gutterBottom className="text-white text-center">
-            Filter by Price: {valueRange[0]}M – {valueRange[1]}M
+        <Box sx={{ width: 300, mx: "auto", mt: 0, py:0 }}>
+          <Typography gutterBottom className="text-white text-center py-0">
+            Price: {valueRange[0]}M – {valueRange[1]}M
           </Typography>
           <Slider
             value={valueRange}

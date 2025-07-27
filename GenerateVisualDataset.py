@@ -32,7 +32,7 @@ def Generate_Player_Rankings(current_teams):
 
     # 5) Drop the no-longer-needed code columns
     df = df.drop(columns=["code", "opponent_code"])
-    df=df[["name", "GW","opponent_name" ]]
+    df=df[["name", "GW","opponent_name","rolling_ICT"]]
     df = df.rename(columns={"name": "name2","GW": "GW2"})
 
 

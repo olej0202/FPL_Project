@@ -28,6 +28,7 @@ import {
 export default function PlayerAnalyticsIndividual() {
   const { fetchIfNeeded, loading, PlayersData,addAnalysis,analyses,removeAnalysis } = useStatsData();
   const API_URL = "https://fpl-project-t5e9.onrender.com/Player";
+  const fallbackUrl = "https://d2kq0urxkarztv.cloudfront.net/51812cad594df29a1a0003f0/661303/upload-643ff5d9-840e-4bbb-b099-07c26ef505c9.png?w=578";
 
   const location = useLocation();
   const initialPlayer = location.state?.selectedPlayer || "";
@@ -81,6 +82,10 @@ useEffect(() => {
     if (playerFilter) {
       const playerData = PlayersData.current.filter((p) => p.name === playerFilter);
       if (playerData.length) {
+        const totalPredictions = playerData.reduce(
+    (sum, row) => sum + (parseFloat(row.points_predictions) || 0),
+      0
+      );
         const latest = playerData[playerData.length - 1];
 
         setLatestStats({
@@ -88,6 +93,8 @@ useEffect(() => {
           Rolling_adjusted_XA: latest.Rolling_adjusted_XA || 0,
           Rolling_adjusted_BPS: latest.Rolling_adjusted_BPS || 0,
           Overcore: latest.Average_Overscore || 0,
+          points_predictions: totalPredictions.toFixed(2),
+          
         });
 
         setPlayerValue(latest.value || null);
@@ -111,13 +118,19 @@ useEffect(() => {
     await fetchIfNeeded();
     const playerData = PlayersData.current.filter((p) => p.name === player);
     if (!playerData.length) return;
+    const totalPredictions = playerData.reduce(
+    (sum, row) => sum + (parseFloat(row.points_predictions) || 0),
+      0
+      );
     const sorted = playerData.sort((a, b) => new Date(a.kickoff_time) - new Date(b.kickoff_time));
     const latest = playerData[playerData.length - 1];
+    
     setter({
       Rolling_adjusted_XG: latest.Rolling_adjusted_XG || 0,
       Rolling_adjusted_XA: latest.Rolling_adjusted_XA || 0,
       Rolling_adjusted_BPS: latest.Rolling_adjusted_BPS || 0,
-      Overcore: latest.Average_Overscore || 0
+      Overcore: latest.Average_Overscore || 0,
+      points_predictions: totalPredictions.toFixed(2),
     });
   };
 
@@ -196,14 +209,14 @@ useEffect(() => {
     { title: "XG Index", value: latestStats.Rolling_adjusted_XG },
     { title: "XA Index", value: latestStats.Rolling_adjusted_XA },
     { title: "BPS Index", value: latestStats.Rolling_adjusted_BPS },
-    { title: "Goals/XG", value: latestStats.Overcore }
+    { title: "Goals /XG", value: latestStats.Overcore },
   ];
 
   const rawStats = [
     { key: "Rolling_adjusted_XG", label: "XG Index" },
     { key: "Rolling_adjusted_XA", label: "XA Index" },
     { key: "Rolling_adjusted_BPS", label: "BPS Index" },
-    { key: "Overcore", label: "Goals/XG" }
+    { key: "Overcore", label: "Goals/XG" },
   ];
 
   const maxValues = {};
@@ -324,7 +337,7 @@ const playerFixtures = useMemo(() => {
 
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col items-center px-2 py-0 space-y-4">
+    <div className="min-h-screen bg-black text-white flex flex-col items-center px-0 py-0 space-y-3">
 
       <div className="w-full max-w-sm text-center">
         <Select
@@ -335,18 +348,27 @@ const playerFixtures = useMemo(() => {
           placeholder="Select or search player..."
         />
       </div>
+<div className="flex gap-10 justify-center mt-2">
+  {playerFilter && playerImageUrl && (
+    <div className="relative inline-block">
+      {/* Player headshot */}
+      <img
+        src={playerImageUrl}
+        alt={playerFilter}
+        onError={(e) => {
+            e.currentTarget.onerror = null;       // prevent loop
+            e.currentTarget.src = fallbackUrl;    // use fallback
+          }}
+        className="max-w-[140px] rounded shadow-lg"
+      />
 
-      <div className="flex gap-10 justify-center mt-6">
-        {playerFilter && playerImageUrl && (
-          <img src={playerImageUrl} alt={playerFilter} className="max-w-[140px] rounded shadow-lg" />
-          
-        )}
-    
+      {/* Price badge in top‑right */}
+      <div className="absolute top-1 -right-10 bg-royal-beige text-black text-xs font-bold px-1 py-1 rounded">
+        ${playerValue} M
       </div>
-      <div className="mt-2 bg-royal-beige text-black font-bold px-3 py-1 rounded border border-royal-gold">
-        Fantasy Price: {playerValue}M
-        
-      </div>
+    </div>
+  )}
+</div>
 
       {playerNews && playerNews !== "No news" && (
   <div className="mt-2 bg-red-700 text-royale-beige font-bold px-3 py-1 rounded border border-royal-red text-center">
@@ -354,40 +376,58 @@ const playerFixtures = useMemo(() => {
   </div>
 )}
 
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full max-w-6xl">
+      <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-4 gap-1 w-1xl ">
         {statCards.map((stat, idx) => (
           <div
             key={idx}
-            className="bg-royal-red text-royal-beige p-4 border border-royal-gold rounded-lg shadow text-center"
+            className="bg-royal-red text-royal-beige p-1 border border-royal-gold rounded-lg shadow text-center"
           >
             <h2 className="text-1xl font-semibold mb-2">{stat.title}</h2>
             <p className="text-2xl font-bold">{parseFloat(stat.value).toFixed(2)}</p>
           </div>
         ))}
       </div>
-<div className="w-full max-w-6xl mx-auto overflow-x-auto mt-6text-center">
-  <span className="flex items-center justify-center space-x-2 px-2 text-center">Fixtures</span>
-  <div className="flex items-center justify-center space-x-2 px-2 py-3 ">
-    {playerFixtures.map((row, idx) => (
-      <div
-        key={idx}
-        className="flex-shrink-0 flex flex-col items-center bg-royal-beige text-black p-2 rounded shadow-md"
-      >
-        <span className="text-xs font-semibold">GW {row.GW}</span>
-        {teamLogos[row["opponent_name"]] ? (
-  <img
-    src={teamLogos[row["opponent_name"]]}
-    alt={row["opponent_name"]}
-    className="h-8 w-8 object-contain"
-  />
-) : (
-  <span className="text-sm truncate">{row["Opponent Name"]}</span>
-)}
+<div className="w-full max-w-6xl mx-auto mt-6 text-center">
+      <h3 className="text-lg font-semibold mb-2">Fixtures</h3>
 
+      {/* Scrollable on xs, wrap & center on sm+ */}
+      <div
+        className="
+          flex flex-row 
+          overflow-x-auto    /* scroll on mobile */
+          sm:flex-wrap        /* wrap to new lines on sm+ */
+          sm:justify-center   /* center on sm+ */
+          justify-start       /* align left on mobile */
+          space-x-1 
+          sm:space-x-4 
+          px-2 py-2
+        "
+      >
+        {playerFixtures.map((row, idx) => (
+          <div
+            key={idx}
+            className="
+              flex-shrink-0 
+              flex flex-col items-center
+              bg-royal-beige text-black 
+              p-2 rounded shadow-md 
+              w-15 sm:w-auto
+            "
+          >
+            <span className="text-xs font-semibold">GW {row.GW}</span>
+            {teamLogos[row.opponent_name] ? (
+              <img
+                src={teamLogos[row.opponent_name]}
+                alt={row.opponent_name}
+                className="h-7 w-7 object-contain"
+              />
+            ) : (
+              <span className="text-sm truncate">{row.opponent_name}</span>
+            )}
+          </div>
+        ))}
       </div>
-    ))}
-  </div>
-</div>
+    </div>
 
 
       <h1 className="text-3xl font-bold text-royal-beige mt-10">Compare Player</h1>

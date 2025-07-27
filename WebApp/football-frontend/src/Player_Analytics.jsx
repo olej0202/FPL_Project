@@ -14,14 +14,14 @@ export default function Player_analytics() {
   }, [location, navigate]);
 
   return (
-    <div className="min-h-screen bg-black text-white px-4 py-6 space-y-6">
+    <div className="min-h-screen bg-black text-white px-4 py-1 space-y-0">
       {/* Tabs */}
       <div className="flex justify-center gap-4 mb-6">
         <NavLink
           to="Rankings"
           end
           className={({ isActive }) =>
-            `flex items-center gap-2 px-4 py-2 font-semibold  ${
+            `flex items-center gap-2 px-4 py-0 font-semibold  ${
               isActive
                 ? "border-b-2 border-royal-gold text-royal-gold hover:text-royal-gold"
                 : "text-white hover:text-royal-gold"
@@ -35,7 +35,7 @@ export default function Player_analytics() {
         <NavLink
           to="Individual"
           className={({ isActive }) =>
-            `flex items-center gap-2 px-4 py-2 font-semibold ${
+            `flex items-center gap-2 px-4 py-1 font-semibold ${
               isActive
                 ? "border-b-2 border-royal-gold text-royal-gold hover:text-royal-gold"
                 : "text-white hover:text-royal-gold"
