@@ -10,6 +10,8 @@ export default function FreeHitTeam() {
   const [playingPlayers, setPlayingPlayers] = useState([]);
   const [benchPlayers, setBenchPlayers] = useState([]);
   const [minGW, setMinGW] = useState(null);
+  const fallbackUrl = "https://d2kq0urxkarztv.cloudfront.net/51812cad594df29a1a0003f0/661303/upload-643ff5d9-840e-4bbb-b099-07c26ef505c9.png?w=578";
+
   const navigate = useNavigate();
 
    useEffect(() => {
@@ -81,6 +83,10 @@ function PlayerRow({ players, isBench = false, navigate }) {
             <img
                 src={player.photo}
                 alt={player.Name}
+                onError={(e) => {
+            e.currentTarget.onerror = null;       // prevent loop
+            e.currentTarget.src = fallbackUrl;    // use fallback
+          }}
                 className={`object-contain ${
                 isBench
                 ? "w-[45px] h-[65px] sm:w-[55px] sm:h-[75px]"

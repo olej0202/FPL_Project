@@ -545,24 +545,24 @@ def Generate_point_predictions():
 
         for i in range(len(player_data)):
             try:
-                goals.append((xgb_goals_player["pred"].values[i]*0.4
+                goals.append((xgb_goals_player["pred"].values[i]*0.3
                          +stat_goals_player["pred"].values[i]*0.4
-                         +DNN_goals_player["pred"].values[i]*0.2)*overscore)
+                         +DNN_goals_player["pred"].values[i]*0.3)*overscore)
             except:
                 goals.append(0)
 
             try:
 
-                assist.append((xgb_assist_player["pred"].values[i]*0.4
+                assist.append((xgb_assist_player["pred"].values[i]*0.3
                                     +stat_assist_player["pred"].values[i]*0.4
-                                    +DNN_assist_player["pred"].values[i]*0.2)*overassist)
+                                    +DNN_assist_player["pred"].values[i]*0.3)*overassist)
             except:
                 assist.append(0)
 
             try:
 
-                bps.append((xgb_bps_player["pred"].values[i]*0.4
-                                   +stat_bps_player["pred"].values[i]*0.6)*0.8)
+                bps.append((xgb_bps_player["pred"].values[i]*0.2
+                                   +stat_bps_player["pred"].values[i]*0.8)*0.8)
             except:
                 bps.append(0)
 
@@ -642,7 +642,6 @@ def Make_Predictions ():
 
         pred2=XGB(position_filter,"FWD",column_list,predlength)        
         Generate_LSTM_preds(position_filter,column_list,predlength)
-    Generate_point_predictions()
 
 
 
