@@ -19,7 +19,6 @@ export default function FreeHitTeam() {
       const data = freeHitData.current || [];
       setPlayingPlayers(data.filter(p => p.status === "Playing"));
       setBenchPlayers(data.filter(p => p.status === "Bench"));
-
       const gwList = data.map(p => Number(p.GW)).filter(gw => !isNaN(gw));
       setMinGW(Math.min(...gwList));
     });
@@ -67,7 +66,7 @@ function PlayerRow({ players, isBench = false, navigate,fallbackUrl }) {
   return (
     <div className="flex justify-center gap-3 py-2 overflow-x-auto">
       {players.map((player, idx) => {
-        const name = player.Name.match(/_([^ ]+)/)?.[1];// Get last name after _ or space
+        const name = player.web_name
         return (
           <div
             key={idx}

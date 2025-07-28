@@ -103,7 +103,7 @@ function PlayerRow({ players, isBench = false, navigate,fallbackUrl }) {
   return (
     <div className="flex justify-center gap-3 py-2 overflow-x-auto">
       {players.map((player, idx) => {
-        const name = player.Name.match(/_([^ ]+)/)?.[1] || player.Name;
+        const name = player.web_name
         return (
           <div
             key={idx}
@@ -143,7 +143,7 @@ function PlayerRow({ players, isBench = false, navigate,fallbackUrl }) {
 }
 
 function TransferCard({ player, label, navigate,fallbackUrl }) {
-  const name = player.Name.match(/_([^ ]+)/)?.[1] || player.Name;
+  const name = player.web_name
   return (
     <div className="flex flex-col items-center" onClick={() =>
               navigate("/Player_Analytics/Individual", {
