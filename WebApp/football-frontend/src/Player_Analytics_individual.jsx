@@ -376,11 +376,11 @@ const playerFixtures = useMemo(() => {
       />
 
       {/* Price badge in top‑right */}
-      <div className="absolute top-1 -right-14 bg-royal-beige text-black text-xs font-bold px-1 py-1 rounded text-center">
+      <div className="absolute top-1 -right-14 bg-black text-royal-beige text-xs font-bold px-1 py-1 rounded text-center">
         <span>Selected</span><br/>
     <span>{parseFloat(playerSelected).toFixed(1)}%</span>       
       </div>
-      <div className="absolute top-1 -left-14 bg-royal-beige text-black text-xs font-bold px-4 py-1 rounded text-center">
+      <div className="absolute top-1 -left-14 bg-black text-royal-beige text-xs font-bold px-4 py-1 rounded text-center">
         <span>Price</span><br/>
     <span>${playerValue}</span>       
       </div>
@@ -402,7 +402,7 @@ const playerFixtures = useMemo(() => {
             className="bg-royal-red text-royal-beige px-3 py-2 border border-royal-gold rounded-lg shadow text-center mr-1 mt-1"
           >
             <h2 className="text-1xl font-semibold mb-0">{stat.title}</h2>
-            <p className="text-2xl font-bold">{parseFloat(stat.value).toFixed(2)}</p>
+            <p className="text-1xl font-bold">{parseFloat(stat.value).toFixed(2)}</p>
           </div>
         ))}
       </div>
