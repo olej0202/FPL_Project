@@ -25,7 +25,6 @@ def GenerateOptimizeSet(Current_data_path):
         "selected_by_percent": "selected"
     })
     prediction_data=pd.read_csv("Model_Predictions.csv").iloc[:,1:]
-    print(len(prediction_data))
     
     merge_cols = ['Name2', 'value', 'team_code', 'news', 'selected']
     result = result[merge_cols]
@@ -38,7 +37,7 @@ def GenerateOptimizeSet(Current_data_path):
     visual_df['offset'] = visual_df['news'].apply(process_news)
     visual_df["selected"] = visual_df["selected"]/100
     visual_df["value"] = visual_df["value"]/10
-    visual_df["minutes_multiplier"] = np.minimum(1, visual_df['average_minutes'] / 80)
+    visual_df["minutes_multiplier"] = np.minimum(1, visual_df['average_minutes'] / 85)
     visual_df["selected"] = visual_df["selected"].clip(lower=0.01)
     visual_df["minutes_multiplier"] = visual_df["minutes_multiplier"].clip(lower=0.01)
     visual_df["news"] = visual_df["news"].fillna("No news")
@@ -91,7 +90,6 @@ def GenerateOptimizeSet(Current_data_path):
     
     visual_df=visual_df[visual_df["name"].isin(names)]
     visual_df.to_csv("Model_Predictions_visual.csv")
-    print(names)
 
     
 
@@ -112,7 +110,6 @@ def GenerateOptimizeSet(Current_data_path):
     values="Points_prediction",    # Values to pivot
     aggfunc="first"           # In case of duplicates, take the first
     ).reset_index()
-    print(pivoted_df)
 
     pivoted_df.to_csv("Model_Optimizer.csv")
         

@@ -56,6 +56,8 @@ def wildcard_optimize_team(sel_thresh, budget, columns, file_path="Model_Optimiz
         model += lpSum(x[i, t] * costs[i] for i in range(num_players)) <= budget
         for team in set(teams):
             model += lpSum(x[i, t] for i in range(num_players) if teams[i] == team) <= 3
+        for team in set(teams):
+            model += lpSum(x[i, t] for i in range(num_players) if teams[i] == team and positions[i] in ("GKP", "DEF")) <= 2
         model += lpSum(x[i, t] for i in range(num_players)) == 15
         model += lpSum(x[i, t] for i in range(num_players) if positions[i] == 'DEF') == 5
         model += lpSum(x[i, t] for i in range(num_players) if positions[i] == 'GKP') == 2
@@ -205,6 +207,9 @@ def freeHit_optimize_team(sel_thresh, budget, columns, file_path="Model_Optimize
     # Max 3 Players per Team Constraint
     for team in set(teams):
         model += lpSum(x[i] for i in range(num_players) if teams[i] == team) <= 3
+    
+    for team in set(teams):
+            model += lpSum(x[i] for i in range(num_players) if teams[i] == team and positions[i] in ("GKP", "DEF")) <= 2
 
     # Total Players Constraint (15 players in squad)
     model += lpSum(x[i] for i in range(num_players)) == 15

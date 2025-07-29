@@ -164,8 +164,7 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
     print(f"Mean Squared Error on CS: {mse:.4f}")
 
 
-    print("ROC AUC:", roc_auc_score(y_CS_test, y_pred_CS))
-    print("Accuracy:", accuracy_score(y_CS_test, y_pred_CS > 0.37))
+
 
     # Assuming your model predicted probabilities:
     y_pred_CS_binary = (y_pred_CS > 0.37).astype(int)
@@ -221,7 +220,6 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
     df_merged['Cluster_XGC_x'] = df_merged['Cluster_XGC_x'].fillna(1.9)
     nan_rows = df_merged[df_merged.isna().any(axis=1)]
 
-    print(nan_rows)
 
 
 

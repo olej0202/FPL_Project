@@ -363,8 +363,6 @@ def get_understat(player_df,Own_team_name,pos,element_list,season_list,position)
         df_reversed = df_reversed[(df_reversed['a_team'] == Own_team_name) | (df_reversed['h_team'] == Own_team_name)]
         df_reversed = df_reversed.drop_duplicates(subset=['date'])
         merged_df = pd.merge(df_minutes, df_reversed,left_on='kickoff_time', right_on='date', how='left')
-        print(df_reversed["date"])
-        print(df_minutes["kickoff_time"])
         df_minutes['gamepos'] = merged_df['position_y'].values
         df_minutes['xGChain'] = merged_df['xGChain'].values
         df_minutes['xGBuildup'] = merged_df['xGBuildup'].values
@@ -387,9 +385,7 @@ def get_understat(player_df,Own_team_name,pos,element_list,season_list,position)
     return df_minutes,most_common_value
 
 def rolling_mode(series):
-    print(series)
     m = mode(series, nan_policy='omit')  # Ignore NaN values
-    print(m)
 
     return  m.mode  # Return the first mode value
 
@@ -849,7 +845,7 @@ def team_transformed2():
 
         new_factor=max(1,3-0.25*len(elo_history[team]))
         # Update ratings
-        surprise_multiplier = abs(actual_result - expected_team) * 2  # tweakable
+        surprise_multiplier = abs(actual_result - expected_team) * 1.5  # tweakable
         delta_elo = new_factor*k_elo * (actual_result - expected_team)*surprise_multiplier
         elo_rating[team] += delta_elo
         # Store history
@@ -858,7 +854,7 @@ def team_transformed2():
     new_team_df=pd.read_csv("Team_data_transformed.csv").iloc[:,1:]
     new_team_df_newest=pd.read_csv("Team_data_newest.csv").iloc[:,1:]
 
-    overall_weight=0.0
+    overall_weight=0.3
 
     team_transformed_df=pd.DataFrame()
     team_transformed_df_newest=pd.DataFrame()
@@ -870,24 +866,24 @@ def team_transformed2():
         slope_df["XGC"]=def_rating_history[team]
         slope_df["XGC_slope"]=slope_df['XGC'].rolling(window=6, min_periods=1).apply(rolling_slope, raw=True)
         selected_team_df=new_team_df[new_team_df["code"]==team].copy()
-        selected_team_df["XGA"]=((1-overall_weight) * np.array(off_rating_away_history[team][:-1]) +overall_weight * np.array(off_rating_history[team][:-1]))
-        selected_team_df["XGCA"]=((1-overall_weight)  * np.array(def_rating_away_history[team][:-1]) +overall_weight * np.array(def_rating_history[team][:-1]))
-        selected_team_df["XGH"]=((1-overall_weight)  * np.array(off_rating_home_history[team][:-1]) +overall_weight * np.array(off_rating_history[team][:-1])) 
-        selected_team_df["XGCH"]=((1-overall_weight)  * np.array(def_rating_home_history[team][:-1]) +overall_weight* np.array(def_rating_history[team][:-1]))
-        selected_team_df["XG_avg"]=off_rating_history[team][:-1]
-        selected_team_df["XGC_avg"]=def_rating_history[team][:-1]
+        selected_team_df["XGA"]=((1-overall_weight) * np.array(off_rating_away_history[team][:-1]) +overall_weight * selected_team_df["XGA"])
+        selected_team_df["XGCA"]=((1-overall_weight)  * np.array(def_rating_away_history[team][:-1]) +overall_weight * selected_team_df["XGCA"])
+        selected_team_df["XGH"]=((1-overall_weight)  * np.array(off_rating_home_history[team][:-1]) +overall_weight * selected_team_df["XGH"]) 
+        selected_team_df["XGCH"]=((1-overall_weight)  * np.array(def_rating_home_history[team][:-1]) +overall_weight* selected_team_df["XGCH"])
+        selected_team_df["XG_avg"]=((1-overall_weight)  * np.array(off_rating_history[team][:-1]) +overall_weight* selected_team_df["XG_avg"])
+        selected_team_df["XGC_avg"]=((1-overall_weight)  * np.array(def_rating_history[team][:-1]) +overall_weight* selected_team_df["XGC_avg"])
         selected_team_df['XG_slope']=slope_df["XG_slope"].values[:-1]
         selected_team_df['XGC_slope']=slope_df["XGC_slope"].values[:-1]
         selected_team_df["Elo_Rating"]=elo_history[team][:-1]
         team_transformed_df=pd.concat([team_transformed_df, selected_team_df], axis=0, ignore_index=True)
 
         newest_selected_team_df=new_team_df_newest[new_team_df_newest["code"]==team].copy()
-        newest_selected_team_df["XGA"]=off_rating_away_history[team][-1]*(1-overall_weight) +off_rating_history[team][-1]*overall_weight
-        newest_selected_team_df["XGCA"]=def_rating_away_history[team][-1]*(1-overall_weight) +def_rating_history[team][-1]*overall_weight
-        newest_selected_team_df["XGH"]=off_rating_home_history[team][-1]*(1-overall_weight) +off_rating_history[team][-1]*overall_weight
-        newest_selected_team_df["XGCH"]=def_rating_home_history[team][-1]*(1-overall_weight) +def_rating_history[team][-1]*overall_weight
-        newest_selected_team_df["XG_avg"]=off_rating_history[team][-1]
-        newest_selected_team_df["XGC_avg"]=def_rating_history[team][-1]
+        newest_selected_team_df["XGA"]=off_rating_away_history[team][-1]*(1-overall_weight) +overall_weight * newest_selected_team_df["XGA"]
+        newest_selected_team_df["XGCA"]=def_rating_away_history[team][-1]*(1-overall_weight) +overall_weight * newest_selected_team_df["XGCA"]
+        newest_selected_team_df["XGH"]=off_rating_home_history[team][-1]*(1-overall_weight) +overall_weight * newest_selected_team_df["XGH"]
+        newest_selected_team_df["XGCH"]=def_rating_home_history[team][-1]*(1-overall_weight) +overall_weight * newest_selected_team_df["XGCH"]
+        newest_selected_team_df["XG_avg"]=off_rating_history[team][-1]*(1-overall_weight) +overall_weight * newest_selected_team_df["XG_avg"]
+        newest_selected_team_df["XGC_avg"]=def_rating_history[team][-1]*(1-overall_weight) +overall_weight * newest_selected_team_df["XGC_avg"]
         newest_selected_team_df['XG_slope']=slope_df["XG_slope"].values[-1]
         newest_selected_team_df['XGC_slope']=slope_df["XGC_slope"].values[-1]
         newest_selected_team_df["Elo_Rating"]=elo_history[team][-1]
@@ -975,7 +971,6 @@ def main_Transform():
         if (player_df["minutes"].sum() < 100):
             unwanted_players.append([name_string, len(player_df),player_df["minutes"].mean()])
         if (len(player_df) > (4)) and (player_df["minutes"].sum() > 100):
-            print("**************************************************")
             lookback=12
             lb2=12
             poslist = [pos] * len(player_df)
@@ -1096,8 +1091,7 @@ def main_Transform():
             
             player_df['Cluster_XG']=cluster_df['Cluster_XG'].values
             player_df['Cluster_XA']=cluster_df['Cluster_XA'].values
-            print("CLUSTER")
-            print(latest_rows_cluster)
+
             if(namelist[0]=="Mohamed_Salah"):
                 latest_rows_cluster.to_csv("test_cluster.csv")
                 cluster_df[['name','Cluster','Cluster_XG','Cluster_XA','expected_goals']].to_csv("test_cluster2.csv")
@@ -1199,7 +1193,6 @@ def adjust_measure(df, measure_name):
     player_df=df.copy()
     clipper_val=player_df[measure_name].max()
     std=player_df[measure_name].std()
-    print(std)
     #player_df[measure_name] = player_df[measure_name].clip(lower=0.0, upper=1.5)
     n_matches=len(player_df)
     new_expected_goals=[]

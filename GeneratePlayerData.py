@@ -97,8 +97,7 @@ def next_opp(team, n_future, fixtures,kmeans,team_code,current_teams):
         XGC_FWD.append(next_opp_newest_row["XG_FORWARD"])
         XGC_MID.append(next_opp_newest_row["XG_MID"])
         kl+=1
-    print(GW)
-    print(XGH)
+
     return clusters,home,n_matches,XGH,XGCH,XGA,XGCA,XGC_DEF,XGC_FWD,XGC_MID,own_XG,GW,played_XGC,played_XG,opp_code
 
 
@@ -110,16 +109,14 @@ def team_data(current_teams):
     # 2) find which codes are present in your input but missing from the dataset
     codes          = current_teams["code"].unique()
     existing_codes = teams_dataset["code"].unique()
-    print(codes)
-    print(existing_codes)
+
     missing_codes  = [c for c in codes if c not in existing_codes]
     
     average_team_codes=[13, 90, 102, 40,49]
     average_df=teams_dataset[teams_dataset["code"].isin(average_team_codes)]
 
     if not missing_codes:
-        print(missing_codes)
-        print("ikke")
+
         return teams_dataset
 
     # 3) decide which columns to average
@@ -130,7 +127,6 @@ def team_data(current_teams):
     # 4) build one synthetic row per missing code
     synthetic_rows = []
     for code in missing_codes:
-        print(code)
         # pick up the name/id from your current_teams input
         row_info = current_teams.loc[current_teams["code"] == code].iloc[0]
         synthetic = {
@@ -182,7 +178,8 @@ def GeneratePlayerData(Future, fixture_path,current_player_path, current_teams_p
     "Idrissa_Gana Gueye": "Idrissa_Gueye",
     "Alisson_Becker": "Alisson_Ramses Becker",
     "Luis_Díaz Marulanda": "Luis_Díaz",
-    "Matheus_Nunes":"Matheus Luiz_Nunes",
+    "Matheus Luiz_Nunes":"Matheus_Nunes",
+    "Alejandro_Garnacho Ferreyra":"Alejandro_Garnacho"
 }
     relevant_players["name"] = relevant_players["name"].apply(lambda n: name_map.get(n, n))
 
@@ -201,8 +198,7 @@ def GeneratePlayerData(Future, fixture_path,current_player_path, current_teams_p
         playerMins=xmins[xmins["name"]==name]
         minutes=playerMins["minutes"].values[0]
         
-        print(player_row2)
-        print(player_row)
+
 
         team_id=player_row2["team"].values[0]
         team_code=player_row2["team_code"].values[0]
@@ -274,11 +270,9 @@ def GeneratePlayerData(Future, fixture_path,current_player_path, current_teams_p
             player_row = pd.DataFrame([own_new_row])
 
         pd.DataFrame(missing_player).to_csv("MIssing_players.csv")
-        print(player_row2)
         clusters,home,n_matches,XGH,XGCH,XGA,XGCA,XGC_DEF,XGC_FWD,XGC_MID,own_XG,GW,played_XGC,played_XG,opp_code=next_opp(team_id, Future, fixture_data,kmeans,team_code,current_teams)
         if(len(clusters)<2):
-            print("mindre")
-            print(XGH)
+
             break
         for i in range(len(clusters)):
                 player_row["Cluster"] = clusters[i]
@@ -301,7 +295,6 @@ def GeneratePlayerData(Future, fixture_path,current_player_path, current_teams_p
             
 
                 Future_dataframe=pd.concat([Future_dataframe, player_row], axis=0, ignore_index=True)
-    print(Future_dataframe)
     Future_dataframe.to_csv("Player_Prediction_set.csv")
     missing_names = [name for name in names if name not in Future_dataframe["name"].values]
     print("Missing players:", missing_names)

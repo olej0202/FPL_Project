@@ -54,7 +54,6 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
     all_preds=[]
     MSE=[]
     for i in range(len(players)):
-        print(players[i])
         preds=[]
         val_preds=[]
         val_real=[]
@@ -80,8 +79,6 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
 
             attacking_factor=(df["opposition_xgc"].values[h]+team_xg)*0.5
             defensive_factor=(team_CS)
-            print("Defensive_factor")
-            print(defensive_factor)
             if(pred_variable=="GOALS"):
                player_preds.append((df['Rolling_adjusted_XG'].values[h])*(attacking_factor))
                real_variable="expected_goals" 
@@ -109,7 +106,6 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
     columns=["Name", "GW", "pred", "position", "opp_stat"]
     data_f=pd.DataFrame(all_preds, columns=columns)
     data_f.to_csv(f"STAT_{pred_variable}.csv", index=False)
-    #print(sum(MSE) / len(MSE))
 def XGB_Make_dataset(position,position2):
     df=pd.read_csv("ML_training2.csv").iloc[:,1:]
 
@@ -180,16 +176,16 @@ def XGB_Make_dataset(position,position2):
     if(position=='GOALS'):
         trainingdf=trainingdf[trainingdf['position'].isin(["FWD", "DEF", "MID"])]
         trainingdf=trainingdf[["expected_goals","opposition_xgc","Own_Attacking_form","XG_slope","rolling_shots",
-                               "Team","name","time","minutes","season","rolling_Threat","position","rolling_XG_historic","Rolling_adjusted_XG2","Rolling_adjusted_XG_form"]]
+                               "Team","name","time","minutes","season","rolling_Threat","position","rolling_XG_historic","Rolling_adjusted_XG_form"]]
         test_columns=["expected_goals","played_XGC","Own_Attacking_form","XG_slope","rolling_shots",
-                               "Team","name","time","minutes","season","rolling_Threat","position","rolling_XG_historic","Rolling_adjusted_XG","Rolling_adjusted_XG_form"]
+                               "Team","name","time","minutes","season","rolling_Threat","position","rolling_XG_historic","Rolling_adjusted_XG_form"]
         target_value="expected_goals"
         
     elif(position=='Assist2'):
         trainingdf=trainingdf[trainingdf['position'].isin(["FWD", "DEF", "MID"])]
-        trainingdf=trainingdf[["XA_diff","position","opposition_xgc","Own_Attacking_form","Rolling_adjusted_XA2","Team","name","Own_cluster","Cluster"
+        trainingdf=trainingdf[["XA_diff","position","opposition_xgc","Own_Attacking_form","Team","name","Own_cluster","Cluster"
                    ,"time","minutes","rolling_XA_historic","XA_Mean_difference","season","rolling_key_passes","XA_slope"]]
-        test_columns=["XA_diff","position","played_XGC","Own_Attacking_form","Rolling_adjusted_XA","Team","name","Own_cluster","Cluster"
+        test_columns=["XA_diff","position","played_XGC","Own_Attacking_form","Team","name","Own_cluster","Cluster"
                    ,"time","minutes","rolling_XA_historic","XA_Mean_difference","season","rolling_key_passes","XA_slope"]
         target_value="XA_Mean_difference"
         
@@ -232,7 +228,6 @@ def XGB_Make_dataset(position,position2):
         test_columns=["played_XG","played_XGC", "rolling_form","rolling_XG","Team","name","Own_cluster","Cluster"
                    ,"was_home","total_points","rolling_GS","rolling_XA","time","gamepos",'Future_XG',"Future_XGA"]
     trainingdf.to_csv("xgb_test_data.csv")
-    print(target_value)
     return trainingdf,target_value,test_columns
     
 def XGB_Train(rounds, eta,max_depth,gamma,min_c,dtrain,target_value,train,Y_train  ):
@@ -326,8 +321,6 @@ def XGB_Make_Pred(trainingdf,target_value,position2,column_list,predlength,posit
 
     X_test.columns = X_train.columns
 
-    print(X_test)
-
     total=[]
     
     Y_train=X_train[[target_value]]
@@ -371,7 +364,6 @@ def XGB_Make_Pred(trainingdf,target_value,position2,column_list,predlength,posit
             row_pred.append(preds_list[i])
             gw=gws[y]
             row=filtered_df.iloc[[y]] 
-            print(row)
             dtest = xgb.DMatrix(row, label=[y],enable_categorical=True)
         
             if(position in ["GOALS","Assist"]):
@@ -470,7 +462,6 @@ def Generate_LSTM_preds(pred,column_list,predlength):
             preds.append(player_name)
             position=row2["position"].values[0]
             gw=row2["GW"].values[0]
-            print(gw)
             val_series_scaled = scaler.transform(row)
             X_val_tensor = torch.tensor(val_series_scaled, dtype=torch.float32)
             with torch.no_grad():
@@ -546,16 +537,16 @@ def Generate_point_predictions():
         for i in range(len(player_data)):
             try:
                 goals.append((xgb_goals_player["pred"].values[i]*0.2
-                         +stat_goals_player["pred"].values[i]*0.4
-                         +DNN_goals_player["pred"].values[i]*0.4)*overscore)
+                         +stat_goals_player["pred"].values[i]*0.5
+                         +DNN_goals_player["pred"].values[i]*0.3)*overscore)
             except:
                 goals.append(0)
 
             try:
 
-                assist.append((xgb_assist_player["pred"].values[i]*0.4
-                                    +stat_assist_player["pred"].values[i]*0.4
-                                    +DNN_assist_player["pred"].values[i]*0.2)*overassist)
+                assist.append((xgb_assist_player["pred"].values[i]*0.2
+                                    +stat_assist_player["pred"].values[i]*0.5
+                                    +DNN_assist_player["pred"].values[i]*0.3)*overassist)
             except:
                 assist.append(0)
 
@@ -598,12 +589,12 @@ def Generate_point_predictions():
         if(position=="FWD"):
             summary_dataset["Points_prediction"]=(2+summary_dataset["Goal_pred"]*4
                                                   +summary_dataset["Assist_pred"]*3
-                                                  +summary_dataset["Bonus_pred"])*0.9+0.1*summary_dataset["Fantasy_pred"]
+                                                  +summary_dataset["Bonus_pred"])*0.8+0.2*summary_dataset["Fantasy_pred"]
         elif(position=="MID"):
             summary_dataset["Points_prediction"]=(2+summary_dataset["Goal_pred"]*5
                                                   +summary_dataset["Assist_pred"]*3
                                                   +summary_dataset["Bonus_pred"]
-                                                  +summary_dataset["GC_pred"])*0.9+0.1*summary_dataset["Fantasy_pred"]
+                                                  +summary_dataset["GC_pred"])*0.8+0.2*summary_dataset["Fantasy_pred"]
             
         elif(position=="GKP"):
             summary_dataset["Points_prediction"]=(2

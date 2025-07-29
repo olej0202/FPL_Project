@@ -43,8 +43,8 @@ def Data_Transformation(n_points_in_future, current_fixture_path,current_player_
 
     
 def Data_Predictions(current_fixture_path,current_team_path, n_points_in_future):
-    GenerateTeamPredictions( current_fixture_path,current_team_path, n_points_in_future)
-    Make_Predictions()
+    #GenerateTeamPredictions( current_fixture_path,current_team_path, n_points_in_future)
+    #Make_Predictions()
     Generate_point_predictions()
     
    
@@ -71,11 +71,11 @@ def Main_Orchestration():
     current_raw_data_path="Raw_Data_24\Fantasy_season_2024_data.csv"
     
     #EXTARCT DATA
-    Data_Extraction(season,is_new_season,has_been_error)
+    #Data_Extraction(season,is_new_season,has_been_error)
     
     
     #Transform data
-    Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path)
+    #Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path)
     
     #Predict data
     Data_Predictions(current_fixture_path,current_team_path, n_points_in_future)
