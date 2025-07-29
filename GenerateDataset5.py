@@ -744,9 +744,9 @@ def team_transformed2():
 
 
 
-        k_def = 0.06
-        k_off=0.06
-        min_val=0.6
+        k_def = 0.07
+        k_off=0.07
+        min_val=0.5
 
         actual_goals = xg
         if was_home==1:
@@ -1205,7 +1205,7 @@ def adjust_measure(df, measure_name):
     new_expected_goals=[]
     current_expected_goals_start_value=player_df[measure_name].mean()
     current_expected_goals=current_expected_goals_start_value
-    smoothing_f=0.06
+    smoothing_f=0.08
     min_val=std
     count=0
     in_row=0
@@ -1221,7 +1221,7 @@ def adjust_measure(df, measure_name):
             else:
                 in_row=0
                 in_row_fac=1
-            if(in_row>2):
+            if(in_row>3):
                 in_row_fac=1.5
 
             new_expected_goals.append(min(clipper_val,current_expected_goals+in_row_fac*offset*smoothing_f*min(min_val,max(-min_val,player_df[measure_name].values[i]-pred_scored))))

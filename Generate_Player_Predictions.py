@@ -531,11 +531,11 @@ def Generate_point_predictions():
 
         xgb_fantasy_player= xgb_fantasy[xgb_fantasy["Name"]==player].sort_values(by=["GW", "opp_stat"])
 
-        overscore=max(0.8,player_data["Average_Overscore"].values[0])
+        overscore=max(0.9,player_data["Average_Overscore"].values[0])
         overscore=min(1.4,overscore)
 
         overassist=max(0.8,player_data["Average_OverAssist"].values[0])
-        overassist=min(1.8,overassist)
+        overassist=min(2,overassist)
 
         goals=[]
         assist=[]
@@ -545,17 +545,17 @@ def Generate_point_predictions():
 
         for i in range(len(player_data)):
             try:
-                goals.append((xgb_goals_player["pred"].values[i]*0.3
+                goals.append((xgb_goals_player["pred"].values[i]*0.2
                          +stat_goals_player["pred"].values[i]*0.4
-                         +DNN_goals_player["pred"].values[i]*0.3)*overscore)
+                         +DNN_goals_player["pred"].values[i]*0.4)*overscore)
             except:
                 goals.append(0)
 
             try:
 
-                assist.append((xgb_assist_player["pred"].values[i]*0.3
+                assist.append((xgb_assist_player["pred"].values[i]*0.4
                                     +stat_assist_player["pred"].values[i]*0.4
-                                    +DNN_assist_player["pred"].values[i]*0.3)*overassist)
+                                    +DNN_assist_player["pred"].values[i]*0.2)*overassist)
             except:
                 assist.append(0)
 

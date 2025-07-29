@@ -24,7 +24,7 @@ const METRICS = {
   rolling_ICT: "ICT Index"
 };
 
-const SUM_METRICS = ["Points_prediction", "Goal_pred"];
+const SUM_METRICS = ["Points_prediction", "Goal_pred","Assist_pred"];
 
 export default function Player_analytics_rankings() {
   const [rawData, setRawData] = useState([]);

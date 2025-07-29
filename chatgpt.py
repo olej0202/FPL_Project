@@ -225,7 +225,7 @@ def main_GPT_News():
             print(f"⚠️ Failed to process story {i+1}: {e}")
 
     # Add FPL Tips
-    fpl_tips = generate_fpl_tips_from_csv("Model_predictions.csv")
+    """fpl_tips = generate_fpl_tips_from_csv("Model_predictions.csv")
     if fpl_tips:
         news_df = pd.concat([
             news_df,
@@ -238,7 +238,7 @@ def main_GPT_News():
                 "source": "Fantasy Model"
             }])
         ], ignore_index=True)
-        print("✅ Added FPL tips section.")
+        print("✅ Added FPL tips section.")"""
 
     news_df.to_csv("PL_news.csv", index=False)
     print("\n📝 Final DataFrame:")
