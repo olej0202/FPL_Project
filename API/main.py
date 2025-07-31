@@ -110,7 +110,7 @@ def get_my_team_optimize(
         )
     except ValueError as e:
         # e.g. if team_id not found or invalid params
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str("Team not found"))
 
     return df.to_dict(orient="records")
 
