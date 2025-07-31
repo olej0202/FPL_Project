@@ -157,6 +157,7 @@ def GeneratePlayerData(Future, fixture_path,current_player_path, current_teams_p
     current_players=pd.read_csv(current_player_path).iloc[:,1:]
     current_teams=pd.read_csv(current_teams_path)
     season_data=pd.read_csv("Unwanted_players.csv").iloc[:,1:]
+    cbi_data=pd.read_csv("GenerateCBI.csv")
     kmeans = joblib.load('kmeans_Groundmodel.pkl')
     relevant_players = current_players.copy()
     name_map = {
@@ -185,6 +186,7 @@ def GeneratePlayerData(Future, fixture_path,current_player_path, current_teams_p
 
     xmins=pd.read_csv("GenerateXmins.csv")
     xmins["name"] = xmins["name"].apply(lambda n: name_map.get(n, n))
+    cbi_data["name"] = cbi_data["name"].apply(lambda n: name_map.get(n, n))
     current_players["name"] = current_players["name"].apply(lambda n: name_map.get(n, n))
 
     names=relevant_players["name"].unique()
@@ -196,6 +198,7 @@ def GeneratePlayerData(Future, fixture_path,current_player_path, current_teams_p
         ]        
         player_row2=current_players[current_players["name"]==name]
         playerMins=xmins[xmins["name"]==name]
+        playerCBI=cbi_data[cbi_data["name"]==name]
         minutes=playerMins["minutes"].values[0]
         
 
@@ -217,6 +220,7 @@ def GeneratePlayerData(Future, fixture_path,current_player_path, current_teams_p
         if(element_type==5):
                 continue
         player_row["position"]=position
+        
 
 
         if len(player_row)<1:
@@ -270,6 +274,21 @@ def GeneratePlayerData(Future, fixture_path,current_player_path, current_teams_p
             player_row = pd.DataFrame([own_new_row])
 
         pd.DataFrame(missing_player).to_csv("MIssing_players.csv")
+        if (position=='GKP'):
+            player_row["CBI"]=0
+            
+        elif (position=='DEF'):
+            player_row["CBI"]=3.8
+            
+        elif (position=='MID'):
+            player_row["CBI"]=0
+            
+        elif (position=='FWD'):
+            player_row["CBI"]=0
+        if(len(playerCBI)>0):
+            player_row["CBI"]=playerCBI["CBI"].values[0]
+
+                
         clusters,home,n_matches,XGH,XGCH,XGA,XGCA,XGC_DEF,XGC_FWD,XGC_MID,own_XG,GW,played_XGC,played_XG,opp_code=next_opp(team_id, Future, fixture_data,kmeans,team_code,current_teams)
         if(len(clusters)<2):
 

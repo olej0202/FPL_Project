@@ -69,7 +69,6 @@ useEffect(() => {
               return (
                 <Wrapper
                   key={idx}
-                  {...wrapperProps}
                   className="block bg-royal-red border border-royal-gold p-4 rounded-lg shadow-md hover:bg-royal-red/80 transition duration-200 text-inherit no-underline"
                 >
                   <p className="text-sm text-royal-beige mb-2">
@@ -80,7 +79,7 @@ useEffect(() => {
                       </span>
                     )}
                   </p>
-                  <p className="whitespace-pre-line">{article.content}</p>
+                  <p className="whitespace-pre-line text-royale-beige">{article.content}</p>
                 </Wrapper>
               );
             })}

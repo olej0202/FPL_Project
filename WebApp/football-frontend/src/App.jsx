@@ -53,7 +53,7 @@ export default function App() {
               alt="FPL Logo"
               className="h-14 w-14 object-contain"
             />
-            <span className="px-2 text-2xl font-bold">FPL Analytics</span>
+            
           </div>
 
           {/* Desktop Nav (md+) */}

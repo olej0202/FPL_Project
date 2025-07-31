@@ -4,7 +4,7 @@ import { useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { useStatsData } from "./Contexts/StatsContext";
 import Slider from "@mui/material/Slider";
-import { Table, BarChart2, Trash2 ,ChevronDown , Save } from "lucide-react";
+import { Table, BarChart2, Trash2 ,ChevronDown , Save,X } from "lucide-react";
 import CustomTooltip from "./components/graphTooltip_player";
 import NameModal from "./components/NameAnalysis";
 import teamLogos from "./utils/team_logos";
@@ -326,6 +326,34 @@ const playerFixtures = useMemo(() => {
     .sort((a, b) => a.GW - b.GW);
 }, [PlayersData.current, playerFilter]);
 
+const compareFixtures = useMemo(() => {
+  if (!comparePlayer || !Array.isArray(PlayersData.current)) return [];
+  return PlayersData.current
+    .filter((d) => d.name === comparePlayer)
+    .sort((a, b) => a.GW - b.GW);
+}, [PlayersData.current, comparePlayer]);
+
+const fixtureData = useMemo(() => {
+  // get all GWs
+  const allGWs = Array.from(
+    new Set([
+      ...playerFixtures.map((d) => d.GW),
+      ...compareFixtures.map((d) => d.GW),
+    ])
+  ).sort((a, b) => a - b);
+
+  return allGWs.map((gw) => {
+    const p1 = playerFixtures.find((d) => d.GW === gw);
+    const p2 = compareFixtures.find((d) => d.GW === gw);
+    return {
+      GW: gw,
+      [playerFilter]: p1 ? p1.Points_prediction : null,
+      [comparePlayer]: p2 ? p2.Points_prediction : null,
+    };
+  });
+}, [playerFixtures, compareFixtures, playerFilter, comparePlayer]);
+
+
 
 
   const CustomRadarTooltip = ({ active, payload, label }) => {
@@ -407,7 +435,7 @@ const playerFixtures = useMemo(() => {
         ))}
       </div>
 <div className="w-full max-w-6xl mx-auto mt-6 text-center">
-      <h3 className="text-lg font-semibold mb-2">Fixtures next {playerFixtures.length} Gws</h3>
+      <h3 className="text-lg font-semibold mb-2">Fixtures next {playerFixtures.length} GWs</h3>
 
       {/* Scrollable on xs, wrap & center on sm+ */}
       <div
@@ -466,49 +494,73 @@ const playerFixtures = useMemo(() => {
 <div className="w-full max-w-6xl mx-auto mt-6 border border-royal-gold">
   
   <div className="h-52 bg-royal-red rounded shadow-md p-1">
-    <ResponsiveContainer width="100%" height="100%">
-      <LineChart
-        data={playerFixtures}
-        margin={{ top: 0, right: 5, left: 0, bottom: 5 }}
-      >
-        <CartesianGrid stroke="#444" strokeDasharray="3 3" />
+<ResponsiveContainer width="100%" height="100%">
+  <LineChart data={fixtureData} margin={{ top: 0, right: 5, left: 0, bottom: 5 }}>
+    <CartesianGrid stroke="#444" strokeDasharray="3 3" />
+    <XAxis dataKey="GW" tick={{ fill: "#fff" }} />
+    <YAxis tick={{ fill: "#fff" }} domain={["auto", "auto"]} />
+    <Tooltip
+      contentStyle={{ backgroundColor: "#222", borderColor: "#FFD700" }}
+      itemStyle={{ color: "#fff" }}
+      labelStyle={{ color: "#fff" }}
+      formatter={(v) => (v != null ? v.toFixed(1) : "-")}
+      labelFormatter={(l) => `GW ${l}`}
+    />
+    <Legend verticalAlign="bottom" align="right" />
+    <Line
+      type="monotone"
+      dataKey={playerFilter}
+      name={playerFilter}
+      stroke="#fff"
+    />
+    {comparePlayer && (
+      <Line
+        type="monotone"
+        dataKey={comparePlayer}
+        name={comparePlayer}
 
-        <XAxis
-          dataKey="GW"
-          tick={{ fill: "#fff" }}
-        />
+        stroke="#FFD700"
+      />
+    )}
+  </LineChart>
+</ResponsiveContainer>
 
-        {/* YAxis without a label, dynamic auto‐scaling */}
-        <YAxis
-          tick={{ fill: "#fff"  }}
-          domain={["auto", "auto"]}
-        />
 
-        <Tooltip
-          contentStyle={{ backgroundColor: "#222", borderColor: "#FFD700" }}
-          itemStyle={{ color: "#fff"  }}
-          labelStyle={{ color: "#fff" }}
-          formatter={(value) => value.toFixed(1)}        // 1 decimal place
-          labelFormatter={(label) => `GW ${label}`}
-        />
-
-        <Line
-          type="monotone"
-          dataKey="Points_prediction"
-          stroke="#fff" 
-          dot={{ fill: "#FFD700" }}
-          activeDot={{ r: 6 }}
-        />
-      </LineChart>
-    </ResponsiveContainer>
+    
   </div>
 </div>
 
       <h1 className="text-3xl font-bold text-royal-beige mt-10">Compare Player</h1>
       <div className="flex gap-10 justify-center mt-6">
-      {comparePlayer && compareImageUrl && (
-          <img src={compareImageUrl} alt={comparePlayer} className="max-w-[140px] rounded shadow-lg" />
-        )}
+      {comparePlayer && (
+  <div className="flex justify-center mt-4">
+    <div className="relative inline-block">
+      {/* the player’s portrait */}
+      <img
+        src={compareImageUrl}
+        alt={comparePlayer}
+        className="max-w-[140px] rounded shadow-lg"
+      />
+
+      {/* the little “X” button in the corner */}
+      <button
+        onClick={() => {
+          setComparePlayer("");
+          setCompareStats({});
+          setCompareImageUrl("");
+        }}
+        className="
+          absolute -top-1 -right-14
+          bg-black bg-opacity-50 
+          p-1 rounded-full 
+          hover:bg-opacity-50
+        "
+      >
+        <X size={40} className="text-red-700 hover:text-red-500" />
+      </button>
+    </div>
+  </div>
+)}
       </div>
 
       <div className="w-full max-w-sm text-center">
@@ -520,19 +572,48 @@ const playerFixtures = useMemo(() => {
           placeholder="Compare with..."
         />
         </div>
-        {comparePlayer && (
-  <div className="flex justify-center mt-4">
-  <button
-    onClick={() => {
-      setComparePlayer("");
-      setCompareStats({});
-      setCompareImageUrl("");
-    }}
-    className="px-10 py-2 bg-red-700 text-white rounded border border-royal-gold hover:bg-red-800 transition"
-  >
-    Remove
-  </button>
-</div>
+
+{comparePlayer && compareFixtures.length > 0 && (
+  <div className="w-full max-w-6xl mx-auto mt-6 text-center">
+    <h3 className="text-lg font-semibold mb-2">
+      Fixtures next {compareFixtures.length} GWs
+    </h3>
+    <div
+      className="
+        flex flex-row overflow-x-auto sm:flex-wrap sm:justify-center 
+        justify-start space-x-1 sm:space-x-4 px-2 py-2
+      "
+    >
+      {compareFixtures.map((row, idx) => (
+        <div
+          key={idx}
+          onClick={() =>
+            navigate("/Team_Analytics/Team_Individual", {
+              state: { selectedTeam: row.opponent_name },
+            })
+          }
+          className="
+            flex-shrink-0 flex flex-col items-center
+            bg-royal-beige text-black p-2 rounded shadow-md w-15 sm:w-auto
+          "
+        >
+          <span className="text-xs font-semibold">GW {row.GW}</span>
+          {teamLogos[row.opponent_name] ? (
+            <img
+              src={teamLogos[row.opponent_name]}
+              alt={row.opponent_name}
+              className="h-10 w-11 object-contain"
+            />
+          ) : (
+            <span className="text-sm truncate">{row.opponent_name}</span>
+          )}
+          <span className="text-xs font-semibold mt-0">
+            {row.was_home ? "(H)" : "(A)"}
+          </span>
+        </div>
+      ))}
+    </div>
+      </div>
 )}
       
 

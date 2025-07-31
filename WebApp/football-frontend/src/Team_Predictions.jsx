@@ -46,7 +46,7 @@ useEffect(() => {
       </h1>
 
       {/* GW Navigation Arrows */}
-<div className="flex items-center justify-center mb-6 gap-6 text-royal-gold text-3xl font-bold">
+<div className="flex items-center justify-center mb-6 gap-6 text-royal-beige text-3xl font-bold">
   {/* Left Arrow */}
   <span
     onClick={() =>
@@ -64,7 +64,7 @@ useEffect(() => {
   </span>
 
   {/* Gameweek Label */}
-  <span className="text-2xl text-royal-gold font-semibold">
+  <span className="text-2xl text-royal-beige font-semibold">
     Gameweek {selectedGW}
   </span>
 

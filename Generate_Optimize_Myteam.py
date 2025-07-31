@@ -134,7 +134,7 @@ def get_my_team(team_id=1,Last_GW=0):
 
 
 
-def optimize_my_team(team_id=1,wildcard_round=40, bb_round=40,Last_GW=0,banned_list=[],GW_list=["0","1", "2","3","4","5"], current_player_path="Raw_Data_25/current_players.csv"):
+def optimize_my_team(team_id=1,wildcard_round=40, bb_round=1,Last_GW=0,banned_list=["Matheus_Santos Carneiro Da Cunha"],GW_list=["0","1", "2","3","4","5","6","7","8"], current_player_path="Raw_Data_25/current_players.csv"):
 
     current_players = pd.read_csv(current_player_path)
     
@@ -143,21 +143,40 @@ def optimize_my_team(team_id=1,wildcard_round=40, bb_round=40,Last_GW=0,banned_l
     team_id=team_id
 
     wildcard_round = wildcard_round  # Gameweek 3 (Index t=2)
+    wildcard_round = 1  # Gameweek 3 (Index t=2)
     bench_points_gw=bb_round
     Last_GW=Last_GW
     hit=0
     banned_list=banned_list
 # Load Data
     data = pd.read_csv("Model_Optimizer.csv")
-    data = data[~data["name"].isin(banned_list)]
+    #data = data[~data["name"].isin(banned_list)]
     cols = GW_list
     for col in cols:
         data[col] = np.where(data["offset"] < 1, data[col] * data["offset"], data[col] * data["minutes_multiplier"])
+        
+    banned_mask = data["name"].isin(banned_list)
+    for col in cols:
+        data[col] = np.where(
+            banned_mask,
+            0,
+            np.where(
+                data["offset"] < 1,
+                data[col] * data["offset"],
+                data[col] * data["minutes_multiplier"]
+            )
+        )
     
-    initial_saved,squad=get_my_team(team_id,Last_GW=36)
-    #initial_saved=1
+    
+    """**********************************************************"""
+    #initial_saved,squad=get_my_team(team_id,Last_GW=36)
+    initial_saved=1
+    squad=pd.read_csv("Free_hit_team.csv")
+    squad["Full_Name"]=squad["Name"].values
+    
+    
 
-    url = f"https://fantasy.premierleague.com/api/entry/{team_id}/"
+    """url = f"https://fantasy.premierleague.com/api/entry/{team_id}/"
     response = requests.get(url)
     if response.status_code == 200:
         resonsep_data = response.json()
@@ -165,8 +184,8 @@ def optimize_my_team(team_id=1,wildcard_round=40, bb_round=40,Last_GW=0,banned_l
     else:
         print(f"Error fetching data (Status Code: {response.status_code})")
 
-    money_in_bank_init = resonsep_data.get("last_deadline_bank", 0)/10  # Convert to actual value
-    #money_in_bank_init=0 ## Fjern
+    money_in_bank_init = resonsep_data.get("last_deadline_bank", 0)/10  # Convert to actual value"""
+    money_in_bank_init=0 ## Fjern
 
 
     players = data['name'].tolist()
@@ -183,14 +202,14 @@ def optimize_my_team(team_id=1,wildcard_round=40, bb_round=40,Last_GW=0,banned_l
     """
     
     list1 = costs.copy()
-    selling_cost = squad["selling_price"].values
+    """selling_cost = squad["selling_price"].values
     budget_amount=sum(selling_cost)+money_in_bank_init
 
 
     for i in range(len(initial_squad)):
-        list1[initial_squad[i]] = selling_cost[i]
+        list1[initial_squad[i]] = selling_cost[i]"""
         
-    #budget_amount=105 ##Fjern
+    budget_amount=100 ##Fjern
 
     positions = data['position'].tolist()
     costs = data['value'].tolist()
@@ -326,24 +345,25 @@ def optimize_my_team(team_id=1,wildcard_round=40, bb_round=40,Last_GW=0,banned_l
             gw = GW_list[t]
 
             # transferred in
-            if x[i, t].varValue > 0.5 and x[i, t-1].varValue < 0.5:
-                records.append({
-                    "Name": name,
-                    "status": "transferred_in",
-                    "GW": gw,
-                    "position": pos,
-                    "photo": f"https://resources.premierleague.com/premierleague/photos/players/110x140/p{player_row_code}.png"
-                })
+            if(gw !=str(wildcard_round)):
+                if x[i, t].varValue > 0.5 and x[i, t-1].varValue < 0.5:
+                    records.append({
+                        "Name": name,
+                        "status": "transferred_in",
+                        "GW": gw,
+                        "position": pos,
+                        "photo": f"https://resources.premierleague.com/premierleague/photos/players/110x140/p{player_row_code}.png"
+                    })
 
-            # transferred out
-            if x[i, t].varValue < 0.5 and x[i, t-1].varValue > 0.5:
-                records.append({
-                    "Name": name,
-                    "status": "transferred_out",
-                    "GW": gw,
-                    "position": pos,
-                    "photo": f"https://resources.premierleague.com/premierleague/photos/players/110x140/p{player_row_code}.png"
-                })
+                # transferred out
+                if x[i, t].varValue < 0.5 and x[i, t-1].varValue > 0.5:
+                    records.append({
+                        "Name": name,
+                        "status": "transferred_out",
+                        "GW": gw,
+                        "position": pos,
+                        "photo": f"https://resources.premierleague.com/premierleague/photos/players/110x140/p{player_row_code}.png"
+                    })
 
 
     for t in(1, optimize_range-1):
@@ -362,6 +382,7 @@ def optimize_my_team(team_id=1,wildcard_round=40, bb_round=40,Last_GW=0,banned_l
 
     # Final structured DataFrame
     status_df = pd.DataFrame(records)
+    print(status_df)
     return status_df
     
     

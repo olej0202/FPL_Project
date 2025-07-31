@@ -94,6 +94,10 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
             if(pred_variable=="bps"):
                real_variable="bonus" 
                player_preds.append(df['Rolling_adjusted_BPS'].values[h]*0.04)
+               
+            if(pred_variable=="CBI"):
+               real_variable="cbi" 
+               player_preds.append(df['CBI'].values[h])
         
             if(pred_variable=="Fantasy"):
                real_variable="total_points"
@@ -393,13 +397,13 @@ def XGB_Make_Pred(trainingdf,target_value,position2,column_list,predlength,posit
     return data_f
     
 def XGB(position,position2,column_list,predlength):
-    if(position=="GC"):
+    if(position in ["GC","CBI"]):
         return 0
     data,target_value,test_columns=XGB_Make_dataset(position,position2)
     pred=XGB_Make_Pred(data,target_value,position2,column_list,predlength,position,test_columns)
     return pred
 def Generate_LSTM_preds(pred,column_list,predlength):
-    if(pred in ["GC","Fantasy","bps"]):
+    if(pred in ["GC","Fantasy","bps","CBI"]):
         return 0
     data=pd.read_csv("Player_Prediction_set.csv").iloc[:,1:]
     data2=pd.read_csv("ML_training2.csv").iloc[:,1:]
@@ -494,6 +498,8 @@ def Generate_point_predictions():
     stat_GC = Get_rows("STAT", "GC").sort_values(by=["GW", "opp_stat"])
 
     xgb_fantasy= Get_rows("XGB", "Fantasy").sort_values(by=["GW", "opp_stat"])
+    
+    stat_cbi= Get_rows("STAT", "CBI").sort_values(by=["GW", "opp_stat"])
 
 
 
@@ -521,6 +527,8 @@ def Generate_point_predictions():
         stat_GC_player = stat_GC[stat_GC["Name"]==player].sort_values(by=["GW", "opp_stat"])
 
         xgb_fantasy_player= xgb_fantasy[xgb_fantasy["Name"]==player].sort_values(by=["GW", "opp_stat"])
+        
+        stat_cbi_player= stat_cbi[stat_cbi["Name"]==player].sort_values(by=["GW", "opp_stat"])
 
         overscore=max(0.9,player_data["Average_Overscore"].values[0])
         overscore=min(1.4,overscore)
@@ -533,6 +541,7 @@ def Generate_point_predictions():
         bps=[]
         gc=[]
         fantasy=[]
+        cbi=[]
 
         for i in range(len(player_data)):
             try:
@@ -561,6 +570,12 @@ def Generate_point_predictions():
                 gc.append(stat_GC_player["pred"].values[i])
             except:
                 gc.append(0)
+                
+            try:
+                cbi.append(stat_cbi_player["pred"].values[i])
+            except:
+                cbi.append(0)
+                
             try:
 
                 fantasy.append(xgb_fantasy_player["pred"].values[i])
@@ -578,9 +593,10 @@ def Generate_point_predictions():
         
         New_dataset["GC_pred"]=gc
         New_dataset["Fantasy_pred"]=fantasy
+        New_dataset["CBI_pred"]=cbi
         
 
-        summary_dataset = New_dataset.groupby(columns_to_include)[["Goal_pred", "Assist_pred", "Bonus_pred", "GC_pred", "Fantasy_pred"]].sum().reset_index()
+        summary_dataset = New_dataset.groupby(columns_to_include)[["Goal_pred", "Assist_pred", "Bonus_pred", "GC_pred", "Fantasy_pred", "CBI_pred"]].sum().reset_index()
         summary_dataset["Average_Overscore"]=player_data["Average_Overscore"].values[0]
         summary_dataset = summary_dataset.fillna(0)
         if(New_dataset["name"].values[0]=='Matheus_Santos Carneiro da Cunha'):
@@ -589,12 +605,12 @@ def Generate_point_predictions():
         if(position=="FWD"):
             summary_dataset["Points_prediction"]=(2+summary_dataset["Goal_pred"]*4
                                                   +summary_dataset["Assist_pred"]*3
-                                                  +summary_dataset["Bonus_pred"])*0.8+0.2*summary_dataset["Fantasy_pred"]
+                                                  +summary_dataset["Bonus_pred"])*0.8+0.2*summary_dataset["Fantasy_pred"]+(summary_dataset["CBI_pred"]/12)*0.8
         elif(position=="MID"):
             summary_dataset["Points_prediction"]=(2+summary_dataset["Goal_pred"]*5
                                                   +summary_dataset["Assist_pred"]*3
                                                   +summary_dataset["Bonus_pred"]
-                                                  +summary_dataset["GC_pred"])*0.8+0.2*summary_dataset["Fantasy_pred"]
+                                                  +summary_dataset["GC_pred"])*0.8+0.2*summary_dataset["Fantasy_pred"]+(summary_dataset["CBI_pred"]/12)*0.8
             
         elif(position=="GKP"):
             summary_dataset["Points_prediction"]=(2
@@ -605,7 +621,7 @@ def Generate_point_predictions():
             summary_dataset["Points_prediction"]=(1+summary_dataset["Goal_pred"]*6
                                                   +summary_dataset["Assist_pred"]*3
                                                   +summary_dataset["Bonus_pred"]
-                                                  +summary_dataset["GC_pred"]*4.5)*0.8+0.2*summary_dataset["Fantasy_pred"]
+                                                  +summary_dataset["GC_pred"]*4.5)*0.8+0.2*summary_dataset["Fantasy_pred"]+(summary_dataset["CBI_pred"]/10)*0.8
         
         
         full_df=pd.concat([full_df, summary_dataset], axis=0, ignore_index=True)
@@ -625,7 +641,8 @@ def Make_Predictions ():
     for k in range(predlength):
         column_list.append(f"p{k+1}")
     column_list.append("position")
-    positions=["GOALS", "Assist","GC","bps","Fantasy"]
+    positions=["GOALS", "Assist","GC","bps","Fantasy","CBI"]
+    positions=["CBI"]
     for y in range(len(positions)):
         XGB_pred=pd.DataFrame()
         position_filter=positions[y]
