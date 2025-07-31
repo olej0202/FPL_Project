@@ -69,7 +69,8 @@ useEffect(() => {
               return (
                 <Wrapper
                   key={idx}
-                  className="block bg-royal-red border border-royal-gold p-4 rounded-lg shadow-md hover:bg-royal-red/80 transition duration-200 text-inherit no-underline"
+                  className="block bg-royal-red border border-royal-gold p-4 rounded-lg shadow-md hover:bg-royal-red/80 transition duration-200 text-inherit no-underline
+                  text-royal-beige visited:text-royal-beige focus:text-royal-beige"
                 >
                   <p className="text-sm text-royal-beige mb-2">
                     {new Date(article.date).toLocaleString()}
@@ -79,7 +80,7 @@ useEffect(() => {
                       </span>
                     )}
                   </p>
-                  <p className="whitespace-pre-line text-royale-beige">{article.content}</p>
+                  <p className="whitespace-pre-line text-royal-beige visited:text-royal-beige focus:text-royal-beige">{article.content}</p>
                 </Wrapper>
               );
             })}
