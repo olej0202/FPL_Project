@@ -182,6 +182,12 @@ def GeneratePlayerData(Future, fixture_path,current_player_path, current_teams_p
     "Matheus Luiz_Nunes":"Matheus_Nunes",
     "Alejandro_Garnacho Ferreyra":"Alejandro_Garnacho"
 }
+    
+    new_players_cluster={
+        "Viktor_Gyökeres":["Alexander_Isak","Kai_Havertz","Yoane_Wissa"],
+        "Florian_Wirtz":["Mohamed_Salah","Cole_Palmer","Dominik_Szoboszlai","Alexis_Mac Allister", "Luis_Díaz"]
+        
+    }
     relevant_players["name"] = relevant_players["name"].apply(lambda n: name_map.get(n, n))
 
     xmins=pd.read_csv("GenerateXmins.csv")
@@ -247,6 +253,9 @@ def GeneratePlayerData(Future, fixture_path,current_player_path, current_teams_p
                         (current_data["Team"] == team_code)&
                         (current_data["minutes"].sum() >= 1000)
                     ]
+            if(name in new_players_cluster):
+                members = new_players_cluster[name]
+                player_cluster = current_data[current_data["name"].isin(members)]
             if(len(player_cluster)==0):
                 player_cluster = current_data[
                     (current_data["position"] == position) & 

@@ -535,6 +535,10 @@ def Generate_point_predictions():
 
         overassist=max(0.8,player_data["Average_OverAssist"].values[0])
         overassist=min(2,overassist)
+        
+        historic_xg=player_data["rolling_XG_historic"].values[0]
+        historic_xa=player_data["rolling_XA_historic"].values[0]
+
 
         goals=[]
         assist=[]
@@ -545,17 +549,17 @@ def Generate_point_predictions():
 
         for i in range(len(player_data)):
             try:
-                goals.append((xgb_goals_player["pred"].values[i]*0.2
+                goals.append(((xgb_goals_player["pred"].values[i]*0.2
                          +stat_goals_player["pred"].values[i]*0.5
-                         +DNN_goals_player["pred"].values[i]*0.3)*overscore)
+                         +DNN_goals_player["pred"].values[i]*0.3)*0.7+0.3*historic_xg)*overscore)
             except:
                 goals.append(0)
 
             try:
 
-                assist.append((xgb_assist_player["pred"].values[i]*0.2
+                assist.append(((xgb_assist_player["pred"].values[i]*0.2
                                     +stat_assist_player["pred"].values[i]*0.5
-                                    +DNN_assist_player["pred"].values[i]*0.3)*overassist)
+                                    +DNN_assist_player["pred"].values[i]*0.3)*0.7+0.3*historic_xa)*overassist)
             except:
                 assist.append(0)
 
@@ -605,12 +609,12 @@ def Generate_point_predictions():
         if(position=="FWD"):
             summary_dataset["Points_prediction"]=(2+summary_dataset["Goal_pred"]*4
                                                   +summary_dataset["Assist_pred"]*3
-                                                  +summary_dataset["Bonus_pred"])*0.8+0.2*summary_dataset["Fantasy_pred"]+(summary_dataset["CBI_pred"]/12)*0.8
+                                                  +summary_dataset["Bonus_pred"])*0.8+0.2*summary_dataset["Fantasy_pred"]+(summary_dataset["CBI_pred"]/12)*0.8*2
         elif(position=="MID"):
             summary_dataset["Points_prediction"]=(2+summary_dataset["Goal_pred"]*5
                                                   +summary_dataset["Assist_pred"]*3
                                                   +summary_dataset["Bonus_pred"]
-                                                  +summary_dataset["GC_pred"])*0.8+0.2*summary_dataset["Fantasy_pred"]+(summary_dataset["CBI_pred"]/12)*0.8
+                                                  +summary_dataset["GC_pred"])*0.8+0.2*summary_dataset["Fantasy_pred"]+(summary_dataset["CBI_pred"]/12)*0.8*2
             
         elif(position=="GKP"):
             summary_dataset["Points_prediction"]=(2
@@ -621,7 +625,7 @@ def Generate_point_predictions():
             summary_dataset["Points_prediction"]=(1+summary_dataset["Goal_pred"]*6
                                                   +summary_dataset["Assist_pred"]*3
                                                   +summary_dataset["Bonus_pred"]
-                                                  +summary_dataset["GC_pred"]*4.5)*0.8+0.2*summary_dataset["Fantasy_pred"]+(summary_dataset["CBI_pred"]/10)*0.8
+                                                  +summary_dataset["GC_pred"]*4.5)*0.8+0.2*summary_dataset["Fantasy_pred"]+(summary_dataset["CBI_pred"]/10)*0.8*2
         
         
         full_df=pd.concat([full_df, summary_dataset], axis=0, ignore_index=True)
@@ -642,7 +646,6 @@ def Make_Predictions ():
         column_list.append(f"p{k+1}")
     column_list.append("position")
     positions=["GOALS", "Assist","GC","bps","Fantasy","CBI"]
-    positions=["CBI"]
     for y in range(len(positions)):
         XGB_pred=pd.DataFrame()
         position_filter=positions[y]

@@ -43,7 +43,7 @@ def Data_Transformation(n_points_in_future, current_fixture_path,current_player_
 
     
 def Data_Predictions(current_fixture_path,current_team_path, n_points_in_future):
-    #GenerateTeamPredictions( current_fixture_path,current_team_path, n_points_in_future)
+    GenerateTeamPredictions( current_fixture_path,current_team_path, n_points_in_future)
     Make_Predictions()
     Generate_point_predictions()
     

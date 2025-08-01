@@ -92,9 +92,9 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
 
     # Filter for current month
     test_df = Model_pred[(Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month == current_month-1)| 
-                   (Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month == current_month-2) ]
+                   (Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month == current_month-3) ]
     train_df = Model_pred[(Model_pred['kickoff_time'].dt.year < current_year) | 
-                     ((Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month < current_month-2))]
+                     ((Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month < current_month-3))]
     train_df=train_df[train_df['kickoff_time']>'2022-12-31']
 
 
