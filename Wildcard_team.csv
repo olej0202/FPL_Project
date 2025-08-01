@@ -1,135 +1,135 @@
 ,Name,status,GW,position,photo,web_name
-0,Ethan_Pinnock,transferred_out,4,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p231065.png,Pinnock
-1,Ismaïla_Sarr,transferred_in,4,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p232185.png,Sarr
-2,Matheus_Santos Carneiro Da Cunha,transferred_out,4,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p430871.png,Cunha
+0,Fabian_Schär,transferred_in,3,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p119471.png,Schär
+1,Joško_Gvardiol,transferred_out,3,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p477424.png,Gvardiol
+2,James_Tarkowski,transferred_out,4,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p17761.png,Tarkowski
 3,Virgil_van Dijk,transferred_in,4,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p97032.png,Virgil
-4,Ismaïla_Sarr,transferred_out,5,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p232185.png,Sarr
-5,Jarrod_Bowen,transferred_out,5,FWD,https://resources.premierleague.com/premierleague/photos/players/110x140/p178186.png,Bowen
-6,Jørgen_Strand Larsen,transferred_in,5,FWD,https://resources.premierleague.com/premierleague/photos/players/110x140/p247412.png,Strand Larsen
-7,Matheus_Santos Carneiro Da Cunha,transferred_in,5,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p430871.png,Cunha
-8,Joško_Gvardiol,transferred_in,6,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p477424.png,Gvardiol
-9,Virgil_van Dijk,transferred_out,6,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p97032.png,Virgil
-10,Declan_Rice,transferred_in,7,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p204480.png,Rice
-11,Enzo_Fernández,transferred_out,7,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p448047.png,Enzo
-12,Eberechi_Eze,transferred_in,8,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p232413.png,Eze
-13,Matheus_Santos Carneiro Da Cunha,transferred_out,8,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p430871.png,Cunha
+4,Chris_Wood,transferred_in,5,FWD,https://resources.premierleague.com/premierleague/photos/players/110x140/p60689.png,Wood
+5,João_Pedro Junqueira de Jesus,transferred_out,5,FWD,https://resources.premierleague.com/premierleague/photos/players/110x140/p475168.png,João Pedro
+6,Joško_Gvardiol,transferred_in,6,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p477424.png,Gvardiol
+7,Virgil_van Dijk,transferred_out,6,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p97032.png,Virgil
+8,Bryan_Mbeumo,transferred_in,7,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p446008.png,Mbeumo
+9,Chris_Wood,transferred_out,7,FWD,https://resources.premierleague.com/premierleague/photos/players/110x140/p60689.png,Wood
+10,Eberechi_Eze,transferred_out,7,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p232413.png,Eze
+11,Jørgen_Strand Larsen,transferred_in,7,FWD,https://resources.premierleague.com/premierleague/photos/players/110x140/p247412.png,Strand Larsen
+12,Bryan_Mbeumo,transferred_out,8,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p446008.png,Mbeumo
+13,Eberechi_Eze,transferred_in,8,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p232413.png,Eze
 14,Alexander_Isak,playing,1,FWD,https://resources.premierleague.com/premierleague/photos/players/110x140/p219168.png,Isak
 15,Amad_Diallo,playing,1,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p493250.png,Amad
-16,Bruno_Borges Fernandes,playing,1,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p141746.png,B.Fernandes
-17,Daniel_Adu-Adjei,benched,1,FWD,https://resources.premierleague.com/premierleague/photos/players/110x140/p590760.png,Adu-Adjei
-18,Daniel_Muñoz,playing,1,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p247348.png,Muñoz
+16,Amara_Nallo,benched,1,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p611926.png,Nallo
+17,Daniel_Muñoz,playing,1,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p247348.png,Muñoz
+18,Eberechi_Eze,playing,1,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p232413.png,Eze
 19,Ederson_Santana de Moraes,playing,1,GKP,https://resources.premierleague.com/premierleague/photos/players/110x140/p121160.png,Ederson M.
-20,Enzo_Fernández,playing,1,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p448047.png,Enzo
-21,Ethan_Pinnock,playing,1,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p231065.png,Pinnock
-22,Harrison_Ashby,benched,1,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p441024.png,Ashby
-23,Jarrod_Bowen,playing,1,FWD,https://resources.premierleague.com/premierleague/photos/players/110x140/p178186.png,Bowen
-24,Karl_Darlow,benched,1,GKP,https://resources.premierleague.com/premierleague/photos/players/110x140/p59735.png,Darlow
-25,Matheus_Santos Carneiro Da Cunha,playing,1,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p430871.png,Cunha
-26,Maxence_Lacroix,playing,1,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p437499.png,Lacroix
-27,Miodrag_Pivaš,benched,1,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p578512.png,Pivas
-28,Mohamed_Salah,playing,1,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p118748.png,M.Salah
+20,Ismaïla_Sarr,playing,1,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p232185.png,Sarr
+21,James_Tarkowski,playing,1,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p17761.png,Tarkowski
+22,Joe_Rodon,benched,1,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p214225.png,Rodon
+23,João_Pedro Junqueira de Jesus,playing,1,FWD,https://resources.premierleague.com/premierleague/photos/players/110x140/p475168.png,João Pedro
+24,Joško_Gvardiol,playing,1,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p477424.png,Gvardiol
+25,Martin_Dúbravka,benched,1,GKP,https://resources.premierleague.com/premierleague/photos/players/110x140/p67089.png,Dúbravka
+26,Matheus_Santos Carneiro Da Cunha,playing,1,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p430871.png,Cunha
+27,Mohamed_Salah,playing,1,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p118748.png,M.Salah
+28,Nathan_Fraser,benched,1,FWD,https://resources.premierleague.com/premierleague/photos/players/110x140/p531363.png,Fraser
 29,Alexander_Isak,playing,2,FWD,https://resources.premierleague.com/premierleague/photos/players/110x140/p219168.png,Isak
 30,Amad_Diallo,playing,2,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p493250.png,Amad
-31,Bruno_Borges Fernandes,playing,2,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p141746.png,B.Fernandes
-32,Daniel_Adu-Adjei,benched,2,FWD,https://resources.premierleague.com/premierleague/photos/players/110x140/p590760.png,Adu-Adjei
-33,Daniel_Muñoz,playing,2,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p247348.png,Muñoz
+31,Amara_Nallo,benched,2,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p611926.png,Nallo
+32,Daniel_Muñoz,playing,2,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p247348.png,Muñoz
+33,Eberechi_Eze,playing,2,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p232413.png,Eze
 34,Ederson_Santana de Moraes,playing,2,GKP,https://resources.premierleague.com/premierleague/photos/players/110x140/p121160.png,Ederson M.
-35,Enzo_Fernández,playing,2,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p448047.png,Enzo
-36,Ethan_Pinnock,playing,2,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p231065.png,Pinnock
-37,Harrison_Ashby,benched,2,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p441024.png,Ashby
-38,Jarrod_Bowen,playing,2,FWD,https://resources.premierleague.com/premierleague/photos/players/110x140/p178186.png,Bowen
-39,Karl_Darlow,benched,2,GKP,https://resources.premierleague.com/premierleague/photos/players/110x140/p59735.png,Darlow
-40,Matheus_Santos Carneiro Da Cunha,playing,2,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p430871.png,Cunha
-41,Maxence_Lacroix,playing,2,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p437499.png,Lacroix
-42,Miodrag_Pivaš,benched,2,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p578512.png,Pivas
-43,Mohamed_Salah,playing,2,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p118748.png,M.Salah
+35,Ismaïla_Sarr,playing,2,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p232185.png,Sarr
+36,James_Tarkowski,playing,2,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p17761.png,Tarkowski
+37,Joe_Rodon,benched,2,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p214225.png,Rodon
+38,João_Pedro Junqueira de Jesus,playing,2,FWD,https://resources.premierleague.com/premierleague/photos/players/110x140/p475168.png,João Pedro
+39,Joško_Gvardiol,playing,2,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p477424.png,Gvardiol
+40,Martin_Dúbravka,benched,2,GKP,https://resources.premierleague.com/premierleague/photos/players/110x140/p67089.png,Dúbravka
+41,Matheus_Santos Carneiro Da Cunha,playing,2,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p430871.png,Cunha
+42,Mohamed_Salah,playing,2,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p118748.png,M.Salah
+43,Nathan_Fraser,benched,2,FWD,https://resources.premierleague.com/premierleague/photos/players/110x140/p531363.png,Fraser
 44,Alexander_Isak,playing,3,FWD,https://resources.premierleague.com/premierleague/photos/players/110x140/p219168.png,Isak
 45,Amad_Diallo,playing,3,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p493250.png,Amad
-46,Bruno_Borges Fernandes,playing,3,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p141746.png,B.Fernandes
-47,Daniel_Adu-Adjei,benched,3,FWD,https://resources.premierleague.com/premierleague/photos/players/110x140/p590760.png,Adu-Adjei
-48,Daniel_Muñoz,playing,3,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p247348.png,Muñoz
+46,Amara_Nallo,benched,3,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p611926.png,Nallo
+47,Daniel_Muñoz,playing,3,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p247348.png,Muñoz
+48,Eberechi_Eze,playing,3,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p232413.png,Eze
 49,Ederson_Santana de Moraes,playing,3,GKP,https://resources.premierleague.com/premierleague/photos/players/110x140/p121160.png,Ederson M.
-50,Enzo_Fernández,playing,3,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p448047.png,Enzo
-51,Ethan_Pinnock,playing,3,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p231065.png,Pinnock
-52,Harrison_Ashby,benched,3,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p441024.png,Ashby
-53,Jarrod_Bowen,playing,3,FWD,https://resources.premierleague.com/premierleague/photos/players/110x140/p178186.png,Bowen
-54,Karl_Darlow,benched,3,GKP,https://resources.premierleague.com/premierleague/photos/players/110x140/p59735.png,Darlow
-55,Matheus_Santos Carneiro Da Cunha,playing,3,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p430871.png,Cunha
-56,Maxence_Lacroix,playing,3,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p437499.png,Lacroix
-57,Miodrag_Pivaš,benched,3,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p578512.png,Pivas
-58,Mohamed_Salah,playing,3,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p118748.png,M.Salah
+50,Fabian_Schär,playing,3,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p119471.png,Schär
+51,Ismaïla_Sarr,playing,3,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p232185.png,Sarr
+52,James_Tarkowski,playing,3,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p17761.png,Tarkowski
+53,Joe_Rodon,benched,3,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p214225.png,Rodon
+54,João_Pedro Junqueira de Jesus,playing,3,FWD,https://resources.premierleague.com/premierleague/photos/players/110x140/p475168.png,João Pedro
+55,Martin_Dúbravka,benched,3,GKP,https://resources.premierleague.com/premierleague/photos/players/110x140/p67089.png,Dúbravka
+56,Matheus_Santos Carneiro Da Cunha,playing,3,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p430871.png,Cunha
+57,Mohamed_Salah,playing,3,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p118748.png,M.Salah
+58,Nathan_Fraser,benched,3,FWD,https://resources.premierleague.com/premierleague/photos/players/110x140/p531363.png,Fraser
 59,Alexander_Isak,playing,4,FWD,https://resources.premierleague.com/premierleague/photos/players/110x140/p219168.png,Isak
 60,Amad_Diallo,playing,4,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p493250.png,Amad
-61,Bruno_Borges Fernandes,playing,4,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p141746.png,B.Fernandes
-62,Daniel_Adu-Adjei,benched,4,FWD,https://resources.premierleague.com/premierleague/photos/players/110x140/p590760.png,Adu-Adjei
-63,Daniel_Muñoz,playing,4,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p247348.png,Muñoz
+61,Amara_Nallo,benched,4,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p611926.png,Nallo
+62,Daniel_Muñoz,playing,4,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p247348.png,Muñoz
+63,Eberechi_Eze,playing,4,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p232413.png,Eze
 64,Ederson_Santana de Moraes,playing,4,GKP,https://resources.premierleague.com/premierleague/photos/players/110x140/p121160.png,Ederson M.
-65,Enzo_Fernández,playing,4,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p448047.png,Enzo
-66,Harrison_Ashby,benched,4,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p441024.png,Ashby
-67,Ismaïla_Sarr,playing,4,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p232185.png,Sarr
-68,Jarrod_Bowen,playing,4,FWD,https://resources.premierleague.com/premierleague/photos/players/110x140/p178186.png,Bowen
-69,Karl_Darlow,benched,4,GKP,https://resources.premierleague.com/premierleague/photos/players/110x140/p59735.png,Darlow
-70,Maxence_Lacroix,playing,4,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p437499.png,Lacroix
-71,Miodrag_Pivaš,benched,4,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p578512.png,Pivas
-72,Mohamed_Salah,playing,4,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p118748.png,M.Salah
+65,Fabian_Schär,playing,4,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p119471.png,Schär
+66,Ismaïla_Sarr,playing,4,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p232185.png,Sarr
+67,Joe_Rodon,benched,4,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p214225.png,Rodon
+68,João_Pedro Junqueira de Jesus,playing,4,FWD,https://resources.premierleague.com/premierleague/photos/players/110x140/p475168.png,João Pedro
+69,Martin_Dúbravka,benched,4,GKP,https://resources.premierleague.com/premierleague/photos/players/110x140/p67089.png,Dúbravka
+70,Matheus_Santos Carneiro Da Cunha,playing,4,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p430871.png,Cunha
+71,Mohamed_Salah,playing,4,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p118748.png,M.Salah
+72,Nathan_Fraser,benched,4,FWD,https://resources.premierleague.com/premierleague/photos/players/110x140/p531363.png,Fraser
 73,Virgil_van Dijk,playing,4,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p97032.png,Virgil
 74,Alexander_Isak,playing,5,FWD,https://resources.premierleague.com/premierleague/photos/players/110x140/p219168.png,Isak
 75,Amad_Diallo,playing,5,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p493250.png,Amad
-76,Bruno_Borges Fernandes,playing,5,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p141746.png,B.Fernandes
-77,Daniel_Adu-Adjei,benched,5,FWD,https://resources.premierleague.com/premierleague/photos/players/110x140/p590760.png,Adu-Adjei
+76,Amara_Nallo,benched,5,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p611926.png,Nallo
+77,Chris_Wood,playing,5,FWD,https://resources.premierleague.com/premierleague/photos/players/110x140/p60689.png,Wood
 78,Daniel_Muñoz,playing,5,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p247348.png,Muñoz
-79,Ederson_Santana de Moraes,playing,5,GKP,https://resources.premierleague.com/premierleague/photos/players/110x140/p121160.png,Ederson M.
-80,Enzo_Fernández,playing,5,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p448047.png,Enzo
-81,Harrison_Ashby,benched,5,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p441024.png,Ashby
-82,Jørgen_Strand Larsen,playing,5,FWD,https://resources.premierleague.com/premierleague/photos/players/110x140/p247412.png,Strand Larsen
-83,Karl_Darlow,benched,5,GKP,https://resources.premierleague.com/premierleague/photos/players/110x140/p59735.png,Darlow
-84,Matheus_Santos Carneiro Da Cunha,playing,5,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p430871.png,Cunha
-85,Maxence_Lacroix,playing,5,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p437499.png,Lacroix
-86,Miodrag_Pivaš,benched,5,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p578512.png,Pivas
-87,Mohamed_Salah,playing,5,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p118748.png,M.Salah
+79,Eberechi_Eze,playing,5,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p232413.png,Eze
+80,Ederson_Santana de Moraes,playing,5,GKP,https://resources.premierleague.com/premierleague/photos/players/110x140/p121160.png,Ederson M.
+81,Fabian_Schär,playing,5,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p119471.png,Schär
+82,Ismaïla_Sarr,playing,5,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p232185.png,Sarr
+83,Joe_Rodon,benched,5,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p214225.png,Rodon
+84,Martin_Dúbravka,benched,5,GKP,https://resources.premierleague.com/premierleague/photos/players/110x140/p67089.png,Dúbravka
+85,Matheus_Santos Carneiro Da Cunha,playing,5,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p430871.png,Cunha
+86,Mohamed_Salah,playing,5,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p118748.png,M.Salah
+87,Nathan_Fraser,benched,5,FWD,https://resources.premierleague.com/premierleague/photos/players/110x140/p531363.png,Fraser
 88,Virgil_van Dijk,playing,5,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p97032.png,Virgil
 89,Alexander_Isak,playing,6,FWD,https://resources.premierleague.com/premierleague/photos/players/110x140/p219168.png,Isak
 90,Amad_Diallo,playing,6,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p493250.png,Amad
-91,Bruno_Borges Fernandes,playing,6,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p141746.png,B.Fernandes
-92,Daniel_Adu-Adjei,benched,6,FWD,https://resources.premierleague.com/premierleague/photos/players/110x140/p590760.png,Adu-Adjei
+91,Amara_Nallo,benched,6,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p611926.png,Nallo
+92,Chris_Wood,playing,6,FWD,https://resources.premierleague.com/premierleague/photos/players/110x140/p60689.png,Wood
 93,Daniel_Muñoz,playing,6,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p247348.png,Muñoz
-94,Ederson_Santana de Moraes,playing,6,GKP,https://resources.premierleague.com/premierleague/photos/players/110x140/p121160.png,Ederson M.
-95,Enzo_Fernández,playing,6,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p448047.png,Enzo
-96,Harrison_Ashby,benched,6,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p441024.png,Ashby
-97,Joško_Gvardiol,playing,6,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p477424.png,Gvardiol
-98,Jørgen_Strand Larsen,playing,6,FWD,https://resources.premierleague.com/premierleague/photos/players/110x140/p247412.png,Strand Larsen
-99,Karl_Darlow,benched,6,GKP,https://resources.premierleague.com/premierleague/photos/players/110x140/p59735.png,Darlow
-100,Matheus_Santos Carneiro Da Cunha,playing,6,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p430871.png,Cunha
-101,Maxence_Lacroix,playing,6,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p437499.png,Lacroix
-102,Miodrag_Pivaš,benched,6,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p578512.png,Pivas
-103,Mohamed_Salah,playing,6,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p118748.png,M.Salah
+94,Eberechi_Eze,playing,6,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p232413.png,Eze
+95,Ederson_Santana de Moraes,playing,6,GKP,https://resources.premierleague.com/premierleague/photos/players/110x140/p121160.png,Ederson M.
+96,Fabian_Schär,playing,6,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p119471.png,Schär
+97,Ismaïla_Sarr,playing,6,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p232185.png,Sarr
+98,Joe_Rodon,benched,6,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p214225.png,Rodon
+99,Joško_Gvardiol,playing,6,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p477424.png,Gvardiol
+100,Martin_Dúbravka,benched,6,GKP,https://resources.premierleague.com/premierleague/photos/players/110x140/p67089.png,Dúbravka
+101,Matheus_Santos Carneiro Da Cunha,playing,6,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p430871.png,Cunha
+102,Mohamed_Salah,playing,6,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p118748.png,M.Salah
+103,Nathan_Fraser,benched,6,FWD,https://resources.premierleague.com/premierleague/photos/players/110x140/p531363.png,Fraser
 104,Alexander_Isak,playing,7,FWD,https://resources.premierleague.com/premierleague/photos/players/110x140/p219168.png,Isak
 105,Amad_Diallo,playing,7,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p493250.png,Amad
-106,Bruno_Borges Fernandes,playing,7,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p141746.png,B.Fernandes
-107,Daniel_Adu-Adjei,benched,7,FWD,https://resources.premierleague.com/premierleague/photos/players/110x140/p590760.png,Adu-Adjei
+106,Amara_Nallo,benched,7,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p611926.png,Nallo
+107,Bryan_Mbeumo,playing,7,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p446008.png,Mbeumo
 108,Daniel_Muñoz,playing,7,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p247348.png,Muñoz
-109,Declan_Rice,playing,7,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p204480.png,Rice
-110,Ederson_Santana de Moraes,playing,7,GKP,https://resources.premierleague.com/premierleague/photos/players/110x140/p121160.png,Ederson M.
-111,Harrison_Ashby,benched,7,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p441024.png,Ashby
-112,Joško_Gvardiol,playing,7,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p477424.png,Gvardiol
-113,Jørgen_Strand Larsen,playing,7,FWD,https://resources.premierleague.com/premierleague/photos/players/110x140/p247412.png,Strand Larsen
-114,Karl_Darlow,benched,7,GKP,https://resources.premierleague.com/premierleague/photos/players/110x140/p59735.png,Darlow
-115,Matheus_Santos Carneiro Da Cunha,playing,7,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p430871.png,Cunha
-116,Maxence_Lacroix,playing,7,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p437499.png,Lacroix
-117,Miodrag_Pivaš,benched,7,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p578512.png,Pivas
-118,Mohamed_Salah,playing,7,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p118748.png,M.Salah
+109,Ederson_Santana de Moraes,playing,7,GKP,https://resources.premierleague.com/premierleague/photos/players/110x140/p121160.png,Ederson M.
+110,Fabian_Schär,playing,7,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p119471.png,Schär
+111,Ismaïla_Sarr,playing,7,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p232185.png,Sarr
+112,Joe_Rodon,benched,7,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p214225.png,Rodon
+113,Joško_Gvardiol,playing,7,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p477424.png,Gvardiol
+114,Jørgen_Strand Larsen,playing,7,FWD,https://resources.premierleague.com/premierleague/photos/players/110x140/p247412.png,Strand Larsen
+115,Martin_Dúbravka,benched,7,GKP,https://resources.premierleague.com/premierleague/photos/players/110x140/p67089.png,Dúbravka
+116,Matheus_Santos Carneiro Da Cunha,playing,7,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p430871.png,Cunha
+117,Mohamed_Salah,playing,7,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p118748.png,M.Salah
+118,Nathan_Fraser,benched,7,FWD,https://resources.premierleague.com/premierleague/photos/players/110x140/p531363.png,Fraser
 119,Alexander_Isak,playing,8,FWD,https://resources.premierleague.com/premierleague/photos/players/110x140/p219168.png,Isak
 120,Amad_Diallo,playing,8,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p493250.png,Amad
-121,Bruno_Borges Fernandes,playing,8,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p141746.png,B.Fernandes
-122,Daniel_Adu-Adjei,benched,8,FWD,https://resources.premierleague.com/premierleague/photos/players/110x140/p590760.png,Adu-Adjei
-123,Daniel_Muñoz,playing,8,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p247348.png,Muñoz
-124,Declan_Rice,playing,8,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p204480.png,Rice
-125,Eberechi_Eze,playing,8,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p232413.png,Eze
-126,Ederson_Santana de Moraes,playing,8,GKP,https://resources.premierleague.com/premierleague/photos/players/110x140/p121160.png,Ederson M.
-127,Harrison_Ashby,benched,8,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p441024.png,Ashby
+121,Amara_Nallo,benched,8,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p611926.png,Nallo
+122,Daniel_Muñoz,playing,8,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p247348.png,Muñoz
+123,Eberechi_Eze,playing,8,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p232413.png,Eze
+124,Ederson_Santana de Moraes,playing,8,GKP,https://resources.premierleague.com/premierleague/photos/players/110x140/p121160.png,Ederson M.
+125,Fabian_Schär,playing,8,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p119471.png,Schär
+126,Ismaïla_Sarr,playing,8,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p232185.png,Sarr
+127,Joe_Rodon,benched,8,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p214225.png,Rodon
 128,Joško_Gvardiol,playing,8,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p477424.png,Gvardiol
 129,Jørgen_Strand Larsen,playing,8,FWD,https://resources.premierleague.com/premierleague/photos/players/110x140/p247412.png,Strand Larsen
-130,Karl_Darlow,benched,8,GKP,https://resources.premierleague.com/premierleague/photos/players/110x140/p59735.png,Darlow
-131,Maxence_Lacroix,playing,8,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p437499.png,Lacroix
-132,Miodrag_Pivaš,benched,8,DEF,https://resources.premierleague.com/premierleague/photos/players/110x140/p578512.png,Pivas
-133,Mohamed_Salah,playing,8,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p118748.png,M.Salah
+130,Martin_Dúbravka,benched,8,GKP,https://resources.premierleague.com/premierleague/photos/players/110x140/p67089.png,Dúbravka
+131,Matheus_Santos Carneiro Da Cunha,playing,8,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p430871.png,Cunha
+132,Mohamed_Salah,playing,8,MID,https://resources.premierleague.com/premierleague/photos/players/110x140/p118748.png,M.Salah
+133,Nathan_Fraser,benched,8,FWD,https://resources.premierleague.com/premierleague/photos/players/110x140/p531363.png,Fraser
