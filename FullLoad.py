@@ -180,7 +180,7 @@ def current_players(season):
     "Marcos_Senesi Barón":          "Marcos_Senesi",
     "Raúl_Jiménez Rodríguez":       "Raúl_Jiménez",
     "Robert_Lynch Sánchez":         "Robert_Sánchez",
-    "Rodrigo_'Rodri' Hernandez Cascante": "Rodrigo_'Rodri' Hernandez",
+    "Rodrigo_'Rodri' Hernandez Cascante": "Rodrigo Hernandez",
     "Rúben_dos Santos Gato Alves Dias":   "Rúben_Gato Alves Dias",
     "Kaoru_Mitoma":                 "Mitoma_Kaoru",
     "Matheus_Santos Carneiro da Cunha": "Matheus_Santos Carneiro Da Cunha",
@@ -189,7 +189,8 @@ def current_players(season):
     "Idrissa_Gana Gueye": "Idrissa_Gueye",
     "Alisson_Becker": "Alisson_Ramses Becker",
     "Luis_Díaz Marulanda": "Luis_Díaz",
-    "Matheus_Nunes":"Matheus Luiz_Nunes",
+    "Matheus Luiz_Nunes":"Matheus_Nunes",
+    "Alejandro_Garnacho Ferreyra":"Alejandro_Garnacho"
 }
     players_new["name"] = players_new["name"].apply(lambda n: name_map.get(n, n))
 

@@ -291,7 +291,7 @@ def optimize_my_team(team_id=1,wildcard_round=40, bb_round=1,Last_GW=0,banned_li
                  lpSum(transfer_in[i, t] * costs[i] for i in range(num_players))
     # For each gameweek, squad value (using list1) plus money in bank equals available funds.
     for t in gameweeks:
-        model += lpSum(x[i, t] * list1[i] for i in range(num_players)) + money_in_bank_var[t] == budget_amount ##Endre til ==
+        model += lpSum(x[i, t] * list1[i] for i in range(num_players)) + money_in_bank_var[t] <= budget_amount ##Endre til ==
 
     # --- Maximum 3 Players per Team ---
     for t in gameweeks:
