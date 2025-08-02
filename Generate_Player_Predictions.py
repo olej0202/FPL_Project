@@ -97,7 +97,7 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
                
             if(pred_variable=="CBI"):
                real_variable="cbi" 
-               player_preds.append(df['CBI'].values[h])
+               player_preds.append((df['CBI'].values[h]**2)/10)
         
             if(pred_variable=="Fantasy"):
                real_variable="total_points"
@@ -609,12 +609,12 @@ def Generate_point_predictions():
         if(position=="FWD"):
             summary_dataset["Points_prediction"]=(2+summary_dataset["Goal_pred"]*5
                                                   +summary_dataset["Assist_pred"]*3
-                                                  +summary_dataset["Bonus_pred"])*0.8+0.2*summary_dataset["Fantasy_pred"]+(summary_dataset["CBI_pred"]/12)*0.5*2
+                                                  +summary_dataset["Bonus_pred"])*0.8+0.2*summary_dataset["Fantasy_pred"]+(summary_dataset["CBI_pred"]/12)*0.7*2
         elif(position=="MID"):
             summary_dataset["Points_prediction"]=(2+summary_dataset["Goal_pred"]*5.5
                                                   +summary_dataset["Assist_pred"]*3
                                                   +summary_dataset["Bonus_pred"]
-                                                  +summary_dataset["GC_pred"])*0.8+0.2*summary_dataset["Fantasy_pred"]+(summary_dataset["CBI_pred"]/12)*0.6*2
+                                                  +summary_dataset["GC_pred"])*0.8+0.2*summary_dataset["Fantasy_pred"]+(summary_dataset["CBI_pred"]/12)*0.8*2
             
         elif(position=="GKP"):
             summary_dataset["Points_prediction"]=(2
