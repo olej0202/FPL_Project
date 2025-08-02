@@ -1214,7 +1214,7 @@ def adjust_measure(df, measure_name):
             else:
                 in_row=0
                 in_row_fac=1
-            if(in_row>3):
+            if(in_row>2):
                 in_row_fac=1.5
 
             new_expected_goals.append(min(clipper_val,current_expected_goals+in_row_fac*offset*smoothing_f*min(min_val,max(-min_val,player_df[measure_name].values[i]-pred_scored))))

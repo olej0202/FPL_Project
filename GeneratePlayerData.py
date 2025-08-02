@@ -170,7 +170,7 @@ def GeneratePlayerData(Future, fixture_path,current_player_path, current_teams_p
     "Marcos_Senesi Barón":          "Marcos_Senesi",
     "Raúl_Jiménez Rodríguez":       "Raúl_Jiménez",
     "Robert_Lynch Sánchez":         "Robert_Sánchez",
-    "Rodrigo_'Rodri' Hernandez Cascante": "Rodrigo Hernandez",
+    "Rodrigo_'Rodri' Hernandez Cascante": "Rodrigo_Hernandez",
     "Rúben_dos Santos Gato Alves Dias":   "Rúben_Gato Alves Dias",
     "Kaoru_Mitoma":                 "Mitoma_Kaoru",
     "Matheus_Santos Carneiro da Cunha": "Matheus_Santos Carneiro Da Cunha",

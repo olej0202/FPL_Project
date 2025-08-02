@@ -21339,404 +21339,474 @@
 21337,Josh_Cullen,MID,2024-05-04,24,0,0,0.03,0.07,0,90,2,5.0,0.05,0.02,Newcastle
 21338,Josh_Cullen,MID,2024-05-11,24,0,0,0.02,0.0,0,87,1,1.5,0.0,0.01,Spurs
 21339,Josh_Cullen,MID,2024-05-19,24,0,2,0.07,0.12,1,82,9,9.0,0.07,0.04,Nott'm Forest
-21340,Jacob_Bruun Larsen,MID,2023-08-11,24,0,0,0.01,0.02,0,29,1,0.0,0.02,0.01,Man City
-21341,Jacob_Bruun Larsen,MID,2023-08-27,24,0,0,0.01,0.0,0,9,1,0.3,0.0,0.01,Aston Villa
-21342,Jacob_Bruun Larsen,MID,2023-09-02,24,0,0,0.05,0.06,0,22,1,4.2,0.04,0.03,Spurs
-21343,Jacob_Bruun Larsen,MID,2023-09-23,24,0,0,0.0,0.13,0,17,1,3.8,0.09,0.0,Man Utd
-21344,Jacob_Bruun Larsen,MID,2023-09-30,24,0,0,0.02,0.12,0,32,1,1.3,0.13,0.02,Newcastle
-21345,Jacob_Bruun Larsen,MID,2023-10-03,24,0,0,0.0,0.03,1,15,6,4.0,0.01,0.0,Luton
-21346,Jacob_Bruun Larsen,MID,2023-10-07,24,0,0,0.01,0.1,0,11,1,0.6,0.08,0.01,Chelsea
-21347,Jacob_Bruun Larsen,MID,2023-10-21,24,0,0,0.0,0.0,0,14,1,0.1,0.0,0.0,Brentford
-21348,Jacob_Bruun Larsen,MID,2023-10-28,24,0,0,0.02,0.0,0,22,1,1.9,0.0,0.01,Bournemouth
-21349,Jacob_Bruun Larsen,MID,2023-11-04,24,0,0,0.0,0.0,0,1,1,0.0,0.0,0.0,Crystal Palace
-21350,Jacob_Bruun Larsen,MID,2023-11-11,24,0,0,0.0,0.0,0,10,1,0.1,0.0,0.0,Arsenal
-21351,Jacob_Bruun Larsen,MID,2023-12-02,24,0,0,0.07,0.5,1,64,8,11.9,0.22,0.03,Sheffield Utd
-21352,Jacob_Bruun Larsen,MID,2023-12-05,24,0,0,0.04,0.07,0,69,2,3.5,0.05,0.03,Wolves
-21353,Jacob_Bruun Larsen,MID,2023-12-16,24,0,0,0.09,0.22,0,81,2,6.6,0.15,0.06,Everton
-21354,Jacob_Bruun Larsen,MID,2023-12-23,24,0,0,0.02,0.0,0,45,1,1.6,0.0,0.01,Fulham
-21355,Jacob_Bruun Larsen,MID,2023-12-26,24,0,0,0.0,0.03,0,5,1,0.0,0.03,0.0,Liverpool
-21356,Jacob_Bruun Larsen,MID,2024-01-12,24,0,0,0.0,0.0,0,6,1,0.1,0.0,0.0,Luton
-21357,Jacob_Bruun Larsen,MID,2024-02-03,24,0,0,0.0,0.0,0,3,1,0.0,0.0,0.0,Fulham
-21358,Jacob_Bruun Larsen,MID,2024-02-10,24,0,0,0.01,0.0,0,4,1,0.2,0.0,0.01,Liverpool
-21359,Jacob_Bruun Larsen,MID,2024-02-17,24,0,0,0.0,0.03,0,10,1,0.0,0.04,0.0,Arsenal
-21360,Jacob_Bruun Larsen,MID,2024-03-03,24,0,0,0.15,0.13,0,68,2,4.9,0.07,0.08,Bournemouth
-21361,Jacob_Bruun Larsen,MID,2024-03-10,24,0,0,0.02,0.04,0,45,1,2.4,0.03,0.01,West Ham
-21362,Jacob_Bruun Larsen,MID,2024-03-16,24,0,3,0.31,1.0,1,68,11,12.7,0.73,0.23,Brentford
-21363,Jacob_Bruun Larsen,MID,2024-03-30,24,0,0,0.1,0.25,0,45,1,5.5,0.21,0.08,Chelsea
-21364,Jacob_Bruun Larsen,MID,2024-04-02,24,0,3,0.06,0.49,1,72,10,11.1,0.28,0.03,Wolves
-21365,Jacob_Bruun Larsen,MID,2024-04-06,24,0,0,0.03,0.03,0,68,2,2.6,0.02,0.02,Everton
-21366,Jacob_Bruun Larsen,MID,2024-04-13,24,0,0,0.07,0.44,0,85,2,3.7,0.29,0.05,Brighton
-21367,Jacob_Bruun Larsen,MID,2024-04-20,24,0,0,0.05,0.25,1,58,6,8.6,0.1,0.02,Sheffield Utd
-21368,Jacob_Bruun Larsen,MID,2024-04-27,24,0,0,0.05,0.13,0,71,3,5.0,0.1,0.04,Man Utd
-21369,Jacob_Bruun Larsen,MID,2024-05-04,24,0,0,0.04,0.1,0,61,2,6.6,0.07,0.03,Newcastle
-21370,Jacob_Bruun Larsen,MID,2024-05-11,24,0,1,0.06,0.42,1,80,7,9.1,0.29,0.04,Spurs
-21371,Jacob_Bruun Larsen,MID,2024-05-19,24,0,0,0.15,0.06,0,45,1,6.4,0.04,0.09,Nott'm Forest
-21372,Hjalmar_Ekdal,DEF,2023-12-02,24,0,0,0.0,0.0,0,7,1,0.4,0.0,0.0,Sheffield Utd
-21373,Hjalmar_Ekdal,DEF,2023-12-05,24,0,0,0.01,0.0,0,90,1,1.9,0.0,0.01,Wolves
-21374,Hjalmar_Ekdal,DEF,2023-12-09,24,0,0,0.0,0.0,0,8,1,0.5,0.0,0.0,Brighton
-21375,Hjalmar_Ekdal,DEF,2024-01-12,24,0,0,0.0,0.04,0,90,2,1.4,0.02,0.0,Luton
-21376,Hjalmar_Ekdal,DEF,2024-01-31,24,0,0,0.0,0.02,0,85,0,3.1,0.03,0.0,Man City
-21377,Hjalmar_Ekdal,DEF,2024-02-03,24,0,0,0.0,0.0,0,45,0,0.4,0.0,0.0,Fulham
-21378,Hjalmar_Ekdal,DEF,2024-04-13,24,0,3,0.0,0.0,0,66,9,2.2,0.0,0.0,Brighton
-21379,Hjalmar_Ekdal,DEF,2024-05-04,24,0,0,0.0,0.0,0,45,1,0.8,0.0,0.0,Newcastle
-21380,Jordan_Beyer,DEF,2023-08-11,24,0,0,0.0,0.0,0,73,1,0.0,0.0,0.0,Man City
-21381,Jordan_Beyer,DEF,2023-09-02,24,0,0,0.0,0.0,0,73,-1,2.3,0.0,0.0,Spurs
-21382,Jordan_Beyer,DEF,2023-09-18,24,0,1,0.01,0.0,0,87,3,2.3,0.0,0.01,Nott'm Forest
-21383,Jordan_Beyer,DEF,2023-09-23,24,0,0,0.01,0.0,0,90,1,2.5,0.0,0.01,Man Utd
-21384,Jordan_Beyer,DEF,2023-09-30,24,0,0,0.0,0.0,0,90,0,2.6,0.0,0.0,Newcastle
-21385,Jordan_Beyer,DEF,2023-10-03,24,0,0,0.01,0.0,0,90,2,2.6,0.0,0.0,Luton
-21386,Jordan_Beyer,DEF,2023-11-04,24,0,0,0.01,0.06,0,85,2,1.5,0.05,0.01,Crystal Palace
-21387,Jordan_Beyer,DEF,2023-11-11,24,0,0,0.01,0.0,0,90,1,5.1,0.0,0.01,Arsenal
-21388,Jordan_Beyer,DEF,2023-11-25,24,0,0,0.0,0.08,0,90,0,1.6,0.05,0.0,West Ham
-21389,Jordan_Beyer,DEF,2023-12-02,24,1,3,0.01,0.12,0,90,11,4.6,0.05,0.0,Sheffield Utd
-21390,Jordan_Beyer,DEF,2023-12-09,24,0,0,0.0,0.0,0,90,2,3.4,0.0,0.0,Brighton
-21391,Jordan_Beyer,DEF,2023-12-16,24,0,0,0.1,0.07,0,90,1,2.8,0.05,0.07,Everton
-21392,Jordan_Beyer,DEF,2023-12-23,24,0,0,0.01,0.0,0,90,5,3.4,0.0,0.01,Fulham
-21393,Jordan_Beyer,DEF,2023-12-26,24,0,0,0.02,0.23,0,90,1,4.7,0.2,0.02,Liverpool
-21394,Jordan_Beyer,DEF,2023-12-30,24,0,0,0.0,0.0,0,16,1,0.0,0.0,0.0,Aston Villa
-21395,Lyle_Foster,FWD,2023-08-11,24,0,0,0.04,0.14,0,90,2,0.0,0.17,0.05,Man City
-21396,Lyle_Foster,FWD,2023-08-27,24,0,1,0.0,0.13,1,80,7,5.7,0.1,0.0,Aston Villa
-21397,Lyle_Foster,FWD,2023-09-02,24,0,0,0.05,0.54,1,90,6,9.5,0.32,0.03,Spurs
-21398,Lyle_Foster,FWD,2023-09-18,24,1,0,0.01,0.15,0,90,2,5.4,0.1,0.01,Nott'm Forest
-21399,Lyle_Foster,FWD,2023-10-03,24,0,3,0.04,0.47,1,79,9,6.3,0.23,0.02,Luton
-21400,Lyle_Foster,FWD,2023-10-07,24,1,0,0.09,0.13,0,90,5,4.0,0.1,0.07,Chelsea
-21401,Lyle_Foster,FWD,2023-10-21,24,0,0,0.25,0.0,0,90,2,3.5,0.0,0.19,Brentford
-21402,Lyle_Foster,FWD,2023-12-16,24,0,0,0.0,0.07,0,45,1,3.2,0.05,0.0,Everton
-21403,Lyle_Foster,FWD,2023-12-23,24,1,0,0.02,0.07,0,64,5,5.5,0.05,0.01,Fulham
-21404,Lyle_Foster,FWD,2023-12-26,24,0,0,0.01,0.0,0,84,2,1.9,0.0,0.01,Liverpool
-21405,Lyle_Foster,FWD,2023-12-30,24,0,0,0.02,0.19,1,90,6,7.8,0.18,0.02,Aston Villa
-21406,Lyle_Foster,FWD,2024-01-12,24,0,0,0.03,0.05,0,90,2,5.1,0.02,0.01,Luton
-21407,Lyle_Foster,FWD,2024-01-31,24,0,0,0.0,0.05,0,58,1,0.5,0.06,0.0,Man City
-21408,Lyle_Foster,FWD,2024-02-03,24,0,0,0.02,0.01,0,90,2,2.4,0.01,0.01,Fulham
-21409,Lyle_Foster,FWD,2024-03-16,24,0,0,0.0,0.0,0,2,1,0.2,0.0,0.0,Brentford
-21410,Lyle_Foster,FWD,2024-03-30,24,0,0,0.06,0.48,0,68,2,4.7,0.4,0.05,Chelsea
-21411,Lyle_Foster,FWD,2024-04-02,24,0,0,0.12,0.0,0,85,2,4.9,0.0,0.07,Wolves
-21412,Lyle_Foster,FWD,2024-04-06,24,0,0,0.04,0.06,0,90,2,3.8,0.05,0.03,Everton
-21413,Lyle_Foster,FWD,2024-04-13,24,0,0,0.1,0.0,0,90,2,2.9,0.0,0.07,Brighton
-21414,Lyle_Foster,FWD,2024-04-20,24,0,0,0.01,0.66,1,83,6,11.1,0.27,0.0,Sheffield Utd
-21415,Lyle_Foster,FWD,2024-04-27,24,0,0,0.05,0.57,0,90,2,6.3,0.44,0.04,Man Utd
-21416,Lyle_Foster,FWD,2024-05-04,24,0,0,0.21,0.59,0,84,2,5.5,0.42,0.15,Newcastle
-21417,Lyle_Foster,FWD,2024-05-11,24,0,0,0.02,0.0,0,86,2,1.5,0.0,0.01,Spurs
-21418,Lyle_Foster,FWD,2024-05-19,24,0,0,0.08,0.0,0,90,2,4.6,0.0,0.05,Nott'm Forest
-21419,Jordan_Henderson,MID,2022-08-06,23,0,0,0.0,0.0,0,90,2,5.1,0.0,0.0,Fulham
-21420,Jordan_Henderson,MID,2022-08-15,23,0,0,0.0,0.0,0,27,1,2.4,0.0,0.0,Crystal Palace
-21421,Jordan_Henderson,MID,2022-08-22,23,0,0,0.0,0.0,0,58,1,3.0,0.0,0.0,Man Utd
-21422,Jordan_Henderson,MID,2022-08-27,23,0,0,0.0,0.0,0,69,3,2.0,0.0,0.0,Bournemouth
-21423,Jordan_Henderson,MID,2022-08-31,23,0,0,0.0,0.0,0,70,2,2.9,0.0,0.0,Newcastle
-21424,Jordan_Henderson,MID,2022-10-01,23,0,0,0.0,0.0,0,58,1,3.6,0.0,0.0,Brighton
-21425,Jordan_Henderson,MID,2022-10-09,23,0,0,0.0,0.0,0,90,2,4.0,0.0,0.0,Arsenal
-21426,Jordan_Henderson,MID,2022-10-16,23,0,0,0.0,0.0,0,17,1,1.5,0.0,0.0,Man City
-21427,Jordan_Henderson,MID,2022-10-19,23,0,0,0.0,0.0,0,90,3,5.8,0.0,0.0,West Ham
-21428,Jordan_Henderson,MID,2022-10-22,23,0,0,0.0,0.0,0,28,1,0.7,0.0,0.0,Nott'm Forest
-21429,Jordan_Henderson,MID,2022-10-29,23,0,0,0.0,0.0,0,29,1,2.8,0.0,0.0,Leeds
-21430,Jordan_Henderson,MID,2022-11-06,23,0,0,0.0,0.0,0,16,1,0.2,0.0,0.0,Spurs
-21431,Jordan_Henderson,MID,2022-12-26,23,0,0,0.1,0.03,0,78,2,4.4,0.02,0.08,Aston Villa
-21432,Jordan_Henderson,MID,2022-12-30,23,0,0,0.02,0.1,0,90,2,3.0,0.05,0.01,Leicester
-21433,Jordan_Henderson,MID,2023-01-14,23,0,0,0.01,0.0,0,68,1,0.7,0.0,0.01,Brighton
-21434,Jordan_Henderson,MID,2023-01-21,23,0,0,0.01,0.0,0,8,1,1.4,0.0,0.01,Chelsea
-21435,Jordan_Henderson,MID,2023-02-04,23,0,0,0.01,0.0,0,25,1,0.5,0.0,0.01,Wolves
-21436,Jordan_Henderson,MID,2023-02-13,23,0,0,0.01,0.0,0,79,3,1.4,0.0,0.01,Everton
-21437,Jordan_Henderson,MID,2023-02-18,23,0,0,0.01,0.01,0,58,1,1.7,0.01,0.01,Newcastle
-21438,Jordan_Henderson,MID,2023-02-25,23,0,0,0.02,0.0,0,90,2,1.6,0.0,0.01,Crystal Palace
-21439,Jordan_Henderson,MID,2023-03-01,23,0,0,0.01,0.0,0,11,1,0.4,0.0,0.01,Wolves
-21440,Jordan_Henderson,MID,2023-03-05,23,1,0,0.19,0.05,0,77,6,5.5,0.04,0.14,Man Utd
-21441,Jordan_Henderson,MID,2023-03-11,23,0,0,0.02,0.0,0,25,1,1.3,0.0,0.01,Bournemouth
-21442,Jordan_Henderson,MID,2023-04-01,23,0,0,0.02,0.0,0,90,2,0.9,0.0,0.02,Man City
-21443,Jordan_Henderson,MID,2023-04-04,23,0,0,0.05,0.14,0,90,3,1.3,0.12,0.04,Chelsea
-21444,Jordan_Henderson,MID,2023-04-09,23,1,0,0.24,0.32,0,90,5,5.3,0.41,0.31,Arsenal
-21445,Jordan_Henderson,MID,2023-04-17,23,1,0,0.27,0.0,0,80,5,8.7,0.0,0.17,Leeds
-21446,Jordan_Henderson,MID,2023-04-22,23,0,0,0.09,0.11,0,90,2,4.5,0.06,0.05,Nott'm Forest
-21447,Jordan_Henderson,MID,2023-04-26,23,0,0,0.66,0.0,0,58,1,6.5,0.0,0.43,West Ham
-21448,Jordan_Henderson,MID,2023-04-30,23,0,0,0.04,0.0,0,27,1,2.6,0.0,0.02,Spurs
-21449,Jordan_Henderson,MID,2023-05-03,23,0,0,0.08,0.11,0,90,3,4.4,0.07,0.05,Fulham
-21450,Jordan_Henderson,MID,2023-05-06,23,0,0,0.02,0.0,0,17,1,1.7,0.0,0.02,Brentford
-21451,Jordan_Henderson,MID,2023-05-15,23,0,0,0.06,0.0,0,73,3,4.7,0.0,0.03,Leicester
-21452,Jordan_Henderson,MID,2023-05-20,23,0,0,0.08,0.0,0,71,2,2.6,0.0,0.06,Aston Villa
-21453,Jordan_Henderson,MID,2023-05-28,23,0,0,0.22,0.04,0,33,1,0.0,0.02,0.11,Southampton
-21454,Hannes_Delcroix,DEF,2023-08-27,24,0,0,0.04,0.06,0,90,1,6.5,0.04,0.03,Aston Villa
-21455,Hannes_Delcroix,DEF,2023-09-02,24,0,0,0.0,0.29,0,45,-1,2.7,0.17,0.0,Spurs
-21456,Hannes_Delcroix,DEF,2023-09-18,24,0,0,0.0,0.0,0,3,1,0.0,0.0,0.0,Nott'm Forest
-21457,Hannes_Delcroix,DEF,2023-10-03,24,0,0,0.0,0.0,0,1,1,0.0,0.0,0.0,Luton
-21458,Hannes_Delcroix,DEF,2023-10-07,24,0,0,0.0,0.0,0,90,0,1.5,0.0,0.0,Chelsea
-21459,Hannes_Delcroix,DEF,2023-10-21,24,0,0,0.0,0.0,0,10,1,0.4,0.0,0.0,Brentford
-21460,Hannes_Delcroix,DEF,2023-12-16,24,0,0,0.02,0.0,0,69,1,2.5,0.0,0.01,Everton
-21461,Hannes_Delcroix,DEF,2023-12-23,24,0,0,0.0,0.0,0,1,1,0.0,0.0,0.0,Fulham
-21462,Hannes_Delcroix,DEF,2023-12-30,24,0,0,0.0,0.0,0,73,1,0.7,0.0,0.0,Aston Villa
-21463,Hannes_Delcroix,DEF,2024-02-10,24,0,0,0.03,0.0,0,90,1,2.2,0.0,0.04,Liverpool
-21464,Hannes_Delcroix,DEF,2024-02-17,24,0,0,0.03,0.0,0,90,0,3.3,0.0,0.04,Arsenal
-21465,Hannes_Delcroix,DEF,2024-03-10,24,0,0,0.0,0.0,0,22,0,1.1,0.0,0.0,West Ham
-21466,Aaron_Ramsey,MID,2023-08-27,24,0,0,0.01,0.0,0,22,1,0.2,0.0,0.01,Aston Villa
-21467,Aaron_Ramsey,MID,2023-09-23,24,0,0,0.43,0.05,0,72,2,4.6,0.03,0.3,Man Utd
-21468,Aaron_Ramsey,MID,2023-09-30,24,0,0,0.0,0.0,0,66,2,0.2,0.0,0.0,Newcastle
-21469,Aaron_Ramsey,MID,2023-10-03,24,0,0,0.0,0.0,0,19,1,0.1,0.0,0.0,Luton
-21470,Aaron_Ramsey,MID,2023-10-07,24,0,0,0.0,0.0,0,29,1,0.7,0.0,0.0,Chelsea
-21471,Aaron_Ramsey,MID,2023-11-11,24,0,0,0.0,0.0,0,10,1,0.1,0.0,0.0,Arsenal
-21472,Aaron_Ramsey,MID,2023-11-25,24,0,0,0.02,0.05,0,17,1,0.7,0.03,0.01,West Ham
-21473,Aaron_Ramsey,MID,2023-12-09,24,0,0,0.0,0.0,0,20,1,0.1,0.0,0.0,Brighton
-21474,Aaron_Ramsey,MID,2023-12-26,24,0,0,0.0,0.0,0,1,1,0.5,0.0,0.0,Liverpool
-21475,Aaron_Ramsey,MID,2023-12-30,24,0,0,0.0,0.0,0,31,1,0.1,0.0,0.0,Aston Villa
-21476,Aaron_Ramsey,MID,2024-01-31,24,0,0,0.0,0.0,0,31,1,0.5,0.0,0.0,Man City
-21477,Aaron_Ramsey,MID,2024-02-03,24,0,0,0.02,0.16,0,62,2,3.3,0.1,0.01,Fulham
-21478,Aaron_Ramsey,MID,2024-02-10,24,0,0,0.0,0.01,0,80,2,1.6,0.01,0.0,Liverpool
-21479,Aaron_Ramsey,MID,2024-02-17,24,0,0,0.0,0.08,0,62,1,0.0,0.11,0.0,Arsenal
-21480,Sam_Greenwood,FWD,2022-08-06,23,0,0,0.0,0.0,0,17,1,2.2,0.0,0.0,Wolves
-21481,Sam_Greenwood,FWD,2022-08-21,23,0,0,0.0,0.0,0,7,1,0.4,0.0,0.0,Chelsea
-21482,Sam_Greenwood,FWD,2022-09-03,23,0,0,0.0,0.0,0,4,1,2.6,0.0,0.0,Brentford
-21483,Sam_Greenwood,FWD,2022-10-23,23,0,0,0.0,0.0,0,75,2,1.5,0.0,0.0,Fulham
-21484,Sam_Greenwood,FWD,2022-11-05,23,1,1,0.0,0.0,1,36,9,13.9,0.0,0.0,Bournemouth
-21485,Sam_Greenwood,FWD,2022-11-12,23,0,0,0.05,0.16,0,45,1,4.1,0.11,0.03,Spurs
-21486,Sam_Greenwood,FWD,2022-12-28,23,1,0,0.2,0.13,0,90,4,5.4,0.15,0.22,Man City
-21487,Sam_Greenwood,FWD,2023-01-04,23,0,0,0.15,0.0,0,12,1,1.6,0.0,0.1,West Ham
-21488,Sam_Greenwood,FWD,2023-01-13,23,0,0,0.07,0.0,0,13,1,2.0,0.0,0.05,Aston Villa
-21489,Sam_Greenwood,FWD,2023-01-22,23,0,0,0.01,0.0,0,3,1,0.0,0.0,0.01,Brentford
-21490,Sam_Greenwood,FWD,2023-02-05,23,0,0,0.0,0.0,0,7,1,0.0,0.0,0.0,Nott'm Forest
-21491,Sam_Greenwood,FWD,2023-02-08,23,0,0,0.0,0.0,0,1,1,0.2,0.0,0.0,Man Utd
-21492,Sam_Greenwood,FWD,2023-02-12,23,0,0,0.07,0.0,0,4,1,3.2,0.0,0.05,Man Utd
-21493,Sam_Greenwood,FWD,2023-02-18,23,0,0,0.13,0.0,0,4,1,2.1,0.0,0.1,Everton
-21494,Sam_Greenwood,FWD,2023-03-04,23,0,0,0.07,0.0,0,10,1,1.4,0.0,0.06,Chelsea
-21495,Sam_Greenwood,FWD,2023-05-06,23,0,0,0.0,0.0,0,31,1,0.0,0.0,0.0,Man City
-21496,Sam_Greenwood,FWD,2023-05-13,23,0,0,0.0,0.08,0,45,1,0.4,0.07,0.0,Newcastle
-21497,Sam_Greenwood,FWD,2023-05-21,23,0,0,0.02,0.0,0,6,1,0.6,0.0,0.01,West Ham
-21498,Luis_Sinisterra Lucumí,MID,2022-08-13,23,0,0,0.0,0.0,0,6,1,0.2,0.0,0.0,Southampton
-21499,Luis_Sinisterra Lucumí,MID,2022-08-21,23,0,0,0.0,0.0,0,20,1,0.2,0.0,0.0,Chelsea
-21500,Luis_Sinisterra Lucumí,MID,2022-08-27,23,0,0,0.0,0.0,0,31,1,0.7,0.0,0.0,Brighton
-21501,Luis_Sinisterra Lucumí,MID,2022-08-30,23,0,3,0.0,0.0,1,63,10,7.2,0.0,0.0,Everton
-21502,Luis_Sinisterra Lucumí,MID,2022-09-03,23,0,0,0.0,0.0,1,58,5,7.0,0.0,0.0,Brentford
-21503,Luis_Sinisterra Lucumí,MID,2022-10-02,23,0,0,0.0,0.0,0,47,-2,0.8,0.0,0.0,Aston Villa
-21504,Luis_Sinisterra Lucumí,MID,2022-10-16,23,0,0,0.0,0.0,0,88,2,9.3,0.0,0.0,Arsenal
-21505,Luis_Sinisterra Lucumí,MID,2022-10-20,23,0,0,0.0,0.0,0,74,2,2.2,0.0,0.0,Leicester
-21506,Luis_Sinisterra Lucumí,MID,2022-10-23,23,0,0,0.0,0.0,0,63,2,2.4,0.0,0.0,Fulham
-21507,Luis_Sinisterra Lucumí,MID,2023-01-22,23,0,0,0.01,0.0,0,21,1,0.5,0.0,0.0,Brentford
-21508,Luis_Sinisterra Lucumí,MID,2023-02-05,23,0,0,0.01,0.45,0,56,1,5.5,0.3,0.01,Nott'm Forest
-21509,Luis_Sinisterra Lucumí,MID,2023-02-08,23,0,0,0.0,0.0,0,7,1,0.0,0.0,0.0,Man Utd
-21510,Luis_Sinisterra Lucumí,MID,2023-03-11,23,0,0,0.0,0.0,0,1,1,0.0,0.0,0.0,Brighton
-21511,Luis_Sinisterra Lucumí,MID,2023-04-01,23,0,0,0.03,0.0,0,64,2,2.5,0.0,0.03,Arsenal
-21512,Luis_Sinisterra Lucumí,MID,2023-04-04,23,0,3,0.31,0.16,1,73,10,11.5,0.09,0.18,Nott'm Forest
-21513,Luis_Sinisterra Lucumí,MID,2023-04-09,23,0,0,0.02,0.26,0,59,1,5.3,0.21,0.02,Crystal Palace
-21514,Luis_Sinisterra Lucumí,MID,2023-04-17,23,0,0,0.02,0.7,1,76,7,7.0,0.56,0.02,Liverpool
-21515,Luis_Sinisterra Lucumí,MID,2023-04-22,23,0,0,0.03,0.23,0,25,1,1.5,0.16,0.02,Fulham
-21516,Luis_Sinisterra Lucumí,MID,2023-04-25,23,0,0,0.0,0.54,1,31,6,6.8,0.28,0.0,Leicester
-21517,Joe_Gelhardt,FWD,2022-08-06,23,0,0,0.0,0.0,0,6,1,0.1,0.0,0.0,Wolves
-21518,Joe_Gelhardt,FWD,2022-08-21,23,0,0,0.0,0.0,0,7,1,0.0,0.0,0.0,Chelsea
-21519,Joe_Gelhardt,FWD,2022-08-27,23,0,0,0.0,0.0,0,8,1,1.0,0.0,0.0,Brighton
-21520,Joe_Gelhardt,FWD,2022-08-30,23,0,0,0.0,0.0,0,44,1,3.1,0.0,0.0,Everton
-21521,Joe_Gelhardt,FWD,2022-09-03,23,0,0,0.0,0.0,0,58,1,1.4,0.0,0.0,Brentford
-21522,Joe_Gelhardt,FWD,2022-10-09,23,0,0,0.0,0.0,0,6,1,2.0,0.0,0.0,Crystal Palace
-21523,Joe_Gelhardt,FWD,2022-10-16,23,0,0,0.0,0.0,0,1,1,0.0,0.0,0.0,Arsenal
-21524,Joe_Gelhardt,FWD,2022-10-20,23,0,0,0.0,0.0,0,15,1,0.5,0.0,0.0,Leicester
-21525,Joe_Gelhardt,FWD,2022-10-23,23,1,0,0.0,0.0,0,6,4,3.2,0.0,0.0,Fulham
-21526,Joe_Gelhardt,FWD,2022-11-05,23,0,0,0.0,0.0,0,9,0,2.2,0.0,0.0,Bournemouth
-21527,Joe_Gelhardt,FWD,2022-11-12,23,0,0,0.0,0.0,0,1,1,0.1,0.0,0.0,Spurs
-21528,Joe_Gelhardt,FWD,2022-12-28,23,0,0,0.0,0.14,0,18,1,0.7,0.15,0.0,Man City
-21529,Joe_Gelhardt,FWD,2022-12-31,23,0,0,0.0,0.05,0,8,1,2.0,0.05,0.0,Newcastle
-21530,Joe_Gelhardt,FWD,2023-01-04,23,0,0,0.0,0.0,0,1,1,0.0,0.0,0.0,West Ham
-21531,Joe_Gelhardt,FWD,2023-01-13,23,1,0,0.0,0.0,0,13,4,3.1,0.0,0.0,Aston Villa
-21532,Daniel_James,MID,2022-08-13,23,0,0,0.0,0.0,0,56,1,2.6,0.0,0.0,Southampton
-21533,Daniel_James,MID,2022-08-21,23,0,0,0.0,0.0,0,69,3,2.4,0.0,0.0,Chelsea
-21534,Daniel_James,MID,2022-08-27,23,0,0,0.0,0.0,0,58,1,0.9,0.0,0.0,Brighton
-21535,Daniel_James,MID,2022-08-30,23,0,0,0.0,0.0,0,14,1,0.6,0.0,0.0,Everton
-21536,Daniel_James,MID,2022-09-03,23,0,0,0.0,0.0,0,30,1,1.4,0.0,0.0,Spurs
-21537,Daniel_James,MID,2022-09-16,23,0,0,0.0,0.0,0,20,1,3.7,0.0,0.0,Nott'm Forest
-21538,Daniel_James,MID,2022-10-01,23,0,0,0.0,0.0,0,69,2,1.2,0.0,0.0,Newcastle
-21539,Daniel_James,MID,2022-10-09,23,0,0,0.0,0.0,0,76,2,0.9,0.0,0.0,West Ham
-21540,Daniel_James,MID,2022-10-15,23,0,0,0.0,0.0,0,45,1,5.7,0.0,0.0,Bournemouth
-21541,Daniel_James,MID,2022-10-20,23,0,0,0.0,0.0,0,17,1,0.3,0.0,0.0,Aston Villa
-21542,Daniel_James,MID,2022-11-05,23,0,0,0.0,0.0,0,14,1,0.2,0.0,0.0,Man City
-21543,Daniel_James,MID,2022-11-13,23,0,0,0.01,0.76,1,31,6,0.0,0.52,0.01,Man Utd
-21544,Daniel_James,MID,2022-12-26,23,0,0,0.0,0.0,0,8,1,0.1,0.0,0.0,Crystal Palace
-21545,Daniel_James,MID,2022-12-31,23,0,0,0.0,0.0,0,28,1,0.9,0.0,0.0,Southampton
-21546,Daniel_James,MID,2023-01-12,23,0,0,0.0,0.0,0,1,1,0.0,0.0,0.0,Chelsea
-21547,Daniel_James,MID,2023-01-15,23,0,0,0.0,0.0,0,13,1,0.0,0.0,0.0,Newcastle
-21548,Daniel_James,MID,2023-03-12,23,0,0,0.0,0.0,0,14,1,0.3,0.0,0.0,Arsenal
-21549,Daniel_James,MID,2023-04-01,23,0,0,0.01,0.12,0,21,1,1.4,0.08,0.01,Bournemouth
-21550,Daniel_James,MID,2023-04-08,23,0,0,0.0,0.0,0,5,1,0.1,0.0,0.0,West Ham
-21551,Daniel_James,MID,2023-04-15,23,1,2,0.01,0.31,1,89,12,11.5,0.23,0.01,Everton
-21552,Daniel_James,MID,2023-04-25,23,0,0,0.02,0.0,0,90,2,1.4,0.0,0.02,Aston Villa
-21553,Daniel_James,MID,2023-04-30,23,0,0,0.0,0.0,0,14,1,0.1,0.0,0.0,Man City
-21554,Daniel_James,MID,2023-05-03,23,0,0,0.14,0.0,0,10,1,1.8,0.0,0.13,Liverpool
-21555,Daniel_James,MID,2023-05-28,23,0,0,0.08,0.0,0,10,1,0.0,0.0,0.08,Man Utd
-21556,Brenden_Aaronson,MID,2022-08-06,23,0,0,0.0,0.0,0,84,2,2.2,0.0,0.0,Wolves
-21557,Brenden_Aaronson,MID,2022-08-13,23,0,0,0.0,0.0,0,90,1,5.5,0.0,0.0,Southampton
-21558,Brenden_Aaronson,MID,2022-08-21,23,0,0,0.0,0.0,1,82,8,11.5,0.0,0.0,Chelsea
-21559,Brenden_Aaronson,MID,2022-08-27,23,0,0,0.0,0.0,0,81,1,2.0,0.0,0.0,Brighton
-21560,Brenden_Aaronson,MID,2022-08-30,23,1,0,0.0,0.0,0,75,5,9.5,0.0,0.0,Everton
-21561,Brenden_Aaronson,MID,2022-09-03,23,0,0,0.0,0.0,0,90,2,3.8,0.0,0.0,Brentford
-21562,Brenden_Aaronson,MID,2022-10-02,23,0,0,0.0,0.0,0,78,3,3.7,0.0,0.0,Aston Villa
-21563,Brenden_Aaronson,MID,2022-10-09,23,1,0,0.0,0.0,0,75,5,1.8,0.0,0.0,Crystal Palace
-21564,Brenden_Aaronson,MID,2022-10-16,23,0,0,0.0,0.0,0,90,2,7.8,0.0,0.0,Arsenal
-21565,Brenden_Aaronson,MID,2022-10-20,23,0,0,0.0,0.0,0,90,2,4.7,0.0,0.0,Leicester
-21566,Brenden_Aaronson,MID,2022-10-23,23,0,0,0.0,0.0,0,90,2,10.8,0.0,0.0,Fulham
-21567,Brenden_Aaronson,MID,2022-10-29,23,0,0,0.0,0.0,0,90,2,3.9,0.0,0.0,Liverpool
-21568,Brenden_Aaronson,MID,2022-11-05,23,0,0,0.0,0.0,0,85,2,4.8,0.0,0.0,Bournemouth
-21569,Brenden_Aaronson,MID,2022-11-12,23,1,0,0.05,0.08,0,90,5,7.6,0.06,0.03,Spurs
-21570,Brenden_Aaronson,MID,2022-12-28,23,0,0,0.02,0.03,0,82,2,1.7,0.03,0.03,Man City
-21571,Brenden_Aaronson,MID,2022-12-31,23,0,0,0.01,0.17,0,90,3,3.5,0.17,0.01,Newcastle
-21572,Brenden_Aaronson,MID,2023-01-04,23,0,0,0.02,0.09,0,62,2,0.6,0.06,0.01,West Ham
-21573,Brenden_Aaronson,MID,2023-01-13,23,0,0,0.06,0.14,0,76,2,3.4,0.11,0.05,Aston Villa
-21574,Brenden_Aaronson,MID,2023-01-22,23,0,0,0.03,0.17,0,69,3,2.9,0.11,0.02,Brentford
-21575,Brenden_Aaronson,MID,2023-02-08,23,0,0,0.02,0.04,0,27,1,0.4,0.03,0.02,Man Utd
-21576,Brenden_Aaronson,MID,2023-02-12,23,0,0,0.0,0.05,0,17,1,0.6,0.04,0.0,Man Utd
-21577,Brenden_Aaronson,MID,2023-02-18,23,0,0,0.11,0.04,0,29,1,0.7,0.03,0.08,Everton
-21578,Brenden_Aaronson,MID,2023-02-25,23,0,0,0.03,0.17,0,74,3,4.4,0.09,0.02,Southampton
-21579,Brenden_Aaronson,MID,2023-03-04,23,0,0,0.01,0.06,0,67,2,1.7,0.05,0.01,Chelsea
-21580,Brenden_Aaronson,MID,2023-03-11,23,0,0,0.11,0.16,0,83,2,5.9,0.11,0.07,Brighton
-21581,Brenden_Aaronson,MID,2023-03-18,23,0,0,0.22,0.02,0,80,2,2.9,0.01,0.15,Wolves
-21582,Brenden_Aaronson,MID,2023-04-01,23,0,0,0.08,0.26,0,64,2,6.4,0.27,0.08,Arsenal
-21583,Brenden_Aaronson,MID,2023-04-04,23,0,0,0.15,0.0,0,73,2,6.5,0.0,0.09,Nott'm Forest
-21584,Brenden_Aaronson,MID,2023-04-09,23,1,0,0.15,0.36,0,59,4,11.0,0.29,0.12,Crystal Palace
-21585,Brenden_Aaronson,MID,2023-04-17,23,0,0,0.06,0.06,0,65,2,3.3,0.05,0.05,Liverpool
-21586,Brenden_Aaronson,MID,2023-04-22,23,0,0,0.03,0.0,0,64,2,2.0,0.0,0.02,Fulham
-21587,Brenden_Aaronson,MID,2023-04-25,23,0,0,0.0,0.06,0,22,1,2.4,0.03,0.0,Leicester
-21588,Brenden_Aaronson,MID,2023-05-06,23,0,0,0.0,0.0,0,10,1,0.0,0.0,0.0,Man City
-21589,Brenden_Aaronson,MID,2023-05-13,23,0,0,0.0,0.0,0,3,1,0.0,0.0,0.0,Newcastle
-21590,Brenden_Aaronson,MID,2023-05-21,23,0,0,0.0,0.2,0,28,1,1.2,0.13,0.0,West Ham
-21591,Brenden_Aaronson,MID,2023-05-28,23,0,0,0.0,0.0,0,31,1,0.0,0.0,0.0,Spurs
-21592,Adama_Traoré Diarra,MID,2022-08-13,23,0,0,0.0,0.0,0,11,1,0.2,0.0,0.0,Fulham
-21593,Adama_Traoré Diarra,MID,2022-08-20,23,0,0,0.0,0.0,0,19,1,0.9,0.0,0.0,Spurs
-21594,Adama_Traoré Diarra,MID,2022-08-31,23,0,0,0.0,0.0,0,15,1,0.5,0.0,0.0,Bournemouth
-21595,Adama_Traoré Diarra,MID,2022-09-03,23,0,0,0.0,0.0,0,8,1,0.0,0.0,0.0,Southampton
-21596,Adama_Traoré Diarra,MID,2022-10-01,23,0,0,0.0,0.0,0,66,2,3.1,0.0,0.0,West Ham
-21597,Adama_Traoré Diarra,MID,2022-10-08,23,0,0,0.0,0.0,0,71,2,3.0,0.0,0.0,Chelsea
-21598,Adama_Traoré Diarra,MID,2022-10-15,23,1,0,0.0,0.0,0,84,6,8.3,0.0,0.0,Nott'm Forest
-21599,Adama_Traoré Diarra,MID,2022-10-18,23,0,0,0.0,0.0,1,57,6,6.9,0.0,0.0,Crystal Palace
-21600,Adama_Traoré Diarra,MID,2022-10-23,23,0,0,0.0,0.0,0,90,2,6.2,0.0,0.0,Leicester
-21601,Adama_Traoré Diarra,MID,2022-10-29,23,0,0,0.0,0.0,0,82,2,1.1,0.0,0.0,Brentford
-21602,Adama_Traoré Diarra,MID,2022-11-05,23,0,0,0.0,0.0,0,22,1,2.6,0.0,0.0,Brighton
-21603,Adama_Traoré Diarra,MID,2022-11-12,23,0,0,0.31,0.03,0,90,2,4.7,0.04,0.4,Arsenal
-21604,Adama_Traoré Diarra,MID,2022-12-26,23,0,0,0.03,0.0,0,30,1,1.3,0.0,0.02,Everton
-21605,Adama_Traoré Diarra,MID,2022-12-31,23,0,0,0.01,0.0,0,45,1,0.6,0.0,0.0,Man Utd
-21606,Adama_Traoré Diarra,MID,2023-01-04,23,0,0,0.01,0.06,0,45,1,0.8,0.05,0.01,Aston Villa
-21607,Adama_Traoré Diarra,MID,2023-01-14,23,0,0,0.15,0.04,0,17,1,2.8,0.03,0.1,West Ham
-21608,Adama_Traoré Diarra,MID,2023-01-22,23,0,0,0.0,0.0,0,45,1,0.3,0.0,0.0,Man City
-21609,Adama_Traoré Diarra,MID,2023-02-04,23,1,0,0.37,0.05,0,48,4,6.3,0.04,0.29,Liverpool
-21610,Adama_Traoré Diarra,MID,2023-02-11,23,1,0,0.08,0.2,0,45,4,2.2,0.1,0.04,Southampton
-21611,Adama_Traoré Diarra,MID,2023-02-18,23,0,0,0.74,0.04,0,76,2,9.5,0.02,0.4,Bournemouth
-21612,Adama_Traoré Diarra,MID,2023-02-24,23,0,0,0.08,0.0,0,30,1,1.0,0.0,0.06,Fulham
-21613,Adama_Traoré Diarra,MID,2023-03-01,23,0,0,0.0,0.0,0,45,1,0.9,0.0,0.0,Liverpool
-21614,Adama_Traoré Diarra,MID,2023-03-04,23,0,0,0.06,0.08,1,45,6,7.0,0.05,0.04,Spurs
-21615,Adama_Traoré Diarra,MID,2023-03-12,23,0,0,0.02,0.0,0,45,1,1.0,0.0,0.02,Newcastle
-21616,Adama_Traoré Diarra,MID,2023-03-18,23,0,0,0.32,0.0,0,33,1,3.8,0.0,0.19,Leeds
-21617,Adama_Traoré Diarra,MID,2023-04-01,23,0,0,0.01,0.07,0,64,2,3.5,0.05,0.01,Nott'm Forest
-21618,Adama_Traoré Diarra,MID,2023-04-08,23,0,0,0.0,0.0,0,16,1,0.1,0.0,0.0,Chelsea
-21619,Adama_Traoré Diarra,MID,2023-04-15,23,0,0,0.0,0.05,0,17,1,2.4,0.04,0.0,Brentford
-21620,Adama_Traoré Diarra,MID,2023-04-25,23,0,0,0.0,0.0,0,11,1,0.9,0.0,0.0,Crystal Palace
-21621,Adama_Traoré Diarra,MID,2023-04-29,23,0,0,0.0,0.0,0,7,0,0.0,0.0,0.0,Brighton
-21622,Adama_Traoré Diarra,MID,2023-05-06,23,0,0,0.0,0.0,0,6,1,0.1,0.0,0.0,Aston Villa
-21623,Adama_Traoré Diarra,MID,2023-05-13,23,0,0,0.0,0.0,0,15,1,0.0,0.0,0.0,Man Utd
-21624,Adama_Traoré Diarra,MID,2023-05-20,23,1,0,0.02,0.1,0,87,5,5.9,0.06,0.01,Everton
-21625,Adama_Traoré Diarra,MID,2023-05-28,23,0,0,0.25,0.06,0,90,2,0.0,0.06,0.24,Arsenal
-21626,Illan_Meslier,GK,2022-08-06,23,0,0,0.0,0.0,0,90,3,3.9,0.0,0.0,Wolves
-21627,Illan_Meslier,GK,2022-08-13,23,0,0,0.0,0.0,0,90,1,1.5,0.0,0.0,Southampton
-21628,Illan_Meslier,GK,2022-08-21,23,0,0,0.0,0.0,0,90,7,2.2,0.0,0.0,Chelsea
-21629,Illan_Meslier,GK,2022-08-27,23,0,0,0.0,0.0,0,90,3,2.5,0.0,0.0,Brighton
-21630,Illan_Meslier,GK,2022-08-30,23,0,0,0.0,0.0,0,90,2,1.1,0.0,0.0,Everton
-21631,Illan_Meslier,GK,2022-09-03,23,0,0,0.0,0.0,0,90,1,2.8,0.0,0.0,Brentford
-21632,Illan_Meslier,GK,2022-10-02,23,0,3,0.0,0.0,0,90,11,3.9,0.0,0.0,Aston Villa
-21633,Illan_Meslier,GK,2022-10-09,23,0,0,0.0,0.0,0,90,2,2.1,0.0,0.0,Crystal Palace
-21634,Illan_Meslier,GK,2022-10-16,23,0,0,0.0,0.0,0,90,3,2.0,0.0,0.0,Arsenal
-21635,Illan_Meslier,GK,2022-10-20,23,0,0,0.0,0.0,0,90,1,0.5,0.0,0.0,Leicester
-21636,Illan_Meslier,GK,2022-10-23,23,0,0,0.0,0.0,0,90,1,1.1,0.0,0.0,Fulham
-21637,Illan_Meslier,GK,2022-10-29,23,0,2,0.0,0.0,0,90,7,6.7,0.0,0.0,Liverpool
-21638,Illan_Meslier,GK,2022-11-05,23,0,0,0.0,0.0,0,90,1,1.9,0.0,0.0,Bournemouth
-21639,Illan_Meslier,GK,2022-11-12,23,0,0,0.0,0.0,0,90,1,3.0,0.0,0.0,Spurs
-21640,Illan_Meslier,GK,2022-12-28,23,0,0,0.0,0.0,0,90,3,4.2,0.0,0.0,Man City
-21641,Illan_Meslier,GK,2022-12-31,23,0,2,0.0,0.0,0,90,8,3.7,0.0,0.0,Newcastle
-21642,Illan_Meslier,GK,2023-01-04,23,0,0,0.0,0.0,0,90,1,0.5,0.0,0.0,West Ham
-21643,Illan_Meslier,GK,2023-01-13,23,0,0,0.0,0.0,0,90,1,2.1,0.0,0.0,Aston Villa
-21644,Illan_Meslier,GK,2023-01-22,23,0,0,0.0,0.0,0,90,6,0.2,0.0,0.0,Brentford
-21645,Illan_Meslier,GK,2023-02-05,23,0,0,0.0,0.0,0,90,2,1.0,0.0,0.0,Nott'm Forest
-21646,Illan_Meslier,GK,2023-02-08,23,0,0,0.0,0.0,0,90,2,2.7,0.0,0.0,Man Utd
-21647,Illan_Meslier,GK,2023-02-12,23,0,0,0.0,0.0,0,90,2,2.4,0.0,0.0,Man Utd
-21648,Illan_Meslier,GK,2023-02-18,23,0,0,0.0,0.0,0,90,3,2.4,0.0,0.0,Everton
-21649,Illan_Meslier,GK,2023-02-25,23,0,0,0.0,0.0,0,90,6,1.4,0.0,0.0,Southampton
-21650,Illan_Meslier,GK,2023-03-04,23,0,0,0.0,0.12,0,90,2,3.5,0.11,0.0,Chelsea
-21651,Illan_Meslier,GK,2023-03-11,23,0,0,0.0,0.0,0,90,1,1.2,0.0,0.0,Brighton
-21652,Illan_Meslier,GK,2023-03-18,23,0,0,0.0,0.0,0,90,2,5.3,0.0,0.0,Wolves
-21653,Illan_Meslier,GK,2023-04-01,23,0,0,0.0,0.0,0,90,0,1.1,0.0,0.0,Arsenal
-21654,Illan_Meslier,GK,2023-04-04,23,0,0,0.0,0.0,0,90,2,0.2,0.0,0.0,Nott'm Forest
-21655,Illan_Meslier,GK,2023-04-09,23,0,0,0.0,0.0,0,90,0,1.8,0.0,0.0,Crystal Palace
-21656,Illan_Meslier,GK,2023-04-17,23,0,0,0.0,0.0,0,90,-1,1.2,0.0,0.0,Liverpool
-21657,Illan_Meslier,GK,2023-04-22,23,0,1,0.0,0.0,0,90,3,2.8,0.0,0.0,Fulham
-21658,Illan_Meslier,GK,2023-04-25,23,0,0,0.0,0.0,0,90,2,1.6,0.0,0.0,Leicester
-21659,Illan_Meslier,GK,2023-04-30,23,0,0,0.0,0.0,0,90,1,1.4,0.0,0.0,Bournemouth
-21660,Patrick_Bamford,FWD,2022-08-06,23,1,0,0.0,0.0,0,83,5,4.2,0.0,0.0,Wolves
-21661,Patrick_Bamford,FWD,2022-08-13,23,0,0,0.0,0.0,0,27,1,3.8,0.0,0.0,Southampton
-21662,Patrick_Bamford,FWD,2022-08-30,23,0,0,0.0,0.0,0,14,1,0.4,0.0,0.0,Everton
-21663,Patrick_Bamford,FWD,2022-09-03,23,0,0,0.0,0.0,0,45,1,1.5,0.0,0.0,Brentford
-21664,Patrick_Bamford,FWD,2022-10-02,23,0,0,0.0,0.0,0,22,1,3.4,0.0,0.0,Aston Villa
-21665,Patrick_Bamford,FWD,2022-10-09,23,0,0,0.0,0.0,0,61,2,3.9,0.0,0.0,Crystal Palace
-21666,Patrick_Bamford,FWD,2022-10-16,23,0,0,0.0,0.0,0,45,-1,4.9,0.0,0.0,Arsenal
-21667,Patrick_Bamford,FWD,2022-10-20,23,0,0,0.0,0.0,0,64,2,7.9,0.0,0.0,Leicester
-21668,Patrick_Bamford,FWD,2022-10-23,23,0,0,0.0,0.0,0,26,1,2.1,0.0,0.0,Fulham
-21669,Patrick_Bamford,FWD,2022-10-29,23,1,0,0.0,0.0,0,38,4,4.8,0.0,0.0,Liverpool
-21670,Patrick_Bamford,FWD,2023-01-13,23,0,1,0.0,0.5,1,23,6,5.1,0.38,0.0,Aston Villa
-21671,Patrick_Bamford,FWD,2023-01-22,23,0,0,0.06,0.0,0,11,1,0.4,0.0,0.04,Brentford
-21672,Patrick_Bamford,FWD,2023-02-05,23,0,0,0.02,0.12,0,66,2,2.3,0.08,0.01,Nott'm Forest
-21673,Patrick_Bamford,FWD,2023-02-08,23,1,0,0.01,0.0,0,62,5,3.7,0.0,0.01,Man Utd
-21674,Patrick_Bamford,FWD,2023-02-12,23,0,0,0.0,0.23,0,57,1,4.2,0.16,0.0,Man Utd
-21675,Patrick_Bamford,FWD,2023-02-18,23,0,0,0.04,0.19,0,90,2,3.4,0.14,0.03,Everton
-21676,Patrick_Bamford,FWD,2023-02-25,23,0,0,0.09,0.13,0,85,1,5.2,0.07,0.05,Southampton
-21677,Patrick_Bamford,FWD,2023-03-11,23,0,2,0.05,0.21,1,65,8,6.7,0.14,0.03,Brighton
-21678,Patrick_Bamford,FWD,2023-03-18,23,0,0,0.08,0.06,0,66,2,2.3,0.04,0.05,Wolves
-21679,Patrick_Bamford,FWD,2023-04-01,23,0,0,0.0,0.0,0,5,0,0.0,0.0,0.0,Arsenal
-21680,Patrick_Bamford,FWD,2023-04-04,23,0,0,0.04,0.67,0,90,2,3.6,0.4,0.02,Nott'm Forest
-21681,Patrick_Bamford,FWD,2023-04-09,23,0,0,0.0,0.07,1,78,6,5.7,0.06,0.0,Crystal Palace
-21682,Patrick_Bamford,FWD,2023-04-22,23,1,0,0.0,0.27,0,25,4,1.1,0.19,0.0,Fulham
-21683,Patrick_Bamford,FWD,2023-04-25,23,0,0,0.01,0.29,0,90,2,3.2,0.15,0.01,Leicester
-21684,Patrick_Bamford,FWD,2023-04-30,23,0,0,0.01,0.56,1,70,6,9.1,0.35,0.01,Bournemouth
-21685,Patrick_Bamford,FWD,2023-05-06,23,0,0,0.0,0.12,0,79,2,1.0,0.15,0.0,Man City
-21686,Patrick_Bamford,FWD,2023-05-13,23,1,0,0.19,0.98,0,90,2,4.9,0.9,0.18,Newcastle
-21687,Patrick_Bamford,FWD,2023-05-21,23,0,0,0.08,0.0,0,33,1,0.8,0.0,0.05,West Ham
-21688,Pascal_Struijk,DEF,2022-08-06,23,0,0,0.0,0.0,0,90,2,2.6,0.0,0.0,Wolves
-21689,Pascal_Struijk,DEF,2022-08-13,23,1,2,0.0,0.0,0,90,6,7.4,0.0,0.0,Southampton
-21690,Pascal_Struijk,DEF,2022-08-21,23,0,0,0.0,0.0,0,90,6,3.2,0.0,0.0,Chelsea
-21691,Pascal_Struijk,DEF,2022-08-27,23,0,0,0.0,0.0,0,90,1,4.2,0.0,0.0,Brighton
-21692,Pascal_Struijk,DEF,2022-08-30,23,0,2,0.0,0.0,0,90,4,4.8,0.0,0.0,Everton
-21693,Pascal_Struijk,DEF,2022-09-03,23,0,0,0.0,0.0,0,90,0,5.6,0.0,0.0,Brentford
-21694,Pascal_Struijk,DEF,2022-10-02,23,0,0,0.0,0.0,0,90,6,0.9,0.0,0.0,Aston Villa
-21695,Pascal_Struijk,DEF,2022-10-09,23,0,0,0.0,0.0,1,90,6,9.6,0.0,0.0,Crystal Palace
-21696,Pascal_Struijk,DEF,2022-10-16,23,0,0,0.0,0.0,0,90,2,4.9,0.0,0.0,Arsenal
-21697,Pascal_Struijk,DEF,2022-10-23,23,0,0,0.0,0.0,0,84,1,1.2,0.0,0.0,Fulham
-21698,Pascal_Struijk,DEF,2022-10-29,23,0,0,0.0,0.0,0,90,2,5.0,0.0,0.0,Liverpool
-21699,Pascal_Struijk,DEF,2022-11-05,23,1,0,0.0,0.0,0,90,4,7.7,0.0,0.0,Bournemouth
-21700,Pascal_Struijk,DEF,2022-11-12,23,0,0,0.03,0.01,0,90,0,6.3,0.01,0.02,Spurs
-21701,Pascal_Struijk,DEF,2022-12-28,23,0,0,0.03,0.1,1,90,7,7.1,0.11,0.03,Man City
-21702,Pascal_Struijk,DEF,2022-12-31,23,0,0,0.0,0.0,0,90,5,2.7,0.0,0.0,Newcastle
-21703,Pascal_Struijk,DEF,2023-01-04,23,0,0,0.03,0.06,0,90,1,1.7,0.04,0.02,West Ham
-21704,Pascal_Struijk,DEF,2023-01-13,23,0,0,0.01,0.0,0,65,1,1.0,0.0,0.01,Aston Villa
-21705,Pascal_Struijk,DEF,2023-01-22,23,0,0,0.02,0.0,0,90,6,2.2,0.0,0.01,Brentford
-21706,Pascal_Struijk,DEF,2023-02-05,23,0,0,0.01,0.0,0,66,1,2.4,0.0,0.01,Nott'm Forest
-21707,Pascal_Struijk,DEF,2023-02-08,23,0,0,0.0,0.2,0,22,1,4.7,0.17,0.0,Man Utd
-21708,Pascal_Struijk,DEF,2023-03-18,23,0,0,0.0,0.0,0,9,1,0.3,0.0,0.0,Wolves
-21709,Pascal_Struijk,DEF,2023-04-01,23,0,0,0.0,0.0,0,90,0,1.9,0.0,0.0,Arsenal
-21710,Pascal_Struijk,DEF,2023-04-04,23,0,0,0.01,0.0,0,90,2,5.2,0.0,0.01,Nott'm Forest
-21711,Pascal_Struijk,DEF,2023-04-09,23,0,0,0.0,0.03,0,90,0,3.2,0.02,0.0,Crystal Palace
-21712,Pascal_Struijk,DEF,2023-04-17,23,0,0,0.0,0.0,0,90,-1,1.5,0.0,0.0,Liverpool
-21713,Pascal_Struijk,DEF,2023-05-06,23,0,0,0.0,0.0,0,10,1,0.0,0.0,0.0,Man City
-21714,Pascal_Struijk,DEF,2023-05-13,23,0,0,0.0,0.0,0,1,1,0.6,0.0,0.0,Newcastle
-21715,Pascal_Struijk,DEF,2023-05-21,23,0,0,0.07,0.0,0,83,1,3.6,0.0,0.05,West Ham
-21716,Pascal_Struijk,DEF,2023-05-28,23,0,0,0.02,0.1,0,58,-1,0.0,0.06,0.01,Spurs
-21717,Wilfried_Gnonto,FWD,2022-10-29,23,0,0,0.0,0.0,0,18,1,1.6,0.0,0.0,Liverpool
-21718,Wilfried_Gnonto,FWD,2022-11-05,23,1,0,0.0,0.0,0,45,4,6.7,0.0,0.0,Bournemouth
-21719,Wilfried_Gnonto,FWD,2022-11-12,23,0,0,0.01,0.0,0,45,1,0.2,0.0,0.01,Spurs
-21720,Wilfried_Gnonto,FWD,2022-12-28,23,0,0,0.03,0.09,0,90,1,3.7,0.1,0.03,Man City
-21721,Wilfried_Gnonto,FWD,2022-12-31,23,0,0,0.07,0.06,0,69,1,2.6,0.06,0.06,Newcastle
-21722,Wilfried_Gnonto,FWD,2023-01-04,23,0,3,0.02,0.49,1,90,9,9.0,0.32,0.01,West Ham
-21723,Wilfried_Gnonto,FWD,2023-01-13,23,0,0,0.14,0.37,0,90,2,7.1,0.29,0.11,Aston Villa
-21724,Wilfried_Gnonto,FWD,2023-01-22,23,0,0,0.06,0.07,0,90,2,5.0,0.04,0.04,Brentford
-21725,Wilfried_Gnonto,FWD,2023-02-05,23,0,0,0.5,0.05,0,90,2,9.8,0.03,0.34,Nott'm Forest
-21726,Wilfried_Gnonto,FWD,2023-02-08,23,0,3,0.04,0.07,1,89,9,7.3,0.06,0.03,Man Utd
-21727,Wilfried_Gnonto,FWD,2023-02-12,23,0,0,0.25,0.1,0,90,2,3.9,0.07,0.18,Man Utd
-21728,Wilfried_Gnonto,FWD,2023-02-18,23,0,0,0.02,0.0,0,90,1,1.2,0.0,0.01,Everton
-21729,Wilfried_Gnonto,FWD,2023-02-25,23,0,0,0.03,0.05,0,60,1,2.3,0.03,0.02,Southampton
-21730,Wilfried_Gnonto,FWD,2023-03-04,23,0,0,0.05,0.0,0,22,1,1.5,0.0,0.04,Chelsea
-21731,Wilfried_Gnonto,FWD,2023-03-11,23,1,0,0.03,0.0,0,24,4,3.5,0.0,0.02,Brighton
-21732,Wilfried_Gnonto,FWD,2023-03-18,23,1,0,0.01,0.0,0,60,5,4.0,0.0,0.01,Wolves
-21733,Wilfried_Gnonto,FWD,2023-04-09,23,0,0,0.01,0.0,0,30,0,0.6,0.0,0.01,Crystal Palace
-21734,Wilfried_Gnonto,FWD,2023-04-17,23,0,0,0.0,0.0,0,13,1,0.0,0.0,0.0,Liverpool
-21735,Wilfried_Gnonto,FWD,2023-04-22,23,0,0,0.01,0.02,0,10,1,0.5,0.01,0.01,Fulham
-21736,Wilfried_Gnonto,FWD,2023-04-30,23,1,0,0.32,0.42,0,90,5,9.2,0.26,0.2,Bournemouth
-21737,Wilfried_Gnonto,FWD,2023-05-06,23,0,0,0.0,0.0,0,57,0,0.0,0.0,0.0,Man City
-21738,Wilfried_Gnonto,FWD,2023-05-13,23,0,0,0.04,0.0,0,26,0,1.0,0.0,0.04,Newcastle
-21739,Wilfried_Gnonto,FWD,2023-05-21,23,0,0,0.03,0.0,0,56,1,3.6,0.0,0.02,West Ham
-21740,Wilfried_Gnonto,FWD,2023-05-28,23,0,0,0.01,0.0,0,2,1,0.0,0.0,0.01,Spurs
+21340,Rodrigo_Hernandez,MID,2022-08-07,23,0,0,0.0,0.0,0,88,3,2.3,0.0,0.0,West Ham
+21341,Rodrigo_Hernandez,MID,2022-08-13,23,0,0,0.0,0.0,0,90,3,3.0,0.0,0.0,Bournemouth
+21342,Rodrigo_Hernandez,MID,2022-08-21,23,1,0,0.0,0.0,0,90,5,9.6,0.0,0.0,Newcastle
+21343,Rodrigo_Hernandez,MID,2022-08-27,23,1,0,0.0,0.0,0,90,5,5.4,0.0,0.0,Crystal Palace
+21344,Rodrigo_Hernandez,MID,2022-08-31,23,0,0,0.0,0.0,0,54,1,3.5,0.0,0.0,Nott'm Forest
+21345,Rodrigo_Hernandez,MID,2022-09-03,23,0,0,0.0,0.0,0,90,2,3.3,0.0,0.0,Aston Villa
+21346,Rodrigo_Hernandez,MID,2022-09-17,23,0,0,0.0,0.0,0,80,2,2.6,0.0,0.0,Wolves
+21347,Rodrigo_Hernandez,MID,2022-10-08,23,1,0,0.0,0.0,0,90,6,6.3,0.0,0.0,Southampton
+21348,Rodrigo_Hernandez,MID,2022-10-16,23,0,0,0.0,0.0,0,90,2,5.9,0.0,0.0,Liverpool
+21349,Rodrigo_Hernandez,MID,2022-10-22,23,0,0,0.0,0.0,0,90,2,2.6,0.0,0.0,Brighton
+21350,Rodrigo_Hernandez,MID,2022-10-29,23,0,0,0.0,0.0,0,90,3,5.9,0.0,0.0,Leicester
+21351,Rodrigo_Hernandez,MID,2022-11-05,23,0,0,0.0,0.0,0,90,2,3.9,0.0,0.0,Fulham
+21352,Rodrigo_Hernandez,MID,2022-11-12,23,0,0,0.21,0.16,0,90,2,7.9,0.1,0.13,Brentford
+21353,Rodrigo_Hernandez,MID,2022-12-28,23,0,2,0.22,0.58,1,90,8,11.4,0.36,0.14,Leeds
+21354,Rodrigo_Hernandez,MID,2022-12-31,23,0,0,0.24,0.61,0,90,2,12.2,0.46,0.18,Everton
+21355,Rodrigo_Hernandez,MID,2023-01-05,23,0,0,0.05,0.0,0,85,3,3.2,0.0,0.04,Chelsea
+21356,Rodrigo_Hernandez,MID,2023-01-14,23,0,0,0.06,0.0,0,90,2,2.8,0.0,0.05,Man Utd
+21357,Rodrigo_Hernandez,MID,2023-01-19,23,1,0,0.44,0.1,0,90,5,8.5,0.06,0.28,Spurs
+21358,Rodrigo_Hernandez,MID,2023-01-22,23,0,0,0.02,0.02,0,76,2,1.2,0.01,0.01,Wolves
+21359,Rodrigo_Hernandez,MID,2023-02-05,23,0,0,0.05,0.33,0,90,2,8.6,0.21,0.03,Spurs
+21360,Rodrigo_Hernandez,MID,2023-02-12,23,0,3,0.33,0.27,1,90,10,17.8,0.19,0.23,Aston Villa
+21361,Rodrigo_Hernandez,MID,2023-02-15,23,0,0,0.01,0.23,0,90,2,5.6,0.26,0.01,Arsenal
+21362,Rodrigo_Hernandez,MID,2023-02-18,23,0,0,0.07,0.3,0,90,2,5.3,0.21,0.05,Nott'm Forest
+21363,Rodrigo_Hernandez,MID,2023-02-25,23,0,0,0.04,0.03,0,54,1,1.7,0.02,0.03,Bournemouth
+21364,Rodrigo_Hernandez,MID,2023-03-04,23,1,2,0.03,0.0,0,90,8,4.6,0.0,0.03,Newcastle
+21365,Rodrigo_Hernandez,MID,2023-03-11,23,0,0,0.13,0.2,0,90,3,7.7,0.15,0.1,Crystal Palace
+21366,Rodrigo_Hernandez,MID,2023-04-01,23,0,0,0.05,0.1,0,82,1,4.2,0.08,0.04,Liverpool
+21367,Rodrigo_Hernandez,MID,2023-04-08,23,0,0,0.02,0.0,0,80,2,0.6,0.0,0.01,Southampton
+21368,Rodrigo_Hernandez,MID,2023-04-15,23,1,0,0.04,0.18,0,52,4,4.6,0.09,0.02,Leicester
+21369,Rodrigo_Hernandez,MID,2023-04-26,23,0,0,0.01,0.0,0,90,1,1.4,0.0,0.01,Arsenal
+21370,Rodrigo_Hernandez,MID,2023-04-30,23,0,0,0.01,0.11,0,90,2,3.8,0.08,0.01,Fulham
+21371,Rodrigo_Hernandez,MID,2023-05-03,23,0,0,0.12,0.27,0,90,3,5.0,0.18,0.08,West Ham
+21372,Rodrigo_Hernandez,MID,2023-05-06,23,0,0,0.0,0.0,0,1,1,0.0,0.0,0.0,Leeds
+21373,Rodrigo_Hernandez,MID,2023-05-14,23,0,0,0.04,0.02,0,87,3,2.4,0.01,0.03,Everton
+21374,Rodrigo_Hernandez,MID,2023-05-21,23,0,0,0.0,0.0,0,12,1,0.5,0.0,0.0,Chelsea
+21375,Rodrigo_Hernandez,MID,2023-05-24,23,0,0,0.01,0.0,0,90,2,1.6,0.0,0.01,Brighton
+21376,Rodrigo_Hernandez,MID,2023-08-11,24,1,2,0.17,0.5,1,90,13,15.3,0.25,0.09,Burnley
+21377,Rodrigo_Hernandez,MID,2023-08-19,24,0,0,0.07,0.0,0,90,3,3.1,0.0,0.06,Newcastle
+21378,Rodrigo_Hernandez,MID,2023-08-27,24,0,3,0.09,0.27,1,90,10,10.8,0.12,0.04,Sheffield Utd
+21379,Rodrigo_Hernandez,MID,2023-09-02,24,0,0,0.08,0.0,0,75,1,1.7,0.0,0.05,Fulham
+21380,Rodrigo_Hernandez,MID,2023-09-16,24,0,0,1.12,0.2,0,90,1,11.5,0.13,0.65,West Ham
+21381,Rodrigo_Hernandez,MID,2023-09-23,24,0,0,0.24,0.0,0,45,-2,1.7,0.0,0.14,Nott'm Forest
+21382,Rodrigo_Hernandez,MID,2023-10-21,24,0,0,0.03,0.0,0,90,1,2.1,0.0,0.02,Brighton
+21383,Rodrigo_Hernandez,MID,2023-10-29,24,1,0,0.06,0.08,0,90,6,3.9,0.07,0.05,Man Utd
+21384,Rodrigo_Hernandez,MID,2023-11-04,24,1,0,0.12,0.05,0,70,6,7.4,0.03,0.06,Bournemouth
+21385,Rodrigo_Hernandez,MID,2023-11-12,24,0,0,0.09,0.03,1,90,6,9.7,0.03,0.08,Chelsea
+21386,Rodrigo_Hernandez,MID,2023-11-25,24,0,0,0.1,0.04,0,90,2,3.8,0.03,0.08,Liverpool
+21387,Rodrigo_Hernandez,MID,2023-12-03,24,0,0,0.17,0.21,0,90,1,4.8,0.13,0.11,Spurs
+21388,Rodrigo_Hernandez,MID,2023-12-10,24,0,0,0.2,0.18,0,90,1,5.1,0.09,0.1,Luton
+21389,Rodrigo_Hernandez,MID,2023-12-16,24,0,0,0.26,0.28,0,90,2,6.2,0.24,0.22,Crystal Palace
+21390,Rodrigo_Hernandez,MID,2023-12-27,24,0,0,0.05,0.31,0,90,2,4.0,0.26,0.04,Everton
+21391,Rodrigo_Hernandez,MID,2023-12-30,24,0,2,0.38,0.22,1,90,10,9.4,0.09,0.16,Sheffield Utd
+21392,Rodrigo_Hernandez,MID,2024-01-13,24,1,0,0.25,0.04,0,90,4,11.8,0.05,0.31,Newcastle
+21393,Rodrigo_Hernandez,MID,2024-01-31,24,0,2,0.04,0.11,1,86,10,7.8,0.05,0.02,Burnley
+21394,Rodrigo_Hernandez,MID,2024-02-05,24,0,0,0.15,0.13,0,90,2,9.2,0.09,0.11,Brentford
+21395,Rodrigo_Hernandez,MID,2024-02-10,24,0,0,0.09,0.04,0,90,3,5.7,0.03,0.06,Everton
+21396,Rodrigo_Hernandez,MID,2024-02-17,24,0,3,0.13,0.29,1,90,10,10.9,0.2,0.09,Chelsea
+21397,Rodrigo_Hernandez,MID,2024-02-20,24,0,0,0.34,0.14,0,90,3,11.5,0.1,0.25,Brentford
+21398,Rodrigo_Hernandez,MID,2024-02-24,24,0,0,0.05,0.06,0,90,3,4.3,0.04,0.03,Bournemouth
+21399,Rodrigo_Hernandez,MID,2024-03-03,24,2,2,0.41,0.1,0,90,10,12.6,0.07,0.28,Man Utd
+21400,Rodrigo_Hernandez,MID,2024-03-10,24,0,0,0.03,0.0,0,90,1,4.0,0.0,0.03,Liverpool
+21401,Rodrigo_Hernandez,MID,2024-03-31,24,0,0,0.19,0.12,0,90,3,7.6,0.17,0.27,Arsenal
+21402,Rodrigo_Hernandez,MID,2024-04-03,24,1,2,0.17,0.26,1,74,12,12.4,0.19,0.12,Aston Villa
+21403,Rodrigo_Hernandez,MID,2024-04-06,24,1,0,0.1,0.11,0,73,5,7.1,0.09,0.08,Crystal Palace
+21404,Rodrigo_Hernandez,MID,2024-04-25,24,0,0,0.03,0.0,0,78,3,2.5,0.0,0.03,Brighton
+21405,Rodrigo_Hernandez,MID,2024-04-28,24,0,0,0.1,0.0,0,90,3,4.9,0.0,0.07,Nott'm Forest
+21406,Rodrigo_Hernandez,MID,2024-05-04,24,2,2,0.58,0.03,0,90,10,13.0,0.02,0.33,Wolves
+21407,Rodrigo_Hernandez,MID,2024-05-11,24,0,0,0.09,0.04,0,90,3,4.0,0.03,0.07,Fulham
+21408,Rodrigo_Hernandez,MID,2024-05-14,24,0,0,0.02,0.0,0,90,3,2.1,0.0,0.01,Spurs
+21409,Rodrigo_Hernandez,MID,2024-05-19,24,0,1,0.15,0.15,1,90,8,10.4,0.08,0.08,West Ham
+21410,Jacob_Bruun Larsen,MID,2023-08-11,24,0,0,0.01,0.02,0,29,1,0.0,0.02,0.01,Man City
+21411,Jacob_Bruun Larsen,MID,2023-08-27,24,0,0,0.01,0.0,0,9,1,0.3,0.0,0.01,Aston Villa
+21412,Jacob_Bruun Larsen,MID,2023-09-02,24,0,0,0.05,0.06,0,22,1,4.2,0.04,0.03,Spurs
+21413,Jacob_Bruun Larsen,MID,2023-09-23,24,0,0,0.0,0.13,0,17,1,3.8,0.09,0.0,Man Utd
+21414,Jacob_Bruun Larsen,MID,2023-09-30,24,0,0,0.02,0.12,0,32,1,1.3,0.13,0.02,Newcastle
+21415,Jacob_Bruun Larsen,MID,2023-10-03,24,0,0,0.0,0.03,1,15,6,4.0,0.01,0.0,Luton
+21416,Jacob_Bruun Larsen,MID,2023-10-07,24,0,0,0.01,0.1,0,11,1,0.6,0.08,0.01,Chelsea
+21417,Jacob_Bruun Larsen,MID,2023-10-21,24,0,0,0.0,0.0,0,14,1,0.1,0.0,0.0,Brentford
+21418,Jacob_Bruun Larsen,MID,2023-10-28,24,0,0,0.02,0.0,0,22,1,1.9,0.0,0.01,Bournemouth
+21419,Jacob_Bruun Larsen,MID,2023-11-04,24,0,0,0.0,0.0,0,1,1,0.0,0.0,0.0,Crystal Palace
+21420,Jacob_Bruun Larsen,MID,2023-11-11,24,0,0,0.0,0.0,0,10,1,0.1,0.0,0.0,Arsenal
+21421,Jacob_Bruun Larsen,MID,2023-12-02,24,0,0,0.07,0.5,1,64,8,11.9,0.22,0.03,Sheffield Utd
+21422,Jacob_Bruun Larsen,MID,2023-12-05,24,0,0,0.04,0.07,0,69,2,3.5,0.05,0.03,Wolves
+21423,Jacob_Bruun Larsen,MID,2023-12-16,24,0,0,0.09,0.22,0,81,2,6.6,0.15,0.06,Everton
+21424,Jacob_Bruun Larsen,MID,2023-12-23,24,0,0,0.02,0.0,0,45,1,1.6,0.0,0.01,Fulham
+21425,Jacob_Bruun Larsen,MID,2023-12-26,24,0,0,0.0,0.03,0,5,1,0.0,0.03,0.0,Liverpool
+21426,Jacob_Bruun Larsen,MID,2024-01-12,24,0,0,0.0,0.0,0,6,1,0.1,0.0,0.0,Luton
+21427,Jacob_Bruun Larsen,MID,2024-02-03,24,0,0,0.0,0.0,0,3,1,0.0,0.0,0.0,Fulham
+21428,Jacob_Bruun Larsen,MID,2024-02-10,24,0,0,0.01,0.0,0,4,1,0.2,0.0,0.01,Liverpool
+21429,Jacob_Bruun Larsen,MID,2024-02-17,24,0,0,0.0,0.03,0,10,1,0.0,0.04,0.0,Arsenal
+21430,Jacob_Bruun Larsen,MID,2024-03-03,24,0,0,0.15,0.13,0,68,2,4.9,0.07,0.08,Bournemouth
+21431,Jacob_Bruun Larsen,MID,2024-03-10,24,0,0,0.02,0.04,0,45,1,2.4,0.03,0.01,West Ham
+21432,Jacob_Bruun Larsen,MID,2024-03-16,24,0,3,0.31,1.0,1,68,11,12.7,0.73,0.23,Brentford
+21433,Jacob_Bruun Larsen,MID,2024-03-30,24,0,0,0.1,0.25,0,45,1,5.5,0.21,0.08,Chelsea
+21434,Jacob_Bruun Larsen,MID,2024-04-02,24,0,3,0.06,0.49,1,72,10,11.1,0.28,0.03,Wolves
+21435,Jacob_Bruun Larsen,MID,2024-04-06,24,0,0,0.03,0.03,0,68,2,2.6,0.02,0.02,Everton
+21436,Jacob_Bruun Larsen,MID,2024-04-13,24,0,0,0.07,0.44,0,85,2,3.7,0.29,0.05,Brighton
+21437,Jacob_Bruun Larsen,MID,2024-04-20,24,0,0,0.05,0.25,1,58,6,8.6,0.1,0.02,Sheffield Utd
+21438,Jacob_Bruun Larsen,MID,2024-04-27,24,0,0,0.05,0.13,0,71,3,5.0,0.1,0.04,Man Utd
+21439,Jacob_Bruun Larsen,MID,2024-05-04,24,0,0,0.04,0.1,0,61,2,6.6,0.07,0.03,Newcastle
+21440,Jacob_Bruun Larsen,MID,2024-05-11,24,0,1,0.06,0.42,1,80,7,9.1,0.29,0.04,Spurs
+21441,Jacob_Bruun Larsen,MID,2024-05-19,24,0,0,0.15,0.06,0,45,1,6.4,0.04,0.09,Nott'm Forest
+21442,Hjalmar_Ekdal,DEF,2023-12-02,24,0,0,0.0,0.0,0,7,1,0.4,0.0,0.0,Sheffield Utd
+21443,Hjalmar_Ekdal,DEF,2023-12-05,24,0,0,0.01,0.0,0,90,1,1.9,0.0,0.01,Wolves
+21444,Hjalmar_Ekdal,DEF,2023-12-09,24,0,0,0.0,0.0,0,8,1,0.5,0.0,0.0,Brighton
+21445,Hjalmar_Ekdal,DEF,2024-01-12,24,0,0,0.0,0.04,0,90,2,1.4,0.02,0.0,Luton
+21446,Hjalmar_Ekdal,DEF,2024-01-31,24,0,0,0.0,0.02,0,85,0,3.1,0.03,0.0,Man City
+21447,Hjalmar_Ekdal,DEF,2024-02-03,24,0,0,0.0,0.0,0,45,0,0.4,0.0,0.0,Fulham
+21448,Hjalmar_Ekdal,DEF,2024-04-13,24,0,3,0.0,0.0,0,66,9,2.2,0.0,0.0,Brighton
+21449,Hjalmar_Ekdal,DEF,2024-05-04,24,0,0,0.0,0.0,0,45,1,0.8,0.0,0.0,Newcastle
+21450,Jordan_Beyer,DEF,2023-08-11,24,0,0,0.0,0.0,0,73,1,0.0,0.0,0.0,Man City
+21451,Jordan_Beyer,DEF,2023-09-02,24,0,0,0.0,0.0,0,73,-1,2.3,0.0,0.0,Spurs
+21452,Jordan_Beyer,DEF,2023-09-18,24,0,1,0.01,0.0,0,87,3,2.3,0.0,0.01,Nott'm Forest
+21453,Jordan_Beyer,DEF,2023-09-23,24,0,0,0.01,0.0,0,90,1,2.5,0.0,0.01,Man Utd
+21454,Jordan_Beyer,DEF,2023-09-30,24,0,0,0.0,0.0,0,90,0,2.6,0.0,0.0,Newcastle
+21455,Jordan_Beyer,DEF,2023-10-03,24,0,0,0.01,0.0,0,90,2,2.6,0.0,0.0,Luton
+21456,Jordan_Beyer,DEF,2023-11-04,24,0,0,0.01,0.06,0,85,2,1.5,0.05,0.01,Crystal Palace
+21457,Jordan_Beyer,DEF,2023-11-11,24,0,0,0.01,0.0,0,90,1,5.1,0.0,0.01,Arsenal
+21458,Jordan_Beyer,DEF,2023-11-25,24,0,0,0.0,0.08,0,90,0,1.6,0.05,0.0,West Ham
+21459,Jordan_Beyer,DEF,2023-12-02,24,1,3,0.01,0.12,0,90,11,4.6,0.05,0.0,Sheffield Utd
+21460,Jordan_Beyer,DEF,2023-12-09,24,0,0,0.0,0.0,0,90,2,3.4,0.0,0.0,Brighton
+21461,Jordan_Beyer,DEF,2023-12-16,24,0,0,0.1,0.07,0,90,1,2.8,0.05,0.07,Everton
+21462,Jordan_Beyer,DEF,2023-12-23,24,0,0,0.01,0.0,0,90,5,3.4,0.0,0.01,Fulham
+21463,Jordan_Beyer,DEF,2023-12-26,24,0,0,0.02,0.23,0,90,1,4.7,0.2,0.02,Liverpool
+21464,Jordan_Beyer,DEF,2023-12-30,24,0,0,0.0,0.0,0,16,1,0.0,0.0,0.0,Aston Villa
+21465,Lyle_Foster,FWD,2023-08-11,24,0,0,0.04,0.14,0,90,2,0.0,0.17,0.05,Man City
+21466,Lyle_Foster,FWD,2023-08-27,24,0,1,0.0,0.13,1,80,7,5.7,0.1,0.0,Aston Villa
+21467,Lyle_Foster,FWD,2023-09-02,24,0,0,0.05,0.54,1,90,6,9.5,0.32,0.03,Spurs
+21468,Lyle_Foster,FWD,2023-09-18,24,1,0,0.01,0.15,0,90,2,5.4,0.1,0.01,Nott'm Forest
+21469,Lyle_Foster,FWD,2023-10-03,24,0,3,0.04,0.47,1,79,9,6.3,0.23,0.02,Luton
+21470,Lyle_Foster,FWD,2023-10-07,24,1,0,0.09,0.13,0,90,5,4.0,0.1,0.07,Chelsea
+21471,Lyle_Foster,FWD,2023-10-21,24,0,0,0.25,0.0,0,90,2,3.5,0.0,0.19,Brentford
+21472,Lyle_Foster,FWD,2023-12-16,24,0,0,0.0,0.07,0,45,1,3.2,0.05,0.0,Everton
+21473,Lyle_Foster,FWD,2023-12-23,24,1,0,0.02,0.07,0,64,5,5.5,0.05,0.01,Fulham
+21474,Lyle_Foster,FWD,2023-12-26,24,0,0,0.01,0.0,0,84,2,1.9,0.0,0.01,Liverpool
+21475,Lyle_Foster,FWD,2023-12-30,24,0,0,0.02,0.19,1,90,6,7.8,0.18,0.02,Aston Villa
+21476,Lyle_Foster,FWD,2024-01-12,24,0,0,0.03,0.05,0,90,2,5.1,0.02,0.01,Luton
+21477,Lyle_Foster,FWD,2024-01-31,24,0,0,0.0,0.05,0,58,1,0.5,0.06,0.0,Man City
+21478,Lyle_Foster,FWD,2024-02-03,24,0,0,0.02,0.01,0,90,2,2.4,0.01,0.01,Fulham
+21479,Lyle_Foster,FWD,2024-03-16,24,0,0,0.0,0.0,0,2,1,0.2,0.0,0.0,Brentford
+21480,Lyle_Foster,FWD,2024-03-30,24,0,0,0.06,0.48,0,68,2,4.7,0.4,0.05,Chelsea
+21481,Lyle_Foster,FWD,2024-04-02,24,0,0,0.12,0.0,0,85,2,4.9,0.0,0.07,Wolves
+21482,Lyle_Foster,FWD,2024-04-06,24,0,0,0.04,0.06,0,90,2,3.8,0.05,0.03,Everton
+21483,Lyle_Foster,FWD,2024-04-13,24,0,0,0.1,0.0,0,90,2,2.9,0.0,0.07,Brighton
+21484,Lyle_Foster,FWD,2024-04-20,24,0,0,0.01,0.66,1,83,6,11.1,0.27,0.0,Sheffield Utd
+21485,Lyle_Foster,FWD,2024-04-27,24,0,0,0.05,0.57,0,90,2,6.3,0.44,0.04,Man Utd
+21486,Lyle_Foster,FWD,2024-05-04,24,0,0,0.21,0.59,0,84,2,5.5,0.42,0.15,Newcastle
+21487,Lyle_Foster,FWD,2024-05-11,24,0,0,0.02,0.0,0,86,2,1.5,0.0,0.01,Spurs
+21488,Lyle_Foster,FWD,2024-05-19,24,0,0,0.08,0.0,0,90,2,4.6,0.0,0.05,Nott'm Forest
+21489,Jordan_Henderson,MID,2022-08-06,23,0,0,0.0,0.0,0,90,2,5.1,0.0,0.0,Fulham
+21490,Jordan_Henderson,MID,2022-08-15,23,0,0,0.0,0.0,0,27,1,2.4,0.0,0.0,Crystal Palace
+21491,Jordan_Henderson,MID,2022-08-22,23,0,0,0.0,0.0,0,58,1,3.0,0.0,0.0,Man Utd
+21492,Jordan_Henderson,MID,2022-08-27,23,0,0,0.0,0.0,0,69,3,2.0,0.0,0.0,Bournemouth
+21493,Jordan_Henderson,MID,2022-08-31,23,0,0,0.0,0.0,0,70,2,2.9,0.0,0.0,Newcastle
+21494,Jordan_Henderson,MID,2022-10-01,23,0,0,0.0,0.0,0,58,1,3.6,0.0,0.0,Brighton
+21495,Jordan_Henderson,MID,2022-10-09,23,0,0,0.0,0.0,0,90,2,4.0,0.0,0.0,Arsenal
+21496,Jordan_Henderson,MID,2022-10-16,23,0,0,0.0,0.0,0,17,1,1.5,0.0,0.0,Man City
+21497,Jordan_Henderson,MID,2022-10-19,23,0,0,0.0,0.0,0,90,3,5.8,0.0,0.0,West Ham
+21498,Jordan_Henderson,MID,2022-10-22,23,0,0,0.0,0.0,0,28,1,0.7,0.0,0.0,Nott'm Forest
+21499,Jordan_Henderson,MID,2022-10-29,23,0,0,0.0,0.0,0,29,1,2.8,0.0,0.0,Leeds
+21500,Jordan_Henderson,MID,2022-11-06,23,0,0,0.0,0.0,0,16,1,0.2,0.0,0.0,Spurs
+21501,Jordan_Henderson,MID,2022-12-26,23,0,0,0.1,0.03,0,78,2,4.4,0.02,0.08,Aston Villa
+21502,Jordan_Henderson,MID,2022-12-30,23,0,0,0.02,0.1,0,90,2,3.0,0.05,0.01,Leicester
+21503,Jordan_Henderson,MID,2023-01-14,23,0,0,0.01,0.0,0,68,1,0.7,0.0,0.01,Brighton
+21504,Jordan_Henderson,MID,2023-01-21,23,0,0,0.01,0.0,0,8,1,1.4,0.0,0.01,Chelsea
+21505,Jordan_Henderson,MID,2023-02-04,23,0,0,0.01,0.0,0,25,1,0.5,0.0,0.01,Wolves
+21506,Jordan_Henderson,MID,2023-02-13,23,0,0,0.01,0.0,0,79,3,1.4,0.0,0.01,Everton
+21507,Jordan_Henderson,MID,2023-02-18,23,0,0,0.01,0.01,0,58,1,1.7,0.01,0.01,Newcastle
+21508,Jordan_Henderson,MID,2023-02-25,23,0,0,0.02,0.0,0,90,2,1.6,0.0,0.01,Crystal Palace
+21509,Jordan_Henderson,MID,2023-03-01,23,0,0,0.01,0.0,0,11,1,0.4,0.0,0.01,Wolves
+21510,Jordan_Henderson,MID,2023-03-05,23,1,0,0.19,0.05,0,77,6,5.5,0.04,0.14,Man Utd
+21511,Jordan_Henderson,MID,2023-03-11,23,0,0,0.02,0.0,0,25,1,1.3,0.0,0.01,Bournemouth
+21512,Jordan_Henderson,MID,2023-04-01,23,0,0,0.02,0.0,0,90,2,0.9,0.0,0.02,Man City
+21513,Jordan_Henderson,MID,2023-04-04,23,0,0,0.05,0.14,0,90,3,1.3,0.12,0.04,Chelsea
+21514,Jordan_Henderson,MID,2023-04-09,23,1,0,0.24,0.32,0,90,5,5.3,0.41,0.31,Arsenal
+21515,Jordan_Henderson,MID,2023-04-17,23,1,0,0.27,0.0,0,80,5,8.7,0.0,0.17,Leeds
+21516,Jordan_Henderson,MID,2023-04-22,23,0,0,0.09,0.11,0,90,2,4.5,0.06,0.05,Nott'm Forest
+21517,Jordan_Henderson,MID,2023-04-26,23,0,0,0.66,0.0,0,58,1,6.5,0.0,0.43,West Ham
+21518,Jordan_Henderson,MID,2023-04-30,23,0,0,0.04,0.0,0,27,1,2.6,0.0,0.02,Spurs
+21519,Jordan_Henderson,MID,2023-05-03,23,0,0,0.08,0.11,0,90,3,4.4,0.07,0.05,Fulham
+21520,Jordan_Henderson,MID,2023-05-06,23,0,0,0.02,0.0,0,17,1,1.7,0.0,0.02,Brentford
+21521,Jordan_Henderson,MID,2023-05-15,23,0,0,0.06,0.0,0,73,3,4.7,0.0,0.03,Leicester
+21522,Jordan_Henderson,MID,2023-05-20,23,0,0,0.08,0.0,0,71,2,2.6,0.0,0.06,Aston Villa
+21523,Jordan_Henderson,MID,2023-05-28,23,0,0,0.22,0.04,0,33,1,0.0,0.02,0.11,Southampton
+21524,Hannes_Delcroix,DEF,2023-08-27,24,0,0,0.04,0.06,0,90,1,6.5,0.04,0.03,Aston Villa
+21525,Hannes_Delcroix,DEF,2023-09-02,24,0,0,0.0,0.29,0,45,-1,2.7,0.17,0.0,Spurs
+21526,Hannes_Delcroix,DEF,2023-09-18,24,0,0,0.0,0.0,0,3,1,0.0,0.0,0.0,Nott'm Forest
+21527,Hannes_Delcroix,DEF,2023-10-03,24,0,0,0.0,0.0,0,1,1,0.0,0.0,0.0,Luton
+21528,Hannes_Delcroix,DEF,2023-10-07,24,0,0,0.0,0.0,0,90,0,1.5,0.0,0.0,Chelsea
+21529,Hannes_Delcroix,DEF,2023-10-21,24,0,0,0.0,0.0,0,10,1,0.4,0.0,0.0,Brentford
+21530,Hannes_Delcroix,DEF,2023-12-16,24,0,0,0.02,0.0,0,69,1,2.5,0.0,0.01,Everton
+21531,Hannes_Delcroix,DEF,2023-12-23,24,0,0,0.0,0.0,0,1,1,0.0,0.0,0.0,Fulham
+21532,Hannes_Delcroix,DEF,2023-12-30,24,0,0,0.0,0.0,0,73,1,0.7,0.0,0.0,Aston Villa
+21533,Hannes_Delcroix,DEF,2024-02-10,24,0,0,0.03,0.0,0,90,1,2.2,0.0,0.04,Liverpool
+21534,Hannes_Delcroix,DEF,2024-02-17,24,0,0,0.03,0.0,0,90,0,3.3,0.0,0.04,Arsenal
+21535,Hannes_Delcroix,DEF,2024-03-10,24,0,0,0.0,0.0,0,22,0,1.1,0.0,0.0,West Ham
+21536,Aaron_Ramsey,MID,2023-08-27,24,0,0,0.01,0.0,0,22,1,0.2,0.0,0.01,Aston Villa
+21537,Aaron_Ramsey,MID,2023-09-23,24,0,0,0.43,0.05,0,72,2,4.6,0.03,0.3,Man Utd
+21538,Aaron_Ramsey,MID,2023-09-30,24,0,0,0.0,0.0,0,66,2,0.2,0.0,0.0,Newcastle
+21539,Aaron_Ramsey,MID,2023-10-03,24,0,0,0.0,0.0,0,19,1,0.1,0.0,0.0,Luton
+21540,Aaron_Ramsey,MID,2023-10-07,24,0,0,0.0,0.0,0,29,1,0.7,0.0,0.0,Chelsea
+21541,Aaron_Ramsey,MID,2023-11-11,24,0,0,0.0,0.0,0,10,1,0.1,0.0,0.0,Arsenal
+21542,Aaron_Ramsey,MID,2023-11-25,24,0,0,0.02,0.05,0,17,1,0.7,0.03,0.01,West Ham
+21543,Aaron_Ramsey,MID,2023-12-09,24,0,0,0.0,0.0,0,20,1,0.1,0.0,0.0,Brighton
+21544,Aaron_Ramsey,MID,2023-12-26,24,0,0,0.0,0.0,0,1,1,0.5,0.0,0.0,Liverpool
+21545,Aaron_Ramsey,MID,2023-12-30,24,0,0,0.0,0.0,0,31,1,0.1,0.0,0.0,Aston Villa
+21546,Aaron_Ramsey,MID,2024-01-31,24,0,0,0.0,0.0,0,31,1,0.5,0.0,0.0,Man City
+21547,Aaron_Ramsey,MID,2024-02-03,24,0,0,0.02,0.16,0,62,2,3.3,0.1,0.01,Fulham
+21548,Aaron_Ramsey,MID,2024-02-10,24,0,0,0.0,0.01,0,80,2,1.6,0.01,0.0,Liverpool
+21549,Aaron_Ramsey,MID,2024-02-17,24,0,0,0.0,0.08,0,62,1,0.0,0.11,0.0,Arsenal
+21550,Sam_Greenwood,FWD,2022-08-06,23,0,0,0.0,0.0,0,17,1,2.2,0.0,0.0,Wolves
+21551,Sam_Greenwood,FWD,2022-08-21,23,0,0,0.0,0.0,0,7,1,0.4,0.0,0.0,Chelsea
+21552,Sam_Greenwood,FWD,2022-09-03,23,0,0,0.0,0.0,0,4,1,2.6,0.0,0.0,Brentford
+21553,Sam_Greenwood,FWD,2022-10-23,23,0,0,0.0,0.0,0,75,2,1.5,0.0,0.0,Fulham
+21554,Sam_Greenwood,FWD,2022-11-05,23,1,1,0.0,0.0,1,36,9,13.9,0.0,0.0,Bournemouth
+21555,Sam_Greenwood,FWD,2022-11-12,23,0,0,0.05,0.16,0,45,1,4.1,0.11,0.03,Spurs
+21556,Sam_Greenwood,FWD,2022-12-28,23,1,0,0.2,0.13,0,90,4,5.4,0.15,0.22,Man City
+21557,Sam_Greenwood,FWD,2023-01-04,23,0,0,0.15,0.0,0,12,1,1.6,0.0,0.1,West Ham
+21558,Sam_Greenwood,FWD,2023-01-13,23,0,0,0.07,0.0,0,13,1,2.0,0.0,0.05,Aston Villa
+21559,Sam_Greenwood,FWD,2023-01-22,23,0,0,0.01,0.0,0,3,1,0.0,0.0,0.01,Brentford
+21560,Sam_Greenwood,FWD,2023-02-05,23,0,0,0.0,0.0,0,7,1,0.0,0.0,0.0,Nott'm Forest
+21561,Sam_Greenwood,FWD,2023-02-08,23,0,0,0.0,0.0,0,1,1,0.2,0.0,0.0,Man Utd
+21562,Sam_Greenwood,FWD,2023-02-12,23,0,0,0.07,0.0,0,4,1,3.2,0.0,0.05,Man Utd
+21563,Sam_Greenwood,FWD,2023-02-18,23,0,0,0.13,0.0,0,4,1,2.1,0.0,0.1,Everton
+21564,Sam_Greenwood,FWD,2023-03-04,23,0,0,0.07,0.0,0,10,1,1.4,0.0,0.06,Chelsea
+21565,Sam_Greenwood,FWD,2023-05-06,23,0,0,0.0,0.0,0,31,1,0.0,0.0,0.0,Man City
+21566,Sam_Greenwood,FWD,2023-05-13,23,0,0,0.0,0.08,0,45,1,0.4,0.07,0.0,Newcastle
+21567,Sam_Greenwood,FWD,2023-05-21,23,0,0,0.02,0.0,0,6,1,0.6,0.0,0.01,West Ham
+21568,Luis_Sinisterra Lucumí,MID,2022-08-13,23,0,0,0.0,0.0,0,6,1,0.2,0.0,0.0,Southampton
+21569,Luis_Sinisterra Lucumí,MID,2022-08-21,23,0,0,0.0,0.0,0,20,1,0.2,0.0,0.0,Chelsea
+21570,Luis_Sinisterra Lucumí,MID,2022-08-27,23,0,0,0.0,0.0,0,31,1,0.7,0.0,0.0,Brighton
+21571,Luis_Sinisterra Lucumí,MID,2022-08-30,23,0,3,0.0,0.0,1,63,10,7.2,0.0,0.0,Everton
+21572,Luis_Sinisterra Lucumí,MID,2022-09-03,23,0,0,0.0,0.0,1,58,5,7.0,0.0,0.0,Brentford
+21573,Luis_Sinisterra Lucumí,MID,2022-10-02,23,0,0,0.0,0.0,0,47,-2,0.8,0.0,0.0,Aston Villa
+21574,Luis_Sinisterra Lucumí,MID,2022-10-16,23,0,0,0.0,0.0,0,88,2,9.3,0.0,0.0,Arsenal
+21575,Luis_Sinisterra Lucumí,MID,2022-10-20,23,0,0,0.0,0.0,0,74,2,2.2,0.0,0.0,Leicester
+21576,Luis_Sinisterra Lucumí,MID,2022-10-23,23,0,0,0.0,0.0,0,63,2,2.4,0.0,0.0,Fulham
+21577,Luis_Sinisterra Lucumí,MID,2023-01-22,23,0,0,0.01,0.0,0,21,1,0.5,0.0,0.0,Brentford
+21578,Luis_Sinisterra Lucumí,MID,2023-02-05,23,0,0,0.01,0.45,0,56,1,5.5,0.3,0.01,Nott'm Forest
+21579,Luis_Sinisterra Lucumí,MID,2023-02-08,23,0,0,0.0,0.0,0,7,1,0.0,0.0,0.0,Man Utd
+21580,Luis_Sinisterra Lucumí,MID,2023-03-11,23,0,0,0.0,0.0,0,1,1,0.0,0.0,0.0,Brighton
+21581,Luis_Sinisterra Lucumí,MID,2023-04-01,23,0,0,0.03,0.0,0,64,2,2.5,0.0,0.03,Arsenal
+21582,Luis_Sinisterra Lucumí,MID,2023-04-04,23,0,3,0.31,0.16,1,73,10,11.5,0.09,0.18,Nott'm Forest
+21583,Luis_Sinisterra Lucumí,MID,2023-04-09,23,0,0,0.02,0.26,0,59,1,5.3,0.21,0.02,Crystal Palace
+21584,Luis_Sinisterra Lucumí,MID,2023-04-17,23,0,0,0.02,0.7,1,76,7,7.0,0.56,0.02,Liverpool
+21585,Luis_Sinisterra Lucumí,MID,2023-04-22,23,0,0,0.03,0.23,0,25,1,1.5,0.16,0.02,Fulham
+21586,Luis_Sinisterra Lucumí,MID,2023-04-25,23,0,0,0.0,0.54,1,31,6,6.8,0.28,0.0,Leicester
+21587,Joe_Gelhardt,FWD,2022-08-06,23,0,0,0.0,0.0,0,6,1,0.1,0.0,0.0,Wolves
+21588,Joe_Gelhardt,FWD,2022-08-21,23,0,0,0.0,0.0,0,7,1,0.0,0.0,0.0,Chelsea
+21589,Joe_Gelhardt,FWD,2022-08-27,23,0,0,0.0,0.0,0,8,1,1.0,0.0,0.0,Brighton
+21590,Joe_Gelhardt,FWD,2022-08-30,23,0,0,0.0,0.0,0,44,1,3.1,0.0,0.0,Everton
+21591,Joe_Gelhardt,FWD,2022-09-03,23,0,0,0.0,0.0,0,58,1,1.4,0.0,0.0,Brentford
+21592,Joe_Gelhardt,FWD,2022-10-09,23,0,0,0.0,0.0,0,6,1,2.0,0.0,0.0,Crystal Palace
+21593,Joe_Gelhardt,FWD,2022-10-16,23,0,0,0.0,0.0,0,1,1,0.0,0.0,0.0,Arsenal
+21594,Joe_Gelhardt,FWD,2022-10-20,23,0,0,0.0,0.0,0,15,1,0.5,0.0,0.0,Leicester
+21595,Joe_Gelhardt,FWD,2022-10-23,23,1,0,0.0,0.0,0,6,4,3.2,0.0,0.0,Fulham
+21596,Joe_Gelhardt,FWD,2022-11-05,23,0,0,0.0,0.0,0,9,0,2.2,0.0,0.0,Bournemouth
+21597,Joe_Gelhardt,FWD,2022-11-12,23,0,0,0.0,0.0,0,1,1,0.1,0.0,0.0,Spurs
+21598,Joe_Gelhardt,FWD,2022-12-28,23,0,0,0.0,0.14,0,18,1,0.7,0.15,0.0,Man City
+21599,Joe_Gelhardt,FWD,2022-12-31,23,0,0,0.0,0.05,0,8,1,2.0,0.05,0.0,Newcastle
+21600,Joe_Gelhardt,FWD,2023-01-04,23,0,0,0.0,0.0,0,1,1,0.0,0.0,0.0,West Ham
+21601,Joe_Gelhardt,FWD,2023-01-13,23,1,0,0.0,0.0,0,13,4,3.1,0.0,0.0,Aston Villa
+21602,Daniel_James,MID,2022-08-13,23,0,0,0.0,0.0,0,56,1,2.6,0.0,0.0,Southampton
+21603,Daniel_James,MID,2022-08-21,23,0,0,0.0,0.0,0,69,3,2.4,0.0,0.0,Chelsea
+21604,Daniel_James,MID,2022-08-27,23,0,0,0.0,0.0,0,58,1,0.9,0.0,0.0,Brighton
+21605,Daniel_James,MID,2022-08-30,23,0,0,0.0,0.0,0,14,1,0.6,0.0,0.0,Everton
+21606,Daniel_James,MID,2022-09-03,23,0,0,0.0,0.0,0,30,1,1.4,0.0,0.0,Spurs
+21607,Daniel_James,MID,2022-09-16,23,0,0,0.0,0.0,0,20,1,3.7,0.0,0.0,Nott'm Forest
+21608,Daniel_James,MID,2022-10-01,23,0,0,0.0,0.0,0,69,2,1.2,0.0,0.0,Newcastle
+21609,Daniel_James,MID,2022-10-09,23,0,0,0.0,0.0,0,76,2,0.9,0.0,0.0,West Ham
+21610,Daniel_James,MID,2022-10-15,23,0,0,0.0,0.0,0,45,1,5.7,0.0,0.0,Bournemouth
+21611,Daniel_James,MID,2022-10-20,23,0,0,0.0,0.0,0,17,1,0.3,0.0,0.0,Aston Villa
+21612,Daniel_James,MID,2022-11-05,23,0,0,0.0,0.0,0,14,1,0.2,0.0,0.0,Man City
+21613,Daniel_James,MID,2022-11-13,23,0,0,0.01,0.76,1,31,6,0.0,0.52,0.01,Man Utd
+21614,Daniel_James,MID,2022-12-26,23,0,0,0.0,0.0,0,8,1,0.1,0.0,0.0,Crystal Palace
+21615,Daniel_James,MID,2022-12-31,23,0,0,0.0,0.0,0,28,1,0.9,0.0,0.0,Southampton
+21616,Daniel_James,MID,2023-01-12,23,0,0,0.0,0.0,0,1,1,0.0,0.0,0.0,Chelsea
+21617,Daniel_James,MID,2023-01-15,23,0,0,0.0,0.0,0,13,1,0.0,0.0,0.0,Newcastle
+21618,Daniel_James,MID,2023-03-12,23,0,0,0.0,0.0,0,14,1,0.3,0.0,0.0,Arsenal
+21619,Daniel_James,MID,2023-04-01,23,0,0,0.01,0.12,0,21,1,1.4,0.08,0.01,Bournemouth
+21620,Daniel_James,MID,2023-04-08,23,0,0,0.0,0.0,0,5,1,0.1,0.0,0.0,West Ham
+21621,Daniel_James,MID,2023-04-15,23,1,2,0.01,0.31,1,89,12,11.5,0.23,0.01,Everton
+21622,Daniel_James,MID,2023-04-25,23,0,0,0.02,0.0,0,90,2,1.4,0.0,0.02,Aston Villa
+21623,Daniel_James,MID,2023-04-30,23,0,0,0.0,0.0,0,14,1,0.1,0.0,0.0,Man City
+21624,Daniel_James,MID,2023-05-03,23,0,0,0.14,0.0,0,10,1,1.8,0.0,0.13,Liverpool
+21625,Daniel_James,MID,2023-05-28,23,0,0,0.08,0.0,0,10,1,0.0,0.0,0.08,Man Utd
+21626,Brenden_Aaronson,MID,2022-08-06,23,0,0,0.0,0.0,0,84,2,2.2,0.0,0.0,Wolves
+21627,Brenden_Aaronson,MID,2022-08-13,23,0,0,0.0,0.0,0,90,1,5.5,0.0,0.0,Southampton
+21628,Brenden_Aaronson,MID,2022-08-21,23,0,0,0.0,0.0,1,82,8,11.5,0.0,0.0,Chelsea
+21629,Brenden_Aaronson,MID,2022-08-27,23,0,0,0.0,0.0,0,81,1,2.0,0.0,0.0,Brighton
+21630,Brenden_Aaronson,MID,2022-08-30,23,1,0,0.0,0.0,0,75,5,9.5,0.0,0.0,Everton
+21631,Brenden_Aaronson,MID,2022-09-03,23,0,0,0.0,0.0,0,90,2,3.8,0.0,0.0,Brentford
+21632,Brenden_Aaronson,MID,2022-10-02,23,0,0,0.0,0.0,0,78,3,3.7,0.0,0.0,Aston Villa
+21633,Brenden_Aaronson,MID,2022-10-09,23,1,0,0.0,0.0,0,75,5,1.8,0.0,0.0,Crystal Palace
+21634,Brenden_Aaronson,MID,2022-10-16,23,0,0,0.0,0.0,0,90,2,7.8,0.0,0.0,Arsenal
+21635,Brenden_Aaronson,MID,2022-10-20,23,0,0,0.0,0.0,0,90,2,4.7,0.0,0.0,Leicester
+21636,Brenden_Aaronson,MID,2022-10-23,23,0,0,0.0,0.0,0,90,2,10.8,0.0,0.0,Fulham
+21637,Brenden_Aaronson,MID,2022-10-29,23,0,0,0.0,0.0,0,90,2,3.9,0.0,0.0,Liverpool
+21638,Brenden_Aaronson,MID,2022-11-05,23,0,0,0.0,0.0,0,85,2,4.8,0.0,0.0,Bournemouth
+21639,Brenden_Aaronson,MID,2022-11-12,23,1,0,0.05,0.08,0,90,5,7.6,0.06,0.03,Spurs
+21640,Brenden_Aaronson,MID,2022-12-28,23,0,0,0.02,0.03,0,82,2,1.7,0.03,0.03,Man City
+21641,Brenden_Aaronson,MID,2022-12-31,23,0,0,0.01,0.17,0,90,3,3.5,0.17,0.01,Newcastle
+21642,Brenden_Aaronson,MID,2023-01-04,23,0,0,0.02,0.09,0,62,2,0.6,0.06,0.01,West Ham
+21643,Brenden_Aaronson,MID,2023-01-13,23,0,0,0.06,0.14,0,76,2,3.4,0.11,0.05,Aston Villa
+21644,Brenden_Aaronson,MID,2023-01-22,23,0,0,0.03,0.17,0,69,3,2.9,0.11,0.02,Brentford
+21645,Brenden_Aaronson,MID,2023-02-08,23,0,0,0.02,0.04,0,27,1,0.4,0.03,0.02,Man Utd
+21646,Brenden_Aaronson,MID,2023-02-12,23,0,0,0.0,0.05,0,17,1,0.6,0.04,0.0,Man Utd
+21647,Brenden_Aaronson,MID,2023-02-18,23,0,0,0.11,0.04,0,29,1,0.7,0.03,0.08,Everton
+21648,Brenden_Aaronson,MID,2023-02-25,23,0,0,0.03,0.17,0,74,3,4.4,0.09,0.02,Southampton
+21649,Brenden_Aaronson,MID,2023-03-04,23,0,0,0.01,0.06,0,67,2,1.7,0.05,0.01,Chelsea
+21650,Brenden_Aaronson,MID,2023-03-11,23,0,0,0.11,0.16,0,83,2,5.9,0.11,0.07,Brighton
+21651,Brenden_Aaronson,MID,2023-03-18,23,0,0,0.22,0.02,0,80,2,2.9,0.01,0.15,Wolves
+21652,Brenden_Aaronson,MID,2023-04-01,23,0,0,0.08,0.26,0,64,2,6.4,0.27,0.08,Arsenal
+21653,Brenden_Aaronson,MID,2023-04-04,23,0,0,0.15,0.0,0,73,2,6.5,0.0,0.09,Nott'm Forest
+21654,Brenden_Aaronson,MID,2023-04-09,23,1,0,0.15,0.36,0,59,4,11.0,0.29,0.12,Crystal Palace
+21655,Brenden_Aaronson,MID,2023-04-17,23,0,0,0.06,0.06,0,65,2,3.3,0.05,0.05,Liverpool
+21656,Brenden_Aaronson,MID,2023-04-22,23,0,0,0.03,0.0,0,64,2,2.0,0.0,0.02,Fulham
+21657,Brenden_Aaronson,MID,2023-04-25,23,0,0,0.0,0.06,0,22,1,2.4,0.03,0.0,Leicester
+21658,Brenden_Aaronson,MID,2023-05-06,23,0,0,0.0,0.0,0,10,1,0.0,0.0,0.0,Man City
+21659,Brenden_Aaronson,MID,2023-05-13,23,0,0,0.0,0.0,0,3,1,0.0,0.0,0.0,Newcastle
+21660,Brenden_Aaronson,MID,2023-05-21,23,0,0,0.0,0.2,0,28,1,1.2,0.13,0.0,West Ham
+21661,Brenden_Aaronson,MID,2023-05-28,23,0,0,0.0,0.0,0,31,1,0.0,0.0,0.0,Spurs
+21662,Adama_Traoré Diarra,MID,2022-08-13,23,0,0,0.0,0.0,0,11,1,0.2,0.0,0.0,Fulham
+21663,Adama_Traoré Diarra,MID,2022-08-20,23,0,0,0.0,0.0,0,19,1,0.9,0.0,0.0,Spurs
+21664,Adama_Traoré Diarra,MID,2022-08-31,23,0,0,0.0,0.0,0,15,1,0.5,0.0,0.0,Bournemouth
+21665,Adama_Traoré Diarra,MID,2022-09-03,23,0,0,0.0,0.0,0,8,1,0.0,0.0,0.0,Southampton
+21666,Adama_Traoré Diarra,MID,2022-10-01,23,0,0,0.0,0.0,0,66,2,3.1,0.0,0.0,West Ham
+21667,Adama_Traoré Diarra,MID,2022-10-08,23,0,0,0.0,0.0,0,71,2,3.0,0.0,0.0,Chelsea
+21668,Adama_Traoré Diarra,MID,2022-10-15,23,1,0,0.0,0.0,0,84,6,8.3,0.0,0.0,Nott'm Forest
+21669,Adama_Traoré Diarra,MID,2022-10-18,23,0,0,0.0,0.0,1,57,6,6.9,0.0,0.0,Crystal Palace
+21670,Adama_Traoré Diarra,MID,2022-10-23,23,0,0,0.0,0.0,0,90,2,6.2,0.0,0.0,Leicester
+21671,Adama_Traoré Diarra,MID,2022-10-29,23,0,0,0.0,0.0,0,82,2,1.1,0.0,0.0,Brentford
+21672,Adama_Traoré Diarra,MID,2022-11-05,23,0,0,0.0,0.0,0,22,1,2.6,0.0,0.0,Brighton
+21673,Adama_Traoré Diarra,MID,2022-11-12,23,0,0,0.31,0.03,0,90,2,4.7,0.04,0.4,Arsenal
+21674,Adama_Traoré Diarra,MID,2022-12-26,23,0,0,0.03,0.0,0,30,1,1.3,0.0,0.02,Everton
+21675,Adama_Traoré Diarra,MID,2022-12-31,23,0,0,0.01,0.0,0,45,1,0.6,0.0,0.0,Man Utd
+21676,Adama_Traoré Diarra,MID,2023-01-04,23,0,0,0.01,0.06,0,45,1,0.8,0.05,0.01,Aston Villa
+21677,Adama_Traoré Diarra,MID,2023-01-14,23,0,0,0.15,0.04,0,17,1,2.8,0.03,0.1,West Ham
+21678,Adama_Traoré Diarra,MID,2023-01-22,23,0,0,0.0,0.0,0,45,1,0.3,0.0,0.0,Man City
+21679,Adama_Traoré Diarra,MID,2023-02-04,23,1,0,0.37,0.05,0,48,4,6.3,0.04,0.29,Liverpool
+21680,Adama_Traoré Diarra,MID,2023-02-11,23,1,0,0.08,0.2,0,45,4,2.2,0.1,0.04,Southampton
+21681,Adama_Traoré Diarra,MID,2023-02-18,23,0,0,0.74,0.04,0,76,2,9.5,0.02,0.4,Bournemouth
+21682,Adama_Traoré Diarra,MID,2023-02-24,23,0,0,0.08,0.0,0,30,1,1.0,0.0,0.06,Fulham
+21683,Adama_Traoré Diarra,MID,2023-03-01,23,0,0,0.0,0.0,0,45,1,0.9,0.0,0.0,Liverpool
+21684,Adama_Traoré Diarra,MID,2023-03-04,23,0,0,0.06,0.08,1,45,6,7.0,0.05,0.04,Spurs
+21685,Adama_Traoré Diarra,MID,2023-03-12,23,0,0,0.02,0.0,0,45,1,1.0,0.0,0.02,Newcastle
+21686,Adama_Traoré Diarra,MID,2023-03-18,23,0,0,0.32,0.0,0,33,1,3.8,0.0,0.19,Leeds
+21687,Adama_Traoré Diarra,MID,2023-04-01,23,0,0,0.01,0.07,0,64,2,3.5,0.05,0.01,Nott'm Forest
+21688,Adama_Traoré Diarra,MID,2023-04-08,23,0,0,0.0,0.0,0,16,1,0.1,0.0,0.0,Chelsea
+21689,Adama_Traoré Diarra,MID,2023-04-15,23,0,0,0.0,0.05,0,17,1,2.4,0.04,0.0,Brentford
+21690,Adama_Traoré Diarra,MID,2023-04-25,23,0,0,0.0,0.0,0,11,1,0.9,0.0,0.0,Crystal Palace
+21691,Adama_Traoré Diarra,MID,2023-04-29,23,0,0,0.0,0.0,0,7,0,0.0,0.0,0.0,Brighton
+21692,Adama_Traoré Diarra,MID,2023-05-06,23,0,0,0.0,0.0,0,6,1,0.1,0.0,0.0,Aston Villa
+21693,Adama_Traoré Diarra,MID,2023-05-13,23,0,0,0.0,0.0,0,15,1,0.0,0.0,0.0,Man Utd
+21694,Adama_Traoré Diarra,MID,2023-05-20,23,1,0,0.02,0.1,0,87,5,5.9,0.06,0.01,Everton
+21695,Adama_Traoré Diarra,MID,2023-05-28,23,0,0,0.25,0.06,0,90,2,0.0,0.06,0.24,Arsenal
+21696,Illan_Meslier,GK,2022-08-06,23,0,0,0.0,0.0,0,90,3,3.9,0.0,0.0,Wolves
+21697,Illan_Meslier,GK,2022-08-13,23,0,0,0.0,0.0,0,90,1,1.5,0.0,0.0,Southampton
+21698,Illan_Meslier,GK,2022-08-21,23,0,0,0.0,0.0,0,90,7,2.2,0.0,0.0,Chelsea
+21699,Illan_Meslier,GK,2022-08-27,23,0,0,0.0,0.0,0,90,3,2.5,0.0,0.0,Brighton
+21700,Illan_Meslier,GK,2022-08-30,23,0,0,0.0,0.0,0,90,2,1.1,0.0,0.0,Everton
+21701,Illan_Meslier,GK,2022-09-03,23,0,0,0.0,0.0,0,90,1,2.8,0.0,0.0,Brentford
+21702,Illan_Meslier,GK,2022-10-02,23,0,3,0.0,0.0,0,90,11,3.9,0.0,0.0,Aston Villa
+21703,Illan_Meslier,GK,2022-10-09,23,0,0,0.0,0.0,0,90,2,2.1,0.0,0.0,Crystal Palace
+21704,Illan_Meslier,GK,2022-10-16,23,0,0,0.0,0.0,0,90,3,2.0,0.0,0.0,Arsenal
+21705,Illan_Meslier,GK,2022-10-20,23,0,0,0.0,0.0,0,90,1,0.5,0.0,0.0,Leicester
+21706,Illan_Meslier,GK,2022-10-23,23,0,0,0.0,0.0,0,90,1,1.1,0.0,0.0,Fulham
+21707,Illan_Meslier,GK,2022-10-29,23,0,2,0.0,0.0,0,90,7,6.7,0.0,0.0,Liverpool
+21708,Illan_Meslier,GK,2022-11-05,23,0,0,0.0,0.0,0,90,1,1.9,0.0,0.0,Bournemouth
+21709,Illan_Meslier,GK,2022-11-12,23,0,0,0.0,0.0,0,90,1,3.0,0.0,0.0,Spurs
+21710,Illan_Meslier,GK,2022-12-28,23,0,0,0.0,0.0,0,90,3,4.2,0.0,0.0,Man City
+21711,Illan_Meslier,GK,2022-12-31,23,0,2,0.0,0.0,0,90,8,3.7,0.0,0.0,Newcastle
+21712,Illan_Meslier,GK,2023-01-04,23,0,0,0.0,0.0,0,90,1,0.5,0.0,0.0,West Ham
+21713,Illan_Meslier,GK,2023-01-13,23,0,0,0.0,0.0,0,90,1,2.1,0.0,0.0,Aston Villa
+21714,Illan_Meslier,GK,2023-01-22,23,0,0,0.0,0.0,0,90,6,0.2,0.0,0.0,Brentford
+21715,Illan_Meslier,GK,2023-02-05,23,0,0,0.0,0.0,0,90,2,1.0,0.0,0.0,Nott'm Forest
+21716,Illan_Meslier,GK,2023-02-08,23,0,0,0.0,0.0,0,90,2,2.7,0.0,0.0,Man Utd
+21717,Illan_Meslier,GK,2023-02-12,23,0,0,0.0,0.0,0,90,2,2.4,0.0,0.0,Man Utd
+21718,Illan_Meslier,GK,2023-02-18,23,0,0,0.0,0.0,0,90,3,2.4,0.0,0.0,Everton
+21719,Illan_Meslier,GK,2023-02-25,23,0,0,0.0,0.0,0,90,6,1.4,0.0,0.0,Southampton
+21720,Illan_Meslier,GK,2023-03-04,23,0,0,0.0,0.12,0,90,2,3.5,0.11,0.0,Chelsea
+21721,Illan_Meslier,GK,2023-03-11,23,0,0,0.0,0.0,0,90,1,1.2,0.0,0.0,Brighton
+21722,Illan_Meslier,GK,2023-03-18,23,0,0,0.0,0.0,0,90,2,5.3,0.0,0.0,Wolves
+21723,Illan_Meslier,GK,2023-04-01,23,0,0,0.0,0.0,0,90,0,1.1,0.0,0.0,Arsenal
+21724,Illan_Meslier,GK,2023-04-04,23,0,0,0.0,0.0,0,90,2,0.2,0.0,0.0,Nott'm Forest
+21725,Illan_Meslier,GK,2023-04-09,23,0,0,0.0,0.0,0,90,0,1.8,0.0,0.0,Crystal Palace
+21726,Illan_Meslier,GK,2023-04-17,23,0,0,0.0,0.0,0,90,-1,1.2,0.0,0.0,Liverpool
+21727,Illan_Meslier,GK,2023-04-22,23,0,1,0.0,0.0,0,90,3,2.8,0.0,0.0,Fulham
+21728,Illan_Meslier,GK,2023-04-25,23,0,0,0.0,0.0,0,90,2,1.6,0.0,0.0,Leicester
+21729,Illan_Meslier,GK,2023-04-30,23,0,0,0.0,0.0,0,90,1,1.4,0.0,0.0,Bournemouth
+21730,Patrick_Bamford,FWD,2022-08-06,23,1,0,0.0,0.0,0,83,5,4.2,0.0,0.0,Wolves
+21731,Patrick_Bamford,FWD,2022-08-13,23,0,0,0.0,0.0,0,27,1,3.8,0.0,0.0,Southampton
+21732,Patrick_Bamford,FWD,2022-08-30,23,0,0,0.0,0.0,0,14,1,0.4,0.0,0.0,Everton
+21733,Patrick_Bamford,FWD,2022-09-03,23,0,0,0.0,0.0,0,45,1,1.5,0.0,0.0,Brentford
+21734,Patrick_Bamford,FWD,2022-10-02,23,0,0,0.0,0.0,0,22,1,3.4,0.0,0.0,Aston Villa
+21735,Patrick_Bamford,FWD,2022-10-09,23,0,0,0.0,0.0,0,61,2,3.9,0.0,0.0,Crystal Palace
+21736,Patrick_Bamford,FWD,2022-10-16,23,0,0,0.0,0.0,0,45,-1,4.9,0.0,0.0,Arsenal
+21737,Patrick_Bamford,FWD,2022-10-20,23,0,0,0.0,0.0,0,64,2,7.9,0.0,0.0,Leicester
+21738,Patrick_Bamford,FWD,2022-10-23,23,0,0,0.0,0.0,0,26,1,2.1,0.0,0.0,Fulham
+21739,Patrick_Bamford,FWD,2022-10-29,23,1,0,0.0,0.0,0,38,4,4.8,0.0,0.0,Liverpool
+21740,Patrick_Bamford,FWD,2023-01-13,23,0,1,0.0,0.5,1,23,6,5.1,0.38,0.0,Aston Villa
+21741,Patrick_Bamford,FWD,2023-01-22,23,0,0,0.06,0.0,0,11,1,0.4,0.0,0.04,Brentford
+21742,Patrick_Bamford,FWD,2023-02-05,23,0,0,0.02,0.12,0,66,2,2.3,0.08,0.01,Nott'm Forest
+21743,Patrick_Bamford,FWD,2023-02-08,23,1,0,0.01,0.0,0,62,5,3.7,0.0,0.01,Man Utd
+21744,Patrick_Bamford,FWD,2023-02-12,23,0,0,0.0,0.23,0,57,1,4.2,0.16,0.0,Man Utd
+21745,Patrick_Bamford,FWD,2023-02-18,23,0,0,0.04,0.19,0,90,2,3.4,0.14,0.03,Everton
+21746,Patrick_Bamford,FWD,2023-02-25,23,0,0,0.09,0.13,0,85,1,5.2,0.07,0.05,Southampton
+21747,Patrick_Bamford,FWD,2023-03-11,23,0,2,0.05,0.21,1,65,8,6.7,0.14,0.03,Brighton
+21748,Patrick_Bamford,FWD,2023-03-18,23,0,0,0.08,0.06,0,66,2,2.3,0.04,0.05,Wolves
+21749,Patrick_Bamford,FWD,2023-04-01,23,0,0,0.0,0.0,0,5,0,0.0,0.0,0.0,Arsenal
+21750,Patrick_Bamford,FWD,2023-04-04,23,0,0,0.04,0.67,0,90,2,3.6,0.4,0.02,Nott'm Forest
+21751,Patrick_Bamford,FWD,2023-04-09,23,0,0,0.0,0.07,1,78,6,5.7,0.06,0.0,Crystal Palace
+21752,Patrick_Bamford,FWD,2023-04-22,23,1,0,0.0,0.27,0,25,4,1.1,0.19,0.0,Fulham
+21753,Patrick_Bamford,FWD,2023-04-25,23,0,0,0.01,0.29,0,90,2,3.2,0.15,0.01,Leicester
+21754,Patrick_Bamford,FWD,2023-04-30,23,0,0,0.01,0.56,1,70,6,9.1,0.35,0.01,Bournemouth
+21755,Patrick_Bamford,FWD,2023-05-06,23,0,0,0.0,0.12,0,79,2,1.0,0.15,0.0,Man City
+21756,Patrick_Bamford,FWD,2023-05-13,23,1,0,0.19,0.98,0,90,2,4.9,0.9,0.18,Newcastle
+21757,Patrick_Bamford,FWD,2023-05-21,23,0,0,0.08,0.0,0,33,1,0.8,0.0,0.05,West Ham
+21758,Pascal_Struijk,DEF,2022-08-06,23,0,0,0.0,0.0,0,90,2,2.6,0.0,0.0,Wolves
+21759,Pascal_Struijk,DEF,2022-08-13,23,1,2,0.0,0.0,0,90,6,7.4,0.0,0.0,Southampton
+21760,Pascal_Struijk,DEF,2022-08-21,23,0,0,0.0,0.0,0,90,6,3.2,0.0,0.0,Chelsea
+21761,Pascal_Struijk,DEF,2022-08-27,23,0,0,0.0,0.0,0,90,1,4.2,0.0,0.0,Brighton
+21762,Pascal_Struijk,DEF,2022-08-30,23,0,2,0.0,0.0,0,90,4,4.8,0.0,0.0,Everton
+21763,Pascal_Struijk,DEF,2022-09-03,23,0,0,0.0,0.0,0,90,0,5.6,0.0,0.0,Brentford
+21764,Pascal_Struijk,DEF,2022-10-02,23,0,0,0.0,0.0,0,90,6,0.9,0.0,0.0,Aston Villa
+21765,Pascal_Struijk,DEF,2022-10-09,23,0,0,0.0,0.0,1,90,6,9.6,0.0,0.0,Crystal Palace
+21766,Pascal_Struijk,DEF,2022-10-16,23,0,0,0.0,0.0,0,90,2,4.9,0.0,0.0,Arsenal
+21767,Pascal_Struijk,DEF,2022-10-23,23,0,0,0.0,0.0,0,84,1,1.2,0.0,0.0,Fulham
+21768,Pascal_Struijk,DEF,2022-10-29,23,0,0,0.0,0.0,0,90,2,5.0,0.0,0.0,Liverpool
+21769,Pascal_Struijk,DEF,2022-11-05,23,1,0,0.0,0.0,0,90,4,7.7,0.0,0.0,Bournemouth
+21770,Pascal_Struijk,DEF,2022-11-12,23,0,0,0.03,0.01,0,90,0,6.3,0.01,0.02,Spurs
+21771,Pascal_Struijk,DEF,2022-12-28,23,0,0,0.03,0.1,1,90,7,7.1,0.11,0.03,Man City
+21772,Pascal_Struijk,DEF,2022-12-31,23,0,0,0.0,0.0,0,90,5,2.7,0.0,0.0,Newcastle
+21773,Pascal_Struijk,DEF,2023-01-04,23,0,0,0.03,0.06,0,90,1,1.7,0.04,0.02,West Ham
+21774,Pascal_Struijk,DEF,2023-01-13,23,0,0,0.01,0.0,0,65,1,1.0,0.0,0.01,Aston Villa
+21775,Pascal_Struijk,DEF,2023-01-22,23,0,0,0.02,0.0,0,90,6,2.2,0.0,0.01,Brentford
+21776,Pascal_Struijk,DEF,2023-02-05,23,0,0,0.01,0.0,0,66,1,2.4,0.0,0.01,Nott'm Forest
+21777,Pascal_Struijk,DEF,2023-02-08,23,0,0,0.0,0.2,0,22,1,4.7,0.17,0.0,Man Utd
+21778,Pascal_Struijk,DEF,2023-03-18,23,0,0,0.0,0.0,0,9,1,0.3,0.0,0.0,Wolves
+21779,Pascal_Struijk,DEF,2023-04-01,23,0,0,0.0,0.0,0,90,0,1.9,0.0,0.0,Arsenal
+21780,Pascal_Struijk,DEF,2023-04-04,23,0,0,0.01,0.0,0,90,2,5.2,0.0,0.01,Nott'm Forest
+21781,Pascal_Struijk,DEF,2023-04-09,23,0,0,0.0,0.03,0,90,0,3.2,0.02,0.0,Crystal Palace
+21782,Pascal_Struijk,DEF,2023-04-17,23,0,0,0.0,0.0,0,90,-1,1.5,0.0,0.0,Liverpool
+21783,Pascal_Struijk,DEF,2023-05-06,23,0,0,0.0,0.0,0,10,1,0.0,0.0,0.0,Man City
+21784,Pascal_Struijk,DEF,2023-05-13,23,0,0,0.0,0.0,0,1,1,0.6,0.0,0.0,Newcastle
+21785,Pascal_Struijk,DEF,2023-05-21,23,0,0,0.07,0.0,0,83,1,3.6,0.0,0.05,West Ham
+21786,Pascal_Struijk,DEF,2023-05-28,23,0,0,0.02,0.1,0,58,-1,0.0,0.06,0.01,Spurs
+21787,Wilfried_Gnonto,FWD,2022-10-29,23,0,0,0.0,0.0,0,18,1,1.6,0.0,0.0,Liverpool
+21788,Wilfried_Gnonto,FWD,2022-11-05,23,1,0,0.0,0.0,0,45,4,6.7,0.0,0.0,Bournemouth
+21789,Wilfried_Gnonto,FWD,2022-11-12,23,0,0,0.01,0.0,0,45,1,0.2,0.0,0.01,Spurs
+21790,Wilfried_Gnonto,FWD,2022-12-28,23,0,0,0.03,0.09,0,90,1,3.7,0.1,0.03,Man City
+21791,Wilfried_Gnonto,FWD,2022-12-31,23,0,0,0.07,0.06,0,69,1,2.6,0.06,0.06,Newcastle
+21792,Wilfried_Gnonto,FWD,2023-01-04,23,0,3,0.02,0.49,1,90,9,9.0,0.32,0.01,West Ham
+21793,Wilfried_Gnonto,FWD,2023-01-13,23,0,0,0.14,0.37,0,90,2,7.1,0.29,0.11,Aston Villa
+21794,Wilfried_Gnonto,FWD,2023-01-22,23,0,0,0.06,0.07,0,90,2,5.0,0.04,0.04,Brentford
+21795,Wilfried_Gnonto,FWD,2023-02-05,23,0,0,0.5,0.05,0,90,2,9.8,0.03,0.34,Nott'm Forest
+21796,Wilfried_Gnonto,FWD,2023-02-08,23,0,3,0.04,0.07,1,89,9,7.3,0.06,0.03,Man Utd
+21797,Wilfried_Gnonto,FWD,2023-02-12,23,0,0,0.25,0.1,0,90,2,3.9,0.07,0.18,Man Utd
+21798,Wilfried_Gnonto,FWD,2023-02-18,23,0,0,0.02,0.0,0,90,1,1.2,0.0,0.01,Everton
+21799,Wilfried_Gnonto,FWD,2023-02-25,23,0,0,0.03,0.05,0,60,1,2.3,0.03,0.02,Southampton
+21800,Wilfried_Gnonto,FWD,2023-03-04,23,0,0,0.05,0.0,0,22,1,1.5,0.0,0.04,Chelsea
+21801,Wilfried_Gnonto,FWD,2023-03-11,23,1,0,0.03,0.0,0,24,4,3.5,0.0,0.02,Brighton
+21802,Wilfried_Gnonto,FWD,2023-03-18,23,1,0,0.01,0.0,0,60,5,4.0,0.0,0.01,Wolves
+21803,Wilfried_Gnonto,FWD,2023-04-09,23,0,0,0.01,0.0,0,30,0,0.6,0.0,0.01,Crystal Palace
+21804,Wilfried_Gnonto,FWD,2023-04-17,23,0,0,0.0,0.0,0,13,1,0.0,0.0,0.0,Liverpool
+21805,Wilfried_Gnonto,FWD,2023-04-22,23,0,0,0.01,0.02,0,10,1,0.5,0.01,0.01,Fulham
+21806,Wilfried_Gnonto,FWD,2023-04-30,23,1,0,0.32,0.42,0,90,5,9.2,0.26,0.2,Bournemouth
+21807,Wilfried_Gnonto,FWD,2023-05-06,23,0,0,0.0,0.0,0,57,0,0.0,0.0,0.0,Man City
+21808,Wilfried_Gnonto,FWD,2023-05-13,23,0,0,0.04,0.0,0,26,0,1.0,0.0,0.04,Newcastle
+21809,Wilfried_Gnonto,FWD,2023-05-21,23,0,0,0.03,0.0,0,56,1,3.6,0.0,0.02,West Ham
+21810,Wilfried_Gnonto,FWD,2023-05-28,23,0,0,0.01,0.0,0,2,1,0.0,0.0,0.01,Spurs
