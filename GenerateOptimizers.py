@@ -39,19 +39,45 @@ def wildcard_optimize_team(sel_thresh, budget, columns, file_path="Model_Optimiz
     bench_gk = {t: LpVariable(cat='Binary', name=f"bench_gk_{t}") for t in gameweeks}
     transfer_in = {(i, t): LpVariable(cat='Binary', name=f"transfer_in_{i}_{t}") for i in range(num_players) for t in range(1, 8)}
     transfer_out = {(i, t): LpVariable(cat='Binary', name=f"transfer_out_{i}_{t}") for i in range(num_players) for t in range(1, 8)}
-    saved_transfers = {t: LpVariable(cat='Integer', lowBound=0, upBound=3, name=f"saved_transfers_{t}") for t in range(8)}
+    saved_transfers = {t: LpVariable(cat='Integer', lowBound=0, upBound=4, name=f"saved_transfers_{t}") for t in range(8)}
+    capt = {
+        (i, t): LpVariable(cat="Binary", name=f"capt_{i}_{t}")
+        for i in range(num_players)
+        for t in gameweeks
+    }
 
     # Objective
-    model += lpSum(y[i, t] * predicted_points[i][t] for i in range(num_players) for t in gameweeks)
+    model += (
+    # full points for all starters y[i,t]
+    lpSum(
+        y[i, t] * predicted_points[i][t]
+        for i in range(num_players)
+        for t in gameweeks
+    )
+    # plus 10% points for anyone on the bench bench[i,t]
+    + lpSum(
+        bench[i, t] * 0.1 * predicted_points[i][t]
+        for i in range(num_players)
+        for t in gameweeks
+    )
+    # plus 2 points for every saved transfer in each week
+    + lpSum(
+        3 * saved_transfers[t]
+        for t in gameweeks
+    )
+     + lpSum(capt[i, t] * predicted_points[i][t] for i in range(num_players) for t in gameweeks)
+)
 
     # Constraints
     for t in gameweeks:
         model += lpSum(y[i, t] for i in range(num_players) if positions[i] == 'DEF') == 3
+        model += lpSum(capt[i, t] for i in range(num_players)) == 1
         for i in range(num_players):
             model += y[i, t] <= x[i, t]
             model += y[i, t] <= 1 - bench[i, t]
             model += y[i, t] >= x[i, t] + (1 - bench[i, t]) - 1
             model += x[i, t] * selected[i] <= sel_thresh
+            model += capt[i, t] <= y[i, t]
 
         model += lpSum(x[i, t] * costs[i] for i in range(num_players)) <= budget
         for team in set(teams):
@@ -68,6 +94,15 @@ def wildcard_optimize_team(sel_thresh, budget, columns, file_path="Model_Optimiz
         model += lpSum(bench[i, t] for i in range(num_players) if positions[i] != 'GKP') == 3
         for i in range(num_players):
             model += bench[i, t] <= x[i, t]
+            
+            
+    #No imidiate transfers        
+    for t in range(1, GW_range-1):
+        for i in range(num_players):
+            # if they come in at t, they cannot go out at t+1
+            model += transfer_in[i, t] + transfer_out[i, t+1] <= 1
+            
+
 
     # Transfers
     for t in range(1, GW_range):
@@ -119,7 +154,8 @@ def wildcard_optimize_team(sel_thresh, budget, columns, file_path="Model_Optimiz
                     "GW": gw,
                     "position": pos,
                     "photo": f"https://resources.premierleague.com/premierleague/photos/players/110x140/p{player_row_code}.png",
-                    "web_name": current_players[current_players["name"] == name]["web_name"].values[0]
+                    "web_name": current_players[current_players["name"] == name]["web_name"].values[0],
+                    "Is_captain":  False
                 })
 
 
@@ -129,6 +165,7 @@ def wildcard_optimize_team(sel_thresh, budget, columns, file_path="Model_Optimiz
             player_row_code=current_players[current_players["name"]==name]["code"].values[0]
             pos = positions[i]
             gw =columns[ t] # Transfers affect upcoming GW
+            is_capt   = capt[i, t].varValue > 0.5
 
             if x[i, t].varValue > 0.5:
                 if bench[i, t].varValue > 0.5:
@@ -136,7 +173,7 @@ def wildcard_optimize_team(sel_thresh, budget, columns, file_path="Model_Optimiz
                 else:
                     status = "playing"
                 records.append({"Name": name, "status": status, "GW": gw, "position": pos, "photo":f"https://resources.premierleague.com/premierleague/photos/players/110x140/p{player_row_code}.png"
-                                ,"web_name": current_players[current_players["name"] == name]["web_name"].values[0]})
+                                ,"web_name": current_players[current_players["name"] == name]["web_name"].values[0], "Is_captain":  bool(is_capt)})
     """
     for t in range(1, GW_range):
         for i in range(num_players):

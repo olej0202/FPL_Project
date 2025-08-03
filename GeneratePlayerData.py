@@ -188,6 +188,17 @@ def GeneratePlayerData(Future, fixture_path,current_player_path, current_teams_p
         "Florian_Wirtz":["Mohamed_Salah","Cole_Palmer","Dominik_Szoboszlai","Alexis_Mac Allister", "Luis_Díaz"]
         
     }
+    new_team_cluster={
+        "Mohammed_Kudus":["Brennan_Johnson","Son_Heung-min","Dejan_Kulusevski"],
+        "Matheus_Santos Carneiro da Cunha":["Bruno_Borges Fernandes","Alejandro_Garnacho Ferreyra","Amad_Diallo"],
+        "Bryan_Mbeumo":["Bruno_Borges Fernandes","Alejandro_Garnacho Ferreyra","Amad_Diallo"],
+        "João_Pedro Junqueira de Jesus":["Nicolas_Jackson","Pedro_Lomba Neto"],
+        "Cole_Palmer":["Mohamed_Salah","Bukayo_Saka"],
+        "Ollie_Watkins":["Erling_Haaland","Yoane_Wissa"],
+        "Anthony_Gordon":["Alexander_Isak","Jacob_Murphy","Harvey_Barnes"],
+        
+    }
+    
     relevant_players["name"] = relevant_players["name"].apply(lambda n: name_map.get(n, n))
 
     xmins=pd.read_csv("GenerateXmins.csv")
@@ -299,8 +310,20 @@ def GeneratePlayerData(Future, fixture_path,current_player_path, current_teams_p
 
                 
         clusters,home,n_matches,XGH,XGCH,XGA,XGCA,XGC_DEF,XGC_FWD,XGC_MID,own_XG,GW,played_XGC,played_XG,opp_code=next_opp(team_id, Future, fixture_data,kmeans,team_code,current_teams)
-        if(len(clusters)<2):
+        
+        
+        #if endre stats for nye spillere på et lag
+        exclude_columns=["kickoff_time", "season", "position","Team","name","gamepos","CBI"]
+        columns_to_average = [col for col in player_row.columns if col not in exclude_columns]
+        if name in new_team_cluster:
+            members = new_team_cluster[name]
+            cluster_df = current_data[current_data["name"].isin(members)]
+            cluster_means = cluster_df[columns_to_average].mean()
+            player_row[columns_to_average] = 0.5 * player_row[columns_to_average] + 0.5 * cluster_means
 
+        
+        
+        if(len(clusters)<2):
             break
         for i in range(len(clusters)):
                 player_row["Cluster"] = clusters[i]
@@ -319,6 +342,7 @@ def GeneratePlayerData(Future, fixture_path,current_player_path, current_teams_p
                 player_row["opp_code"] = opp_code[i]
                 player_row["average_minutes"] = minutes
                 player_row["Team"]=team_code
+        
                 
             
 
