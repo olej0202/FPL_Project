@@ -62,7 +62,7 @@ def wildcard_optimize_team(sel_thresh, budget, columns, file_path="Model_Optimiz
     )
     # plus 2 points for every saved transfer in each week
     + lpSum(
-        3 * saved_transfers[t]
+        2 * saved_transfers[t]
         for t in gameweeks
     )
      + lpSum(capt[i, t] * predicted_points[i][t] for i in range(num_players) for t in gameweeks)
@@ -143,7 +143,8 @@ def wildcard_optimize_team(sel_thresh, budget, columns, file_path="Model_Optimiz
                     "GW": gw,
                     "position": pos,
                     "photo": f"https://resources.premierleague.com/premierleague/photos/players/110x140/p{player_row_code}.png",
-                    "web_name": current_players[current_players["name"] == name]["web_name"].values[0]
+                    "web_name": current_players[current_players["name"] == name]["web_name"].values[0], 
+                    "Is_captain":  False
                 })
 
             # transferred out

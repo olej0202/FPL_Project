@@ -246,8 +246,11 @@ def optimize_my_team(team_id=1,wildcard_round=40, bb_round=1,Last_GW=0,banned_li
 
     # --- Objective Function ---
     # (Bench points term is added only if bench_points_gw is in the gameweek range)
-    obj = lpSum((y[i, t] + c[i, t]) * predicted_points[i][t] 
-                for i in range(num_players) for t in gameweeks)
+    obj = lpSum((y[i, t] + c[i, t]+bench[i, t] * 0.1) * predicted_points[i][t] 
+                for i in range(num_players) for t in gameweeks)+ lpSum(
+        2 * saved_transfers[t]
+        for t in gameweeks
+    )
     if bench_points_gw in gameweeks:
         obj += lpSum(bench[i, bench_points_gw] * predicted_points[i][bench_points_gw] 
                      for i in range(num_players))
@@ -352,7 +355,8 @@ def optimize_my_team(team_id=1,wildcard_round=40, bb_round=1,Last_GW=0,banned_li
                         "status": "transferred_in",
                         "GW": gw,
                         "position": pos,
-                        "photo": f"https://resources.premierleague.com/premierleague/photos/players/110x140/p{player_row_code}.png"
+                        "photo": f"https://resources.premierleague.com/premierleague/photos/players/110x140/p{player_row_code}.png", 
+                        "Is_captain":  False
                     })
 
                 # transferred out
@@ -362,7 +366,8 @@ def optimize_my_team(team_id=1,wildcard_round=40, bb_round=1,Last_GW=0,banned_li
                         "status": "transferred_out",
                         "GW": gw,
                         "position": pos,
-                        "photo": f"https://resources.premierleague.com/premierleague/photos/players/110x140/p{player_row_code}.png"
+                        "photo": f"https://resources.premierleague.com/premierleague/photos/players/110x140/p{player_row_code}.png", 
+                        "Is_captain":  False
                     })
 
 
@@ -372,13 +377,14 @@ def optimize_my_team(team_id=1,wildcard_round=40, bb_round=1,Last_GW=0,banned_li
             player_row_code=current_players[current_players["name"]==name]["code"].values[0]
             pos = positions[i]
             gw =GW_list[ t] # Transfers affect upcoming GW
+            is_capt   = c[i, t].varValue > 0.5
 
             if x[i, t].varValue > 0.5:
                 if bench[i, t].varValue > 0.5:
                     status = "benched"
                 else:
                     status = "playing"
-                records.append({"Name": name, "status": status, "GW": gw, "position": pos, "photo":f"https://resources.premierleague.com/premierleague/photos/players/110x140/p{player_row_code}.png"})
+                records.append({"Name": name, "status": status, "GW": gw, "position": pos, "photo":f"https://resources.premierleague.com/premierleague/photos/players/110x140/p{player_row_code}.png", "Is_captain":  bool(is_capt)})
 
     # Final structured DataFrame
     status_df = pd.DataFrame(records)
