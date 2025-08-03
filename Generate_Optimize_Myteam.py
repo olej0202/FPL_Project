@@ -246,9 +246,9 @@ def optimize_my_team(team_id=1,wildcard_round=40, bb_round=1,Last_GW=0,banned_li
 
     # --- Objective Function ---
     # (Bench points term is added only if bench_points_gw is in the gameweek range)
-    obj = lpSum((y[i, t] + c[i, t]+bench[i, t] * 0.1) * predicted_points[i][t] 
+    obj = lpSum((y[i, t] + c[i, t]+bench[i, t] * 0.05) * predicted_points[i][t] 
                 for i in range(num_players) for t in gameweeks)+ lpSum(
-        1 * saved_transfers[t]
+        0.3 * saved_transfers[t]
         for t in gameweeks
     )
     if bench_points_gw in gameweeks:
