@@ -531,10 +531,10 @@ def Generate_point_predictions():
         stat_cbi_player= stat_cbi[stat_cbi["Name"]==player].sort_values(by=["GW", "opp_stat"])
 
         overscore=max(0.9,player_data["Average_Overscore"].values[0])
-        overscore=min(1.4,overscore)
+        overscore=min(1.25,overscore)
 
         overassist=max(0.9,player_data["Average_OverAssist"].values[0])
-        overassist=min(1.7,overassist)
+        overassist=min(1.5,overassist)
         
         historic_xg=player_data["rolling_XG_historic"].values[0]
         historic_xa=player_data["rolling_XA_historic"].values[0]

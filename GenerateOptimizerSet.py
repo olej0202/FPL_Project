@@ -78,7 +78,7 @@ def GenerateOptimizeSet(Current_data_path):
             player_points[player_points['value'].isin(value)]
             .sort_values(['value', 'Points_prediction'], ascending=[True, False])
             .groupby('value')
-            .head(3)
+            .head(2)
             .reset_index(drop=True)
         )
         names.extend(top_players_by_value["name"].tolist())
@@ -99,10 +99,15 @@ def GenerateOptimizeSet(Current_data_path):
     optimized_player_set["minutes_multiplier"] = np.minimum(1, optimized_player_set['average_minutes'] / 80)
     optimized_player_set["0"] = 0
     
-    
+    optimized_player_set["Points_prediction"] = np.where(
+    optimized_player_set["position"] == "GKP",
+    optimized_player_set["Points_prediction"] * 0.8,
+    optimized_player_set["Points_prediction"]
+)
     
 
     constant_cols = ["name", "position","value", 'team_code','selected','offset', 'minutes_multiplier','0']
+    
 
     pivoted_df = optimized_player_set.pivot_table(
     index=constant_cols,             # Each player is one row
