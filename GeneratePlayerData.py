@@ -196,6 +196,7 @@ def GeneratePlayerData(Future, fixture_path,current_player_path, current_teams_p
         "Cole_Palmer":["Mohamed_Salah","Bukayo_Saka"],
         "Ollie_Watkins":["Erling_Haaland","Yoane_Wissa"],
         "Anthony_Gordon":["Alexander_Isak","Jacob_Murphy","Harvey_Barnes"],
+        "Ismaïla_Sarr":["Romain_Esse","Eberechi_Eze"],
         
     }
     

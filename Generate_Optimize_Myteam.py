@@ -134,7 +134,7 @@ def get_my_team(team_id=1,Last_GW=0):
 
 
 
-def optimize_my_team(team_id=1,wildcard_round=40, bb_round=1,Last_GW=0,banned_list=["Matheus_Santos Carneiro Da Cunha"],GW_list=["0","1", "2","3","4","5","6","7","8"], current_player_path="Raw_Data_25/current_players.csv"):
+def optimize_my_team(team_id=1,wildcard_round=40, bb_round=1,Last_GW=0,banned_list=[],GW_list=["0","1", "2","3","4","5","6","7","8"], current_player_path="Raw_Data_25/current_players.csv"):
 
     current_players = pd.read_csv(current_player_path)
     
@@ -223,6 +223,11 @@ def optimize_my_team(team_id=1,wildcard_round=40, bb_round=1,Last_GW=0,banned_li
 
     def_indices   = [i for i, pos in enumerate(positions) if pos == 'DEF']
     gk_indices    = [i for i, pos in enumerate(positions) if pos == 'GKP']
+    
+    for i in gk_indices:
+        for t in range(optimize_range):
+            predicted_points[i][t] *= 0.8
+            
     mid_indices   = [i for i, pos in enumerate(positions) if pos == 'MID']
     fwd_indices   = [i for i, pos in enumerate(positions) if pos == 'FWD']
     outfield_indices = [i for i, pos in enumerate(positions) if pos != 'GKP']
@@ -264,6 +269,13 @@ def optimize_my_team(team_id=1,wildcard_round=40, bb_round=1,Last_GW=0,banned_li
         model += lpSum(x[i, t] for i in mid_indices) == 5
         model += lpSum(x[i, t] for i in fwd_indices) == 3
 
+    
+    #No imidiate transfers        
+    for t in range(1, optimize_range-1):
+        for i in range(num_players):
+            # if they come in at t, they cannot go out at t+1
+            model += transfer_in[i, t] + transfer_out[i, t+1] <= 1
+            
     # --- Bench Constraints ---
     for t in gameweeks:
         model += lpSum(bench[i, t] for i in gk_indices) == 1
