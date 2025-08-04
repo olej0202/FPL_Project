@@ -740,8 +740,8 @@ def team_transformed2():
 
 
 
-        k_def = 0.06
-        k_off=0.06
+        k_def = 0.08
+        k_off=0.08
         min_val=0.6
 
         actual_goals = xg
@@ -854,7 +854,7 @@ def team_transformed2():
     new_team_df=pd.read_csv("Team_data_transformed.csv").iloc[:,1:]
     new_team_df_newest=pd.read_csv("Team_data_newest.csv").iloc[:,1:]
 
-    overall_weight=0.1
+    overall_weight=0.2
 
     team_transformed_df=pd.DataFrame()
     team_transformed_df_newest=pd.DataFrame()
@@ -1091,6 +1091,10 @@ def main_Transform():
             
             player_df['Cluster_XG']=cluster_df['Cluster_XG'].values
             player_df['Cluster_XA']=cluster_df['Cluster_XA'].values
+            
+            player_df["rolling_Adjusted_XG_historic"] = player_df['Adjusted_XG'].rolling(window=30, min_periods=1).mean()
+            player_df["rolling_Adjusted_XA_historic"] = player_df['Adjusted_XA'].rolling(window=30, min_periods=1).mean()
+
 
             if(namelist[0]=="Mohamed_Salah"):
                 latest_rows_cluster.to_csv("test_cluster.csv")
