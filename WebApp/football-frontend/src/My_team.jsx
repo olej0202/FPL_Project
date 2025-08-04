@@ -3,59 +3,32 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { X,ArrowRight } from "lucide-react";
 import pitch from "./assets/pitch.png";
+import {useMyteamData} from "./Contexts/MyTeamContext";
 
 
 export default function MyTeamOptimize() {
-  const [teamId, setTeamId] = useState("");
-  const [bbRound, setBbRound] = useState("");
-  const [wildRound, setWildRound] = useState("");
-  const [bannedList, setBannedList] = useState([]);
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(false);
+    const {
+    teamId,
+    setTeamId,
+    bbRound,
+    setBbRound,
+    wildRound,
+    setWildRound,
+    bannedList,
+    data,
+    loading,
+    fetchTeam,
+    toggleBan,
+    removeBan,} = useMyteamData();
   const navigate = useNavigate();
+  const [showBbInput, setShowBbInput] = useState(!!bbRound);
+  const [showWildInput, setShowWildInput] = useState(!!wildRound);
+
   
 
-  const fetchTeam = async () => {
-    if (!teamId) return alert("Team ID is required");
-    setLoading(true);
-    try {
-      const params = new URLSearchParams({ team_id: teamId });
-      if (bbRound)   params.append("bb_round", bbRound);
-      if (wildRound) params.append("wildcard_round", wildRound);
-      bannedList.forEach((id) => params.append("banned_list", id));
-
-      const resp = await fetch(`https://fpl-project-t5e9.onrender.com/My_Team_Optimize?${params}`);
-      if (!resp.ok) throw new Error(await resp.text());
-      const json = await resp.json();
-      setData(json);
-    } catch (err) {
-      console.error(err);
-      alert("Error: " + err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-   const toggleBan = (id) => {
-    console.log("About to generate with bannedList:", bannedList);
-   const sid = id.toString();
-   setBannedList((prev) => {
-     return prev.includes(sid)
-       ? [...prev]
-       : [...prev, sid];
-   });
- };
 
 
- const RemoveBan= (id) => {
-    console.log("About to generate with bannedList:", bannedList);
-   const sid = id.toString();
-   setBannedList((prev) => {
-     return prev.includes(sid)
-       ? prev.filter((x) => x !== sid)
-       : [...prev];
-   });
- };
+
 
   if (loading) {
     return (
@@ -87,7 +60,7 @@ export default function MyTeamOptimize() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col items-center px-0 py-4 space-y-8">
+     <div className="min-h-screen bg-black text-white flex flex-col items-center px-0 py-4 space-y-8">
       <h1 className="text-3xl font-bold">Optimize My Team</h1>
 
       {/* Form */}
@@ -99,20 +72,58 @@ export default function MyTeamOptimize() {
           onChange={(e) => setTeamId(e.target.value)}
           className="w-40 p-2 bg-black border border-royal-gold rounded text-white text-center"
         />
-        <input
-          type="number"
-          placeholder="Bench Boost GW"
-          value={bbRound}
-          onChange={(e) => setBbRound(e.target.value)}
-          className="w-40 p-2 bg-black border border-royal-gold rounded text-white text-center"
-        />
-        <input
-          type="number"
-          placeholder="Wildcard GW"
-          value={wildRound}
-          onChange={(e) => setWildRound(e.target.value)}
-          className="w-40 p-2 bg-black border border-royal-gold rounded text-white text-center"
-        />
+
+        {/* Bench Boost Toggle with fixed container */}
+        {showBbInput ? (
+          <div className="relative w-40">
+            <input
+              type="number"
+              placeholder="Bench Boost GW"
+              value={bbRound}
+              onChange={(e) => setBbRound(e.target.value)}
+              className="w-full p-2 bg-black border border-royal-gold rounded text-white text-center"
+            />
+            <button
+              onClick={() => { setShowBbInput(false); setBbRound(""); }}
+              className="absolute top-2 -right-8 p-1 text-red-500 bg-black"
+            >
+              <X size={14} />
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => setShowBbInput(true)}
+            className="w-40 p-2 bg-transparent border border-dashed border-royal-gold rounded text-royal-gold hover:bg-yellow-300 hover:text-black transition"
+          >
+            + Add Bench Boost
+          </button>
+        )}
+
+        {/* Wildcard Toggle with fixed container */}
+        {showWildInput ? (
+          <div className="relative w-40">
+            <input
+              type="number"
+              placeholder="Wildcard GW"
+              value={wildRound}
+              onChange={(e) => setWildRound(e.target.value)}
+              className="w-full p-2 bg-black border border-royal-gold rounded text-white text-center"
+            />
+            <button
+              onClick={() => { setShowWildInput(false); setWildRound(""); }}
+              className="absolute top-2 -right-8 p-1 text-red-500 bg-black"
+            >
+              <X size={14} />
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => setShowWildInput(true)}
+            className="w-40 p-2 bg-transparent border border-dashed border-royal-gold rounded text-royal-gold hover:bg-yellow-300 hover:text-black transition"
+          >
+            + Add Wildcard
+          </button>
+        )}
         <button
           onClick={fetchTeam}
           className="bg-royal-gold text-black font-semibold px-6 py-2 rounded hover:bg-yellow-300 transition"
@@ -124,22 +135,45 @@ export default function MyTeamOptimize() {
       {/* Banned pills */}
       {/* Banned pills (click the X to un‐ban) */}
 {bannedList.length > 0 && (
-  <div className="flex flex-wrap gap-2 justify-center">
-    <span>Unwanted players:</span>
-    {bannedList.filter(id => id) .map((id) => (
-      <div
-        key={id}
-        className="relative bg-red-600 text-white px-3 py-1 rounded-full text-sm"
-      >
-        {id}
-        <button
-          onClick={() => RemoveBan(id)}
-          className="absolute top-0 right-0 -mt-1 -mr-1 bg-black bg-opacity-50 rounded-full p-0.5"
+    <div className="flex flex-col items-center">
+    {/* 1. Label on its own line */}
+    <span className="mb-4 text-lg font-semibold">Unwanted players:</span>
+
+    {/* 2. Grid: 3 columns, with gap in X and Y */}
+    <div className="grid grid-cols-3 gap-x-4 gap-y-2">
+    {bannedList.map((id) => {
+      // find the player object once
+      const player = data.find((p) => p.Name === id);
+      if (!player) return null;
+      return (
+        <div
+          key={id}
+          className="relative flex items-center bg-red-600 text-white px-3 py-1 rounded-full text-sm"
         >
-          <X size={12} className="text-white" />
-        </button>
-      </div>
-    ))}
+          <img
+            src={player.photo}
+            alt={player.Name}
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src =
+                "https://d2kq0urxkarztv.cloudfront.net/51812cad594df29a1a0003f0/661303/upload-643ff5d9-840e-4bbb-b099-07c26ef505c9.png?w=578";
+            }}
+            className="w-7 h-7 rounded-full mr-1 object-cover"
+          />
+          {/* extract the display name however you like */}
+          <span>
+            {player.Name.match(/^[^_]*_([^ ]+)/)[1]}
+          </span>
+          <button
+            onClick={() => removeBan(id)}
+            className="absolute top-0 right-0 -mt-1 -mr-1 bg-black bg-opacity-50 rounded-full p-0.5"
+          >
+            <X size={12} className="text-white" />
+          </button>
+        </div>
+      );
+    })}
+    </div>
   </div>
 )}
 

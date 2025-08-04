@@ -344,6 +344,7 @@ def optimize_my_team(team_id=1,wildcard_round=40, bb_round=1,Last_GW=0,banned_li
         for i in range(num_players):
             name = players[i]
             player_row_code = current_players[current_players["name"] == name]["code"].values[0]
+            web_name = current_players[current_players["name"] == name]["web_name"].values[0]
             pos = positions[i]
             gw = GW_list[t]
 
@@ -356,7 +357,8 @@ def optimize_my_team(team_id=1,wildcard_round=40, bb_round=1,Last_GW=0,banned_li
                         "GW": gw,
                         "position": pos,
                         "photo": f"https://resources.premierleague.com/premierleague/photos/players/110x140/p{player_row_code}.png", 
-                        "Is_captain":  False
+                        "Is_captain":  False,
+                        "web_name":web_name
                     })
 
                 # transferred out
@@ -367,7 +369,8 @@ def optimize_my_team(team_id=1,wildcard_round=40, bb_round=1,Last_GW=0,banned_li
                         "GW": gw,
                         "position": pos,
                         "photo": f"https://resources.premierleague.com/premierleague/photos/players/110x140/p{player_row_code}.png", 
-                        "Is_captain":  False
+                        "Is_captain":  False,
+                        "web_name":web_name
                     })
 
 
@@ -378,13 +381,20 @@ def optimize_my_team(team_id=1,wildcard_round=40, bb_round=1,Last_GW=0,banned_li
             pos = positions[i]
             gw =GW_list[ t] # Transfers affect upcoming GW
             is_capt   = c[i, t].varValue > 0.5
+            web_name = current_players[current_players["name"] == name]["web_name"].values[0]
 
             if x[i, t].varValue > 0.5:
                 if bench[i, t].varValue > 0.5:
                     status = "benched"
                 else:
                     status = "playing"
-                records.append({"Name": name, "status": status, "GW": gw, "position": pos, "photo":f"https://resources.premierleague.com/premierleague/photos/players/110x140/p{player_row_code}.png", "Is_captain":  bool(is_capt)})
+                records.append({"Name": name
+                                , "status": status
+                                , "GW": gw
+                                , "position": pos
+                                , "photo":f"https://resources.premierleague.com/premierleague/photos/players/110x140/p{player_row_code}.png"
+                                , "Is_captain":  bool(is_capt)
+                                ,"web_name":web_name})
 
     # Final structured DataFrame
     status_df = pd.DataFrame(records)
