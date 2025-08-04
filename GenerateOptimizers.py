@@ -56,13 +56,13 @@ def wildcard_optimize_team(sel_thresh, budget, columns, file_path="Model_Optimiz
     )
     # plus 10% points for anyone on the bench bench[i,t]
     + lpSum(
-        bench[i, t] * 0.1 * predicted_points[i][t]
+        bench[i, t] * 0.05 * predicted_points[i][t]
         for i in range(num_players)
         for t in gameweeks
     )
     # plus 2 points for every saved transfer in each week
     + lpSum(
-        0.3 * saved_transfers[t]
+        0.2 * saved_transfers[t]
         for t in gameweeks
     )
      + lpSum(capt[i, t] * predicted_points[i][t] for i in range(num_players) for t in gameweeks)

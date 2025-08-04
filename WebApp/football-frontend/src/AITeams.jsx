@@ -8,7 +8,7 @@ export default function AITeams() {
     // Redirect to Rankings if on /Player_Analytics
     useEffect(() => {
       if (location.pathname === "/AITeams") {
-        navigate("/AITeams/FreeHitTeam");
+        navigate("/AITeams/My_Team");
       }
     }, [location, navigate]);
 
@@ -18,7 +18,7 @@ export default function AITeams() {
   {/* Tabs */}
   <div className="flex justify-center gap-4 mb-6">
 <NavLink
-  to="FreeHitTeam"
+  to="My_Team"
   end
   className={({ isActive }) =>
     `px-4 py-2 font-semibold ${
@@ -28,7 +28,7 @@ export default function AITeams() {
     }`
   }
 >
-  Free Hit
+  My team
 </NavLink>
 
 <NavLink
@@ -45,7 +45,7 @@ export default function AITeams() {
 </NavLink>
 
 <NavLink
-  to="My_Team"
+  to="FreeHitTeam"
   className={({ isActive }) =>
     `px-4 py-2 font-semibold ${
       isActive
@@ -54,7 +54,7 @@ export default function AITeams() {
     }`
   }
 >
-  My Team
+  Free hit
 </NavLink>
 
   </div>

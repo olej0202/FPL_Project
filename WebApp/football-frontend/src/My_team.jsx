@@ -271,7 +271,7 @@ function PlayerRow({ players, isBench = false, toggleBan, bannedList, navigate }
   const fallback =
     "https://d2kq0urxkarztv.cloudfront.net/51812cad594df29a1a0003f0/661303/upload-643ff5d9-840e-4bbb-b099-07c26ef505c9.png?w=578";
   return (
-    <div className="flex justify-center gap-3 px-2 overflow-x-auto text-center w-full ">
+    <div className="flex justify-center gap-2 px-2 overflow-x-auto text-center w-full ">
       {players.map((p) => (
         <div key={p.Name} className="relative" >
           <img
@@ -283,7 +283,7 @@ function PlayerRow({ players, isBench = false, toggleBan, bannedList, navigate }
             className={`object-contain ${
                 isBench
                   ? "w-[45] h-[60px] sm:w-[55px] sm:h-[75px]"
-                  : "w-[60px] h-[80px] sm:w-[60px] sm:h-[80px]"
+                  : "w-[60px] h-[80px] sm:w-[55px] sm:h-[75px]"
               }`}
             onClick={() =>
               navigate("/Player_Analytics/Individual", {
@@ -308,7 +308,7 @@ function PlayerRow({ players, isBench = false, toggleBan, bannedList, navigate }
             {`mt-1 text-center font-small text-xs sm:text-sm leading-tight ${
               isBench ? "text-black" : "text-white"
             }`}>
-              {p.Name.match(/^[^_]*_([^ ]+)/)[1]}
+              {p.web_name}
             </span>
         </div>
       ))}
@@ -352,7 +352,7 @@ function TransferCard({ player, label, toggleBan, bannedList }) {
 
       
     </div>
-    <span className="text-xs mt-1">{player.Name.match(/^[^_]*_([^ ]+)/)[1]}</span>
+    <span className="text-xs mt-1">{player.web_name}</span>
     <span className="text-xs text-gray-400">{label}</span>
     </div>
   );
