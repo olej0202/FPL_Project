@@ -19,12 +19,15 @@ export default function MyTeamOptimize() {
     loading,
     fetchTeam,
     toggleBan,
-    removeBan,} = useMyteamData();
+    removeBan,has_changed,sethas_changed,bannedPlayersData} = useMyteamData();
   const navigate = useNavigate();
   const [showBbInput, setShowBbInput] = useState(!!bbRound);
   const [showWildInput, setShowWildInput] = useState(!!wildRound);
 
-  
+
+  useEffect(() => {
+   sethas_changed(true);
+ }, [teamId, bbRound, wildRound, bannedList, sethas_changed]);
 
 
 
@@ -124,58 +127,65 @@ export default function MyTeamOptimize() {
             + Add Wildcard
           </button>
         )}
-        <button
-          onClick={fetchTeam}
-          className="bg-royal-gold text-black font-semibold px-6 py-2 rounded hover:bg-yellow-300 transition"
+               <button
+          onClick={() => {
+            fetchTeam();
+            // once we’ve optimized, reset the flag
+            sethas_changed(false);
+          }}
+          disabled={!has_changed}
+          className={`
+            font-semibold px-6 py-2 rounded transition
+            ${has_changed
+              ? "bg-royal-gold text-black hover:bg-yellow-300 cursor-pointer"
+              : "bg-gray-600 text-gray-300 cursor-not-allowed"
+            }
+          `}
         >
-          Optimize Team 
+          Optimize Team
         </button>
       </div>
 
       {/* Banned pills */}
       {/* Banned pills (click the X to un‐ban) */}
-{bannedList.length > 0 && (
-    <div className="flex flex-col items-center">
-    {/* 1. Label on its own line */}
-    <span className="mb-4 text-lg font-semibold">Unwanted players:</span>
-
-    {/* 2. Grid: 3 columns, with gap in X and Y */}
-    <div className="grid grid-cols-3 gap-x-4 gap-y-2">
-    {bannedList.map((id) => {
-      // find the player object once
-      const player = data.find((p) => p.Name === id);
-      if (!player) return null;
-      return (
-        <div
-          key={id}
-          className="relative flex items-center bg-red-600 text-white px-3 py-1 rounded-full text-sm"
+{bannedPlayersData.length > 0 && (
+   <div className="flex flex-col items-center">
+    {/* Header */}
+    <h2 className="text-lg font-semibold text-white mb-2">
+      Unwanted players
+    </h2>
+  <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+    
+    {bannedPlayersData.map((player) => (
+     
+      <div
+        key={player.Name}
+        className="relative flex items-center bg-royal-red text-white px-1 py-1 rounded-full text-sm"
+      >
+        <img
+          src={player.photo}
+          alt={player.web_name}
+          onError={(e) => {
+            e.currentTarget.onerror = null;
+            e.currentTarget.src =
+              "https://d2kq0urxkarztv.cloudfront.net/51812cad594df29a1a0003f0/661303/upload-643ff5d9-840e-4bbb-b099-07c26ef505c9.png?w=578";
+          }}
+          className="w-7 h-7 rounded-full mr-1 object-cover"
+        />
+        <span>{player.web_name}</span>
+        <button
+          onClick={() => removeBan(player.Name)}
+          className="absolute top-0 right-0 -mt-1 -mr-1 bg-black bg-opacity-50 rounded-full p-0.5"
         >
-          <img
-            src={player.photo}
-            alt={player.Name}
-            onError={(e) => {
-              e.currentTarget.onerror = null;
-              e.currentTarget.src =
-                "https://d2kq0urxkarztv.cloudfront.net/51812cad594df29a1a0003f0/661303/upload-643ff5d9-840e-4bbb-b099-07c26ef505c9.png?w=578";
-            }}
-            className="w-7 h-7 rounded-full mr-1 object-cover"
-          />
-          {/* extract the display name however you like */}
-          <span>
-            {player.Name.match(/^[^_]*_([^ ]+)/)[1]}
-          </span>
-          <button
-            onClick={() => removeBan(id)}
-            className="absolute top-0 right-0 -mt-1 -mr-1 bg-black bg-opacity-50 rounded-full p-0.5"
-          >
-            <X size={12} className="text-white" />
-          </button>
-        </div>
-      );
-    })}
-    </div>
+          <X size={12} className="text-white" />
+        </button>
+      </div>
+      
+    ))}
+  </div>
   </div>
 )}
+
 
 
       {/* Squad Pitch */}
@@ -224,45 +234,74 @@ export default function MyTeamOptimize() {
         </div>
       )}
 
-      {/* Transfers under pitch */}
-      {transfers.length > 0 && (
-        <div className="w-full max-w-2xl">
-          <h2 className="text-2xl font-bold text-center mb-3">
-            Transfers
-          </h2>
-          {transfers.map((grp) => (
-            <div key={grp.GW} className="mb-6">
-              <h3 className="text-lg font-semibold text-center mb-4">
-                GW {grp.GW}
-              </h3>
-              <div className="flex flex-wrap justify-center items-center gap-6">
-                {grp.out.map((outP, idx) => {
-                  const inP = grp.in[idx];
-                  return (
-                    <div key={idx} className="flex items-center gap-1">
-                      <TransferCard
-             player={outP}
-             label="Out"
-             toggleBan={toggleBan}
-             bannedList={bannedList}
-           />
-                      <ArrowRight className="text-royal-gold" />
-                      {inP && (
-             <TransferCard
-               player={inP}
-               label="In"
-               toggleBan={toggleBan}
-               bannedList={bannedList}
-             />
-           )}
-                    </div>
-                  );
-                })}
+{/* Transfers under pitch */}
+{transfers.length > 0 && (
+  <div className="w-full max-w-2xl">
+    <h2 className="text-2xl font-bold text-center mb-3">Transfers</h2>
+
+    {transfers.map((grp) => {
+      // 1) make a mutable copy of the incoming list
+      const remainingIns = [...grp.in];
+
+      // 2) for each out, find & remove the first in of the same position
+      const pairs = grp.out.map((outP) => {
+        const matchIdx = remainingIns.findIndex(
+          (inP) => inP.position === outP.position
+        );
+        if (matchIdx !== -1) {
+          const [matchedIn] = remainingIns.splice(matchIdx, 1);
+          return { outP, inP: matchedIn };
+        } else {
+          // no in of same position
+          return { outP, inP: null };
+        }
+      });
+
+      // 3) any ins left over get rendered on their own
+      remainingIns.forEach((inP) => pairs.push({ outP: null, inP }));
+
+      return (
+        <div key={grp.GW} className="mb-6">
+          <h3 className="text-lg font-semibold text-center mb-4">
+            GW {grp.GW}
+          </h3>
+          <div className="flex flex-wrap justify-center items-center gap-6">
+            {pairs.map(({ outP, inP }, idx) => (
+              <div key={idx} className="flex items-center gap-1">
+                {/* Out if present */}
+                {outP && (
+                  <TransferCard
+                    player={outP}
+                    label="Out"
+                    toggleBan={toggleBan}
+                    bannedList={bannedList}
+                    navigate={navigate}
+                  />
+                )}
+
+                {/* Show arrow only when both sides exist */}
+                {outP && inP && (
+                  <ArrowRight className="text-royal-gold" />
+                )}
+
+                {/* In if present */}
+                {inP && (
+                  <TransferCard
+                    player={inP}
+                    label="In"
+                    toggleBan={toggleBan}
+                    bannedList={bannedList}
+                    navigate={navigate}
+                  />
+                )}
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      )}
+      );
+    })}
+  </div>
+)}
     </div>
   );
 }
@@ -316,7 +355,7 @@ function PlayerRow({ players, isBench = false, toggleBan, bannedList, navigate }
   );
 }
 
-function TransferCard({ player, label, toggleBan, bannedList }) {
+function TransferCard({ player, label, toggleBan, bannedList, navigate  }) {
   const fallback =
     "https://cdn.nba.com/headshots/nba/latest/1040x760/1709.png";
   return (
@@ -328,8 +367,14 @@ function TransferCard({ player, label, toggleBan, bannedList }) {
         onError={(e) => {
           e.currentTarget.onerror = null;
           e.currentTarget.src = fallback;
+        
         }}
         className="w-12 h-16 rounded object-cover"
+      onClick={() =>
+              navigate("/Player_Analytics/Individual", {
+                state: { selectedPlayer: player.Name },
+              })
+            }
       />
       {label === "In" && (
            <button

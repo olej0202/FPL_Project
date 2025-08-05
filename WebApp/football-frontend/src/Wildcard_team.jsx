@@ -75,26 +75,73 @@ export default function WildcardTeam() {
               </div>
 
       {/* Transfer History */}
-      <div className="w-full max-w-2xl mt-10">
-        <h2 className="text-2xl font-bold text-center mb-4">Transfers</h2>
-        {transfers.sort((a, b) => a.GW - b.GW).map((t, idx) => (
-          <div key={idx} className="mb-6">
-            <h3 className="text-lg font-semibold mb-2 text-center">GW {t.GW}</h3>
-            <div className="flex flex-wrap justify-center gap-10 items-center">
-              {t.out.map((outPlayer, i) => {
-                const inPlayer = t.in[i];
-                return (
-                  <div key={i} className="flex items-center gap-2">
-                    <TransferCard player={outPlayer} label="Out" navigate={navigate} />
-                    <ArrowRight className="text-royal-gold" />
-                    {inPlayer ? <TransferCard player={inPlayer} label="In" navigate={navigate} /> : null}
-                  </div>
-                );
-              })}
-            </div>
+{/* Transfer History */}
+<div className="w-full max-w-2xl mt-10">
+  <h2 className="text-2xl font-bold text-center mb-4">Transfers</h2>
+
+  {transfers
+    .sort((a, b) => a.GW - b.GW)
+    .map((t) => {
+      // 1) clone the in-list so we can remove matches
+      const remainingIns = [...t.in];
+
+      // 2) pair outs with same-position ins
+      const pairs = t.out.map((outPlayer) => {
+        const matchIdx = remainingIns.findIndex(
+          (inPlayer) => inPlayer.position === outPlayer.position
+        );
+        if (matchIdx !== -1) {
+          // remove and return matched tuple
+          const [matchedIn] = remainingIns.splice(matchIdx, 1);
+          return { outPlayer, inPlayer: matchedIn };
+        } else {
+          // no matching in; still render the out alone
+          return { outPlayer, inPlayer: null };
+        }
+      });
+
+      // 3) render any leftover ins with no matching out
+      remainingIns.forEach((inPlayer) => {
+        pairs.push({ outPlayer: null, inPlayer });
+      });
+
+      return (
+        <div key={t.GW} className="mb-6">
+          <h3 className="text-lg font-semibold mb-2 text-center">
+            GW {t.GW}
+          </h3>
+          <div className="flex flex-wrap justify-center gap-10 items-center">
+            {pairs.map(({ outPlayer, inPlayer }, idx) => (
+              <div key={idx} className="flex items-center gap-2">
+                {/* Out card if present */}
+                {outPlayer && (
+                  <TransferCard
+                    player={outPlayer}
+                    label="Out"
+                    navigate={navigate}
+                  />
+                )}
+
+                {/* Arrow only when both exist */}
+                {outPlayer && inPlayer && (
+                  <ArrowRight className="text-royal-gold" />
+                )}
+
+                {/* In card if present */}
+                {inPlayer && (
+                  <TransferCard
+                    player={inPlayer}
+                    label="In"
+                    navigate={navigate}
+                  />
+                )}
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+        </div>
+      );
+    })}
+</div>
     </div>
   );
 }

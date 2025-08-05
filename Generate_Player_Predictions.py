@@ -80,10 +80,10 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
             attacking_factor=(df["opposition_xgc"].values[h]+team_xg)*0.5
             defensive_factor=(team_CS)
             if(pred_variable=="GOALS"):
-               player_preds.append((df['Rolling_adjusted_XG'].values[h])*(attacking_factor))
+               player_preds.append((df['Rolling_adjusted_XG'].values[h]*0.5+df['rolling_Adjusted_XG_historic'].values[h]*0.5)*(attacking_factor))
                real_variable="expected_goals" 
             if(pred_variable=="Assist"):
-               player_preds.append((df['Rolling_adjusted_XA'].values[h])*(attacking_factor))             
+               player_preds.append((df['Rolling_adjusted_XA'].values[h]*0.5+df['rolling_Adjusted_XA_historic'].values[h]*0.5)*(attacking_factor))             
                real_variable="expected_assists"            
             if(pred_variable=="GC"):
                 real_variable="expected_goals_conceded"
@@ -93,7 +93,7 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
             
             if(pred_variable=="bps"):
                real_variable="bonus" 
-               player_preds.append(df['Rolling_adjusted_BPS'].values[h]*0.04)
+               player_preds.append((df['Rolling_adjusted_BPS'].values[h]+df['rolling_bps_historic'].values[h])*0.02)
                
             if(pred_variable=="CBI"):
                real_variable="cbi" 
@@ -609,12 +609,12 @@ def Generate_point_predictions():
         if(position=="FWD"):
             summary_dataset["Points_prediction"]=(2+summary_dataset["Goal_pred"]*5
                                                   +summary_dataset["Assist_pred"]*3
-                                                  +summary_dataset["Bonus_pred"])*0.8+0.2*summary_dataset["Fantasy_pred"]+(summary_dataset["CBI_pred"]/12)*0.6*2
+                                                  +summary_dataset["Bonus_pred"])*0.8+0.2*summary_dataset["Fantasy_pred"]+(summary_dataset["CBI_pred"]/12)*0.65*2
         elif(position=="MID"):
             summary_dataset["Points_prediction"]=(2+summary_dataset["Goal_pred"]*5.5
                                                   +summary_dataset["Assist_pred"]*3
                                                   +summary_dataset["Bonus_pred"]
-                                                  +summary_dataset["GC_pred"])*0.8+0.2*summary_dataset["Fantasy_pred"]+(summary_dataset["CBI_pred"]/12)*0.6*2
+                                                  +summary_dataset["GC_pred"])*0.8+0.2*summary_dataset["Fantasy_pred"]+(summary_dataset["CBI_pred"]/12)*0.65*2
             
         elif(position=="GKP"):
             summary_dataset["Points_prediction"]=(2
@@ -625,7 +625,7 @@ def Generate_point_predictions():
             summary_dataset["Points_prediction"]=(1+summary_dataset["Goal_pred"]*6
                                                   +summary_dataset["Assist_pred"]*3
                                                   +summary_dataset["Bonus_pred"]
-                                                  +summary_dataset["GC_pred"]*4.5)*0.8+0.2*summary_dataset["Fantasy_pred"]+(summary_dataset["CBI_pred"]/10)*0.6*2
+                                                  +summary_dataset["GC_pred"]*4.5)*0.8+0.2*summary_dataset["Fantasy_pred"]+(summary_dataset["CBI_pred"]/10)*0.65*2
         
         
         full_df=pd.concat([full_df, summary_dataset], axis=0, ignore_index=True)
