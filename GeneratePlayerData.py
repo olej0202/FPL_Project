@@ -26,18 +26,17 @@ def Xmins(current_players):
         
 def next_opp(team, n_future, fixtures,kmeans,team_code,current_teams):
     fixtures=fixtures.copy()
-    fixtures=fixtures[(fixtures['finished']==False)].iloc[0:,:]
+    print(n_future)
     current_teams=current_teams.copy()
     filtered_fix = fixtures[(fixtures['team_a'] == team) | (fixtures['team_h'] == team)]
-    filtered_fix=filtered_fix[filtered_fix["provisional_start_time"]==False]
-    filtered_fix=filtered_fix[filtered_fix["finished_provisional"]==False]
+    filtered_fix = filtered_fix[
+    filtered_fix["event"].astype(int).isin([int(x) for x in n_future])
+]
+    print(filtered_fix)
     teams_dataset=pd.read_csv("Team_data_newest3.csv")
 
     GW_now=filtered_fix["event"].values[0]
-    max_gw=GW_now+n_future-1
-    
 
-    filtered_fix=filtered_fix[filtered_fix["event"]<=max_gw]
     
     clusters=[]
     XGH=[]
@@ -150,7 +149,7 @@ def team_data(current_teams):
 
     
     
-def GeneratePlayerData(Future, fixture_path,current_player_path, current_teams_path):
+def GeneratePlayerData(time_list, fixture_path,current_player_path, current_teams_path):
     Xmins(current_player_path)
     current_data=pd.read_csv("Player_future.csv").iloc[:,1:]
     fixture_data=pd.read_csv(fixture_path).iloc[:,1:]
@@ -308,7 +307,7 @@ def GeneratePlayerData(Future, fixture_path,current_player_path, current_teams_p
             player_row["CBI"]=playerCBI["CBI"].values[0]
 
                 
-        clusters,home,n_matches,XGH,XGCH,XGA,XGCA,XGC_DEF,XGC_FWD,XGC_MID,own_XG,GW,played_XGC,played_XG,opp_code=next_opp(team_id, Future, fixture_data,kmeans,team_code,current_teams)
+        clusters,home,n_matches,XGH,XGCH,XGA,XGCA,XGC_DEF,XGC_FWD,XGC_MID,own_XG,GW,played_XGC,played_XG,opp_code=next_opp(team_id, time_list, fixture_data,kmeans,team_code,current_teams)
         
         
         #if endre stats for nye spillere på et lag

@@ -9,8 +9,11 @@ from GenerateOptimizerSet import GenerateOptimizeSet #Lager dataset klart til å
 from GenerateVisualDataset import Generate_ALL_datasets
 from chatgpt import main_GPT_News
 
+import pandas as pd
 import torch
 import torch.nn as nn
+from datetime import datetime
+
 from torch.utils.data import TensorDataset, DataLoader
 class DeepNN(nn.Module):
         def __init__(self, input_dim):
@@ -36,10 +39,10 @@ def Data_Extraction(season,is_new_season,has_been_error):
     #main_Extract_Understat(season)
 
 
-def Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path):
+def Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list):
     #main_Transform()
     team_data(current_team_path)
-    GeneratePlayerData(n_points_in_future, current_fixture_path,current_player_path,current_team_path)
+    GeneratePlayerData(time_list, current_fixture_path,current_player_path,current_team_path)
 
     
 def Data_Predictions(current_fixture_path,current_team_path, n_points_in_future):
@@ -54,7 +57,23 @@ def Data_Generation(current_raw_data_path,ownership,budget,GW_list_wildcard,GW_l
     Generate_ALL_datasets(current_team_path)
     #main_GPT_News()
 
+def Get_times(current_fixture_path,n_points_in_future):
+    df=pd.read_csv(current_fixture_path)
+    df['kickoff_time'] = pd.to_datetime(df['kickoff_time'])
 
+    min_kicks = (
+        df
+        .groupby('event', as_index=False)['kickoff_time']
+        .min()
+    )
+    min_kicks['kickoff_time'] = min_kicks['kickoff_time'].dt.tz_convert('Europe/Oslo')
+
+    now = pd.Timestamp.now(tz='Europe/Oslo')
+    future = min_kicks[min_kicks['kickoff_time'] > now]
+    n = n_points_in_future
+    next_n = future.sort_values('kickoff_time').head(n)
+    return next_n["event"].astype(str).values
+    
 def Main_Orchestration():
     season=25
     is_new_season=1
@@ -62,20 +81,23 @@ def Main_Orchestration():
     n_points_in_future=8
     budget=100
     ownership=0.9
-    GW_list_wildcard=['1', '2','3', '4','5','6','7','8']
-    GW_list_freehit=['1'] 
     
     current_fixture_path="Raw_Data_25\Fantasy_season_2025_Fixtures.csv"
     current_player_path="Raw_Data_25/current_players.csv"
     current_team_path="Raw_Data_25\current_teams.csv"
     current_raw_data_path="Raw_Data_24\Fantasy_season_2024_data.csv"
+    time_list=Get_times(current_fixture_path,n_points_in_future)
+    
+    GW_list_wildcard=time_list
+    GW_list_freehit=[time_list[0]]
+    
     
     #EXTARCT DATA
     #Data_Extraction(season,is_new_season,has_been_error)
     
     
     #Transform data
-    Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path)
+    Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list)
     
     #Predict data
     Data_Predictions(current_fixture_path,current_team_path, n_points_in_future)

@@ -932,7 +932,8 @@ def main_Transform():
     "Rodrigo_'Rodri' Hernandez Cascante": "Rodrigo 'Rodri'_Hernandez",
     "Rúben_dos Santos Gato Alves Dias":   "Rúben_Gato Alves Dias",
     "Kaoru_Mitoma":                 "Mitoma_Kaoru",
-    "Matheus_Santos Carneiro da Cunha": "Matheus_Santos Carneiro Da Cunha"
+    "Matheus_Santos Carneiro da Cunha": "Matheus_Santos Carneiro Da Cunha",
+    "Dominic_Solanke": "Dominic_Solanke-Mitchell"
 }
     df_all["name"] = df_all["name"].apply(lambda n: name_map.get(n, n))
     unique_players = df_all[["name"]].drop_duplicates()
