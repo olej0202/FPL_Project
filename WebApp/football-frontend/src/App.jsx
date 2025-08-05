@@ -32,13 +32,13 @@ export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   const navItems = [
-    { to: "/AITeams", icon: Brain, label: "AI Teams" },
+    { to: "/", icon: Brain, label: "AI Teams" },
     
     { to: "/Team_Analytics", icon: Users, label: "Team Analytics" },
     { to: "/Player_Analytics", icon: User, label: "Player Analytics" },
     { to: "/TeamPredictionsFuture", icon: Calendar, label: "Fixtures" },
     { to: "/Score_Predictions", icon: Trophy, label: "Score Predictions" },
-    { to: "/", icon: Newspaper, label: "News Blog" },
+    { to: "/News", icon: Newspaper, label: "News Blog" },
   ];
 
   return (
@@ -120,10 +120,6 @@ export default function App() {
         )}
       </nav>
 
-      {/* AI sub-nav */}
-      <AITeamNav />
-
-      {/* Main Routes */}
       <Routes>
         <Route path="/Team_Analytics" element={<Team_Analytics />}>
           <Route index element={<Team_Analytics_Rankings />} />
@@ -134,8 +130,7 @@ export default function App() {
           />
         </Route>
         <Route path="/Score_Predictions" element={<Team_Predictions />} />
-        <Route path="/AITeams" element={<AITeams />}>
-          <Route index element={<FreeHitTeam />} />
+        <Route path="/" element={<AITeams />}>
           <Route path="FreeHitTeam" element={<FreeHitTeam />} />
           <Route path="Wildcard_Team" element={<WildcardTeam />} />
           <Route path="My_Team" element={<MyTeam />} />
@@ -150,7 +145,7 @@ export default function App() {
             element={<PlayerAnalyticsIndividual />}
           />
         </Route>
-        <Route path="/" element={<NewsBlog />} />
+        <Route path="/News" element={<NewsBlog />} />
         <Route
           path="/TeamPredictionsFuture"
           element={<TeamPredictionsFuture />}

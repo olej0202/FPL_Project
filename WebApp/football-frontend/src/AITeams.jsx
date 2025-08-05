@@ -7,8 +7,8 @@ export default function AITeams() {
     
     // Redirect to Rankings if on /Player_Analytics
     useEffect(() => {
-      if (location.pathname === "/AITeams") {
-        navigate("/AITeams/My_Team");
+      if (location.pathname === "/") {
+        navigate("/My_Team");
       }
     }, [location, navigate]);
 
