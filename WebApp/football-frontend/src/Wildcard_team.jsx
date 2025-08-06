@@ -159,10 +159,22 @@ function PlayerRow({ players, isBench = false, navigate,fallbackUrl }) {
                 state: { selectedPlayer: player.Name },
               })
             }
-            className={`flex flex-col items-center cursor-pointer hover:scale-105 transition-transform ${
+            className={`relative flex flex-col items-center cursor-pointer hover:scale-105 transition-transform ${
               isBench ? "text-black opacity-90" : "text-white"
             }`}
           >
+            {player.Is_captain && (
+              <div
+                className="
+                  absolute top-2 -right-2
+                  bg-black text-white font-bold
+                  text-xs rounded-full
+                  w-5 h-5 flex items-center justify-center
+                "
+              >
+                C
+              </div>
+            )}
             <img
               src={player.photo}
               alt={player.Name}

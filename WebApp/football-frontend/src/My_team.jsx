@@ -313,6 +313,18 @@ function PlayerRow({ players, isBench = false, toggleBan, bannedList, navigate }
     <div className="flex justify-center gap-2 px-2 overflow-x-auto text-center w-full ">
       {players.map((p) => (
         <div key={p.Name} className="relative" >
+          {p.Is_captain && (
+              <div
+                className="
+                  absolute top-12 -right-2
+                  bg-black text-white font-bold
+                  text-xs rounded-full
+                  w-5 h-5 flex items-center justify-center
+                "
+              >
+                C
+              </div>
+            )}
           <img
             src={p.photo}
             onError={(e) => {
