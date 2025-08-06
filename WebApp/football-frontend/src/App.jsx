@@ -33,12 +33,23 @@ export default function App() {
 
   const navItems = [
     { to: "/", icon: Brain, label: "AI Teams" },
-    
     { to: "/Team_Analytics", icon: Users, label: "Team Analytics" },
     { to: "/Player_Analytics", icon: User, label: "Player Analytics" },
     { to: "/TeamPredictionsFuture", icon: Calendar, label: "Fixtures" },
     { to: "/Score_Predictions", icon: Trophy, label: "Score Predictions" },
     { to: "/News", icon: Newspaper, label: "News Blog" },
+  ];
+
+   const menuItems = [
+    { to: "/Team_Analytics", icon: Users, label: "Team Analytics" },
+    { to: "/TeamPredictionsFuture", icon: Calendar, label: "Fixtures" },
+    { to: "/Score_Predictions", icon: Trophy, label: "Score Predictions" },
+    { to: "/News", icon: Newspaper, label: "News Blog" },
+  ];
+
+     const tabItems = [
+    { to: "/", icon: Brain, label: "AI Teams" },
+    { to: "/Player_Analytics", icon: User, label: "Player Analytics" },
   ];
 
   return (

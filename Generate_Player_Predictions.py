@@ -126,7 +126,7 @@ def XGB_Make_dataset(position,position2):
                    ,"Rolling_adjusted_XG2","Rolling_adjusted_XGC2","Rolling_adjusted_XA2","rolling_GS_historic","rolling_XG_historic","goals_scored","expected_goals"
                   ,"assists","rolling_Assist_historic","rolling_Assist","rolling_XA_historic","expected_assists","rolling_GC_historic","rolling_XGC_historic","clean_sheets",
                    "expected_goals_conceded", "rolling_bps","rolling_bps_historic","rolling_bonus_historic","rolling_bonus","bonus","rolling_key_passes","rolling_shots","Own_Attacking_form","Rolling_BPS_per_90"
-                  ,"XG_Mean_difference","XA_Mean_difference","Shot_Mean_difference","Adjusted_XG_Mean_difference","Threat_Mean_difference","rolling_Threat","XG_Mean","Rolling_creativity"]]
+                  ,"XG_Mean_difference","XA_Mean_difference","Shot_Mean_difference","Adjusted_XG_Mean_difference","Threat_Mean_difference","rolling_Threat","XG_Mean","Rolling_creativity","rolling_Adjusted_XG_historic","rolling_Adjusted_XA_historic"]]
     
     
     names= df['name'].unique()
@@ -180,9 +180,10 @@ def XGB_Make_dataset(position,position2):
     if(position=='GOALS'):
         trainingdf=trainingdf[trainingdf['position'].isin(["FWD", "DEF", "MID"])]
         trainingdf=trainingdf[["expected_goals","opposition_xgc","Own_Attacking_form","XG_slope","rolling_shots",
-                               "Team","name","time","minutes","season","rolling_Threat","position","rolling_XG_historic","Rolling_adjusted_XG_form"]]
+                               "Team","name","time","minutes","season","rolling_Threat","position","rolling_XG_historic","Rolling_adjusted_XG_form","rolling_Adjusted_XG_historic"]]
+        
         test_columns=["expected_goals","played_XGC","Own_Attacking_form","XG_slope","rolling_shots",
-                               "Team","name","time","minutes","season","rolling_Threat","position","rolling_XG_historic","Rolling_adjusted_XG_form"]
+                               "Team","name","time","minutes","season","rolling_Threat","position","rolling_XG_historic","Rolling_adjusted_XG_form","rolling_Adjusted_XG_historic"]
         target_value="expected_goals"
         
     elif(position=='Assist2'):
@@ -220,9 +221,9 @@ def XGB_Make_dataset(position,position2):
     elif(position=='Assist'):
         trainingdf=trainingdf[trainingdf['position'].isin(["FWD", "DEF", "MID"])]
         trainingdf=trainingdf[["expected_assists","opposition_xgc","Own_Attacking_form","XA_slope","rolling_key_passes",
-                               "Team","name","time","minutes","season","Rolling_creativity","position","rolling_XA_historic","Cluster","Rolling_adjusted_XA2","Rolling_adjusted_XA_form"]]
+                               "Team","name","time","minutes","season","Rolling_creativity","position","rolling_XA_historic","Cluster","Rolling_adjusted_XA2","Rolling_adjusted_XA_form","rolling_Adjusted_XA_historic"]]
         test_columns=["expected_assists","played_XGC","Own_Attacking_form","XA_slope","rolling_key_passes",
-                               "Team","name","time","minutes","season","Rolling_creativity","position","rolling_XA_historic","Cluster","Rolling_adjusted_XA","Rolling_adjusted_XA_form"]
+                               "Team","name","time","minutes","season","Rolling_creativity","position","rolling_XA_historic","Cluster","Rolling_adjusted_XA","Rolling_adjusted_XA_form","rolling_Adjusted_XA_historic"]
         target_value="expected_assists"
              
 
@@ -322,7 +323,9 @@ def XGB_Make_Pred(trainingdf,target_value,position2,column_list,predlength,posit
     Pred_data.replace([np.inf, -np.inf], 1, inplace=True)
 
     X_test=Pred_data[test_columns].copy()
-
+    
+    print(X_train.columns)
+    print(X_test.columns)
     X_test.columns = X_train.columns
 
     total=[]
@@ -414,10 +417,10 @@ def Generate_LSTM_preds(pred,column_list,predlength):
 
     if(pred=="GOALS"):
         features=["opposition_xgc","Own_Attacking_form","XG_slope","rolling_shots",
-              "minutes","rolling_Threat","rolling_XG_historic","Rolling_adjusted_XG2","Rolling_adjusted_XG_form","Cluster_XG"]
+              "minutes","rolling_Threat","rolling_XG_historic","Rolling_adjusted_XG_form","rolling_Adjusted_XG_historic"]
         features_test=["opposition_xgc","Own_Attacking_form","XG_slope","rolling_shots",
-              "minutes","rolling_Threat","rolling_XG_historic","Rolling_adjusted_XG","Rolling_adjusted_XG_form","Cluster_XG"]
-        target="expected_goals"
+              "minutes","rolling_Threat","rolling_XG_historic","Rolling_adjusted_XG_form","rolling_Adjusted_XG_historic"]
+        target="expected_goals" 
         model_path="DNN_XG.pt"
         
     if(pred=="Assist"):
