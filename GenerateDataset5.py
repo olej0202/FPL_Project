@@ -854,7 +854,7 @@ def team_transformed2():
     new_team_df=pd.read_csv("Team_data_transformed.csv").iloc[:,1:]
     new_team_df_newest=pd.read_csv("Team_data_newest.csv").iloc[:,1:]
 
-    overall_weight=0.2
+    overall_weight=0.25
 
     team_transformed_df=pd.DataFrame()
     team_transformed_df_newest=pd.DataFrame()
@@ -1204,7 +1204,7 @@ def adjust_measure(df, measure_name):
     current_expected_goals_start_value=player_df[measure_name].mean()
     current_expected_goals=current_expected_goals_start_value
     smoothing_f=0.06
-    min_val=std
+    min_val=std*1.5
     count=0
     in_row=0
     in_row_fac=1

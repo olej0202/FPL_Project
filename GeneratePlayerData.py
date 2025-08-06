@@ -191,7 +191,7 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
         "Mohammed_Kudus":["Brennan_Johnson","Son_Heung-min","Dejan_Kulusevski"],
         "Matheus_Santos Carneiro Da Cunha":["Bruno_Borges Fernandes","Alejandro_Garnacho Ferreyra","Amad_Diallo"],
         "Bryan_Mbeumo":["Bruno_Borges Fernandes","Alejandro_Garnacho Ferreyra","Amad_Diallo"],
-        "João_Pedro Junqueira de Jesus":["Nicolas_Jackson","Pedro_Lomba Neto"],
+        "João_Pedro Junqueira de Jesus":["Nicolas_Jackson"],
         "Cole_Palmer":["Mohamed_Salah","Bukayo_Saka"],
         "Ollie_Watkins":["Erling_Haaland","Yoane_Wissa"],
         "Anthony_Gordon":["Alexander_Isak","Jacob_Murphy","Harvey_Barnes"],        
