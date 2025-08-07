@@ -16,11 +16,13 @@ export default function Team_Analytics_Individual() {
   const { fetchIfNeeded, TeamData } = useStatsData();
   const API_URL = "https://fpl-project-t5e9.onrender.com/Teams";
   const [eloData, setEloData] = useState([]);
+  const [history, setHistory] = useState([]);
   const [data, setData] = useState([]);
   const [teamFilter, setTeamFilter] = useState("");
   const [teams, setTeams] = useState([]);
   const [latestStats, setLatestStats] = useState({});
   const [showOffensive, setShowOffensive] = useState(true);
+  const [chartType, setChartType] = useState("elo");     // ← 'elo'|'off'|'def'
   const [chartHeight, setChartHeight] = useState(300);
   const location = useLocation();
 
@@ -39,6 +41,14 @@ export default function Team_Analytics_Individual() {
       setEloData(Object.values(eloRaw).map(r => ({
         kickoff_time: r.kickoff_time,
         Elo_Rating: Number(parseFloat(r.Elo_Rating).toFixed(1)),
+        XG_avg: Number(parseFloat(r.XG_avg).toFixed(1)),
+        XGC_avg: Number(parseFloat(r.XGC_avg).toFixed(1)),
+        name: r.name || r.Team
+      })));
+      setHistory(Object.values(eloRaw).map(r => ({
+        kickoff_time: r.kickoff_time,
+        XG_avg: Number(parseFloat(r.XG_avg).toFixed(1)),
+        XGC_avg: Number(parseFloat(r.XGC_avg).toFixed(1)),
         name: r.name || r.Team
       })));
     };
@@ -139,17 +149,87 @@ export default function Team_Analytics_Individual() {
         })}
       </div>
 
+  {/* Chart-type buttons */}
+      <div className="flex justify-center gap-6">
+        <button
+          onClick={() => setChartType("elo")}
+          className={`px-4 py-2 rounded ${
+            chartType === "elo"
+              ? "underline text-royal-gold"
+              : "text-royal-beige"
+          }`}
+        >
+          ELO
+        </button>
+        <button
+          onClick={() => setChartType("off")}
+          className={`px-4 py-2 rounded ${
+            chartType === "off"
+              ? "underline text-royal-gold"
+              : "text-royal-beige"
+          }`}
+        >
+          Offensive
+        </button>
+        <button
+          onClick={() => setChartType("def")}
+          className={`px-4 py-2 rounded ${
+            chartType === "def"
+              ? "underline text-royal-gold"
+              : "text-royal-beige"
+          }`}
+        >
+          Defensive
+        </button>
+      </div>
+
+      {/* Line Chart */}
       <div className="bg-royal-red p-4 rounded shadow border border-royal-gold w-full max-w-6xl">
-        <h2 className="text-xl font-semibold text-center text-royal-gold">ELO Rating Over Time</h2>
-        <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={eloChartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                  <CartesianGrid stroke="#333" />
-                  <XAxis dataKey="kickoff_time" tick={{ fontSize: 10 }} stroke="#fff" />
-                  <YAxis stroke="#fff" domain={["dataMin", "dataMax"]}/>
-                  <Tooltip contentStyle={{ backgroundColor: "#5A0000", color: "#FFD700", border: "1px solid #FFD700" }} />
-                  <Line type="monotone" dataKey="Elo_Rating" stroke="#FFD700" dot={false} />
-                </LineChart>
-              </ResponsiveContainer>
+        <h2 className="text-xl font-semibold text-center text-royal-gold mb-2">
+          {chartType === "elo"
+            ? "ELO Rating Over Time"
+            : chartType === "off"
+            ? "Average XG Over Time"
+            : "Average XGC Over Time"}
+        </h2>
+        <ResponsiveContainer width="100%" height={chartHeight}>
+          <LineChart
+            data={
+              chartType === "elo"
+                ? eloData.Elo_Rating
+                : chartType === "off"
+                ? eloData.XG_avg
+                : eloData.XGC_avg
+            }
+          >
+
+            <XAxis
+              dataKey="kickoff_time"
+              tick={{ fontSize: 10 }}
+              stroke="#fff"
+            />
+            <YAxis stroke="#fff" domain={["dataMin", "dataMax"]} />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: "#5A0000",
+                color: "#FFD700",
+                border: "1px solid #FFD700",
+              }}
+            />
+            <Line
+              type="monotone"
+              dataKey={
+                chartType === "elo"
+                  ? "Elo_Rating"
+                  : chartType === "off"
+                  ? "avg_xg"
+                  : "avg_xgc"
+              }
+              stroke="#FFD700"
+              dot={false}
+            />
+          </LineChart>
+        </ResponsiveContainer>
       </div>
     </div>
   );
