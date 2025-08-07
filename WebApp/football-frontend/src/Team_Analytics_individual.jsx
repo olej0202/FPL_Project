@@ -16,7 +16,8 @@ export default function Team_Analytics_Individual() {
   const { fetchIfNeeded, TeamData } = useStatsData();
   const API_URL = "https://fpl-project-t5e9.onrender.com/Teams";
   const [eloData, setEloData] = useState([]);
-  const [history, setHistory] = useState([]);
+  const [offData, setoffData] = useState([]);
+  const [defData, setdefData] = useState([]);
   const [data, setData] = useState([]);
   const [teamFilter, setTeamFilter] = useState("");
   const [teams, setTeams] = useState([]);
@@ -41,13 +42,15 @@ export default function Team_Analytics_Individual() {
       setEloData(Object.values(eloRaw).map(r => ({
         kickoff_time: r.kickoff_time,
         Elo_Rating: Number(parseFloat(r.Elo_Rating).toFixed(1)),
-        XG_avg: Number(parseFloat(r.XG_avg).toFixed(1)),
-        XGC_avg: Number(parseFloat(r.XGC_avg).toFixed(1)),
         name: r.name || r.Team
       })));
-      setHistory(Object.values(eloRaw).map(r => ({
+      setoffData(Object.values(eloRaw).map(r => ({
         kickoff_time: r.kickoff_time,
         XG_avg: Number(parseFloat(r.XG_avg).toFixed(1)),
+        name: r.name || r.Team
+      })));
+      setdefData(Object.values(eloRaw).map(r => ({
+        kickoff_time: r.kickoff_time,
         XGC_avg: Number(parseFloat(r.XGC_avg).toFixed(1)),
         name: r.name || r.Team
       })));
@@ -108,7 +111,12 @@ export default function Team_Analytics_Individual() {
       ];
 
   // Filter for selected team Elo history
-  const eloChartData = eloData.filter((d) => d.name === teamFilter);
+  const eloChartData = eloData.filter(d => d.name === teamFilter);
+
+ const offChartData = offData.filter(d => d.name === teamFilter);
+
+
+const defChartData = defData.filter(d => d.name === teamFilter);
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center px-4 py-8 space-y-10">
@@ -148,40 +156,25 @@ export default function Team_Analytics_Individual() {
           );
         })}
       </div>
-
-  {/* Chart-type buttons */}
-      <div className="flex justify-center gap-6">
-        <button
-          onClick={() => setChartType("elo")}
-          className={`px-4 py-2 rounded ${
-            chartType === "elo"
-              ? "underline text-royal-gold"
-              : "text-royal-beige"
-          }`}
-        >
-          ELO
-        </button>
-        <button
-          onClick={() => setChartType("off")}
-          className={`px-4 py-2 rounded ${
-            chartType === "off"
-              ? "underline text-royal-gold"
-              : "text-royal-beige"
-          }`}
-        >
-          Offensive
-        </button>
-        <button
-          onClick={() => setChartType("def")}
-          className={`px-4 py-2 rounded ${
-            chartType === "def"
-              ? "underline text-royal-gold"
-              : "text-royal-beige"
-          }`}
-        >
-          Defensive
-        </button>
-      </div>
+{/* Chart-type buttons */}
+<div className="flex justify-center space-x-2 focus:outline-none focus:ring-0 active:outline-none active:ring-0  hover:outline-none hover:ring-0">
+  {["elo","off","def"].map((type, i) => {
+    const labels = { elo: "ELO", off: "Offensive", def: "Defensive" };
+    const isSel = chartType === type;
+    return (
+      <button
+        key={type}
+        onClick={() => setChartType(type)}
+        className={`
+          px-2 py-1 bg-transparent focus:outline-none focus:ring-0 active:outline-none active:ring-0 border-none
+          ${isSel ? "text-royal-gold underline" : "text-white"}
+        `}
+      >
+        {labels[type]}
+      </button>
+    );
+  })}
+</div>
 
       {/* Line Chart */}
       <div className="bg-royal-red p-4 rounded shadow border border-royal-gold w-full max-w-6xl">
@@ -189,19 +182,20 @@ export default function Team_Analytics_Individual() {
           {chartType === "elo"
             ? "ELO Rating Over Time"
             : chartType === "off"
-            ? "Average XG Over Time"
-            : "Average XGC Over Time"}
+            ? "Off Rating Over Time"
+            : "Def Rating Over Time"}
         </h2>
         <ResponsiveContainer width="100%" height={chartHeight}>
           <LineChart
             data={
               chartType === "elo"
-                ? eloData.Elo_Rating
+                ? eloChartData
                 : chartType === "off"
-                ? eloData.XG_avg
-                : eloData.XGC_avg
+                ? offChartData
+                : defChartData
             }
           >
+
 
             <XAxis
               dataKey="kickoff_time"
@@ -222,8 +216,8 @@ export default function Team_Analytics_Individual() {
                 chartType === "elo"
                   ? "Elo_Rating"
                   : chartType === "off"
-                  ? "avg_xg"
-                  : "avg_xgc"
+                  ? "XG_avg"
+                  : "XGC_avg"
               }
               stroke="#FFD700"
               dot={false}
