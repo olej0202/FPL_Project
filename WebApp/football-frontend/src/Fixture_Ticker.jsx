@@ -17,7 +17,7 @@ import { useOtherData } from "./Contexts/OtherContext";
 
 const METRIC_LABELS = {
   XG: "Predicted Goals Scored",
-  XGC: "Predicted Goals Against",
+  CS: "Predicted Clean Sheets",
   Opposition_XGC: "Top Attacking Fixtures",
   Opposition_XG: "Top Defensive Fixtures",
   
@@ -53,7 +53,7 @@ const CustomYAxisTick = ({ x, y, payload }) => {
 };
 
 
-const ASCENDING_METRICS = ["XGC", "Opposition_XG"];
+const ASCENDING_METRICS = [ "Opposition_XG"];
 
 export default function TeamPredictionRankings() {
   const [teamData, setTeamData] = useState([]);
