@@ -15,7 +15,7 @@ def GenerateOptimizeSet(Current_data_path):
     data_df=pd.read_csv(Current_data_path).iloc[:,1:]
     result = (
         data_df
-          .groupby("name")[["now_cost","team_code","news","selected_by_percent"]]
+          .groupby("name")[["now_cost","team_code","news","selected_by_percent","web_name"]]
           .first()                   # take the first row in each group
           .reset_index()             # turn the group key back into a column
     )    
@@ -26,7 +26,7 @@ def GenerateOptimizeSet(Current_data_path):
     })
     prediction_data=pd.read_csv("Model_Predictions.csv").iloc[:,1:]
     
-    merge_cols = ['Name2', 'value', 'team_code', 'news', 'selected']
+    merge_cols = ['Name2', 'value', 'team_code', 'news', 'selected',"web_name"]
     result = result[merge_cols]
 
     merged_df = prediction_data.merge(result, how='left', left_on='name', right_on='Name2')
@@ -41,6 +41,7 @@ def GenerateOptimizeSet(Current_data_path):
     visual_df["selected"] = visual_df["selected"].clip(lower=0.01)
     visual_df["minutes_multiplier"] = visual_df["minutes_multiplier"].clip(lower=0.01)
     visual_df["news"] = visual_df["news"].fillna("No news")
+    visual_df["web_name"] = visual_df["web_name"].fillna("Ukjent")
 
     
     cols_to_offset=["Goal_pred","Assist_pred","Points_prediction"]
@@ -106,7 +107,7 @@ def GenerateOptimizeSet(Current_data_path):
 )
     
 
-    constant_cols = ["name", "position","value", 'team_code','selected','offset', 'minutes_multiplier','0']
+    constant_cols = ["name", "position","value", 'team_code','selected','web_name','offset', 'minutes_multiplier','0']
     
 
     pivoted_df = optimized_player_set.pivot_table(
@@ -122,4 +123,4 @@ def GenerateOptimizeSet(Current_data_path):
 
 
 if __name__ == "__main__":
-    GenerateOptimizeSet("Raw_Data_24\Fantasy_season_2024_data.csv")
+    GenerateOptimizeSet("Raw_Data_25\Fantasy_season_2025_data.csv")

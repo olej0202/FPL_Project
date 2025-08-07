@@ -85,24 +85,36 @@ export default function Player_analytics_rankings() {
         (d) => d.GW >= GWRange[0] && d.GW <= GWRange[1]
       );
 
-      aggregated = Object.values(
-        filteredByGW.reduce((acc, curr) => {
-          if (!acc[curr.name]) acc[curr.name] = { name: curr.name, value: 0 };
-          acc[curr.name].value += parseFloat(curr[selectedMetric] || 0);
-          return acc;
-        }, {})
-      );
+           aggregated = Object.values(
+       filteredByGW.reduce((acc, curr) => {
+         // use curr.Name (the unique id) as the key, but store web_name for display
+         if (!acc[curr.name]) {
+           acc[curr.name] = {
+             id: curr.name,
+             web_name: curr.web_name,
+             value: 0,
+           };
+         }
+         acc[curr.name].value += parseFloat(curr[selectedMetric] || 0);
+         return acc;
+       }, {})
+     );
     } else {
       const latestGW = Math.max(...data.map((d) => d.GW));
       const latestData = data.filter((d) => d.GW === latestGW);
 
-      aggregated = latestData.map((d) => ({
-        name: d.name,
-        value: parseFloat(d[selectedMetric] || 0),
-      }));
+     aggregated = latestData.map((d) => ({
+       id: d.name,
+       web_name: d.web_name,
+       value: parseFloat(d[selectedMetric] || 0),
+     }));
     }
 
-    setFiltered(aggregated.sort((a, b) => b.value - a.value).slice(0, 15));
+   setFiltered(
+     aggregated
+       .sort((a, b) => b.value - a.value)
+       .slice(0, 15)
+   );
   }, [rawData, selectedMetric, GWRange, selectedPos, valueRange]);
 
   if (loading) return <div className="text-white">Loading...</div>;
@@ -190,6 +202,7 @@ export default function Player_analytics_rankings() {
       {/* Ranking List */}
       <ul className="w-full max-w-2xl divide-y divide-gray-700">
         {filtered.map((player, idx) => {
+         const displayName = player.id;
           const percentage =
             maxValue === minValue
               ? 100
@@ -197,11 +210,11 @@ export default function Player_analytics_rankings() {
 
           return (
             <li
-              key={player.name}
+              key={player.id}
               className="relative py-3 px-4 cursor-pointer hover:bg-royal-red transition"
               onClick={() =>
                 navigate("/Player_Analytics/Individual", {
-                  state: { selectedPlayer: player.name },
+                  state: { selectedPlayer: player.id },
                 })
               }
             >
@@ -215,7 +228,7 @@ export default function Player_analytics_rankings() {
                   <span className="text-royal-gold font-bold w-6 text-right">
                     {idx + 1}.
                   </span>
-                  <span className="text-white">{player.name}</span>
+                  <span className="text-white">{displayName}</span>
                 </div>
                 <span className="text-royal-gold font-semibold">
                   {player.value.toFixed(2)}
