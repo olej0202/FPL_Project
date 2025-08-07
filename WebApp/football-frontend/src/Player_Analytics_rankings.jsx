@@ -78,6 +78,13 @@ export default function Player_analytics_rankings() {
       (d) => d.value >= valueRange[0] && d.value <= valueRange[1]
     );
 
+       if (selectedMetric === "DefCon") {
+     data = data.filter((d) => {
+       const v = Number(d.DefCon);
+       return Number.isFinite(v) && v <= 14;
+     });
+   }
+
     let aggregated;
 
     if (SUM_METRICS.includes(selectedMetric)) {
