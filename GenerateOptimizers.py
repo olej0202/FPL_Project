@@ -222,15 +222,19 @@ def freeHit_optimize_team(sel_thresh, budget, columns, file_path="Model_Optimize
     x = {i: LpVariable(cat='Binary', name=f"x_{i}") for i in range(num_players)}  # Selected players
     bench = {i: LpVariable(cat='Binary', name=f"bench_{i}") for i in range(num_players)}  # Bench players
     y = {i: LpVariable(cat='Binary', name=f"y_{i}") for i in range(num_players)}  # Playing players
+    capt = {i: LpVariable(cat='Binary', name=f"capt_{i}") for i in range(num_players)}  
+    
 
     # Objective: Maximize Total Points for Gameweek 1
-    model += lpSum(y[i] * predicted_points[i] for i in range(num_players))
+    model += lpSum(y[i] * predicted_points[i] for i in range(num_players))+ lpSum(capt[i] * predicted_points[i] for i in range(num_players))
 
     # Ensure y is 1 only when player is in the squad and not benched
     for i in range(num_players):
         model += y[i] <= x[i]               # Can only play if selected in squad
         model += y[i] <= 1 - bench[i]        # Can't play if benched
         model += y[i] >= x[i] + (1 - bench[i]) - 1  # Consistency
+        
+    model += lpSum(capt[i] for i in range(num_players)) == 1
 
 
     for i in range(num_players):
@@ -241,6 +245,8 @@ def freeHit_optimize_team(sel_thresh, budget, columns, file_path="Model_Optimize
 
     # Budget Constraint
     model += lpSum(x[i] * costs[i] for i in range(num_players)) <= budget
+    
+    
 
     # Max 3 Players per Team Constraint
     for team in set(teams):
@@ -284,6 +290,7 @@ def freeHit_optimize_team(sel_thresh, budget, columns, file_path="Model_Optimize
             except:
                 player_row=current_players[current_players["name"]==players[i][:-1]]["code"].values[0]
             status = "Bench" if bench[i].varValue > 0.5 else "Playing"
+            is_capt   = capt[i].varValue > 0.5
             print(f"- {players[i]} ({positions[i]}) - {status}")
             player_set.append(players[i])
             player_set.append(positions[i])
@@ -291,9 +298,11 @@ def freeHit_optimize_team(sel_thresh, budget, columns, file_path="Model_Optimize
             player_set.append(f"https://resources.premierleague.com/premierleague/photos/players/110x140/p{player_row}.png")
             player_set.append(columns[0])
             player_set.append(current_players[current_players["name"]==players[i]]["web_name"].values[0])
+            player_set.append(is_capt)
             result_set.append(player_set)
             
-    columns=["Name", "position", "status","photo", "GW","web_name"]
+            
+    columns=["Name", "position", "status","photo", "GW","web_name","Is_captain"]
 
     result_df=pd.DataFrame(result_set,columns=columns)
     result_df.to_csv("Free_hit_team.csv")

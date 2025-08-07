@@ -202,7 +202,7 @@ export default function Player_analytics_rankings() {
       {/* Ranking List */}
       <ul className="w-full max-w-2xl divide-y divide-gray-700">
         {filtered.map((player, idx) => {
-         const displayName = player.id;
+         const displayName = player.web_name;
           const percentage =
             maxValue === minValue
               ? 100

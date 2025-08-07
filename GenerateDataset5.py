@@ -1204,7 +1204,7 @@ def adjust_measure(df, measure_name):
     current_expected_goals_start_value=player_df[measure_name].mean()
     current_expected_goals=current_expected_goals_start_value
     smoothing_f=0.05
-    min_val=std*1.3
+    min_val=std*1.1
     count=0
     in_row=0
     in_row_fac=1

@@ -23,7 +23,7 @@ export default function MyTeamOptimize() {
   const navigate = useNavigate();
   const [showBbInput, setShowBbInput] = useState(!!bbRound);
   const [showWildInput, setShowWildInput] = useState(!!wildRound);
-
+ const minG=1
 
   useEffect(() => {
    sethas_changed(true);
@@ -78,54 +78,94 @@ export default function MyTeamOptimize() {
 
         {/* Bench Boost Toggle with fixed container */}
         {showBbInput ? (
-          <div className="relative w-40">
-            <input
-              type="number"
-              placeholder="Bench Boost GW"
-              value={bbRound}
-              onChange={(e) => setBbRound(e.target.value)}
-              className="w-full p-2 bg-black border border-royal-gold rounded text-white text-center"
-            />
-            <button
-              onClick={() => { setShowBbInput(false); setBbRound(""); }}
-              className="absolute top-2 -right-8 p-1 text-red-500 bg-black"
-            >
-              <X size={14} />
-            </button>
-          </div>
-        ) : (
-          <button
-            onClick={() => setShowBbInput(true)}
-            className="w-40 p-2 bg-transparent border border-dashed border-royal-gold rounded text-royal-gold hover:bg-yellow-300 hover:text-black transition"
-          >
-            + Add Bench Boost
-          </button>
-        )}
+  <>
+    {minG === null ? (
+      // data not loaded yet
+      <div className="w-40 p-2 text-center text-gray-400">Loading GWs…</div>
+    ) : (
+      <div className="relative w-40">
+        <select
+          value={bbRound || ""}
+          onChange={(e) => setBbRound(Number(e.target.value))}
+          className="w-full p-2 bg-black border border-royal-gold rounded text-white text-center"
+        >
+          {/* placeholder option */}
+          <option value="" disabled>
+            Bench Boost GW
+          </option>
+          {/* only render once minGW is known */}
+          {Array.from({ length: 38 - minG + 1 }, (_, i) => minG + i).map(
+            (gw) => (
+              <option key={gw} value={gw}>
+                GW {gw}
+              </option>
+            )
+          )}
+        </select>
+        <button
+          onClick={() => {
+            setShowBbInput(false);
+            setBbRound("");
+          }}
+          className="absolute top-2 -right-8 p-1 text-red-500 bg-black"
+        >
+          <X size={14} />
+        </button>
+      </div>
+    )}
+  </>
+) : (
+  <button
+    onClick={() =>      {setShowBbInput(true); setBbRound(minGW);       }}
+    className="w-40 p-2 bg-transparent border border-dashed border-royal-gold rounded text-royal-gold hover:bg-yellow-300 hover:text-black transition"
+  >
+     + Add Bench Boost
+  </button>
+)}
 
         {/* Wildcard Toggle with fixed container */}
-        {showWildInput ? (
-          <div className="relative w-40">
-            <input
-              type="number"
-              placeholder="Wildcard GW"
-              value={wildRound}
-              onChange={(e) => setWildRound(e.target.value)}
-              className="w-full p-2 bg-black border border-royal-gold rounded text-white text-center"
-            />
-            <button
-              onClick={() => { setShowWildInput(false); setWildRound(""); }}
-              className="absolute top-2 -right-8 p-1 text-red-500 bg-black"
-            >
-              <X size={14} />
-            </button>
-          </div>
-        ) : (
-          <button
-            onClick={() => setShowWildInput(true)}
-            className="w-40 p-2 bg-transparent border border-dashed border-royal-gold rounded text-royal-gold hover:bg-yellow-300 hover:text-black transition"
-          >
-            + Add Wildcard
-          </button>
+{showWildInput ? (
+  <>
+    {minG === null ? (
+      // data not loaded yet
+      <div className="w-40 p-2 text-center text-gray-400">Loading GWs…</div>
+    ) : (
+      <div className="relative w-40">
+        <select
+          value={wildRound || ""}
+          onChange={(e) => setWildRound(Number(e.target.value))}
+          className="w-full p-2 bg-black border border-royal-gold rounded text-white text-center"
+        >
+          <option value="" disabled>
+            Wildcard GW
+          </option>
+          {Array.from({ length: 38 - minG + 1 }, (_, i) => minG + i).map(
+            (gw) => (
+              <option key={gw} value={gw}>
+                GW {gw}
+              </option>
+            )
+          )}
+        </select>
+        <button
+          onClick={() => {
+            setShowWildInput(false);
+            setWildRound("");
+          }}
+          className="absolute top-2 -right-8 p-1 text-red-500 bg-black"
+        >
+          <X size={14} />
+        </button>
+      </div>
+    )}
+  </>
+) : (
+  <button
+    onClick={() =>      {setShowWildInput(true); setWildRound(minGW);       }}
+    className="w-40 p-2 bg-transparent border border-dashed border-royal-gold rounded text-royal-gold hover:bg-yellow-300 hover:text-black transition"
+  >
+    + Add Wildcard
+  </button>
         )}
                <button
           onClick={() => {
