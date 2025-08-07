@@ -95,7 +95,7 @@ useEffect(() => {
           Rolling_adjusted_XA: latest.Rolling_adjusted_XA || 0,
           Rolling_adjusted_BPS: latest.Rolling_adjusted_BPS || 0,
           Overcore: latest.Average_Overscore || 0,
-          rolling_ICT: latest.rolling_ICT || 0,
+          DefCon: latest.DefCon || 0,
           points_predictions: totalPredictions || 0,
           
         });
@@ -134,7 +134,7 @@ useEffect(() => {
       Rolling_adjusted_XA: latest.Rolling_adjusted_XA || 0,
       Rolling_adjusted_BPS: latest.Rolling_adjusted_BPS || 0,
       Overcore: latest.Average_Overscore || 0,
-      rolling_ICT:latest.rolling_ICT || 0,
+      DefCon:latest.DefCon || 0,
       points_predictions: totalPredictions || 0,
     });
   };
@@ -214,7 +214,7 @@ useEffect(() => {
     { title: "XG Index", value: latestStats.Rolling_adjusted_XG },
     { title: "XA Index", value: latestStats.Rolling_adjusted_XA },
     { title: "BPS Index", value: latestStats.Rolling_adjusted_BPS },
-    { title: "ICT Index", value: latestStats.rolling_ICT },
+    { title: "DefCon", value: latestStats.DefCon },
     { title: "Goals/XG", value: latestStats.Overcore },
     {title: "XPoints", value: latestStats.points_predictions }
   ];
@@ -223,7 +223,7 @@ useEffect(() => {
     { key: "Rolling_adjusted_XG", label: "XG Index" },
     { key: "Rolling_adjusted_XA", label: "XA Index" },
     { key: "Rolling_adjusted_BPS", label: "BPS Index" },
-    { key: "rolling_ICT", label: "ICT Index" },
+    { key: "DefCon", label: "DefCon" },
     { key: "Overcore", label: "Goals/XG" },
     { key: "points_predictions", label: "XPoints" },
   ];
@@ -245,8 +245,8 @@ useEffect(() => {
       return value * 230; // assuming typical max ~4.0 → 100
     case "Rolling_adjusted_BPS":
       return value *4; // typical max ~200 → 100
-    case "rolling_ICT":
-      return value *10; // typical max ~200 → 100
+    case "DefCon":
+      return value *5; // typical max ~200 → 100
     case "Overcore":
       return value *30; 
     case "points_predictions":

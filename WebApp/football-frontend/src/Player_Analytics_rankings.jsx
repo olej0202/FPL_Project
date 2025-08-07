@@ -21,7 +21,7 @@ const METRICS = {
   Rolling_adjusted_XG: "Goal Index",
   Rolling_adjusted_XA: "Assist Index",
   Rolling_adjusted_BPS: "Bonus Index",
-  rolling_ICT: "ICT Index"
+  DefCon: "DefCon Index"
 };
 
 const SUM_METRICS = ["Points_prediction", "Goal_pred","Assist_pred"];
