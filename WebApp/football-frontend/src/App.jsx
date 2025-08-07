@@ -32,7 +32,7 @@ export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   const navItems = [
-    { to: "/", icon: Brain, label: "AI Teams" },
+    { to: "/My_Team", icon: Brain, label: "AI Teams" },
     { to: "/Team_Analytics", icon: Users, label: "Team Analytics" },
     { to: "/Player_Analytics", icon: User, label: "Player Analytics" },
     { to: "/TeamPredictionsFuture", icon: Calendar, label: "Fixtures" },
