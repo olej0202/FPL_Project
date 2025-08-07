@@ -166,7 +166,7 @@ def current_players(season):
 
     team_mapping = {team["id"]: team["name"] for team in teams}
     players=pd.DataFrame(players)
-    players_new=players[["code","element_type", "photo","team_code","team","opta_code","now_cost","selected_by_percent","expected_goals","web_name","news"]]
+    players_new=players[["code","element_type", "photo","team_code","team","opta_code","now_cost","selected_by_percent","expected_goals","web_name","news","defensive_contribution_per_90"]]
     players_new["name"]=players["first_name"]+" "+players["second_name"]
     players_new["name"]=players_new["name"].str.replace(" ", "_", n=1)
     players_new["chance_of_playing_this_round"]=players["chance_of_playing_this_round"]    

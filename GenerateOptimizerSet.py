@@ -15,18 +15,19 @@ def GenerateOptimizeSet(Current_data_path):
     data_df=pd.read_csv(Current_data_path).iloc[:,1:]
     result = (
         data_df
-          .groupby("name")[["now_cost","team_code","news","selected_by_percent","web_name"]]
+          .groupby("name")[["now_cost","team_code","news","selected_by_percent","web_name","defensive_contribution_per_90"]]
           .first()                   # take the first row in each group
           .reset_index()             # turn the group key back into a column
     )    
     result = result.rename(columns={
         "name": "Name2",
         "now_cost": "value",
-        "selected_by_percent": "selected"
+        "selected_by_percent": "selected",
+        "defensive_contribution_per_90": "DefCon"
     })
     prediction_data=pd.read_csv("Model_Predictions.csv").iloc[:,1:]
     
-    merge_cols = ['Name2', 'value', 'team_code', 'news', 'selected',"web_name"]
+    merge_cols = ['Name2', 'value', 'team_code', 'news', 'selected',"web_name","DefCon"]
     result = result[merge_cols]
 
     merged_df = prediction_data.merge(result, how='left', left_on='name', right_on='Name2')
@@ -42,6 +43,7 @@ def GenerateOptimizeSet(Current_data_path):
     visual_df["minutes_multiplier"] = visual_df["minutes_multiplier"].clip(lower=0.01)
     visual_df["news"] = visual_df["news"].fillna("No news")
     visual_df["web_name"] = visual_df["web_name"].fillna("Ukjent")
+    visual_df["DefCon"] = visual_df["DefCon"].fillna(0)
 
     
     cols_to_offset=["Goal_pred","Assist_pred","Points_prediction"]
@@ -107,7 +109,7 @@ def GenerateOptimizeSet(Current_data_path):
 )
     
 
-    constant_cols = ["name", "position","value", 'team_code','selected','web_name','offset', 'minutes_multiplier','0']
+    constant_cols = ["name", "position","value", 'team_code','selected','web_name','DefCon','offset', 'minutes_multiplier','0']
     
 
     pivoted_df = optimized_player_set.pivot_table(

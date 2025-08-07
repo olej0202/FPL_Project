@@ -156,7 +156,7 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
     current_players=pd.read_csv(current_player_path).iloc[:,1:]
     current_teams=pd.read_csv(current_teams_path)
     season_data=pd.read_csv("Unwanted_players.csv").iloc[:,1:]
-    cbi_data=pd.read_csv("GenerateCBI.csv")
+    cbi_data=pd.read_csv("GenerateCBI2.csv")
     kmeans = joblib.load('kmeans_Groundmodel.pkl')
     relevant_players = current_players.copy()
     name_map = {
