@@ -304,6 +304,7 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
             
         elif (position=='FWD'):
             player_row["CBI"]=0
+            
         if(len(playerCBI)>0):
             player_row["CBI"]=(playerCBI["CBI"].values[0]/90)*minutes
 
