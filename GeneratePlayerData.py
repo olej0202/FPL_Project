@@ -194,7 +194,8 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
         "João_Pedro Junqueira de Jesus":["Nicolas_Jackson"],
         "Cole_Palmer":["Mohamed_Salah","Bukayo_Saka"],
         "Ollie_Watkins":["Erling_Haaland","Yoane_Wissa"],
-        "Anthony_Gordon":["Alexander_Isak","Jacob_Murphy","Harvey_Barnes"],        
+        "Anthony_Gordon":["Alexander_Isak","Jacob_Murphy","Harvey_Barnes"],   
+        "Igor_Thiago Nascimento Rodrigues":["Yoane_Wissa","Bryan_Mbeumo"]     
     }
     
     relevant_players["name"] = relevant_players["name"].apply(lambda n: name_map.get(n, n))
@@ -304,7 +305,7 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
         elif (position=='FWD'):
             player_row["CBI"]=0
         if(len(playerCBI)>0):
-            player_row["CBI"]=playerCBI["CBI"].values[0]
+            player_row["CBI"]=(playerCBI["CBI"].values[0]/90)*minutes
 
                 
         clusters,home,n_matches,XGH,XGCH,XGA,XGCA,XGC_DEF,XGC_FWD,XGC_MID,own_XG,GW,played_XGC,played_XG,opp_code=next_opp(team_id, time_list, fixture_data,kmeans,team_code,current_teams)
