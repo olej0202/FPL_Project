@@ -35,7 +35,7 @@ export default function App() {
     { to: "/My_Team", icon: Brain, label: "AI Teams" },
     { to: "/Team_Analytics", icon: Users, label: "Team Analytics" },
     { to: "/Player_Analytics", icon: User, label: "Player Analytics" },
-    { to: "/TeamPredictionsFuture", icon: Calendar, label: "Fixtures" },
+    { to: "/TeamPredictionsFuture", icon: Calendar, label: "Fixture Ticker" },
     { to: "/Score_Predictions", icon: Trophy, label: "Score Predictions" },
     { to: "/News", icon: Newspaper, label: "News Blog" },
   ];

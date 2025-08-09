@@ -380,15 +380,17 @@ const fixtureData = useMemo(() => {
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center px-0 py-0 space-y-3">
 
-      <div className="w-full max-w-sm text-center">
-        <Select
-          options={playerOptions}
-          onChange={(option) => setPlayerFilter(option.value)}
-          value={{ label: playerFilter, value: playerFilter }}
-          styles={selectStyles}
-          placeholder="Select or search player..."
-        />
-      </div>
+<div className="w-full max-w-sm text-center">
+  <Select
+    options={playerOptions}
+    getOptionLabel={(opt) => String(opt.label ?? opt.value).replace(/_/g, " ")}
+    getOptionValue={(opt) => String(opt.value ?? opt.label)}
+    onChange={(opt) => setPlayerFilter(opt?.value ?? "")}
+    value={playerOptions.find(o => o.value === playerFilter) || null}
+    styles={selectStyles}
+    placeholder="Select or search player..."
+  />
+</div>
 <div className="flex gap-10 justify-center mt-2">
   {playerFilter && playerImageUrl && (
     <div className="relative inline-block">
@@ -564,14 +566,16 @@ const fixtureData = useMemo(() => {
       </div>
 
       <div className="w-full max-w-sm text-center">
-        <Select
-          options={playerOptions}
-          onChange={(opt) => setComparePlayer(opt.value)}
-          value={{ label: comparePlayer, value: comparePlayer }}
-          styles={selectStyles}
-          placeholder="Compare with..."
-        />
-        </div>
+  <Select
+    options={playerOptions}
+    getOptionLabel={(opt) => String(opt.label ?? opt.value).replace(/_/g, " ")}
+    getOptionValue={(opt) => String(opt.value ?? opt.label)}
+    onChange={(opt) => setComparePlayer(opt?.value ?? "")}
+    value={playerOptions.find((o) => o.value === comparePlayer) || null}
+    styles={selectStyles}
+    placeholder="Compare with..."
+  />
+</div>
 
 {comparePlayer && compareFixtures.length > 0 && (
   <div className="w-full max-w-6xl mx-auto mt-6 text-center">

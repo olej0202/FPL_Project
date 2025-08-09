@@ -99,53 +99,89 @@ def next_opp(team, n_future, fixtures,kmeans,team_code,current_teams):
 
     return clusters,home,n_matches,XGH,XGCH,XGA,XGCA,XGC_DEF,XGC_FWD,XGC_MID,own_XG,GW,played_XGC,played_XG,opp_code
 
+import pandas as pd
+from datetime import datetime
 
-def team_data(current_teams):
-    current_teams=pd.read_csv(current_teams)
-    # 1) load your “real” dataset
+def team_data(
+    current_teams,
+    off_factors=None,        # e.g. {13: 1.10, 90: 0.95}
+    def_factors=None,        # e.g. {40: 0.90, 102: 1.05}
+    offense_cols=None,       # columns to scale for offense
+    defense_cols=None,       # columns to scale for defense
+):
+    off_factors = {94:0.9,2:0.9 }
+    def_factors = {94:0.85,11:0.9, 31:0.9 }
+
+    # sensible defaults; adjust to your schema
+    if offense_cols is None:
+        offense_cols = [
+            "XGH","XGA","XG_avg","XG_slope",
+            "Rolling_Threat"
+        ]
+    if defense_cols is None:
+        defense_cols = [
+            "XGCH","XGCA","XGC_avg","XGC_slope",
+            "Rolling_Threat_Against"
+        ]
+
+    current_teams = pd.read_csv(current_teams)
     teams_dataset = pd.read_csv("Team_data_newest2.csv")
 
-    # 2) find which codes are present in your input but missing from the dataset
-    codes          = current_teams["code"].unique()
+    # make sure numeric cols are numeric
+    for col in set(offense_cols + defense_cols):
+        if col in teams_dataset.columns:
+            teams_dataset[col] = pd.to_numeric(teams_dataset[col], errors="coerce")
+
+    # fill any missing codes with averages from representative teams (as you had)
+    codes = current_teams["code"].unique()
     existing_codes = teams_dataset["code"].unique()
+    missing_codes = [c for c in codes if c not in existing_codes]
 
-    missing_codes  = [c for c in codes if c not in existing_codes]
-    
-    average_team_codes=[13, 90, 102, 40,49]
-    average_df=teams_dataset[teams_dataset["code"].isin(average_team_codes)]
+    average_team_codes = [13, 90, 102, 40, 49]
+    average_df = teams_dataset[teams_dataset["code"].isin(average_team_codes)]
 
-    if not missing_codes:
+    if missing_codes:
+        numeric_cols = [
+            "XG","XGC","was_home","opponent","Clean_Sheet","Result",
+            "Threat","Threat_against","XG_DEF","XG_MID","XG_FORWARD",
+            "XGA","XGCA","XGH","XGCH","XG_avg","XGC_avg",
+            "Rolling_Threat","Rolling_Threat_Against","XG_slope","XGC_slope","Elo_Rating"
+        ]
+        col_means = average_df[numeric_cols].mean(numeric_only=True)
 
-        return teams_dataset
+        synthetic_rows = []
+        for code in missing_codes:
+            row_info = current_teams.loc[current_teams["code"] == code].iloc[0]
+            synthetic = {
+                "name":         row_info["name"],
+                "code":         code,
+                "id":           row_info["id"],
+                "kickoff_time": datetime.today(),
+            }
+            for col in numeric_cols:
+                if col in col_means:
+                    synthetic[col] = col_means[col]
+            synthetic_rows.append(synthetic)
 
-    # 3) decide which columns to average
-    #    we’ll average every numeric column except the ID/code fields
-    numeric_cols = ["XG","XGC","was_home","opponent","Clean_Sheet","Result","Threat","Threat_against","XG_DEF","XG_MID","XG_FORWARD","XGA","XGCA","XGH","XGCH","XG_avg","XGC_avg","Rolling_Threat","Rolling_Threat_Against","XG_slope","XGC_slope","Elo_Rating"]
-    col_means = average_df[numeric_cols].mean()
+        teams_dataset = pd.concat([teams_dataset, pd.DataFrame(synthetic_rows)], ignore_index=True)
 
-    # 4) build one synthetic row per missing code
-    synthetic_rows = []
-    for code in missing_codes:
-        # pick up the name/id from your current_teams input
-        row_info = current_teams.loc[current_teams["code"] == code].iloc[0]
-        synthetic = {
-            "name":          row_info["name"],
-            "code":          code,
-            "id":            row_info["id"],
-            "kickoff_time":  datetime.today(),   # today’s date/time
-        }
-        # fill in each numeric column with its global mean
-        for col in numeric_cols:
-            synthetic[col] = col_means[col]
+    # ---- APPLY TEAM-SPECIFIC MULTIPLIERS ----
+    def _apply_factors(df, factors, cols):
+        cols = [c for c in cols if c in df.columns]  # only existing cols
+        if not cols or not factors:
+            return df
+        mask = df["code"].isin(factors.keys())
+        # per-row multiplier vector
+        mult = df.loc[mask, "code"].map(factors)
+        df.loc[mask, cols] = df.loc[mask, cols].mul(mult.values, axis=0)
+        return df
 
-        synthetic_rows.append(synthetic)
+    teams_dataset = _apply_factors(teams_dataset, off_factors, offense_cols)
+    teams_dataset = _apply_factors(teams_dataset, def_factors, defense_cols)
 
-    # 5) append them and return the combined DataFrame
-    missing_df = pd.DataFrame(synthetic_rows)
-    full_df    = pd.concat([teams_dataset, missing_df], ignore_index=True)
-    full_df.to_csv("Team_data_newest3.csv")
+    teams_dataset.to_csv("Team_data_newest3.csv", index=False)
+    return teams_dataset
 
-    return full_df
 
     
     
@@ -179,7 +215,7 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
     "Alisson_Becker": "Alisson_Ramses Becker",
     "Luis_Díaz Marulanda": "Luis_Díaz",
     "Matheus Luiz_Nunes":"Matheus_Nunes",
-    "Alejandro_Garnacho Ferreyra":"Alejandro_Garnacho"
+    "Alejandro_Garnacho Ferreyra":"Alejandro_Garnacho",
 }
     
     new_players_cluster={
@@ -195,7 +231,8 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
         "Cole_Palmer":["Mohamed_Salah","Bukayo_Saka"],
         "Ollie_Watkins":["Erling_Haaland","Yoane_Wissa"],
         "Anthony_Gordon":["Alexander_Isak","Jacob_Murphy","Harvey_Barnes"],   
-        "Igor_Thiago Nascimento Rodrigues":["Yoane_Wissa","Bryan_Mbeumo"]     
+        "Igor_Thiago Nascimento Rodrigues":["Yoane_Wissa","Bryan_Mbeumo"],
+        "Lucas_Tolentino Coelho de Lima":["Jarrod_Bowen"]     
     }
     
     relevant_players["name"] = relevant_players["name"].apply(lambda n: name_map.get(n, n))

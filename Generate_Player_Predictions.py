@@ -179,11 +179,11 @@ def XGB_Make_dataset(position,position2):
 
     if(position=='GOALS'):
         trainingdf=trainingdf[trainingdf['position'].isin(["FWD", "DEF", "MID"])]
-        trainingdf=trainingdf[["expected_goals","opposition_xgc","Own_Attacking_form","XG_slope","rolling_shots",
-                               "Team","name","time","minutes","season","rolling_Threat","position","rolling_XG_historic","Rolling_adjusted_XG_form","rolling_Adjusted_XG_historic"]]
+        trainingdf=trainingdf[["expected_goals","opposition_xgc","Rolling_adjusted_XG_form","rolling_shots",
+                               "Team","name","time","minutes","season","rolling_Threat","position","rolling_XG_historic","Rolling_adjusted_XG2","rolling_Adjusted_XG_historic"]]
         
-        test_columns=["expected_goals","played_XGC","Own_Attacking_form","XG_slope","rolling_shots",
-                               "Team","name","time","minutes","season","rolling_Threat","position","rolling_XG_historic","Rolling_adjusted_XG_form","rolling_Adjusted_XG_historic"]
+        test_columns=["expected_goals","played_XGC","Rolling_adjusted_XG_form","rolling_shots",
+                               "Team","name","time","minutes","season","rolling_Threat","position","rolling_XG_historic","Rolling_adjusted_XG","rolling_Adjusted_XG_historic"]
         target_value="expected_goals"
         
     elif(position=='Assist2'):
@@ -220,9 +220,9 @@ def XGB_Make_dataset(position,position2):
 
     elif(position=='Assist'):
         trainingdf=trainingdf[trainingdf['position'].isin(["FWD", "DEF", "MID"])]
-        trainingdf=trainingdf[["expected_assists","opposition_xgc","Own_Attacking_form","XA_slope","rolling_key_passes",
+        trainingdf=trainingdf[["expected_assists","opposition_xgc","XA_slope","rolling_key_passes",
                                "Team","name","time","minutes","season","Rolling_creativity","position","rolling_XA_historic","Cluster","Rolling_adjusted_XA2","Rolling_adjusted_XA_form","rolling_Adjusted_XA_historic"]]
-        test_columns=["expected_assists","played_XGC","Own_Attacking_form","XA_slope","rolling_key_passes",
+        test_columns=["expected_assists","played_XGC","XA_slope","rolling_key_passes",
                                "Team","name","time","minutes","season","Rolling_creativity","position","rolling_XA_historic","Cluster","Rolling_adjusted_XA","Rolling_adjusted_XA_form","rolling_Adjusted_XA_historic"]
         target_value="expected_assists"
              
@@ -533,11 +533,11 @@ def Generate_point_predictions():
         
         stat_cbi_player= stat_cbi[stat_cbi["Name"]==player].sort_values(by=["GW", "opp_stat"])
 
-        overscore=max(0.8,player_data["Average_Overscore"].values[0])
-        overscore=min(1.25,overscore)
+        overscore=max(0.9,player_data["Average_Overscore"].values[0])
+        overscore=min(1.15,overscore)
 
-        overassist=max(0.8,player_data["Average_OverAssist"].values[0])
-        overassist=min(1.5,overassist)
+        overassist=max(0.9,player_data["Average_OverAssist"].values[0])
+        overassist=min(1.2,overassist)
         
         historic_xg=player_data["rolling_XG_historic"].values[0]
         historic_xa=player_data["rolling_XA_historic"].values[0]

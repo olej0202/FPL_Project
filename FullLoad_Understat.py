@@ -76,7 +76,7 @@ def FullLoad(season):
     
     All_data.to_csv(f"Raw_Data_{season}/Understat_data.csv")
 def Add_index(season):
-    Unique_Fantasy_data=pd.read_csv(f"Raw_Data_{season}\Fantasy_season_20{season}_data.csv")[["element","first_name","second_name","Full_Name"]].drop_duplicates()
+    Unique_Fantasy_data=pd.read_csv(f"Raw_Data_{season}\current_players.csv")[["code","first_name","second_name","name"]].drop_duplicates()
     
     Understat_df=pd.read_csv(f"Raw_Data_{season}/Understat_data.csv").iloc[:,1:]
     

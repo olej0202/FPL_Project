@@ -18,7 +18,8 @@ def GenerateOptimizeSet(Current_data_path):
           .groupby("name")[["now_cost","team_code","news","selected_by_percent","web_name","defensive_contribution_per_90"]]
           .first()                   # take the first row in each group
           .reset_index()             # turn the group key back into a column
-    )    
+    )
+        
     result = result.rename(columns={
         "name": "Name2",
         "now_cost": "value",
