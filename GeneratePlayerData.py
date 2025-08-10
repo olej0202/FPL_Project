@@ -110,7 +110,7 @@ def team_data(
     defense_cols=None,       # columns to scale for defense
 ):
     off_factors = {94:0.9,2:0.9 }
-    def_factors = {94:0.85,11:0.9, 31:0.9 }
+    def_factors = {94:1.15,11:1.1, 31:1.1 }
 
     # sensible defaults; adjust to your schema
     if offense_cols is None:
