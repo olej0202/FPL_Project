@@ -83,7 +83,7 @@ function PlayerRow({ players, isBench = false, navigate,fallbackUrl }) {
             {player.Is_captain && (
               <div
                 className="
-                  absolute top-2 -right-2
+                  absolute top-2 -left-2
                   bg-black text-white font-bold
                   text-xs rounded-full
                   w-5 h-5 flex items-center justify-center

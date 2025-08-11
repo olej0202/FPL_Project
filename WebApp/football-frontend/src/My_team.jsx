@@ -356,7 +356,7 @@ function PlayerRow({ players, isBench = false, toggleBan, bannedList, navigate }
           {p.Is_captain && (
               <div
                 className="
-                  absolute top-12 -right-2
+                  absolute top-12 -left-2
                   bg-black text-white font-bold
                   text-xs rounded-full
                   w-5 h-5 flex items-center justify-center
