@@ -110,7 +110,7 @@ def team_data(
     defense_cols=None,       # columns to scale for defense
 ):
     off_factors = {94:0.9,2:0.9 }
-    def_factors = {94:1.15,11:1.1, 31:1.1 }
+    def_factors = {94:1.15,11:1.1, 31:1.1,8:1.1 }
 
     # sensible defaults; adjust to your schema
     if offense_cols is None:
@@ -232,7 +232,8 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
         "Ollie_Watkins":["Erling_Haaland","Yoane_Wissa"],
         "Anthony_Gordon":["Alexander_Isak","Jacob_Murphy","Harvey_Barnes"],   
         "Igor_Thiago Nascimento Rodrigues":["Yoane_Wissa","Bryan_Mbeumo"],
-        "Lucas_Tolentino Coelho de Lima":["Jarrod_Bowen"]     
+        "Lucas_Tolentino Coelho de Lima":["Jarrod_Bowen"],
+        "Mohamed_Salah":["Cody_Gakpo","Luis_Díaz" ]      
     }
     
     relevant_players["name"] = relevant_players["name"].apply(lambda n: name_map.get(n, n))
