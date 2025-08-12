@@ -232,7 +232,9 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
         "Anthony_Gordon":["Alexander_Isak","Jacob_Murphy","Harvey_Barnes"],   
         "Igor_Thiago Nascimento Rodrigues":["Yoane_Wissa","Bryan_Mbeumo"],
         "Lucas_Tolentino Coelho de Lima":["Jarrod_Bowen"],
-        "Mohamed_Salah":["Cody_Gakpo","Luis_Díaz" ]      
+        "Mohamed_Salah":["Cody_Gakpo","Luis_Díaz" ],
+        "Eberechi_Eze":["Romain_Esse"],
+        "Ismaïla_Sarr":["Romain_Esse"],
     }
     
     relevant_players["name"] = relevant_players["name"].apply(lambda n: name_map.get(n, n))
