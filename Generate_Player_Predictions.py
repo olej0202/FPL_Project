@@ -14,6 +14,7 @@ from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.models import load_model
 from tensorflow.keras.models import load_model
 from tensorflow.keras.losses import MeanSquaredError
+import tensorflow as tf
 from sklearn.svm import SVR
 import torch
 import torch.nn as nn
@@ -408,81 +409,160 @@ def XGB(position,position2,column_list,predlength):
 def Generate_LSTM_preds(pred,column_list,predlength):
     if(pred in ["GC","Fantasy","bps","CBI"]):
         return 0
-    data=pd.read_csv("Player_Prediction_set.csv").iloc[:,1:]
-    data2=pd.read_csv("ML_training2.csv").iloc[:,1:]
-    data2["opposition_xg"] = data2.apply(lambda row: row[22] if row[18] else row[20], axis=1)
-    data2["opposition_xgc"] = data2.apply(lambda row: row[23] if row[18] else row[21], axis=1)
-    data["opposition_xg"]=data["played_XG"].values
-    data["opposition_xgc"]=data["played_XGC"].values
-
-    if(pred=="GOALS"):
-        features=["opposition_xgc","Own_Attacking_form","XG_slope","rolling_shots",
-              "minutes","rolling_Threat","rolling_XG_historic","Rolling_adjusted_XG_form","rolling_Adjusted_XG_historic"]
-        features_test=["opposition_xgc","Own_Attacking_form","XG_slope","rolling_shots",
-              "minutes","rolling_Threat","rolling_XG_historic","Rolling_adjusted_XG_form","rolling_Adjusted_XG_historic"]
-        target="expected_goals" 
-        model_path="DNN_XG.pt"
-        
-    if(pred=="Assist"):
-        features=["opposition_xgc",
-               "Own_Attacking_form","Rolling_creativity", "Rolling_adjusted_XA2","Cluster",
-               "rolling_XA_historic","minutes","rolling_key_passes","XA_slope"]
-        features_test=["opposition_xgc",
-               "Own_Attacking_form","Rolling_creativity", "Rolling_adjusted_XA","Cluster",
-               "rolling_XA_historic","minutes","rolling_key_passes","XA_slope"]
-        target="expected_assists"
-        model_path="DNN_XA.pt"
-
-    scaler_data=data2[features]
-    scaler = StandardScaler()
-    train_df_scaled = scaler.fit_transform(scaler_data)
-    
-    
-    unique_players=data["name"].unique()
-    
     column_list = ["Name", "pred", "position", "GW","opp_stat" ]
 
+    time_df=pd.read_csv("ML_training2.csv").iloc[:,1:]
+    
+    df=time_df.copy()
+    df["opposition_xg"] = df.apply(lambda row: row[22] if row[18] else row[20], axis=1)
+    df["opposition_xgc"] = df.apply(lambda row: row[23] if row[18] else row[21], axis=1)
 
-    """model = DeepNN(input_dim)
-    model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))  # use 'cuda' if on GPU
-    model.eval()"""
+    if(pred=="GOALS"):
+        time_cols=["name", "time","expected_goals", "opposition_xgc","minutes", "Own_Attacking_form", "rolling_Adjusted_XG_historic"]
+        lagged_cols=["expected_goals", "opposition_xgc"]
+        aux_cols = ["minutes", "Own_Attacking_form", "rolling_Adjusted_XG_historic", "opposition_xgc"]
+        target_col = "expected_goals"
+
+        features=["opposition_xgc","Own_Attacking_form","XG_slope","rolling_shots",
+                  "minutes","rolling_Threat","rolling_XG_historic","Rolling_adjusted_XG_form","rolling_Adjusted_XG_historic"]
+        features_test=["opposition_xgc","Own_Attacking_form","XG_slope","rolling_shots",
+                  "minutes","rolling_Threat","rolling_XG_historic","Rolling_adjusted_XG_form","rolling_Adjusted_XG_historic"]
+        model_path="DNN_XG.pt"
+
+        model_path_time=model = "DNN_XG_2.keras"
+
+    if(pred=="Assist"):
+        time_cols=["name", "time","expected_assists", "opposition_xgc","minutes", "Own_Attacking_form", "rolling_Adjusted_XA_historic"]
+        lagged_cols=["expected_assists", "opposition_xgc"]
+        aux_cols = ["minutes", "Own_Attacking_form", "rolling_Adjusted_XA_historic", "opposition_xgc"]
+        target_col = "expected_assists"
+
+        features=["opposition_xgc",
+                   "Own_Attacking_form","Rolling_creativity", "Rolling_adjusted_XA2","Cluster",
+                   "rolling_XA_historic","minutes","rolling_key_passes","XA_slope"]
+        features_test=["opposition_xgc",
+                   "Own_Attacking_form","Rolling_creativity", "Rolling_adjusted_XA","Cluster",
+                   "rolling_XA_historic","minutes","rolling_key_passes","XA_slope"]
+        model_path="DNN_XA.pt"
+
+        model_path_time=model = "DNN_XA_2.keras"
+
+
+
+    train_df_time = df[time_cols].copy()
+
+    lags_n=10+1
+
+    train_df_time = train_df_time.sort_values(["name", "time"])
+
+    # make sure the two series are numeric
+    for col in lagged_cols:
+        train_df_time[col] = pd.to_numeric(train_df_time[col], errors="coerce")
+
+    g = train_df_time.groupby("name", group_keys=False)
+
+    # build lags/leads for k in [-1, 1..15] (skip k=0)
+    new_cols = []
+    for k in range(-1, lags_n):
+        if k == 0:
+            continue
+        suffix = f"lead{abs(k)}" if k < 0 else f"lag{k}"
+        for col in lagged_cols:
+            out_col = f"{col}_{suffix}"
+            train_df_time[out_col] = g[col].shift(k)  # k<0 = lead, k>0 = lag
+            new_cols.append(out_col)
+
+    # Option A (simple): set any NaNs from shifting to 0
+    train_df_time[new_cols] = train_df_time[new_cols].fillna(0)
+    lag_cols = (
+        [f"{lagged_cols[0]}_lag{k}" for k in range(1, lags_n)] +
+        [f"{lagged_cols[1]}_lag{k}" for k in range(1, lags_n)]
+    )
+
+
+    scaler_lags = StandardScaler().fit(train_df_time[lag_cols])
+    scaler_aux  = StandardScaler().fit(train_df_time[aux_cols])
+
+
+    new_data=pd.read_csv("Player_Prediction_set.csv")
+    new_data["opposition_xgc"] = new_data["played_XGC"].values
+
+    train_df_now = df.copy()
+    DNN_scaler_data=train_df_now[features]
+    DNN_scaler = StandardScaler().fit(DNN_scaler_data)
+
+
+    import numpy as np
+    from sklearn.metrics import mean_squared_error
+    # config
+    names1 = new_data["name"].unique()
+    # choose a time column for sorting
+    time_col = 'kickoff_time' if 'kickoff_time' in train_df_time.columns else ('time' if 'time' in train_df_time.columns else ('GW' if 'GW' in train_df_time.columns else None))
+
+    errors = []
     try:
-        model = torch.load(model_path, map_location=torch.device('cpu'))
+        DNN_model = torch.load(model_path, map_location=torch.device('cpu'))
     except:
         input_dim = len(features)  # or features_test if needed
-        model = DeepNN(input_dim)
-        model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
-    model.eval()
+        DNN_model = DeepNN(input_dim)
+        DNN_model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
+    DNN_model.eval()
     total_preds=[]
+    for name in names1:
+        print(name)
+        # pick rows for this player
+        new_player_data=new_data.loc[new_data['name'] == name].copy()
 
-    for k in range(len(unique_players)):
-        pred_player_df=[]
-        player_name=unique_players[k]
-        df=data[data["name"]==unique_players[k]]
-        test_data=df[features_test].copy()
-        test_data.columns = scaler_data.columns
-
-        for g in range(len(test_data)):
+        new_player_pred_data=new_player_data[aux_cols]    
+        player_df = train_df_time.loc[train_df_time['name'] == name].copy().tail(1)
+        if(len(player_df)<1):
+            test_data=new_player_data[features_test].copy()
+            test_data.columns = DNN_scaler_data.columns
             preds=[]
-            row=test_data.iloc[[g]]
-            row2=df.iloc[[g]]
-            preds.append(player_name)
-            position=row2["position"].values[0]
-            gw=row2["GW"].values[0]
-            val_series_scaled = scaler.transform(row)
-            X_val_tensor = torch.tensor(val_series_scaled, dtype=torch.float32)
-            with torch.no_grad():
-                predictions = model(X_val_tensor).numpy().flatten()
-            preds.append(predictions[0])
-            preds.append(position)
-            preds.append(gw)
-            preds.append(row2["played_XGC"].values[0])
+            for g in range(len(test_data)):
+                row=test_data.iloc[[g]]
+                row2=new_player_data.iloc[[g]]
+                val_series_scaled = DNN_scaler.transform(row)
+                X_val_tensor = torch.tensor(val_series_scaled, dtype=torch.float32)
+                with torch.no_grad():
+                    predictions = DNN_model(X_val_tensor).numpy().flatten()
+                preds.append(predictions[0])
+            print("pred")
+            print(preds)
+        else:
 
-            total_preds.append(preds)
-            
+            row=player_df[lag_cols].to_numpy() 
+
+            new_player_pred_data.loc[:, lag_cols] = np.repeat(row, len(new_player_pred_data), axis=0)
+
+
+
+            # take last N rows
+            Xl = new_player_pred_data[lag_cols].fillna(0).values.astype(np.float32)
+            Xa = new_player_pred_data[aux_cols].fillna(0).values.astype(np.float32)
+            y_true = [0]*len(new_player_pred_data)
+            # scale using the SAME scalers from training
+            Xl_s = scaler_lags.transform(Xl)
+            Xa_s = scaler_aux.transform(Xa)
+
+            time_model= tf.keras.models.load_model(model_path_time)
+            preds = time_model.predict([Xl_s, Xa_s], verbose=0).ravel()
+            print("pred")
+            print(preds)
+        for j in range(len(preds)):
+            pred_list=[]
+            pred_list.append(name)
+            pred_list.append(preds[j])
+            pred_list.append(new_player_data["position"].values[0])
+            pred_list.append(new_player_data["GW"].values[j])
+            pred_list.append(new_player_data["played_XGC"].values[j])
+
+            total_preds.append(pred_list)
+
     pred_all_players=pd.DataFrame(total_preds,columns=column_list)
 
-    pred_all_players.to_csv(f"DNN_{pred}.csv") 
+    pred_all_players.to_csv(f"DNN_{pred}2.csv")
+
     
 def Generate_point_predictions():
     players=pd.read_csv("Player_prediction_set.csv").iloc[:,1:]
@@ -552,17 +632,17 @@ def Generate_point_predictions():
 
         for i in range(len(player_data)):
             try:
-                goals.append(((xgb_goals_player["pred"].values[i]*0.25
+                goals.append(((xgb_goals_player["pred"].values[i]*0.2
                          +stat_goals_player["pred"].values[i]*0.4
-                         +DNN_goals_player["pred"].values[i]*0.35))*overscore)
+                         +DNN_goals_player["pred"].values[i]*0.4))*overscore)
             except:
                 goals.append(0)
 
             try:
 
-                assist.append(((xgb_assist_player["pred"].values[i]*0.25
+                assist.append(((xgb_assist_player["pred"].values[i]*0.2
                                     +stat_assist_player["pred"].values[i]*0.4
-                                    +DNN_assist_player["pred"].values[i]*0.35))*overassist)
+                                    +DNN_assist_player["pred"].values[i]*0.4))*overassist)
             except:
                 assist.append(0)
 
