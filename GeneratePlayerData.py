@@ -339,6 +339,9 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
         
         #if endre stats for nye spillere på et lag
         exclude_columns=["kickoff_time", "season", "position","Team","name","gamepos","CBI"]
+        overscore=player_row["Average_Overscore"].values[0]
+        overassist=player_row["Average_OverAssist"].values[0]
+
         columns_to_average = [col for col in player_row.columns if col not in exclude_columns]
         if name in new_team_cluster:
             members = new_team_cluster[name]
@@ -367,6 +370,9 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
                 player_row["opp_code"] = opp_code[i]
                 player_row["average_minutes"] = minutes
                 player_row["Team"]=team_code
+                player_row["Average_Overscore"]=overscore
+                player_row["Average_OverAssist"]=overassist
+                
         
                 
             

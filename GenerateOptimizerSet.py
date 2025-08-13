@@ -36,7 +36,8 @@ def GenerateOptimizeSet(Current_data_path):
     merged_df.drop(columns=['Name2'], inplace=True)
     
     visual_df=merged_df.copy()
-    visual_df['offset'] = visual_df['news'].apply(process_news)
+    #visual_df['offset'] = visual_df['news'].apply(process_news)
+    visual_df['offset'] = 1
     visual_df["selected"] = visual_df["selected"]/100
     visual_df["value"] = visual_df["value"]/10
     visual_df["minutes_multiplier"] = np.minimum(1, visual_df['average_minutes'] / 85)
