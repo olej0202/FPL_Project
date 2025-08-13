@@ -422,12 +422,14 @@ def Generate_LSTM_preds(pred,column_list,predlength):
         lagged_cols=["expected_goals", "opposition_xgc"]
         aux_cols = ["minutes", "Own_Attacking_form", "rolling_Adjusted_XG_historic", "opposition_xgc"]
         target_col = "expected_goals"
+        n_lags=13
 
         features=["opposition_xgc","Own_Attacking_form","XG_slope","rolling_shots",
                   "minutes","rolling_Threat","rolling_XG_historic","Rolling_adjusted_XG_form","rolling_Adjusted_XG_historic"]
         features_test=["opposition_xgc","Own_Attacking_form","XG_slope","rolling_shots",
                   "minutes","rolling_Threat","rolling_XG_historic","Rolling_adjusted_XG_form","rolling_Adjusted_XG_historic"]
         model_path="DNN_XG.pt"
+        
 
         model_path_time=model = "DNN_XG_2.keras"
 
@@ -446,12 +448,13 @@ def Generate_LSTM_preds(pred,column_list,predlength):
         model_path="DNN_XA.pt"
 
         model_path_time=model = "DNN_XA_2.keras"
+        n_lags=10
 
 
 
     train_df_time = df[time_cols].copy()
 
-    lags_n=10
+    lags_n=n_lags
 
     train_df_time = train_df_time.sort_values(["name", "time"])
 
@@ -514,7 +517,7 @@ def Generate_LSTM_preds(pred,column_list,predlength):
 
         new_player_pred_data=new_player_data[aux_cols]    
         player_df = train_df_time.loc[train_df_time['name'] == name].copy().tail(1)
-        if(len(player_df)<1):
+        if(len(player_df)<1 or new_player_data["position"].values[0]=='DEF'):
             test_data=new_player_data[features_test].copy()
             test_data.columns = DNN_scaler_data.columns
             preds=[]
@@ -539,15 +542,23 @@ def Generate_LSTM_preds(pred,column_list,predlength):
             elif(name=='Maxence_Lacroix' and pred=="GOALS"):
                 new_player_pred_data.to_csv("Lacroix_debug.csv")
             # take last N rows
-            Xl = new_player_pred_data[lag_cols].fillna(0).values.astype(np.float32)
-            Xa = new_player_pred_data[aux_cols].fillna(0).values.astype(np.float32)
+            Xl = new_player_pred_data[lag_cols].fillna(-1).values.astype(np.float32)
+            Xa = new_player_pred_data[aux_cols].fillna(-1).values.astype(np.float32)
             y_true = [0]*len(new_player_pred_data)
             # scale using the SAME scalers from training
             Xl_s = scaler_lags.transform(Xl)
             Xa_s = scaler_aux.transform(Xa)
 
             time_model= tf.keras.models.load_model(model_path_time)
-            preds = time_model.predict([Xl_s, Xa_s], verbose=0).ravel()
+            
+            outs = time_model.predict([Xl_s, Xa_s], verbose=0)
+
+
+            if isinstance(outs, (list, tuple)) and len(outs) == 2:
+                p_hat, mu_hat = outs
+                preds = (p_hat.ravel() * mu_hat.ravel())
+            else:
+                preds = outs.ravel()
 
         for j in range(len(preds)):
             pred_list=[]

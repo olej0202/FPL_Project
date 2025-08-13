@@ -234,8 +234,8 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
         "Lucas_Tolentino Coelho de Lima":["Jarrod_Bowen"],
         "Mohamed_Salah":["Cody_Gakpo","Luis_Díaz" ],
         "Eberechi_Eze":["Romain_Esse"],
-        "Ismaïla_Sarr":["Romain_Esse"],
-    }
+        "Ismaïla_Sarr":["Romain_Esse"], 
+        "Jeremie_Frimpong":["Andrew_Robertson","Pedro_Porro","Lucas_Digne"], }
     
     relevant_players["name"] = relevant_players["name"].apply(lambda n: name_map.get(n, n))
 
