@@ -451,7 +451,7 @@ def Generate_LSTM_preds(pred,column_list,predlength):
 
     train_df_time = df[time_cols].copy()
 
-    lags_n=10+1
+    lags_n=10
 
     train_df_time = train_df_time.sort_values(["name", "time"])
 
@@ -464,9 +464,8 @@ def Generate_LSTM_preds(pred,column_list,predlength):
     # build lags/leads for k in [-1, 1..15] (skip k=0)
     new_cols = []
     for k in range(-1, lags_n):
-        if k == 0:
-            continue
-        suffix = f"lead{abs(k)}" if k < 0 else f"lag{k}"
+
+        suffix = f"lead{abs(k)}" if k < 0 else f"lag{k+1}"
         for col in lagged_cols:
             out_col = f"{col}_{suffix}"
             train_df_time[out_col] = g[col].shift(k)  # k<0 = lead, k>0 = lag
@@ -475,8 +474,8 @@ def Generate_LSTM_preds(pred,column_list,predlength):
     # Option A (simple): set any NaNs from shifting to 0
     train_df_time[new_cols] = train_df_time[new_cols].fillna(0)
     lag_cols = (
-        [f"{lagged_cols[0]}_lag{k}" for k in range(1, lags_n)] +
-        [f"{lagged_cols[1]}_lag{k}" for k in range(1, lags_n)]
+        [f"{lagged_cols[0]}_lag{k+1}" for k in range(0, lags_n)] +
+        [f"{lagged_cols[1]}_lag{k+1}" for k in range(0, lags_n)]
     )
 
 
@@ -527,8 +526,7 @@ def Generate_LSTM_preds(pred,column_list,predlength):
                 with torch.no_grad():
                     predictions = DNN_model(X_val_tensor).numpy().flatten()
                 preds.append(predictions[0])
-            print("pred")
-            print(preds)
+
         else:
 
             row=player_df[lag_cols].to_numpy() 
@@ -536,7 +534,10 @@ def Generate_LSTM_preds(pred,column_list,predlength):
             new_player_pred_data.loc[:, lag_cols] = np.repeat(row, len(new_player_pred_data), axis=0)
 
 
-
+            if(name=='Ismaïla_Sarr' and pred=="GOALS" ):
+                new_player_pred_data.to_csv("Sarr_debug.csv")
+            elif(name=='Maxence_Lacroix' and pred=="GOALS"):
+                new_player_pred_data.to_csv("Lacroix_debug.csv")
             # take last N rows
             Xl = new_player_pred_data[lag_cols].fillna(0).values.astype(np.float32)
             Xa = new_player_pred_data[aux_cols].fillna(0).values.astype(np.float32)
@@ -547,8 +548,7 @@ def Generate_LSTM_preds(pred,column_list,predlength):
 
             time_model= tf.keras.models.load_model(model_path_time)
             preds = time_model.predict([Xl_s, Xa_s], verbose=0).ravel()
-            print("pred")
-            print(preds)
+
         for j in range(len(preds)):
             pred_list=[]
             pred_list.append(name)
@@ -561,7 +561,7 @@ def Generate_LSTM_preds(pred,column_list,predlength):
 
     pred_all_players=pd.DataFrame(total_preds,columns=column_list)
 
-    pred_all_players.to_csv(f"DNN_{pred}2.csv")
+    pred_all_players.to_csv(f"DNN_{pred}.csv")
 
     
 def Generate_point_predictions():
