@@ -2,6 +2,9 @@ import pandas as pd
 import joblib
 import numpy as np
 from datetime import datetime
+
+from GenerateConfig import Manual_team_offensive_adjustments, Manual_team_defensive_adjustments,Manual_NewPlayer_Adjustments,Manual_Player_Adjustments
+
 def Xmins(current_players):
     xmins=pd.read_csv("GenerateXmins.csv").iloc[:,1:]
     df=pd.read_csv(current_players)[["name"]]
@@ -109,10 +112,9 @@ def team_data(
     offense_cols=None,       # columns to scale for offense
     defense_cols=None,       # columns to scale for defense
 ):
-    off_factors = {94:0.9,2:0.9 }
-    def_factors = {94:1.15,11:1.1, 31:1.1,8:1.1 }
+    off_factors = Manual_team_offensive_adjustments
+    def_factors = Manual_team_defensive_adjustments
 
-    # sensible defaults; adjust to your schema
     if offense_cols is None:
         offense_cols = [
             "XGH","XGA","XG_avg","XG_slope",
@@ -218,24 +220,8 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
     "Alejandro_Garnacho Ferreyra":"Alejandro_Garnacho",
 }
     
-    new_players_cluster={
-        "Viktor_Gyökeres":["Alexander_Isak","Kai_Havertz","Yoane_Wissa"],
-        "Florian_Wirtz":["Mohamed_Salah","Cole_Palmer","Dominik_Szoboszlai","Alexis_Mac Allister", "Luis_Díaz"]
-        
-    }
-    new_team_cluster={
-        "Mohammed_Kudus":["Brennan_Johnson","Son_Heung-min","Dejan_Kulusevski"],
-        "Matheus_Santos Carneiro Da Cunha":["Bruno_Borges Fernandes","Alejandro_Garnacho Ferreyra","Amad_Diallo"],
-        "Bryan_Mbeumo":["Bruno_Borges Fernandes","Alejandro_Garnacho Ferreyra","Amad_Diallo"],
-        "Cole_Palmer":["Mohamed_Salah","Bukayo_Saka"],
-        "Ollie_Watkins":["Erling_Haaland","Yoane_Wissa"],
-        "Anthony_Gordon":["Alexander_Isak","Jacob_Murphy","Harvey_Barnes"],   
-        "Igor_Thiago Nascimento Rodrigues":["Yoane_Wissa","Bryan_Mbeumo"],
-        "Lucas_Tolentino Coelho de Lima":["Jarrod_Bowen"],
-        "Mohamed_Salah":["Cody_Gakpo","Luis_Díaz" ],
-        "Eberechi_Eze":["Romain_Esse"],
-        "Ismaïla_Sarr":["Romain_Esse"], 
-        "Jeremie_Frimpong":["Andrew_Robertson","Pedro_Porro","Lucas_Digne"], }
+    new_players_cluster=Manual_NewPlayer_Adjustments
+    new_team_cluster=Manual_Player_Adjustments
     
     relevant_players["name"] = relevant_players["name"].apply(lambda n: name_map.get(n, n))
 
