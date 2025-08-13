@@ -517,7 +517,7 @@ def Generate_LSTM_preds(pred,column_list,predlength):
 
         new_player_pred_data=new_player_data[aux_cols]    
         player_df = train_df_time.loc[train_df_time['name'] == name].copy().tail(1)
-        if(len(player_df)<1 or new_player_data["position"].values[0]=='DEF'):
+        if(len(player_df)<1):
             test_data=new_player_data[features_test].copy()
             test_data.columns = DNN_scaler_data.columns
             preds=[]
