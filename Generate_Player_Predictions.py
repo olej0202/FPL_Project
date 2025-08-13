@@ -78,7 +78,7 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
 
             xggc=df["opposition_xgc"].values[h]
 
-            attacking_factor=(df["opposition_xgc"].values[h]+team_xg)*0.5
+            attacking_factor=(df["opposition_xgc"].values[h]*0.4+team_xg*0.6)
             defensive_factor=(team_CS)
             if(pred_variable=="GOALS"):
                player_preds.append((df['Rolling_adjusted_XG'].values[h]*0.5+df['rolling_Adjusted_XG_historic'].values[h]*0.5)*(attacking_factor))
@@ -624,11 +624,11 @@ def Generate_point_predictions():
         
         stat_cbi_player= stat_cbi[stat_cbi["Name"]==player].sort_values(by=["GW", "opp_stat"])
 
-        overscore=max(0.9,player_data["Average_Overscore"].values[0])
+        overscore=max(0.85,player_data["Average_Overscore"].values[0])
         overscore=min(1.15,overscore)
 
-        overassist=max(0.9,player_data["Average_OverAssist"].values[0])
-        overassist=min(1.2,overassist)
+        overassist=max(0.85,player_data["Average_OverAssist"].values[0])
+        overassist=min(1.3,overassist)
         
         historic_xg=player_data["rolling_XG_historic"].values[0]
         historic_xa=player_data["rolling_XA_historic"].values[0]
