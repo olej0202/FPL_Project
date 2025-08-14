@@ -512,14 +512,14 @@ const fixtureData = useMemo(() => {
     <Line
       type="monotone"
       dataKey={playerFilter}
-      name={playerFilter}
+      name={playerFilter.replace(/_/g, " ")}
       stroke="#fff"
     />
     {comparePlayer && (
       <Line
         type="monotone"
         dataKey={comparePlayer}
-        name={comparePlayer}
+        name={comparePlayer.replace(/_/g, " ")}
 
         stroke="#FFD700"
       />

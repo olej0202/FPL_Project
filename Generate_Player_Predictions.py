@@ -418,8 +418,8 @@ def Generate_LSTM_preds(pred,column_list,predlength):
     df["opposition_xgc"] = df.apply(lambda row: row[23] if row[18] else row[21], axis=1)
 
     if(pred=="GOALS"):
-        time_cols=["name", "time","expected_goals", "opposition_xgc","minutes", "Own_Attacking_form", "rolling_Adjusted_XG_historic"]
-        lagged_cols=["expected_goals", "opposition_xgc"]
+        time_cols=["name","Threat", "time","expected_goals", "opposition_xgc","minutes", "Own_Attacking_form", "rolling_Adjusted_XG_historic"]
+        lagged_cols=[ "opposition_xgc","Threat"]
         aux_cols = ["minutes", "Own_Attacking_form", "rolling_Adjusted_XG_historic", "opposition_xgc"]
         target_col = "expected_goals"
         n_lags=13
@@ -434,8 +434,8 @@ def Generate_LSTM_preds(pred,column_list,predlength):
         model_path_time=model = "DNN_XG_2.keras"
 
     if(pred=="Assist"):
-        time_cols=["name", "time","expected_assists", "opposition_xgc","minutes", "Own_Attacking_form", "rolling_Adjusted_XA_historic"]
-        lagged_cols=["expected_assists", "opposition_xgc"]
+        time_cols=["name","creativity", "time","expected_assists", "opposition_xgc","minutes", "Own_Attacking_form", "rolling_Adjusted_XA_historic"]
+        lagged_cols=["opposition_xgc","creativity"]
         aux_cols = ["minutes", "Own_Attacking_form", "rolling_Adjusted_XA_historic", "opposition_xgc"]
         target_col = "expected_assists"
 
@@ -517,7 +517,7 @@ def Generate_LSTM_preds(pred,column_list,predlength):
 
         new_player_pred_data=new_player_data[aux_cols]    
         player_df = train_df_time.loc[train_df_time['name'] == name].copy().tail(1)
-        if(len(player_df)<1):
+        if(len(player_df)<5):
             test_data=new_player_data[features_test].copy()
             test_data.columns = DNN_scaler_data.columns
             preds=[]

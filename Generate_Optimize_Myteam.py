@@ -134,16 +134,18 @@ def get_my_team(team_id=1,Last_GW=0):
 
 
 
-def optimize_my_team(team_id=1,wildcard_round=40, bb_round=1,Last_GW=0,banned_list=[],GW_list=["0","1", "2","3","4","5","6","7","8"], current_player_path="Raw_Data_25/current_players.csv"):
+def optimize_my_team(team_id=1,wildcard_round=40, bb_round=40,Last_GW=0,banned_list=[],GW_list=["0","1", "2","3","4","5","6","7","8"], current_player_path="Raw_Data_25/current_players.csv"):
 
     current_players = pd.read_csv(current_player_path)
-    
-
+    is_first=False
+    if "1" in GW_list:
+        is_first=True
 
     team_id=team_id
 
     wildcard_round = wildcard_round  # Gameweek 3 (Index t=2)
-    wildcard_round = 1  # Gameweek 3 (Index t=2)
+    if(is_first):
+        wildcard_round = 1  # Gameweek 3 (Index t=2)
     bench_points_gw=bb_round
     Last_GW=Last_GW
     hit=0
@@ -169,23 +171,26 @@ def optimize_my_team(team_id=1,wildcard_round=40, bb_round=1,Last_GW=0,banned_li
     
     
     """**********************************************************"""
-    #initial_saved,squad=get_my_team(team_id,Last_GW=36)
-    initial_saved=1
-    squad=pd.read_csv("Free_hit_team.csv")
-    squad["Full_Name"]=squad["Name"].values
-    
-    
-
-    """url = f"https://fantasy.premierleague.com/api/entry/{team_id}/"
-    response = requests.get(url)
-    if response.status_code == 200:
-        resonsep_data = response.json()
-    
+    if(is_first):
+        initial_saved=1
+        squad=pd.read_csv("Free_hit_team.csv")
+        squad["Full_Name"]=squad["Name"].values
+        money_in_bank_init=0 ## Fjern
+        
+        
     else:
-        print(f"Error fetching data (Status Code: {response.status_code})")
+        initial_saved,squad=get_my_team(team_id,Last_GW=Last_GW)
+        url = f"https://fantasy.premierleague.com/api/entry/{team_id}/"
+        response = requests.get(url)
+        if response.status_code == 200:
+            resonsep_data = response.json()
+    
+        else:
+            print(f"Error fetching data (Status Code: {response.status_code})")
 
-    money_in_bank_init = resonsep_data.get("last_deadline_bank", 0)/10  # Convert to actual value"""
-    money_in_bank_init=0 ## Fjern
+        money_in_bank_init = resonsep_data.get("last_deadline_bank", 0)/10
+
+    
 
 
     players = data['name'].tolist()
@@ -194,22 +199,21 @@ def optimize_my_team(team_id=1,wildcard_round=40, bb_round=1,Last_GW=0,banned_li
     for t in range (len(squad)):
         name=squad["Full_Name"].values[t]
         initial_squad.append(players.index(name))
-    """
-    initial_squad=[players.index('Ezri_Konsa Ngoyo'),players.index('Anthony_Gordon'),players.index('Bukayo_Saka'),players.index('Ibrahima_Konaté'),
-               players.index('Ismaïla_Sarr'),players.index('David_Raya Martin'),players.index('Omar_Marmoush'),players.index('Tom_King'),
-               players.index('Joško_Gvardiol'),players.index('Daniel_Muñoz'),players.index('Jurriën_Timber'),players.index('Jacob_Murphy'),
-               players.index('Jean-Philippe_Mateta'),players.index('Alexander_Isak'),players.index('Mohamed_Salah')]
-    """
+
     
     list1 = costs.copy()
-    """selling_cost = squad["selling_price"].values
-    budget_amount=sum(selling_cost)+money_in_bank_init
-
-
-    for i in range(len(initial_squad)):
-        list1[initial_squad[i]] = selling_cost[i]"""
+    
+    if( is_first):
+        budget_amount=100 ##Fjern
         
-    budget_amount=100 ##Fjern
+    else:
+        selling_cost = squad["selling_price"].values
+        budget_amount=sum(selling_cost)+money_in_bank_init
+
+
+        for i in range(len(initial_squad)):
+            list1[initial_squad[i]] = selling_cost[i]
+        
 
     positions = data['position'].tolist()
     costs = data['value'].tolist()
@@ -345,6 +349,9 @@ def optimize_my_team(team_id=1,wildcard_round=40, bb_round=1,Last_GW=0,banned_li
     records = []
     # Output
     print(f"Status: {model.status}")
+    if(model.status==-1):
+        return pd.DataFrame()
+        
     for t in range(1, optimize_range):
         print(f"\nGameweek {t+1} Squad:")
         for i in range(num_players):
@@ -410,7 +417,6 @@ def optimize_my_team(team_id=1,wildcard_round=40, bb_round=1,Last_GW=0,banned_li
 
     # Final structured DataFrame
     status_df = pd.DataFrame(records)
-    print(status_df)
     return status_df
     
     

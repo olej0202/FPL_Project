@@ -37,7 +37,7 @@ export default function App() {
     { to: "/Player_Analytics", icon: User, label: "Player Analytics" },
     { to: "/TeamPredictionsFuture", icon: Calendar, label: "Fixture Ticker" },
     { to: "/Score_Predictions", icon: Trophy, label: "Score Predictions" },
-    { to: "/News", icon: Newspaper, label: "News Blog" },
+    { to: "/News", icon: Newspaper, label: "PL News" },
   ];
 
    const menuItems = [

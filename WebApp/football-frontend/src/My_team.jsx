@@ -225,15 +225,25 @@ export default function MyTeamOptimize() {
   </div>
   </div>
 )}
+{data && (
+        
+        <div className="mt-2 flex justify-center">
+  <p className="max-w-md text-center text-xs sm:text-sm leading-tight text-gray-600 dark:text-gray-300">
+    Click a player to view stats, or add them to <span className="font-medium">Unwanted</span> and optimize again.
+  </p>
+</div>
+      )}
 
 
 
       {/* Squad Pitch */}
       {data && (
+        
         <div
           className="w-full max-w-[400px] aspect-[1/2] bg-no-repeat bg-cover bg-center border border-white rounded-lg px-2 py-1 relative"
           style={{ backgroundImage: `url(${pitch})` }}
         >
+          
           <div className="flex flex-col justify-between h-[500px] pt-0 space-y-0 width-full">
             <PlayerRow
               players={starters.filter((p) => p.position === "GKP")}

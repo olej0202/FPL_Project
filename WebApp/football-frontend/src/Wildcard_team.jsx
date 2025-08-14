@@ -47,10 +47,13 @@ export default function WildcardTeam() {
   const getPlayersByPosition = (pos) => teamPlayers.filter(p => p.position === pos);
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col items-center py-10 px-1 space-y-10">
+    <div className="min-h-screen bg-black text-white flex flex-col items-center py-4 px-1 space-y-3">
       <h1 className="text-3xl md:text-4xl font-bold text-center mb-4">
         AI Optimized Wildcard Team GW {minGW}
       </h1>
+      <span className="mt-0 text-center font-small text-xs sm:text-sm leading-tight">
+              Click on players to get stats
+            </span>
 
       {/* Team Pitch */}
       <div
@@ -73,6 +76,8 @@ export default function WildcardTeam() {
                   </div>
                 )}
               </div>
+
+              
 
       {/* Transfer History */}
 {/* Transfer History */}

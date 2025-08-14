@@ -3,7 +3,7 @@ import joblib
 import numpy as np
 from datetime import datetime
 
-from GenerateConfig import Manual_team_offensive_adjustments, Manual_team_defensive_adjustments,Manual_NewPlayer_Adjustments,Manual_Player_Adjustments
+from GenerateConfig import Manual_team_offensive_adjustments, Manual_team_defensive_adjustments,Manual_NewPlayer_Adjustments,Manual_Player_Adjustments,NEW_TEAMS
 
 def Xmins(current_players):
     xmins=pd.read_csv("GenerateXmins.csv").iloc[:,1:]
@@ -141,14 +141,15 @@ def team_data(
 
     average_team_codes = [13, 90, 102, 40, 49]
     average_df = teams_dataset[teams_dataset["code"].isin(average_team_codes)]
-
-    if missing_codes:
-        numeric_cols = [
+    numeric_cols = [
             "XG","XGC","was_home","opponent","Clean_Sheet","Result",
             "Threat","Threat_against","XG_DEF","XG_MID","XG_FORWARD",
             "XGA","XGCA","XGH","XGCH","XG_avg","XGC_avg",
             "Rolling_Threat","Rolling_Threat_Against","XG_slope","XGC_slope","Elo_Rating"
         ]
+    
+    if missing_codes:
+        
         col_means = average_df[numeric_cols].mean(numeric_only=True)
 
         synthetic_rows = []
@@ -164,8 +165,29 @@ def team_data(
                 if col in col_means:
                     synthetic[col] = col_means[col]
             synthetic_rows.append(synthetic)
+    
 
         teams_dataset = pd.concat([teams_dataset, pd.DataFrame(synthetic_rows)], ignore_index=True)
+    if NEW_TEAMS:
+        # 1) Normalize key types so .isin works
+        new_codes = {str(c) for c in NEW_TEAMS}
+        codes = teams_dataset["code"].astype(str)
+        mask = codes.isin(new_codes)
+    
+        if not mask.any():
+            print("No matching team codes in teams_dataset")
+        else:
+            # 2) Use only columns present in BOTH frames
+            cols = [c for c in numeric_cols if c in average_df.columns and c in teams_dataset.columns]
+    
+            # 3) Coerce to numeric before taking means (avoids all-NaN means)
+            avg_num = average_df[cols].apply(pd.to_numeric, errors="coerce")
+            col_means = avg_num.mean()               # index = cols
+            col_means = col_means.reindex(cols)      # keep order
+            col_means = col_means.fillna(0)          # or choose another fallback
+    
+            # 4) Assign (broadcast to all masked rows)
+            teams_dataset.loc[mask, cols] = col_means.values
 
     # ---- APPLY TEAM-SPECIFIC MULTIPLIERS ----
     def _apply_factors(df, factors, cols):
