@@ -98,7 +98,9 @@ def GenerateOptimizeSet(Current_data_path):
 
     
 
-    optimized_player_set['offset'] = optimized_player_set['news'].apply(process_news)
+    #optimized_player_set['offset'] = optimized_player_set['news'].apply(process_news)
+    optimized_player_set['offset'] = 1
+
     optimized_player_set["selected"] = optimized_player_set["selected"]/100
     optimized_player_set["value"] = optimized_player_set["value"]/10
     optimized_player_set["minutes_multiplier"] = np.minimum(1, optimized_player_set['average_minutes'] / 80)
