@@ -3,6 +3,7 @@ import os
 import requests
 import json
 import pandas as pd
+import numpy as np
 
 def fixtures(season):
     url = "https://fantasy.premierleague.com/api/fixtures/"
@@ -28,7 +29,11 @@ def Fulload(season):
         response = requests.get(full_url)
         data = json.loads(response.text)
         df=pd.DataFrame(data['history'])
-        replicated_id_df = pd.concat([id_df] * len(df), ignore_index=True)
+        replicated_id_df = pd.DataFrame(
+            np.repeat(id_df.to_numpy(), len(df), axis=0),
+            columns=id_df.columns,
+            index=df.index  # align indices to df
+        )
         df[["id", "second_name", "team","first_name","code","news","element_type","team_code"]]=replicated_id_df[["id", "second_name", "team","first_name","code","news","element_type","team_code"]]
         df["Full_Name"]=df["first_name"]+"_"+df["second_name"]
         full_df=pd.concat([full_df, df], axis=0, ignore_index=True)

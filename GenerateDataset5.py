@@ -282,6 +282,8 @@ def XP_new(df,home,n_matches):
     return XP
 def get_understat(player_df,Own_team_name,pos,element_list,season_list,position):
     
+    directory_path25 = 'Raw_Data_25/Understat_data_with_element.csv'
+    
     directory_path24 = 'Raw_Data_24/Understat_data_with_element.csv'
 
     directory_path23 = 'Raw_Data_23/Understat_data_with_element.csv'
@@ -308,12 +310,21 @@ def get_understat(player_df,Own_team_name,pos,element_list,season_list,position)
     
     filtered_df=pd.DataFrame()
     try:
-        season_df=player_df[player_df["season"]=='25']
-        element=season_df["element"].values[0]
-        data_24 = pd.read_csv(directory_path24)
-        filtered_df=data_24[data_24["element"]==element]
+        season_df=player_df[player_df["season"]=='26']
+        element=season_df["code_x"].values[0]
+        data_25 = pd.read_csv(directory_path25)
+        filtered_df=data_25[data_25["element"]==element]
     except:
         filtered_df=pd.DataFrame()
+    
+    if(len(filtered_df)<1):
+        try:
+            season_df=player_df[player_df["season"]=='25']
+            element=season_df["element"].values[0]
+            data_24 = pd.read_csv(directory_path24)
+            filtered_df=data_24[data_24["element"]==element]
+        except:
+            filtered_df=pd.DataFrame()
     
     if(len(filtered_df)<1):
         try:
@@ -390,10 +401,12 @@ def rolling_mode(series):
     return  m.mode  # Return the first mode value
 
 def Generate_team_data():
+    df_26=pd.read_csv("Raw_Data_25/Fantasy_season_2025_data.csv")
     df_25=pd.read_csv("Raw_Data_24/Fantasy_season_2024_data.csv")
     df_24=pd.read_csv("Raw_Data_23/Fantasy_season_2023_data.csv")
     df_23=pd.read_csv("Raw_Data_22/Fantasy_season_2022_data.csv")
-
+    
+    team_26=pd.read_csv("Raw_Data_25/current_teams.csv")
     team_25=pd.read_csv("Fantasy-Premier-League/Fantasy-Premier-League/data/2024-25/teams2.csv")
     team_24=pd.read_csv("Fantasy-Premier-League/Fantasy-Premier-League/data/2023-24/teams2.csv")
     team_23=pd.read_csv("Fantasy-Premier-League/Fantasy-Premier-League/data/2022-23/teams2.csv")
@@ -403,16 +416,19 @@ def Generate_team_data():
     XGCAs=[]
     XGCHs=[]
     full_team_data=pd.DataFrame()
-    for i in range(3):
+    for i in range(4):
         if(i==0):
             data=df_23
             code_data=team_23
         elif(i==1):
             data=df_24
             code_data=team_24
-        else:
+        elif(i==2):
             data=df_25
             code_data=team_25
+        else:
+            data=df_26
+            code_data=team_26
             
         teams=data["team"].unique()
 
@@ -898,6 +914,10 @@ def main_Transform():
     Generate_team_data()
     team_transformed2()
     
+    df_26=pd.read_csv("Raw_Data_25/Fantasy_season_2025_data.csv").iloc[:,1:]
+    df_26["name"]=df_26["first_name"]+" "+df_26["second_name"]
+    df_26["season"]='26'
+    
     df_25=pd.read_csv("Raw_Data_24/Fantasy_season_2024_data.csv").iloc[:,1:]
     df_25["name"]=df_25["first_name"]+" "+df_25["second_name"]
     #df_25["name"]=df_25["first_name"]+" "+df_25["second_name"]
@@ -907,7 +927,7 @@ def main_Transform():
     df_23=pd.read_csv("Raw_Data_22/Fantasy_season_2022_data.csv").iloc[:,1:]
     df_23["season"]='23'
 
-    df_all = pd.concat([df_25,df_24, df_23], ignore_index=True)
+    df_all = pd.concat([df_26,df_25,df_24, df_23], ignore_index=True)
     df_all["name"] = df_all["name"].str.replace(" ", "_", n=1, regex=False)
     
     df_all.to_csv("Fantasy_Merged.csv")
@@ -929,11 +949,17 @@ def main_Transform():
     "Marcos_Senesi Barón":          "Marcos_Senesi",
     "Raúl_Jiménez Rodríguez":       "Raúl_Jiménez",
     "Robert_Lynch Sánchez":         "Robert_Sánchez",
-    "Rodrigo_'Rodri' Hernandez Cascante": "Rodrigo 'Rodri'_Hernandez",
+    "Rodrigo_'Rodri' Hernandez Cascante": "Rodrigo_Hernandez",
     "Rúben_dos Santos Gato Alves Dias":   "Rúben_Gato Alves Dias",
     "Kaoru_Mitoma":                 "Mitoma_Kaoru",
     "Matheus_Santos Carneiro da Cunha": "Matheus_Santos Carneiro Da Cunha",
-    "Dominic_Solanke": "Dominic_Solanke-Mitchell"
+    "David_Raya Martín":"David_Raya Martin",
+    "Kepa_Arrizabalaga Revuelta": "Kepa_Arrizabalaga",
+    "Idrissa_Gana Gueye": "Idrissa_Gueye",
+    "Alisson_Becker": "Alisson_Ramses Becker",
+    "Luis_Díaz Marulanda": "Luis_Díaz",
+    "Matheus Luiz_Nunes":"Matheus_Nunes",
+    "Alejandro_Garnacho Ferreyra":"Alejandro_Garnacho",
 }
     df_all["name"] = df_all["name"].apply(lambda n: name_map.get(n, n))
     unique_players = df_all[["name"]].drop_duplicates()

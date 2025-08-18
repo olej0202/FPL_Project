@@ -52,7 +52,7 @@ Manual_Player_Adjustments={
         "Igor_Thiago Nascimento Rodrigues":["Yoane_Wissa","Bryan_Mbeumo"],
         "Lucas_Tolentino Coelho de Lima":["Jarrod_Bowen"],
         "Mohamed_Salah":["Cody_Gakpo","Luis_Díaz","Mohamed_Salah" ],
-        "Eberechi_Eze":["Romain_Esse"],
+        "Eberechi_Eze":["Romain_Esse","Eberechi_Eze"],
         "Ismaïla_Sarr":["Romain_Esse","Ismaïla_Sarr"], 
         }
 
