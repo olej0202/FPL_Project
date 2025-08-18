@@ -104,7 +104,7 @@ def get_my_team_optimize(
             banned_list=banned_list or [],
             bb_round=bb_round,
             wildcard_round=wildcard_round,
-            Last_GW=0,
+            Last_GW=1,
             GW_list=["0","2","3","4","5","6"],
             current_player_path="Raw_Data_25/current_players.csv"
         )

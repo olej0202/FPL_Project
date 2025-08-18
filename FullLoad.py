@@ -166,7 +166,7 @@ def current_players(season):
 
     team_mapping = {team["id"]: team["name"] for team in teams}
     players=pd.DataFrame(players)
-    players_new=players[["code","element_type", "photo","team_code","team","opta_code","now_cost","selected_by_percent","expected_goals","web_name","news","defensive_contribution_per_90","opta_code", "minutes","clearances_blocks_interceptions","recoveries","tackles","defensive_contribution","first_name","second_name"]]
+    players_new=players[["code","element_type", "photo","team_code","team","opta_code","now_cost","selected_by_percent","expected_goals","web_name","news","defensive_contribution_per_90","opta_code", "minutes","clearances_blocks_interceptions","recoveries","tackles","defensive_contribution","id","first_name","second_name"]]
     players_new["name"]=players["first_name"]+" "+players["second_name"]
     players_new["name"]=players_new["name"].str.replace(" ", "_", n=1)
     players_new["chance_of_playing_this_round"]=players["chance_of_playing_this_round"]    
@@ -211,10 +211,10 @@ def main_Extract(season, is_new_season, Has_been_error):
     new_season=is_new_season
     Has_been_error=Has_been_error
     #innføre refresh tider
-    """if new_season==1:
+    if new_season==1:
         Fulload(season)
     else:
-        Incremental(Has_been_error,season)"""
+        Incremental(Has_been_error,season)
     fixtures(season)
     current_players(season)
 

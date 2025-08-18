@@ -6,9 +6,12 @@ import os
 
 
 
+
+import numpy as np
 def get_transfers(team_id):
     transfers_url = f"https://fantasy.premierleague.com/api/entry/{team_id}/transfers/"
     response_transfers = requests.get(transfers_url)
+    print(response_transfers)
 
     if response_transfers.status_code != 200:
         print(f"Error fetching transfers (Status Code: {response_transfers.status_code})")
@@ -49,7 +52,7 @@ def initial_transfers(df,max_event):
     return saved_transfers
     
 
-def get_my_team(team_id=1,Last_GW=0):
+def get_my_team(team_id=46805,Last_GW=1):
     team_id=team_id
 
     Last_GW=Last_GW
@@ -60,81 +63,91 @@ def get_my_team(team_id=1,Last_GW=0):
     df = pd.DataFrame(team_transfers)
 
     free_hit_gw_played=played_free_hit(team_id)
+    print(free_hit_gw_played)
+    print(free_hit_gw_played)
+    try:
 
-
-    df=df[df["event"]!=free_hit_gw_played]
+        df=df[df["event"]!=free_hit_gw_played]
     
-    transfers1 = df.groupby('event').size().reset_index(name='count')
+        transfers1 = df.groupby('event').size().reset_index(name='count')
 
-    max_event = Last_GW
+        max_event = Last_GW
     
-    saved_transfers=initial_transfers(transfers1,max_event)
+        saved_transfers=initial_transfers(transfers1,max_event)
 
-    initial_saved=saved_transfers+hit
+        initial_saved=saved_transfers+hit
 
 
-    active=[]
-    for i in range(len(df["element_in"])):
-        element_in=df["element_in"].values[-i-1]
-        out_list=df["element_out"].values[0:-i-1]
+        active=[]
+        for i in range(len(df["element_in"])):
+            element_in=df["element_in"].values[-i-1]
+            out_list=df["element_out"].values[0:-i-1]
 
-        if(element_in in out_list):
-            active.append(0)
+            if(element_in in out_list):
+                active.append(0)
+            else:
+                active.append(1)
+        df["Active"]= list(reversed(active))
+    
+        df=df[df["Active"]==1]
+    
+
+        df=df[["element_in", "element_in_cost"]]
+    
+
+        if(Last_GW==free_hit_gw_played):
+            gameweek = Last_GW-1
+            initial_saved-=1
         else:
-            active.append(1)
-    df["Active"]= list(reversed(active))
-    
-    df=df[df["Active"]==1]
-    
+            gameweek = Last_GW  # Replace with the desired gameweek
+    except:
+        df=pd.DataFrame()
+        saved_transfers=min(5,Last_GW)
 
-    df=df[["element_in", "element_in_cost"]]
-    
+        initial_saved=saved_transfers+hit
 
-    if(Last_GW==free_hit_gw_played):
-        gameweek = Last_GW-1
-        initial_saved-=1
-    else:
-        gameweek = Last_GW  # Replace with the desired gameweek
-
-    url = f"https://fantasy.premierleague.com/api/entry/{team_id}/event/{gameweek}/picks/"
+    url = f"https://fantasy.premierleague.com/api/entry/{team_id}/event/1/picks/"
 
     response = requests.get(url)
+    print(response)
 
     if response.status_code == 200:
         team_selection = response.json()
         picks=team_selection.get("picks")  # View the JSON response
         pick_df = pd.DataFrame(picks)
-    
+        print(pick_df)
     else:
         print(f"Error fetching team selection (Status Code: {response.status_code})")
 
     for g in range(len(pick_df)):
         element=pick_df["element"].values[g]
+        if(len(df)>0):
         
-        """if(element not in df["element_in"].values):
+            if(element not in df["element_in"].values):
+                new_row = pd.DataFrame({'element_in': [element], 'element_in_cost': [np.nan]}, index=[len(df)])
+                df = pd.concat([df, new_row], ignore_index=True)
+        else:
             new_row = pd.DataFrame({'element_in': [element], 'element_in_cost': [np.nan]}, index=[len(df)])
-            print("NewRow")
-            print(new_row)
-            df = pd.concat([df, new_row], ignore_index=True)"""
+            df = pd.concat([df, new_row], ignore_index=True)
 
-    data=pd.read_csv("Raw_Data_24/Fantasy_season_2024_data.csv")
-    data=data[["Full_Name","element", "value", "kickoff_time"]]
-    data['kickoff_time'] = pd.to_datetime(data['kickoff_time'])
-    result = data.loc[data.groupby('Full_Name')['kickoff_time'].idxmax(), ['Full_Name','element', 'value', 'kickoff_time']]
+    print(df)
+    data=pd.read_csv("Raw_Data_25/current_players.csv")
+    data = data[["name", "id", "now_cost"]].rename(
+    columns={"name": "Full_Name", "now_cost": "value"}
+)
 
-    team_df=pd.merge(df, result, left_on='element_in', right_on='element', how='left')
+    team_df=pd.merge(df, data, left_on='element_in', right_on='id', how='left')
 
     team_df['element_in_cost'] = team_df['element_in_cost'].fillna(team_df['value'])
     team_df["selling_price_value"] = np.floor((team_df["value"] - team_df["element_in_cost"]) / 2).clip(lower=0)
     team_df["selling_price"] = (team_df[["value", "element_in_cost"]].min(axis=1)+team_df["selling_price_value"])/10
     team_df=team_df[team_df["element_in_cost"]>30]
-    
     return initial_saved, team_df
 
 
 
 
-def optimize_my_team(team_id=1,wildcard_round=40, bb_round=40,Last_GW=0,banned_list=[],GW_list=["0","1", "2","3","4","5","6","7","8"], current_player_path="Raw_Data_25/current_players.csv"):
+def optimize_my_team(team_id=46805,wildcard_round=40, bb_round=40,Last_GW=1,banned_list=[],GW_list=["0", "2","3","4","5","6","7","8"], current_player_path="Raw_Data_25/current_players.csv"):
 
     current_players = pd.read_csv(current_player_path)
     is_first=False
@@ -213,6 +226,9 @@ def optimize_my_team(team_id=1,wildcard_round=40, bb_round=40,Last_GW=0,banned_l
 
         for i in range(len(initial_squad)):
             list1[initial_squad[i]] = selling_cost[i]
+
+
+
         
 
     positions = data['position'].tolist()
