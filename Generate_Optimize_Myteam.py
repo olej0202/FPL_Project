@@ -193,6 +193,7 @@ def optimize_my_team(team_id=46805,wildcard_round=40, bb_round=40,Last_GW=1,bann
         
     else:
         initial_saved,squad=get_my_team(team_id,Last_GW=Last_GW)
+        initial_saved-=1
         url = f"https://fantasy.premierleague.com/api/entry/{team_id}/"
         response = requests.get(url)
         if response.status_code == 200:
@@ -273,7 +274,7 @@ def optimize_my_team(team_id=46805,wildcard_round=40, bb_round=40,Last_GW=1,bann
     # (Bench points term is added only if bench_points_gw is in the gameweek range)
     obj = lpSum((y[i, t] + c[i, t]+bench[i, t] * 0.05) * predicted_points[i][t] 
                 for i in range(num_players) for t in gameweeks)+ lpSum(
-        0.2 * saved_transfers[t]
+        0.15 * saved_transfers[t]
         for t in gameweeks
     )
     if bench_points_gw in gameweeks:
