@@ -39,11 +39,12 @@ Manual_NewPlayer_Adjustments={
         "Rayan_Cherki":["İlkay_Gündoğan","Phil_Foden"],
         "El_Hadji Malick Diouf":["Aaron_Wan-Bissaka", "Lucas_Digne"], 
         "Jeremie_Frimpong":["Andrew_Robertson","Pedro_Porro","Lucas_Digne"],
-        "Benjamin_Sesko":["Kai_Havertz","Rasmus_Højlund","Marcus_Rashford"],     
+        "Benjamin_Sesko":["Kai_Havertz","Rasmus_Højlund","Marcus_Rashford"], 
+        "Hugo_Ekitiké":["Kai_Havertz","Yoane_Wissa","Luis_Díaz" ]    
     }
 
 Manual_Player_Adjustments={
-        "Mohammed_Kudus":["Brennan_Johnson","Son_Heung-min","Dejan_Kulusevski"],
+        "Mohammed_Kudus":["Brennan_Johnson","Son_Heung-min"],
         "Matheus_Santos Carneiro Da Cunha":["Bruno_Borges Fernandes","Alejandro_Garnacho Ferreyra","Amad_Diallo"],
         "Bryan_Mbeumo":["Bruno_Borges Fernandes","Alejandro_Garnacho Ferreyra","Amad_Diallo"],
         "Cole_Palmer":["Mohamed_Salah","Bukayo_Saka"],

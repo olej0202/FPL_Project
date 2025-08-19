@@ -81,7 +81,7 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
             attacking_factor=(df["opposition_xgc"].values[h]*0.4+team_xg*0.6)
             defensive_factor=(team_CS)
             if(pred_variable=="GOALS"):
-               player_preds.append((df['Rolling_adjusted_XG'].values[h]*0.5+df['rolling_Adjusted_XG_historic'].values[h]*0.5)*(attacking_factor))
+               player_preds.append((df['Rolling_adjusted_XG'].values[h]*df["opposition_xgc"].values[h]+df['Share_of_XG'].values[h]*team_xg)*(0.5))
                real_variable="expected_goals" 
             if(pred_variable=="Assist"):
                player_preds.append((df['Rolling_adjusted_XA'].values[h]*0.5+df['rolling_Adjusted_XA_historic'].values[h]*0.5)*(attacking_factor))             
@@ -644,8 +644,8 @@ def Generate_point_predictions():
         for i in range(len(player_data)):
             try:
                 goals.append(((xgb_goals_player["pred"].values[i]*0.2
-                         +stat_goals_player["pred"].values[i]*0.4
-                         +DNN_goals_player["pred"].values[i]*0.4))*overscore)
+                         +stat_goals_player["pred"].values[i]*0.5
+                         +DNN_goals_player["pred"].values[i]*0.3))*overscore)
             except:
                 goals.append(0)
 

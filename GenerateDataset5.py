@@ -94,6 +94,7 @@ def process_player_data(player_df, team, team_id2,kmeans):
     midXG=[]
     own_att_stat=[]
     own_cluster = []
+    own_team_xgs=[]
     teams_dataset=pd.read_csv("Team_data_transformed2.csv")
     player_df['kickoff_time'] = pd.to_datetime(player_df['kickoff_time'])
     player_df['kickoff_time'] = player_df['kickoff_time'].dt.strftime('%Y-%m-%dT%H:%M:%SZ')
@@ -131,6 +132,7 @@ def process_player_data(player_df, team, team_id2,kmeans):
         opp_cluster.append(cluster)
         o_cluster = kmeans.predict(own_stat)[0]
         own_cluster.append(o_cluster)
+        own_team_xgs.append(own_row["Round_XG"].values[0])
 
     df["Cluster"] = opp_cluster
     df["XGH"] = XGH
@@ -150,6 +152,7 @@ def process_player_data(player_df, team, team_id2,kmeans):
     df["XGC_MID"]=midXG
     df['Own_Attacking_form'] = own_att_stat
     df['opponent_code'] = player_df['opponent_code'].values
+    df["Team_XG"]=own_team_xgs
 
     return df
 
@@ -454,6 +457,7 @@ def Generate_team_data():
             XGs=[]
             CSs=[]
             wons=[]
+            XG2s=[]
             #washomes=team_data.groupby('kickoff_time')['was_home'].max().values
             washomes=team_data.groupby('kickoff_time').filter(lambda x: len(x) >= 5).groupby('kickoff_time')['was_home'].max().values
             opponents=team_data.groupby('kickoff_time').filter(lambda x: len(x) >= 5).groupby('kickoff_time')['opponent_code'].median().values
@@ -481,6 +485,11 @@ def Generate_team_data():
                     XGs.append(GS.values[k])
                 else:
                     XGs.append((GS.values[k]+XG1)/2)
+                    
+                if(XG1==0):
+                    XG2s.append(GS.values[k])
+                else:
+                    XG2s.append((XG1))
             Played_against_df=data[data["opponent_team"]==id]
             XGCaway = Played_against_df.pivot_table(
                 index='kickoff_time',           # Rows will be based on 'kickoff_time'
@@ -508,6 +517,7 @@ def Generate_team_data():
             New_team_df["id"]=[id]*len(XGs)
             New_team_df["kickoff_time"]=kickoff_times
             New_team_df["XG"]=XGs
+            New_team_df["Round_XG"]=XG2s
             New_team_df["XGC"]=XGCS
             New_team_df["was_home"]=washomes
             New_team_df["opponent"]=opponents
@@ -1121,6 +1131,7 @@ def main_Transform():
             
             player_df["rolling_Adjusted_XG_historic"] = player_df['Adjusted_XG'].rolling(window=30, min_periods=1).mean()
             player_df["rolling_Adjusted_XA_historic"] = player_df['Adjusted_XA'].rolling(window=30, min_periods=1).mean()
+            player_df["Share_of_XG"]=player_df['expected_goals'].rolling(window=20, min_periods=1).sum()/player_df["Team_XG"].rolling(window=20, min_periods=1).sum()
 
 
             if(namelist[0]=="Mohamed_Salah"):
