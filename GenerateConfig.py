@@ -35,8 +35,8 @@ Manual_team_defensive_adjustments = {94:1.15,11:1.1, 31:1.1,8:1.1,6:0.85 }
 Manual_NewPlayer_Adjustments={
         "Viktor_Gyökeres":["Alexander_Isak","Kai_Havertz","Yoane_Wissa"],
         "Florian_Wirtz":["Mohamed_Salah","Cole_Palmer","Dominik_Szoboszlai","Alexis_Mac Allister", "Luis_Díaz"],
-        "Tijjani_Reijnders":["İlkay_Gündoğan","Phil_Foden","Mateo_Kovačić"],
-        "Rayan_Cherki":["İlkay_Gündoğan","Phil_Foden","Mateo_Kovačić"],
+        "Tijjani_Reijnders":["İlkay_Gündoğan","Phil_Foden"],
+        "Rayan_Cherki":["İlkay_Gündoğan","Phil_Foden"],
         "El_Hadji Malick Diouf":["Aaron_Wan-Bissaka", "Lucas_Digne"], 
         "Jeremie_Frimpong":["Andrew_Robertson","Pedro_Porro","Lucas_Digne"],
         "Benjamin_Sesko":["Kai_Havertz","Rasmus_Højlund","Marcus_Rashford"],     
