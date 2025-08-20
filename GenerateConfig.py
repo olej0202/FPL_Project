@@ -29,7 +29,7 @@ Manual_team_offensive_adjustments = {94:0.9,1:1.2 }
     
     
     
-Manual_team_defensive_adjustments = {94:1.15,11:1.1, 31:1.1,8:1.1,6:0.85, 17:0.9 }
+Manual_team_defensive_adjustments = {94:1.15,11:1.1, 31:1.1,6:0.85, 17:0.9 }
 
 
 Manual_NewPlayer_Adjustments={
@@ -52,9 +52,7 @@ Manual_Player_Adjustments={
         "Anthony_Gordon":["Alexander_Isak","Jacob_Murphy","Harvey_Barnes"],   
         "Igor_Thiago Nascimento Rodrigues":["Yoane_Wissa","Bryan_Mbeumo"],
         "Lucas_Tolentino Coelho de Lima":["Jarrod_Bowen"],
-        "Mohamed_Salah":["Cody_Gakpo","Luis_Díaz","Mohamed_Salah" ],
-        "Eberechi_Eze":["Romain_Esse","Eberechi_Eze"],
-        "Ismaïla_Sarr":["Romain_Esse","Ismaïla_Sarr"], 
+        "Mohamed_Salah":["Luis_Díaz","Mohamed_Salah" ],
         }
 
 NEW_TEAMS=[56]
