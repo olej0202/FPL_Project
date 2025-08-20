@@ -97,10 +97,10 @@ def Main_Orchestration():
     
     
     #Transform data
-    Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list)
+    #Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list)
     
     #Predict data
-    Data_Predictions(current_fixture_path,current_team_path, n_points_in_future)
+    #Data_Predictions(current_fixture_path,current_team_path, n_points_in_future)
     
     Data_Generation(current_raw_data_path,ownership,budget,GW_list_wildcard,GW_list_freehit,current_player_path,current_team_path )
     

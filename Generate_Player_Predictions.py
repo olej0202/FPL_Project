@@ -448,7 +448,7 @@ def Generate_LSTM_preds(pred,column_list,predlength):
         model_path="DNN_XA.pt"
 
         model_path_time = "DNN_XA_2.keras"
-        n_lags=10
+        n_lags=13
 
 
 
@@ -515,9 +515,11 @@ def Generate_LSTM_preds(pred,column_list,predlength):
         # pick rows for this player
         new_player_data=new_data.loc[new_data['name'] == name].copy()
 
-        new_player_pred_data=new_player_data[aux_cols]    
-        player_df = train_df_time.loc[train_df_time['name'] == name].copy().tail(1)
+        new_player_pred_data=new_player_data[aux_cols]   
+        player_df = train_df_time.loc[train_df_time['name'] == name].copy()
         if(len(player_df)<5):
+            if(name=='Ismaïla_Sarr' and pred=="GOALS" ):
+                new_player_pred_data.to_csv("Sarr_debug.csv")
             test_data=new_player_data[features_test].copy()
             test_data.columns = DNN_scaler_data.columns
             preds=[]
@@ -531,9 +533,8 @@ def Generate_LSTM_preds(pred,column_list,predlength):
                 preds.append(predictions[0])
 
         else:
-
-            row=player_df[lag_cols].to_numpy() 
-
+            one_player_df=player_df.tail(1)
+            row=one_player_df[lag_cols].to_numpy() 
             new_player_pred_data.loc[:, lag_cols] = np.repeat(row, len(new_player_pred_data), axis=0)
 
 
