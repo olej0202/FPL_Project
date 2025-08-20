@@ -418,9 +418,9 @@ def Generate_LSTM_preds(pred,column_list,predlength):
     df["opposition_xgc"] = df.apply(lambda row: row[23] if row[18] else row[21], axis=1)
 
     if(pred=="GOALS"):
-        time_cols=["name","Threat", "time","expected_goals", "opposition_xgc","minutes", "Own_Attacking_form", "rolling_Adjusted_XG_historic"]
-        lagged_cols=[ "opposition_xgc","Threat"]
-        aux_cols = ["minutes", "Own_Attacking_form", "rolling_Adjusted_XG_historic", "opposition_xgc"]
+        time_cols=["name","Threat", "time","expected_goals", "opposition_xgc","minutes", "Own_Attacking_form", "rolling_Adjusted_XG_historic","Share_of_XG"]
+        lagged_cols=[ "opposition_xgc","Threat","Share_of_XG"]
+        aux_cols = ["minutes", "Own_Attacking_form", "rolling_Adjusted_XG_historic", "opposition_xgc","Share_of_XG"]
         target_col = "expected_goals"
         n_lags=13
 
@@ -431,7 +431,7 @@ def Generate_LSTM_preds(pred,column_list,predlength):
         model_path="DNN_XG.pt"
         
 
-        model_path_time=model = "DNN_XG_2.keras"
+        model_path_time = "DNN_XG_3.keras"
 
     if(pred=="Assist"):
         time_cols=["name","creativity", "time","expected_assists", "opposition_xgc","minutes", "Own_Attacking_form", "rolling_Adjusted_XA_historic"]
@@ -447,7 +447,7 @@ def Generate_LSTM_preds(pred,column_list,predlength):
                    "rolling_XA_historic","minutes","rolling_key_passes","XA_slope"]
         model_path="DNN_XA.pt"
 
-        model_path_time=model = "DNN_XA_2.keras"
+        model_path_time = "DNN_XA_2.keras"
         n_lags=10
 
 
