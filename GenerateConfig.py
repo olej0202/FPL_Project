@@ -25,7 +25,7 @@ Spurs,6
 ,Ipswich,40"""
 
 
-Manual_team_offensive_adjustments = {94:0.9,1:1.2 }
+Manual_team_offensive_adjustments = {94:0.9,1:1.2,31:0.9 }
     
     
     
