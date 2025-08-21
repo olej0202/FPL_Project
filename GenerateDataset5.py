@@ -931,11 +931,131 @@ def team_transformed2():
 
     team_transformed_df.to_csv("Team_data_transformed2.csv")
     team_transformed_df_newest.to_csv("Team_data_newest2.csv")
+    
+    
+def Understat_teams():
+    from sklearn.preprocessing import MinMaxScaler
+    dfs = []
+
+    for yr in range(22, 26):  # 22, 23, 24, 25
+        folder = f"Raw_Data_{yr}"   # adjust case if needed
+        csv_path = f"{folder}/Understat_Teams.csv"
+
+        df = pd.read_csv(csv_path).iloc[:,1:]
+        dfs.append(df)
+
+    # union all
+    columns=["title","date","h_a","deep","deep_allowed","xpts","ppda","ppda_allowed"]
+    all_teams = pd.concat(dfs, ignore_index=True, sort=False)
+    unioned_df=all_teams[columns]
+
+    unioned_df = unioned_df.copy()
+    unioned_df["date"] = pd.to_datetime(unioned_df["date"], errors="coerce")
+    unioned_df = unioned_df.sort_values(["title", "date"])
+
+    # 2) Numeric columns (ensure numbers, not strings/objects)
+    num_cols = ["deep","deep_allowed","xpts","ppda","ppda_allowed"]
+    unioned_df[num_cols] = unioned_df[num_cols].apply(pd.to_numeric, errors="coerce")
+
+    g = unioned_df.groupby("title", sort=False)
+
+    # 3a) Rolling mean INCLUDING current match (last 10)
+    roll_inc = pd.DataFrame({
+        c: g[c].transform(lambda s: s.ewm(span=12, adjust=False, min_periods=1).mean())
+        for c in num_cols
+    }).add_prefix("roll10_")  # e.g., roll10_deep
+
+    # 3b) Rolling mean of PREVIOUS 10 (exclude current)  ← what you want
+    roll_prev = pd.DataFrame({
+        c: g[c].transform(lambda s: s.ewm(span=12, adjust=False, min_periods=1).mean())
+        for c in num_cols
+    }).add_prefix("roll10prev_")
+
+    # 4) Attach (indexes already aligned via transform)
+    unioned_df = pd.concat([unioned_df, roll_inc, roll_prev], axis=1)
+
+    unioned_df = unioned_df.dropna().reset_index(drop=True)
+    mapping = {
+        "Manchester City": "Man City",
+        "Manchester United": "Man Utd",
+        "Newcastle United": "Newcastle",
+        "Nottingham Forest": "Nott'm Forest",
+        "Sheffield United": "Sheffield Utd",
+        "Tottenham": "Spurs",                 # if your data has "Tottenham Hotspur", map that too:
+        "Tottenham Hotspur": "Spurs",
+        "Wolverhampton Wanderers": "Wolves",
+    }
+
+    # tidy whitespace then map
+    unioned_df["title"] = unioned_df["title"].astype(str).str.strip().replace(mapping)
+
+
+    #Add history DATA
+    history=unioned_df[["title", "date", "roll10prev_deep", "roll10prev_deep_allowed", "roll10prev_xpts", "roll10prev_ppda", "roll10prev_ppda_allowed"]]
+
+    history["date_only"] = pd.to_datetime(history["date"], errors="coerce").dt.date
+    num_cols = history.select_dtypes(include="number").columns.tolist()
+
+    team_data = pd.read_csv("Team_data_transformed2.csv").iloc[:, 1:].copy()
+    team_data["kickoff_date"] = pd.to_datetime(team_data["kickoff_time"], errors="coerce").dt.date
+
+    right = history[["title", "date_only"] + num_cols].rename(columns={"title": "name"})
+
+    merged = team_data.merge(
+        right,
+        how="left",
+        left_on=["name", "kickoff_date"],
+        right_on=["name", "date_only"],
+    )
+    merged = merged.drop(columns=["date_only"])
+    rows_any_nan = merged[merged.isna().any(axis=1)]
+    History_merged = merged.fillna(merged.mean(numeric_only=True))
+
+    rename_map = {
+        "roll10prev_deep":"roll10_deep",
+        "roll10prev_deep_allowed":"roll10_deep_allowed",
+        "roll10prev_xpts":"roll10_xpts",
+        "roll10prev_ppda":"roll10_ppda",
+        "roll10prev_ppda_allowed":"roll10_ppda_allowed",
+    }
+    History_merged = History_merged.rename(columns=rename_map)
+    print(History_merged)
+    scale_cols=["roll10_deep","roll10_deep_allowed","roll10_xpts","roll10_ppda","roll10_ppda_allowed" ]
+    scaler_prev = MinMaxScaler().fit(History_merged[scale_cols])
+    History_merged[scale_cols] = scaler_prev.transform(History_merged[scale_cols])
+
+
+    History_merged.to_csv("Team_data_transformed2.csv")
+    #Add New data
+    new_table=unioned_df[["title", "date", "roll10_deep", "roll10_deep_allowed", "roll10_xpts", "roll10_ppda", "roll10_ppda_allowed"]]
+    new_table["date_only"] = pd.to_datetime(new_table["date"], errors="coerce").dt.date
+    num_cols = new_table.select_dtypes(include="number").columns.tolist()
+
+    team_data = pd.read_csv("Team_data_newest2.csv").iloc[:, 1:].copy()
+    team_data["kickoff_date"] = pd.to_datetime(team_data["kickoff_time"], errors="coerce").dt.date
+
+    right = new_table[["title", "date_only"] + num_cols].rename(columns={"title": "name"})
+
+    merged = team_data.merge(
+        right,
+        how="left",
+        left_on=["name", "kickoff_date"],
+        right_on=["name", "date_only"],
+    )
+    merged = merged.drop(columns=["date_only"])
+    rows_any_nan = merged[merged.isna().any(axis=1)]
+    New_merged = merged.fillna(merged.mean(numeric_only=True))
+    New_merged[scale_cols] = scaler_prev.transform(New_merged[scale_cols])
+
+
+    New_merged.to_csv("Team_data_newest2.csv")
+
 
 def main_Transform():
     kmeans=make_Kmeans()
     Generate_team_data()
     team_transformed2()
+    Understat_teams()
     
     df_26=pd.read_csv("Raw_Data_25/Fantasy_season_2025_data.csv").iloc[:,1:]
     df_26["name"]=df_26["first_name"]+" "+df_26["second_name"]

@@ -26,7 +26,7 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
 
     team_df["Cluster"]=kmeans.predict(team_df[["XG_avg","XGC_avg"]].values)
 
-    opponent_df = team_df[["code", "XGA", "XGCA", "XGH", "XGCH", "kickoff_time", "XG_slope", "XGC_slope","XG_avg","XGC_avg","Cluster","Rolling_Threat","Rolling_Threat_Against"]].copy()
+    opponent_df = team_df[["code", "XGA", "XGCA", "XGH", "XGCH", "kickoff_time", "XG_slope", "XGC_slope","XG_avg","XGC_avg","Cluster","Rolling_Threat","Rolling_Threat_Against","roll10_xpts","roll10_deep","roll10_deep_allowed"]].copy()
 
     pred_df = pd.merge(team_df, opponent_df, 
                    left_on=['opponent', 'kickoff_time'], 
@@ -66,7 +66,13 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
     Model_pred["Opposition_XGC_avg"] = pred_df["XGC_avg_opp"]
     Model_pred["Own_XG_avg"] = pred_df["XG_avg_team"]
     Model_pred["Own_XGC_avg"] = pred_df["XGC_avg_team"]
-
+    Model_pred["Own_XPTS"] = pred_df["roll10_xpts_team"]
+    Model_pred["Opposition_XPTS"] = pred_df["roll10_xpts_opp"]
+    Model_pred["Own_DEEP"] = pred_df["roll10_deep_team"]
+    Model_pred["Opposition_DEEP"] = pred_df["roll10_deep_opp"]
+    Model_pred["Own_DEEP_allowed"] = pred_df["roll10_deep_allowed_team"]
+    Model_pred["Opposition_DEEP_allowed"] = pred_df["roll10_deep_allowed_opp"]
+    
     Model_pred["Opposition_Treat"] = pred_df["Rolling_Threat_opp"]
     Model_pred["Opposition_TreatAgainst"] = pred_df["Rolling_Threat_Against_opp"]
     Model_pred["Own_Treat"] = pred_df["Rolling_Threat_team"]
@@ -100,7 +106,7 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
 
 
     # Define Features and Target
-    features = ['Own_XG','Opposition_XGC','Own_XG_slope','Opponent_XGC_slope','Own_XG_avg','Opposition_XGC_avg','Own_Cluster','Opposition_Cluster','Cluster_XG','Own_Treat','Opposition_TreatAgainst']
+    features = ['Own_XG','Opposition_XGC','Own_XG_slope','Opponent_XGC_slope','Own_XG_avg','Opposition_XGC_avg','Own_Cluster','Opposition_Cluster','Cluster_XG','Own_Treat','Opposition_TreatAgainst','Opposition_XPTS',"Own_DEEP"]
     #features = ['Own_XG', 'Own_XGC', 'Opposition_XG', 'Opposition_XGC'] # Exclude target and date
     target = 'XG'
 
@@ -124,9 +130,9 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
 
 
     # Define Features and Target
-    features = ['Own_XGC', 'Opposition_XG','Own_XGC_slope','Opponent_XG_slope','Opposition_XG_avg','Own_XGC_avg','Own_Cluster','Opposition_Cluster','Cluster_XGC','Opposition_Treat','Own_TreatAgainst']
+    features = ['Own_XGC', 'Opposition_XG','Own_XGC_slope','Opponent_XG_slope','Opposition_XG_avg','Own_XGC_avg','Own_Cluster','Opposition_Cluster','Cluster_XGC','Opposition_Treat','Own_TreatAgainst','Opposition_XPTS',"Opposition_DEEP"]
     #features = ['Own_XGC', 'Opposition_XG','Own_XGC_slope','Opponent_XG_slope','Opposition_XG_avg','Own_XGC_avg','Own_Cluster','Opposition_Cluster']
-    
+
     #features = ['Own_XG', 'Own_XGC', 'Opposition_XG', 'Opposition_XGC']# Exclude target and date
     target = 'XGC'
     cs_target='Clean_Sheet'
@@ -173,11 +179,10 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
     recall = recall_score(y_CS_test, y_pred_CS_binary, pos_label=1)
     print(f"Recall (actual clean sheets captured): {recall:.3f}")
 
-
     fixture_data=pd.read_csv(fixture_path)[["event","team_a","team_h","finished"]]
     team_code_data=pd.read_csv(current_team_path)[["name","code","id"]]
 
-    team_data=pd.read_csv("Team_data_newest3.csv")[["code","XGA","XGCA","XGH","XGCH","XG_slope","XGC_slope","XG_avg","XGC_avg","Rolling_Threat","Rolling_Threat_Against"]]
+    team_data=pd.read_csv("Team_data_newest3.csv")[["code","XGA","XGCA","XGH","XGCH","XG_slope","XGC_slope","XG_avg","XGC_avg","Rolling_Threat","Rolling_Threat_Against","roll10_xpts","roll10_deep"]]
     team_data["Cluster"]=kmeans.predict(team_data[["XG_avg","XGC_avg"]].values)
     cluster_data=pd.read_csv("Team_cluster_data.csv")[["code_team","Cluster_opp","Cluster_XG","Cluster_XGC"]]
 
@@ -200,8 +205,8 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
     predict_data["team_h"]=df_merged["code_y"].values
     predict_data["team_a_name"]=df_merged["name_x"].values
     predict_data["team_h_name"]=df_merged["name_y"].values
-    df_merged = predict_data.merge(team_data[["code","XGA","XGCA","XG_slope","XGC_slope","XG_avg","XGC_avg","Cluster","Rolling_Threat","Rolling_Threat_Against"]], left_on='team_a', right_on='code', how='left')  # Left join to keep all rows from df2
-    df_merged = df_merged.merge(team_data[["code","XGH","XGCH","XG_slope","XGC_slope","XG_avg","XGC_avg","Cluster","Rolling_Threat","Rolling_Threat_Against"]], left_on='team_h', right_on='code', how='left')  # Left join to keep all rows from df2
+    df_merged = predict_data.merge(team_data[["code","XGA","XGCA","XG_slope","XGC_slope","XG_avg","XGC_avg","Cluster","Rolling_Threat","Rolling_Threat_Against","roll10_xpts","roll10_deep"]], left_on='team_a', right_on='code', how='left')  # Left join to keep all rows from df2
+    df_merged = df_merged.merge(team_data[["code","XGH","XGCH","XG_slope","XGC_slope","XG_avg","XGC_avg","Cluster","Rolling_Threat","Rolling_Threat_Against","roll10_xpts","roll10_deep"]], left_on='team_h', right_on='code', how='left')  # Left join to keep all rows from df2
     df_merged = df_merged.merge(cluster_data, left_on=['code_x', 'Cluster_y'], right_on=['code_team', 'Cluster_opp'], how='left')  # Left join to keep all rows from df2
     df_merged = df_merged.rename(columns={
         'Cluster_XG': 'Cluster_XG_y',
@@ -224,7 +229,7 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
 
 
 
-    features = ['Own_XG','Opposition_XGC','Own_XG_slope','Opponent_XGC_slope','Own_XG_avg','Opposition_XGC_avg',"Cluster","Own_Treat","Opposition_TreatAgainst"]
+    features = ['Own_XG','Opposition_XGC','Own_XG_slope','Opponent_XGC_slope','Own_XG_avg','Opposition_XGC_avg',"Cluster","Own_Treat","Opposition_TreatAgainst",'Opposition_XPTS','Own_DEEP']
 
     new_input_XG = pd.DataFrame()
     new_input_XG["Own_XG"]=df_merged["XGH"]
@@ -239,8 +244,11 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
     new_input_XG['Cluster_XG']=df_merged["Cluster_XG_x"]
     new_input_XG['Own_Treat']=df_merged["Rolling_Threat_y"]
     new_input_XG['Opposition_TreatAgainst']=df_merged["Rolling_Threat_Against_x"]
+    new_input_XG['Opposition_XPTS']=df_merged["roll10_xpts_x"]
+    new_input_XG['Own_DEEP']=df_merged["roll10_deep_y"]
 
 
+    
 
     new_input_XG2 = pd.DataFrame()
     new_input_XG2["Own_XG"]=df_merged["XGA"]
@@ -254,6 +262,9 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
     new_input_XG2['Cluster_XG']=df_merged["Cluster_XG_y"]
     new_input_XG2['Own_Treat']=df_merged["Rolling_Threat_x"]
     new_input_XG2['Opposition_TreatAgainst']=df_merged["Rolling_Threat_Against_y"]
+    new_input_XG2['Opposition_XPTS']=df_merged["roll10_xpts_y"]
+    new_input_XG2['Own_DEEP']=df_merged["roll10_deep_x"]
+
 
     new_input_XG.to_csv("teams_preds_test.csv")
 
@@ -262,7 +273,7 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
     xg2 = model_xg.predict(new_input_XG2)
 
 
-    features = ['Own_XGC', 'Opposition_XG','Own_XGC_slope','Opponent_XG_slope','Own_XGC_avg','Opposition_XG_avg','Opposition_Treat','Own_TreatAgainst']
+    features = ['Own_XGC', 'Opposition_XG','Own_XGC_slope','Opponent_XG_slope','Own_XGC_avg','Opposition_XG_avg','Opposition_Treat','Own_TreatAgainst','Opposition_XPTS','Opposition_DEEP']
     new_input_XGC = pd.DataFrame()
     new_input_XGC["Own_XGC"]=df_merged["XGCH"]
     new_input_XGC["Opposition_XG"]=df_merged["XGA"]
@@ -275,6 +286,9 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
     new_input_XGC['Cluster_XGC']=df_merged["Cluster_XGC_x"]
     new_input_XGC['Opposition_Treat']=df_merged["Rolling_Threat_x"]
     new_input_XGC['Own_TreatAgainst']=df_merged["Rolling_Threat_Against_y"]
+    new_input_XGC['Opposition_XPTS']=df_merged["roll10_xpts_x"]
+    new_input_XGC['Opposition_DEEP']=df_merged["roll10_deep_x"]
+    
     new_input_XGC.to_csv("teams_preds_test2.csv")
 
 
@@ -290,6 +304,9 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
     new_input_XGC2['Cluster_XGC']=df_merged["Cluster_XGC_y"]
     new_input_XGC2['Opposition_Treat']=df_merged["Rolling_Threat_y"]
     new_input_XGC2['Own_TreatAgainst']=df_merged["Rolling_Threat_Against_x"]
+    new_input_XGC2['Opposition_XPTS']=df_merged["roll10_xpts_y"]
+    new_input_XGC2['Opposition_DEEP']=df_merged["roll10_deep_y"]
+
 
 
     xgc = model_xgc.predict(new_input_XGC)
@@ -334,6 +351,4 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
     ALL_pred.to_csv("Team_prediction.csv")
 
 
-if __name__ == "__main__":
-    GenerateTeamPredictions( "Raw_Data_25\Fantasy_season_2025_Fixtures.csv","Raw_Data_24\current_teams.csv", 8)
-
+GenerateTeamPredictions( "Raw_Data_25\Fantasy_season_2025_Fixtures.csv","Raw_Data_25\current_teams.csv", 8)

@@ -118,7 +118,7 @@ def team_data(
     if offense_cols is None:
         offense_cols = [
             "XGH","XGA","XG_avg","XG_slope",
-            "Rolling_Threat"
+            "Rolling_Threat", "roll10_xpts", "roll10_deep"
         ]
     if defense_cols is None:
         defense_cols = [
@@ -173,19 +173,19 @@ def team_data(
         new_codes = {str(c) for c in NEW_TEAMS}
         codes = teams_dataset["code"].astype(str)
         mask = codes.isin(new_codes)
-    
+
         if not mask.any():
             print("No matching team codes in teams_dataset")
         else:
             # 2) Use only columns present in BOTH frames
             cols = [c for c in numeric_cols if c in average_df.columns and c in teams_dataset.columns]
-    
+
             # 3) Coerce to numeric before taking means (avoids all-NaN means)
             avg_num = average_df[cols].apply(pd.to_numeric, errors="coerce")
             col_means = avg_num.mean()               # index = cols
             col_means = col_means.reindex(cols)      # keep order
             col_means = col_means.fillna(0)          # or choose another fallback
-    
+
             # 4) Assign (broadcast to all masked rows)
             teams_dataset.loc[mask, cols] = col_means.values
 

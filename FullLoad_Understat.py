@@ -7,6 +7,7 @@ import pandas as pd
 import os
 import csv
 from rapidfuzz import process
+
 def get_data(url):
     response = requests.get(url)
     if response.status_code != 200:
@@ -129,9 +130,46 @@ def Add_index(season):
         
     All_data.to_csv(f"Raw_Data_{season}/Understat_data_with_element.csv")
     
+
+def teams_data(season):
+    league="EPL"
+    url = f"https://understat.com/league/{league}/20{season}"
+    html = requests.get(url, timeout=30).text
+
+    # Extract the JSON embedded in the page (teamsData)
+    m = re.search(r"var\s+teamsData\s*=\s*JSON.parse\('([^']+)'\);", html)
+    raw = m.group(1)
+    decoded = json.loads(raw.encode('utf-8').decode('unicode_escape'))
+    # decoded is a dict keyed by team id; values are dicts with xG/xGA totals & more
+    df = pd.DataFrame.from_dict(decoded, orient="index").reset_index(drop=True)
+    
+    df['history'] = df['history'].apply(lambda x: x if isinstance(x, list) else [])
+
+    # 2) Explode to one row per match
+    tmp = df.explode('history', ignore_index=True)
+
+    # 3) Flatten the match dicts (including nested ppda fields)
+    hist_flat = pd.json_normalize(tmp['history'], sep='_')
+
+    # 4) Combine with id/name and clean up
+    out = pd.concat([tmp[['id', 'title']].reset_index(drop=True), hist_flat], axis=1)
+
+    # 5) Optional: compute PPDA ratios and parse date
+    if {'ppda_att','ppda_def'}.issubset(out.columns):
+        out['ppda'] = out['ppda_att'] / out['ppda_def']
+    if {'ppda_allowed_att','ppda_allowed_def'}.issubset(out.columns):
+        out['ppda_allowed'] = out['ppda_allowed_att'] / out['ppda_allowed_def']
+
+    if 'date' in out.columns:
+        out['date'] = pd.to_datetime(out['date'], errors='coerce')
+        
+    out.to_csv(f"Raw_Data_{season}/Understat_Teams.csv")
+    
+
+    
 def main_Extract_Understat(season):
     FullLoad(season)
     Add_index(season)
-    
+    teams_data(season)
 if __name__ == "__main__":
     main_Extract_Understat(25)       
