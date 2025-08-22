@@ -15,7 +15,7 @@ from sklearn.metrics import recall_score
 
 
 def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
-    team_df = pd.read_csv("Team_data_transformed2.csv").iloc[:, 1:]
+    team_df = pd.read_csv("Team_data_transformed4.csv").iloc[:, 1:]
 
     team_df["XG_slope"] = team_df["XG_slope"].fillna(team_df["XG_slope"].median())
     team_df["XGC_slope"] = team_df["XGC_slope"].fillna(team_df["XGC_slope"].median())
@@ -45,9 +45,11 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
 
         code_df['Cluster_XGC'] = (code_df.groupby('Cluster_opp')['XGC'].transform(lambda x: x.shift(1).rolling(window=8, min_periods=1).mean()))
         code_df['Cluster_XGC'] = code_df['Cluster_XGC'].fillna(code_df['Cluster_XGC'].mean())
+        code_df['Cluster_CS'] = (code_df.groupby('Cluster_opp')['Clean_Sheet'].transform(lambda x: x.shift(1).rolling(window=8, min_periods=1).mean()))
+        code_df['Cluster_CS'] = code_df['Cluster_CS'].fillna(code_df['Cluster_CS'].mean())
         code_df['kickoff_time'] = pd.to_datetime(code_df['kickoff_time'])
         latest_rows = code_df.loc[code_df.groupby('Cluster_opp')['kickoff_time'].idxmax()]
-        latest_rows = latest_rows[['code_team','Cluster_opp', 'Cluster_XG','Cluster_XGC']]
+        latest_rows = latest_rows[['code_team','Cluster_opp', 'Cluster_XG','Cluster_XGC','Cluster_CS']]
         latest_df=pd.concat([latest_df, latest_rows], axis=0, ignore_index=True)
 
         new_pred_df=pd.concat([new_pred_df, code_df], axis=0, ignore_index=True)
@@ -100,7 +102,7 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
     test_df = Model_pred[(Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month == current_month-1)| 
                    (Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month == current_month-3) ]
     train_df = Model_pred[(Model_pred['kickoff_time'].dt.year < current_year) | 
-                     ((Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month < current_month-3))]
+                     ((Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month < current_month-4))]
     train_df=train_df[train_df['kickoff_time']>'2022-12-31']
 
 
@@ -182,9 +184,9 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
     fixture_data=pd.read_csv(fixture_path)[["event","team_a","team_h","finished"]]
     team_code_data=pd.read_csv(current_team_path)[["name","code","id"]]
 
-    team_data=pd.read_csv("Team_data_newest3.csv")[["code","XGA","XGCA","XGH","XGCH","XG_slope","XGC_slope","XG_avg","XGC_avg","Rolling_Threat","Rolling_Threat_Against","roll10_xpts","roll10_deep"]]
+    team_data=pd.read_csv("Team_data_newest4.csv")[["code","XGA","XGCA","XGH","XGCH","XG_slope","XGC_slope","XG_avg","XGC_avg","Rolling_Threat","Rolling_Threat_Against","roll10_xpts","roll10_deep"]]
     team_data["Cluster"]=kmeans.predict(team_data[["XG_avg","XGC_avg"]].values)
-    cluster_data=pd.read_csv("Team_cluster_data.csv")[["code_team","Cluster_opp","Cluster_XG","Cluster_XGC"]]
+    cluster_data=pd.read_csv("Team_cluster_data.csv")[["code_team","Cluster_opp","Cluster_XG","Cluster_XGC","Cluster_CS"]]
 
     fixture_data=fixture_data[fixture_data["finished"]==False]
     #fixture_data=fixture_data[(fixture_data['event']>33)].iloc[0:,:]
@@ -210,19 +212,24 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
     df_merged = df_merged.merge(cluster_data, left_on=['code_x', 'Cluster_y'], right_on=['code_team', 'Cluster_opp'], how='left')  # Left join to keep all rows from df2
     df_merged = df_merged.rename(columns={
         'Cluster_XG': 'Cluster_XG_y',
-        'Cluster_XGC': 'Cluster_XGC_y'
+        'Cluster_XGC': 'Cluster_XGC_y',
+        'Cluster_CS': 'Cluster_CS_y'
     })
     df_merged = df_merged.drop(['code_team', 'Cluster_opp'], axis=1)
     df_merged = df_merged.merge(cluster_data, left_on=['code_y', 'Cluster_x'], right_on=['code_team', 'Cluster_opp'], how='left')  # Left join to keep all rows from df2
     df_merged = df_merged.rename(columns={
         'Cluster_XG': 'Cluster_XG_x',
-        'Cluster_XGC': 'Cluster_XGC_x'
+        'Cluster_XGC': 'Cluster_XGC_x',
+    
+        'Cluster_CS': 'Cluster_CS_x'
     })
     df_merged = df_merged.drop(['code_team', 'Cluster_opp'], axis=1)
     df_merged['Cluster_XG_y'] = df_merged['Cluster_XG_y'].fillna(0.9)
     df_merged['Cluster_XG_x'] = df_merged['Cluster_XG_x'].fillna(0.9)
     df_merged['Cluster_XGC_y'] = df_merged['Cluster_XGC_y'].fillna(1.9)
     df_merged['Cluster_XGC_x'] = df_merged['Cluster_XGC_x'].fillna(1.9)
+    df_merged['Cluster_CS_y'] = df_merged['Cluster_CS_y'].fillna(0.1)
+    df_merged['Cluster_CS_x'] = df_merged['Cluster_CS_x'].fillna(0.1)
     nan_rows = df_merged[df_merged.isna().any(axis=1)]
 
 
@@ -272,6 +279,9 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
     xg = model_xg.predict(new_input_XG)
     xg2 = model_xg.predict(new_input_XG2)
 
+    
+    
+
 
     features = ['Own_XGC', 'Opposition_XG','Own_XGC_slope','Opponent_XG_slope','Own_XGC_avg','Opposition_XG_avg','Opposition_Treat','Own_TreatAgainst','Opposition_XPTS','Opposition_DEEP']
     new_input_XGC = pd.DataFrame()
@@ -316,6 +326,13 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
     #css1=model_CS.predict(new_input_XGC)
     #css2=model_CS.predict(new_input_XGC2)
 
+    own_xg_cluster=df_merged["Cluster_XG_x"].values
+    opp_xg_cluster=df_merged["Cluster_XG_y"].values
+    own_cluster_css=df_merged["Cluster_CS_x"].values
+    opp_cluster_css=df_merged["Cluster_CS_y"].values
+    print(opp_cluster_css)
+    print(css2)
+
     result_df=pd.DataFrame()
     result_df["GW"]=df_merged["event"]
     result_df["pred"]=df_merged["event"]-min_event+1
@@ -323,10 +340,10 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
     result_df["away_team"]=df_merged["team_a_name"]
     result_df["home_code"]=df_merged["team_h"]
     result_df["away_code"]=df_merged["team_a"]
-    result_df["home_goals"]=(xg+xgc2)/2
-    result_df["away_goals"]=(xgc+xg2)/2
-    result_df["Clean_Sheet_home"]=css1
-    result_df["Clean_Sheet_away"]=css2
+    result_df["home_goals"]=(xg+xgc2+own_xg_cluster)/3
+    result_df["away_goals"]=(xgc+xg2+opp_xg_cluster)/3
+    result_df["Clean_Sheet_home"]=css1*0.7+0.3*own_cluster_css
+    result_df["Clean_Sheet_away"]=css2*0.7+0.3*opp_cluster_css
     result_df.to_csv("Team_prediction_visual.csv")
 
     home_df=result_df[["GW", "pred"]]
