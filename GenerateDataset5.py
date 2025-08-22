@@ -1276,6 +1276,39 @@ def main_Transform():
             adjusted_xg_mean_feature=player_df["Adjusted_XG_Mean"].values[-1]
             #player_df["Average_OverAssist"]=player_df["OverAssist"].rolling(window=12, min_periods=1).mean()
             player_df["Average_OverAssist"]=player_df['assists'].rolling(window=15, min_periods=1).sum()/player_df['expected_assists'].rolling(window=15, min_periods=1).sum()
+            
+            
+            clusters=player_df["Cluster"].unique()
+            for clust in clusters:
+                col_name=f'XG_vs_{clust}'
+                is_cluster=player_df["Cluster"]==clust
+                player_df[col_name]=(
+                    player_df[is_cluster].groupby('name')['expected_goals']
+                    .rolling(window=8, min_periods=1).mean()
+                    .reset_index(level=0, drop=True)
+                )
+                player_df[col_name]=player_df[col_name].ffill()
+                
+            for clust in clusters:
+                col_name=f'XA_vs_{clust}'
+                is_cluster=player_df["Cluster"]==clust
+                player_df[col_name]=(
+                    player_df[is_cluster].groupby('name')['expected_assists']
+                    .rolling(window=8, min_periods=1).mean()
+                    .reset_index(level=0, drop=True)
+                )
+                player_df[col_name]=player_df[col_name].ffill()
+                
+            for clust in clusters:
+                col_name=f'BPS_vs_{clust}'
+                is_cluster=player_df["Cluster"]==clust
+                player_df[col_name]=(
+                    player_df[is_cluster].groupby('name')['bps']
+                    .rolling(window=8, min_periods=1).mean()
+                    .reset_index(level=0, drop=True)
+                )
+                player_df[col_name]=player_df[col_name].ffill()
+                
             player_df = player_df.ffill()
             
             

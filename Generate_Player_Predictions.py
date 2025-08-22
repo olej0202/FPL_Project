@@ -574,6 +574,70 @@ def Generate_LSTM_preds(pred,column_list,predlength):
     pred_all_players=pd.DataFrame(total_preds,columns=column_list)
 
     pred_all_players.to_csv(f"DNN_{pred}.csv")
+    
+    
+import numpy as np
+import pandas as pd
+
+def CLUSTER_preds(pred_variable):
+    path="Player_Prediction_set.csv"
+    # map the request to the dynamic column prefix + fallback column
+    metric_map = {
+        "GOALS":  ("XG",  "XG_historic"),
+        "Assist": ("XA",  "XA_historic"),
+        "bps":    ("BPS", "bps_historic"),
+    }
+    if pred_variable not in metric_map:
+        return 0
+
+    metric, fallback_col = metric_map[pred_variable]
+
+    data = pd.read_csv(path)
+    # be safe on dtypes
+    for col in ["GW", "opposition_xgc"]:
+        if col in data.columns:
+            data[col] = pd.to_numeric(data[col], errors="coerce")
+
+    all_rows = []
+
+    # work per player, sorted by GW (or date if you prefer)
+    for name, df in data.groupby("name"):
+        df = df.sort_values("GW").reset_index(drop=True)
+
+        for idx, row in df.iterrows():
+            cluster = str(row.get("Cluster", "")).strip()
+            # if your column uses underscores in the cluster name, normalize:
+            cluster_key = cluster.replace(" ", "_")
+
+            col_name = f"{metric}_vs_{cluster_key}"  # e.g., XG_vs_finisher
+
+            # get the cluster-specific value if that column exists
+            val = np.nan
+            if col_name in df.columns:
+                val = row[col_name]
+
+            # fallback if missing/zero
+            if pd.isna(val) or float(val) == 0.0:
+                if fallback_col in df.columns:
+                    val = row.get(fallback_col, 0.0)
+                else:
+                    val = 0.0
+
+            out = [
+                name,
+                int(row["GW"]) if not pd.isna(row.get("GW")) else np.nan,
+                float(val) if not pd.isna(val) else 0.0,
+                row.get("position", ""),
+                # include an opponent stat if useful (or drop this)
+                float(row["opposition_xgc"]) if "opposition_xgc" in row and not pd.isna(row["opposition_xgc"]) else np.nan,
+            ]
+            all_rows.append(out)
+
+    out_df = pd.DataFrame(all_rows, columns=["Name", "GW", "pred", "position", "opp_stat"])
+    out_path = f"CLUSTER_{pred_variable}.csv"
+    out_df.to_csv(out_path, index=False)
+
+
 
     
 def Generate_point_predictions():
@@ -582,13 +646,17 @@ def Generate_point_predictions():
     xgb_goals = Get_rows("XGB", "GOALS").sort_values(by=["GW", "opp_stat"])
     stat_goals = Get_rows("STAT", "GOALS").sort_values(by=["GW", "opp_stat"])
     DNN_goals = Get_rows("DNN", "GOALS").sort_values(by=["GW", "opp_stat"])
+    cluster_goals=Get_rows("CLUSTER", "GOALS").sort_values(by=["GW", "opp_stat"])
 
     xgb_assist = Get_rows("XGB", "Assist").sort_values(by=["GW", "opp_stat"])
     stat_assist = Get_rows("STAT", "Assist").sort_values(by=["GW", "opp_stat"])
     DNN_assist = Get_rows("DNN", "Assist").sort_values(by=["GW", "opp_stat"])
+    cluster_assist=Get_rows("CLUSTER", "Assist").sort_values(by=["GW", "opp_stat"])
 
     xgb_bps = Get_rows("XGB", "bps").sort_values(by=["GW", "opp_stat"])
     stat_bps = Get_rows("STAT", "bps").sort_values(by=["GW", "opp_stat"])
+    cluster_bps=Get_rows("CLUSTER", "bps").sort_values(by=["GW", "opp_stat"])
+
 
     stat_GC = Get_rows("STAT", "GC").sort_values(by=["GW", "opp_stat"])
 
@@ -611,13 +679,20 @@ def Generate_point_predictions():
         xgb_goals_player = xgb_goals[xgb_goals["Name"]==player].sort_values(by=["GW", "opp_stat"])
         stat_goals_player = stat_goals[stat_goals["Name"]==player].sort_values(by=["GW", "opp_stat"])
         DNN_goals_player = DNN_goals[DNN_goals["Name"]==player].sort_values(by=["GW", "opp_stat"])
+        CLUSTER_goals_player = cluster_goals[cluster_goals["Name"]==player].sort_values(by=["GW", "opp_stat"])
+
+        
 
         xgb_assist_player = xgb_assist[xgb_assist["Name"]==player].sort_values(by=["GW", "opp_stat"])
         stat_assist_player = stat_assist[stat_assist["Name"]==player].sort_values(by=["GW", "opp_stat"])
         DNN_assist_player = DNN_assist[DNN_assist["Name"]==player].sort_values(by=["GW", "opp_stat"])
+        CLUSTER_assist_player = cluster_assist[cluster_assist["Name"]==player].sort_values(by=["GW", "opp_stat"])
+
 
         xgb_bps_player = xgb_bps[xgb_bps["Name"]==player].sort_values(by=["GW", "opp_stat"])
         stat_bps_player = stat_bps[stat_bps["Name"]==player].sort_values(by=["GW", "opp_stat"])
+        cluster_bps_player = cluster_bps[cluster_bps["Name"]==player].sort_values(by=["GW", "opp_stat"])
+
 
         stat_GC_player = stat_GC[stat_GC["Name"]==player].sort_values(by=["GW", "opp_stat"])
 
@@ -644,24 +719,27 @@ def Generate_point_predictions():
 
         for i in range(len(player_data)):
             try:
-                goals.append(((xgb_goals_player["pred"].values[i]*0.2
+                goals.append(((xgb_goals_player["pred"].values[i]*0.0
                          +stat_goals_player["pred"].values[i]*0.5
-                         +DNN_goals_player["pred"].values[i]*0.3))*overscore)
+                         +DNN_goals_player["pred"].values[i]*0.3
+                         +CLUSTER_goals_player["pred"].values[i]*0.2))*overscore)
             except:
                 goals.append(0)
 
             try:
 
-                assist.append(((xgb_assist_player["pred"].values[i]*0.2
+                assist.append(((xgb_assist_player["pred"].values[i]*0.0
                                     +stat_assist_player["pred"].values[i]*0.5
-                                    +DNN_assist_player["pred"].values[i]*0.3))*overassist)
+                                    +DNN_assist_player["pred"].values[i]*0.3
+                                    +CLUSTER_assist_player["pred"].values[i]*0.2))*overassist)
             except:
                 assist.append(0)
 
             try:
 
                 bps.append((xgb_bps_player["pred"].values[i]*0.3
-                                   +stat_bps_player["pred"].values[i]*0.7)*1.0)
+                                   +stat_bps_player["pred"].values[i]*0.5
+                                   +cluster_bps_player["pred"].values[i]*0.2*0.02)*1.0)
             except:
                 bps.append(0)
 
@@ -748,6 +826,7 @@ def Make_Predictions ():
 
         pred2=XGB(position_filter,"FWD",column_list,predlength)        
         Generate_LSTM_preds(position_filter,column_list,predlength)
+        CLUSTER_preds(position_filter)
 
 
 
