@@ -29,7 +29,7 @@ Manual_team_offensive_adjustments = {94:0.9,1:1.2,31:0.9,21:0.9,4:0.9 }
     
     
     
-Manual_team_defensive_adjustments = {94:1.15,11:1.1, 31:1.1,6:0.85, 17:0.9 }
+Manual_team_defensive_adjustments = {94:1.1,11:1.1, 31:1.1,6:0.85, 17:0.9 }
 
 
 Manual_NewPlayer_Adjustments={
@@ -40,7 +40,7 @@ Manual_NewPlayer_Adjustments={
         "El_Hadji Malick Diouf":["Aaron_Wan-Bissaka", "Lucas_Digne"], 
         "Jeremie_Frimpong":["Andrew_Robertson","Pedro_Porro","Lucas_Digne"],
         "Benjamin_Sesko":["Kai_Havertz","Rasmus_Højlund","Marcus_Rashford"], 
-        "Hugo_Ekitiké":["Kai_Havertz","Yoane_Wissa","Luis_Díaz" ]    
+        "Hugo_Ekitiké":["Kai_Havertz","Yoane_Wissa","Alexander_Isak" ]    
     }
 
 Manual_Player_Adjustments={

@@ -342,8 +342,8 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
     result_df["away_code"]=df_merged["team_a"]
     result_df["home_goals"]=(xg+xgc2+own_xg_cluster)/3
     result_df["away_goals"]=(xgc+xg2+opp_xg_cluster)/3
-    result_df["Clean_Sheet_home"]=css1*0.7+0.3*own_cluster_css
-    result_df["Clean_Sheet_away"]=css2*0.7+0.3*opp_cluster_css
+    result_df["Clean_Sheet_home"]=css1*0.8+0.2*own_cluster_css
+    result_df["Clean_Sheet_away"]=css2*0.8+0.2*opp_cluster_css
     result_df.to_csv("Team_prediction_visual.csv")
 
     home_df=result_df[["GW", "pred"]]

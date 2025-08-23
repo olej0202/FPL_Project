@@ -323,6 +323,7 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
             own_new_row=player_cluster.iloc[0,:].copy()
             own_new_row["name"]=name
             own_new_row["Team"]=team_code
+            own_new_row["position"]=position
 
             columns_to_average = [col for col in player_cluster.columns if col not in exclude_columns]
 

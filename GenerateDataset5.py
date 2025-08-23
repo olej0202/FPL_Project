@@ -1283,8 +1283,8 @@ def main_Transform():
                 col_name=f'XG_vs_{clust}'
                 is_cluster=player_df["Cluster"]==clust
                 player_df[col_name]=(
-                    player_df[is_cluster].groupby('name')['expected_goals']
-                    .rolling(window=8, min_periods=1).mean()
+                    player_df[is_cluster].groupby('name')['expected_goals'].transform(lambda s: s.clip(upper=0.8)  
+                    .rolling(window=8, min_periods=1).mean())
                     .reset_index(level=0, drop=True)
                 )
                 player_df[col_name]=player_df[col_name].ffill()
@@ -1293,8 +1293,8 @@ def main_Transform():
                 col_name=f'XA_vs_{clust}'
                 is_cluster=player_df["Cluster"]==clust
                 player_df[col_name]=(
-                    player_df[is_cluster].groupby('name')['expected_assists']
-                    .rolling(window=8, min_periods=1).mean()
+                    player_df[is_cluster].groupby('name')['expected_assists'].transform(lambda s: s.clip(upper=0.8)  
+                    .rolling(window=8, min_periods=1).mean())
                     .reset_index(level=0, drop=True)
                 )
                 player_df[col_name]=player_df[col_name].ffill()
@@ -1303,8 +1303,8 @@ def main_Transform():
                 col_name=f'BPS_vs_{clust}'
                 is_cluster=player_df["Cluster"]==clust
                 player_df[col_name]=(
-                    player_df[is_cluster].groupby('name')['bps']
-                    .rolling(window=8, min_periods=1).mean()
+                    player_df[is_cluster].groupby('name')['bps'].transform(lambda s: s.clip(upper=35)  
+                    .rolling(window=8, min_periods=1).mean())
                     .reset_index(level=0, drop=True)
                 )
                 player_df[col_name]=player_df[col_name].ffill()
