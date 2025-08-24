@@ -781,7 +781,7 @@ def team_transformed2():
 
         k_def = 0.06
         k_off=0.06
-        min_val=0.6
+        min_val=0.8
 
         actual_goals = xg
         if was_home==1:

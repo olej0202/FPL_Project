@@ -106,10 +106,9 @@ def get_my_team(team_id=46805,Last_GW=1):
 
         initial_saved=saved_transfers+hit
 
-    url = f"https://fantasy.premierleague.com/api/entry/{team_id}/event/1/picks/"
+    url = f"https://fantasy.premierleague.com/api/entry/{team_id}/event/{Last_GW}/picks/"
 
     response = requests.get(url)
-    print(response)
 
     if response.status_code == 200:
         team_selection = response.json()
@@ -147,7 +146,7 @@ def get_my_team(team_id=46805,Last_GW=1):
 
 
 
-def optimize_my_team(team_id=46805,wildcard_round=40, bb_round=40,Last_GW=1,banned_list=[],GW_list=["0", "2","3","4","5","6","7","8"], current_player_path="Raw_Data_25/current_players.csv"):
+def optimize_my_team(team_id=7025308,wildcard_round=40, bb_round=40,Last_GW=2,banned_list=[],GW_list=["0","3","4","5","6","7"], current_player_path="Raw_Data_25/current_players.csv"):
 
     current_players = pd.read_csv(current_player_path)
     is_first=False
@@ -193,7 +192,8 @@ def optimize_my_team(team_id=46805,wildcard_round=40, bb_round=40,Last_GW=1,bann
         
     else:
         initial_saved,squad=get_my_team(team_id,Last_GW=Last_GW)
-        initial_saved-=1
+        print(initial_saved)
+        print(initial_saved)
         url = f"https://fantasy.premierleague.com/api/entry/{team_id}/"
         response = requests.get(url)
         if response.status_code == 200:
@@ -203,6 +203,7 @@ def optimize_my_team(team_id=46805,wildcard_round=40, bb_round=40,Last_GW=1,bann
             print(f"Error fetching data (Status Code: {response.status_code})")
 
         money_in_bank_init = resonsep_data.get("last_deadline_bank", 0)/10
+        print(money_in_bank_init)
 
     
 
@@ -213,6 +214,7 @@ def optimize_my_team(team_id=46805,wildcard_round=40, bb_round=40,Last_GW=1,bann
     for t in range (len(squad)):
         name=squad["Full_Name"].values[t]
         initial_squad.append(players.index(name))
+    print(initial_squad)
 
     
     list1 = costs.copy()
