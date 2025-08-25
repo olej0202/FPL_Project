@@ -33,7 +33,7 @@ class DeepNN(nn.Module):
 
 
 def Data_Extraction(season,is_new_season,has_been_error):
-    #main_Extract(season, is_new_season, has_been_error)
+    main_Extract(season, is_new_season, has_been_error)
     current_players(season)
     current_teams(season)
     #main_Extract_Understat(season)
@@ -93,7 +93,7 @@ def Main_Orchestration():
     
     
     #EXTARCT DATA
-    #Data_Extraction(season,is_new_season,has_been_error)
+    Data_Extraction(season,is_new_season,has_been_error)
     
     
     #Transform data
