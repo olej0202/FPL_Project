@@ -155,10 +155,10 @@ def optimize_my_team(team_id=7025308,wildcard_round=40, bb_round=40,Last_GW=2,ba
 
     team_id=team_id
 
-    wildcard_round = wildcard_round-Last_GW  # Gameweek 3 (Index t=2)
+    wildcard_round = int(wildcard_round)-Last_GW  # Gameweek 3 (Index t=2)
     if(is_first):
         wildcard_round = 1  # Gameweek 3 (Index t=2)
-    bench_points_gw=bb_round-Last_GW
+    bench_points_gw=int(bb_round)-Last_GW
     Last_GW=Last_GW
     hit=0
     banned_list=banned_list
