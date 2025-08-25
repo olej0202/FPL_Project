@@ -25,7 +25,7 @@ Spurs,6
 ,Ipswich,40"""
 
 
-Manual_team_offensive_adjustments = {94:0.9,1:1.2,31:0.9,21:0.9,4:0.9 }
+Manual_team_offensive_adjustments = {94:0.9,1:1.1,31:0.9,21:0.9,4:0.9 }
     
     
     
@@ -40,15 +40,13 @@ Manual_NewPlayer_Adjustments={
         "El_Hadji Malick Diouf":["Aaron_Wan-Bissaka", "Lucas_Digne"], 
         "Jeremie_Frimpong":["Andrew_Robertson","Pedro_Porro","Lucas_Digne"],
         "Benjamin_Sesko":["Kai_Havertz","Rasmus_Højlund","Marcus_Rashford"], 
-        "Hugo_Ekitiké":["Kai_Havertz","Yoane_Wissa","Alexander_Isak" ]    
+        "Hugo_Ekitiké":["Kai_Havertz","Alexander_Isak" ]    
     }
 
 Manual_Player_Adjustments={
         "Mohammed_Kudus":["Brennan_Johnson","Son_Heung-min"],
         "Matheus_Santos Carneiro Da Cunha":["Bruno_Borges Fernandes","Alejandro_Garnacho Ferreyra","Amad_Diallo"],
         "Bryan_Mbeumo":["Bruno_Borges Fernandes","Alejandro_Garnacho Ferreyra","Amad_Diallo"],
-        "Cole_Palmer":["Mohamed_Salah","Bukayo_Saka"],
-        "Ollie_Watkins":["Erling_Haaland","Yoane_Wissa"],
         "Anthony_Gordon":["Alexander_Isak","Jacob_Murphy","Harvey_Barnes"],   
         "Igor_Thiago Nascimento Rodrigues":["Yoane_Wissa","Bryan_Mbeumo"],
         "Lucas_Tolentino Coelho de Lima":["Jarrod_Bowen"],
