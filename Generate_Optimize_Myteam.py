@@ -3,7 +3,7 @@ import numpy as np
 from pulp import LpMaximize, LpProblem, LpVariable, lpSum
 import requests
 import os
-
+from pulp import value 
 
 
 
@@ -439,7 +439,17 @@ def optimize_my_team(team_id=7025308,wildcard_round=40, bb_round=40,Last_GW=2,ba
                                 ,"web_name":web_name})
 
     # Final structured DataFrame
+    obj_val = float(value(model.objective))
+    records.append({"Name": 'Obj Value'
+                                , "status": obj_val
+                                , "GW": 100
+                                , "position": "obj"
+                                , "photo": "obj"
+                                , "Is_captain":  0
+                                ,"web_name":'obj'})
+    print(records[-1])
     status_df = pd.DataFrame(records)
+    
     return status_df
     
     
