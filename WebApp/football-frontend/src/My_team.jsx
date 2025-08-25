@@ -245,11 +245,21 @@ if (data) {
 {data && (
         
         <div className="mt-2 flex justify-center">
-  <p className="max-w-md text-center text-xs sm:text-sm leading-tight text-gray-600 dark:text-gray-300 mb-10">
+  <p className="max-w-md text-center text-xs sm:text-sm leading-tight text-gray-600 dark:text-gray-300">
     Click a player to view stats, or add them to <span className="font-medium">Unwanted</span>
   </p>
 </div>
       )}
+      {totalPredPoints != null && (
+  <div className="text-center bg-black/70 backdrop-blur px-3 py-0 rounded-md text-center">
+    <div className="text-[10px] uppercase tracking-wide text-gray-300">
+      Total predicted points
+    </div>
+    <div className="text-royal-gold font-bold text-lg">
+      {totalPredPoints.toFixed(2)}
+    </div>
+  </div>
+)}
 
     
 
@@ -262,16 +272,7 @@ if (data) {
           className="w-full max-w-[400px] aspect-[1/2] bg-no-repeat bg-cover bg-center border border-white rounded-lg px-2 py-1 relative"
           style={{ backgroundImage: `url(${pitch})` }}
         >
-          {totalPredPoints != null && (
-  <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-black/70 backdrop-blur px-3 py-1 rounded-md text-center">
-    <div className="text-[10px] uppercase tracking-wide text-gray-300">
-      Total predicted points
-    </div>
-    <div className="text-royal-gold font-bold text-lg">
-      {totalPredPoints.toFixed(2)}
-    </div>
-  </div>
-)}
+          
           
           <div className="flex flex-col justify-between h-[500px] pt-0 space-y-0 width-full">
             <PlayerRow
