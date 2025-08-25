@@ -62,6 +62,23 @@ export default function MyTeamOptimize() {
     ).sort((a, b) => a.GW - b.GW);
   }
 
+let totalPredPoints = null;
+if (data) {
+  // prefer full dataset; fall back to gwData if you really want only that slice
+  const objRow =
+    data.find((p) => p.Name === "Obj Value") ||
+    (Array.isArray(gwData) && gwData.find((p) => p.Name === "Obj Value")) ||
+    // optional: if you sometimes used another label earlier
+    data.find((p) => p.Name === "__TOTAL_OBJECTIVE__");
+
+  // value might live in `status` (string) or in `objective` (number); handle both
+  if (objRow) {
+    const asNum =
+      objRow.objective != null ? Number(objRow.objective) : Number(objRow.status);
+    totalPredPoints = Number.isFinite(asNum) ? asNum : null;
+  }
+}
+
   return (
      <div className="min-h-screen bg-black text-white flex flex-col items-center px-0 py-4 space-y-8">
       <h1 className="text-3xl font-bold">Optimize My Team</h1>
@@ -228,11 +245,13 @@ export default function MyTeamOptimize() {
 {data && (
         
         <div className="mt-2 flex justify-center">
-  <p className="max-w-md text-center text-xs sm:text-sm leading-tight text-gray-600 dark:text-gray-300">
-    Click a player to view stats, or add them to <span className="font-medium">Unwanted</span> and optimize again.
+  <p className="max-w-md text-center text-xs sm:text-sm leading-tight text-gray-600 dark:text-gray-300 mb-10">
+    Click a player to view stats, or add them to <span className="font-medium">Unwanted</span>
   </p>
 </div>
       )}
+
+    
 
 
 
@@ -243,6 +262,16 @@ export default function MyTeamOptimize() {
           className="w-full max-w-[400px] aspect-[1/2] bg-no-repeat bg-cover bg-center border border-white rounded-lg px-2 py-1 relative"
           style={{ backgroundImage: `url(${pitch})` }}
         >
+          {totalPredPoints != null && (
+  <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-black/70 backdrop-blur px-3 py-1 rounded-md text-center">
+    <div className="text-[10px] uppercase tracking-wide text-gray-300">
+      Total predicted points
+    </div>
+    <div className="text-royal-gold font-bold text-lg">
+      {totalPredPoints.toFixed(2)}
+    </div>
+  </div>
+)}
           
           <div className="flex flex-col justify-between h-[500px] pt-0 space-y-0 width-full">
             <PlayerRow
