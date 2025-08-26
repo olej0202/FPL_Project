@@ -47,11 +47,10 @@ Manual_Player_Adjustments={
         "Mohammed_Kudus":["Brennan_Johnson","Son_Heung-min"],
         "Matheus_Santos Carneiro Da Cunha":["Bruno_Borges Fernandes","Alejandro_Garnacho Ferreyra","Amad_Diallo"],
         "Bryan_Mbeumo":["Bruno_Borges Fernandes","Alejandro_Garnacho Ferreyra","Amad_Diallo"],
-        "Anthony_Gordon":["Alexander_Isak","Jacob_Murphy","Harvey_Barnes"],   
+        "Anthony_Gordon":["Alexander_Isak","Harvey_Barnes"],   
         "Igor_Thiago Nascimento Rodrigues":["Yoane_Wissa","Bryan_Mbeumo"],
         "Lucas_Tolentino Coelho de Lima":["Jarrod_Bowen"],
-        "Mohamed_Salah":["Luis_Díaz","Mohamed_Salah" ],
-        }
+        "Mohamed_Salah":["Luis_Díaz","Mohamed_Salah" ]        }
 
 NEW_TEAMS=[56]
 
