@@ -10,6 +10,7 @@ export function MyTeamDataContextProvider({ children }) {
   const [teamId, setTeamId] = useState('');
   const [bbRound, setBbRound] = useState('');
   const [wildRound, setWildRound] = useState('');
+  const [freehitROund, setfreehitROund] = useState('');
   const [bannedList, setBannedList] = useState([]);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -23,6 +24,7 @@ export function MyTeamDataContextProvider({ children }) {
       const params = new URLSearchParams({ team_id: teamId });
       if (bbRound)   params.append('bb_round', bbRound);
       if (wildRound) params.append('wildcard_round', wildRound);
+      if (freehitROund) params.append('freehit_round', freehitROund);
       bannedList.forEach((id) => params.append('banned_list', id));
 
       const resp = await fetch(
@@ -80,6 +82,8 @@ export function MyTeamDataContextProvider({ children }) {
         setBbRound,
         wildRound,
         setWildRound,
+        freehitROund, 
+        setfreehitROund,
         bannedList,
         data,
         loading,
