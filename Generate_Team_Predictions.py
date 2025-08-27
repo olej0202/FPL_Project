@@ -119,10 +119,28 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
 
 
     model_xg=SVR(kernel='rbf', C=0.1, epsilon=0.1,gamma=0.1)
-    model_xg.fit(X_train, y_train)
+    params = {
+            'max_depth': 5,
+            'eta': 0.1,
+            'objective': 'reg:squarederror',  # Use 'reg:squarederror' for regression
+            'eval_metric': 'rmse',             # Use 'rmse' (root mean squared error) for evaluation
+            'tree_method':'hist',
+            'grow_policy': 'lossguide',
+            'lambda': 2, 
+            'gamma':0.1,
+            'min_child_weight': 6
+        }
+
+    num_rounds = 60
+    dtrain = xgb.DMatrix(X_train, label=y_train,enable_categorical=True)
+    model_xg = xgb.train(params, dtrain, num_rounds)
+
+    #model_xg.fit(X_train, y_train)
     #model_xg.fit(X_train_lasso, y_train)
     # Make Predictions
-    y_pred = model_xg.predict(X_test)
+    dtest= xgb.DMatrix(X_test, label=y_test,enable_categorical=True)
+
+    y_pred = model_xg.predict(dtest)
     #y_pred = model_xg.predict(X_test_lasso)
 
     # Evaluate Performance
@@ -158,10 +176,14 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
     model_CS.fit(X_train, y_CS_train)
 
     model_xgc=SVR(kernel='rbf', C=0.1, epsilon=0.1,gamma=0.1)
-    model_xgc.fit(X_train, y_train)
+    dtrain = xgb.DMatrix(X_train, label=y_train,enable_categorical=True)
+    model_xgc = xgb.train(params, dtrain, num_rounds)
+    #model_xgc.fit(X_train, y_train)
 
     # Make Predictions
-    y_pred = model_xgc.predict(X_test)
+    dtest= xgb.DMatrix(X_test, label=y_test,enable_categorical=True)
+
+    y_pred = model_xgc.predict(dtest)    
     y_pred_CS = model_CS.predict_proba(X_test)[:, 1]
     #y_pred_CS = model_CS.predict(X_test)
     # Evaluate Performance
@@ -275,9 +297,11 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
 
     new_input_XG.to_csv("teams_preds_test.csv")
 
+    XG1= xgb.DMatrix(new_input_XG)
+    XG2= xgb.DMatrix(new_input_XG2)
 
-    xg = model_xg.predict(new_input_XG)
-    xg2 = model_xg.predict(new_input_XG2)
+    xg = model_xg.predict(XG1)
+    xg2 = model_xg.predict(XG2)
 
     
     
@@ -318,9 +342,11 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
     new_input_XGC2['Opposition_DEEP']=df_merged["roll10_deep_y"]
 
 
+    XGC1= xgb.DMatrix(new_input_XGC)
+    XGC2= xgb.DMatrix(new_input_XGC2)
 
-    xgc = model_xgc.predict(new_input_XGC)
-    xgc2 = model_xgc.predict(new_input_XGC2)
+    xgc = model_xgc.predict(XGC1)
+    xgc2 = model_xgc.predict(XGC2)
     css1=model_CS.predict_proba(new_input_XGC)[:, 1]
     css2=model_CS.predict_proba(new_input_XGC2)[:, 1]
     #css1=model_CS.predict(new_input_XGC)
@@ -340,10 +366,10 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
     result_df["away_team"]=df_merged["team_a_name"]
     result_df["home_code"]=df_merged["team_h"]
     result_df["away_code"]=df_merged["team_a"]
-    result_df["home_goals"]=(xg+xgc2+own_xg_cluster)/3
-    result_df["away_goals"]=(xgc+xg2+opp_xg_cluster)/3
-    result_df["Clean_Sheet_home"]=css1*0.8+0.2*own_cluster_css
-    result_df["Clean_Sheet_away"]=css2*0.8+0.2*opp_cluster_css
+    result_df["home_goals"]=((xg+xgc2)/2)*0.8+0.2*own_xg_cluster
+    result_df["away_goals"]=((xgc+xg2)/2)*0.8+0.2*opp_xg_cluster
+    result_df["Clean_Sheet_home"]=css1*0.7+0.3*own_cluster_css
+    result_df["Clean_Sheet_away"]=css2*0.7+0.3*opp_cluster_css
     result_df.to_csv("Team_prediction_visual.csv")
 
     home_df=result_df[["GW", "pred"]]
@@ -369,3 +395,4 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
 
 
 GenerateTeamPredictions( "Raw_Data_25\Fantasy_season_2025_Fixtures.csv","Raw_Data_25\current_teams.csv", 8)
+

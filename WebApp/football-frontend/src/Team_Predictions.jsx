@@ -87,13 +87,12 @@ useEffect(() => {
 
 
 
-     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
   {filteredData.map((match, idx) => (
     <div
       key={idx}
-      className="bg-royal-red border border-royal-beige border-3 p-6 rounded shadow text-royal-beige" 
+      className="bg-royal-red border border-royal-beige border-3 p-3 rounded shadow text-royal-beige" 
     >
-      <h2 className="text-lg font-bold text-center mb-4">GW {match.GW}</h2>
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center space-x-2">
 
