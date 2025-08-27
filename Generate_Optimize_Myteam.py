@@ -146,9 +146,10 @@ def get_my_team(team_id=46805,Last_GW=1):
 
 
 
-def optimize_my_team(team_id=7025308,wildcard_round=40, bb_round=40,Last_GW=2,banned_list=[],GW_list=["0","3","4","5","6","7"], current_player_path="Raw_Data_25/current_players.csv"):
+def optimize_my_team(team_id=7025308,wildcard_round=40, bb_round=40,free_hit_round=40,Last_GW=2,banned_list=[],GW_list=["0","3","4","5","6","7"], current_player_path="Raw_Data_25/current_players.csv"):
 
     current_players = pd.read_csv(current_player_path)
+    free_hit_values=pd.read_csv("Free_hit_values.csv")
     is_first=False
     if "1" in GW_list:
         is_first=True
@@ -157,6 +158,14 @@ def optimize_my_team(team_id=7025308,wildcard_round=40, bb_round=40,Last_GW=2,ba
 
     wildcard_round= None if wildcard_round is None else int(wildcard_round) - Last_GW
     bench_points_gw = None if bb_round is None else int(bb_round) - Last_GW
+    freehit_round=  None if free_hit_round is None else int(free_hit_round) - Last_GW
+    if(str(free_hit_round) in GW_list):
+        free_hit_val=free_hit_values.values[freehit_round][-1]
+        week_to_remove_transfer=int(free_hit_round)+1-Last_GW
+        GW_list.remove(str(free_hit_round))
+    else:
+        free_hit_val=0
+        week_to_remove_transfer=40
     if(wildcard_round<1):
         wildcard_round=40
     if(bench_points_gw<1):
@@ -197,7 +206,7 @@ def optimize_my_team(team_id=7025308,wildcard_round=40, bb_round=40,Last_GW=2,ba
     else:
         initial_saved,squad=get_my_team(team_id,Last_GW=Last_GW)
         print(initial_saved)
-        print(initial_saved)
+
         url = f"https://fantasy.premierleague.com/api/entry/{team_id}/"
         response = requests.get(url)
         if response.status_code == 200:
@@ -241,7 +250,8 @@ def optimize_my_team(team_id=7025308,wildcard_round=40, bb_round=40,Last_GW=2,ba
     positions = data['position'].tolist()
     costs = data['value'].tolist()
     teams = data['team_code'].tolist()
-    selected = data['selected'].tolist() 
+    selected = data['selected'].tolist()
+     
     predicted_points = data[GW_list].values
 
     optimize_range = len(GW_list) # Number of gameweeks to optimize
@@ -357,10 +367,14 @@ def optimize_my_team(team_id=7025308,wildcard_round=40, bb_round=40,Last_GW=2,ba
 
     for t in gameweeks[1:]:
         if t == wildcard_round:
-            model += saved_transfers[t] == hit # Reset after wildcard
+            model += saved_transfers[t] == hit # Reset after wildcard       
         else:
-            model += saved_transfers[t] == saved_transfers[t-1] + (1 - lpSum(transfer_in[i, t] for i in range(num_players)))
-            model += saved_transfers[t] <= 5
+            if(t == week_to_remove_transfer):
+                model += saved_transfers[t] == saved_transfers[t-1] + (1 - lpSum(transfer_in[i, t] for i in range(num_players)))-1
+                model += saved_transfers[t] <= 5
+            else:
+                model += saved_transfers[t] == saved_transfers[t-1] + (1 - lpSum(transfer_in[i, t] for i in range(num_players)))
+                model += saved_transfers[t] <= 5
 
     # --- Initial Transfers & Bank ---
     model += saved_transfers[0] == initial_saved
@@ -439,7 +453,7 @@ def optimize_my_team(team_id=7025308,wildcard_round=40, bb_round=40,Last_GW=2,ba
                                 ,"web_name":web_name})
 
     # Final structured DataFrame
-    obj_val = float(value(model.objective))
+    obj_val = float(value(model.objective))+free_hit_val
     records.append({"Name": 'Obj Value'
                                 , "status": obj_val
                                 , "GW": 100

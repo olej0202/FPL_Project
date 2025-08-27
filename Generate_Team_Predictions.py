@@ -108,7 +108,7 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
 
 
     # Define Features and Target
-    features = ['Own_XG','Opposition_XGC','Own_XG_slope','Opponent_XGC_slope','Own_XG_avg','Opposition_XGC_avg','Own_Cluster','Opposition_Cluster','Cluster_XG','Own_Treat','Opposition_TreatAgainst','Opposition_XPTS',"Own_DEEP"]
+    features = ['Own_XG','Opposition_XGC','Own_XG_slope','Opponent_XGC_slope','Own_XG_avg','Opposition_XGC_avg','Own_Cluster','Opposition_Cluster','Cluster_XG','Own_Treat','Opposition_TreatAgainst','Opposition_XPTS',"Own_DEEP",'Own_XPTS']
     #features = ['Own_XG', 'Own_XGC', 'Opposition_XG', 'Opposition_XGC'] # Exclude target and date
     target = 'XG'
 
@@ -258,7 +258,7 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
 
 
 
-    features = ['Own_XG','Opposition_XGC','Own_XG_slope','Opponent_XGC_slope','Own_XG_avg','Opposition_XGC_avg',"Cluster","Own_Treat","Opposition_TreatAgainst",'Opposition_XPTS','Own_DEEP']
+    features = ['Own_XG','Opposition_XGC','Own_XG_slope','Opponent_XGC_slope','Own_XG_avg','Opposition_XGC_avg',"Cluster","Own_Treat","Opposition_TreatAgainst",'Opposition_XPTS','Own_DEEP','Own_XPTS']
 
     new_input_XG = pd.DataFrame()
     new_input_XG["Own_XG"]=df_merged["XGH"]
@@ -275,6 +275,8 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
     new_input_XG['Opposition_TreatAgainst']=df_merged["Rolling_Threat_Against_x"]
     new_input_XG['Opposition_XPTS']=df_merged["roll10_xpts_x"]
     new_input_XG['Own_DEEP']=df_merged["roll10_deep_y"]
+    new_input_XG['Own_XPTS']=df_merged["roll10_xpts_y"]
+    
 
 
     
@@ -293,6 +295,8 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
     new_input_XG2['Opposition_TreatAgainst']=df_merged["Rolling_Threat_Against_y"]
     new_input_XG2['Opposition_XPTS']=df_merged["roll10_xpts_y"]
     new_input_XG2['Own_DEEP']=df_merged["roll10_deep_x"]
+    new_input_XG2['Own_XPTS']=df_merged["roll10_xpts_x"]
+
 
 
     new_input_XG.to_csv("teams_preds_test.csv")

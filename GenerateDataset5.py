@@ -564,10 +564,10 @@ def Generate_team_data():
         team_data=full_team_data[full_team_data["name"]==team]
         away_team=team_data[team_data["was_home"]==False]
         home_team=team_data[team_data["was_home"]==True]
-        home_team['XGH']=np.clip(home_team['XG'], None, 3.5).rolling(window=8, min_periods=1).mean()
-        home_team['XGCH']=np.clip(home_team['XGC'], None, 3.5).rolling(window=8, min_periods=1).mean()
-        away_team['XGA']=np.clip(away_team['XG'], None, 3.5).rolling(window=8, min_periods=1).mean()
-        away_team['XGCA']=np.clip(away_team['XGC'], None, 3.5).rolling(window=8, min_periods=1).mean()
+        home_team['XGH']=np.clip(home_team['XG'], None, 3).rolling(window=8, min_periods=1).mean()
+        home_team['XGCH']=np.clip(home_team['XGC'], None, 3).rolling(window=8, min_periods=1).mean()
+        away_team['XGA']=np.clip(away_team['XG'], None, 3).rolling(window=8, min_periods=1).mean()
+        away_team['XGCA']=np.clip(away_team['XGC'], None, 3).rolling(window=8, min_periods=1).mean()
         
         home_team["XG_DEF"]=home_team['XG_DEF'].ewm(span=8, adjust=False).mean()
         home_team["XG_MID"]=home_team['XG_MID'].ewm(span=8, adjust=False).mean()
@@ -588,8 +588,8 @@ def Generate_team_data():
         new_team['XG_avg']=new_team['XG'].rolling(window=10, min_periods=1).mean()
         new_team['XGC_avg']=new_team['XGC'].rolling(window=10, min_periods=1).mean()
         
-        new_team['Rolling_Threat']=new_team['Threat'].rolling(window=10, min_periods=1).mean()
-        new_team['Rolling_Threat_Against']=new_team['Threat_against'].rolling(window=10, min_periods=1).mean()
+        new_team['Rolling_Threat']=new_team['Threat'].ewm(span=20, adjust=False).mean()
+        new_team['Rolling_Threat_Against']=new_team['Threat_against'].ewm(span=20, adjust=False).mean()
         
         new_team['XG_slope']=new_team['XG_avg'].rolling(window=6, min_periods=1).apply(rolling_slope, raw=True)
         new_team['XGC_slope']=new_team['XGC_avg'].rolling(window=6, min_periods=1).apply(rolling_slope, raw=True)
@@ -779,9 +779,9 @@ def team_transformed2():
 
 
 
-        k_def = 0.06
-        k_off=0.06
-        min_val=0.8
+        k_def = 0.07
+        k_off=0.07
+        min_val=0.7
 
         actual_goals = xg
         if was_home==1:
@@ -893,7 +893,7 @@ def team_transformed2():
     new_team_df=pd.read_csv("Team_data_transformed.csv").iloc[:,1:]
     new_team_df_newest=pd.read_csv("Team_data_newest.csv").iloc[:,1:]
 
-    overall_weight=0.25
+    overall_weight=0.2
 
     team_transformed_df=pd.DataFrame()
     team_transformed_df_newest=pd.DataFrame()

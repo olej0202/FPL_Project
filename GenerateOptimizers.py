@@ -5,7 +5,7 @@ from pulp import LpMaximize, LpProblem, LpVariable, lpSum
 import pandas as pd
 import numpy as np
 from pulp import LpMaximize, LpProblem, LpVariable, lpSum
-
+from pulp import value 
 def wildcard_optimize_team(sel_thresh, budget, columns, file_path="Model_Optimizer.csv", current_player_path="Raw_Data_25/current_players.csv"):
     # Load and preprocess data
     data = pd.read_csv(file_path)
@@ -308,10 +308,102 @@ def freeHit_optimize_team(sel_thresh, budget, columns, file_path="Model_Optimize
     result_df.to_csv("Free_hit_team.csv")
     print(result_df)
 
+def freeHit_values(sel_thresh, budget, columns, file_path="Model_Optimizer.csv", current_player_path="Raw_Data_25/current_players.csv"):
+
+    data = pd.read_csv(file_path)
+    print(columns)
+    cols = columns
+    
+    data[cols] = np.where(data["offset"] < 1, data[cols] * data["offset"], data[cols] * data["minutes_multiplier"])
+    budget = budget
+    sel_tresh = sel_thresh
+    players = data['name'].tolist()
+    positions = data['position'].tolist()
+    costs = data['value'].tolist()
+    teams = data['team_code'].tolist() 
+    selected = data['selected'].tolist() 
+    predicted_points = data[cols].values.flatten()  # Only use 'p1' for Gameweek 1
+
+    not_sel_list=[]
+
+    num_players = len(players)
+
+    # Define Model
+    model = LpProblem("Maximize_Predicted_Points_One_Round", LpMaximize)
+
+    # Decision Variables
+    x = {i: LpVariable(cat='Binary', name=f"x_{i}") for i in range(num_players)}  # Selected players
+    bench = {i: LpVariable(cat='Binary', name=f"bench_{i}") for i in range(num_players)}  # Bench players
+    y = {i: LpVariable(cat='Binary', name=f"y_{i}") for i in range(num_players)}  # Playing players
+    capt = {i: LpVariable(cat='Binary', name=f"capt_{i}") for i in range(num_players)}  
+    
+
+    # Objective: Maximize Total Points for Gameweek 1
+    model += lpSum(y[i] * predicted_points[i] for i in range(num_players))+ lpSum(capt[i] * predicted_points[i] for i in range(num_players))
+
+    # Ensure y is 1 only when player is in the squad and not benched
+    for i in range(num_players):
+        model += y[i] <= x[i]               # Can only play if selected in squad
+        model += y[i] <= 1 - bench[i]        # Can't play if benched
+        model += y[i] >= x[i] + (1 - bench[i]) - 1  # Consistency
+        
+    model += lpSum(capt[i] for i in range(num_players)) == 1
+
+
+    for i in range(num_players):
+            model += x[i] * selected[i] <= sel_tresh
+
+
+    model += lpSum(y[i] for i in range(num_players) if positions[i] == 'DEF') == 3
+
+    # Budget Constraint
+    model += lpSum(x[i] * costs[i] for i in range(num_players)) <= budget
+    
+    
+
+    # Max 3 Players per Team Constraint
+    for team in set(teams):
+        model += lpSum(x[i] for i in range(num_players) if teams[i] == team) <= 3
+    
+    for team in set(teams):
+            model += lpSum(x[i] for i in range(num_players) if teams[i] == team and positions[i] in ("GKP", "DEF")) <= 2
+
+    # Total Players Constraint (15 players in squad)
+    model += lpSum(x[i] for i in range(num_players)) == 15
+
+    # Position Constraints
+    model += lpSum(x[i] for i in range(num_players) if positions[i] == 'DEF') == 5  # 5 Defenders
+    model += lpSum(x[i] for i in range(num_players) if positions[i] == 'GKP') == 2   # 2 Goalkeepers
+    model += lpSum(x[i] for i in range(num_players) if positions[i] == 'MID') == 5  # 5 Midfielders
+    model += lpSum(x[i] for i in range(num_players) if positions[i] == 'FWD') == 3  # 3 Attackers
+
+    # Bench Constraints
+    model += lpSum(bench[i] for i in range(num_players) if positions[i] == 'GKP') == 1  # Exactly 1 GK on bench
+    model += lpSum(bench[i] for i in range(num_players) if positions[i] != 'GKP') == 3  # Exactly 3 outfield players on bench
+
+    # A player can only be benched if they are in the squad
+    for i in range(num_players):
+        model += bench[i] <= x[i]
+
+    # Solve the Model
+    model.solve()
+    obj_val = float(value(model.objective))
+    # Check the status of the solution
+    return [columns[0], obj_val]
 
 def generate_optimizers(ownership, budget, GW_list_wildcard, GW_list_freehit):
     wildcard_optimize_team(ownership, budget, GW_list_wildcard)
     freeHit_optimize_team(ownership, budget, GW_list_freehit)
+    free_hit_vals=[]
+    for i in range(len(GW_list_wildcard)):
+        cols=GW_list_wildcard[i]
+        print(GW_list_wildcard)
+        val=freeHit_values(ownership, budget, cols)
+        free_hit_vals.append(val)
+    free_hit_df=pd.DataFrame(free_hit_vals, columns=["GW", "Val"])
+    free_hit_df.to_csv("Free_hit_values.csv")
+
+        
     
     
 if __name__ == "__main__":
