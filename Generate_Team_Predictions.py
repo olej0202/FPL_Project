@@ -102,7 +102,7 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
     test_df = Model_pred[(Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month == current_month-1)| 
                    (Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month == current_month-3) ]
     train_df = Model_pred[(Model_pred['kickoff_time'].dt.year < current_year) | 
-                     ((Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month < current_month-4))]
+                     ((Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month < current_month-3))]
     train_df=train_df[train_df['kickoff_time']>'2022-12-31']
 
 
@@ -118,7 +118,7 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
     y_test = test_df[target]
 
 
-    model_xg=SVR(kernel='rbf', C=0.1, epsilon=0.1,gamma=0.1)
+    
     params = {
             'max_depth': 5,
             'eta': 0.1,
@@ -134,13 +134,14 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
     num_rounds = 60
     dtrain = xgb.DMatrix(X_train, label=y_train,enable_categorical=True)
     model_xg = xgb.train(params, dtrain, num_rounds)
-
-    #model_xg.fit(X_train, y_train)
+    #SVR
+    model_xg=SVR(kernel='rbf', C=0.1, epsilon=0.1,gamma=0.1)
+    model_xg.fit(X_train, y_train)
     #model_xg.fit(X_train_lasso, y_train)
     # Make Predictions
     dtest= xgb.DMatrix(X_test, label=y_test,enable_categorical=True)
 
-    y_pred = model_xg.predict(dtest)
+    y_pred = model_xg.predict(X_test)
     #y_pred = model_xg.predict(X_test_lasso)
 
     # Evaluate Performance
@@ -178,12 +179,15 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
     model_xgc=SVR(kernel='rbf', C=0.1, epsilon=0.1,gamma=0.1)
     dtrain = xgb.DMatrix(X_train, label=y_train,enable_categorical=True)
     model_xgc = xgb.train(params, dtrain, num_rounds)
-    #model_xgc.fit(X_train, y_train)
+    
+    #SVR
+    model_xgc=SVR(kernel='rbf', C=0.1, epsilon=0.1,gamma=0.1)
+    model_xgc.fit(X_train, y_train)
 
     # Make Predictions
     dtest= xgb.DMatrix(X_test, label=y_test,enable_categorical=True)
 
-    y_pred = model_xgc.predict(dtest)    
+    y_pred = model_xgc.predict(X_test)    
     y_pred_CS = model_CS.predict_proba(X_test)[:, 1]
     #y_pred_CS = model_CS.predict(X_test)
     # Evaluate Performance
@@ -304,8 +308,8 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
     XG1= xgb.DMatrix(new_input_XG)
     XG2= xgb.DMatrix(new_input_XG2)
 
-    xg = model_xg.predict(XG1)
-    xg2 = model_xg.predict(XG2)
+    xg = model_xg.predict(new_input_XG)
+    xg2 = model_xg.predict(new_input_XG2)
 
     
     
@@ -349,8 +353,8 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
     XGC1= xgb.DMatrix(new_input_XGC)
     XGC2= xgb.DMatrix(new_input_XGC2)
 
-    xgc = model_xgc.predict(XGC1)
-    xgc2 = model_xgc.predict(XGC2)
+    xgc = model_xgc.predict(new_input_XGC)
+    xgc2 = model_xgc.predict(new_input_XGC2)
     css1=model_CS.predict_proba(new_input_XGC)[:, 1]
     css2=model_CS.predict_proba(new_input_XGC2)[:, 1]
     #css1=model_CS.predict(new_input_XGC)

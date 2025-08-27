@@ -103,7 +103,7 @@ export default function MyTeamOptimize() {
 }
 
   // --- Compute GWs and split squad ---
-  let minGW, maxGW, starters = [], bench = [], transfers = [], gwData = [];
+  let minGW, maxGW=38, starters = [], bench = [], transfers = [], gwData = [];
   if (data) {
     const gws = data.map((p) => Number(p.GW)).filter((n) => !isNaN(n));
     if (gws.length) {
@@ -198,7 +198,7 @@ export default function MyTeamOptimize() {
                   <option value="" disabled>
                     Bench Boost GW
                   </option>
-                  {Array.from({ length: 38 - minGW + 1 }, (_, i) => minGW + i).map(
+                  {Array.from({ length: maxGW - minGW + 1 }, (_, i) => minGW + i).map(
                     (gw) => (
                       <option key={gw} value={gw}>
                         GW {gw}
