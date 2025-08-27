@@ -31,18 +31,47 @@ export default function MyTeamOptimize() {
   const [showWildInput, setShowWildInput] = useState(!!wildRound);
   const [showfreehitInput, setshowfreehitInput] = useState(!!freehitROund);
   const [loadingPhase, setLoadingPhase] = useState("idle");
+  const [progress, setProgress] = useState(0);
   useEffect(() => {
     sethas_changed(true);
   }, [teamId, bbRound, wildRound, bannedList, sethas_changed, freehitROund]);
   useEffect(() => {
   if (loading) {
     setLoadingPhase("fetch");
-    const t = setTimeout(() => {
-      if (loading) setLoadingPhase("optimize");
-    }, 4000);
-    return () => clearTimeout(t);
+    setProgress(0);
+
+    // animate 0 → 40 over ~3s
+    let rafId;
+    const start = performance.now();
+    const duration = 4000; // 3s
+    const tick = (now) => {
+      const elapsed = now - start;
+      const pct = Math.min(40, (elapsed / duration) * 40);
+      setProgress(pct);
+
+      if (elapsed < duration && loading) {
+        rafId = requestAnimationFrame(tick);
+      } else if (loading) {
+        setLoadingPhase("optimize");
+        // gentle drift 40 → 90 while still loading
+        let p = Math.max(pct, 40);
+        const iv = setInterval(() => {
+          if (!loading) return clearInterval(iv);
+          p = Math.min(90, p + 1);
+          setProgress(p);
+          if (p >= 90) clearInterval(iv);
+        }, 120);
+      }
+    };
+    rafId = requestAnimationFrame(tick);
+
+    return () => cancelAnimationFrame(rafId);
   } else {
+    // finish to 100 then reset
+    setProgress(100);
+    const t = setTimeout(() => setProgress(0), 300);
     setLoadingPhase("idle");
+    return () => clearTimeout(t);
   }
 }, [loading]);
 
@@ -54,13 +83,14 @@ export default function MyTeamOptimize() {
           {loadingPhase === "fetch" ? "Fetching team…" : "Optimizing team…"}
         </div>
 
-        {/* progress bar */}
         <div className="h-2 w-full bg-gray-700 rounded overflow-hidden">
           <div
-            className={[
-              "h-full bg-royal-gold transition-all duration-700 ease-out",
-              loadingPhase === "fetch" ? "w-2/5" : "w-11/12"
-            ].join(" ")}
+            className="h-full bg-royal-gold transition-[width] duration-200 ease-out"
+            style={{ width: `${progress}%` }}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={Math.round(progress)}
+            role="progressbar"
           />
         </div>
 
