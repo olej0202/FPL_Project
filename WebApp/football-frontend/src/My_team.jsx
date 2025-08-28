@@ -43,7 +43,7 @@ export default function MyTeamOptimize() {
     // animate 0 → 40 over ~3s
     let rafId;
     const start = performance.now();
-    const duration = 4000; // 3s
+    const duration = 3000; // 3s
     const tick = (now) => {
       const elapsed = now - start;
       const pct = Math.min(40, (elapsed / duration) * 40);
@@ -57,10 +57,10 @@ export default function MyTeamOptimize() {
         let p = Math.max(pct, 40);
         const iv = setInterval(() => {
           if (!loading) return clearInterval(iv);
-          p = Math.min(90, p + 1);
+          p = Math.min(98, p + 1);
           setProgress(p);
-          if (p >= 90) clearInterval(iv);
-        }, 120);
+          if (p >= 98) clearInterval(iv);
+        }, 200);
       }
     };
     rafId = requestAnimationFrame(tick);
@@ -103,12 +103,12 @@ export default function MyTeamOptimize() {
 }
 
   // --- Compute GWs and split squad ---
-  let minGW, maxGW=38, starters = [], bench = [], transfers = [], gwData = [];
+  let minGW=1, maxGW=38, starters = [], bench = [], transfers = [], gwData = [];
   if (data) {
     const gws = data.map((p) => Number(p.GW)).filter((n) => !isNaN(n));
     if (gws.length) {
       minGW = Math.min(...gws);
-      maxGW = Math.max(...gws);
+      maxGW = Math.min(38,minGW+5);
     }
     gwData = data.filter((p) => Number(p.GW) === minGW);
     starters = gwData.filter((p) => p.status === "playing");
@@ -245,7 +245,7 @@ export default function MyTeamOptimize() {
                   <option value="" disabled>
                     Wildcard GW
                   </option>
-                  {Array.from({ length: 38 - minGW + 1 }, (_, i) => minGW + i).map(
+                  {Array.from({ length: maxGW - minGW + 1  }, (_, i) => minGW + i).map(
                     (gw) => (
                       <option key={gw} value={gw}>
                         GW {gw}
@@ -292,7 +292,7 @@ export default function MyTeamOptimize() {
                   <option value="" disabled>
                     FreeHit GW
                   </option>
-                  {Array.from({ length: 38 - minGW + 1 }, (_, i) => minGW + i).map(
+                  {Array.from({ length: maxGW - minGW + 1  }, (_, i) => minGW + i).map(
                     (gw) => (
                       <option key={gw} value={gw}>
                         GW {gw}
