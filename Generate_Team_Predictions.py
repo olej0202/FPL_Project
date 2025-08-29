@@ -15,7 +15,7 @@ from sklearn.metrics import recall_score
 
 
 def GenerateTeamPredictions1(fixture_path, current_team_path,horizon):
-    team_df = pd.read_csv("Team_data_transformed4.csv").iloc[:, 1:]
+    team_df = pd.read_csv("Team_data_transformed2.csv").iloc[:, 1:]
 
     team_df["XG_slope"] = team_df["XG_slope"].fillna(team_df["XG_slope"].median())
     team_df["XGC_slope"] = team_df["XGC_slope"].fillna(team_df["XGC_slope"].median())
@@ -408,7 +408,7 @@ def GenerateTeamPredictions1(fixture_path, current_team_path,horizon):
 
 
 def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
-    team_df = pd.read_csv("Team_data_transformed4.csv").iloc[:, 1:]
+    team_df = pd.read_csv("Team_data_transformed2.csv").iloc[:, 1:]
 
     team_df["XG_slope"] = team_df["XG_slope"].fillna(team_df["XG_slope"].median())
     team_df["XGC_slope"] = team_df["XGC_slope"].fillna(team_df["XGC_slope"].median())
@@ -517,7 +517,7 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
 
     
     # Define Features and Target
-    features = ['Own_XG','Opposition_XGC','Own_XG_slope','Opponent_XGC_slope','Own_XG_avg','Opposition_XGC_avg','Own_Cluster','Opposition_Cluster','Cluster_XG','Own_Treat','Opposition_TreatAgainst','Opposition_XPTS',"Own_DEEP",'Own_XPTS']
+    features = ['Own_XG','Opposition_XGC','Own_XG_slope','Opponent_XGC_slope','Own_XG_avg','Opposition_XGC_avg','Own_Cluster','Opposition_Cluster','Own_Treat','Opposition_TreatAgainst','Opposition_XPTS',"Own_DEEP",'Own_XPTS']
     #features = ['Own_XG', 'Own_XGC', 'Opposition_XG', 'Opposition_XGC'] # Exclude target and date
     target = 'XG_Bucket'
 
@@ -540,7 +540,7 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
         grow_policy="lossguide",
         max_depth=6,
         learning_rate=0.1,
-        n_estimators=200,
+        n_estimators=100,
         reg_lambda=2.0,
         gamma=0.1,
         min_child_weight=5,
@@ -561,7 +561,7 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
 
 
     # Define Features and Target
-    features = ['Own_XGC', 'Opposition_XG','Own_XGC_slope','Opponent_XG_slope','Opposition_XG_avg','Own_XGC_avg','Own_Cluster','Opposition_Cluster','Cluster_XGC','Opposition_Treat','Own_TreatAgainst','Opposition_XPTS',"Opposition_DEEP",'Own_XPTS']
+    features = ['Own_XGC', 'Opposition_XG','Own_XGC_slope','Opponent_XG_slope','Opposition_XG_avg','Own_XGC_avg','Own_Cluster','Opposition_Cluster','Opposition_Treat','Own_TreatAgainst','Opposition_XPTS',"Opposition_DEEP",'Own_XPTS']
 
     target = 'XGC_Bucket'
     cs_target='Clean_Sheet'
@@ -677,7 +677,7 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
 
 
 
-    features = ['Own_XG','Opposition_XGC','Own_XG_slope','Opponent_XGC_slope','Own_XG_avg','Opposition_XGC_avg','Own_Cluster','Opposition_Cluster','Cluster_XG','Own_Treat','Opposition_TreatAgainst','Opposition_XPTS',"Own_DEEP",'Own_XPTS']
+    features = ['Own_XG','Opposition_XGC','Own_XG_slope','Opponent_XGC_slope','Own_XG_avg','Opposition_XGC_avg','Own_Cluster','Opposition_Cluster','Own_Treat','Opposition_TreatAgainst','Opposition_XPTS',"Own_DEEP",'Own_XPTS']
 
     new_input_XG = pd.DataFrame()
     new_input_XG["Own_XG"]=df_merged["XGH"]
@@ -688,7 +688,6 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     new_input_XG["Opposition_XGC_avg"]=df_merged["XGC_avg_x"]
     new_input_XG["Own_Cluster"] = df_merged["Cluster_y"]
     new_input_XG["Opposition_Cluster"] = df_merged["Cluster_x"]
-    new_input_XG['Cluster_XG']=df_merged["Cluster_XG_x"]
     new_input_XG['Own_Treat']=df_merged["Rolling_Threat_y"]
     new_input_XG['Opposition_TreatAgainst']=df_merged["Rolling_Threat_Against_x"]
     new_input_XG['Opposition_XPTS']=df_merged["roll10_xpts_x"]
@@ -708,7 +707,6 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     new_input_XG2["Opposition_XGC_avg"]=df_merged["XGC_avg_y"]
     new_input_XG2["Own_Cluster"] = df_merged["Cluster_x"]
     new_input_XG2["Opposition_Cluster"] = df_merged["Cluster_y"]
-    new_input_XG2['Cluster_XG']=df_merged["Cluster_XG_y"]
     new_input_XG2['Own_Treat']=df_merged["Rolling_Threat_x"]
     new_input_XG2['Opposition_TreatAgainst']=df_merged["Rolling_Threat_Against_y"]
     new_input_XG2['Opposition_XPTS']=df_merged["roll10_xpts_y"]
@@ -733,7 +731,7 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     xg2 = proba2 @ weights    
 
 
-    features = ['Own_XGC', 'Opposition_XG','Own_XGC_slope','Opponent_XG_slope','Opposition_XG_avg','Own_XGC_avg','Own_Cluster','Opposition_Cluster','Cluster_XGC','Opposition_Treat','Own_TreatAgainst','Opposition_XPTS',"Opposition_DEEP",'Own_XPTS']
+    features = ['Own_XGC', 'Opposition_XG','Own_XGC_slope','Opponent_XG_slope','Opposition_XG_avg','Own_XGC_avg','Own_Cluster','Opposition_Cluster','Opposition_Treat','Own_TreatAgainst','Opposition_XPTS',"Opposition_DEEP",'Own_XPTS']
     new_input_XGC = pd.DataFrame()
     new_input_XGC["Own_XGC"]=df_merged["XGCH"]
     new_input_XGC["Opposition_XG"]=df_merged["XGA"]
@@ -743,7 +741,6 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     new_input_XGC["Own_XGC_avg"]=df_merged["XGC_avg_y"]
     new_input_XGC["Own_Cluster"] = df_merged["Cluster_y"]
     new_input_XGC["Opposition_Cluster"] = df_merged["Cluster_x"]
-    new_input_XGC['Cluster_XGC']=df_merged["Cluster_XGC_x"]
     new_input_XGC['Opposition_Treat']=df_merged["Rolling_Threat_x"]
     new_input_XGC['Own_TreatAgainst']=df_merged["Rolling_Threat_Against_y"]
     new_input_XGC['Opposition_XPTS']=df_merged["roll10_xpts_x"]
@@ -760,7 +757,6 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     new_input_XGC2["Own_XGC_avg"]=df_merged["XGC_avg_x"]
     new_input_XGC2["Own_Cluster"] = df_merged["Cluster_x"]
     new_input_XGC2["Opposition_Cluster"] = df_merged["Cluster_y"]
-    new_input_XGC2['Cluster_XGC']=df_merged["Cluster_XGC_y"]
     new_input_XGC2['Opposition_Treat']=df_merged["Rolling_Threat_y"]
     new_input_XGC2['Own_TreatAgainst']=df_merged["Rolling_Threat_Against_x"]
     new_input_XGC2['Opposition_XPTS']=df_merged["roll10_xpts_y"]
@@ -838,6 +834,7 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
 
     ALL_pred=pd.concat([home_df, away_df], axis=0, ignore_index=True)
     ALL_pred.to_csv("Team_prediction2.csv")
+
 
 
 
