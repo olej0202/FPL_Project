@@ -117,13 +117,13 @@ def team_data(
 
     if offense_cols is None:
         offense_cols = [
-            "XGH","XGA","XG_avg","XG_slope",
-            "Rolling_Threat", "roll10_xpts", "roll10_deep"
+            "XGH","XGA","XG_avg",
+            "Rolling_Threat", "roll10_xpts", "roll10_deep","XG"
         ]
     if defense_cols is None:
         defense_cols = [
-            "XGCH","XGCA","XGC_avg","XGC_slope",
-            "Rolling_Threat_Against"
+            "XGCH","XGCA","XGC_avg",
+            "Rolling_Threat_Against","XGC"
         ]
 
     current_teams = pd.read_csv(current_teams)

@@ -108,7 +108,7 @@ def GenerateTeamPredictions1(fixture_path, current_team_path,horizon):
 
 
     # Define Features and Target
-    features = ['Own_XG','Opposition_XGC','Own_XG_slope','Opponent_XGC_slope','Own_XG_avg','Opposition_XGC_avg','Own_Cluster','Opposition_Cluster','Cluster_XG','Own_Treat','Opposition_TreatAgainst','Opposition_XPTS',"Own_DEEP",'Own_XPTS']
+    features = ['Own_XG','Opposition_XGC','Own_XG_slope','Opponent_XGC_slope','Own_XG_avg','Opposition_XGC_avg','Own_Cluster','Opposition_Cluster','Own_Treat','Opposition_TreatAgainst','Opposition_XPTS',"Own_DEEP",'Own_XPTS']
     #features = ['Own_XG', 'Own_XGC', 'Opposition_XG', 'Opposition_XGC'] # Exclude target and date
     target = 'XG'
 
@@ -151,7 +151,7 @@ def GenerateTeamPredictions1(fixture_path, current_team_path,horizon):
 
 
     # Define Features and Target
-    features = ['Own_XGC', 'Opposition_XG','Own_XGC_slope','Opponent_XG_slope','Opposition_XG_avg','Own_XGC_avg','Own_Cluster','Opposition_Cluster','Cluster_XGC','Opposition_Treat','Own_TreatAgainst','Opposition_XPTS',"Opposition_DEEP"]
+    features = ['Own_XGC', 'Opposition_XG','Own_XGC_slope','Opponent_XG_slope','Opposition_XG_avg','Own_XGC_avg','Own_Cluster','Opposition_Cluster','Opposition_Treat','Own_TreatAgainst','Opposition_XPTS',"Opposition_DEEP"]
     #features = ['Own_XGC', 'Opposition_XG','Own_XGC_slope','Opponent_XG_slope','Opposition_XG_avg','Own_XGC_avg','Own_Cluster','Opposition_Cluster']
 
     #features = ['Own_XG', 'Own_XGC', 'Opposition_XG', 'Opposition_XGC']# Exclude target and date
@@ -262,7 +262,7 @@ def GenerateTeamPredictions1(fixture_path, current_team_path,horizon):
 
 
 
-    features = ['Own_XG','Opposition_XGC','Own_XG_slope','Opponent_XGC_slope','Own_XG_avg','Opposition_XGC_avg',"Cluster","Own_Treat","Opposition_TreatAgainst",'Opposition_XPTS','Own_DEEP','Own_XPTS']
+    features = ['Own_XG','Opposition_XGC','Own_XG_slope','Opponent_XGC_slope','Own_XG_avg','Opposition_XGC_avg','Own_Cluster','Opposition_Cluster','Own_Treat','Opposition_TreatAgainst','Opposition_XPTS',"Own_DEEP",'Own_XPTS']
 
     new_input_XG = pd.DataFrame()
     new_input_XG["Own_XG"]=df_merged["XGH"]
@@ -273,7 +273,6 @@ def GenerateTeamPredictions1(fixture_path, current_team_path,horizon):
     new_input_XG["Opposition_XGC_avg"]=df_merged["XGC_avg_x"]
     new_input_XG["Own_Cluster"] = df_merged["Cluster_y"]
     new_input_XG["Opposition_Cluster"] = df_merged["Cluster_x"]
-    new_input_XG['Cluster_XG']=df_merged["Cluster_XG_x"]
     new_input_XG['Own_Treat']=df_merged["Rolling_Threat_y"]
     new_input_XG['Opposition_TreatAgainst']=df_merged["Rolling_Threat_Against_x"]
     new_input_XG['Opposition_XPTS']=df_merged["roll10_xpts_x"]
@@ -293,7 +292,6 @@ def GenerateTeamPredictions1(fixture_path, current_team_path,horizon):
     new_input_XG2["Opposition_XGC_avg"]=df_merged["XGC_avg_y"]
     new_input_XG2["Own_Cluster"] = df_merged["Cluster_x"]
     new_input_XG2["Opposition_Cluster"] = df_merged["Cluster_y"]
-    new_input_XG2['Cluster_XG']=df_merged["Cluster_XG_y"]
     new_input_XG2['Own_Treat']=df_merged["Rolling_Threat_x"]
     new_input_XG2['Opposition_TreatAgainst']=df_merged["Rolling_Threat_Against_y"]
     new_input_XG2['Opposition_XPTS']=df_merged["roll10_xpts_y"]
@@ -314,7 +312,7 @@ def GenerateTeamPredictions1(fixture_path, current_team_path,horizon):
     
 
 
-    features = ['Own_XGC', 'Opposition_XG','Own_XGC_slope','Opponent_XG_slope','Own_XGC_avg','Opposition_XG_avg','Opposition_Treat','Own_TreatAgainst','Opposition_XPTS','Opposition_DEEP']
+    features = ['Own_XGC', 'Opposition_XG','Own_XGC_slope','Opponent_XG_slope','Opposition_XG_avg','Own_XGC_avg','Own_Cluster','Opposition_Cluster','Opposition_Treat','Own_TreatAgainst','Opposition_XPTS',"Opposition_DEEP"]
     new_input_XGC = pd.DataFrame()
     new_input_XGC["Own_XGC"]=df_merged["XGCH"]
     new_input_XGC["Opposition_XG"]=df_merged["XGA"]
@@ -324,7 +322,6 @@ def GenerateTeamPredictions1(fixture_path, current_team_path,horizon):
     new_input_XGC["Own_XGC_avg"]=df_merged["XGC_avg_y"]
     new_input_XGC["Own_Cluster"] = df_merged["Cluster_y"]
     new_input_XGC["Opposition_Cluster"] = df_merged["Cluster_x"]
-    new_input_XGC['Cluster_XGC']=df_merged["Cluster_XGC_x"]
     new_input_XGC['Opposition_Treat']=df_merged["Rolling_Threat_x"]
     new_input_XGC['Own_TreatAgainst']=df_merged["Rolling_Threat_Against_y"]
     new_input_XGC['Opposition_XPTS']=df_merged["roll10_xpts_x"]
@@ -342,7 +339,6 @@ def GenerateTeamPredictions1(fixture_path, current_team_path,horizon):
     new_input_XGC2["Own_XGC_avg"]=df_merged["XGC_avg_x"]
     new_input_XGC2["Own_Cluster"] = df_merged["Cluster_x"]
     new_input_XGC2["Opposition_Cluster"] = df_merged["Cluster_y"]
-    new_input_XGC2['Cluster_XGC']=df_merged["Cluster_XGC_y"]
     new_input_XGC2['Opposition_Treat']=df_merged["Rolling_Threat_y"]
     new_input_XGC2['Own_TreatAgainst']=df_merged["Rolling_Threat_Against_x"]
     new_input_XGC2['Opposition_XPTS']=df_merged["roll10_xpts_y"]
@@ -404,6 +400,10 @@ def GenerateTeamPredictions1(fixture_path, current_team_path,horizon):
 
     ALL_pred=pd.concat([home_df, away_df], axis=0, ignore_index=True)
     ALL_pred.to_csv("Team_prediction1.csv")
+
+
+
+
 
 
 
@@ -508,10 +508,10 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     current_month = datetime.today().month
 
     # Filter for current month
-    test_df = Model_pred[(Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month == current_month-4)| 
+    test_df = Model_pred[(Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month == current_month-1)| 
                    (Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month == current_month-3) ]
     train_df = Model_pred[(Model_pred['kickoff_time'].dt.year < current_year) | 
-                     ((Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month < current_month-4))]
+                     ((Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month < current_month-3))]
     train_df=train_df[train_df['kickoff_time']>'2022-12-31']
 
 
@@ -543,7 +543,7 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
         n_estimators=100,
         reg_lambda=2.0,
         gamma=0.1,
-        min_child_weight=5,
+        min_child_weight=8,
         random_state=42,
         enable_categorical=True
     )
@@ -591,7 +591,7 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
         n_estimators=100,
         reg_lambda=2.0,
         gamma=0.1,
-        min_child_weight=5,
+        min_child_weight=8,
         random_state=42,
         enable_categorical=True
     )
@@ -602,7 +602,7 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     weights = np.array([0.3, 0.9, 1.5, 2.2])        # same order as encoded classes
     custom_pred = proba @ weights
 
-    CS_weights = np.array([1, 0.2, 0, 0])        # same order as encoded classes
+    CS_weights = np.array([1, 0.4, 0, 0])        # same order as encoded classes
     CS_custom_pred = proba @ CS_weights
 
     
@@ -807,11 +807,11 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     result_df["away_code"]=df_merged["team_a"]
     result_df["home_goals"]=((xg+xgc2)/2)*0.7+0.15*(own_xg_cluster+opp_xgc_cluster)
     result_df["away_goals"]=((xgc+xg2)/2)*0.7+0.15*(opp_xg_cluster+own_xgc_cluster)
-    result_df["Clean_Sheet_home"]=((css1+css11)/2)*0.7+0.3*own_cluster_css
-    result_df["Clean_Sheet_away"]=((css2+css22)/2)*0.7+0.3*own_cluster_css
-    result_df["test_XG"]=xg
-    result_df["test_cluster"]=own_xg_cluster
-    result_df["test_opp_XGC"]=xgc2
+    result_df["Clean_Sheet_home"]=((css1+css11)/2)*1+0*own_cluster_css
+    result_df["Clean_Sheet_away"]=((css2+css22)/2)*1+0*own_cluster_css
+    result_df["homecss1"]=css1
+    result_df["homecss2"]=css11
+    result_df["home_XG"]=xg+xgc2
     result_df.to_csv("Team_prediction_visual2.csv")
 
     home_df=result_df[["GW", "pred"]]
@@ -840,6 +840,10 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
 
 
 
+
+
+
+
 def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
     GenerateTeamPredictions2(fixture_path, current_team_path,horizon)
     GenerateTeamPredictions1(fixture_path, current_team_path,horizon)
@@ -854,7 +858,7 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
     team_pred_visual1=pd.read_csv("Team_prediction_visual1.csv")
     team_pred_visual2=pd.read_csv("Team_prediction_visual2.csv")
     
-    team_pred_visual1[["home_goals","away_goals","Clean_Sheet_home","Clean_Sheet_away","test_XG"]]=team_pred_visual1[["home_goals","away_goals","Clean_Sheet_home","Clean_Sheet_away","test_XG"]]*0.5+team_pred_visual2[["home_goals","away_goals","Clean_Sheet_home","Clean_Sheet_away","test_XG"]]*0.5
+    team_pred_visual1[["home_goals","away_goals"]]=team_pred_visual1[["home_goals","away_goals"]]*0.5+team_pred_visual2[["home_goals","away_goals"]]*0.5
     team_pred_visual1.to_csv("Team_prediction_visual.csv")
     
 
