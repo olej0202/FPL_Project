@@ -33,10 +33,10 @@ class DeepNN(nn.Module):
 
 
 def Data_Extraction(season,is_new_season,has_been_error):
-    #main_Extract(season, is_new_season, has_been_error)
+    main_Extract(season, is_new_season, has_been_error)
     current_players(season)
     current_teams(season)
-    #main_Extract_Understat(season)
+    main_Extract_Understat(season)
 
 
 def Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list):
@@ -55,7 +55,7 @@ def Data_Generation(current_raw_data_path,ownership,budget,GW_list_wildcard,GW_l
     GenerateOptimizeSet(current_player_path)
     generate_optimizers(ownership=ownership,budget=budget,GW_list_wildcard=GW_list_wildcard,GW_list_freehit=GW_list_freehit  )
     Generate_ALL_datasets(current_team_path)
-    #main_GPT_News()
+    main_GPT_News()
 
 def Get_times(current_fixture_path,n_points_in_future):
     df=pd.read_csv(current_fixture_path)
@@ -77,7 +77,7 @@ def Get_times(current_fixture_path,n_points_in_future):
 def Main_Orchestration():
     season=25
     is_new_season=0
-    has_been_error=1
+    has_been_error=0
     n_points_in_future=8
     budget=100
     ownership=0.9
@@ -97,7 +97,7 @@ def Main_Orchestration():
     
     
     #Transform data
-    Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list)
+    #Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list)
     
     #Predict data
     Data_Predictions(current_fixture_path,current_team_path, n_points_in_future)

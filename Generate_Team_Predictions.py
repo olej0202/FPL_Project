@@ -12,7 +12,13 @@ from datetime import datetime
 from sklearn.metrics import mean_squared_error
 from sklearn.metrics import roc_auc_score, accuracy_score
 from sklearn.metrics import recall_score
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import (precision_recall_curve, average_precision_score,
+                             log_loss, brier_score_loss, roc_auc_score, classification_report, confusion_matrix)
+import tensorflow as tf
+from tensorflow.keras import layers, regularizers, callbacks, Model, Input,Sequential,losses
 
+from sklearn.utils.class_weight import compute_class_weight
 
 def GenerateTeamPredictions1(fixture_path, current_team_path,horizon):
     team_df = pd.read_csv("Team_data_transformed2.csv").iloc[:, 1:]
@@ -407,6 +413,9 @@ def GenerateTeamPredictions1(fixture_path, current_team_path,horizon):
 
 
 
+
+
+
 def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     team_df = pd.read_csv("Team_data_transformed2.csv").iloc[:, 1:]
 
@@ -419,7 +428,7 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
 
     team_df["Cluster"]=kmeans.predict(team_df[["XG_avg","XGC_avg"]].values)
 
-    opponent_df = team_df[["code", "XGA", "XGCA", "XGH", "XGCH", "kickoff_time", "XG_slope", "XGC_slope","XG_avg","XGC_avg","Cluster","Rolling_Threat","Rolling_Threat_Against","roll10_xpts","roll10_deep","roll10_deep_allowed"]].copy()
+    opponent_df = team_df[["code", "XGA", "XGCA", "XGH", "XGCH", "kickoff_time", "XG_slope", "XGC_slope","XG_avg","XGC_avg","Cluster","Rolling_Threat","Rolling_Threat_Against","roll10_xpts","roll10_deep","roll10_deep_allowed","Rolling_XG","Rolling_XGC"]].copy()        
 
     pred_df = pd.merge(team_df, opponent_df, 
                    left_on=['opponent', 'kickoff_time'], 
@@ -472,6 +481,10 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     Model_pred["Opposition_TreatAgainst"] = pred_df["Rolling_Threat_Against_opp"]
     Model_pred["Own_Treat"] = pred_df["Rolling_Threat_team"]
     Model_pred["Own_TreatAgainst"] = pred_df["Rolling_Threat_Against_team"]
+    Model_pred["Own_RollingXG"] = pred_df["Rolling_XG_team"]
+    Model_pred["Opposition_RollingXG"] = pred_df["Rolling_XG_opp"]
+    Model_pred["Own_RollingXGC"] = pred_df["Rolling_XGC_team"]
+    Model_pred["Opposition_RollingXGC"] = pred_df["Rolling_XGC_opp"]
 
 
     Model_pred["Own_Cluster"] = pred_df["Cluster_team"]
@@ -484,7 +497,7 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     Model_pred["Opponent_XGC_slope"] = pred_df["XGC_slope_opp"]
     Model_pred["XG_Bucket"] = pd.cut(
         Model_pred["XG"],
-        bins=[-np.inf, 0.6, 1.2, 1.8, np.inf],
+        bins=[-np.inf, 0.8, 1.3, 1.8, np.inf],
         labels=[0,1, 2, 3],
         right=True,
         include_lowest=True # interval is [a, b)
@@ -492,7 +505,7 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
 
     Model_pred["XGC_Bucket"] = pd.cut(
         Model_pred["XGC"],
-        bins=[-np.inf, 0.6, 1.2, 1.8, np.inf],
+        bins=[-np.inf, 0.8, 1.3, 1.8, np.inf],
         labels=[0,1, 2, 3],
         right=True,
         include_lowest=True # interval is [a, b)
@@ -508,16 +521,16 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     current_month = datetime.today().month
 
     # Filter for current month
-    test_df = Model_pred[(Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month == current_month-1)| 
+    test_df = Model_pred[(Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month == current_month-4)| 
                    (Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month == current_month-3) ]
     train_df = Model_pred[(Model_pred['kickoff_time'].dt.year < current_year) | 
-                     ((Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month < current_month-3))]
+                     ((Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month < current_month-4))]
     train_df=train_df[train_df['kickoff_time']>'2022-12-31']
 
 
     
     # Define Features and Target
-    features = ['Own_XG','Opposition_XGC','Own_XG_slope','Opponent_XGC_slope','Own_XG_avg','Opposition_XGC_avg','Own_Cluster','Opposition_Cluster','Own_Treat','Opposition_TreatAgainst','Opposition_XPTS',"Own_DEEP",'Own_XPTS']
+    features = ['Own_XG','Opposition_XGC','Own_XG_slope','Opponent_XGC_slope','Own_XG_avg','Opposition_XGC_avg','Own_Cluster','Opposition_Cluster','Own_Treat','Opposition_TreatAgainst','Opposition_XPTS',"Own_DEEP",'Own_XPTS','Opposition_RollingXGC','Own_RollingXG']
     #features = ['Own_XG', 'Own_XGC', 'Opposition_XG', 'Opposition_XGC'] # Exclude target and date
     target = 'XG_Bucket'
 
@@ -561,7 +574,7 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
 
 
     # Define Features and Target
-    features = ['Own_XGC', 'Opposition_XG','Own_XGC_slope','Opponent_XG_slope','Opposition_XG_avg','Own_XGC_avg','Own_Cluster','Opposition_Cluster','Opposition_Treat','Own_TreatAgainst','Opposition_XPTS',"Opposition_DEEP",'Own_XPTS']
+    features = ['Own_XGC', 'Opposition_XG','Own_XGC_slope','Opponent_XG_slope','Opposition_XG_avg','Own_XGC_avg','Own_Cluster','Opposition_Cluster','Opposition_Treat','Own_TreatAgainst','Opposition_XPTS',"Opposition_DEEP",'Own_XPTS','Opposition_RollingXG','Own_RollingXGC']
 
     target = 'XGC_Bucket'
     cs_target='Clean_Sheet'
@@ -571,6 +584,7 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     X_test = test_df[features].astype(float)
     y_test = test_df['XGC'].astype(float)
 
+    y_CS_train=train_df[cs_target].astype(int)
     y_CS_test=test_df[cs_target]
 
     for cat_col in ['Own_Cluster','Opposition_Cluster']:
@@ -597,26 +611,97 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     )
     
     model_xgc.fit(X_train, y_train)
-
     proba = model_xgc.predict_proba(X_test)
     weights = np.array([0.3, 0.9, 1.5, 2.2])        # same order as encoded classes
     custom_pred = proba @ weights
 
-    CS_weights = np.array([1, 0.4, 0, 0])        # same order as encoded classes
-    CS_custom_pred = proba @ CS_weights
+    def upsample_positives(X_df, y, pos_ratio=0.30, random_state=42):
+
+        rng = np.random.RandomState(random_state)
+
+        X = X_df.reset_index(drop=True).copy()
+        y = pd.Series(y, name="y").reset_index(drop=True)
+
+        pos_idx = np.flatnonzero(y.values == 1)
+        neg_idx = np.flatnonzero(y.values == 0)
+
+        n_neg = len(neg_idx)
+        n_pos_target = int((pos_ratio / (1 - pos_ratio)) * n_neg)
+
+        if len(pos_idx) == 0 or len(neg_idx) == 0:
+            # nothing to balance
+            return X, y.values.astype(int)
+
+        if len(pos_idx) >= n_pos_target:
+            pos_keep = rng.choice(pos_idx, size=n_pos_target, replace=False)
+        else:
+            pos_keep = rng.choice(pos_idx, size=n_pos_target, replace=True)
+
+        keep_idx = np.concatenate([neg_idx, pos_keep])
+        rng.shuffle(keep_idx)
+
+        X_bal = X.iloc[keep_idx].reset_index(drop=True)
+        y_bal = y.values[keep_idx].astype(int)   # <- numpy, no index alignment
+        return X_bal, y_bal
+
+
+
+    cat_cols = [c for c in ['Own_Cluster','Opposition_Cluster'] if c in X_train.columns]
+    num_cols = [c for c in X_train.columns if c not in cat_cols]
+
+    classes = np.array([0, 1])
+    w = compute_class_weight(class_weight="balanced", classes=classes, y=y_CS_train)
+    class_weight = {0: w[0], 1: w[1]}   # e.g., {0:0.6, 1:1.4}
+
+
+    # align columns
+    scaler = StandardScaler()
+    X_train_oh=X_train.copy()
+    X_test_oh=X_test.copy()
+    X_train_oh[num_cols] = scaler.fit_transform(X_train[num_cols].astype(float))
+    X_test_oh[num_cols]  = scaler.transform(X_test[num_cols].astype(float))
+
+
+    X_train_bal, y_train_bal = upsample_positives(X_train_oh, y_CS_train, pos_ratio=0.25)
+    y_smooth = 0.15 + 0.65 * y_train_bal  # if you're using smoothed labels
+
+    input_dim = X_train_bal.shape[1]
+    model = Sequential([
+        layers.Input(shape=(input_dim,)),
+        layers.Dense(64, activation='relu', kernel_regularizer=regularizers.l2(1e-3)),
+        layers.Dropout(0.1),
+        layers.Dense(16, activation='relu', kernel_regularizer=regularizers.l2(1e-3)),
+        layers.Dropout(0.1),
+        layers.Dense(1, activation=None)])
+    model.compile(optimizer='adam', loss=tf.keras.losses.Huber(delta=1.0) ,metrics=[tf.keras.metrics.MeanAbsoluteError()])
+
+    history = model.fit(
+        X_train_bal, y_smooth,
+        epochs=300,
+        batch_size=32,
+        shuffle=True,
+        verbose=0
+    )
+
+    p_test = model.predict(X_test_oh, verbose=0).ravel()
+    
+
+
+    print(p_test)
+
 
     
     mse = mean_squared_error(y_test, custom_pred)
     print(f"Mean Squared Error on Test Set: {mse:.4f}")
 
-    mse = mean_squared_error(y_CS_test, CS_custom_pred)
+    mse = mean_squared_error(y_CS_test, p_test)
     print(f"Mean Squared Error on CS: {mse:.4f}")
 
 
 
 
     # Assuming your model predicted probabilities:
-    y_pred_CS_binary = (CS_custom_pred > 0.37).astype(int)
+    y_pred_CS_binary = (p_test > 0.37).astype(int)
 
     # Recall = correctly predicted 1s / total actual 1s
     recall = recall_score(y_CS_test, y_pred_CS_binary, pos_label=1)
@@ -625,7 +710,7 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     fixture_data=pd.read_csv(fixture_path)[["event","team_a","team_h","finished"]]
     team_code_data=pd.read_csv(current_team_path)[["name","code","id"]]
 
-    team_data=pd.read_csv("Team_data_newest3.csv")[["code","XGA","XGCA","XGH","XGCH","XG_slope","XGC_slope","XG_avg","XGC_avg","Rolling_Threat","Rolling_Threat_Against","roll10_xpts","roll10_deep"]]
+    team_data=pd.read_csv("Team_data_newest3.csv")[["code","XGA","XGCA","XGH","XGCH","XG_slope","XGC_slope","XG_avg","XGC_avg","Rolling_Threat","Rolling_Threat_Against","roll10_xpts","roll10_deep","Rolling_XG","Rolling_XGC"]]
     team_data["Cluster"]=kmeans.predict(team_data[["XG_avg","XGC_avg"]].values)
     cluster_data=pd.read_csv("Team_cluster_data.csv")[["code_team","Cluster_opp","Cluster_XG","Cluster_XGC","Cluster_CS"]]
 
@@ -648,8 +733,8 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     predict_data["team_h"]=df_merged["code_y"].values
     predict_data["team_a_name"]=df_merged["name_x"].values
     predict_data["team_h_name"]=df_merged["name_y"].values
-    df_merged = predict_data.merge(team_data[["code","XGA","XGCA","XG_slope","XGC_slope","XG_avg","XGC_avg","Cluster","Rolling_Threat","Rolling_Threat_Against","roll10_xpts","roll10_deep"]], left_on='team_a', right_on='code', how='left')  # Left join to keep all rows from df2
-    df_merged = df_merged.merge(team_data[["code","XGH","XGCH","XG_slope","XGC_slope","XG_avg","XGC_avg","Cluster","Rolling_Threat","Rolling_Threat_Against","roll10_xpts","roll10_deep"]], left_on='team_h', right_on='code', how='left')  # Left join to keep all rows from df2
+    df_merged = predict_data.merge(team_data[["code","XGA","XGCA","XG_slope","XGC_slope","XG_avg","XGC_avg","Cluster","Rolling_Threat","Rolling_Threat_Against","roll10_xpts","roll10_deep","Rolling_XG","Rolling_XGC"]], left_on='team_a', right_on='code', how='left')  # Left join to keep all rows from df2
+    df_merged = df_merged.merge(team_data[["code","XGH","XGCH","XG_slope","XGC_slope","XG_avg","XGC_avg","Cluster","Rolling_Threat","Rolling_Threat_Against","roll10_xpts","roll10_deep","Rolling_XG","Rolling_XGC"]], left_on='team_h', right_on='code', how='left')  # Left join to keep all rows from df2
     df_merged = df_merged.merge(cluster_data, left_on=['code_x', 'Cluster_y'], right_on=['code_team', 'Cluster_opp'], how='left')  # Left join to keep all rows from df2
     df_merged = df_merged.rename(columns={
         'Cluster_XG': 'Cluster_XG_y',
@@ -677,7 +762,7 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
 
 
 
-    features = ['Own_XG','Opposition_XGC','Own_XG_slope','Opponent_XGC_slope','Own_XG_avg','Opposition_XGC_avg','Own_Cluster','Opposition_Cluster','Own_Treat','Opposition_TreatAgainst','Opposition_XPTS',"Own_DEEP",'Own_XPTS']
+    features = ['Own_XG','Opposition_XGC','Own_XG_slope','Opponent_XGC_slope','Own_XG_avg','Opposition_XGC_avg','Own_Cluster','Opposition_Cluster','Own_Treat','Opposition_TreatAgainst','Opposition_XPTS',"Own_DEEP",'Own_XPTS','Opposition_RollingXGC','Own_RollingXG']
 
     new_input_XG = pd.DataFrame()
     new_input_XG["Own_XG"]=df_merged["XGH"]
@@ -693,10 +778,10 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     new_input_XG['Opposition_XPTS']=df_merged["roll10_xpts_x"]
     new_input_XG['Own_DEEP']=df_merged["roll10_deep_y"]
     new_input_XG['Own_XPTS']=df_merged["roll10_xpts_y"]
-    
+    new_input_XG['Opposition_RollingXGC']=df_merged["Rolling_XGC_x"]
+    new_input_XG['Own_RollingXG']=df_merged["Rolling_XG_y"]
 
 
-    
 
     new_input_XG2 = pd.DataFrame()
     new_input_XG2["Own_XG"]=df_merged["XGA"]
@@ -712,6 +797,8 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     new_input_XG2['Opposition_XPTS']=df_merged["roll10_xpts_y"]
     new_input_XG2['Own_DEEP']=df_merged["roll10_deep_x"]
     new_input_XG2['Own_XPTS']=df_merged["roll10_xpts_x"]
+    new_input_XG2['Opposition_RollingXGC']=df_merged["Rolling_XGC_y"]
+    new_input_XG2['Own_RollingXG']=df_merged["Rolling_XG_x"]
 
     new_input_XG = new_input_XG[features].astype(float)
     new_input_XG2 = new_input_XG2[features].astype(float)
@@ -731,7 +818,7 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     xg2 = proba2 @ weights    
 
 
-    features = ['Own_XGC', 'Opposition_XG','Own_XGC_slope','Opponent_XG_slope','Opposition_XG_avg','Own_XGC_avg','Own_Cluster','Opposition_Cluster','Opposition_Treat','Own_TreatAgainst','Opposition_XPTS',"Opposition_DEEP",'Own_XPTS']
+    features = ['Own_XGC', 'Opposition_XG','Own_XGC_slope','Opponent_XG_slope','Opposition_XG_avg','Own_XGC_avg','Own_Cluster','Opposition_Cluster','Opposition_Treat','Own_TreatAgainst','Opposition_XPTS',"Opposition_DEEP",'Own_XPTS','Opposition_RollingXG','Own_RollingXGC']
     new_input_XGC = pd.DataFrame()
     new_input_XGC["Own_XGC"]=df_merged["XGCH"]
     new_input_XGC["Opposition_XG"]=df_merged["XGA"]
@@ -746,6 +833,9 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     new_input_XGC['Opposition_XPTS']=df_merged["roll10_xpts_x"]
     new_input_XGC['Opposition_DEEP']=df_merged["roll10_deep_x"]
     new_input_XGC['Own_XPTS']=df_merged["roll10_xpts_y"]
+    new_input_XGC['Opposition_RollingXG']=df_merged["Rolling_XG_x"]
+    new_input_XGC['Own_RollingXGC']=df_merged["Rolling_XGC_y"]
+
     
 
     new_input_XGC2 = pd.DataFrame()
@@ -762,6 +852,9 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     new_input_XGC2['Opposition_XPTS']=df_merged["roll10_xpts_y"]
     new_input_XGC2['Opposition_DEEP']=df_merged["roll10_deep_y"]
     new_input_XGC2['Own_XPTS']=df_merged["roll10_xpts_x"]
+    new_input_XGC2['Opposition_RollingXG']=df_merged["Rolling_XG_y"]
+    new_input_XGC2['Own_RollingXGC']=df_merged["Rolling_XGC_x"]
+
 
     new_input_XGC = new_input_XGC[features].astype(float)
     new_input_XGC2 = new_input_XGC2[features].astype(float)
@@ -780,14 +873,18 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     xgc2 = xgc_proba2 @ weights    
 
 
-    CS_weights = np.array([1, 0.2, 0, 0])        # same order as encoded classes
-    CS_custom_pred = proba @ CS_weights
 
-    css1=xgc_proba1 @ CS_weights
-    css2=xgc_proba2 @ CS_weights
 
-    css11=proba2 @ CS_weights
-    css22=proba1 @ CS_weights
+    cat_cols = [c for c in ['Own_Cluster','Opposition_Cluster'] if c in X_train.columns]
+    num_cols = [c for c in X_train.columns if c not in cat_cols]
+    
+    new_input_XGC[num_cols]  = scaler.transform(new_input_XGC[num_cols].astype(float))
+    new_input_XGC2[num_cols]  = scaler.transform(new_input_XGC2[num_cols].astype(float))
+    
+    css1=model.predict(new_input_XGC, verbose=0).ravel()
+
+    css2=model.predict(new_input_XGC2, verbose=0).ravel()
+
 
     own_xg_cluster=df_merged["Cluster_XG_x"].values
     opp_xg_cluster=df_merged["Cluster_XG_y"].values
@@ -807,11 +904,11 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     result_df["away_code"]=df_merged["team_a"]
     result_df["home_goals"]=((xg+xgc2)/2)*0.7+0.15*(own_xg_cluster+opp_xgc_cluster)
     result_df["away_goals"]=((xgc+xg2)/2)*0.7+0.15*(opp_xg_cluster+own_xgc_cluster)
-    result_df["Clean_Sheet_home"]=((css1+css11)/2)*1+0*own_cluster_css
-    result_df["Clean_Sheet_away"]=((css2+css22)/2)*1+0*own_cluster_css
-    result_df["homecss1"]=css1
-    result_df["homecss2"]=css11
-    result_df["home_XG"]=xg+xgc2
+    result_df["Clean_Sheet_home"]=css1
+    result_df["Clean_Sheet_away"]=css2
+    result_df["test_XG"]=xg
+    result_df["test_cluster"]=own_xg_cluster
+    result_df["test_opp_XGC"]=xgc2
     result_df.to_csv("Team_prediction_visual2.csv")
 
     home_df=result_df[["GW", "pred"]]
@@ -840,10 +937,6 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
 
 
 
-
-
-
-
 def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
     GenerateTeamPredictions2(fixture_path, current_team_path,horizon)
     GenerateTeamPredictions1(fixture_path, current_team_path,horizon)
@@ -858,10 +951,9 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
     team_pred_visual1=pd.read_csv("Team_prediction_visual1.csv")
     team_pred_visual2=pd.read_csv("Team_prediction_visual2.csv")
     
-    team_pred_visual1[["home_goals","away_goals"]]=team_pred_visual1[["home_goals","away_goals"]]*0.5+team_pred_visual2[["home_goals","away_goals"]]*0.5
+    team_pred_visual1[["home_goals","away_goals","Clean_Sheet_home","Clean_Sheet_away"]]=team_pred_visual1[["home_goals","away_goals","Clean_Sheet_home","Clean_Sheet_away"]]*1+team_pred_visual2[["home_goals","away_goals","Clean_Sheet_home","Clean_Sheet_away"]]*0
     team_pred_visual1.to_csv("Team_prediction_visual.csv")
     
 
-
-GenerateTeamPredictions( "Raw_Data_25\Fantasy_season_2025_Fixtures.csv","Raw_Data_25\current_teams.csv", 8)
-
+if __name__ == "__main__":
+    pass

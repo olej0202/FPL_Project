@@ -595,6 +595,8 @@ def Generate_team_data():
         new_team['XGC_slope']=new_team['XGC_avg'].rolling(window=6, min_periods=1).apply(rolling_slope, raw=True)
         new_team["Rolling_Threat"]=new_team["Rolling_Threat"]/100
         new_team["Rolling_Threat_Against"]=new_team["Rolling_Threat_Against"]/100
+        new_team["Rolling_XG"]=new_team['XG'].ewm(span=15, adjust=False).mean()
+        new_team["Rolling_XGC"]=new_team['XGC'].ewm(span=15, adjust=False).mean()
         
         newest_data = pd.concat([newest_data, new_team.iloc[[-1]]], axis=0, ignore_index=True)
         new_team["XGCH"]=new_team["XGCH"].shift(1, fill_value=1.5)
@@ -607,6 +609,8 @@ def Generate_team_data():
         new_team["XGC_slope"]=new_team["XGC_slope"].shift(1, fill_value=0)
         new_team["Rolling_Threat"]=new_team["Rolling_Threat"].shift(1, fill_value=1.5)
         new_team["Rolling_Threat_Against"]=new_team["Rolling_Threat_Against"].shift(1, fill_value=1.5)
+        new_team["Rolling_XG"]=new_team["Rolling_XG"].shift(1, fill_value=1.5)
+        new_team["Rolling_XGC"]=new_team["Rolling_XGC"].shift(1, fill_value=1.5)
 
         ALL_teams=pd.concat([ALL_teams, new_team], axis=0, ignore_index=True)
     ALL_teams.to_csv("Team_data_transformed.csv")
