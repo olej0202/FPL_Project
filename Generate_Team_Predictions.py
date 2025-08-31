@@ -662,13 +662,13 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     X_test_oh[num_cols]  = scaler.transform(X_test[num_cols].astype(float))
 
 
-    X_train_bal, y_train_bal = upsample_positives(X_train_oh, y_CS_train, pos_ratio=0.25)
-    y_smooth = 0.15 + 0.65 * y_train_bal  # if you're using smoothed labels
+    X_train_bal, y_train_bal = X_train_oh, y_CS_train
+    y_smooth = 0.2 + 0.6 * y_train_bal  # if you're using smoothed labels
 
     input_dim = X_train_bal.shape[1]
     model = Sequential([
         layers.Input(shape=(input_dim,)),
-        layers.Dense(64, activation='relu', kernel_regularizer=regularizers.l2(1e-3)),
+        layers.Dense(32, activation='relu', kernel_regularizer=regularizers.l2(1e-3)),
         layers.Dropout(0.1),
         layers.Dense(16, activation='relu', kernel_regularizer=regularizers.l2(1e-3)),
         layers.Dropout(0.1),
@@ -677,8 +677,8 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
 
     history = model.fit(
         X_train_bal, y_smooth,
-        epochs=300,
-        batch_size=32,
+        epochs=100,
+        batch_size=64,
         shuffle=True,
         verbose=0
     )
@@ -944,7 +944,7 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
     team_pred1=pd.read_csv("Team_prediction1.csv")
     team_pred2=pd.read_csv("Team_prediction2.csv")
     
-    team_pred1[["XG","XGC","CS"]]=team_pred1[["XG","XGC","CS"]]*0.5+team_pred2[["XG","XGC","CS"]]*0.5
+    team_pred1[["XG","XGC"]]=team_pred1[["XG","XGC"]]*0.5+team_pred2[["XG","XGC"]]*0.5
     
     team_pred1.to_csv("Team_prediction.csv")
     
