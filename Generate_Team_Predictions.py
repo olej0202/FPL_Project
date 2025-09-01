@@ -944,14 +944,14 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
     team_pred1=pd.read_csv("Team_prediction1.csv")
     team_pred2=pd.read_csv("Team_prediction2.csv")
     
-    team_pred1[["XG","XGC"]]=team_pred1[["XG","XGC"]]*0.5+team_pred2[["XG","XGC"]]*0.5
+    team_pred1[["XG","XGC","CS"]]=team_pred1[["XG","XGC","CS"]]*0.5+team_pred2[["XG","XGC","CS"]]*0.5
     
     team_pred1.to_csv("Team_prediction.csv")
     
     team_pred_visual1=pd.read_csv("Team_prediction_visual1.csv")
     team_pred_visual2=pd.read_csv("Team_prediction_visual2.csv")
     
-    team_pred_visual1[["home_goals","away_goals","Clean_Sheet_home","Clean_Sheet_away"]]=team_pred_visual1[["home_goals","away_goals","Clean_Sheet_home","Clean_Sheet_away"]]*1+team_pred_visual2[["home_goals","away_goals","Clean_Sheet_home","Clean_Sheet_away"]]*0
+    team_pred_visual1[["home_goals","away_goals","Clean_Sheet_home","Clean_Sheet_away"]]=team_pred_visual1[["home_goals","away_goals","Clean_Sheet_home","Clean_Sheet_away"]]*0.5+team_pred_visual2[["home_goals","away_goals","Clean_Sheet_home","Clean_Sheet_away"]]*0.5
     team_pred_visual1.to_csv("Team_prediction_visual.csv")
     
 
