@@ -704,7 +704,7 @@ def Generate_point_predictions():
         overscore=min(1.2,overscore)
 
         overassist=max(0.9,player_data["Average_OverAssist"].values[0])
-        overassist=min(1.4,overassist)
+        overassist=min(1.7,overassist)
         
         historic_xg=player_data["rolling_XG_historic"].values[0]
         historic_xa=player_data["rolling_XA_historic"].values[0]
@@ -720,26 +720,26 @@ def Generate_point_predictions():
         for i in range(len(player_data)):
             try:
                 goals.append(((xgb_goals_player["pred"].values[i]*0.15
-                         +stat_goals_player["pred"].values[i]*0.5
+                         +stat_goals_player["pred"].values[i]*0.6
                          +DNN_goals_player["pred"].values[i]*0.25
-                         +CLUSTER_goals_player["pred"].values[i]*0.1))*overscore)
+                         +CLUSTER_goals_player["pred"].values[i]*0.0))*overscore)
             except:
                 goals.append(0)
 
             try:
 
                 assist.append(((xgb_assist_player["pred"].values[i]*0.15
-                                    +stat_assist_player["pred"].values[i]*0.5
+                                    +stat_assist_player["pred"].values[i]*0.6
                                     +DNN_assist_player["pred"].values[i]*0.25
-                                    +CLUSTER_assist_player["pred"].values[i]*0.1))*overassist)
+                                    +CLUSTER_assist_player["pred"].values[i]*0.0))*overassist)
             except:
                 assist.append(0)
 
             try:
 
-                bps.append((xgb_bps_player["pred"].values[i]*0.3
+                bps.append((xgb_bps_player["pred"].values[i]*0.4
                                    +stat_bps_player["pred"].values[i]*0.5
-                                   +cluster_bps_player["pred"].values[i]*0.2*0.02)*1.0)
+                                   +cluster_bps_player["pred"].values[i]*0.1*0.04)*0.8)
             except:
                 bps.append(0)
 
@@ -787,7 +787,7 @@ def Generate_point_predictions():
             summary_dataset["Points_prediction"]=(2+summary_dataset["Goal_pred"]*5.5
                                                   +summary_dataset["Assist_pred"]*3
                                                   +summary_dataset["Bonus_pred"]
-                                                  +summary_dataset["GC_pred"])*0.8+0.2*summary_dataset["Fantasy_pred"]+(summary_dataset["CBI_pred"]/12)*0.6*2
+                                                  +summary_dataset["GC_pred"])*0.8+0.2*summary_dataset["Fantasy_pred"]+(summary_dataset["CBI_pred"]/12)*0.55*2
             
         elif(position=="GKP"):
             summary_dataset["Points_prediction"]=(2
