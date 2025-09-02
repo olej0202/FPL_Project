@@ -81,10 +81,17 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
             attacking_factor=(df["opposition_xgc"].values[h]*0.4+team_xg*0.6)
             defensive_factor=(team_CS)
             if(pred_variable=="GOALS"):
-               player_preds.append((df['Rolling_adjusted_XG'].values[h]*df["opposition_xgc"].values[h]+df['Share_of_XG'].values[h]*team_xg)*(0.5))
+
+
+               own_data_xg_pred=(df['Rolling_adjusted_XG'].values[h]*df["opposition_xgc"].values[h]+df['Share_of_XG'].values[h]*team_xg)*(0.5)
+               team_data_xg_pred=(df['Understat_POSXG'].values[h]*df["opposition_xgc"].values[h]+df['Understat_POSXG_Share'].values[h]*team_xg)*(0.5) +df['Team_Pen_Data'].values[h]*df['Pen_Number'].values[h]
+        
+               player_preds.append(own_data_xg_pred*0.6+0.4*team_data_xg_pred)
                real_variable="expected_goals" 
             if(pred_variable=="Assist"):
-               player_preds.append((df['Rolling_adjusted_XA'].values[h]*df["opposition_xgc"].values[h]+df['Share_of_XA'].values[h]*team_xg)*(0.5))           
+               own_data_xa_pred=(df['Rolling_adjusted_XA'].values[h]*df["opposition_xgc"].values[h]+df['Share_of_XA'].values[h]*team_xg)*(0.5)
+               team_data_xa_pred=(df['Understat_POSXA'].values[h]*df["opposition_xgc"].values[h]+df['Understat_POSXA_Share'].values[h]*team_xg)*(0.5)
+               player_preds.append(own_data_xa_pred*0.6+0.4*team_data_xa_pred)        
                real_variable="expected_assists"            
             if(pred_variable=="GC"):
                 real_variable="expected_goals_conceded"
@@ -719,18 +726,18 @@ def Generate_point_predictions():
 
         for i in range(len(player_data)):
             try:
-                goals.append(((xgb_goals_player["pred"].values[i]*0.15
-                         +stat_goals_player["pred"].values[i]*0.6
-                         +DNN_goals_player["pred"].values[i]*0.25
+                goals.append(((xgb_goals_player["pred"].values[i]*0.0
+                         +stat_goals_player["pred"].values[i]*0.8
+                         +DNN_goals_player["pred"].values[i]*0.2
                          +CLUSTER_goals_player["pred"].values[i]*0.0))*overscore)
             except:
                 goals.append(0)
 
             try:
 
-                assist.append(((xgb_assist_player["pred"].values[i]*0.15
-                                    +stat_assist_player["pred"].values[i]*0.6
-                                    +DNN_assist_player["pred"].values[i]*0.25
+                assist.append(((xgb_assist_player["pred"].values[i]*0.0
+                                    +stat_assist_player["pred"].values[i]*0.8
+                                    +DNN_assist_player["pred"].values[i]*0.2
                                     +CLUSTER_assist_player["pred"].values[i]*0.0))*overassist)
             except:
                 assist.append(0)

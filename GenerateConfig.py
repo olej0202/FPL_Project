@@ -52,6 +52,12 @@ Manual_Player_Adjustments={
         "Lucas_Tolentino Coelho de Lima":["Jarrod_Bowen"],
         "Mohamed_Salah":["Luis_Díaz","Mohamed_Salah" ]        }
 
+
+Manual_Player_Risk={
+        "Alexander_Isak":0.7,
+        "Igor_Thiago Nascimento Rodrigues":0.7
+}
+
 NEW_TEAMS=[56]
 
 

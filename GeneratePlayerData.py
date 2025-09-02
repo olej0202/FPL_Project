@@ -3,7 +3,7 @@ import joblib
 import numpy as np
 from datetime import datetime
 
-from GenerateConfig import Manual_team_offensive_adjustments, Manual_team_defensive_adjustments,Manual_NewPlayer_Adjustments,Manual_Player_Adjustments,NEW_TEAMS
+from GenerateConfig import Manual_Player_Risk,Manual_team_offensive_adjustments, Manual_team_defensive_adjustments,Manual_NewPlayer_Adjustments,Manual_Player_Adjustments,NEW_TEAMS
 
 def Xmins(current_players):
     xmins=pd.read_csv("GenerateXmins.csv").iloc[:,1:]
@@ -217,6 +217,10 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
     current_teams=pd.read_csv(current_teams_path)
     season_data=pd.read_csv("Unwanted_players.csv").iloc[:,1:]
     cbi_data=pd.read_csv("GenerateCBI2.csv")
+    understat_pos=pd.read_csv("Generate_Player_Matches.csv")
+    understat_team=pd.read_csv("Team_Positions_transformed_Newest.csv")
+    team_pen_data=pd.read_csv("Team_Penalties.csv")
+    pen_takers=pd.read_csv("GeneratePenTakers.csv")
     kmeans = joblib.load('kmeans_Groundmodel.pkl')
     relevant_players = current_players.copy()
     name_map = {
@@ -256,19 +260,31 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
     Future_dataframe=pd.DataFrame()
     missing_player=[]
     for name in names:
+        player_risiko=0.4
         player_row = current_data[
             current_data["name"].str.lower() == name.lower()
         ]        
         player_row2=current_players[current_players["name"]==name]
+        player_pen_takers=pen_takers[pen_takers["name"]==name]
+        if(len(player_pen_takers)==0):
+            pen_number=0
+        else:
+            pen_number=player_pen_takers["Is_taker"].values[0]
         playerMins=xmins[xmins["name"]==name]
         playerCBI=cbi_data[cbi_data["name"]==name]
         minutes=playerMins["minutes"].values[0]
-        
+        player_understat_pos=understat_pos[understat_pos["fpl_name"]==name]["Matched_Pos"].values[0]      
 
 
         team_id=player_row2["team"].values[0]
         team_code=player_row2["team_code"].values[0]
         
+        player_understat_team=understat_team[understat_team["Team_code"]==team_code]
+        player_understat_team=player_understat_team[player_understat_team["pos_group"]==player_understat_pos]
+        player_team_pen_data=team_pen_data[team_pen_data["code"]==team_code]["Penalty"].values[0]
+        
+
+
         element_type=player_row2["element_type"].values[0]
         if(element_type==1):
             position='GKP'
@@ -287,6 +303,7 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
 
 
         if len(player_row)<1:
+            player_risiko=0.8
             missing_player.append(name)
             current_player_season=season_data[season_data["Name"]==name]
             has_history=0
@@ -372,7 +389,23 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
             cluster_means = cluster_df[columns_to_average].mean()
             player_row[columns_to_average] = 0.5 * player_row[columns_to_average] + 0.5 * cluster_means
 
+        print(player_understat_pos)
+        print(team_code)
+        print(name)
+        if len(player_row)<7:
+            player_risiko=0.6
+        if(name in Manual_Player_Risk):
+                player_risiko = Manual_Player_Risk[name]
         
+            
+        player_row["Understat_pos"]=player_understat_pos
+        player_row["Understat_POSXG"]=player_understat_team["XGIndex"].values[0]
+        player_row["Understat_POSXG_Share"]=player_understat_team["Rolling_XG_Share"].values[0]
+        player_row["Understat_POSXA"]=player_understat_team["XAIndex"].values[0]
+        player_row["Understat_POSXA_Share"]=player_understat_team["Rolling_XA_Share"].values[0]
+        player_row["Team_Pen_Data"]=player_team_pen_data
+        player_row["Pen_Number"]=pen_number
+        player_row["player_risiko"]=player_risiko
         
         if(len(clusters)<2):
             break

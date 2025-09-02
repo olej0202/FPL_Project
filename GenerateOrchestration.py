@@ -7,6 +7,7 @@ from Generate_Team_Predictions import GenerateTeamPredictions #Prediksjoner for 
 from Generate_Player_Predictions import Make_Predictions,Generate_point_predictions #Lager prediksjoner og setter det sammen til et datatset
 from GenerateOptimizerSet import GenerateOptimizeSet #Lager dataset klart til å optimeres på
 from GenerateVisualDataset import Generate_ALL_datasets
+from GenerateDataset_Understat import Generate_Understat_dataset
 from chatgpt import main_GPT_News
 
 import pandas as pd
@@ -33,14 +34,15 @@ class DeepNN(nn.Module):
 
 
 def Data_Extraction(season,is_new_season,has_been_error):
-    main_Extract(season, is_new_season, has_been_error)
+    #main_Extract(season, is_new_season, has_been_error)
     current_players(season)
     current_teams(season)
-    main_Extract_Understat(season)
+    #main_Extract_Understat(season)
 
 
-def Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list):
+def Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos):
     #main_Transform()
+    Generate_Understat_dataset(current_player_path,run_player_pos)
     team_data(current_team_path)
     GeneratePlayerData(time_list, current_fixture_path,current_player_path,current_team_path)
 
@@ -91,13 +93,15 @@ def Main_Orchestration():
     GW_list_wildcard=time_list
     GW_list_freehit=[time_list[0]]
     
+    run_player_pos=0
+    
     
     #EXTARCT DATA
     #Data_Extraction(season,is_new_season,has_been_error)
     
     
     #Transform data
-    Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list)
+    Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos)
     
     #Predict data
     Data_Predictions(current_fixture_path,current_team_path, n_points_in_future)
