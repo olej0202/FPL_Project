@@ -80,18 +80,19 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
 
             attacking_factor=(df["opposition_xgc"].values[h]*0.4+team_xg*0.6)
             defensive_factor=(team_CS)
+            fordelings_faktor=df["player_risiko"].values[0]
             if(pred_variable=="GOALS"):
 
 
                own_data_xg_pred=(df['Rolling_adjusted_XG'].values[h]*df["opposition_xgc"].values[h]+df['Share_of_XG'].values[h]*team_xg)*(0.5)
                team_data_xg_pred=(df['Understat_POSXG'].values[h]*df["opposition_xgc"].values[h]+df['Understat_POSXG_Share'].values[h]*team_xg)*(0.5) +df['Team_Pen_Data'].values[h]*df['Pen_Number'].values[h]
         
-               player_preds.append(own_data_xg_pred*0.6+0.4*team_data_xg_pred)
+               player_preds.append(own_data_xg_pred*(1-fordelings_faktor)+fordelings_faktor*team_data_xg_pred)
                real_variable="expected_goals" 
             if(pred_variable=="Assist"):
                own_data_xa_pred=(df['Rolling_adjusted_XA'].values[h]*df["opposition_xgc"].values[h]+df['Share_of_XA'].values[h]*team_xg)*(0.5)
                team_data_xa_pred=(df['Understat_POSXA'].values[h]*df["opposition_xgc"].values[h]+df['Understat_POSXA_Share'].values[h]*team_xg)*(0.5)
-               player_preds.append(own_data_xa_pred*0.6+0.4*team_data_xa_pred)        
+               player_preds.append(own_data_xa_pred*(1-fordelings_faktor)+fordelings_faktor*team_data_xa_pred)        
                real_variable="expected_assists"            
             if(pred_variable=="GC"):
                 real_variable="expected_goals_conceded"

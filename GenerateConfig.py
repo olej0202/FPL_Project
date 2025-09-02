@@ -44,9 +44,6 @@ Manual_NewPlayer_Adjustments={
     }
 
 Manual_Player_Adjustments={
-        "Mohammed_Kudus":["Brennan_Johnson","Son_Heung-min"],
-        "Matheus_Santos Carneiro Da Cunha":["Bruno_Borges Fernandes","Alejandro_Garnacho Ferreyra","Amad_Diallo"],
-        "Bryan_Mbeumo":["Bruno_Borges Fernandes","Alejandro_Garnacho Ferreyra","Amad_Diallo"],
         "Anthony_Gordon":["Alexander_Isak","Harvey_Barnes"],   
         "Igor_Thiago Nascimento Rodrigues":["Yoane_Wissa","Bryan_Mbeumo"],
         "Lucas_Tolentino Coelho de Lima":["Jarrod_Bowen"],
@@ -55,7 +52,13 @@ Manual_Player_Adjustments={
 
 Manual_Player_Risk={
         "Alexander_Isak":0.7,
-        "Igor_Thiago Nascimento Rodrigues":0.7
+        "Igor_Thiago Nascimento Rodrigues":0.7,
+        "Jack_Grealish":0.7,
+        "Yoane_Wissa":0.7,
+        "Bryan_Mbeumo":0.5,
+        "Matheus_Santos Carneiro Da Cunha":0.5,
+        "Mohammed_Kudus":0.6
+        
 }
 
 NEW_TEAMS=[56]

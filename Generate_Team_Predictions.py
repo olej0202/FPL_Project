@@ -663,7 +663,7 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
 
 
     X_train_bal, y_train_bal = X_train_oh, y_CS_train
-    y_smooth = 0.15 + 0.65 * y_train_bal  # if you're using smoothed labels
+    y_smooth = 0.15 + 0.7 * y_train_bal  # if you're using smoothed labels
 
     input_dim = X_train_bal.shape[1]
     model = Sequential([
