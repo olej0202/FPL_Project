@@ -146,7 +146,7 @@ def get_my_team(team_id=46805,Last_GW=1):
 
 
 
-def optimize_my_team(team_id=7025308,wildcard_round=40, bb_round=40,free_hit_round=40,Last_GW=2,banned_list=[],GW_list=["0","3","4","5","6","7"], current_player_path="Raw_Data_25/current_players.csv"):
+def optimize_my_team(team_id=7025308,wildcard_round=40, bb_round=40,free_hit_round=40,Last_GW=3,banned_list=[],GW_list=["0","4","5","6","7","8"], current_player_path="Raw_Data_25/current_players.csv"):
 
     current_players = pd.read_csv(current_player_path)
     free_hit_values=pd.read_csv("Free_hit_values.csv")
@@ -160,7 +160,7 @@ def optimize_my_team(team_id=7025308,wildcard_round=40, bb_round=40,free_hit_rou
     bench_points_gw = None if bb_round is None else int(bb_round) - Last_GW
     freehit_round=  None if free_hit_round is None else int(free_hit_round) - Last_GW
     if(str(free_hit_round) in GW_list):
-        free_hit_val=free_hit_values.values[freehit_round][-1]
+        free_hit_val=free_hit_values.values[freehit_round-1][-1]
         week_to_remove_transfer=int(free_hit_round)+1-Last_GW
         GW_list.remove(str(free_hit_round))
     else:
