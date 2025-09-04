@@ -172,6 +172,8 @@ def optimize_my_team(team_id=7025308,wildcard_round=40, bb_round=40,free_hit_rou
         bench_points_gw=40
     if(is_first):
         wildcard_round = 1  # Gameweek 3 (Index t=2)
+    if(freehit_round<wildcard_round):
+        wildcard_round-=1
     Last_GW=Last_GW
     hit=0
     banned_list=banned_list

@@ -91,7 +91,9 @@ def GenerateOptimizeSet(Current_data_path):
 
 
 
-    optimized_player_set=merged_df[merged_df["name"].isin(names)]
+    #optimized_player_set=merged_df[merged_df["name"].isin(names)]
+    optimized_player_set=merged_df.copy()
+    
     
     visual_df=visual_df[visual_df["name"].isin(names)]
     visual_df.to_csv("Model_Predictions_visual.csv")
