@@ -118,12 +118,12 @@ def team_data(
     if offense_cols is None:
         offense_cols = [
             "XGH","XGA","XG_avg",
-            "Rolling_Threat", "roll10_xpts", "roll10_deep","XG"
+            "Rolling_Threat", "roll10_deep","XG","Rolling_XG"
         ]
     if defense_cols is None:
         defense_cols = [
             "XGCH","XGCA","XGC_avg",
-            "Rolling_Threat_Against","XGC"
+            "Rolling_Threat_Against","XGC","Rolling_XGC"
         ]
 
     current_teams = pd.read_csv(current_teams)
@@ -145,7 +145,7 @@ def team_data(
             "XG","XGC","was_home","opponent","Clean_Sheet","Result",
             "Threat","Threat_against","XG_DEF","XG_MID","XG_FORWARD",
             "XGA","XGCA","XGH","XGCH","XG_avg","XGC_avg",
-            "Rolling_Threat","Rolling_Threat_Against","XG_slope","XGC_slope","Elo_Rating"
+            "Rolling_Threat","Rolling_Threat_Against","XG_slope","XGC_slope","Elo_Rating","Rolling_XG","Rolling_XGC"
         ]
     
     if missing_codes:
@@ -190,7 +190,7 @@ def team_data(
             teams_dataset.loc[mask, cols] = col_means.values
 
     # ---- APPLY TEAM-SPECIFIC MULTIPLIERS ----
-    def _apply_factors(df, factors, cols):
+    def _apply_factors(df, factors, cols,is_offensive):
         cols = [c for c in cols if c in df.columns]  # only existing cols
         if not cols or not factors:
             return df
@@ -198,10 +198,18 @@ def team_data(
         # per-row multiplier vector
         mult = df.loc[mask, "code"].map(factors)
         df.loc[mask, cols] = df.loc[mask, cols].mul(mult.values, axis=0)
+        other_cols=["roll10_xpts"]
+        if(is_offensive==1):
+            mult2=mult
+            
+            df.loc[mask, other_cols] = df.loc[mask, other_cols].mul(mult2.values, axis=0)
+        else:
+            mult2=1/mult
+            df.loc[mask, other_cols] = df.loc[mask, other_cols].mul(mult2.values, axis=0)
         return df
 
-    teams_dataset = _apply_factors(teams_dataset, off_factors, offense_cols)
-    teams_dataset = _apply_factors(teams_dataset, def_factors, defense_cols)
+    teams_dataset = _apply_factors(teams_dataset, off_factors, offense_cols,1)
+    teams_dataset = _apply_factors(teams_dataset, def_factors, defense_cols,0)
 
     teams_dataset.to_csv("Team_data_newest3.csv", index=False)
     return teams_dataset

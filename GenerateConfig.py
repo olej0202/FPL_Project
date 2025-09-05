@@ -57,7 +57,13 @@ Manual_Player_Risk={
         "Yoane_Wissa":0.7,
         "Bryan_Mbeumo":0.5,
         "Matheus_Santos Carneiro Da Cunha":0.5,
-        "Mohammed_Kudus":0.6
+        "Mohammed_Kudus":0.6,
+        "Florian_Wirtz":0.6,
+        "Viktor_Gyökeres":0.7,
+        "Tijjani_Reijnders":0.5,
+        "El_Hadji Malick Diouf":0.6,
+        "Benjamin_Sesko":0.7,
+        "Hugo_Ekitiké":0.7
         
 }
 
