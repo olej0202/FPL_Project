@@ -521,10 +521,10 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     current_month = datetime.today().month
 
     # Filter for current month
-    test_df = Model_pred[(Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month == current_month-4)| 
+    test_df = Model_pred[(Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month == current_month-1)| 
                    (Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month == current_month-3) ]
     train_df = Model_pred[(Model_pred['kickoff_time'].dt.year < current_year) | 
-                     ((Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month < current_month-4))]
+                     ((Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month < current_month-3))]
     train_df=train_df[train_df['kickoff_time']>'2022-12-31']
 
 
@@ -663,7 +663,7 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
 
 
     X_train_bal, y_train_bal = X_train_oh, y_CS_train
-    y_smooth = 0.15 + 0.7 * y_train_bal  # if you're using smoothed labels
+    y_smooth = 0.1 + 0.8 * y_train_bal  # if you're using smoothed labels
 
     input_dim = X_train_bal.shape[1]
     model = Sequential([
@@ -811,7 +811,7 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
 
     proba1 = model_xg.predict_proba(new_input_XG)
     proba2 = model_xg.predict_proba(new_input_XG2)
-    weights = np.array([0.3, 0.9, 1.5, 2.2])
+    weights = np.array([0.5, 1.2, 1.55, 2.2])
     
 
     xg = proba1 @ weights
@@ -867,7 +867,7 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
 
     xgc_proba1 = model_xgc.predict_proba(new_input_XGC)
     xgc_proba2 = model_xgc.predict_proba(new_input_XGC2)
-    weights = np.array([0.3, 0.9, 1.5, 2.2])
+    weights = np.array([0.5, 1.2, 1.55, 2.2])
 
     xgc = xgc_proba1 @ weights
     xgc2 = xgc_proba2 @ weights    
@@ -904,8 +904,8 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     result_df["away_code"]=df_merged["team_a"]
     result_df["home_goals"]=((xg+xgc2)/2)*0.7+0.15*(own_xg_cluster+opp_xgc_cluster)
     result_df["away_goals"]=((xgc+xg2)/2)*0.7+0.15*(opp_xg_cluster+own_xgc_cluster)
-    result_df["Clean_Sheet_home"]=css1
-    result_df["Clean_Sheet_away"]=css2
+    result_df["Clean_Sheet_home"]=css1*0.5+0.5*(0.35/((((xgc+xg2)/2)*0.7+0.15*(opp_xg_cluster+own_xgc_cluster))**2))
+    result_df["Clean_Sheet_away"]=css2*0.5+0.5*(0.35/((((xg+xgc2)/2)*0.7+0.15*(own_xg_cluster+opp_xgc_cluster))**2))
     result_df["test_XG"]=xg
     result_df["test_cluster"]=own_xg_cluster
     result_df["test_opp_XGC"]=xgc2
