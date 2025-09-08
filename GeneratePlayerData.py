@@ -281,17 +281,21 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
         playerMins=xmins[xmins["name"]==name]
         playerCBI=cbi_data[cbi_data["name"]==name]
         minutes=playerMins["minutes"].values[0]
+        print(name)
         player_understat_pos=understat_pos[understat_pos["fpl_name"]==name]["Matched_Pos"].values[0]      
 
 
         team_id=player_row2["team"].values[0]
         team_code=player_row2["team_code"].values[0]
         
+        
+        print(player_understat_pos)
         player_understat_team=understat_team[understat_team["Team_code"]==team_code]
+        print(player_understat_team)
         player_understat_team=player_understat_team[player_understat_team["pos_group"]==player_understat_pos]
         player_team_pen_data=team_pen_data[team_pen_data["code"]==team_code]["Penalty"].values[0]
         
-
+        
 
         element_type=player_row2["element_type"].values[0]
         if(element_type==1):
@@ -405,7 +409,7 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
         if(name in Manual_Player_Risk):
                 player_risiko = Manual_Player_Risk[name]
         
-            
+        print(player_understat_team)
         player_row["Understat_pos"]=player_understat_pos
         player_row["Understat_POSXG"]=player_understat_team["XGIndex"].values[0]
         player_row["Understat_POSXG_Share"]=player_understat_team["Rolling_XG_Share"].values[0]

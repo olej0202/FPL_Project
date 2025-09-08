@@ -790,12 +790,12 @@ def Generate_point_predictions():
         if(position=="FWD"):
             summary_dataset["Points_prediction"]=(2+summary_dataset["Goal_pred"]*5.5
                                                   +summary_dataset["Assist_pred"]*3
-                                                  +summary_dataset["Bonus_pred"])*1+0*summary_dataset["Fantasy_pred"]+(summary_dataset["CBI_pred"]/12)*0.0*2
+                                                  +summary_dataset["Bonus_pred"])*0.85+0.15*summary_dataset["Fantasy_pred"]+(summary_dataset["CBI_pred"]/12)*0.0*2
         elif(position=="MID"):
             summary_dataset["Points_prediction"]=(2+summary_dataset["Goal_pred"]*5.5
                                                   +summary_dataset["Assist_pred"]*3
                                                   +summary_dataset["Bonus_pred"]
-                                                  +summary_dataset["GC_pred"])*1+0*summary_dataset["Fantasy_pred"]+(summary_dataset["CBI_pred"]/12)*0.55*2
+                                                  +summary_dataset["GC_pred"])*0.85+0.15*summary_dataset["Fantasy_pred"]+(summary_dataset["CBI_pred"]/12)*0.55*2
             
         elif(position=="GKP"):
             summary_dataset["Points_prediction"]=(2
