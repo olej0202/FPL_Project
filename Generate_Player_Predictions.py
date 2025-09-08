@@ -745,8 +745,8 @@ def Generate_point_predictions():
 
             try:
 
-                bps.append((xgb_bps_player["pred"].values[i]*0.4
-                                   +stat_bps_player["pred"].values[i]*0.5
+                bps.append((xgb_bps_player["pred"].values[i]*0.3
+                                   +stat_bps_player["pred"].values[i]*0.6
                                    +cluster_bps_player["pred"].values[i]*0.1*0.04)*0.8)
             except:
                 bps.append(0)
@@ -790,12 +790,12 @@ def Generate_point_predictions():
         if(position=="FWD"):
             summary_dataset["Points_prediction"]=(2+summary_dataset["Goal_pred"]*5.5
                                                   +summary_dataset["Assist_pred"]*3
-                                                  +summary_dataset["Bonus_pred"])*0.85+0.15*summary_dataset["Fantasy_pred"]+(summary_dataset["CBI_pred"]/12)*0.0*2
+                                                  +summary_dataset["Bonus_pred"])*0.9+0.1*summary_dataset["Fantasy_pred"]+(summary_dataset["CBI_pred"]/12)*0.0*2
         elif(position=="MID"):
             summary_dataset["Points_prediction"]=(2+summary_dataset["Goal_pred"]*5.5
                                                   +summary_dataset["Assist_pred"]*3
                                                   +summary_dataset["Bonus_pred"]
-                                                  +summary_dataset["GC_pred"])*0.85+0.15*summary_dataset["Fantasy_pred"]+(summary_dataset["CBI_pred"]/12)*0.55*2
+                                                  +summary_dataset["GC_pred"])*0.9+0.1*summary_dataset["Fantasy_pred"]+(summary_dataset["CBI_pred"]/12)*0.55*2
             
         elif(position=="GKP"):
             summary_dataset["Points_prediction"]=(2
