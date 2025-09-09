@@ -400,7 +400,7 @@ def generate_optimizers(ownership, budget, GW_list_wildcard, GW_list_freehit):
         free_hit_vals.append(val)
     free_hit_df=pd.DataFrame(free_hit_vals, columns=["GW", "Val"])
     free_hit_df.to_csv("Free_hit_values.csv")
-    #wildcard_optimize_team(ownership, budget, GW_list_wildcard)
+    wildcard_optimize_team(ownership, budget, GW_list_wildcard)
     freeHit_optimize_team(ownership, budget, GW_list_freehit)
     
 
