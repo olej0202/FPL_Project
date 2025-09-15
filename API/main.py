@@ -106,8 +106,8 @@ def get_my_team_optimize(
             bb_round=bb_round,
             wildcard_round=wildcard_round,
             free_hit_round=freehit_round,
-            Last_GW=3,
-            GW_list=["0","4","5","6","7","8"],
+            Last_GW=4,
+            GW_list=["0","5","6","7","8","9"],
             current_player_path="Raw_Data_25/current_players.csv"
         )
     except ValueError as e:
