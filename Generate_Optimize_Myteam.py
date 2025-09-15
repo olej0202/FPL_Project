@@ -8,6 +8,24 @@ from pulp import value
 
 
 import numpy as np
+
+def Get_times(current_fixture_path):
+    df=pd.read_csv(current_fixture_path)
+    df['kickoff_time'] = pd.to_datetime(df['kickoff_time'])
+
+    min_kicks = (
+        df
+        .groupby('event', as_index=False)['kickoff_time']
+        .min()
+    )
+    min_kicks['kickoff_time'] = min_kicks['kickoff_time'].dt.tz_convert('Europe/Oslo')
+
+    now = pd.Timestamp.now(tz='Europe/Oslo')
+    future = min_kicks[min_kicks['kickoff_time'] > now]
+    n = 1
+    next_n = future.sort_values('kickoff_time').head(n)
+    return next_n["event"].astype(int).values[0]-1
+
 def get_transfers(team_id):
     transfers_url = f"https://fantasy.premierleague.com/api/entry/{team_id}/transfers/"
     response_transfers = requests.get(transfers_url)
@@ -146,8 +164,13 @@ def get_my_team(team_id=46805,Last_GW=4):
 
 
 
-def optimize_my_team(team_id=46805,wildcard_round=40, bb_round=40,free_hit_round=40,Last_GW=4,banned_list=[],GW_list=["0","5","6","7","8","9"], current_player_path="Raw_Data_25/current_players.csv"):
-
+def optimize_my_team(team_id=46805,wildcard_round=8, bb_round=40,free_hit_round=40,Last_GW=4,banned_list=[],GW_list=["0","5","6","7","8","9"], current_player_path="Raw_Data_25/current_players.csv"):
+    current_fixture_path="Raw_Data_25\Fantasy_season_2025_Fixtures.csv"
+    Last_GW=Get_times(current_fixture_path)
+    start = max(Last_GW + 1, 1)  # avoid duplicating '0' if n < 0
+    cutoff=start+4
+    GW_list= ['0'] + [str(i) for i in range(start, cutoff + 1)]
+    print(GW_list)
     current_players = pd.read_csv(current_player_path)
     free_hit_values=pd.read_csv("Free_hit_values.csv")
     is_first=False
