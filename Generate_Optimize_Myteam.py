@@ -52,7 +52,7 @@ def initial_transfers(df,max_event):
     return saved_transfers
     
 
-def get_my_team(team_id=46805,Last_GW=1):
+def get_my_team(team_id=46805,Last_GW=4):
     team_id=team_id
 
     Last_GW=Last_GW
@@ -63,7 +63,6 @@ def get_my_team(team_id=46805,Last_GW=1):
     df = pd.DataFrame(team_transfers)
 
     free_hit_gw_played=played_free_hit(team_id)
-    print(free_hit_gw_played)
     print(free_hit_gw_played)
     try:
 
@@ -103,10 +102,11 @@ def get_my_team(team_id=46805,Last_GW=1):
     except:
         df=pd.DataFrame()
         saved_transfers=min(5,Last_GW)-1
+        gameweek=Last_GW
 
         initial_saved=saved_transfers+hit
 
-    url = f"https://fantasy.premierleague.com/api/entry/{team_id}/event/{Last_GW}/picks/"
+    url = f"https://fantasy.premierleague.com/api/entry/{team_id}/event/{gameweek}/picks/"
 
     response = requests.get(url)
 
@@ -146,7 +146,7 @@ def get_my_team(team_id=46805,Last_GW=1):
 
 
 
-def optimize_my_team(team_id=7025308,wildcard_round=40, bb_round=40,free_hit_round=40,Last_GW=3,banned_list=[],GW_list=["0","4","5","6","7","8"], current_player_path="Raw_Data_25/current_players.csv"):
+def optimize_my_team(team_id=46805,wildcard_round=40, bb_round=40,free_hit_round=40,Last_GW=4,banned_list=[],GW_list=["0","5","6","7","8","9"], current_player_path="Raw_Data_25/current_players.csv"):
 
     current_players = pd.read_csv(current_player_path)
     free_hit_values=pd.read_csv("Free_hit_values.csv")
@@ -230,6 +230,7 @@ def optimize_my_team(team_id=7025308,wildcard_round=40, bb_round=40,free_hit_rou
         name=squad["Full_Name"].values[t]
         initial_squad.append(players.index(name))
     print(initial_squad)
+    print(squad)
 
     
     list1 = costs.copy()
