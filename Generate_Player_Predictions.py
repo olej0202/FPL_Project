@@ -102,7 +102,7 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
             
             if(pred_variable=="bps"):
                real_variable="bonus" 
-               player_preds.append((df['Rolling_adjusted_BPS'].values[h]+df['rolling_bps_historic'].values[h])*0.02)
+               player_preds.append((df['Rolling_adjusted_BPS'].values[h]+df['rolling_bps_historic'].values[h])*0.035)
                
             if(pred_variable=="CBI"):
                real_variable="cbi" 
