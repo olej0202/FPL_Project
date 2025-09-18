@@ -32,7 +32,7 @@ def Generate_Player_Rankings(current_teams):
 
     # 5) Drop the no-longer-needed code columns
     df = df.drop(columns=["code", "opponent_code"])
-    df=df[["name", "GW","opponent_name","rolling_ICT","was_home"]]
+    df=df[["name", "GW","opponent_name","rolling_ICT","was_home","CBI"]]
     df = df.rename(columns={"name": "name2","GW": "GW2"})
 
 
@@ -44,6 +44,7 @@ def Generate_Player_Rankings(current_teams):
         how="left"   # use 'inner' if you only want rows with a match
     )
     df3 = df3.drop(columns=["name2", "GW2"])
+    df3["DefCon"]=df3["CBI"].values
     df3.to_csv("Model_Predictions_visual2.csv")
 def Generate_ALL_datasets(current_teams):
     Generate_Player_Historical()
