@@ -164,7 +164,7 @@ def get_my_team(team_id=46805,Last_GW=4):
 
 
 
-def optimize_my_team(team_id=46805,wildcard_round=8, bb_round=40,free_hit_round=40,Last_GW=4,banned_list=[],GW_list=["0","5","6","7","8","9"], current_player_path="Raw_Data_25/current_players.csv"):
+def optimize_my_team(team_id=6758079,wildcard_round=8, bb_round=40,free_hit_round=40,Last_GW=4,banned_list=[],GW_list=["0","5","6","7","8","9"], current_player_path="Raw_Data_25/current_players.csv"):
     current_fixture_path="Raw_Data_25/Fantasy_season_2025_Fixtures.csv"
     Last_GW=Get_times(current_fixture_path)
     start = max(Last_GW + 1, 1)  # avoid duplicating '0' if n < 0
@@ -230,6 +230,7 @@ def optimize_my_team(team_id=46805,wildcard_round=8, bb_round=40,free_hit_round=
         
     else:
         initial_saved,squad=get_my_team(team_id,Last_GW=Last_GW)
+        print("SAVED")
         print(initial_saved)
 
         url = f"https://fantasy.premierleague.com/api/entry/{team_id}/"
@@ -254,6 +255,7 @@ def optimize_my_team(team_id=46805,wildcard_round=8, bb_round=40,free_hit_round=
         initial_squad.append(players.index(name))
     print(initial_squad)
     print(squad)
+    
 
     
     list1 = costs.copy()
@@ -271,7 +273,8 @@ def optimize_my_team(team_id=46805,wildcard_round=8, bb_round=40,free_hit_round=
 
 
 
-        
+    print(budget_amount)
+    print()
 
     positions = data['position'].tolist()
     costs = data['value'].tolist()

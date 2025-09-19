@@ -108,7 +108,7 @@ def GenerateTeamPredictions1(fixture_path, current_team_path,horizon):
     test_df = Model_pred[(Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month == current_month-1)| 
                    (Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month == current_month-3) ]
     train_df = Model_pred[(Model_pred['kickoff_time'].dt.year < current_year) | 
-                     ((Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month < current_month-3))]
+                     ((Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month < current_month-4))]
     train_df=train_df[train_df['kickoff_time']>'2022-12-31']
 
 
@@ -522,15 +522,15 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
 
     # Filter for current month
     test_df = Model_pred[(Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month == current_month-1)| 
-                   (Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month == current_month-3) ]
+                   (Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month == current_month-2) ]
     train_df = Model_pred[(Model_pred['kickoff_time'].dt.year < current_year) | 
-                     ((Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month < current_month-3))]
+                     ((Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month < current_month-4))]
     train_df=train_df[train_df['kickoff_time']>'2022-12-31']
 
 
     
     # Define Features and Target
-    features = ['Own_XG','Opposition_XGC','Own_XG_slope','Opponent_XGC_slope','Own_XG_avg','Opposition_XGC_avg','Own_Cluster','Opposition_Cluster','Own_Treat','Opposition_TreatAgainst','Opposition_XPTS',"Own_DEEP",'Own_XPTS','Opposition_RollingXGC','Own_RollingXG']
+    features = ['Own_XG','Opposition_XGC','Own_XG_slope','Opponent_XGC_slope','Own_XG_avg','Opposition_XGC_avg','Own_Cluster','Opposition_Cluster','Own_Treat','Opposition_TreatAgainst','Opposition_XPTS',"Own_DEEP",'Opposition_RollingXGC','Own_RollingXG']
     #features = ['Own_XG', 'Own_XGC', 'Opposition_XG', 'Opposition_XGC'] # Exclude target and date
     target = 'XG_Bucket'
 
@@ -564,7 +564,7 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     model_xg.fit(X_train, y_train)
 
     proba = model_xg.predict_proba(X_test)
-    weights = np.array([0.3, 0.9, 1.5, 2.4])        # same order as encoded classes
+    weights = np.array([0.6, 1.2, 1.6, 2.4])        # same order as encoded classes
     custom_pred = proba @ weights
     
     # Evaluate Performance
@@ -574,7 +574,7 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
 
 
     # Define Features and Target
-    features = ['Own_XGC', 'Opposition_XG','Own_XGC_slope','Opponent_XG_slope','Opposition_XG_avg','Own_XGC_avg','Own_Cluster','Opposition_Cluster','Opposition_Treat','Own_TreatAgainst','Opposition_XPTS',"Opposition_DEEP",'Own_XPTS','Opposition_RollingXG','Own_RollingXGC']
+    features = ['Own_XGC', 'Opposition_XG','Own_XGC_slope','Opponent_XG_slope','Opposition_XG_avg','Own_XGC_avg','Own_Cluster','Opposition_Cluster','Opposition_Treat','Own_TreatAgainst','Opposition_XPTS',"Opposition_DEEP",'Opposition_RollingXG','Own_RollingXGC']
 
     target = 'XGC_Bucket'
     cs_target='Clean_Sheet'
@@ -612,7 +612,7 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     
     model_xgc.fit(X_train, y_train)
     proba = model_xgc.predict_proba(X_test)
-    weights = np.array([0.3, 0.9, 1.5, 2.4])        # same order as encoded classes
+    weights = np.array([0.6, 1.2, 1.6, 2.4])        # same order as encoded classes
     custom_pred = proba @ weights
 
     def upsample_positives(X_df, y, pos_ratio=0.30, random_state=42):
@@ -762,7 +762,7 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
 
 
 
-    features = ['Own_XG','Opposition_XGC','Own_XG_slope','Opponent_XGC_slope','Own_XG_avg','Opposition_XGC_avg','Own_Cluster','Opposition_Cluster','Own_Treat','Opposition_TreatAgainst','Opposition_XPTS',"Own_DEEP",'Own_XPTS','Opposition_RollingXGC','Own_RollingXG']
+    features = ['Own_XG','Opposition_XGC','Own_XG_slope','Opponent_XGC_slope','Own_XG_avg','Opposition_XGC_avg','Own_Cluster','Opposition_Cluster','Own_Treat','Opposition_TreatAgainst','Opposition_XPTS',"Own_DEEP",'Opposition_RollingXGC','Own_RollingXG']
 
     new_input_XG = pd.DataFrame()
     new_input_XG["Own_XG"]=df_merged["XGH"]
@@ -777,7 +777,7 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     new_input_XG['Opposition_TreatAgainst']=df_merged["Rolling_Threat_Against_x"]
     new_input_XG['Opposition_XPTS']=df_merged["roll10_xpts_x"]
     new_input_XG['Own_DEEP']=df_merged["roll10_deep_y"]
-    new_input_XG['Own_XPTS']=df_merged["roll10_xpts_y"]
+    #new_input_XG['Own_XPTS']=df_merged["roll10_xpts_y"]
     new_input_XG['Opposition_RollingXGC']=df_merged["Rolling_XGC_x"]
     new_input_XG['Own_RollingXG']=df_merged["Rolling_XG_y"]
 
@@ -796,9 +796,11 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     new_input_XG2['Opposition_TreatAgainst']=df_merged["Rolling_Threat_Against_y"]
     new_input_XG2['Opposition_XPTS']=df_merged["roll10_xpts_y"]
     new_input_XG2['Own_DEEP']=df_merged["roll10_deep_x"]
-    new_input_XG2['Own_XPTS']=df_merged["roll10_xpts_x"]
+    #new_input_XG2['Own_XPTS']=df_merged["roll10_xpts_x"]
     new_input_XG2['Opposition_RollingXGC']=df_merged["Rolling_XGC_y"]
     new_input_XG2['Own_RollingXG']=df_merged["Rolling_XG_x"]
+    
+    new_input_XG2.to_csv("team_preds_test_A_Goals.csv")
 
     new_input_XG = new_input_XG[features].astype(float)
     new_input_XG2 = new_input_XG2[features].astype(float)
@@ -818,7 +820,7 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     xg2 = proba2 @ weights    
 
 
-    features = ['Own_XGC', 'Opposition_XG','Own_XGC_slope','Opponent_XG_slope','Opposition_XG_avg','Own_XGC_avg','Own_Cluster','Opposition_Cluster','Opposition_Treat','Own_TreatAgainst','Opposition_XPTS',"Opposition_DEEP",'Own_XPTS','Opposition_RollingXG','Own_RollingXGC']
+    features = ['Own_XGC', 'Opposition_XG','Own_XGC_slope','Opponent_XG_slope','Opposition_XG_avg','Own_XGC_avg','Own_Cluster','Opposition_Cluster','Opposition_Treat','Own_TreatAgainst','Opposition_XPTS',"Opposition_DEEP",'Opposition_RollingXG','Own_RollingXGC']
     new_input_XGC = pd.DataFrame()
     new_input_XGC["Own_XGC"]=df_merged["XGCH"]
     new_input_XGC["Opposition_XG"]=df_merged["XGA"]
@@ -832,7 +834,7 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     new_input_XGC['Own_TreatAgainst']=df_merged["Rolling_Threat_Against_y"]
     new_input_XGC['Opposition_XPTS']=df_merged["roll10_xpts_x"]
     new_input_XGC['Opposition_DEEP']=df_merged["roll10_deep_x"]
-    new_input_XGC['Own_XPTS']=df_merged["roll10_xpts_y"]
+    #new_input_XGC['Own_XPTS']=df_merged["roll10_xpts_y"]
     new_input_XGC['Opposition_RollingXG']=df_merged["Rolling_XG_x"]
     new_input_XGC['Own_RollingXGC']=df_merged["Rolling_XGC_y"]
 
@@ -851,7 +853,7 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     new_input_XGC2['Own_TreatAgainst']=df_merged["Rolling_Threat_Against_x"]
     new_input_XGC2['Opposition_XPTS']=df_merged["roll10_xpts_y"]
     new_input_XGC2['Opposition_DEEP']=df_merged["roll10_deep_y"]
-    new_input_XGC2['Own_XPTS']=df_merged["roll10_xpts_x"]
+    #new_input_XGC2['Own_XPTS']=df_merged["roll10_xpts_x"]
     new_input_XGC2['Opposition_RollingXG']=df_merged["Rolling_XG_y"]
     new_input_XGC2['Own_RollingXGC']=df_merged["Rolling_XGC_x"]
 
@@ -871,6 +873,10 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
 
     xgc = xgc_proba1 @ weights
     xgc2 = xgc_proba2 @ weights    
+    
+    weights_test = np.array([0.7, 0.3, 0, 0])
+    css_test=proba2 @ weights_test
+    css_test2=proba1 @ weights_test
 
 
 
@@ -902,13 +908,13 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     result_df["away_team"]=df_merged["team_a_name"]
     result_df["home_code"]=df_merged["team_h"]
     result_df["away_code"]=df_merged["team_a"]
-    result_df["home_goals"]=((xg+xgc2)/2)*0.7+0.15*(own_xg_cluster+opp_xgc_cluster)
-    result_df["away_goals"]=((xgc+xg2)/2)*0.7+0.15*(opp_xg_cluster+own_xgc_cluster)
-    result_df["Clean_Sheet_home"]=css1*0.5+0.5*(0.35/((((xgc+xg2)/2)*0.7+0.15*(opp_xg_cluster+own_xgc_cluster))**2))
-    result_df["Clean_Sheet_away"]=css2*0.5+0.5*(0.35/((((xg+xgc2)/2)*0.7+0.15*(own_xg_cluster+opp_xgc_cluster))**2))
+    result_df["home_goals"]=((xg+xgc2)/2)
+    result_df["away_goals"]=((xgc+xg2)/2)
+    result_df["Clean_Sheet_home"]=css1*0.7+0.3*(0.35/((xgc+xg2)/2))
+    result_df["Clean_Sheet_away"]=css2*0.7+0.3*(0.35/((xg+xgc2)/2))
     result_df["test_XG"]=xg
-    result_df["test_cluster"]=css1
-    result_df["test_opp_XGC"]=css2
+    result_df["test_cluster"]=xgc
+    result_df["test_opp_XGC"]=xg2
     result_df.to_csv("Team_prediction_visual2.csv")
 
     home_df=result_df[["GW", "pred"]]
