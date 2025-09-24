@@ -325,34 +325,41 @@ export default function MyTeamOptimize() {
             + Add Free Hit
           </button>
         )}
-        <div className="flex items-center gap-2 px-2 py-2 border border-royal-gold rounded">
-  <span className="text-sm text-gray-300 select-none">Hits</span>
+{/* Hits counter (same footprint/style as other controls) */}
+<div className="relative w-40">
+  <div className="h-10 bg-black border border-royal-gold rounded flex items-center justify-between px-2 text-center">
+    {/* − button (left) */}
+    <button
+      type="button"
+      aria-label="Decrease hits"
+      onClick={() => setn_hits(Math.max(0, Number(n_hits || 0) - 1))}
+      className="inline-flex items-center justify-center w-7 h-7 rounded-full
+                 border border-royal-gold text-royal-gold bg-black
+                 hover:bg-royal-gold hover:text-black transition leading-none"
+    >
+      −
+    </button>
 
-  <button
-    type="button"
-    aria-label="Decrease hits"
-    onClick={() => setn_hits(Math.max(0, Number(n_hits || 0) - 1))}
-    className="w-7 h-7 flex items-center justify-center rounded bg-black border border-royal-gold text-royal-gold hover:bg-yellow-300 hover:text-black transition"
-  >
-    −
-  </button>
+    {/* center stack: label top, value bottom */}
+    <div className="flex flex-col items-center leading-none select-none">
+      <span className="text-[10px] uppercase tracking-wide text-gray-300">Hits</span>
+      <span className="text-sm font-semibold">{Number(n_hits || 0)}</span>
+    </div>
 
-  <div
-    className="w-10 text-center font-semibold"
-    aria-live="polite"
-  >
-    {Number(n_hits || 0)}
+    {/* + button (right) */}
+    <button
+      type="button"
+      aria-label="Increase hits"
+      onClick={() => setn_hits(Number(n_hits || 0) + 1)}
+      className="inline-flex items-center justify-center w-7 h-7 rounded-full
+                 border border-royal-gold text-royal-gold bg-black
+                 hover:bg-royal-gold hover:text-black transition leading-none"
+    >
+      +
+    </button>
   </div>
-
-  <button
-    type="button"
-    aria-label="Increase hits"
-    onClick={() => setn_hits(Number(n_hits || 0) + 1)}
-    className="w-7 h-7 flex items-center justify-center rounded bg-black border border-royal-gold text-royal-gold hover:bg-yellow-300 hover:text-black transition"
-  >
-    +
-  </button>
 </div>
+
 
         <button
           onClick={() => {

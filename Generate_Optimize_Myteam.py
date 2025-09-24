@@ -276,6 +276,11 @@ def optimize_my_team(team_id=6758079,wildcard_round=8, bb_round=40,free_hit_roun
     print(budget_amount)
     print()
 
+    
+    initial_saved=initial_saved+n_hits
+    print("HITS")
+    print(n_hits)
+    print(initial_saved)
     positions = data['position'].tolist()
     costs = data['value'].tolist()
     teams = data['team_code'].tolist()
@@ -406,7 +411,7 @@ def optimize_my_team(team_id=6758079,wildcard_round=8, bb_round=40,free_hit_roun
                 model += saved_transfers[t] <= 5
 
     # --- Initial Transfers & Bank ---
-    model += saved_transfers[0] == initial_saved+hit
+    model += saved_transfers[0] == initial_saved
     model += money_in_bank_var[0] == money_in_bank_init
 
     # --- Solve the Model ---
