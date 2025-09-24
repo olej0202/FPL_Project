@@ -1,0 +1,679 @@
+,name,CBI
+0,David_Raya Martin,0.0
+1,Kepa_Arrizabalaga,0.0
+2,Karl_Hein,0.0
+3,Tommy_Setford,0.0
+4,Gabriel_dos Santos Magalhães,6.055861193398223
+5,William_Saliba,6.396841066140177
+6,Riccardo_Calafiori,5.94
+7,Jurriën_Timber,4.658385093167702
+8,Jakub_Kiwior,7.493285586392123
+9,Myles_Lewis-Skelly,3.5682819383259914
+10,Benjamin_White,6.175732217573221
+11,Oleksandr_Zinchenko,1.8900000000000001
+12,Brayden_Clarke,0.0
+13,Maldini_Kacurri,0.0
+14,Josh_Nichols,0.0
+15,Bukayo_Saka,5.638051044083526
+16,Martin_Ødegaard,4.924601464885825
+17,Noni_Madueke,5.724852071005918
+18,Gabriel_Martinelli Silva,4.807355516637478
+19,Leandro_Trossard,5.585231736056559
+20,Declan_Rice,9.46865037194474
+21,Mikel_Merino Zazón,10.0
+22,Fábio_Ferreira Vieira,0.0
+23,Christian_Nørgaard,12.925531914893618
+24,Ethan_Nwaneri,4.77
+25,Martín_Zubimendi Ibáñez,0.0
+26,Reiss_Nelson,4.05
+27,Ismeal_Kabia,0.0
+28,Albert_Sambi Lokonga,0.0
+29,Kai_Havertz,4.759615384615384
+30,Gabriel_Fernando de Jesus,4.5
+31,Cristhian_Mosquera,0.0
+32,Viktor_Gyökeres,0.0
+33,Emiliano_Martínez Romero,0.0
+34,Marco_Bizot,0.0
+35,Joe_Gauci,0.0
+36,Filip_Marschall,0.0
+37,Matty_Cash,6.3073948767520545
+38,Lucas_Digne,6.82282793867121
+39,Ezri_Konsa Ngoyo,5.395095367847411
+40,Ian_Maatsen,5.680000000000001
+41,Tyrone_Mings,6.756032171581769
+42,Pau_Torres,5.170876671619613
+43,Andrés_García,1.71
+44,Álex_Moreno Lopera,7.470000000000001
+45,Lamare_Bogarde,2.6999999999999997
+46,Lino_da Cruz Sousa,0.0
+47,Yasin_Özcan,0.0
+48,Morgan_Rogers,5.576243980738362
+49,Youri_Tielemans,9.342148760330577
+50,Leon_Bailey,6.1219081272084805
+51,Emiliano_Buendía Stati,1.44
+52,Samuel_Iling-Junior,0.0
+53,Jacob_Ramsey,7.407178217821783
+54,Donyell_Malen,1.53
+55,John_McGinn,6.617050067658999
+56,Ross_Barkley,6.75
+57,Enzo_Barrenechea,0.0
+58,Lewis_Dobbin,0.0
+59,Boubacar_Kamara,10.988372093023255
+60,Amadou_Onana,11.159330440173589
+61,Ben_Broggio,0.0
+62,Leander_Dendoncker,0.0
+63,Jamaldeen_Jimoh-Aloba,0.0
+64,Kadan_Young,0.0
+65,Ollie_Watkins,2.7072888546085614
+66,Zépiqueno_Redmond,0.0
+67,Evann_Guessand,0.0
+68,Max_Weiß,0.0
+69,Etienne_Green,0.0
+70,Václav_Hladký,0.0
+71,Connor_Roberts,0.0
+72,Kyle_Walker,3.1500000000000004
+73,Hannes_Delcroix,0.0
+74,Owen_Dodgson,0.0
+75,Hjalmar_Ekdal,0.0
+76,Maxime_Estève,0.0
+77,Quilindschy_Hartman,0.0
+78,Bashir_Humphreys,0.0
+79,Jordan_Beyer,0.0
+80,Lucas_Pires Silva,0.0
+81,Shurandy_Sambo,0.0
+82,Oliver_Sonne,0.0
+83,Axel_Tuanzebe,6.2105263157894735
+84,Joe_Worrall,0.0
+85,Jaidon_Anthony,0.0
+86,Manuel_Benson Hedilazio,0.0
+87,Jacob_Bruun Larsen,0.0
+88,Enock_Agyei,0.0
+89,Darko_Churlinov,0.0
+90,Josh_Cullen,0.0
+91,Marcus_Edwards,0.0
+92,Hannibal_Mejbri,0.0
+93,Luca_Koleosho,0.0
+94,Josh_Laurent,0.0
+95,Loum_Tchaouna,0.0
+96,Aaron_Ramsey,0.0
+97,Oluwaseun_Adewumi,0.0
+98,Jaydon_Banel,0.0
+99,Mike_Trésor Ndayishimiye,0.0
+100,Zian_Flemming,0.0
+101,Zeki_Amdouni,0.0
+102,Lyle_Foster,0.0
+103,Ashley_Barnes,0.0
+104,Michael_Obafemi,0.0
+105,Martin_Dúbravka,0.0
+106,Lesley_Ugochukwu,0.0
+107,Norberto_Murara Neto,0.0
+108,Đorđe_Petrović,0.0
+109,Will_Dennis,0.0
+110,Callan_McKenna,0.0
+111,Alex_Paulsen,0.0
+112,Illia_Zabarnyi,8.45287873914442
+113,Marcos_Senesi,9.628286491387126
+114,Adam_Smith,4.653215636822194
+115,Adrien_Truffert,0.0
+116,Matai_Akinmboni,0.0
+117,Owen_Bevan,0.0
+118,James_Hill,4.95
+119,Julián_Araujo Zúñiga,2.88
+120,Chris_Mepham,0.0
+121,Julio_Soler Barreto,0.09
+122,Justin_Kluivert,5.309961522017956
+123,Antoine_Semenyo,7.504684572142412
+124,Dango_Ouattara,8.82882882882883
+125,Marcus_Tavernier,8.338509316770185
+126,Tyler_Adams,12.679938744257274
+127,David_Brooks,7.2
+128,Ryan_Christie,13.878902554399243
+129,Lewis_Cook,11.673387096774194
+130,Philip_Billing,3.1500000000000004
+131,Alex_Scott,9.36
+132,Luis_Sinisterra Lucumí,2.88
+133,Romain_Faivre,0.0
+134,Hamed_Traorè,0.0
+135,Dominic_Sadi,0.0
+136,Zain_Silcott-Duberry,0.09
+137,Ben_Winterburn,0.36
+138,Francisco_Evanilson de Lima Barbosa,4.156236512731981
+139,Enes_Ünal,2.07
+140,Daniel_Adu-Adjei,0.0
+141,Eli_Junior Kroupi,0.0
+142,Caoimhín_Kelleher,0.0
+143,Ellery_Balcombe,0.0
+144,Matthew_Cox,0.0
+145,Julian_Eyestone,0.0
+146,Hákon_Rafn Valdimarsson,0.0
+147,Nathan_Collins,9.236842105263158
+148,Keane_Lewis-Potter,4.249676584734799
+149,Kristoffer_Ajer,5.589672016748081
+150,Rico_Henry,0.54
+151,Michael_Kayode,3.69
+152,Ethan_Pinnock,10.167364016736402
+153,Mads_Roerslev Rasmussen,4.745454545454545
+154,Sepp_van den Berg,7.976006191950464
+155,Benjamin_Arthur,0.0
+156,Benjamin_Fredrick,0.0
+157,Aaron_Hickey,0.0
+158,Kim_Ji-soo,0.18
+159,Jayden_Meghoma,0.0
+160,Kevin_Schade,6.352476983779044
+161,Mikkel_Damsgaard,9.924424596358639
+162,Antoni_Milambo,0.0
+163,Fábio_Freitas Gouveia Carvalho,4.41
+164,Jordan_Henderson,0.0
+165,Vitaly_Janelt,9.155930697467792
+166,Mathias_Jensen,7.829999999999999
+167,Gustavo_Nunes Fernandes Gomes,0.45
+168,Frank_Onyeka,0.18
+169,Yehor_Yarmoliuk,13.484320557491289
+170,Romelle_Donovan,0.0
+171,Yunus_Emre Konak,0.54
+172,Paris_Maghoma,1.17
+173,Myles_Peart-Harris,0.0
+174,Ryan_Trevitt,0.27
+175,Yoane_Wissa,4.251968503937007
+176,Igor_Thiago Nascimento Rodrigues,1.98
+177,Iwan_Morgan,0.0
+178,Jason_Steele,0.0
+179,Bart_Verbruggen,0.0
+180,Tom_McGill,0.0
+181,Carl_Rushworth,0.0
+182,Kjell_Scherpen,0.0
+183,Olivier_Boscagli,0.0
+184,Diego_Coppola,0.0
+185,Maxim_De Cuyper,0.0
+186,Lewis_Dunk,5.449303219605959
+187,Pervis_Estupiñán Tenorio,6.152563568153397
+188,Ferdi_Kadıoğlu,3.3299999999999996
+189,Igor_Julio dos Santos de Paulo,5.49
+190,Tariq_Lamptey,4.68
+191,Jan_Paul van Hecke,6.993243243243243
+192,Joël_Veltman,6.959858323494687
+193,Adam_Webster,7.11
+194,Eiran_Cashin,0.18
+195,Jacob_Slater,0.0
+196,Charlie_Tasker,0.0
+197,Mitoma_Kaoru,5.822102425876011
+198,Georginio_Rutter,7.086614173228346
+199,Solly_March,1.44
+200,Yankuba_Minteh,8.454396504642272
+201,Julio_Enciso Espínola,6.155844155844156
+202,Brajan_Gruda,4.41
+203,Jack_Hinshelwood,7.145187601957586
+204,Matt_O'Riley,6.300000000000001
+205,Abdallah_Sima,0.0
+206,Yasin_Ayari,10.480081716036773
+207,Carlos_Baleba,12.721804511278195
+208,Facundo_Buonanotte,9.668435013262599
+209,Diego_Gómez Amarilla,6.39
+210,James_Milner,1.17
+211,Jeremy_Sarmiento Morante,0.09
+212,Tom_Watson,0.0
+213,Mats_Wieffer,15.254237288135592
+214,Malick_Yalcouyé,0.0
+215,Joe_Knight,0.0
+216,Adrian_Mazilu,0.0
+217,Andrew_Moran,0.0
+218,Danny_Welbeck,4.0540540540540535
+219,Evan_Ferguson,2.97
+220,Stefanos_Tzimas,0.0
+221,Charalampos_Kostoulas,0.0
+222,Robert_Sánchez,0.0
+223,Filip_Jörgensen,0.0
+224,Mike_Penders,0.0
+225,Gabriel_Słonina,0.0
+226,Marc_Cucurella Saseta,5.753012048192772
+227,Reece_James,4.257332071901608
+228,Trevoh_Chalobah,8.044692737430168
+229,Levi_Colwill,6.314285714285714
+230,Malo_Gusto,5.6826767404209395
+231,Benoît_Badiashile Mukinayi,2.6100000000000003
+232,Wesley_Fofana,6.757679180887372
+233,Mamadou_Sarr,0.0
+234,Tosin_Adarabioyo,7.312900926585887
+235,Josh_Acheampong,0.36
+236,Aarón_Anselmino,0.0
+237,Cole_Palmer,4.819918571875979
+238,Pedro_Lomba Neto,4.73474801061008
+239,Enzo_Fernández,7.981651376146789
+240,Estêvão_Almeida de Oliveira Gonçalves,0.0
+241,Jamie_Bynoe-Gittens,0.0
+242,Christopher_Nkunku,5.31
+243,Moisés_Caicedo Corozo,12.220232766338405
+244,Tyrique_George,0.8099999999999999
+245,Roméo_Lavia,7.92
+246,Mykhailo_Mudryk,1.17
+247,Andrey_Nascimento dos Santos,0.0
+248,Dário_Luís Essugo,0.0
+249,Kendry_Páez Andrade,0.0
+250,João_Pedro Junqueira de Jesus,4.439876670092497
+251,Liam_Delap,3.7920371086200233
+252,Nicolas_Jackson,3.6486486486486487
+253,Jorrel_Hato,0.0
+254,Dean_Henderson,0.0
+255,Walter_Benítez,0.0
+256,Remi_Matthews,0.0
+257,Daniel_Muñoz,7.441932486838031
+258,Maxence_Lacroix,10.022464698331193
+259,Tyrick_Mitchell,6.3203883495145625
+260,Borna_Sosa,0.0
+261,Marc_Guéhi,7.884929715593332
+262,Chris_Richards,9.042165538781884
+263,Chadi_Riad Dnanou,0.63
+264,Nathaniel_Clyne,2.6999999999999997
+265,Rob_Holding,0.0
+266,Caleb_Kporha,0.27
+267,Eberechi_Eze,7.094281298299845
+268,Ismaïla_Sarr,6.314623338257015
+269,Cheick_Doucouré,6.12
+270,Romain_Esse,1.8
+271,Will_Hughes,10.671428571428573
+272,Daichi_Kamada,10.077669902912621
+273,Jefferson_Lerma Solís,12.9647577092511
+274,Adam_Wharton,12.671232876712327
+275,Asher_Agbinone,0.18
+276,Naouirou_Ahamada,0.0
+277,Justin_Devenny,5.04
+278,Malcolm_Ebiowei,0.0
+279,Jesurun_Rak-Sakyi,0.0
+280,Matheus_França de Oliveira,0.72
+281,David_Ozoh,0.0
+282,Kaden_Rodney,0.0
+283,Franco_Umeh-Chibueze,0.0
+284,Jean-Philippe_Mateta,3.883421650264951
+285,Eddie_Nketiah,4.862475442043222
+286,Odsonne_Édouard,0.9
+287,Zach_Marsh,0.0
+288,Kiernan_Dewsbury-Hall,2.34
+289,Jordan_Pickford,0.0
+290,Mark_Travers,0.0
+291,Harry_Tyrer,0.0
+292,Jarrad_Branthwaite,9.828616978876045
+293,James_Tarkowski,10.965092402464066
+294,Vitalii_Mykolenko,7.3588578844905905
+295,Jake_O'Brien,7.059948979591836
+296,Séamus_Coleman,1.26
+297,Michael_Keane,8.862332695984703
+298,Nathan_Patterson,1.6199999999999999
+299,Roman_Dixon,0.72
+300,Reece_Welch,0.0
+301,Iliman_Ndiaye,9.830997526793075
+302,Dwight_McNeil,6.390922401171303
+303,Carlos_Alcaraz Durán,6.12
+304,Idrissa_Gueye,12.282076395690499
+305,James_Garner,10.245283018867925
+306,Tim_Iroegbunam,9.99
+307,Harrison_Armstrong,0.27
+308,Callum_Bates,0.0
+309,Coby_Ebere,0.0
+310,Isaac_Heath,0.0
+311,Jenson_Metcalfe,0.0
+312,Thierno_Barry,0.0
+313,Norberto_Bercique Gomes Betuncal,4.970414201183432
+314,Youssef_Ramalho Chermiti,0.0
+315,Martin_Sherif,0.0
+316,Adam_Aznou,0.0
+317,Bernd_Leno,0.0
+318,Steven_Benda,0.0
+319,Antonee_Robinson,8.215413771320279
+320,Joachim_Andersen,9.52861952861953
+321,Calvin_Bassey,5.972674040338322
+322,Timothy_Castagne,8.166869671132764
+323,Issa_Diop,7.556221889055473
+324,Jorge_Cuenca Barreno,3.42
+325,Kenny_Tete,8.223350253807107
+326,Samuel_Amissah,0.0
+327,Alex_Iwobi,6.85340489768534
+328,Emile_Smith Rowe,5.967583497053044
+329,Adama_Traoré Diarra,5.740318906605923
+330,Andreas_Hoelgebaum Pereira,6.736526946107784
+331,Ryan_Sessegnon,6.659999999999999
+332,Harry_Wilson,7.2125435540069684
+333,Sander_Berge,9.806393516434039
+334,Tom_Cairney,6.569999999999999
+335,Saša_Lukić,9.352640545144803
+336,Martial_Godo,0.18
+337,Luke_Harris,0.0
+338,Josh_King,1.26
+339,Harrison_Reed,1.71
+340,Raúl_Jiménez,5.539018503620273
+341,Rodrigo_Muniz Carvalho,4.05
+342,Benjamin_Lecomte,0.0
+343,Illan_Meslier,0.0
+344,Alex_Cairns,0.0
+345,Karl_Darlow,0.0
+346,Jayden_Bogle,0.0
+347,Pascal_Struijk,0.0
+348,Jaka_Bijol,0.0
+349,Sebastiaan_Bornauw,0.0
+350,Sam_Byram,0.0
+351,Gabriel_Gudmundsson,0.0
+352,Joe_Rodon,0.0
+353,Isaac_Schmidt,0.0
+354,Brenden_Aaronson,0.0
+355,Wilfried_Gnonto,0.0
+356,Jack_Harrison,6.441005802707931
+357,Daniel_James,0.0
+358,Ethan_Ampadu,0.0
+359,Sam_Greenwood,0.0
+360,Ilia_Gruev,0.0
+361,Largie_Ramazani,0.0
+362,Tanaka_Ao,0.0
+363,Charlie_Crew,0.0
+364,Joe_Gelhardt,0.0
+365,Darko_Gyabi,0.0
+366,Joël_Piroe,0.0
+367,Patrick_Bamford,0.0
+368,Mateo_Joseph Fernández-Regatillo,0.0
+369,Lukas_Nmecha,0.0
+370,Sean_Longstaff,7.02
+371,Anton_Stach,0.0
+372,Lucas_Estella Perri,0.0
+373,Alisson_Ramses Becker,0.0
+374,Giorgi_Mamardashvili,0.0
+375,Ármin_Pécsi,0.0
+376,Freddie_Woodman,0.0
+377,Jeremie_Frimpong,0.0
+378,Milos_Kerkez,5.58453237410072
+379,Andrew_Robertson,3.8483259378781765
+380,Virgil_van Dijk,8.108108108108107
+381,Ibrahima_Konaté,6.923076923076923
+382,Conor_Bradley,4.05
+383,Joe_Gomez,4.05
+384,Konstantinos_Tsimikas,5.49
+385,Amara_Nallo,0.0
+386,Rhys_Williams,0.0
+387,Calvin_Ramsay,0.0
+388,Mohamed_Salah,3.627741553052757
+389,Florian_Wirtz,8.0
+390,Luis_Díaz,5.942331801086502
+391,Cody_Gakpo,6.371681415929204
+392,Federico_Chiesa,0.72
+393,Alexis_Mac Allister,10.396611474778592
+394,Dominik_Szoboszlai,7.207243460764587
+395,Curtis_Jones,8.46063454759107
+396,Harvey_Elliott,2.34
+397,Ryan_Gravenberch,11.079113924050633
+398,Ben_Doak,0.0
+399,Endo_Wataru,3.69
+400,Stefan_Bajčetić Maquieira,0.0
+401,James_McConnell,0.0
+402,Tyler_Morton,0.0
+403,Trey_Nyoni,0.0
+404,Darwin_Núñez Ribeiro,6.226415094339623
+405,Jayden_Danns,0.0
+406,Hugo_Ekitiké,0.0
+407,James_Trafford,0.0
+408,Ederson_Santana de Moraes,0.0
+409,Stefan_Ortega Moreno,0.0
+410,Marcus_Bettinelli,0.0
+411,Rayan_Aït-Nouri,5.408097686375321
+412,Joško_Gvardiol,6.39719341061623
+413,Manuel_Akanji,4.383697813121272
+414,Nathan_Aké,3.2399999999999998
+415,Abdukodir_Khusanov,3.6
+416,Matheus_Nunes,4.526946107784431
+417,Rúben_Gato Alves Dias,5.03746143675628
+418,John_Stones,2.79
+419,Rico_Lewis,4.290254237288136
+420,Nico_O'Reilly,2.16
+421,Vitor_de Oliveira Nunes dos Reis,0.09
+422,Omar_Marmoush,4.599659284497444
+423,Phil_Foden,4.624505928853755
+424,Sávio_'Savinho' Moreira de Oliveira,6.0852272727272725
+425,Bernardo_Veiga de Carvalho e Silva,7.525309336332959
+426,Rayan_Cherki,0.0
+427,Jérémy_Doku,6.035856573705179
+428,Jack_Grealish,3.96
+429,İlkay_Gündoğan,7.1415689810640215
+430,Rodrigo_Hernandez,0.99
+431,Mateo_Kovačić,9.35278030993619
+432,Nico_González Iglesias,6.84
+433,Oscar_Bobb,0.18
+434,Claudio_Echeverri,0.18
+435,James_McAtee,1.44
+436,Tijjani_Reijnders,0.0
+437,Sverre_Nypan,0.0
+438,Kalvin_Phillips,11.917140536149471
+439,Erling_Haaland,2.401315789473684
+440,Bryan_Mbeumo,7.194729136163982
+441,Altay_Bayındır,0.0
+442,André_Onana,0.0
+443,Elyh_Harrison,0.0
+444,Tom_Heaton,0.0
+445,Dermot_Mee,0.0
+446,Matthijs_de Ligt,7.432751297781973
+447,Lisandro_Martínez,6.887492861222158
+448,Noussair_Mazraoui,7.648095909732017
+449,Diego_León Blanco,0.0
+450,Diogo_Dalot Teixeira,5.69701280227596
+451,Patrick_Dorgu,4.86
+452,Harry_Maguire,8.172472872644203
+453,Luke_Shaw,1.26
+454,Leny_Yoro,7.21551724137931
+455,Harry_Amass,1.6199999999999999
+456,Tyler_Fredricson,1.53
+457,Ayden_Heaven,1.6199999999999999
+458,Tyrell_Malacia,0.36
+459,Bruno_Borges Fernandes,10.70931388796818
+460,Matheus_Santos Carneiro Da Cunha,6.933744221879815
+461,Marcus_Rashford,4.391796322489392
+462,Amad_Diallo,8.345626975763963
+463,Alejandro_Garnacho,6.622486288848264
+464,Antony_dos Santos,1.71
+465,Mason_Mount,3.7800000000000002
+466,Jadon_Sancho,6.208665906499429
+467,Carlos_Henrique Casimiro,15.594358629952989
+468,Kobbie_Mainoo,9.131227217496962
+469,Manuel_Ugarte Ribeiro,12.408553742262239
+470,Toby_Collyer,3.1500000000000004
+471,Jayce_Fitzgerald,0.0
+472,Jack_Fletcher,0.0
+473,Sékou_Koné,0.0
+474,Jack_Moorhouse,0.0
+475,Rasmus_Højlund,2.0720720720720722
+476,Joshua_Zirkzee,5.783393501805054
+477,Chido_Obi,1.08
+478,Ethan_Wheatley,0.0
+479,Nick_Pope,0.0
+480,Mark_Gillespie,0.0
+481,Odysseas_Vlachodimos,0.0
+482,Lewis_Hall,5.964351005484461
+483,Fabian_Schär,7.328790459965928
+484,Sven_Botman,4.14
+485,Dan_Burn,7.72972972972973
+486,Tino_Livramento,5.777777777777779
+487,Kieran_Trippier,6.581986143187067
+488,Emil_Krafth,2.34
+489,Jamaal_Lascelles,0.0
+490,Alex_Murphy,0.0
+491,Harrison_Ashby,0.0
+492,Miodrag_Pivaš,0.0
+493,Matt_Targett,0.09
+494,Anthony_Gordon,5.300658978583196
+495,Anthony_Elanga,4.867788461538462
+496,Harvey_Barnes,4.639175257731958
+497,Bruno_Guimarães Rodriguez Moura,9.624197983501375
+498,Jacob_Murphy,6.417657045840408
+499,Joelinton_Cássio Apolinário de Lira,10.601503759398495
+500,Sandro_Tonali,10.388571428571428
+501,Antoñito_Cordero Campillo,0.0
+502,Joe_Willock,7.352112676056338
+503,Isaac_Hayden,0.0
+504,Garang_Kuol,0.0
+505,Lewis_Miley,3.42
+506,Joe_White,0.0
+507,Alexander_Isak,2.904278462654097
+508,William_Osula,0.8099999999999999
+509,Sean_Neave,0.0
+510,Aaron_Ramsdale,0.0
+511,Matz_Sels,0.0
+512,Carlos_Miguel dos Santos Pereira,0.0
+513,Matt_Turner,0.0
+514,Nikola_Milenković,8.378378378378379
+515,Murillo_Costa dos Santos,10.614805520702635
+516,Ola_Aina,6.188251001335114
+517,Neco_Williams,8.728748068006182
+518,David_Mota Veiga Teixeira do Carmo,0.0
+519,Jair_Paula da Cunha Filho,0.0
+520,Felipe_Rodrigues da Silva,10.08
+521,Omar_Richards,0.0
+522,Zach_Abbott,0.0
+523,Willy_Boly,2.07
+524,Morgan_Gibbs-White,7.280826799714897
+525,Callum_Hudson-Odoi,5.712328767123287
+526,Elliot_Anderson,13.437270726338959
+527,João_Pedro Ferreira da Silva,8.91
+528,Nicolás_Domínguez,13.49539406345957
+529,Lewis_O'Brien,0.0
+530,Ibrahim_Sangaré,8.37
+531,Ryan_Yates,11.457127827459232
+532,Eric_da Silva Moreira,0.45
+533,Marko_Stamenić,0.0
+534,Chris_Wood,2.920892494929006
+535,Igor_Jesus Maciel da Cruz,0.0
+536,Taiwo_Awoniyi,2.79
+537,Dan_Ndoye,0.0
+538,Angus_Gunn,0.0
+539,Marc_Guiu Paz,0.27
+540,Anthony_Patterson,0.0
+541,Simon_Moore,0.0
+542,Blondy_Nna Noukeu,0.0
+543,Daniel_Ballard,0.0
+544,Trai_Hume,0.0
+545,Aji_Alese,0.0
+546,Joe_Anderson,0.0
+547,Dennis_Cirkin,0.0
+548,Leo_Fuhr Hjelde,0.0
+549,Niall_Huggins,0.0
+550,Zak_Johnson,0.0
+551,Luke_O'Nien,0.0
+552,Timothée_Pembélé,0.0
+553,Reinildo_Mandava,0.0
+554,Jenson_Seelt,0.0
+555,Simon_Adingra,6.993524514338575
+556,Habib_Diarra,0.0
+557,Patrick_Roberts,0.0
+558,Milan_Aleksić,0.0
+559,Enzo_Le Fée,0.0
+560,Romaine_Mundle,0.0
+561,Dan_Neil,0.0
+562,Ian_Poveda-Ocampo,0.0
+563,Chris_Rigg,0.0
+564,Noah_Sadiki,0.0
+565,Chemsdine_Talbi,0.0
+566,Abdoullah_Ba,0.0
+567,Alan_Browne,0.0
+568,Pierre_Ekwah Elimby,0.0
+569,Harrison_Jones,0.0
+570,Jay_Matete,0.0
+571,Nectarios_Triantis,0.0
+572,Wilson_Isidor,0.0
+573,Eliezer_Mayenda Dossou,0.0
+574,Ahmed_Abdullahi,0.0
+575,Luís_Hemir Silva Semedo,0.0
+576,Nazarii_Rusyn,0.0
+577,Granit_Xhaka,0.0
+578,Robin_Roefs,0.0
+579,Guglielmo_Vicario,0.0
+580,Brandon_Austin,0.0
+581,Antonín_Kinský,0.0
+582,Pedro_Porro,6.6308518802762855
+583,Cristian_Romero,7.055084745762712
+584,Kevin_Danso,8.73
+585,Ben_Davies,8.600451467268622
+586,Radu_Drăgușin,6.263999999999999
+587,Djed_Spence,6.687150837988828
+588,Destiny_Udogie,6.131045241809672
+589,Micky_van de Ven,5.8579881656804735
+590,Ashley_Phillips,0.0
+591,Takai_Kōta,0.0
+592,Luka_Vušković,0.0
+593,Son_Heung-min,5.256410256410256
+594,Brennan_Johnson,4.933210502072778
+595,James_Maddison,7.003891050583658
+596,Mohammed_Kudus,6.570104287369641
+597,Dejan_Kulusevski,7.279966471081308
+598,Mathys_Tel,5.8500000000000005
+599,Rodrigo_Bentancur,13.5
+600,Lucas_Bergvall,12.375000000000002
+601,Yves_Bissouma,12.44269340974212
+602,Wilson_Odobert,5.13
+603,Manor_Solomon,0.0
+604,Bryan_Gil Salvatierra,0.0
+605,Archie_Gray,8.331428571428571
+606,Mikey_Moore,1.71
+607,Pape_Matar Sarr,10.79431877958969
+608,Yang_Min-hyeok,0.0
+609,Callum_Olusesi,0.0
+610,Dominic_Solanke-Mitchell,3.6425648021828105
+611,Richarlison_de Andrade,2.25
+612,Will_Lankshear,0.0
+613,Dane_Scarlett,0.45
+614,João_Maria Lobo Alves Palhares Costa Palhinha Gonçalves,0.0
+615,Alphonse_Areola,0.0
+616,Wes_Foderingham,0.0
+617,Krisztián_Hegyi,0.0
+618,El_Hadji Malick Diouf,0.0
+619,Emerson_Palmieri dos Santos,6.190702087286527
+620,Maximilian_Kilman,8.790322580645162
+621,Konstantinos_Mavropanos,9.552825552825553
+622,Nayef_Aguerd,0.0
+623,Ollie_Scarles,4.86
+624,Jean-Clair_Todibo,8.289473684210526
+625,Aaron_Wan-Bissaka,7.362079898541534
+626,Kaelan_Casey,0.09
+627,Lucas_Tolentino Coelho de Lima,10.27379949452401
+628,Tomáš_Souček,8.216933281310963
+629,James_Ward-Prowse,8.29030006978367
+630,Crysencio_Summerville,5.49
+631,Edson_Álvarez Velázquez,10.429621254946298
+632,Maxwel_Cornet,0.8099999999999999
+633,Guido_Rodríguez,11.06364428945074
+634,Luis_Guilherme Lira dos Santos,1.08
+635,George_Earthy,0.0
+636,Andy_Irving,2.16
+637,Lewis_Orford,0.72
+638,Freddie_Potts,0.0
+639,Jarrod_Bowen,6.385339609952925
+640,Niclas_Füllkrug,3.51
+641,Callum_Marshall,0.0
+642,Kyle_Walker-Peters,13.77
+643,Callum_Wilson,0.0
+644,Sam_Johnstone,0.0
+645,José_Malheiro de Sá,0.0
+646,Daniel_Bentley,0.0
+647,Tom_King,0.0
+648,Emmanuel_Agbadou,9.191489361702127
+649,Matt_Doherty,7.268408551068884
+650,Hugo_Bueno López,0.0
+651,Yerson_Mosquera Valdelamar,4.05
+652,Rodrigo_Martins Gomes,4.23
+653,Santiago_Ignacio Bueno,7.8843861740166865
+654,Toti_Gomes,8.610792192881746
+655,Ki-Jana_Hoever,0.0
+656,Bastien_Meupiyou Menadjou,0.0
+657,Pedro_Cardoso de Lima,0.63
+658,Alfie_Pond,0.0
+659,Hwang_Hee-chan,4.14
+660,André_Trindade da Costa Neto,13.070388349514564
+661,Jean-Ricner_Bellegarde,7.076830732292916
+662,Fer_López González,0.0
+663,João_Victor Gomes da Silva,11.405042016806723
+664,Gonçalo_Manuel Ganchinho Guedes,5.3999999999999995
+665,Marshall_Munetsi,6.935933147632313
+666,Boubacar_Traoré,0.18
+667,Tawanda_Chirewa,0.0
+668,Tom_Edozie,0.0
+669,Enso_González Medina,0.0
+670,Joe_Hodge,0.0
+671,Jørgen_Strand Larsen,3.1658291457286434
+672,Fábio_Soares Silva,0.0
+673,Saša_Kalajdžić,0.0
+674,Leon_Chiwome,0.0
+675,Nathan_Fraser,0.0
+676,Jhon_Arias,0.0
+677,Florian_Wirtz,6.6
