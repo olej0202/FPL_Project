@@ -396,7 +396,7 @@ def optimize_my_team(team_id=6758079,wildcard_round=8, bb_round=40,free_hit_roun
 
     for t in gameweeks[1:]:
         if t == wildcard_round:
-            model += saved_transfers[t] == hit # Reset after wildcard       
+            model += saved_transfers[t] == 0 # Reset after wildcard       
         else:
             if(t == week_to_remove_transfer):
                 model += saved_transfers[t] == saved_transfers[t-1] + (1 - lpSum(transfer_in[i, t] for i in range(num_players)))-1
@@ -406,7 +406,7 @@ def optimize_my_team(team_id=6758079,wildcard_round=8, bb_round=40,free_hit_roun
                 model += saved_transfers[t] <= 5
 
     # --- Initial Transfers & Bank ---
-    model += saved_transfers[0] == initial_saved
+    model += saved_transfers[0] == initial_saved+hit
     model += money_in_bank_var[0] == money_in_bank_init
 
     # --- Solve the Model ---

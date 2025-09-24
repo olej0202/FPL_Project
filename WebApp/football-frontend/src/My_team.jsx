@@ -24,6 +24,8 @@ export default function MyTeamOptimize() {
     has_changed,
     sethas_changed,
     bannedPlayersData,
+    n_hits, 
+    setn_hits
   } = useMyteamData();
 
   const navigate = useNavigate();
@@ -34,7 +36,7 @@ export default function MyTeamOptimize() {
   const [progress, setProgress] = useState(0);
   useEffect(() => {
     sethas_changed(true);
-  }, [teamId, bbRound, wildRound, bannedList, sethas_changed, freehitROund]);
+  }, [teamId, bbRound, wildRound, bannedList, sethas_changed, freehitROund,n_hits]);
   useEffect(() => {
   if (loading) {
     setLoadingPhase("fetch");
@@ -323,6 +325,34 @@ export default function MyTeamOptimize() {
             + Add Free Hit
           </button>
         )}
+        <div className="flex items-center gap-2 px-2 py-2 border border-royal-gold rounded">
+  <span className="text-sm text-gray-300 select-none">Hits</span>
+
+  <button
+    type="button"
+    aria-label="Decrease hits"
+    onClick={() => setn_hits(Math.max(0, Number(n_hits || 0) - 1))}
+    className="w-7 h-7 flex items-center justify-center rounded bg-black border border-royal-gold text-royal-gold hover:bg-yellow-300 hover:text-black transition"
+  >
+    −
+  </button>
+
+  <div
+    className="w-10 text-center font-semibold"
+    aria-live="polite"
+  >
+    {Number(n_hits || 0)}
+  </div>
+
+  <button
+    type="button"
+    aria-label="Increase hits"
+    onClick={() => setn_hits(Number(n_hits || 0) + 1)}
+    className="w-7 h-7 flex items-center justify-center rounded bg-black border border-royal-gold text-royal-gold hover:bg-yellow-300 hover:text-black transition"
+  >
+    +
+  </button>
+</div>
 
         <button
           onClick={() => {
