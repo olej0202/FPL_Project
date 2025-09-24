@@ -487,7 +487,7 @@ def optimize_my_team(team_id=6758079,wildcard_round=8, bb_round=40,free_hit_roun
                                 ,"web_name":web_name})
 
     # Final structured DataFrame
-    obj_val = float(value(model.objective))+free_hit_val
+    obj_val = float(value(model.objective))+free_hit_val-n_hits*4*0.8
     records.append({"Name": 'Obj Value'
                                 , "status": obj_val
                                 , "GW": 100

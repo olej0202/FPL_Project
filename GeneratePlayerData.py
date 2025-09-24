@@ -187,7 +187,7 @@ def team_data(
             col_means = col_means.fillna(0)          # or choose another fallback
 
             # 4) Assign (broadcast to all masked rows)
-            teams_dataset.loc[mask, cols] = col_means.values
+            teams_dataset.loc[mask, cols] = col_means.values*0.5+teams_dataset.loc[mask, cols].values*0.5
 
     # ---- APPLY TEAM-SPECIFIC MULTIPLIERS ----
     def _apply_factors(df, factors, cols,is_offensive):

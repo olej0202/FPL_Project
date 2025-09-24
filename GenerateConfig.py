@@ -67,7 +67,7 @@ Manual_Player_Risk={
         
 }
 
-NEW_TEAMS=[]
+NEW_TEAMS=[56]
 
 
 min_id=46805

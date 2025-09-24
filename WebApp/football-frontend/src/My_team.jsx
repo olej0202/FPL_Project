@@ -335,7 +335,7 @@ export default function MyTeamOptimize() {
       onClick={() => setn_hits(Math.max(0, Number(n_hits || 0) - 1))}
       className="inline-flex items-center justify-center w-7 h-7 rounded-full
                  border border-royal-gold text-royal-gold bg-black
-                 hover:bg-royal-gold hover:text-black transition leading-none"
+                 hover:bg-royal-gold hover:text-black hover:border-none transition leading-none"
     >
       −
     </button>
@@ -353,7 +353,7 @@ export default function MyTeamOptimize() {
       onClick={() => setn_hits(Number(n_hits || 0) + 1)}
       className="inline-flex items-center justify-center w-7 h-7 rounded-full
                  border border-royal-gold text-royal-gold bg-black
-                 hover:bg-royal-gold hover:text-black transition leading-none"
+                 hover:bg-royal-gold hover:text-black hover:border-none transition leading-none"
     >
       +
     </button>
