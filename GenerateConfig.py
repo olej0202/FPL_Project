@@ -29,7 +29,7 @@ Manual_team_offensive_adjustments = {94:0.9,4:0.9 }
     
     
     
-Manual_team_defensive_adjustments = {94:1.1, 31:1.1,6:0.65 }
+Manual_team_defensive_adjustments = {94:1.1,6:0.8 }
 
 
 Manual_NewPlayer_Adjustments={
@@ -57,17 +57,17 @@ Manual_Player_Risk={
         "Yoane_Wissa":0.7,
         "Bryan_Mbeumo":0.5,
         "Matheus_Santos Carneiro Da Cunha":0.5,
-        "Mohammed_Kudus":0.6,
-        "Florian_Wirtz":0.6,
-        "Viktor_Gyökeres":0.7,
+        "Mohammed_Kudus":0.5,
+        "Florian_Wirtz":0.5,
+        "Viktor_Gyökeres":0.5,
         "Tijjani_Reijnders":0.5,
-        "El_Hadji Malick Diouf":0.6,
+        "El_Hadji Malick Diouf":0.5,
         "Benjamin_Sesko":0.7,
-        "Hugo_Ekitiké":0.7
+        "Hugo_Ekitiké":0.5
         
 }
 
-NEW_TEAMS=[56]
+NEW_TEAMS=[]
 
 
 min_id=46805
