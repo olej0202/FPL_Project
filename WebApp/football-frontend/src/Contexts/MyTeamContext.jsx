@@ -26,7 +26,7 @@ export function MyTeamDataContextProvider({ children }) {
       if (wildRound) params.append('wildcard_round', wildRound);
       if (freehitROund) params.append('freehit_round', freehitROund);
       bannedList.forEach((id) => params.append('banned_list', id));
-      if (n_hits) params.append('hits', n_hits);
+      if (n_hits) params.append('n_hits', n_hits);
 
       const resp = await fetch(
         `https://fpl-project-t5e9.onrender.com/My_Team_Optimize?${params}`

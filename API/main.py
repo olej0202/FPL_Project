@@ -88,7 +88,7 @@ def get_my_team_optimize(
     bb_round:     Optional[int]             = Query(40, title="Bench Boost round"),
     wildcard_round: Optional[int]           = Query(40, title="Wildcard round"),
     freehit_round: Optional[int]           = Query(40, title="freehit round"),
-    n_hits:Optional[int]           = Query(0, title="hits"),
+    n_hits:Optional[int]                   = Query(0, title="n_hits"),
 ):
     """
     Optimize a team given:
