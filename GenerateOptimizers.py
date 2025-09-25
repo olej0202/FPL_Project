@@ -16,6 +16,8 @@ def wildcard_optimize_team(sel_thresh, budget, columns, file_path="Model_Optimiz
             data[col] * data["offset"],
             data[col] * data["minutes_multiplier"]
         )
+        
+        
 
     # Setup inputs
     players = data['name'].tolist()

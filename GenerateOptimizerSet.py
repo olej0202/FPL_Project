@@ -105,7 +105,7 @@ def GenerateOptimizeSet(Current_data_path):
 
     optimized_player_set["selected"] = optimized_player_set["selected"]/100
     optimized_player_set["value"] = optimized_player_set["value"]/10
-    optimized_player_set["minutes_multiplier"] = np.minimum(1, optimized_player_set['average_minutes'] / 80)
+    optimized_player_set["minutes_multiplier"] = np.minimum(1, optimized_player_set['average_minutes'] / 85)
     optimized_player_set["0"] = 0
     
     optimized_player_set["Points_prediction"] = np.where(
