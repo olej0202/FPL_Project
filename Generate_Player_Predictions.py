@@ -728,8 +728,8 @@ def Generate_point_predictions():
         for i in range(len(player_data)):
             try:
                 goals.append(((xgb_goals_player["pred"].values[i]*0.1
-                         +stat_goals_player["pred"].values[i]*0.6
-                         +DNN_goals_player["pred"].values[i]*0.3
+                         +stat_goals_player["pred"].values[i]*0.7
+                         +DNN_goals_player["pred"].values[i]*0.2
                          +CLUSTER_goals_player["pred"].values[i]*0.0))*overscore)
             except:
                 goals.append(0)
@@ -737,8 +737,8 @@ def Generate_point_predictions():
             try:
 
                 assist.append(((xgb_assist_player["pred"].values[i]*0.1
-                                    +stat_assist_player["pred"].values[i]*0.6
-                                    +DNN_assist_player["pred"].values[i]*0.3
+                                    +stat_assist_player["pred"].values[i]*0.7
+                                    +DNN_assist_player["pred"].values[i]*0.2
                                     +CLUSTER_assist_player["pred"].values[i]*0.0))*overassist)
             except:
                 assist.append(0)
@@ -788,11 +788,11 @@ def Generate_point_predictions():
             summary_dataset.to_csv("debug2.csv")
             New_dataset.to_csv("debug1.csv")
         if(position=="FWD"):
-            summary_dataset["Points_prediction"]=(2+summary_dataset["Goal_pred"]*5.5
+            summary_dataset["Points_prediction"]=(2+summary_dataset["Goal_pred"]*5
                                                   +summary_dataset["Assist_pred"]*3
                                                   +summary_dataset["Bonus_pred"])*0.9+0.1*summary_dataset["Fantasy_pred"]+(summary_dataset["CBI_pred"]/12)*0.0*2
         elif(position=="MID"):
-            summary_dataset["Points_prediction"]=(2+summary_dataset["Goal_pred"]*5.5
+            summary_dataset["Points_prediction"]=(2+summary_dataset["Goal_pred"]*5
                                                   +summary_dataset["Assist_pred"]*3
                                                   +summary_dataset["Bonus_pred"]
                                                   +summary_dataset["GC_pred"])*0.9+0.1*summary_dataset["Fantasy_pred"]+(summary_dataset["CBI_pred"]/12)*0.7*2
