@@ -351,6 +351,7 @@ def Generate_Understat_dataset(current_players,run_player_pos):
 
     agg_ops = {c: "mean" for c in ["npg","npxG","key_passes","shots","goals","xG","xA","assists","xGChain","xGBuildup"]}
     agg_ops["opponent"] = most_common   # <- add the opponent “mode”
+    df.to_csv("Understat_transformed.csv")
 
     agg_df = (
         df.groupby(["pos_group","date","player_team"])

@@ -1,6 +1,55 @@
 import pandas as pd
 import joblib
 import numpy as np
+def Generate_Lineups():
+
+    # ── Load & prep ────────────────────────────────────────────────────────────────
+    df = pd.read_csv("Understat_transformed.csv")
+    df = df[["player_name","player_team","opponent","pos_group","date"]].copy()
+    df["date"] = pd.to_datetime(df["date"], errors="coerce")
+    
+    # ── Latest lineup per team (drop SUB) ─────────────────────────────────────────
+    df_non_sub = df.loc[~df["pos_group"].str.upper().eq("SUB")].copy()
+    df_non_sub["latest_team_date"] = df_non_sub.groupby("player_team")["date"].transform("max")
+    out = (
+        df_non_sub.loc[df_non_sub["date"].eq(df_non_sub["latest_team_date"])]
+                  .drop(columns="latest_team_date")
+                  .sort_values(["player_team","date","player_name"])
+                  .reset_index(drop=True)
+    )
+    
+    # ── % appearances over last 5 distinct team dates (non-SUB) ──────────────────
+    last5_dates = (
+        df_non_sub[["player_team","date"]].drop_duplicates()
+                 .sort_values(["player_team","date"], ascending=[True, False])
+                 .groupby("player_team")
+                 .head(5)
+    )
+    denom = last5_dates.groupby("player_team")["date"].nunique().rename("n_dates").reset_index()
+    
+    appearances = (
+        df_non_sub.merge(last5_dates, on=["player_team","date"], how="inner")
+                  .drop_duplicates(["player_team","player_name","date"])
+                  .groupby(["player_team","player_name"])["date"].nunique()
+                  .rename("appearances_last5")
+                  .reset_index()
+    )
+    
+    # ── Include position from the last date ───────────────────────────────────────
+    pos_latest = out[["player_team","player_name","pos_group"]].rename(columns={"pos_group":"pos_latest"})
+    
+    result = (out[["player_team","player_name"]]            # players from latest lineup
+              .merge(pos_latest, on=["player_team","player_name"], how="left")
+              .merge(appearances, on=["player_team","player_name"], how="left")
+              .merge(denom, on="player_team", how="left"))
+    
+    result["appearances_last5"] = result["appearances_last5"].fillna(0).astype(int)
+    result["appear_pct_last5"] = (result["appearances_last5"] / result["n_dates"] * 100).round(1)
+    
+    # Final columns
+    result = result[["player_team","player_name","pos_latest","appearances_last5","n_dates","appear_pct_last5"]]
+    
+    result.to_csv("Team_lineups.csv")
 
 def Generate_Team_threats():
     df = pd.read_csv("Team_AggTest.csv")
