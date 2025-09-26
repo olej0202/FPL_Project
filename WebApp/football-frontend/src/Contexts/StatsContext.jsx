@@ -7,6 +7,7 @@ export const useStatsData = () => useContext(StatsDataContext);
 export function StatsDataProvider({ children }) {
   const PlayersRef = useRef(null);
   const TeamRef = useRef(null);
+  const TeamThreatRef = useRef(null);
 
   const [loading, setLoading] = useState(false);
   const [analyses, setAnalyses] = useState([]);
@@ -18,16 +19,18 @@ const removeAnalysis = (id) => {
 };
 
   const fetchIfNeeded = async () => {
-    if (PlayersRef.current && TeamRef.current) return;
+    if (PlayersRef.current && TeamRef.current&& TeamThreatRef.current) return;
 
     setLoading(true);
     try {
-      const [PlayersRes, TeamRes] = await Promise.all([
+      const [PlayersRes, TeamRes,TeamThreat] = await Promise.all([
         fetch("https://fpl-project-t5e9.onrender.com/Player_rankings").then(res => res.json()),
         fetch("https://fpl-project-t5e9.onrender.com/Team_current").then(res => res.json()),
+        fetch("https://fpl-project-t5e9.onrender.com/Team_Threat").then(res => res.json()),
       ]);
       PlayersRef.current = PlayersRes;
       TeamRef.current = TeamRes;
+      TeamThreatRef.current = TeamThreat;
     } catch (err) {
       console.error("Failed fetching AI team data:", err);
     } finally {
@@ -42,6 +45,7 @@ const removeAnalysis = (id) => {
         loading,
         PlayersData: PlayersRef,
         TeamData: TeamRef,
+        TeamThreatData: TeamThreatRef,
         analyses,
         addAnalysis,
         removeAnalysis,

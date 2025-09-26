@@ -47,6 +47,11 @@ def Generate_Team_threats():
     latest_ewm["Treat"]=latest_ewm["Goal_Treat"]*0.7+0.3*latest_ewm["Assist_Treat"]
 
     latest_ewm=latest_ewm[["opponent","pos_group","Treat"]]
+    pg = latest_ewm["pos_group"].str.upper().str.strip()
+    latest_ewm = latest_ewm.loc[
+        ~pg.isin(["SUB", "GK", "GKP"]),
+        ["opponent", "pos_group", "Treat"]
+    ]
     latest_ewm.to_csv("Team_threat.csv")
 def Generate_Player_Historical():
     data=pd.read_csv("testML4.csv").iloc[:,1:]

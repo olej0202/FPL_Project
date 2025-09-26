@@ -8,12 +8,15 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  BarChart,
+  Bar,
+  LabelList,
 } from "recharts";
 import { useLocation } from "react-router-dom";
 import { useStatsData } from "./Contexts/StatsContext";
 
 export default function Team_Analytics_Individual() {
-  const { fetchIfNeeded, TeamData } = useStatsData();
+  const { fetchIfNeeded, TeamData,TeamThreatData } = useStatsData();
   const API_URL = "https://fpl-project-t5e9.onrender.com/Teams";
   const [eloData, setEloData] = useState([]);
   const [offData, setoffData] = useState([]);
@@ -117,6 +120,31 @@ export default function Team_Analytics_Individual() {
 
 
 const defChartData = defData.filter(d => d.name === teamFilter);
+// Threat list for the currently selected team
+const threatRows = React.useMemo(() => {
+  if (!teamFilter) return [];
+
+  const src = Array.isArray(TeamThreatData?.current)
+    ? TeamThreatData.current
+    : Array.isArray(TeamThreatData)
+    ? TeamThreatData
+    : [];
+
+  if (src.length === 0) return [];
+
+  return src
+    .filter(r => (r?.opponent ?? r?.Opponent) === teamFilter)
+    .map(r => {
+      const threat = Number(
+        r?.Threat ?? r?.Treat ?? r?.threat ?? r?.treat ?? NaN
+      );
+      const pos = r?.pos_group ?? r?.position_group ?? r?.PosGroup ?? "Unknown";
+      return { pos_group: pos, threat };
+    })
+    .filter(r => Number.isFinite(r.threat))
+    .sort((a, b) => b.threat - a.threat);
+}, [TeamThreatData, teamFilter]);
+
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center px-4 py-8 space-y-10">
@@ -203,7 +231,7 @@ const defChartData = defData.filter(d => d.name === teamFilter);
               tick={{ fontSize: 10 }}
               stroke="#fff"
             />
-            <YAxis stroke="#fff" domain={["dataMin", "dataMax"]} />
+            <YAxis hide stroke="#fff" domain={["dataMin", "dataMax"]} />
             <Tooltip
               contentStyle={{
                 backgroundColor: "#5A0000",
@@ -226,7 +254,39 @@ const defChartData = defData.filter(d => d.name === teamFilter);
           </LineChart>
         </ResponsiveContainer>
       </div>
+      {/* Positional Threat list */}
+{/* Positional Threat — Bar Chart */}
+{teamFilter && (
+  <div className="bg-royal-red p-1 rounded shadow border border-royal-gold w-full max-w-6xl mt-8">
+    <h2 className="text-xl font-semibold mb-4 text-center text-royal-beige">
+      Positional Threat Against
+    </h2>
+
+    <ResponsiveContainer width="100%" height={300}>
+      <BarChart data={threatRows} margin={{ top: 20, right: 10, left: 30, bottom: 0 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#ffffff40" />
+        <XAxis dataKey="pos_group" stroke="#f7ead6" />
+        <YAxis hide stroke="#f7ead6" domain={[0, "dataMax"]} />
+        <Tooltip
+          contentStyle={{
+            backgroundColor: "#5A0000",
+            color: "#FFD700",
+            border: "1px solid #FFD700",
+          }}
+          formatter={(v) => (typeof v === "number" ? v.toFixed(2) : v)}
+        />
+        <Bar dataKey="threat" fill="#B8860B">
+          <LabelList dataKey="threat" position="top" formatter={(v) => v.toFixed(2)} />
+        </Bar>
+      </BarChart>
+    </ResponsiveContainer>
+  </div>
+)}
+
+
     </div>
   );
 }
+
+
 
