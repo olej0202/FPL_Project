@@ -2,6 +2,52 @@ import pandas as pd
 import joblib
 import numpy as np
 
+def Generate_Team_threats():
+    df = pd.read_csv("Team_AggTest.csv")
+    team_df = df[["opponent", "pos_group", "date", "shots", "npxG_share", "xA_share", "key_passes"]].copy()
+
+    # ensure proper dtypes
+    team_df["date"] = pd.to_datetime(team_df["date"], errors="coerce")
+    metrics = ["shots", "npxG_share", "xA_share", "key_passes"]
+    team_df[metrics] = team_df[metrics].apply(pd.to_numeric, errors="coerce")
+
+    # sort by time within each group
+    team_df = team_df.sort_values(["opponent", "pos_group", "date"])
+
+    # EWM per team × pos_group (span=20)
+    span = 25
+    ewm_cols = [f"{c}_ewm" for c in metrics]
+    team_df[ewm_cols] = (
+        team_df
+          .groupby(["opponent", "pos_group"])[metrics]
+          .transform(lambda s: s.ewm(span=span, adjust=False).mean())
+    )
+
+    # --- examples of how to use the result ---
+
+    # 1) get Crystal Palace rows (with EWM columns)
+    cp = team_df.loc[team_df["opponent"] == "Aston Villa"]
+
+    # 2) latest EWM per team × pos_group (i.e., last date per group)
+    latest_ewm = (
+        team_df
+          .sort_values("date")
+          .groupby(["opponent", "pos_group"], as_index=False)
+          .tail(1)[["opponent", "pos_group"] + ewm_cols]
+    )
+    team_totals = latest_ewm.groupby("opponent")["shots_ewm"].transform("sum")
+    latest_ewm["shots_share_pct"] = (latest_ewm["shots_ewm"] / team_totals)
+    latest_ewm["shots_share_pct"] = latest_ewm["shots_share_pct"].fillna(0.0)
+
+    team_totals_pass = latest_ewm.groupby("opponent")["key_passes_ewm"].transform("sum")
+    latest_ewm["pass_share_pct"] = (latest_ewm["key_passes_ewm"] / team_totals)
+    latest_ewm["pass_share_pct"] = latest_ewm["pass_share_pct"].fillna(0.0)
+    latest_ewm["Goal_Treat"]=latest_ewm["npxG_share_ewm"]*0.7+0.3*latest_ewm["shots_share_pct"]
+    latest_ewm["Assist_Treat"]=latest_ewm["xA_share_ewm"]*0.7+0.3*latest_ewm["pass_share_pct"]
+    latest_ewm["Treat"]=latest_ewm["Goal_Treat"]*0.7+0.3*latest_ewm["Assist_Treat"]
+
+    latest_ewm=latest_ewm[["opponent","pos_group","Treat"]]
+    latest_ewm.to_csv("Team_threat.csv")
 def Generate_Player_Historical():
     data=pd.read_csv("testML4.csv").iloc[:,1:]
     relevant_players=pd.read_csv("Player_Prediction_set.csv")
@@ -49,6 +95,7 @@ def Generate_Player_Rankings(current_teams):
 def Generate_ALL_datasets(current_teams):
     Generate_Player_Historical()
     Generate_Player_Rankings(current_teams)
+    Generate_Team_threats()
 
 if __name__ == "__main__":
     Generate_ALL_datasets()
