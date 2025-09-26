@@ -205,15 +205,15 @@ const normalizeRole = (pos_latest = "") => {
 // ── Base anchors (top=attack 0% → bottom 100%) ───────────────────────────────
 const BASE = {
   GK: { x: 50, y: 92 },
-  LB: { x: 14, y: 65 },
-  CB: { x: 50, y: 77 },
-  RB: { x: 88, y: 65 },
-  DM: { x: 50, y: 60 },
-  CM: { x: 50, y: 50 },
-  AM: { x: 50, y: 34 },
-  LW: { x: 14, y: 34 },
-  RW: { x: 88, y: 34 },
-  ST: { x: 50, y: 15 },
+  LB: { x: 14, y: 60 },
+  CB: { x: 50, y: 73 },
+  RB: { x: 88, y: 60 },
+  DM: { x: 50, y: 55 },
+  CM: { x: 50, y: 40 },
+  AM: { x: 50, y: 25 },
+  LW: { x: 14, y: 25 },
+  RW: { x: 88, y: 25 },
+  ST: { x: 50, y: 10 },
 };
 
 // ── Dynamic spacing config (wider for CM/FW, tighter for CB) ─────────────────
@@ -236,7 +236,7 @@ const placeWithinRow = (base, i, n, role) => {
   let totalSpan = Math.min(maxSpan, gap * (n - 1));
   if (role === "CM" && n >= 3) totalSpan = Math.max(totalSpan, 50);
   if (role === "CM" && n >= 2) totalSpan = Math.max(totalSpan, 32);
-  if (role === "CB" && n >= 3) totalSpan = Math.max(totalSpan, 50);
+  if (role === "CB" && n >= 3) totalSpan = Math.max(totalSpan, 55);
   if (role === "CB" && n >= 2) totalSpan = Math.max(totalSpan, 32);
   if (role === "DM" && n >= 2) totalSpan = Math.max(totalSpan, 26);
   if (role === "ST" && n >= 2) totalSpan = Math.max(totalSpan, 32);
@@ -338,7 +338,7 @@ const lineupOnPitch = React.useMemo(() => {
 {/* Lineup on Pitch */}
 {teamFilter && (
   <div
-  className="w-full max-w-[480px] aspect-[5/8] bg-no-repeat bg-cover border border-royal-gold rounded-lg relative mt-8"
+  className="w-full max-w-[480px] aspect-[1/2] bg-no-repeat bg-cover border border-royal-gold rounded-lg relative mt-4"
   style={{
     backgroundImage: `url(${pitch})`,
     backgroundPosition: "50% 50%",
@@ -449,10 +449,10 @@ const lineupOnPitch = React.useMemo(() => {
     </h2>
 
     <ResponsiveContainer width="100%" height={300}>
-      <BarChart data={threatRows} margin={{ top: 20, right: 10, left: 15, bottom: 0 }}>
+      <BarChart data={threatRows} margin={{ top: 20, right: 10, left: 5, bottom: 0 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="#ffffff40" />
         <XAxis dataKey="pos_group" stroke="#f7ead6" />
-        <YAxis hide stroke="#f7ead6" domain={[0, "dataMax"]} />
+        <YAxis hide stroke="#d6ddf7ff" domain={[0, "dataMax"]} />
         <Tooltip
           contentStyle={{
             backgroundColor: "#5A0000",
@@ -461,7 +461,7 @@ const lineupOnPitch = React.useMemo(() => {
           }}
           formatter={(v) => (typeof v === "number" ? v.toFixed(2) : v)}
         />
-        <Bar dataKey="threat" fill="#9f8f7cff" >
+        <Bar dataKey="threat" fill="#B8860B" >
           <LabelList dataKey="threat" position="top" formatter={(v) => v.toFixed(2)} />
         </Bar>
       </BarChart>
