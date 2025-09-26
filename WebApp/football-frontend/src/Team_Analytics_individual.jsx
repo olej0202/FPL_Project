@@ -361,7 +361,7 @@ const lineupOnPitch = React.useMemo(() => {
   />
 
   <div className="px-3 py-1 rounded-md bg-black/70 border border-royal-gold shadow">
-    <div className="text-xs font-semibold text-white whitespace-nowrap">{p.name}</div>
+    <div className="text-xs font-semibold text-white whitespace-nowrap">{(p.name ?? "").trim().split(/[,\s]+/).pop() || ""}</div>
     <div className="text-[12px] text-white">
       {Number.isFinite(p.pct) ? `${Math.round(p.pct)}%` : "—"}
     </div>
