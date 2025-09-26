@@ -333,7 +333,7 @@ const lineupOnPitch = React.useMemo(() => {
       </div>
 
        <h2 className="text-xl font-semibold mb-3 text-center text-royal-beige mb-2">
-      Latest Lineup — 5-match Appearance % 
+      Latest Lineup — 5-match Start % 
     </h2>
 {/* Lineup on Pitch */}
 {teamFilter && (
@@ -361,7 +361,7 @@ const lineupOnPitch = React.useMemo(() => {
   />
 
   <div className="px-3 py-1 rounded-md bg-black/70 border border-royal-gold shadow">
-    <div className="text-xs font-semibold text-white whitespace-nowrap">{(p.name ?? "").trim().split(/[,\s]+/).pop() || ""}</div>
+    <div className="text-xs font-semibold text-white whitespace-nowrap">{(p.name ?? "").trim().split(/[,\s;]+/).pop() || ""}</div>
     <div className="text-[12px] text-white">
       {Number.isFinite(p.pct) ? `${Math.round(p.pct)}%` : "—"}
     </div>
@@ -449,7 +449,7 @@ const lineupOnPitch = React.useMemo(() => {
     </h2>
 
     <ResponsiveContainer width="100%" height={300}>
-      <BarChart data={threatRows} margin={{ top: 20, right: 10, left: 5, bottom: 0 }}>
+      <BarChart data={threatRows} margin={{ top: 20, right: 0, left: 0, bottom: 0 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="#ffffff40" />
         <XAxis dataKey="pos_group" stroke="#f7ead6" />
         <YAxis hide stroke="#d6ddf7ff" domain={[0, "dataMax"]} />
