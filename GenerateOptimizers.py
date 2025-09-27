@@ -134,6 +134,7 @@ def wildcard_optimize_team(sel_thresh, budget, columns, file_path="Model_Optimiz
         for i in range(num_players):
             name = players[i]
             player_row_code = current_players[current_players["name"] == name]["code"].values[0]
+            teamCode=current_players[current_players["name"]==players[i]]["team_code"].values[0]
             pos = positions[i]
             gw = columns[t]
 
@@ -144,7 +145,8 @@ def wildcard_optimize_team(sel_thresh, budget, columns, file_path="Model_Optimiz
                     "status": "transferred_in",
                     "GW": gw,
                     "position": pos,
-                    "photo": f"https://resources.premierleague.com/premierleague/photos/players/110x140/p{player_row_code}.png",
+                    #"photo": f"https://resources.premierleague.com/premierleague/photos/players/110x140/p{player_row_code}.png",
+                    "photo":f"https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_{teamCode}-110.png",
                     "web_name": current_players[current_players["name"] == name]["web_name"].values[0], 
                     "Is_captain":  False
                 })
@@ -156,7 +158,8 @@ def wildcard_optimize_team(sel_thresh, budget, columns, file_path="Model_Optimiz
                     "status": "transferred_out",
                     "GW": gw,
                     "position": pos,
-                    "photo": f"https://resources.premierleague.com/premierleague/photos/players/110x140/p{player_row_code}.png",
+                    #"photo": f"https://resources.premierleague.com/premierleague/photos/players/110x140/p{player_row_code}.png",
+                    "photo":f"https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_{teamCode}-110.png",
                     "web_name": current_players[current_players["name"] == name]["web_name"].values[0],
                     "Is_captain":  False
                 })
@@ -293,11 +296,13 @@ def freeHit_optimize_team(sel_thresh, budget, columns, file_path="Model_Optimize
                 player_row=current_players[current_players["name"]==players[i][:-1]]["code"].values[0]
             status = "Bench" if bench[i].varValue > 0.5 else "Playing"
             is_capt   = capt[i].varValue > 0.5
+            teamCode=current_players[current_players["name"]==players[i]]["team_code"].values[0]
             print(f"- {players[i]} ({positions[i]}) - {status}")
             player_set.append(players[i])
             player_set.append(positions[i])
             player_set.append(status)
-            player_set.append(f"https://resources.premierleague.com/premierleague/photos/players/110x140/p{player_row}.png")
+            #player_set.append(f"https://resources.premierleague.com/premierleague/photos/players/110x140/p{player_row}.png")
+            player_set.append(f"https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_{teamCode}-110.png")
             player_set.append(columns[0])
             player_set.append(current_players[current_players["name"]==players[i]]["web_name"].values[0])
             player_set.append(is_capt)

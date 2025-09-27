@@ -914,8 +914,10 @@ def team_transformed2():
         selected_team_df["XGCA"]=((1-overall_weight)  * np.array(def_rating_away_history[team][:-1]) +overall_weight * selected_team_df["XGCA"])
         selected_team_df["XGH"]=((1-overall_weight)  * np.array(off_rating_home_history[team][:-1]) +overall_weight * selected_team_df["XGH"]) 
         selected_team_df["XGCH"]=((1-overall_weight)  * np.array(def_rating_home_history[team][:-1]) +overall_weight* selected_team_df["XGCH"])
-        selected_team_df["XG_avg"]=((1-overall_weight)  * np.array(off_rating_history[team][:-1]) +overall_weight* selected_team_df["XG_avg"])
-        selected_team_df["XGC_avg"]=((1-overall_weight)  * np.array(def_rating_history[team][:-1]) +overall_weight* selected_team_df["XGC_avg"])
+        selected_team_df["XG_avg"]=selected_team_df["XGH"]*0.5+selected_team_df["XGA"]*0.5
+        selected_team_df["XGC_avg"]=selected_team_df["XGCH"]*0.5+selected_team_df["XGCA"]*0.5
+        #selected_team_df["XG_avg"]=((1-overall_weight)  * np.array(off_rating_history[team][:-1]) +overall_weight* selected_team_df["XG_avg"])
+        #selected_team_df["XGC_avg"]=((1-overall_weight)  * np.array(def_rating_history[team][:-1]) +overall_weight* selected_team_df["XGC_avg"])
         selected_team_df['XG_slope']=slope_df["XG_slope"].values[:-1]
         selected_team_df['XGC_slope']=slope_df["XGC_slope"].values[:-1]
         selected_team_df["Elo_Rating"]=elo_history[team][:-1]
@@ -926,8 +928,10 @@ def team_transformed2():
         newest_selected_team_df["XGCA"]=def_rating_away_history[team][-1]*(1-overall_weight) +overall_weight * newest_selected_team_df["XGCA"]
         newest_selected_team_df["XGH"]=off_rating_home_history[team][-1]*(1-overall_weight) +overall_weight * newest_selected_team_df["XGH"]
         newest_selected_team_df["XGCH"]=def_rating_home_history[team][-1]*(1-overall_weight) +overall_weight * newest_selected_team_df["XGCH"]
-        newest_selected_team_df["XG_avg"]=off_rating_history[team][-1]*(1-overall_weight) +overall_weight * newest_selected_team_df["XG_avg"]
-        newest_selected_team_df["XGC_avg"]=def_rating_history[team][-1]*(1-overall_weight) +overall_weight * newest_selected_team_df["XGC_avg"]
+        selected_team_df["XG_avg"]=selected_team_df["XGH"]*0.5+selected_team_df["XGA"]*0.5
+        selected_team_df["XGC_avg"]=selected_team_df["XGCH"]*0.5+selected_team_df["XGCA"]*0.5
+        #newest_selected_team_df["XG_avg"]=off_rating_history[team][-1]*(1-overall_weight) +overall_weight * newest_selected_team_df["XG_avg"]
+        #newest_selected_team_df["XGC_avg"]=def_rating_history[team][-1]*(1-overall_weight) +overall_weight * newest_selected_team_df["XGC_avg"]
         newest_selected_team_df['XG_slope']=slope_df["XG_slope"].values[-1]
         newest_selected_team_df['XGC_slope']=slope_df["XGC_slope"].values[-1]
         newest_selected_team_df["Elo_Rating"]=elo_history[team][-1]
