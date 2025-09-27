@@ -928,8 +928,8 @@ def team_transformed2():
         newest_selected_team_df["XGCA"]=def_rating_away_history[team][-1]*(1-overall_weight) +overall_weight * newest_selected_team_df["XGCA"]
         newest_selected_team_df["XGH"]=off_rating_home_history[team][-1]*(1-overall_weight) +overall_weight * newest_selected_team_df["XGH"]
         newest_selected_team_df["XGCH"]=def_rating_home_history[team][-1]*(1-overall_weight) +overall_weight * newest_selected_team_df["XGCH"]
-        selected_team_df["XG_avg"]=newest_selected_team_df["XGH"]*0.5+newest_selected_team_df["XGA"]*0.5
-        selected_team_df["XGC_avg"]=newest_selected_team_df["XGCH"]*0.5+newest_selected_team_df["XGCA"]*0.5
+        newest_selected_team_df["XG_avg"]=newest_selected_team_df["XGH"]*0.5+newest_selected_team_df["XGA"]*0.5
+        newest_selected_team_df["XGC_avg"]=newest_selected_team_df["XGCH"]*0.5+newest_selected_team_df["XGCA"]*0.5
         #newest_selected_team_df["XG_avg"]=off_rating_history[team][-1]*(1-overall_weight) +overall_weight * newest_selected_team_df["XG_avg"]
         #newest_selected_team_df["XGC_avg"]=def_rating_history[team][-1]*(1-overall_weight) +overall_weight * newest_selected_team_df["XGC_avg"]
         newest_selected_team_df['XG_slope']=slope_df["XG_slope"].values[-1]

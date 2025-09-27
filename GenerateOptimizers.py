@@ -169,6 +169,7 @@ def wildcard_optimize_team(sel_thresh, budget, columns, file_path="Model_Optimiz
         for i in range(num_players):
             name = players[i]
             player_row_code=current_players[current_players["name"]==name]["code"].values[0]
+            teamCode=current_players[current_players["name"]==name]["team_code"].values[0]
             pos = positions[i]
             gw =columns[ t] # Transfers affect upcoming GW
             is_capt   = capt[i, t].varValue > 0.5
