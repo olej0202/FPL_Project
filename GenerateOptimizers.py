@@ -178,7 +178,7 @@ def wildcard_optimize_team(sel_thresh, budget, columns, file_path="Model_Optimiz
                     status = "benched"
                 else:
                     status = "playing"
-                records.append({"Name": name, "status": status, "GW": gw, "position": pos, "photo":f"https://resources.premierleague.com/premierleague/photos/players/110x140/p{player_row_code}.png"
+                records.append({"Name": name, "status": status, "GW": gw, "position": pos, "photo":f"https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_{teamCode}-110.png"
                                 ,"web_name": current_players[current_players["name"] == name]["web_name"].values[0], "Is_captain":  bool(is_capt)})
     """
     for t in range(1, GW_range):
