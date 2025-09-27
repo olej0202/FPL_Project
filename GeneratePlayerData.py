@@ -384,6 +384,7 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
             
         if(len(playerCBI)>0):
             cbi_ind=((playerCBI["CBI"].values[0]/90)*minutes)
+            print(minutes)
             last = player_row["defcon_avg"].iloc[-1] if not player_row["defcon_avg"].empty else np.nan
             cbi_hist = cbi_ind if pd.isna(last) else last
             player_row["CBI"]=cbi_ind*0.5+0.5*cbi_hist
