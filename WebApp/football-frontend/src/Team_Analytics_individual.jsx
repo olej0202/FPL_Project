@@ -292,6 +292,39 @@ const lineupOnPitch = React.useMemo(() => {
   return out;
 }, [lineupLatestStats]);
 
+// mirror helper (flip both axes relative to the pitch)
+const mirrorBase = ({ x, y }) => ({ x: 100 - x, y: 100 - y });
+
+// Aggregate threat per normalized role, then place at mirrored coords
+const threatsOnPitch = React.useMemo(() => {
+  if (!Array.isArray(threatRows) || threatRows.length === 0) return [];
+
+  // sum threats per role (change to average if you prefer)
+  const byRole = threatRows.reduce((acc, r) => {
+    const role = normalizeRole(r.pos_group);
+    const val  = Number(r.threat) || 0;
+    acc[role] = (acc[role] ?? 0) + val;
+    return acc;
+  }, {});
+
+  const out = Object.entries(byRole).map(([role, threat]) => {
+    const base = BASE[role] || BASE.CM;
+    const { x, y } = mirrorBase(base); // ← flip to the “opposite” side
+    return { role, threat, x, y };
+  });
+
+  // optional: stable order, highest threat first
+  out.sort((a, b) => b.threat - a.threat || a.role.localeCompare(b.role));
+  return out;
+}, [threatRows]);
+
+const [minT, maxT] = React.useMemo(() => {
+  if (!threatsOnPitch.length) return [0, 1];
+  const vals = threatsOnPitch.map(d => d.threat);
+  return [Math.min(...vals), Math.max(...vals)];
+}, [threatsOnPitch]);
+
+
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center px-4 py-8 space-y-10">
@@ -370,6 +403,46 @@ const lineupOnPitch = React.useMemo(() => {
     ))}
   </div>
 )}
+
+
+<h2 className="text-xl font-semibold mb-4 text-center text-royal-beige">
+      Threat by Opposition Position
+    </h2>
+
+{/* Threats Faced — mirrored positions */}
+{teamFilter && (
+  <div
+    className="w-full max-w-[480px] aspect-[1/2] bg-no-repeat bg-cover border border-royal-gold rounded-lg relative mt-6"
+    style={{ backgroundImage: `url(${pitch})`, backgroundPosition: "50% 50%" }}
+  >
+    
+    {threatsOnPitch.map(t => {
+      const alpha =
+        maxT > minT ? 0.35 + 0.5 * ((t.threat - minT) / (maxT - minT)) : 0.5;
+
+      return (
+        <div
+          key={t.role}
+          className="absolute -translate-x-1/2 -translate-y-1/2 text-center flex flex-col items-center"
+          style={{ left: `${t.x}%`, top: `${t.y}%` }}
+        >
+          
+          <div
+            className="px-3 py-1 rounded-md border border-royal-gold shadow"
+            style={{ backgroundColor: `rgba(185, 28, 28, ${alpha})` }} // intensity by threat
+          >
+            <div className="text-[11px] font-semibold text-royal-gold">{t.role}</div>
+            <div className="text-sm font-bold text-white">
+              {Number.isFinite(t.threat) ? t.threat.toFixed(2) : "—"}
+            </div>
+          </div>
+        </div>
+      );
+    })}
+  </div>
+)}
+
+
 {/* Chart-type buttons */}
 <div className="flex justify-center space-x-2 focus:outline-none focus:ring-0 active:outline-none active:ring-0  hover:outline-none hover:ring-0">
   {["elo","off","def"].map((type, i) => {
@@ -441,33 +514,10 @@ const lineupOnPitch = React.useMemo(() => {
         </ResponsiveContainer>
       </div>
       {/* Positional Threat list */}
-{/* Positional Threat — Bar Chart */}
-{teamFilter && (
-  <div className="bg-royal-red p-1 rounded shadow border border-royal-gold w-full max-w-6xl mt-8">
-    <h2 className="text-xl font-semibold mb-4 text-center text-royal-beige">
-      Positional Threat Against
-    </h2>
 
-    <ResponsiveContainer width="100%" height={300}>
-      <BarChart data={threatRows} margin={{ top: 20, right: 0, left: 0, bottom: 0 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#ffffff40" />
-        <XAxis dataKey="pos_group" stroke="#f7ead6" />
-        <YAxis hide stroke="#d6ddf7ff" domain={[0, "dataMax"]} />
-        <Tooltip
-          contentStyle={{
-            backgroundColor: "#5A0000",
-            color: "#FFD700",
-            border: "1px solid #FFD700",
-          }}
-          formatter={(v) => (typeof v === "number" ? v.toFixed(2) : v)}
-        />
-        <Bar dataKey="threat" fill="#B8860B" >
-          <LabelList dataKey="threat" position="top" formatter={(v) => v.toFixed(2)} />
-        </Bar>
-      </BarChart>
-    </ResponsiveContainer>
-  </div>
-)}
+
+
+
 
 
 
