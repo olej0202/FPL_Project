@@ -42,7 +42,7 @@ export default function FreeHitTeam() {
             
 
         <div
-          className="w-full max-w-[500px] aspect-[3/5] bg-no-repeat bg-cover bg-center border border-white rounded-lg px-2 py-1 relative"
+          className="w-full max-w-[500px] aspect-[3/5] bg-no-repeat bg-cover bg-center border border-white rounded-lg px-2 py-4 relative"
           style={{ backgroundImage: `url(${pitch})` }}
         >
           <div className="flex flex-col justify-between h-[700px] pt-1 space-y-1">
