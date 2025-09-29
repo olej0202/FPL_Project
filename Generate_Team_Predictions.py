@@ -105,10 +105,10 @@ def GenerateTeamPredictions1(fixture_path, current_team_path,horizon):
     current_month = datetime.today().month
 
     # Filter for current month
-    test_df = Model_pred[(Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month == current_month-1)| 
-                   (Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month == current_month-3) ]
+    test_df = Model_pred[(Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month == current_month)| 
+                   (Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month == current_month-1) ]
     train_df = Model_pred[(Model_pred['kickoff_time'].dt.year < current_year) | 
-                     ((Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month < current_month-4))]
+                     ((Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month < current_month-2))]
     train_df=train_df[train_df['kickoff_time']>'2022-12-31']
 
 
@@ -521,10 +521,10 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     current_month = datetime.today().month
 
     # Filter for current month
-    test_df = Model_pred[(Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month == current_month-1)| 
+    test_df = Model_pred[(Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month == current_month)| 
                    (Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month == current_month-2) ]
     train_df = Model_pred[(Model_pred['kickoff_time'].dt.year < current_year) | 
-                     ((Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month < current_month-4))]
+                     ((Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month < current_month-2))]
     train_df=train_df[train_df['kickoff_time']>'2022-12-31']
 
 
@@ -663,10 +663,10 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
 
 
     X_train_bal, y_train_bal = X_train_oh, y_CS_train
-    y_smooth = 0 + 1 * y_train_bal  # if you're using smoothed labels
+    y_smooth = 0.3/train_df['XGC'].astype(float) + 0.8 * y_train_bal  # if you're using smoothed labels
 
     input_dim = X_train_bal.shape[1]
-    model = Sequential([
+    """model = Sequential([
         layers.Input(shape=(input_dim,)),
         layers.Dense(32, activation='relu', kernel_regularizer=regularizers.l2(1e-3)),
         layers.Dropout(0.1),
@@ -678,12 +678,14 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     history = model.fit(
         X_train_bal, y_smooth,
         epochs=100,
-        batch_size=64,
+        batch_size=32,
         shuffle=True,
         verbose=0
-    )
+    )"""
+    model=SVR(kernel='rbf', C=0.1, epsilon=0.1,gamma=0.1)
+    model.fit(X_train_bal, y_smooth)
 
-    p_test = model.predict(X_test_oh, verbose=0).ravel()
+    p_test = model.predict(X_test_oh)
     
 
 
@@ -837,6 +839,10 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     #new_input_XGC['Own_XPTS']=df_merged["roll10_xpts_y"]
     new_input_XGC['Opposition_RollingXG']=df_merged["Rolling_XG_x"]
     new_input_XGC['Own_RollingXGC']=df_merged["Rolling_XGC_y"]
+    new_input_XGC.to_csv("teams_preds_test2.csv")
+    
+    
+    css_stat_home=0.4/(new_input_XGC["Own_XGC"]*0.6+0.4*new_input_XGC["Opposition_XG"])
 
     
 
@@ -856,6 +862,8 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     #new_input_XGC2['Own_XPTS']=df_merged["roll10_xpts_x"]
     new_input_XGC2['Opposition_RollingXG']=df_merged["Rolling_XG_y"]
     new_input_XGC2['Own_RollingXGC']=df_merged["Rolling_XGC_x"]
+    
+    css_stat_away=0.4/(new_input_XGC2["Own_XGC"]*0.6+0.4*new_input_XGC2["Opposition_XG"])
 
 
     new_input_XGC = new_input_XGC[features].astype(float)
@@ -887,9 +895,10 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     new_input_XGC[num_cols]  = scaler.transform(new_input_XGC[num_cols].astype(float))
     new_input_XGC2[num_cols]  = scaler.transform(new_input_XGC2[num_cols].astype(float))
     
-    css1=model.predict(new_input_XGC, verbose=0).ravel()
+    
+    css1=model.predict(new_input_XGC)
 
-    css2=model.predict(new_input_XGC2, verbose=0).ravel()
+    css2=model.predict(new_input_XGC2)
 
 
     own_xg_cluster=df_merged["Cluster_XG_x"].values
@@ -910,10 +919,10 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     result_df["away_code"]=df_merged["team_a"]
     result_df["home_goals"]=((xg+xgc2)/2)
     result_df["away_goals"]=((xgc+xg2)/2)
-    result_df["Clean_Sheet_home"]=css1*0.7+0.3*(0.35/((xgc+xg2)/2))
-    result_df["Clean_Sheet_away"]=css2*0.7+0.3*(0.35/((xg+xgc2)/2))
-    result_df["test_XG"]=xg
-    result_df["test_cluster"]=xgc
+    result_df["Clean_Sheet_home"]=css_stat_home
+    result_df["Clean_Sheet_away"]=css_stat_away
+    result_df["test_XG"]=css1
+    result_df["test_cluster"]=css2
     result_df["test_opp_XGC"]=xg2
     result_df.to_csv("Team_prediction_visual2.csv")
 
@@ -944,8 +953,9 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
 
 
 def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
-    GenerateTeamPredictions2(fixture_path, current_team_path,horizon)
     GenerateTeamPredictions1(fixture_path, current_team_path,horizon)
+    GenerateTeamPredictions2(fixture_path, current_team_path,horizon)
+    
     
     team_pred1=pd.read_csv("Team_prediction1.csv")
     team_pred2=pd.read_csv("Team_prediction2.csv")
