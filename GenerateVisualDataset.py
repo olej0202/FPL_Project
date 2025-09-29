@@ -150,6 +150,7 @@ def Generate_ALL_datasets(current_teams):
     Generate_Player_Historical()
     Generate_Player_Rankings(current_teams)
     Generate_Team_threats()
+    Generate_Lineups()
 
 if __name__ == "__main__":
     Generate_ALL_datasets()
