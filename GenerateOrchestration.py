@@ -57,7 +57,7 @@ def Data_Generation(current_raw_data_path,ownership,budget,GW_list_wildcard,GW_l
     GenerateOptimizeSet(current_player_path)
     generate_optimizers(ownership=ownership,budget=budget,GW_list_wildcard=GW_list_wildcard,GW_list_freehit=GW_list_freehit  )
     Generate_ALL_datasets(current_team_path)
-    #main_GPT_News()
+    main_GPT_News()
 
 def Get_times(current_fixture_path,n_points_in_future):
     df=pd.read_csv(current_fixture_path)
@@ -79,7 +79,7 @@ def Get_times(current_fixture_path,n_points_in_future):
 def Main_Orchestration():
     season=25
     is_new_season=0
-    has_been_error=0
+    has_been_error=1
     n_points_in_future=8
     budget=100
     ownership=0.9
