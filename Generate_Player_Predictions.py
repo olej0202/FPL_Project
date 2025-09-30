@@ -716,6 +716,8 @@ def Generate_point_predictions():
         
         historic_xg=player_data["rolling_XG_historic"].values[0]
         historic_xa=player_data["rolling_XA_historic"].values[0]
+        
+        cbi_hit_rate=player_data["defcon_avg_hit_rate"].values[-1]
 
 
         goals=[]
@@ -795,7 +797,7 @@ def Generate_point_predictions():
             summary_dataset["Points_prediction"]=(2+summary_dataset["Goal_pred"]*5
                                                   +summary_dataset["Assist_pred"]*3
                                                   +summary_dataset["Bonus_pred"]
-                                                  +summary_dataset["GC_pred"])*0.9+0.1*summary_dataset["Fantasy_pred"]+(summary_dataset["CBI_pred"]/12)*0.65*2
+                                                  +summary_dataset["GC_pred"])*0.9+0.1*summary_dataset["Fantasy_pred"]+((summary_dataset["CBI_pred"]/12)*0.7+0.3*cbi_hit_rate)*0.8*2
             
         elif(position=="GKP"):
             summary_dataset["Points_prediction"]=(2
@@ -806,7 +808,7 @@ def Generate_point_predictions():
             summary_dataset["Points_prediction"]=(1+summary_dataset["Goal_pred"]*6
                                                   +summary_dataset["Assist_pred"]*4
                                                   +summary_dataset["Bonus_pred"]
-                                                  +summary_dataset["GC_pred"]*6)*0.8+0.2*summary_dataset["Fantasy_pred"]+(summary_dataset["CBI_pred"]/10)*0.65*2
+                                                  +summary_dataset["GC_pred"]*6)*0.8+0.2*summary_dataset["Fantasy_pred"]+((summary_dataset["CBI_pred"]/10)*0.7+0.3*cbi_hit_rate)*0.8*2
         
         
         full_df=pd.concat([full_df, summary_dataset], axis=0, ignore_index=True)

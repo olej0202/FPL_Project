@@ -64,7 +64,7 @@ def Generate_Team_threats():
     team_df = team_df.sort_values(["opponent", "pos_group", "date"])
 
     # EWM per team × pos_group (span=20)
-    span = 25
+    span = 20
     ewm_cols = [f"{c}_ewm" for c in metrics]
     team_df[ewm_cols] = (
         team_df
@@ -92,8 +92,8 @@ def Generate_Team_threats():
     latest_ewm["pass_share_pct"] = (latest_ewm["key_passes_ewm"] / team_totals)
     latest_ewm["pass_share_pct"] = latest_ewm["pass_share_pct"].fillna(0.0)
     latest_ewm["Goal_Treat"]=latest_ewm["npxG_share_ewm"]*0.7+0.3*latest_ewm["shots_share_pct"]
-    latest_ewm["Assist_Treat"]=latest_ewm["xA_share_ewm"]*0.7+0.3*latest_ewm["pass_share_pct"]
-    latest_ewm["Treat"]=latest_ewm["Goal_Treat"]*0.7+0.3*latest_ewm["Assist_Treat"]
+    latest_ewm["Assist_Treat"]=latest_ewm["xA_share_ewm"]*0.6+0.4*latest_ewm["pass_share_pct"]
+    latest_ewm["Treat"]=latest_ewm["Goal_Treat"]*0.6+0.4*latest_ewm["Assist_Treat"]
 
     latest_ewm=latest_ewm[["opponent","pos_group","Treat"]]
     pg = latest_ewm["pos_group"].str.upper().str.strip()
