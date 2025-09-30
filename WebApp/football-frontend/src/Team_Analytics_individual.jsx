@@ -18,13 +18,13 @@ import { useStatsData } from "./Contexts/StatsContext";
 import pitch from "./assets/pitch_lineup.png";
 
 export default function Team_Analytics_Individual() {
-  const { fetchIfNeeded, TeamData,TeamThreatData,TeamLineupsData } = useStatsData();
+  const { fetchIfNeeded, TeamData,TeamThreatData,TeamLineupsData,selected_team, setselected_team  } = useStatsData();
   const API_URL = "https://fpl-project-t5e9.onrender.com/Teams";
   const [eloData, setEloData] = useState([]);
   const [offData, setoffData] = useState([]);
   const [defData, setdefData] = useState([]);
   const [data, setData] = useState([]);
-  const [teamFilter, setTeamFilter] = useState("");
+  const [teamFilter, setTeamFilter] = useState(selected_team);
   const [teams, setTeams] = useState([]);
   const [latestStats, setLatestStats] = useState({});
   const [showOffensive, setShowOffensive] = useState(true);
@@ -70,7 +70,7 @@ export default function Team_Analytics_Individual() {
       .sort();
     setTeams(uniqueTeams);
     const passed = location.state?.selectedTeam;
-    setTeamFilter(passed && uniqueTeams.includes(passed) ? passed : uniqueTeams[0]);
+    setTeamFilter(passed && uniqueTeams.includes(passed) ? passed : selected_team);
   }, [TeamData?.current?.length, location.state]);
 
   useEffect(() => {
@@ -335,7 +335,7 @@ const [minT, maxT] = React.useMemo(() => {
       <select
         className="border border-royal-gold w-full max-w-sm text-black text-center py-2"
         value={teamFilter}
-        onChange={(e) => setTeamFilter(e.target.value)}
+        onChange={(e) => setTeamFilter(e.target.value)&setselected_team?.(e.target.value)}
       >
         {teams.map((t) => (
           <option key={t} value={t}>{t}</option>

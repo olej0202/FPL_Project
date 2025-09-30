@@ -46,6 +46,24 @@ export default function Team_Analytics() {
           <User size={18} />
           Individual Team
         </NavLink>
+
+
+        <NavLink
+          to="Team_Analysis"
+          className={({ isActive }) =>
+            `flex items-center gap-2 px-4 py-2 font-semibold ${
+              isActive
+                ? "border-b-2 border-royal-gold text-royal-gold hover:text-royal-gold"
+                : "text-white hover:text-royal-gold"
+            }`
+          }
+        >
+          <User size={18} />
+           Team Analysis
+        </NavLink>
+
+
+        
       </div>
 
       {/* 🔽 This renders the nested content */}

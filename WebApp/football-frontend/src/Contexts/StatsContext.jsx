@@ -10,6 +10,7 @@ export function StatsDataProvider({ children }) {
   const TeamThreatRef = useRef(null);
   const TeamLineupsRef= useRef(null);
   const [loading, setLoading] = useState(false);
+  const [selected_team, setselected_team] = useState("Arsenal");
   const [analyses, setAnalyses] = useState([]);
   const addAnalysis = (analysis) => {
   setAnalyses((prev) => [...prev, analysis]);
@@ -52,6 +53,8 @@ const removeAnalysis = (id) => {
         analyses,
         addAnalysis,
         removeAnalysis,
+        selected_team,
+        setselected_team,
       }}
     >
       {children}

@@ -48,6 +48,7 @@ def Generate_Lineups():
     
     # Final columns
     result = result[["player_team","player_name","pos_latest","appearances_last5","n_dates","appear_pct_last5"]]
+    print("HEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEER")
     
     result.to_csv("Team_lineups.csv")
 

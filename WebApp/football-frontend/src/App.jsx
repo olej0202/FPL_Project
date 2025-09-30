@@ -15,6 +15,7 @@ import NewsBlog from "./News";
 import TeamPredictionsFuture from "./Fixture_Ticker";
 import AITeams from "./AITeams";
 import AITeamNav from "./components/team_navigation";
+import Team_Analytics_Analysis from "./Team_Analytics_Analysis";
 import logo from "./assets/FPL_analytics_logo.png";
 import "./index.css";
 import {
@@ -138,6 +139,10 @@ export default function App() {
           <Route
             path="Team_Rankings"
             element={<Team_Analytics_Rankings />}
+          />
+          <Route
+            path="Team_Analysis"
+            element={<Team_Analytics_Analysis />}
           />
         </Route>
         <Route path="/Score_Predictions" element={<Team_Predictions />} />
