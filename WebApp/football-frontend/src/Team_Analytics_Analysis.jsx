@@ -515,7 +515,7 @@ export default function Team_Analytics_Analysis() {
           cursor-pointer 
           ${viewMode === "chart" ? "underline text-royal-gold border-royal-gold" 
             : "text-white hover:text-gray-300"
-          } bg-black
+          } bg-black hover:border-none
         `}
             title="Chart"
           >
@@ -528,7 +528,7 @@ export default function Team_Analytics_Analysis() {
           cursor-pointer 
           ${viewMode === "table" ? "underline text-royal-gold border-royal-gold" 
             : "text-white hover:text-gray-300"
-          } bg-black
+          } bg-black hover:border-none outline-none 
         `}
             title="Table"
           >
@@ -644,7 +644,7 @@ export default function Team_Analytics_Analysis() {
             <button
               aria-label="Close"
               onClick={() => setModalOpen(false)}
-              className="absolute top-1 right-2 text-gray-300 hover:text-white"
+              className="absolute top-1 right-2 text-black hover:text-white"
             >
               <XIcon size={18} />
             </button>
@@ -665,7 +665,7 @@ export default function Team_Analytics_Analysis() {
               </div>
               <div className="flex justify-end gap-2 pt-1">
                 <button
-                  className="px-3 py-1 rounded border border-gray-500 text-gray-200"
+                  className="px-3 py-1 rounded border border-gray-500 text-black"
                   onClick={() => setModalOpen(false)}
                 >
                   Cancel
