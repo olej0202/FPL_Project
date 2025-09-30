@@ -278,7 +278,7 @@ useEffect(() => {
     { value: "Bonus", label: "Bonus" },
     { value: "Adjusted XG", label: "Adjusted XG" },
     { value: "Adjusted XA", label: "Adjusted XA" },
-    { value: "ICT", label: "ICT Index" },
+    { value: "Defcon Hit", label: "Defcon Hit" },
 
   ];
       const handleAddAnalysis = (name) => {
