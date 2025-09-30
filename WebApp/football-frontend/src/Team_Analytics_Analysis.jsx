@@ -383,7 +383,6 @@ export default function Team_Analytics_Analysis() {
             onChange={onChangeTeamSelect}
             isClearable={false}
             placeholder="Select team…"
-            components={{ ...animatedComponents, Option, SingleValue }}
             styles={selectStyles}
             menuPortalTarget={document.body}
           />
