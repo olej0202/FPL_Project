@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
-import { User, BarChart } from "lucide-react";
+import { User, BarChart,ChartLine } from "lucide-react"; 
 
 export default function Team_Analytics() {
   const navigate = useNavigate();
@@ -58,7 +58,7 @@ export default function Team_Analytics() {
             }`
           }
         >
-          <User size={18} />
+          <ChartLine size={18} />
            Team Analysis
         </NavLink>
 

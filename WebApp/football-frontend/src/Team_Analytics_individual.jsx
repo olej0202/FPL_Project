@@ -366,7 +366,7 @@ const [minT, maxT] = React.useMemo(() => {
       </div>
 
        <h2 className="text-xl font-semibold mb-3 text-center text-royal-beige mb-2">
-      Latest Lineup — 5-match Start % 
+      Latest Lineup — % Starts last 5 matches
     </h2>
 {/* Lineup on Pitch */}
 {teamFilter && (
