@@ -586,14 +586,15 @@ useEffect(() => {
         </div>
       </div>
       <div className="text-center">
-        <h2>Save Analysis</h2>
+        
         <button
           aria-label="Save analysis"
           onClick={() => setModalOpen(true)}
-          className="p-1 rounded text-royal-gold hover:text-royal-gold transition mt-5 mb-10"
+          className="flex items-center gap-2 p-2 rounded text-royal-gold hover:text-royal-gold transition mt-5 mb-10 text-center"
           title="Save analysis"
           disabled={!addAnalysis}
         >
+            <h2>Save Analysis</h2>
           <SaveIcon size={35} />
         </button>
       </div>
@@ -818,6 +819,7 @@ useEffect(() => {
           </div>
         </div>
       )}
+
     </div>
   );
 }
