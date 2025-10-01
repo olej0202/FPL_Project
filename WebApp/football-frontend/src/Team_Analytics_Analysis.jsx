@@ -32,19 +32,26 @@ export default function Team_Analytics_Analysis() {
   } = useStatsData();
 
   // ---- Config ----
-  const API_URL = "https://fpl-project-t5e9.onrender.com/Teams";
+  const API_URL = "https://fpl-project-t5e9.onrender.com/Teams_Analysis";
   const METRICS = [
-    { key: "XG", label: "XG" },
-    { key: "XGC", label: "XGC" },
-    { key: "Clean_Sheet", label: "Clean Sheet" },
-    { key: "Threat", label: "Threat" },
-  ];
+  { key: "xg",            label: "Expected Goals" },
+  { key: "xgc",           label: "Expected Goals Conceded" },
+  { key: "gs",            label: "Goals Scored" },
+  { key: "gc",            label: "Goals Conceded" },
+  { key: "cs",            label: "Clean Sheets" },
+  { key: "g_minus_xg",    label: "Goals − XG" },
+  { key: "gc_minus_xgc",  label: "Goals Conceded − XGC" },
+  // (Optional if you kept these in the file)
+  // { key: "threat",         label: "Threat" },
+  // { key: "threat_against", label: "Threat Against" },
+];
+
 
   // ---- UI state ----
   const [team, setTeam] = useState(selected_team || "");
   const [teams, setTeams] = useState([]);
   const [viewMode, setViewMode] = useState("chart"); // 'chart' | 'table'
-  const [metric, setMetric] = useState("XG");
+  const [metric, setMetric] = useState("xg");
 
   // non-metric filters
   const [opponents, setOpponents] = useState([]);       // all available opponent strings
@@ -61,6 +68,15 @@ export default function Team_Analytics_Analysis() {
   // Save analysis modal
   const [modalOpen, setModalOpen] = useState(false);
   const [analysisName, setAnalysisName] = useState("");
+
+  const [seasonOption, setSeasonOption] = useState({ value: "all", label: "All seasons" });
+  const [seasonFilter, setSeasonFilter] = useState([]);
+
+  const seasonLabelFromNum = (y) => {
+  if (!y) return null;
+  const yy = String(y % 100).padStart(2, "0");
+  return `${y - 1}/${yy}`;
+};
 
   // ---- bootstrap teams + default team ----
   useEffect(() => {
@@ -84,10 +100,7 @@ export default function Team_Analytics_Analysis() {
     setTeam(t);
     setselected_team?.(t);
     // reset dependent filters on team change
-    setOpponentFilter([]);
-    setWasHome("all");
-    setDateFrom("");
-    setDateTo("");
+
   };
 
   // ---- fetch team data whenever 'team' changes ----
@@ -113,41 +126,56 @@ export default function Team_Analytics_Analysis() {
             : [];
         }
 
-        const toNum = (v) => {
-          const n = Number(v);
-          return Number.isFinite(n) ? n : null;
-        };
+const toNum = (v) => {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+};
 
-        const norm = (data || []).map((d, i) => {
-          const name = d.name ?? d.Team ?? "";
-          const opponent = d.opponent ?? d.Opponent ?? "";
-          const kickoff_time = d.kickoff_time ?? d.date ?? d.kickoff ?? "";
-          const was_home = Number(d.was_home ?? d.wasHome ?? d.home ?? 0);
+const norm = (data || []).map((d, i) => {
+  const name         = d.name ?? d.Team ?? "";
+  const opponentCode = d.opponent ?? d.Opponent ?? "";          // numeric in your CSV
+  const opponentName = d.opponent_name ?? d.OpponentName ?? ""; // added by Python merge
+  const opponent     = opponentName || opponentCode;            // prefer name, fallback code
+  const kickoff_time = d.kickoff_time ?? d.date ?? d.kickoff ?? "";
+  const was_home     = Number(d.was_home ?? d.wasHome ?? d.home ?? 0);
 
-          // server id may repeat → create a guaranteed-unique render key
-          const serverId = d.id ?? null;
-          const rowKey = `${serverId ?? "noid"}|${name}|${opponent}|${kickoff_time}|${i}`;
+  // Make a guaranteed-unique React key
+  const serverId = d.id ?? null;
+  const rowKey = `${serverId ?? "noid"}|${name}|${opponent}|${kickoff_time}|${i}`;
 
-          return {
-            id: serverId, // domain id
-            __key: rowKey, // unique React key
-            name,
-            opponent,
-            was_home,
-            kickoff_time,
-            XG: toNum(d.XG),
-            XGC: toNum(d.XGC),
-            Clean_Sheet: toNum(d.Clean_Sheet),
-            Threat: toNum(d.Threat),
-          };
-        });
+  return {
+    id: serverId,
+    __key: rowKey,
+    name,
+    opponent,
+    opponent_code: opponentCode,
+    was_home,
+    kickoff_time,
+
+    // map CSV/JSON fields with spaces → JS-safe keys
+    xg:           toNum(d["Expected Goals"]),
+    xgc:          toNum(d["Expected Goals Conceeded"]),
+    gs:           toNum(d["Goals Scored"]),
+    gc:           toNum(d["Goals Conceeded"]),
+    cs:           toNum(d["Clean Sheets"]),
+    g_minus_xg:   toNum(d["Goals-XG"]),
+    gc_minus_xgc: toNum(d["Goals Conceeded-XGC"]),
+
+    // optional (if present)
+    threat:         toNum(d["Threat"]),
+    threat_against: toNum(d["Threat_against"]),
+    season:         d["Season"] ?? null,
+    season_label:   d["Season_Label"] ?? null,
+  };
+});
+
 
         if (alive) {
           setRows(norm);
-          const opps = [...new Set(norm.map((r) => r.opponent).filter(Boolean))].sort();
-          setOpponents(opps);
+          setOpponents([...new Set(norm.map(r => r.opponent).filter(Boolean))].sort());
           // keep only previously selected opponents that still exist
-          setOpponentFilter((prev) => prev.filter((o) => opps.includes(o.value)));
+          setOpponentFilter(prev => prev.filter(o => setOpponents.has?.(o.value) || opponents.includes(o.value)));
+
         }
       } catch (e) {
         if (alive) setErr(e?.message || "Failed to load");
@@ -249,15 +277,16 @@ export default function Team_Analytics_Analysis() {
   const onChangeTeamSelect = (opt) => opt && onChangeTeam(opt.value);
 
   // Metric select
-  const metricOptions = useMemo(
-    () => METRICS.map((m) => ({ value: m.key, label: m.label })),
-    []
-  );
-  const metricOption = useMemo(
-    () => metricOptions.find((o) => o.value === metric) || metricOptions[0],
-    [metric, metricOptions]
-  );
-  const onChangeMetricSelect = (opt) => setMetric(opt?.value || "XG");
+const metricOptions = useMemo(
+  () => METRICS.map(m => ({ value: m.key, label: m.label })),
+  []
+);
+const metricOption = useMemo(
+  () => metricOptions.find(o => o.value === metric) || metricOptions[0],
+  [metric, metricOptions]
+);
+const onChangeMetricSelect = (opt) => setMetric(opt?.value || "xg");
+
 
   // Venue select
   const venueOptions = [
@@ -281,6 +310,24 @@ export default function Team_Analytics_Analysis() {
       })),
     [opponents]
   );
+  const seasonOptions = useMemo(() => {
+  const labels = [
+    ...new Set(
+      rows
+        .map(r => r.season_label || seasonLabelFromNum(r.season))
+        .filter(Boolean)
+    ),
+  ].sort((a, b) => a.localeCompare(b));
+  return labels.map(l => ({ value: l, label: l }));
+}, [rows]);
+
+// Keep only still-valid selected seasons if options change
+useEffect(() => {
+  setSeasonFilter(prev =>
+    (prev || []).filter(o => seasonOptions.some(opt => opt.value === o.value))
+  );
+}, [seasonOptions]);
+
 
   // ---- apply non-metric filters ----
   const filtered = useMemo(() => {
@@ -294,6 +341,13 @@ export default function Team_Analytics_Analysis() {
     if (wasHome === "home") out = out.filter((r) => r.was_home === 1);
     if (wasHome === "away") out = out.filter((r) => r.was_home === 0);
 
+    if (seasonFilter.length > 0) {
+  const wanted = new Set(seasonFilter.map(o => o.value));
+  out = out.filter(r =>
+    wanted.has(r.season_label || seasonLabelFromNum(r.season))
+  );
+}
+
     const toDate = (s) => (s ? new Date(s) : null);
     const df = toDate(dateFrom);
     const dt = toDate(dateTo);
@@ -302,7 +356,7 @@ export default function Team_Analytics_Analysis() {
 
     out.sort((a, b) => new Date(a.kickoff_time) - new Date(b.kickoff_time));
     return out;
-  }, [rows, opponentFilter, wasHome, dateFrom, dateTo]);
+  }, [rows, opponentFilter, wasHome, dateFrom, dateTo,seasonFilter]);
 
   // ---- chart data ----
   const chartData = useMemo(() => {
@@ -340,6 +394,7 @@ export default function Team_Analytics_Analysis() {
   const selectedMetric = metric;
   const TotalOfMetric = metricSummary.sum;
   const avgOfMetric = metricSummary.avg;
+  const currentMetricLabel = METRICS.find(m => m.key === metric)?.label ?? metric;
 
   // --- Save / Remove handlers ---
   const handleAddAnalysis = (name) => {
@@ -348,7 +403,7 @@ export default function Team_Analytics_Analysis() {
       id,
       name: name || id,
       player: playerFilter,
-      metric: selectedMetric,
+      metric: currentMetricLabel,
       TotalOfMetric,
       avgOfMetric,
     });
@@ -463,6 +518,48 @@ export default function Team_Analytics_Analysis() {
               menuPortalTarget={document.body}
             />
           </div>
+          {/* Seasons (multi) */}
+<div className="flex flex-col">
+  <label className="text-xs text-gray-300 mb-1">Seasons</label>
+  <Select
+    options={seasonOptions}
+    value={seasonFilter}
+    onChange={(opts) => setSeasonFilter(opts || [])}
+    isMulti
+    isClearable
+    placeholder="Select season(s)…"
+    closeMenuOnSelect={false}
+    hideSelectedOptions={false}
+    components={animatedComponents}
+    styles={selectStyles}
+    menuPortalTarget={document.body}
+  />
+  {/* quick actions */}
+  <div className="flex gap-2 mt-2">
+    <button
+      type="button"
+      className="px-2 py-1 text-xs border border-royal-gold rounded text-royal-gold hover:bg-royal-gold hover:text-black"
+      onClick={() => setSeasonFilter([])}   // All (no filter)
+    >
+      All
+    </button>
+    <button
+      type="button"
+      className="px-2 py-1 text-xs border border-royal-gold rounded text-royal-gold hover:bg-royal-gold hover:text-black"
+      onClick={() => setSeasonFilter(seasonOptions)}   // Select all
+    >
+      Select all
+    </button>
+    <button
+      type="button"
+      className="px-2 py-1 text-xs border border-gray-500 rounded text-gray-200 hover:bg-gray-700"
+      onClick={() => setSeasonFilter([])}   // Clear
+    >
+      Clear
+    </button>
+  </div>
+</div>
+
 
           {/* Dates */}
           <div className="flex flex-col">
@@ -539,7 +636,7 @@ export default function Team_Analytics_Analysis() {
       {/* Visualization card */}
       <div className="w-full max-w-6xl bg-royal-red border border-royal-gold rounded relative">
         <div className="px-3 py-2 text-center">
-          <h2 className="text-lg font-semibold text-royal-beige">{metric} Over Time</h2>
+          <h2 className="text-lg font-semibold text-royal-beige">{currentMetricLabel} Over Time</h2>
         </div>
 
         {/* Summary box (sum + average) */}
@@ -600,7 +697,7 @@ export default function Team_Analytics_Analysis() {
                   dataKey="value"
                   stroke="#FFD700"
                   dot={false}
-                  name={metric}
+                  name={currentMetricLabel}
                 />
               </RLineChart>
             </ResponsiveContainer>
@@ -611,7 +708,7 @@ export default function Team_Analytics_Analysis() {
           <div className="bg-black/30 border-t border-royal-gold rounded-b overflow-hidden">
             <div className="grid grid-cols-4 text-royal-beige bg-black/40 text-xs uppercase tracking-wide">
               <div className="py-2 px-3">Kickoff Time</div>
-              <div className="py-2 px-3">{metric}</div>
+              <div className="py-2 px-3">{currentMetricLabel}</div>
               <div className="py-2 px-3">Opponent</div>
               <div className="py-2 px-3">Was Home</div>
             </div>
@@ -652,13 +749,13 @@ export default function Team_Analytics_Analysis() {
               <input
                 type="text"
                 className="w-full border border-royal-gold rounded text-black px-3 py-2"
-                placeholder={`e.g. ${team} - ${metric}`}
+                placeholder={`e.g. ${team} - ${currentMetricLabel}`}
                 value={analysisName}
                 onChange={(e) => setAnalysisName(e.target.value)}
               />
               <div className="text-xs text-gray-300">
                 Saving: <span className="text-white">{team}</span> /{" "}
-                <span className="text-white">{metric}</span> — Sum:{" "}
+                <span className="text-white">{currentMetricLabel}</span> — Sum:{" "}
                 <span className="text-white">{metricSummary.sum.toFixed(2)}</span>, Avg:{" "}
                 <span className="text-white">{metricSummary.avg.toFixed(2)}</span>
               </div>
