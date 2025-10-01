@@ -34,14 +34,14 @@ class DeepNN(nn.Module):
 
 
 def Data_Extraction(season,is_new_season,has_been_error):
-    main_Extract(season, is_new_season, has_been_error)
+    #main_Extract(season, is_new_season, has_been_error)
     current_players(season)
     current_teams(season)
     main_Extract_Understat(season)
 
 
 def Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos):
-    #main_Transform()
+    main_Transform()
     Generate_Understat_dataset(current_player_path,run_player_pos)
     team_data(current_team_path)
     GeneratePlayerData(time_list, current_fixture_path,current_player_path,current_team_path)
@@ -54,10 +54,10 @@ def Data_Predictions(current_fixture_path,current_team_path, n_points_in_future)
     
    
 def Data_Generation(current_raw_data_path,ownership,budget,GW_list_wildcard,GW_list_freehit,current_player_path,current_team_path ):
-    #GenerateOptimizeSet(current_player_path)
-    #generate_optimizers(ownership=ownership,budget=budget,GW_list_wildcard=GW_list_wildcard,GW_list_freehit=GW_list_freehit  )
+    GenerateOptimizeSet(current_player_path)
+    generate_optimizers(ownership=ownership,budget=budget,GW_list_wildcard=GW_list_wildcard,GW_list_freehit=GW_list_freehit  )
     Generate_ALL_datasets(current_team_path)
-    #main_GPT_News()
+    main_GPT_News()
 
 def Get_times(current_fixture_path,n_points_in_future):
     df=pd.read_csv(current_fixture_path)
@@ -97,14 +97,14 @@ def Main_Orchestration():
     
     
     #EXTARCT DATA
-    #Data_Extraction(season,is_new_season,has_been_error)
+    Data_Extraction(season,is_new_season,has_been_error)
     
     
     #Transform data
-    #Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos)
+    Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos)
     
     #Predict data
-    #Data_Predictions(current_fixture_path,current_team_path, n_points_in_future)
+    Data_Predictions(current_fixture_path,current_team_path, n_points_in_future)
     
     Data_Generation(current_raw_data_path,ownership,budget,GW_list_wildcard,GW_list_freehit,current_player_path,current_team_path )
     

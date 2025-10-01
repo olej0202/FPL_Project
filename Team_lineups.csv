@@ -90,14 +90,14 @@
 88,Everton,Beto,FW,4,5,80.0
 89,Everton,Idrissa Gueye,DM,5,5,100.0
 90,Everton,Iliman Ndiaye,RW,5,5,100.0
-91,Everton,Jack Grealish,LW,4,5,80.0
+91,Everton,Jack Grealish,LW,5,5,100.0
 92,Everton,Jake O&#039;Brien,DR,5,5,100.0
 93,Everton,James Garner,DM,5,5,100.0
 94,Everton,James Tarkowski,CB,5,5,100.0
 95,Everton,Jordan Pickford,GK,5,5,100.0
 96,Everton,Kiernan Dewsbury-Hall,AMC,5,5,100.0
 97,Everton,Michael Keane,CB,5,5,100.0
-98,Everton,Vitalii Mykolenko,DL,2,5,40.0
+98,Everton,Vitalii Mykolenko,DL,3,5,60.0
 99,Fulham,Alex Iwobi,LW,5,5,100.0
 100,Fulham,Bernd Leno,GK,5,5,100.0
 101,Fulham,Calvin Bassey,CB,5,5,100.0
@@ -252,17 +252,17 @@
 250,Sunderland,Robin Roefs,GK,5,5,100.0
 251,Sunderland,Trai Hume,DR,5,5,100.0
 252,Sunderland,Wilson Isidor,FW,3,5,60.0
-253,West Ham,Alphonse Areola,GK,1,5,20.0
-254,West Ham,Callum Wilson,FW,1,5,20.0
-255,West Ham,Crysencio Summerville,LW,2,5,40.0
-256,West Ham,El Hadji Malick Diouf,DL,5,5,100.0
-257,West Ham,James Ward-Prowse,DM,5,5,100.0
-258,West Ham,Jarrod Bowen,RW,5,5,100.0
-259,West Ham,Konstantinos Mavropanos,CB,3,5,60.0
-260,West Ham,Kyle Walker-Peters,DR,3,5,60.0
-261,West Ham,Lucas Paquetá,AMC,5,5,100.0
-262,West Ham,Mateus Fernandes,DM,3,5,60.0
-263,West Ham,Max Kilman,CB,5,5,100.0
+253,West Ham,Alphonse Areola,GK,2,5,40.0
+254,West Ham,Crysencio Summerville,LW,3,5,60.0
+255,West Ham,El Hadji Malick Diouf,DL,5,5,100.0
+256,West Ham,Jarrod Bowen,RW,5,5,100.0
+257,West Ham,Konstantinos Mavropanos,CB,4,5,80.0
+258,West Ham,Kyle Walker-Peters,DR,4,5,80.0
+259,West Ham,Lucas Paquetá,MC,5,5,100.0
+260,West Ham,Mateus Fernandes,MC,4,5,80.0
+261,West Ham,Max Kilman,CB,5,5,100.0
+262,West Ham,Niclas Füllkrug,FW,3,5,60.0
+263,West Ham,Soungoutou Magassa,DM,1,5,20.0
 264,Wolves,André,DM,3,5,60.0
 265,Wolves,Hee-Chan Hwang,LW,3,5,60.0
 266,Wolves,Hugo Bueno,DL,3,5,60.0
