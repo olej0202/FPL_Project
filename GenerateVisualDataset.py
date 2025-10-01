@@ -1,6 +1,64 @@
 import pandas as pd
 import joblib
 import numpy as np
+
+def Visual_Teams_history(path="Team_Data_FUll.csv"):
+    # 1) Load + keep only needed columns
+    df = pd.read_csv(path).iloc[:, 1:]
+    cols = ["name", "code", "kickoff_time",
+            "Plain_XG", "Plain_XGC", "Plain_GS", "Plain_GC","Clean_Sheet",
+            "Threat", "Threat_against", "was_home", "opponent"]
+    teams_df = df[cols].copy()
+
+    # 2) Make sure code/opponent are numeric (so join works reliably)
+    teams_df["code"] = pd.to_numeric(teams_df["code"], errors="coerce").astype("Int64")
+    teams_df["opponent"] = pd.to_numeric(teams_df["opponent"], errors="coerce").astype("Int64")
+
+    # 3) Build unique team lookup (code → name)
+    unique_teams = (
+        teams_df[["name", "code"]]
+        .drop_duplicates()
+        .dropna(subset=["code"])        # only rows with a code
+        .rename(columns={"name": "opponent_name", "code": "opponent"})   # rename to join on 'opponent'
+    )
+
+    # 4) Merge opponent name into teams_df
+    teams_df = teams_df.merge(
+        unique_teams[["opponent", "opponent_name"]],
+        on="opponent",
+        how="left"
+    )
+
+    # 5) Parse kickoff_time and create Season:
+    #    If month <= 6 → Season = year, else Season = year + 1
+    teams_df["kickoff_time"] = pd.to_datetime(teams_df["kickoff_time"], errors="coerce")
+
+    teams_df["Season"] = np.where(
+        teams_df["kickoff_time"].dt.month <= 6,
+        teams_df["kickoff_time"].dt.year,
+        teams_df["kickoff_time"].dt.year + 1
+    )
+
+    # (Optional) Pretty season label like "2023/24"
+    teams_df["Season_Label"] = teams_df["Season"].astype("Int64").apply(
+        lambda y: f"{y-1}/{str(y%100).zfill(2)}" if pd.notna(y) else pd.NA
+    )
+
+    teams_df["Goals-XG"] = teams_df["Plain_GS"]- teams_df["Plain_XG"]
+    teams_df["Goals Conceeded-XGC"] = teams_df["Plain_GC"]- teams_df["Plain_XGC"]
+    cutoff = pd.Timestamp("2023-12-01", tz="UTC")
+    teams_df = teams_df.loc[teams_df["kickoff_time"] >= cutoff].copy()
+    teams_df = teams_df.rename(columns={
+    "Plain_XG":  "Expected Goals",
+    "Plain_XGC": "Expected Goals Conceeded",
+    "Plain_GS":  "Goals Scored",
+    "Plain_GC":  "Goals Conceeded",
+    "Clean_Sheet": "Clean Sheets"
+    })
+
+    
+    teams_df.to_csv("Teams_Visual_Analysis.csv")
+    
 def Generate_Lineups():
 
     # ── Load & prep ────────────────────────────────────────────────────────────────
@@ -152,6 +210,7 @@ def Generate_ALL_datasets(current_teams):
     Generate_Player_Rankings(current_teams)
     Generate_Team_threats()
     Generate_Lineups()
+    Visual_Teams_history()
 
 if __name__ == "__main__":
     Generate_ALL_datasets()

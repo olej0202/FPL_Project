@@ -54,7 +54,9 @@ def load_and_transform(endpoint):
     elif endpoint == "Team_Threat":
         csv_path = os.path.join(parent_dir, "Team_threat.csv")    
     elif endpoint == "Team_Lineups":
-        csv_path = os.path.join(parent_dir, "Team_lineups.csv")    
+        csv_path = os.path.join(parent_dir, "Team_lineups.csv")   
+    elif endpoint=="Teams_Analysis": 
+        csv_path = os.path.join(parent_dir, "Teams_Visual_Analysis.csv")   
         
         
     else:
@@ -198,6 +200,29 @@ def get_all_data():
 @app.get("/Teams")
 def get_team_data(team: str = Query(None)):
     df = load_and_transform("Teams")
+
+    if team:
+        df = df[df["name"] == team]
+
+    # Replace non-JSON-compliant values
+    df = df.replace([np.inf, -np.inf], np.nan)
+    df=df.dropna()
+
+    # Convert to dict
+    records = df.to_dict(orient="records")
+
+    # Use allow_nan=False to force clean JSON
+    try:
+        return json.loads(json.dumps(records, allow_nan=False))
+    except ValueError as e:
+        # Optional: Log or return an error if still invalid
+        print("JSON serialization error:", e)
+        print(df[df.isin([np.nan, np.inf, -np.inf]).any(axis=1)])
+        return {"error": "Data contains values that cannot be serialized to JSON."}
+    
+@app.get("/Teams_Analysis")
+def get_team_data(team: str = Query(None)):
+    df = load_and_transform("Teams_Analysis")
 
     if team:
         df = df[df["name"] == team]

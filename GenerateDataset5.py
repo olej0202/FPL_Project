@@ -539,6 +539,10 @@ def Generate_team_data():
             New_team_df["Result"]=wons
             New_team_df["Threat"]=Threat.values
             New_team_df["Threat_against"]=Threatagainst['threat'].values
+            New_team_df["Plain_XG"]=XG.values
+            New_team_df["Plain_XGC"]=XGC.values
+            New_team_df["Plain_GS"]=GS.values
+            New_team_df["Plain_GC"]=GC.values
             
             xg_def=XGCaway['DEF'].values
             xg_mid=XGCaway['MID'].values
