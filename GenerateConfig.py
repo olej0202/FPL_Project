@@ -55,9 +55,9 @@ Manual_Player_Risk={
         "Igor_Thiago Nascimento Rodrigues":0.7,
         "Jack_Grealish":0.5,
         "Yoane_Wissa":0.7,
-        "Bryan_Mbeumo":0.5,
-        "Matheus_Santos Carneiro Da Cunha":0.5,
-        "Mohammed_Kudus":0.5,
+        "Bryan_Mbeumo":0.6,
+        "Matheus_Santos Carneiro Da Cunha":0.7,
+        "Mohammed_Kudus":0.7,
         "Benjamin_Sesko":0.7,
         "Hugo_Ekitiké":0.5
         
