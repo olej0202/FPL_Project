@@ -15,9 +15,9 @@ export default function Team_Analytics() {
   }, [location, navigate]);
 
   return (
-    <div className="min-h-screen bg-black text-white px-4 py-6 space-y-6">
+    <div className="min-h-screen bg-black text-white px-4 py-3 space-y-3">
       {/* Tabs */}
-      <div className="flex justify-center gap-4 mb-6">
+      <div className="flex justify-center gap-4 mb-2">
         <NavLink
           to="Team_Rankings"
           end

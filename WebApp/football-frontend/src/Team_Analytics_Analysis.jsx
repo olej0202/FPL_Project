@@ -419,6 +419,7 @@ useEffect(() => {
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center px-4 py-8 space-y-8">
+        <h1 className="text-4xl font-bold text-center text-royal-beige">Team Historical Analysis</h1>
       {/* Team logo + selector */}
       <div className="flex flex-col items-center gap-3">
         {team ? (

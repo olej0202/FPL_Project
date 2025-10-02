@@ -14,14 +14,14 @@ export default function Player_analytics() {
   }, [location, navigate]);
 
   return (
-    <div className="min-h-screen bg-black text-white px-1 py-1 space-y-0">
+    <div className="min-h-screen bg-black text-white px-1 py-3 space-y-8">
       {/* Tabs */}
-      <div className="flex justify-center gap-4 mb-1">
+      <div className="flex justify-center gap-4 mb-3">
         <NavLink
           to="Rankings"
           end
           className={({ isActive }) =>
-            `flex items-center gap-2 px-4 py-0 font-semibold  ${
+            `flex items-center gap-2 px-4 py-1 font-semibold  ${
               isActive
                 ? "border-b-2 border-royal-gold text-royal-gold hover:text-royal-gold"
                 : "text-white hover:text-royal-gold"
