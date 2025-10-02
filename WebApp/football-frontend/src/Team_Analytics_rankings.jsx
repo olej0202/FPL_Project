@@ -21,7 +21,7 @@ const METRIC_DESCRIPTIONS = {
 const ASCENDING_METRICS = ["XGC_avg"];
 
 export default function TeamAnalyticsList() {
-  const { fetchIfNeeded, loading, TeamData } = useStatsData();
+  const { fetchIfNeeded, loading, TeamData,setselected_team } = useStatsData();
   const [selectedMetric, setSelectedMetric] = useState("XG_avg");
   const [rankingData, setRankingData] = useState([]);
   const navigate = useNavigate();
@@ -94,11 +94,12 @@ export default function TeamAnalyticsList() {
       <li
         key={team.name}
         className="relative py-3 px-4 cursor-pointer hover:bg-royal-red transition"
-        onClick={() =>
+        onClick={() =>{
+          setselected_team(team.name); // update context
           navigate("/Team_Analytics/Team_Individual", {
             state: { selectedTeam: team.name },
           })
-        }
+        }}
       >
         {/* Background bar */}
         <div

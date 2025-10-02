@@ -29,7 +29,7 @@ Manual_team_offensive_adjustments = {94:0.9,4:0.9 }
     
     
     
-Manual_team_defensive_adjustments = {94:1.1,6:0.8 }
+Manual_team_defensive_adjustments = {6:0.9 }
 
 
 Manual_NewPlayer_Adjustments={
@@ -53,15 +53,11 @@ Manual_Player_Adjustments={
 Manual_Player_Risk={
         "Alexander_Isak":0.8,
         "Igor_Thiago Nascimento Rodrigues":0.7,
-        "Jack_Grealish":0.7,
+        "Jack_Grealish":0.5,
         "Yoane_Wissa":0.7,
         "Bryan_Mbeumo":0.5,
         "Matheus_Santos Carneiro Da Cunha":0.5,
         "Mohammed_Kudus":0.5,
-        "Florian_Wirtz":0.5,
-        "Viktor_Gyökeres":0.5,
-        "Tijjani_Reijnders":0.5,
-        "El_Hadji Malick Diouf":0.5,
         "Benjamin_Sesko":0.7,
         "Hugo_Ekitiké":0.5
         

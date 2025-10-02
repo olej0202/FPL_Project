@@ -406,6 +406,7 @@ useEffect(() => {
       metric: currentMetricLabel,
       TotalOfMetric,
       avgOfMetric,
+      Type:"Team"
     });
     setModalOpen(false);
     setAnalysisName("");
@@ -802,6 +803,7 @@ useEffect(() => {
                     <span className="text-white">
                       {Number(a.avgOfMetric ?? 0).toFixed(2)}
                     </span>
+                    <span className="text-white">• Type {a.Type}</span>
                   </div>
                 </div>
 

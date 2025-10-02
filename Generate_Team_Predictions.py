@@ -961,7 +961,7 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
     team_pred2=pd.read_csv("Team_prediction2.csv")
     
     team_pred1[["XG","XGC"]]=team_pred1[["XG","XGC"]]*0.5+team_pred2[["XG","XGC"]]*0.5
-    team_pred1[["CS"]]=team_pred1[["CS"]]*0.6+team_pred2[["CS"]]*0.4
+    team_pred1[["CS"]]=team_pred1[["CS"]]*0.5+team_pred2[["CS"]]*0.5
 
     
     team_pred1.to_csv("Team_prediction.csv")

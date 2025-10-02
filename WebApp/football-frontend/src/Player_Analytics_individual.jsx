@@ -289,7 +289,8 @@ useEffect(() => {
       player: playerFilter,
       metric: selectedMetric,
       TotalOfMetric,
-      avgOfMetric
+      avgOfMetric,
+      Type:"Player"
     });
     setModalOpen(false);
   };

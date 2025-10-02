@@ -14,9 +14,9 @@ export default function Player_analytics() {
   }, [location, navigate]);
 
   return (
-    <div className="min-h-screen bg-black text-white px-4 py-1 space-y-0">
+    <div className="min-h-screen bg-black text-white px-1 py-1 space-y-0">
       {/* Tabs */}
-      <div className="flex justify-center gap-4 mb-6">
+      <div className="flex justify-center gap-4 mb-1">
         <NavLink
           to="Rankings"
           end
