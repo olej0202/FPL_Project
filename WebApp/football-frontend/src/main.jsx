@@ -7,9 +7,11 @@ import { AITeamDataProvider } from "./Contexts/AITeamsContext";
 import {OtherDataProvider} from "./Contexts/OtherContext";
 import {StatsDataProvider} from "./Contexts/StatsContext";
 import {MyTeamDataContextProvider} from "./Contexts/MyTeamContext";
+import ScrollToTop from "./components/ScrollTop";
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <HashRouter >
+    <ScrollToTop />
   <MyTeamDataContextProvider>
   <StatsDataProvider>
     <AITeamDataProvider>
