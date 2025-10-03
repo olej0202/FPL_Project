@@ -59,7 +59,8 @@ Manual_Player_Risk={
         "Matheus_Santos Carneiro Da Cunha":0.7,
         "Mohammed_Kudus":0.7,
         "Benjamin_Sesko":0.7,
-        "Hugo_Ekitiké":0.5
+        "Hugo_Ekitiké":0.5,
+        "Nick_Woltemade":0.8
         
 }
 

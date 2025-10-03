@@ -2,6 +2,8 @@ import pandas as pd
 import joblib
 import numpy as np
 
+
+
 def Visual_Teams_history(path="Team_Data_FUll.csv"):
     # 1) Load + keep only needed columns
     df = pd.read_csv(path).iloc[:, 1:]
@@ -33,6 +35,14 @@ def Visual_Teams_history(path="Team_Data_FUll.csv"):
     #    If month <= 6 → Season = year, else Season = year + 1
     teams_df["kickoff_time"] = pd.to_datetime(teams_df["kickoff_time"], errors="coerce")
 
+    transformed_teams=pd.read_csv("Team_data_transformed2.csv").iloc[:,1:][["code","kickoff_time", "XGC_avg","XG_avg" ]].rename(columns={"code": "opponent_code","kickoff_time":"kickoff2"})   # rename to join on 'opponent'
+    transformed_teams["kickoff2"] = pd.to_datetime(transformed_teams["kickoff2"], errors="coerce")
+    
+    teams_df=teams_df.merge(transformed_teams, right_on=["opponent_code","kickoff2"], left_on=["opponent","kickoff_time"], how="left")
+
+
+    print(teams_df)
+
     teams_df["Season"] = np.where(
         teams_df["kickoff_time"].dt.month <= 6,
         teams_df["kickoff_time"].dt.year,
@@ -46,6 +56,8 @@ def Visual_Teams_history(path="Team_Data_FUll.csv"):
 
     teams_df["Goals-XG"] = teams_df["Plain_GS"]- teams_df["Plain_XG"]
     teams_df["Goals Conceeded-XGC"] = teams_df["Plain_GC"]- teams_df["Plain_XGC"]
+    teams_df["Expected Goals Adjusted"] = teams_df["Plain_XG"]/teams_df["XGC_avg"]
+    teams_df["Expected Goals Conceeded Adjusted"] = teams_df["Plain_XGC"]/teams_df["XG_avg"]
     cutoff = pd.Timestamp("2023-12-01", tz="UTC")
     teams_df = teams_df.loc[teams_df["kickoff_time"] >= cutoff].copy()
     teams_df = teams_df.rename(columns={
@@ -58,6 +70,8 @@ def Visual_Teams_history(path="Team_Data_FUll.csv"):
 
     
     teams_df.to_csv("Teams_Visual_Analysis.csv")
+
+Visual_Teams_history()
     
 def Generate_Lineups():
 
