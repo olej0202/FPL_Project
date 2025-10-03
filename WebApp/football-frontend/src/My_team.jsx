@@ -176,7 +176,7 @@ export default function MyTeamOptimize() {
       <h1 className="text-3xl font-bold">Optimize My Team</h1>
 
       {/* Form */}
-      <div className="flex flex-col sm:flex-row gap-2">
+      <div className="flex flex-col sm:flex-row gap-2 hover:border-none">
         <input
           type="number"
           placeholder="Team ID *"

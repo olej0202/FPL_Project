@@ -427,6 +427,8 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
         player_row["Team_Pen_Data"]=player_team_pen_data
         player_row["Pen_Number"]=pen_number
         player_row["player_risiko"]=player_risiko
+        player_row["Goal_Index"]=player_row["Understat_POSXG"]*0.5+0.5*player_row["Rolling_adjusted_XG"]
+        player_row["Assist_Index"]=player_row["Understat_POSXA"]*0.5+0.5*player_row["Rolling_adjusted_XA"]
         
         if(len(clusters)<2):
             break
