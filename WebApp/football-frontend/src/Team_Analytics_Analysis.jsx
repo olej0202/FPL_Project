@@ -18,6 +18,9 @@ import {
   Save as SaveIcon,
   X as XIcon,
   Trash2 as TrashIcon,
+  ChevronDown,
+  ChevronUp,
+  Filter as FilterIcon,
 } from "lucide-react";
 
 export default function Team_Analytics_Analysis() {
@@ -38,6 +41,8 @@ export default function Team_Analytics_Analysis() {
   { key: "xgc",           label: "Expected Goals Conceded" },
   { key: "gs",            label: "Goals Scored" },
   { key: "gc",            label: "Goals Conceded" },
+  { key: "xg_adj",            label: "Expected Goals Adjusted" },
+  { key: "xgc_adj",            label: "Expected Goals Conceded Adjusted" },
   { key: "cs",            label: "Clean Sheets" },
   { key: "g_minus_xg",    label: "Goals − XG" },
   { key: "gc_minus_xgc",  label: "Goals Conceded − XGC" },
@@ -71,6 +76,7 @@ export default function Team_Analytics_Analysis() {
 
   const [seasonOption, setSeasonOption] = useState({ value: "all", label: "All seasons" });
   const [seasonFilter, setSeasonFilter] = useState([]);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   const seasonLabelFromNum = (y) => {
   if (!y) return null;
@@ -157,6 +163,8 @@ const norm = (data || []).map((d, i) => {
     xgc:          toNum(d["Expected Goals Conceeded"]),
     gs:           toNum(d["Goals Scored"]),
     gc:           toNum(d["Goals Conceeded"]),
+    xg_adj:           toNum(d["Expected Goals Adjusted"]),
+    xgc_adj:           toNum(d["Expected Goals Conceeded Adjusted"]),
     cs:           toNum(d["Clean Sheets"]),
     g_minus_xg:   toNum(d["Goals-XG"]),
     gc_minus_xgc: toNum(d["Goals Conceeded-XGC"]),
@@ -447,146 +455,174 @@ useEffect(() => {
       </div>
 
       {/* Filters (Metric + Opponents multi + Venue + Dates) */}
-      <div className="w-full max-w-5xl bg-black/30 border border-royal-gold rounded p-3">
-  <div className="grid grid-cols-1 gap-5">
-          {/* Metric */}
-          <div className="flex flex-col">
-            <label className="text-xs text-gray-300 mb-1">Metric</label>
-            <Select
-              options={metricOptions}
-              value={metricOption}
-              onChange={onChangeMetricSelect}
-              isClearable={false}
-              placeholder="Select metric…"
-              components={animatedComponents}
-              styles={selectStyles}
-              menuPortalTarget={document.body}
-            />
-          </div>
+{/* Filters (collapsible) */}
+<div className="w-full max-w-5xl border border-royal-gold rounded overflow-hidden bg-black/30">
+  {/* Header */}
+  <button
+    type="button"
+    aria-expanded={filtersOpen}
+    onClick={() => setFiltersOpen((v) => !v)}
+    className="w-full flex items-center justify-between px-4 py-3 bg-black/40 hover:bg-black/50 hover:border-none outline-none focus:outline-none focus:ring-0
+    focus-visible:outline-none focus-visible:ring-0"
+    title={filtersOpen ? "Collapse filters" : "Expand filters"}
+  >
+    <div className="flex items-center gap-2 hover:border-none">
+      {!filtersOpen ? <FilterIcon size={18} /> : null}
+      <span className="text-sm font-semibold tracking-wide text-royal-beige">
+        Filters
+      </span>
+    </div>
+    {filtersOpen ? (
+      <ChevronUp size={18} className="text-royal-gold" />
+    ) : (
+      <ChevronDown size={18} className="text-royal-gold" />
+    )}
+  </button>
 
-          {/* Opponents (multi) */}
-          <div className="flex flex-col md:col-span-1">
-            <label className="text-xs text-gray-300 mb-1">Opponents</label>
-            <Select
-              options={opponentOptions}
-              value={opponentFilter}
-              onChange={(opts) => setOpponentFilter(opts || [])}
-              isMulti
-              isClearable
-              placeholder="Select opponent(s)…"
-              closeMenuOnSelect={false}
-              hideSelectedOptions={false}
-              components={{ ...animatedComponents, Option, MultiValueLabel }}
-              styles={selectStyles}
-              menuPortalTarget={document.body}
-            />
-            {/* quick actions */}
-            <div className="flex gap-2 mt-2">
-              <button
-                type="button"
-                className="px-2 py-1 text-xs border border-royal-gold rounded text-royal-gold hover:bg-royal-gold hover:text-black"
-                onClick={() => setOpponentFilter([])} // All (no filter)
-              >
-                All
-              </button>
-              <button
-                type="button"
-                className="px-2 py-1 text-xs border border-royal-gold rounded text-royal-gold hover:bg-royal-gold hover:text-black"
-                onClick={() => setOpponentFilter(opponentOptions)}
-              >
-                Select all
-              </button>
-              <button
-                type="button"
-                className="px-2 py-1 text-xs border border-gray-500 rounded text-gray-200 hover:bg-gray-700"
-                onClick={() => setOpponentFilter([])}
-              >
-                Clear
-              </button>
-            </div>
-          </div>
+  {/* Body (hidden when collapsed) */}
+  {filtersOpen && (
+    <div className="p-3 border-t border-royal-gold/50">
+      <div className="grid grid-cols-1 gap-5">
+        {/* Metric */}
+        <div className="flex flex-col">
+          <label className="text-xs text-gray-300 mb-1">Metric</label>
+          <Select
+            options={metricOptions}
+            value={metricOption}
+            onChange={onChangeMetricSelect}
+            isClearable={false}
+            placeholder="Select metric…"
+            components={animatedComponents}
+            styles={selectStyles}
+            menuPortalTarget={document.body}
+          />
+        </div>
 
-          {/* Venue */}
-          <div className="flex flex-col">
-            <label className="text-xs text-gray-300 mb-1">Venue</label>
-            <Select
-              options={venueOptions}
-              value={venueOption}
-              onChange={onChangeVenueSelect}
-              isClearable={false}
-              placeholder="Venue…"
-              components={animatedComponents}
-              styles={selectStyles}
-              menuPortalTarget={document.body}
-            />
-          </div>
-          {/* Seasons (multi) */}
-<div className="flex flex-col">
-  <label className="text-xs text-gray-300 mb-1">Seasons</label>
-  <Select
-    options={seasonOptions}
-    value={seasonFilter}
-    onChange={(opts) => setSeasonFilter(opts || [])}
-    isMulti
-    isClearable
-    placeholder="Select season(s)…"
-    closeMenuOnSelect={false}
-    hideSelectedOptions={false}
-    components={animatedComponents}
-    styles={selectStyles}
-    menuPortalTarget={document.body}
-  />
-  {/* quick actions */}
-  <div className="flex gap-2 mt-2">
-    <button
-      type="button"
-      className="px-2 py-1 text-xs border border-royal-gold rounded text-royal-gold hover:bg-royal-gold hover:text-black"
-      onClick={() => setSeasonFilter([])}   // All (no filter)
-    >
-      All
-    </button>
-    <button
-      type="button"
-      className="px-2 py-1 text-xs border border-royal-gold rounded text-royal-gold hover:bg-royal-gold hover:text-black"
-      onClick={() => setSeasonFilter(seasonOptions)}   // Select all
-    >
-      Select all
-    </button>
-    <button
-      type="button"
-      className="px-2 py-1 text-xs border border-gray-500 rounded text-gray-200 hover:bg-gray-700"
-      onClick={() => setSeasonFilter([])}   // Clear
-    >
-      Clear
-    </button>
-  </div>
-</div>
-
-
-          {/* Dates */}
-          <div className="flex flex-col">
-            <label className="text-xs text-gray-300 mb-1">From (date)</label>
-            <input
-              type="date"
-              className="bg-black border border-royal-gold rounded px-3 py-2 text-white placeholder-[#c8b27a] focus:outline-none focus:ring-1 focus:ring-[#FFD700] focus:border-[#FFD700]"
-              value={dateFrom}
-              onChange={(e) => setDateFrom(e.target.value)}
-              placeholder={minDate || ""}
-            />
-          </div>
-
-          <div className="flex flex-col">
-            <label className="text-xs text-gray-300 mb-1">To (date)</label>
-            <input
-              type="date"
-              className="bg-black border border-royal-gold rounded px-3 py-2 text-white placeholder-[#c8b27a] focus:outline-none focus:ring-1 focus:ring-[#FFD700] focus:border-[#FFD700]"
-              value={dateTo}
-              onChange={(e) => setDateTo(e.target.value)}
-              placeholder={maxDate || ""}
-            />
+        {/* Opponents (multi) */}
+        <div className="flex flex-col md:col-span-1">
+          <label className="text-xs text-gray-300 mb-1">Opponents</label>
+          <Select
+            options={opponentOptions}
+            value={opponentFilter}
+            onChange={(opts) => setOpponentFilter(opts || [])}
+            isMulti
+            isClearable
+            placeholder="Select opponent(s)…"
+            closeMenuOnSelect={false}
+            hideSelectedOptions={false}
+            components={{ ...animatedComponents, Option, MultiValueLabel }}
+            styles={selectStyles}
+            menuPortalTarget={document.body}
+          />
+          {/* quick actions */}
+          <div className="flex gap-2 mt-2">
+            <button
+              type="button"
+              className="px-2 py-1 text-xs border border-royal-gold rounded text-royal-gold hover:bg-royal-gold hover:text-black"
+              onClick={() => setOpponentFilter([])}
+            >
+              All
+            </button>
+            <button
+              type="button"
+              className="px-2 py-1 text-xs border border-royal-gold rounded text-royal-gold hover:bg-royal-gold hover:text-black"
+              onClick={() => setOpponentFilter(opponentOptions)}
+            >
+              Select all
+            </button>
+            <button
+              type="button"
+              className="px-2 py-1 text-xs border border-gray-500 rounded text-gray-200 hover:bg-gray-700"
+              onClick={() => setOpponentFilter([])}
+            >
+              Clear
+            </button>
           </div>
         </div>
+
+        {/* Venue */}
+        <div className="flex flex-col">
+          <label className="text-xs text-gray-300 mb-1">Venue</label>
+          <Select
+            options={venueOptions}
+            value={venueOption}
+            onChange={onChangeVenueSelect}
+            isClearable={false}
+            placeholder="Venue…"
+            components={animatedComponents}
+            styles={selectStyles}
+            menuPortalTarget={document.body}
+          />
+        </div>
+
+        {/* Seasons (multi) */}
+        <div className="flex flex-col">
+          <label className="text-xs text-gray-300 mb-1">Seasons</label>
+          <Select
+            options={seasonOptions}
+            value={seasonFilter}
+            onChange={(opts) => setSeasonFilter(opts || [])}
+            isMulti
+            isClearable
+            placeholder="Select season(s)…"
+            closeMenuOnSelect={false}
+            hideSelectedOptions={false}
+            components={animatedComponents}
+            styles={selectStyles}
+            menuPortalTarget={document.body}
+          />
+          <div className="flex gap-2 mt-2">
+            <button
+              type="button"
+              className="px-2 py-1 text-xs border border-royal-gold rounded text-royal-gold hover:bg-royal-gold hover:text-black"
+              onClick={() => setSeasonFilter([])}
+            >
+              All
+            </button>
+            <button
+              type="button"
+              className="px-2 py-1 text-xs border border-royal-gold rounded text-royal-gold hover:bg-royal-gold hover:text-black"
+              onClick={() => setSeasonFilter(seasonOptions)}
+            >
+              Select all
+            </button>
+            <button
+              type="button"
+              className="px-2 py-1 text-xs border border-gray-500 rounded text-gray-200 hover:bg-gray-700"
+              onClick={() => setSeasonFilter([])}
+            >
+              Clear
+            </button>
+          </div>
+        </div>
+
+        {/* Dates */}
+        <div className="flex flex-col">
+          <label className="text-xs text-gray-300 mb-1">From (date)</label>
+          <input
+            type="date"
+            className="bg-black border border-royal-gold rounded px-3 py-2 text-white placeholder-[#c8b27a] focus:outline-none focus:ring-1 focus:ring-[#FFD700] focus:border-[#FFD700]"
+            value={dateFrom}
+            onChange={(e) => setDateFrom(e.target.value)}
+            placeholder={minDate || ""}
+          />
+        </div>
+
+        <div className="flex flex-col">
+          <label className="text-xs text-gray-300 mb-1">To (date)</label>
+          <input
+            type="date"
+            className="bg-black border border-royal-gold rounded px-3 py-2 text-white placeholder-[#c8b27a] focus:outline-none focus:ring-1 focus:ring-[#FFD700] focus:border-[#FFD700]"
+            value={dateTo}
+            onChange={(e) => setDateTo(e.target.value)}
+            placeholder={maxDate || ""}
+          />
+        </div>
       </div>
+    </div>
+  )}
+</div>
+
       <div className="text-center">
         
         <button

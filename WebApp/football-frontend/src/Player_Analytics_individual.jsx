@@ -4,7 +4,7 @@ import { useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { useStatsData } from "./Contexts/StatsContext";
 import Slider from "@mui/material/Slider";
-import { Table, BarChart2, Trash2 ,ChevronDown , Save,X } from "lucide-react";
+import { Table, BarChart2, Trash2, ChevronDown, ChevronUp, Filter as FilterIcon, Save, X } from "lucide-react";
 import CustomTooltip from "./components/graphTooltip_player";
 import NameModal from "./components/NameAnalysis";
 import teamLogos from "./utils/team_logos";
@@ -51,6 +51,7 @@ export default function PlayerAnalyticsIndividual() {
   const [seasonFilter, setSeasonFilter] = useState([]);
   const [opponentFilter, setOpponentFilter] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
      const scrollToBottom = () => {
     window.scrollTo({
@@ -650,83 +651,112 @@ const fixtureData = useMemo(() => {
         </div>
       )}
 
-      <h1 className="text-4xl font-bold text-center text-royal-beige mt-10 py-5">Historical Analysis</h1>
+<h1 className="text-4xl font-bold text-center text-royal-beige mt-10 py-5">
+  Historical Analysis
+</h1>
 
+{/* Collapsible Filters */}
+<div className="w-full max-w-6xl mx-auto border border-royal-gold rounded overflow-hidden bg-black/30 hover:border-none">
+  {/* Header */}
+  <button
+    type="button"
+    aria-expanded={filtersOpen}
+    onClick={() => setFiltersOpen(v => !v)}
+    className="
+      w-full flex items-center justify-between px-4 py-3
+      bg-black/40 hover:bg-black/50
+      outline-none focus:outline-none focus:ring-0
+      focus-visible:outline-none focus-visible:ring-0 hover:border-none
+    "
+    title={filtersOpen ? 'Collapse filters' : 'Expand filters'}
+  >
+    <div className="flex items-center gap-2">
+      {!filtersOpen ? <FilterIcon size={18} /> : null}
+      <span className="text-sm font-semibold tracking-wide text-royal-beige">
+        Filters
+      </span>
+    </div>
+    {filtersOpen ? (
+      <ChevronUp size={18} className="text-royal-gold" />
+    ) : (
+      <ChevronDown size={18} className="text-royal-gold" />
+    )}
+  </button>
 
-<div className="w-full max-w-sm text-center">
-    <h2 className="text-2xl text-royal-beige mb-4 text-center">
-  Choose Metric
-</h2>
-        <Select
-          options={historyMetrics}
-          value={historyMetrics.find(m => m.value === selectedMetric)}
-          onChange={o => setSelectedMetric(o.value)}
-          placeholder="Metric..."
-          styles={selectStyles}
-
-        />
-        
+  {/* Body */}
+  {filtersOpen && (
+    <div className="p-4 border-t border-royal-gold/40">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Metric */}
+        <div className="w-full">
+          <h2 className="text-2xl text-royal-beige mb-2 text-center md:text-left">Choose Metric</h2>
+          <Select
+            options={historyMetrics}
+            value={historyMetrics.find(m => m.value === selectedMetric)}
+            onChange={o => setSelectedMetric(o.value)}
+            placeholder="Metric..."
+            styles={selectStyles}
+          />
         </div>
-    <div className="w-full max-w-sm text-center">
-        <h2 className="text-2xl text-royal-beige mb-4 text-center">
-  Season
-</h2>
-        <Select
-      options={seasonOptions}
-      value={seasonFilter}
-      onChange={opts => setSeasonFilter(opts || [])}
-      isMulti
-      isClearable
-      placeholder="Select Season(s)..."
-      styles={selectStyles}
-    />
+
+        {/* Season */}
+        <div className="w-full">
+          <h2 className="text-2xl text-royal-beige mb-2 text-center md:text-left">Season</h2>
+          <Select
+            options={seasonOptions}
+            value={seasonFilter}
+            onChange={opts => setSeasonFilter(opts || [])}
+            isMulti
+            isClearable
+            placeholder="Select Season(s)..."
+            styles={selectStyles}
+          />
+        </div>
+
+        {/* Opponents */}
+        <div className="w-full">
+          <h2 className="text-2xl text-royal-beige mb-2 text-center md:text-left">Opponents</h2>
+          <Select
+            options={opponentOptions}
+            value={opponentFilter}
+            onChange={opts => setOpponentFilter(opts || [])}
+            isMulti
+            isClearable
+            placeholder="Select Opponent(s)..."
+            styles={selectStyles}
+          />
+        </div>
+      </div>
+
+      {/* Date Range */}
+      <div className="px-1 mt-6">
+        <h2 className="text-2xl text-royal-beige mb-3 text-center">
+          Date Range:<br />
+          {dateRange[0] && dateRange[1]
+            ? `${new Date(dateRange[0]).toLocaleDateString()} – ${new Date(dateRange[1]).toLocaleDateString()}`
+            : ' Select a range'}
+        </h2>
+
+        <Slider
+          value={dateRange}
+          onChange={handleSliderChange}
+          valueLabelDisplay="auto"
+          valueLabelFormat={valueLabelFormat}
+          min={bounds[0]}
+          max={bounds[1]}
+          step={24 * 60 * 60 * 1000}
+          marks={[
+            { value: bounds[0], label: valueLabelFormat(bounds[0]) },
+            { value: bounds[1], label: valueLabelFormat(bounds[1]) }
+          ]}
+          getAriaLabel={() => "Date range"}
+          sx={{ color: "#B8860B" }}
+        />
+      </div>
     </div>
-    <div className="w-full max-w-sm text-center">
-        <h2 className="text-2xl text-royal-beige mb-4 text-center">
-  Opponents
-</h2>
-        <Select
-      options={opponentOptions}
-      value={opponentFilter}
-      onChange={opts => setOpponentFilter(opts || [])}
-      isMulti
-      isClearable
-      placeholder="Select Opponent(s)..."
-      styles={selectStyles}
-    />
-    </div>
+  )}
+</div>
 
-
-
-
-
-      <div className="px-4 my-8">
-      <h2 className="text-2xl text-royal-beige mb-4 text-center">
-  Date Range:<br/>{' '}
-  {dateRange[0] && dateRange[1]
-    ? `${new Date(dateRange[0]).toLocaleDateString()} – ${new Date(dateRange[1]).toLocaleDateString()}`
-    : ' Select a range'}
-</h2>
-    
-
-      <Slider
-        value={dateRange}
-        onChange={handleSliderChange}
-        valueLabelDisplay="auto"
-        valueLabelFormat={valueLabelFormat}
-        min={bounds[0]}
-        max={bounds[1]}
-        step={24 * 60 * 60 * 1000} // one-day steps
-        marks={[
-          { value: bounds[0], label: valueLabelFormat(bounds[0]) },
-          { value: bounds[1], label: valueLabelFormat(bounds[1]) }
-        ]}
-        getAriaLabel={() => "Date range"}
-        sx={{ color: "#B8860B" }}
-      />
-
-      {/* …now render your chart or table based on `filtered`… */}
-    </div>
 
       <div className="flex flex-col sm:flex-row gap-4 justify-center mt-4">
   {/* Avg Box */}

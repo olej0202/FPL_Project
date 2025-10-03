@@ -51,12 +51,12 @@ export default function Team_Analytics_Individual() {
       })));
       setoffData(Object.values(eloRaw).map(r => ({
         kickoff_time: r.kickoff_time,
-        XG_avg: Number(parseFloat(r.XG_avg).toFixed(1)),
+        XG_avg: Number(parseFloat(r.XG_avg).toFixed(3)),
         name: r.name || r.Team
       })));
       setdefData(Object.values(eloRaw).map(r => ({
         kickoff_time: r.kickoff_time,
-        XGC_avg: Number(parseFloat(r.XGC_avg).toFixed(1)),
+        XGC_avg: Number(parseFloat(r.XGC_avg).toFixed(3)),
         name: r.name || r.Team
       })));
     };
