@@ -397,7 +397,7 @@ def freeHit_values(sel_thresh, budget, columns, file_path="Model_Optimizer.csv",
     model.solve()
     obj_val = float(value(model.objective))+5
     # Check the status of the solution
-    return [columns[0], obj_val]
+    return [columns, obj_val]
 
 def generate_optimizers(ownership, budget, GW_list_wildcard, GW_list_freehit):
     free_hit_vals=[]

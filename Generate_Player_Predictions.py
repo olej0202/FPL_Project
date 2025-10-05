@@ -715,7 +715,7 @@ def Generate_point_predictions():
         overassist=min(1.5,overassist)
         
         historic_xg=player_data["rolling_XG_historic"].values[0]
-        historic_xa=player_data["rolling_XA_historic"].values[0]
+        historic_Assist=player_data["rolling_Assist_historic"].values[-1]
         
         cbi_hit_rate=player_data["defcon_avg_hit_rate"].values[-1]
 
@@ -739,17 +739,18 @@ def Generate_point_predictions():
             try:
 
                 assist.append(((xgb_assist_player["pred"].values[i]*0
-                                    +stat_assist_player["pred"].values[i]*0.8
+                                    +stat_assist_player["pred"].values[i]*0.6
                                     +DNN_assist_player["pred"].values[i]*0.2
+                                    +historic_Assist*0.2
                                     +CLUSTER_assist_player["pred"].values[i]*0.0))*overassist)
             except:
                 assist.append(0)
 
             try:
 
-                bps.append((xgb_bps_player["pred"].values[i]*0.3
+                bps.append(max(0.5,(xgb_bps_player["pred"].values[i]*0.3
                                    +stat_bps_player["pred"].values[i]*0.6
-                                   +cluster_bps_player["pred"].values[i]*0.1*0.04)*1)
+                                   +cluster_bps_player["pred"].values[i]*0.1*0.04))*0.8)
             except:
                 bps.append(0)
 
@@ -808,7 +809,7 @@ def Generate_point_predictions():
             summary_dataset["Points_prediction"]=(1+summary_dataset["Goal_pred"]*6
                                                   +summary_dataset["Assist_pred"]*4
                                                   +summary_dataset["Bonus_pred"]
-                                                  +summary_dataset["GC_pred"]*6)*0.8+0.2*summary_dataset["Fantasy_pred"]+((summary_dataset["CBI_pred"]/10)*0.7+0.3*cbi_hit_rate)*0.85*2
+                                                  +summary_dataset["GC_pred"]*6)*0.8+0.2*summary_dataset["Fantasy_pred"]+((summary_dataset["CBI_pred"]/10)*0.7+0.3*cbi_hit_rate)*0.75*2
         
         
         full_df=pd.concat([full_df, summary_dataset], axis=0, ignore_index=True)

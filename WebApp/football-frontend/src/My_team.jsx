@@ -182,7 +182,7 @@ export default function MyTeamOptimize() {
           placeholder="Team ID *"
           value={teamId}
           onChange={(e) => setTeamId(e.target.value)}
-          className="w-40 p-2 bg-black border border-royal-gold rounded text-white text-center"
+          className="w-40 p-2 bg-black border border-royal-gold rounded text-white text-center hover:border-none"
         />
 
         {/* Bench Boost */}

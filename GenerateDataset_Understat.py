@@ -454,7 +454,7 @@ def Generate_Understat_dataset(current_players,run_player_pos):
               .transform(lambda s: s.ewm(span=20, adjust=False, min_periods=1).mean())
     )
     agg_enriched["Rolling_Adjusted_XA"] = (
-        agg_enriched.groupby(["player_team", "pos_group"])["Adjusted_XA"]
+        agg_enriched.groupby(["player_team", "pos_group"])["assists"]
               .transform(lambda s: s.ewm(span=20, adjust=False, min_periods=1).mean())
     )
 
