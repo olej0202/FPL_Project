@@ -1280,7 +1280,7 @@ def main_Transform():
             player_df["Share_of_XG"]=player_df['expected_goals'].rolling(window=20, min_periods=1).sum()/player_df["Team_XG"].rolling(window=20, min_periods=1).sum()
             player_df["Share_of_XA"]=player_df['expected_assists'].rolling(window=20, min_periods=1).sum()/player_df["Team_XA"].rolling(window=20, min_periods=1).sum()
             player_df['defcon_adjusted'] = np.where(player_df['position'].eq('DEF'),player_df['defcon'].clip(upper=13),player_df['defcon'].clip(upper=15))
-            player_df['defcon_hit_rate'] = ((player_df['position'].eq('DEF') & player_df['defcon'].gt(10)) |(~player_df['position'].eq('DEF') & player_df['defcon'].gt(12))).astype(int)
+            player_df['defcon_hit_rate'] = ((player_df['position'].eq('DEF') & player_df['defcon'].gt(9)) |(~player_df['position'].eq('DEF') & player_df['defcon'].gt(11))).astype(int)
             player_df['defcon_avg'] = player_df['defcon_adjusted'].where(player_df['defcon'] > 0).rolling(30, min_periods=1).mean()
             player_df['defcon_avg_hit_rate'] = player_df['defcon_hit_rate'].where(player_df['defcon'] > 0).rolling(30, min_periods=1).mean()
 
