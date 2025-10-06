@@ -25,7 +25,7 @@ Spurs,6
 ,Ipswich,40"""
 
 
-Manual_team_offensive_adjustments = {94:0.9,4:0.9,17:1.2 }
+Manual_team_offensive_adjustments = {4:0.9,17:1.1 }
     
     
     
@@ -34,33 +34,28 @@ Manual_team_defensive_adjustments = {6:0.9 }
 
 Manual_NewPlayer_Adjustments={
         "Viktor_Gyökeres":["Alexander_Isak","Kai_Havertz","Yoane_Wissa"],
-        "Florian_Wirtz":["Mohamed_Salah","Cole_Palmer","Dominik_Szoboszlai","Alexis_Mac Allister", "Luis_Díaz"],
-        "Tijjani_Reijnders":["İlkay_Gündoğan","Phil_Foden"],
-        "Rayan_Cherki":["İlkay_Gündoğan","Phil_Foden"],
-        "El_Hadji Malick Diouf":["Aaron_Wan-Bissaka", "Lucas_Digne"], 
-        "Jeremie_Frimpong":["Andrew_Robertson","Pedro_Porro","Lucas_Digne"],
         "Benjamin_Sesko":["Kai_Havertz","Rasmus_Højlund","Marcus_Rashford"], 
-        "Hugo_Ekitiké":["Kai_Havertz","Alexander_Isak" ]    
+        "Hugo_Ekitiké":["Kai_Havertz","Alexander_Isak" ],
+        "Nick_Woltemade":["Kai_Havertz","Alexander_Isak" ],  
     }
 
 Manual_Player_Adjustments={
         "Anthony_Gordon":["Alexander_Isak","Harvey_Barnes"],   
         "Igor_Thiago Nascimento Rodrigues":["Yoane_Wissa","Bryan_Mbeumo"],
-        "Lucas_Tolentino Coelho de Lima":["Jarrod_Bowen"],
         "Mohamed_Salah":["Luis_Díaz","Mohamed_Salah" ]        }
 
 
 Manual_Player_Risk={
         "Alexander_Isak":0.8,
         "Igor_Thiago Nascimento Rodrigues":0.7,
-        "Jack_Grealish":0.5,
+        "Jack_Grealish":0.7,
         "Yoane_Wissa":0.7,
         "Bryan_Mbeumo":0.6,
         "Matheus_Santos Carneiro Da Cunha":0.7,
         "Mohammed_Kudus":0.7,
         "Benjamin_Sesko":0.7,
         "Hugo_Ekitiké":0.5,
-        "Nick_Woltemade":0.8
+        "Nick_Woltemade":0.7
         
 }
 
