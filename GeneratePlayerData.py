@@ -215,7 +215,72 @@ def team_data(
     return teams_dataset
 
 
+
+def add_team_share_per90(
+    minutes_col: str = "average_minutes",
+    team_col: str = "Team",
+    name_col: str = "name",
+    per: int = 90,
+    share_suffix: str = "_share",
+    add_percent: bool = False,
+    percent_suffix: str = "_share_pct",
+    round_pct: int = 2,
+) -> pd.DataFrame:
+    df = pd.read_csv("Player_Prediction_set.csv")
+    metrics=["Rolling_adjusted_XG","rolling_Threat","Rolling_adjusted_XA","Rolling_creativity","Rolling_adjusted_BPS"]
     
+    # 0) Precompute minutes per (team, name) once
+    player_mins = (
+        df.groupby([team_col, name_col], as_index=True)[minutes_col]
+          .sum()
+          .rename("mins_sum")
+    )
+
+    # Work on a copy to avoid mutating caller's DataFrame unexpectedly
+    out = df.copy()
+
+    for metric in metrics:
+        # 1) Player-level metric sum
+        player_metric = (
+            df.groupby([team_col, name_col], as_index=True)[metric]
+              .sum()
+              .rename("metric_sum")
+        )
+
+        # 2) Combine minutes + metric; compute per-<per> rate
+        player_agg = pd.concat([player_mins, player_metric], axis=1)
+        player_agg["per_val"] = (
+            player_agg["metric_sum"]*player_agg["mins_sum"]/ per)
+
+        # 3) Team total of that same per-<per> metric
+        team_total = (
+            player_agg.groupby(level=0)["per_val"]
+                      .sum()
+                      .rename("team_per_total")
+        )
+
+        # 4) Join team totals and compute share; guard against divide-by-zero
+        player_agg = player_agg.join(team_total, on=team_col)
+        share_col = f"{metric}{share_suffix}"
+        player_agg[share_col] = (
+            player_agg["per_val"] / player_agg["team_per_total"]
+        ).fillna(0.0)
+
+        # 5) Attach back to every original row for that (team, name)
+        out = out.join(player_agg[[share_col]], on=[team_col, name_col])
+
+        # 6) Optional percent column
+        if add_percent:
+            pct_col = f"{metric}{percent_suffix}"
+            out[pct_col] = (out[share_col] * 100).round(round_pct)
+
+    out.to_csv("Player_Prediction_set.csv", index=False)
+
+
+
+
+
+
     
 def GeneratePlayerData(time_list, fixture_path,current_player_path, current_teams_path):
     Xmins(current_player_path)
@@ -458,6 +523,7 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
 
                 Future_dataframe=pd.concat([Future_dataframe, player_row], axis=0, ignore_index=True)
     Future_dataframe.to_csv("Player_Prediction_set.csv")
+    add_team_share_per90()
     missing_names = [name for name in names if name not in Future_dataframe["name"].values]
     print("Missing players:", missing_names)
     print("Total missing:", len(missing_names))  
