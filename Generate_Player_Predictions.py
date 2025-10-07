@@ -741,9 +741,9 @@ def Generate_point_predictions():
             try:
 
                 assist.append(((xgb_assist_player["pred"].values[i]*0
-                                    +stat_assist_player["pred"].values[i]*0.6
+                                    +stat_assist_player["pred"].values[i]*0.7
                                     +DNN_assist_player["pred"].values[i]*0.2
-                                    +historic_Assist*0.2
+                                    +historic_Assist*0.1
                                     +CLUSTER_assist_player["pred"].values[i]*0.0))*overassist)
             except:
                 assist.append(0)
@@ -751,8 +751,8 @@ def Generate_point_predictions():
             try:
 
                 bps.append(max(0.5,(xgb_bps_player["pred"].values[i]*0.3
-                                   +stat_bps_player["pred"].values[i]*0.6
-                                   +cluster_bps_player["pred"].values[i]*0.1*0.04))*0.8)
+                                   +stat_bps_player["pred"].values[i]*0.5
+                                   +max(0.5,cluster_bps_player["pred"].values[i]*0.2*0.04)))*0.8)
             except:
                 bps.append(0)
 
