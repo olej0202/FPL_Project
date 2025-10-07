@@ -367,8 +367,9 @@ def GenerateTeamPredictions1(fixture_path, current_team_path,horizon):
     opp_xgc_cluster=df_merged["Cluster_XGC_y"].values
     own_cluster_css=df_merged["Cluster_CS_x"].values
     opp_cluster_css=df_merged["Cluster_CS_y"].values
-    print(opp_cluster_css)
-    print(css2)
+    
+    stat_XG_HOME=df_merged["XGH"].values*df_merged["XGCA"].values*2/3
+    stat_XG_AWAY=df_merged["XGA"].values*df_merged["XGCH"].values*2/3
 
     result_df=pd.DataFrame()
     result_df["GW"]=df_merged["event"]
@@ -377,12 +378,12 @@ def GenerateTeamPredictions1(fixture_path, current_team_path,horizon):
     result_df["away_team"]=df_merged["team_a_name"]
     result_df["home_code"]=df_merged["team_h"]
     result_df["away_code"]=df_merged["team_a"]
-    result_df["home_goals"]=((xg+xgc2)/2)*0.7+0.15*(own_xg_cluster+opp_xgc_cluster)
-    result_df["away_goals"]=((xgc+xg2)/2)*0.7+0.15*(opp_xg_cluster+own_xgc_cluster)
+    result_df["home_goals"]=((xg+xgc2)/2)*0.7+0.3*stat_XG_HOME
+    result_df["away_goals"]=((xgc+xg2)/2)*0.7+0.3*stat_XG_AWAY
     result_df["Clean_Sheet_home"]=css1
     result_df["Clean_Sheet_away"]=css2
-    result_df["test_XG"]=xg
-    result_df["test_cluster"]=css1
+    result_df["test_XG"]=stat_XG_HOME
+    result_df["test_cluster"]=stat_XG_AWAY
     result_df["test_opp_XGC"]=css2
     result_df.to_csv("Team_prediction_visual1.csv")
 
