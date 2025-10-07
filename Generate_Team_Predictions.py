@@ -815,7 +815,7 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
 
     proba1 = model_xg.predict_proba(new_input_XG)
     proba2 = model_xg.predict_proba(new_input_XG2)
-    weights = np.array([0.4, 1.1, 1.5, 2.4])
+    weights = np.array([0.4, 1.1, 1.5, 2.6])
     
 
     xg = proba1 @ weights
