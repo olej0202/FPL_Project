@@ -453,7 +453,7 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
             
             last = player_row["defcon_avg"].iloc[-1] if not player_row["defcon_avg"].empty else np.nan
             cbi_hist = cbi_ind if pd.isna(last) else last
-            player_row["CBI"]=cbi_ind*0.5+0.5*cbi_hist
+            player_row["CBI"]=cbi_ind*0.7+0.3*cbi_hist
         else:
             last = player_row["defcon_avg"].iloc[-1] if not player_row["defcon_avg"].empty else np.nan
             player_row["CBI"]=last
