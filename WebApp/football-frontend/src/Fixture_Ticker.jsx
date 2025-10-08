@@ -140,10 +140,7 @@ export default function TeamPredictionRankingsTable() {
 
   const formatTotalValue = (val) => {
     if (!Number.isFinite(val)) return "-";
-    if (selectedMetric === "CS") {
-      const pct = val > gwColumns.length ? (val / gwColumns.length) * 100 : val * 100; // try to keep sensible display
-      return `${pct.toFixed(0)}%`;
-    }
+    
     return val.toFixed(2);
   };
 
