@@ -395,6 +395,8 @@ def GenerateTeamPredictions1(fixture_path, current_team_path,horizon):
     home_df["CS"]=result_df["Clean_Sheet_home"]
     home_df["Opposition_XG"]=df_merged["XGA"]
     home_df["Opposition_XGC"]=df_merged["XGCA"]
+    home_df["Opponent_team"]=result_df["away_team"]
+    home_df["Home"]='H'
 
     away_df=result_df[["GW", "pred"]]
     away_df["team_name"]=result_df["away_team"]
@@ -404,6 +406,8 @@ def GenerateTeamPredictions1(fixture_path, current_team_path,horizon):
     away_df["CS"]=result_df["Clean_Sheet_away"]
     away_df["Opposition_XG"]=df_merged["XGH"]
     away_df["Opposition_XGC"]=df_merged["XGCH"]
+    away_df["Opponent_team"]=result_df["home_team"]
+    away_df["Home"]='A'
 
     ALL_pred=pd.concat([home_df, away_df], axis=0, ignore_index=True)
     ALL_pred.to_csv("Team_prediction1.csv")
@@ -935,6 +939,8 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     home_df["CS"]=result_df["Clean_Sheet_home"]
     home_df["Opposition_XG"]=df_merged["XGA"]
     home_df["Opposition_XGC"]=df_merged["XGCA"]
+    home_df["Opponent_team"]=result_df["away_team"]
+    home_df["Home"]='H'
 
     away_df=result_df[["GW", "pred"]]
     away_df["team_name"]=result_df["away_team"]
@@ -944,6 +950,8 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     away_df["CS"]=result_df["Clean_Sheet_away"]
     away_df["Opposition_XG"]=df_merged["XGH"]
     away_df["Opposition_XGC"]=df_merged["XGCH"]
+    away_df["Opponent_team"]=result_df["home_team"]
+    away_df["Home"]='A'
 
     ALL_pred=pd.concat([home_df, away_df], axis=0, ignore_index=True)
     ALL_pred.to_csv("Team_prediction2.csv")

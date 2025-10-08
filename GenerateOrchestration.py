@@ -49,8 +49,8 @@ def Data_Transformation(n_points_in_future, current_fixture_path,current_player_
     
 def Data_Predictions(current_fixture_path,current_team_path, n_points_in_future):
     GenerateTeamPredictions( current_fixture_path,current_team_path, n_points_in_future)
-    Make_Predictions()
-    Generate_point_predictions()
+    #Make_Predictions()
+    #Generate_point_predictions()
     
    
 def Data_Generation(current_raw_data_path,ownership,budget,GW_list_wildcard,GW_list_freehit,current_player_path,current_team_path ):
@@ -101,12 +101,12 @@ def Main_Orchestration():
     
     
     #Transform data
-    Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos)
+    #Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos)
     
     #Predict data
     Data_Predictions(current_fixture_path,current_team_path, n_points_in_future)
     
-    Data_Generation(current_raw_data_path,ownership,budget,GW_list_wildcard,GW_list_freehit,current_player_path,current_team_path )
+    #Data_Generation(current_raw_data_path,ownership,budget,GW_list_wildcard,GW_list_freehit,current_player_path,current_team_path )
     
 if __name__ == "__main__":
     Main_Orchestration()
