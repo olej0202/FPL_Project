@@ -120,7 +120,7 @@ export default function Player_analytics_rankings() {
    setFiltered(
      aggregated
        .sort((a, b) => b.value - a.value)
-       .slice(0, 15)
+       .slice(0, 20)
    );
   }, [rawData, selectedMetric, GWRange, selectedPos, valueRange]);
 

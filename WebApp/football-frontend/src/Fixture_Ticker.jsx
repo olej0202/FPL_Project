@@ -198,7 +198,7 @@ export default function TeamPredictionRankingsTable() {
       )}
 
       {/* Mobile GW pager */}
-      {isMobile && gwColumns.length > 3 && (
+      {isMobile && gwColumns.length > 2 && (
         <div className="flex items-center gap-3">
           <button
             className="px-3 py-1 rounded bg-royal-beige text-black disabled:opacity-40"
@@ -258,7 +258,7 @@ export default function TeamPredictionRankingsTable() {
                     let bg = "";
                     if (rawVal !== null) {
                       if (selectedMetric === "XG") {
-                        bg = rawVal > 1.8 ? "bg-green-900/90" : rawVal < 1.1 ? "bg-red-900/90" : "bg-yellow-900/90";
+                        bg = rawVal > 1.7 ? "bg-green-900/90" : rawVal < 1.1 ? "bg-red-900/90" : "bg-yellow-900/90";
                       } else if (selectedMetric === "Opposition_XGC") {
                         bg = rawVal > 1.6 ? "bg-green-900/90" : rawVal < 1.1 ? "bg-red-900/90" : "bg-yellow-900/90";
                       } 
