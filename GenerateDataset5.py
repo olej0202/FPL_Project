@@ -760,8 +760,8 @@ def team_transformed2():
         was_home=row['was_home']
         team = row['code']
         opponent = row['opponent']
-        xg = min(2.5,max(0.5,row['XG']))
-        xgc = min(2.5,max(0.5,row['XGC']))
+        xg = min(2.8,max(0.5,row['XG']))
+        xgc = min(2.8,max(0.5,row['XGC']))
 
         team_off = off_rating[team]
         team_def = def_rating[team]
@@ -788,8 +788,8 @@ def team_transformed2():
 
 
 
-        k_def = 0.06
-        k_off=0.06
+        k_def = 0.08
+        k_off=0.08
         min_val=0.8
 
         actual_goals = xg
