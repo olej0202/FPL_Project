@@ -227,7 +227,7 @@ def add_team_share_per90(
     round_pct: int = 2,
 ) -> pd.DataFrame:
     df = pd.read_csv("Player_Prediction_set.csv")
-    metrics=["Rolling_adjusted_XG","rolling_Threat","Rolling_adjusted_XA","Rolling_creativity","Rolling_adjusted_BPS"]
+    metrics=["Rolling_adjusted_XG","rolling_Threat","Rolling_adjusted_XA","Rolling_creativity","Rolling_adjusted_BPS","Share_of_XG", "Share_of_XA"]
     
     # 0) Precompute minutes per (team, name) once
     player_mins = (
