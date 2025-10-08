@@ -2,14 +2,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import Slider from "@mui/material/Slider";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import teamLogos from "./utils/team_logos"; // adjust path as needed
+import teamLogos from "./utils/team_logos";
 import { useOtherData } from "./Contexts/OtherContext";
-
-/**
- * Dynamic table view that replaces the chart.
- * Shows: Rank, Team (logo), one column per GW in the selected range, and Total.
- * Each GW cell shows: opponent_name, Home/Away, and the selected metric value.
- */
 
 const METRIC_LABELS = {
   XG: "Predicted Goals Scored",
@@ -81,10 +75,11 @@ export default function TeamPredictionRankingsTable() {
     return cols;
   }, [GWRange]);
 
-  // Visible GW columns (max 3 on mobile)
+  // Visible GW columns (max 3 on mobile) — cap start at (len - 3)
   const visibleGwColumns = useMemo(() => {
     if (!isMobile) return gwColumns;
-    const start = Math.min(gwWindowStart, Math.max(0, gwColumns.length - 1));
+    const maxStart = Math.max(0, gwColumns.length - 3);
+    const start = Math.min(gwWindowStart, maxStart);
     return gwColumns.slice(start, start + 3);
   }, [gwColumns, isMobile, gwWindowStart]);
 
@@ -101,7 +96,7 @@ export default function TeamPredictionRankingsTable() {
       const existing = entry.perGW[item.GW];
       if (!existing || Math.abs(metricVal) > Math.abs(existing.value || 0)) {
         entry.perGW[item.GW] = {
-          opponent_name: item.Opponent_team?? item.Opponent ?? "",
+          opponent_name: item.opponent_name ?? item.Opponent_team ?? item.Opponent ?? "",
           Home: item.Home ?? item.home ?? item.Venue,
           value: metricVal,
         };
@@ -140,7 +135,6 @@ export default function TeamPredictionRankingsTable() {
 
   const formatTotalValue = (val) => {
     if (!Number.isFinite(val)) return "-";
-    
     return val.toFixed(2);
   };
 
@@ -198,7 +192,7 @@ export default function TeamPredictionRankingsTable() {
       )}
 
       {/* Mobile GW pager */}
-      {isMobile && gwColumns.length > 2 && (
+      {isMobile && gwColumns.length > 3 && (
         <div className="flex items-center gap-3">
           <button
             className="px-3 py-1 rounded bg-royal-beige text-black disabled:opacity-40"
@@ -222,17 +216,24 @@ export default function TeamPredictionRankingsTable() {
 
       {/* Dynamic table */}
       <div className="w-full max-w-7xl overflow-x-auto">
-        <table className="min-w-full border-collapse">
-          <thead>
-            <tr className="bg-[#121212] text-sm sticky top-0">
-              <th className="px-3 py-2 text-left border-b border-neutral-800">#</th>
-              <th className="px-3 py-2 text-left border-b border-neutral-800">Team</th>
+        <table className="min-w-full border-collapse table-fixed">
+          <thead className="sticky top-0 z-10">
+            <tr className="text-sm">
+              <th className="px-3 py-2 text-left border-b border-neutral-800 bg-[#121212] w-10">#</th>
+              <th className="px-3 py-2 text-left border-b border-neutral-800 bg-[#121212] min-w-[140px]">
+                Team
+              </th>
               {visibleGwColumns.map((gw) => (
-                <th key={`h-gw-${gw}`} className="px-3 py-2 text-left border-b border-neutral-800">
+                <th
+                  key={`h-gw-${gw}`}
+                  className="px-3 py-2 text-left border-b border-neutral-800 bg-[#121212] min-w-[88px] w-[88px]"
+                >
                   GW {gw}
                 </th>
               ))}
-              <th className="px-3 py-2 text-left border-b border-neutral-800">Total</th>
+              <th className="px-3 py-2 text-left border-b border-neutral-800 bg-[#121212] min-w-[90px] w-[90px]">
+                Total
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -242,12 +243,17 @@ export default function TeamPredictionRankingsTable() {
               return (
                 <tr key={row.team_name} className="odd:bg-[#0a0a0a] even:bg-[#101010] hover:bg-[#171717]">
                   <td className="px-3 py-2 border-b border-neutral-900 align-top w-10">{rank}</td>
-                  <td className="px-3 py-2 border-b border-neutral-900 align-top whitespace-nowrap">{row.team_name}{logoSrc ? (
-                      <img src={logoSrc} alt={`${row.team_name} logo`} className="h-6 w-6 text-center" />
-                    ) : (
-                      <span className="text-neutral-500">—</span>
-                    )}</td>
-              
+                  <td className="px-3 py-2 border-b border-neutral-900 align-top whitespace-nowrap">
+                    <div className="flex items-center gap-2">
+                      {logoSrc ? (
+                        <img src={logoSrc} alt={`${row.team_name} logo`} className="h-6 w-6" />
+                      ) : (
+                        <span className="text-neutral-500">—</span>
+                      )}
+                      <span>{row.team_name}</span>
+                    </div>
+                  </td>
+
                   {visibleGwColumns.map((gw) => {
                     const cell = row.perGW[gw];
                     const opp = cell?.opponent_name || "";
@@ -261,21 +267,24 @@ export default function TeamPredictionRankingsTable() {
                         bg = rawVal > 1.7 ? "bg-green-900/90" : rawVal < 1.1 ? "bg-red-900/90" : "bg-yellow-900/90";
                       } else if (selectedMetric === "Opposition_XGC") {
                         bg = rawVal > 1.6 ? "bg-green-900/90" : rawVal < 1.1 ? "bg-red-900/90" : "bg-yellow-900/90";
-                      } 
-                      else if (selectedMetric === "Opposition_XG") {
+                      } else if (selectedMetric === "Opposition_XG") {
                         bg = rawVal < 1.1 ? "bg-green-900/90" : rawVal > 1.6 ? "bg-red-900/90" : "bg-yellow-900/90";
-                      } 
-                      else if (selectedMetric === "CS") {
+                      } else if (selectedMetric === "CS") {
                         const p = rawVal > 1 ? rawVal / 100 : rawVal; // normalize to 0-1
                         bg = p > 0.35 ? "bg-green-900/90" : p < 0.25 ? "bg-red-900/90" : "bg-yellow-900/90";
                       }
                     }
 
                     return (
-                      <td key={`${row.team_name}-gw-${gw}`} className="px-1 sm:px-1 py-1 sm:py-2 border-b border-neutral-900 align-top text-center">
+                      <td
+                        key={`${row.team_name}-gw-${gw}`}
+                        className="px-1 sm:px-1 py-1 sm:py-2 border-b border-neutral-900 align-top text-center min-w-[88px] w-[88px]"
+                      >
                         {cell ? (
                           <div className={`flex flex-col text-sm leading-tight rounded-md px-1 py-1 ${bg}`}>
-                            <span className="font-medium truncate" title={opp}>{opp || "TBD"}</span>
+                            <span className="font-medium truncate" title={opp}>
+                              {opp || "TBD"}
+                            </span>
                             <span className="text-xs text-neutral-300">({hav})</span>
                             <span className="text-xs">{rawVal !== null ? formatCellValue(rawVal) : "-"}</span>
                           </div>
@@ -285,7 +294,8 @@ export default function TeamPredictionRankingsTable() {
                       </td>
                     );
                   })}
-                  <td className="px-3 py-2 border-b border-neutral-900 align-top font-semibold">
+
+                  <td className="px-3 py-2 border-b border-neutral-900 align-top font-semibold min-w-[90px] w-[90px]">
                     {formatTotalValue(row.total)}
                   </td>
                 </tr>
@@ -304,10 +314,7 @@ export default function TeamPredictionRankingsTable() {
         <p>
           On small screens, only Team, Logo, Total and up to three GW columns are shown. Use the pager to view more GWs.
         </p>
-        <p>
-          Ranking is by <span className="font-semibold">Total</span> across the selected GW range. Metrics marked as
-          lower-is-better
-        </p>
+        
       </div>
     </div>
   );
