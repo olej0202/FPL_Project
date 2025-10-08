@@ -711,10 +711,10 @@ def Generate_point_predictions():
         stat_cbi_player= stat_cbi[stat_cbi["Name"]==player].sort_values(by=["GW", "opp_stat"])
 
         overscore=max(0.9,player_data["Average_Overscore"].values[0])
-        overscore=min(1.2,overscore)
+        overscore=min(1.15,overscore)
 
         overassist=max(0.9,player_data["Average_OverAssist"].values[0])
-        overassist=min(1.5,overassist)
+        overassist=min(1.3,overassist)
         
         historic_xg=player_data["rolling_XG_historic"].values[0]
         historic_Assist=player_data["rolling_Assist_historic"].values[-1]
@@ -752,7 +752,7 @@ def Generate_point_predictions():
 
                 bps.append(max(0.5,(xgb_bps_player["pred"].values[i]*0.3
                                    +stat_bps_player["pred"].values[i]*0.5
-                                   +max(0.5,cluster_bps_player["pred"].values[i]*0.2*0.04)))*0.8)
+                                   +max(0.5,cluster_bps_player["pred"].values[i]*0.2*0.04)))*0.6)
             except:
                 bps.append(0)
 

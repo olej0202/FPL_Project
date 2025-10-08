@@ -33,14 +33,12 @@ Manual_team_defensive_adjustments = {6:0.9 }
 
 
 Manual_NewPlayer_Adjustments={
-        "Viktor_Gyökeres":["Alexander_Isak","Kai_Havertz","Yoane_Wissa"],
         "Benjamin_Sesko":["Kai_Havertz","Rasmus_Højlund","Marcus_Rashford"], 
         "Hugo_Ekitiké":["Kai_Havertz","Alexander_Isak" ],
-        "Nick_Woltemade":["Kai_Havertz","Alexander_Isak" ],  
+        "Nick_Woltemade":["Kai_Havertz","Alexander_Isak","Anthony_Gordon" ],  
     }
 
 Manual_Player_Adjustments={
-        "Anthony_Gordon":["Alexander_Isak","Harvey_Barnes"],   
         "Igor_Thiago Nascimento Rodrigues":["Yoane_Wissa","Bryan_Mbeumo"],
         "Mohamed_Salah":["Luis_Díaz","Mohamed_Salah" ]        }
 
@@ -48,7 +46,7 @@ Manual_Player_Adjustments={
 Manual_Player_Risk={
         "Alexander_Isak":0.8,
         "Igor_Thiago Nascimento Rodrigues":0.7,
-        "Jack_Grealish":0.7,
+        "Jack_Grealish":0.6,
         "Yoane_Wissa":0.7,
         "Bryan_Mbeumo":0.6,
         "Matheus_Santos Carneiro Da Cunha":0.7,
