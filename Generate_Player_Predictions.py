@@ -88,7 +88,7 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
                own_data_xg_pred=((df['Share_of_XG_share'].values[h]*0.3+df['Rolling_adjusted_XG_share'].values[h]*0.4+0.3*df['rolling_Threat_share'].values[h])*team_xg)*0.8+0.2*((df['Rolling_adjusted_XG'].values[h]*0.7+df['rolling_Adjusted_XG_historic'].values[h]*0.3)*df["opposition_xgc"].values[h])
                team_data_xg_pred=(df['Understat_POSXG'].values[h]*df["opposition_xgc"].values[h]+df['Understat_POSXG_Share'].values[h]*team_xg)*(0.5) 
         
-               player_preds.append(own_data_xg_pred*(1-fordelings_faktor)+fordelings_faktor*team_data_xg_pred+df['Team_Pen_Data'].values[h]*df['Pen_Number'].values[h])
+               player_preds.append(own_data_xg_pred*(1-fordelings_faktor)+fordelings_faktor*team_data_xg_pred+df['Team_Pen_Data'].values[h]*df['Pen_Number'].values[h]*0.7)
                real_variable="expected_goals" 
             if(pred_variable=="Assist"):
                #own_data_xa_pred=((df['Rolling_adjusted_XA'].values[h]*0.7+df['rolling_Adjusted_XA_historic'].values[h]*0.3)*df["opposition_xgc"].values[h]+df['Share_of_XA'].values[h]*team_xg)*(0.5)
@@ -732,8 +732,8 @@ def Generate_point_predictions():
         for i in range(len(player_data)):
             try:
                 goals.append(((xgb_goals_player["pred"].values[i]*0
-                         +stat_goals_player["pred"].values[i]*0.8
-                         +DNN_goals_player["pred"].values[i]*0.2
+                         +stat_goals_player["pred"].values[i]*0.75
+                         +DNN_goals_player["pred"].values[i]*0.25
                          +CLUSTER_goals_player["pred"].values[i]*0.0))*overscore)
             except:
                 goals.append(0)
@@ -793,11 +793,11 @@ def Generate_point_predictions():
             summary_dataset.to_csv("debug2.csv")
             New_dataset.to_csv("debug1.csv")
         if(position=="FWD"):
-            summary_dataset["Points_prediction"]=(2+summary_dataset["Goal_pred"]*5.5
+            summary_dataset["Points_prediction"]=(2+summary_dataset["Goal_pred"]*6
                                                   +summary_dataset["Assist_pred"]*3
                                                   +summary_dataset["Bonus_pred"])*0.9+0.1*summary_dataset["Fantasy_pred"]+(summary_dataset["CBI_pred"]/12)*0.0*2
         elif(position=="MID"):
-            summary_dataset["Points_prediction"]=(2+summary_dataset["Goal_pred"]*5
+            summary_dataset["Points_prediction"]=(2+summary_dataset["Goal_pred"]*5.5
                                                   +summary_dataset["Assist_pred"]*3
                                                   +summary_dataset["Bonus_pred"]
                                                   +summary_dataset["GC_pred"])*0.9+0.1*summary_dataset["Fantasy_pred"]+((summary_dataset["CBI_pred"]/12)*0.7+0.3*cbi_hit_rate)*0.8*2
