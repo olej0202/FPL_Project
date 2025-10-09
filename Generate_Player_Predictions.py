@@ -794,11 +794,11 @@ def Generate_point_predictions():
             New_dataset.to_csv("debug1.csv")
         if(position=="FWD"):
             summary_dataset["Points_prediction"]=(2+summary_dataset["Goal_pred"]*6
-                                                  +summary_dataset["Assist_pred"]*3
+                                                  +summary_dataset["Assist_pred"]*3.5
                                                   +summary_dataset["Bonus_pred"])*0.9+0.1*summary_dataset["Fantasy_pred"]+(summary_dataset["CBI_pred"]/12)*0.0*2
         elif(position=="MID"):
             summary_dataset["Points_prediction"]=(2+summary_dataset["Goal_pred"]*5.5
-                                                  +summary_dataset["Assist_pred"]*3
+                                                  +summary_dataset["Assist_pred"]*3.5
                                                   +summary_dataset["Bonus_pred"]
                                                   +summary_dataset["GC_pred"])*0.9+0.1*summary_dataset["Fantasy_pred"]+((summary_dataset["CBI_pred"]/12)*0.7+0.3*cbi_hit_rate)*0.8*2
             
