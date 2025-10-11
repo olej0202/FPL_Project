@@ -1086,7 +1086,7 @@ def main_Transform():
     df_all = pd.concat([df_26,df_25,df_24, df_23], ignore_index=True)
     df_all["name"] = df_all["name"].str.replace(" ", "_", n=1, regex=False)
     
-    df_all.to_csv("Fantasy_Merged.csv")
+    
     
     
     newest_df = pd.DataFrame()
@@ -1119,6 +1119,8 @@ def main_Transform():
 }
     df_all["name"] = df_all["name"].apply(lambda n: name_map.get(n, n))
     unique_players = df_all[["name"]].drop_duplicates()
+    
+    df_all.to_csv("Fantasy_Merged.csv")
 
     for index, row in unique_players.iterrows():
         data = []
@@ -1279,7 +1281,7 @@ def main_Transform():
             player_df["rolling_Adjusted_XA_historic"] = player_df['Adjusted_XA'].rolling(window=30, min_periods=1).mean()
             player_df["Share_of_XG"]=player_df['expected_goals'].rolling(window=20, min_periods=1).sum()/player_df["Team_XG"].rolling(window=20, min_periods=1).sum()
             player_df["Share_of_XA"]=player_df['expected_assists'].rolling(window=20, min_periods=1).sum()/player_df["Team_XA"].rolling(window=20, min_periods=1).sum()
-            player_df['defcon_adjusted'] = np.where(player_df['position'].eq('DEF'),player_df['defcon'].clip(upper=13),player_df['defcon'].clip(upper=15))
+            player_df['defcon_adjusted'] = np.where(player_df['position'].eq('DEF'),player_df['defcon'].clip(upper=14),player_df['defcon'].clip(upper=16))
             player_df['defcon_hit_rate'] = ((player_df['position'].eq('DEF') & player_df['defcon'].gt(9)) |(~player_df['position'].eq('DEF') & player_df['defcon'].gt(11))).astype(int)
             player_df['defcon_avg'] = player_df['defcon_adjusted'].where(player_df['defcon'] > 0).rolling(30, min_periods=1).mean()
             player_df['defcon_avg_hit_rate'] = player_df['defcon_hit_rate'].where(player_df['defcon'] > 0).rolling(30, min_periods=1).mean()

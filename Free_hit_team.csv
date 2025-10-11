@@ -1,15 +1,15 @@
 ,Name,position,status,photo,GW,web_name,Is_captain
-0,Amara_Nallo,DEF,Bench,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_14-110.png,8,Nallo,False
-1,Antoine_Semenyo,MID,Playing,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_91-110.png,8,Semenyo,False
-2,Axel_Tuanzebe,DEF,Bench,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_90-110.png,8,Tuanzebe,False
-3,Caoimhín_Kelleher,GKP,Playing,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_94-110.png,8,Kelleher,False
+0,Alex_Murphy,DEF,Bench,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_4-110.png,8,A.Murphy,False
+1,Antonín_Kinský,GKP,Bench,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_6-110.png,8,Kinsky,False
+2,Ayden_Heaven,DEF,Bench,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_1-110.png,8,Heaven,False
+3,Chido_Obi,FWD,Bench,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_1-110.png,8,Obi,False
 4,Daniel_Muñoz,DEF,Playing,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_31-110.png,8,Muñoz,False
-5,Erling_Haaland,FWD,Playing,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_43-110.png,8,Haaland,True
-6,Freddie_Woodman,GKP,Bench,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_14-110.png,8,Woodman,False
-7,Ismaïla_Sarr,MID,Playing,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_31-110.png,8,Sarr,False
-8,Jean-Philippe_Mateta,FWD,Playing,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_31-110.png,8,Mateta,False
-9,Jurriën_Timber,DEF,Playing,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_3-110.png,8,J.Timber,False
-10,Marc_Guiu Paz,FWD,Bench,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_8-110.png,8,Marc Guiu,False
+5,David_Raya Martin,GKP,Playing,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_3-110.png,8,Raya,False
+6,Enzo_Fernández,MID,Playing,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_8-110.png,8,Enzo,False
+7,Erling_Haaland,FWD,Playing,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_43-110.png,8,Haaland,True
+8,Ismaïla_Sarr,MID,Playing,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_31-110.png,8,Sarr,False
+9,Jean-Philippe_Mateta,FWD,Playing,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_31-110.png,8,Mateta,False
+10,Jurriën_Timber,DEF,Playing,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_3-110.png,8,J.Timber,False
 11,Mohamed_Salah,MID,Playing,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_14-110.png,8,M.Salah,False
 12,Mohammed_Kudus,MID,Playing,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_6-110.png,8,Kudus,False
 13,Nathan_Collins,DEF,Playing,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_94-110.png,8,Collins,False
