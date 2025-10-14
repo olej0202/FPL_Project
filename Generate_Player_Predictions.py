@@ -788,6 +788,7 @@ def Generate_point_predictions():
 
         summary_dataset = New_dataset.groupby(columns_to_include)[["Goal_pred", "Assist_pred", "Bonus_pred", "GC_pred", "Fantasy_pred", "CBI_pred"]].sum().reset_index()
         summary_dataset["Average_Overscore"]=player_data["Average_Overscore"].values[0]
+        summary_dataset["Point_STD"]=player_data["TP_std_20"].values[0]
         summary_dataset = summary_dataset.fillna(0)
         if(New_dataset["name"].values[0]=='Matheus_Santos Carneiro da Cunha'):
             summary_dataset.to_csv("debug2.csv")

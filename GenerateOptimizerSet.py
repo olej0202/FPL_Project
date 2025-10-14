@@ -46,6 +46,8 @@ def GenerateOptimizeSet(Current_data_path):
     visual_df["news"] = visual_df["news"].fillna("No news")
     visual_df["web_name"] = visual_df["web_name"].fillna("Ukjent")
     visual_df["DefCon"] = visual_df["DefCon"].fillna(0)
+    visual_df["Point_STD"] = visual_df["Point_STD"].fillna(3)
+    
 
     
     cols_to_offset=["Goal_pred","Assist_pred","Points_prediction"]
@@ -115,7 +117,7 @@ def GenerateOptimizeSet(Current_data_path):
 )
     
 
-    constant_cols = ["name", "position","value", 'team_code','selected','web_name','DefCon','offset', 'minutes_multiplier','0']
+    constant_cols = ["name", "position","value", 'team_code','selected','web_name','DefCon','Point_STD','offset', 'minutes_multiplier','0']
     
 
     pivoted_df = optimized_player_set.pivot_table(
