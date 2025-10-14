@@ -424,6 +424,7 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
             own_new_row[columns_to_average] = player_cluster[columns_to_average].mean()*1
             own_new_row["Average_Overscore"]=1
             own_new_row["Average_OverAssist"]=1
+            own_new_row["TP_std_20"]=3
             if has_history==1:
                 own_new_row["average_minutes"]=average_minutes
             else:
