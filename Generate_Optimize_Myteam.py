@@ -204,8 +204,7 @@ def optimize_my_team(team_id=6758079,wildcard_round=8, bb_round=40,free_hit_roun
     data = pd.read_csv("Model_Optimizer.csv")
     #data = data[~data["name"].isin(banned_list)]
     cols = GW_list
-    for col in cols:
-        data[col] = np.where(data["offset"] < 1, data[col] * data["offset"], data[col] * data["minutes_multiplier"])
+    
         
     banned_mask = data["name"].isin(banned_list)
     for col in cols:

@@ -470,7 +470,7 @@ def Generate_Understat_dataset(current_players,run_player_pos):
 
     def adjust_measure_safe(g: pd.DataFrame, measure_name: str,
                             w_threat: float = 0.4, w_xgc: float = 0.6,
-                            smoothing: float = 0.07, min_std_mult: float = 1.5,
+                            smoothing: float = 0.08, min_std_mult: float = 1.5,
                             start_from: str = "mean") -> pd.Series:
         """Stateful smoother per group; returns a Series aligned to g.index."""
         # ensure expected columns exist

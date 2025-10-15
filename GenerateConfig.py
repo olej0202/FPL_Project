@@ -45,15 +45,15 @@ Manual_Player_Adjustments={
 
 Manual_Player_Risk={
         "Alexander_Isak":0.8,
-        "Igor_Thiago Nascimento Rodrigues":0.7,
+        "Igor_Thiago Nascimento Rodrigues":0.5,
         "Jack_Grealish":0.7,
         "Yoane_Wissa":0.7,
         "Bryan_Mbeumo":0.6,
-        "Matheus_Santos Carneiro Da Cunha":0.7,
+        "Matheus_Santos Carneiro Da Cunha":0.6,
         "Mohammed_Kudus":0.7,
         "Benjamin_Sesko":0.7,
         "Hugo_Ekitiké":0.5,
-        "Nick_Woltemade":0.7
+        "Nick_Woltemade":0.6
         
 }
 
