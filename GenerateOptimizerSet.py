@@ -112,7 +112,7 @@ def GenerateOptimizeSet(Current_data_path):
     
     optimized_player_set["Points_prediction"] = np.where(
     optimized_player_set["position"] == "GKP",
-    optimized_player_set["Points_prediction"] * 1,
+    optimized_player_set["Points_prediction"] * 0.8,
     optimized_player_set["Points_prediction"]
 )
     
