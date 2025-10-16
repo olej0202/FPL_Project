@@ -106,7 +106,7 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
             
             if(pred_variable=="bps"):
                real_variable="bonus" 
-               player_preds.append((df['Rolling_adjusted_BPS'].values[h])*0.045)
+               player_preds.append((df['Rolling_adjusted_BPS'].values[h]*0.4+df['rolling_bps_historic'].values[h]*0.3+min(0.4,df['Rolling_BPS_per_90'].values[h])*90*0.3)*0.04)
                
             if(pred_variable=="CBI"):
                real_variable="cbi" 
@@ -753,8 +753,8 @@ def Generate_point_predictions():
             try:
 
                 bps.append(max(0.5,(xgb_bps_player["pred"].values[i]*0.3
-                                   +stat_bps_player["pred"].values[i]*0.5
-                                   +max(0.5,cluster_bps_player["pred"].values[i]*0.2*0.04)))*0.6)
+                                   +stat_bps_player["pred"].values[i]*0.6
+                                   +max(0.5,cluster_bps_player["pred"].values[i]*0.1*0.04)))*0.65)
             except:
                 bps.append(0)
 

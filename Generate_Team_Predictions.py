@@ -820,7 +820,7 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
 
     proba1 = model_xg.predict_proba(new_input_XG)
     proba2 = model_xg.predict_proba(new_input_XG2)
-    weights = np.array([0.4, 1.1, 1.5, 2.6])
+    weights = np.array([0.4, 1.1, 1.65, 2.6])
     
 
     xg = proba1 @ weights
@@ -882,7 +882,7 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
 
     xgc_proba1 = model_xgc.predict_proba(new_input_XGC)
     xgc_proba2 = model_xgc.predict_proba(new_input_XGC2)
-    weights = np.array([0.4, 1.1, 1.5, 2.4])
+    weights = np.array([0.4, 1.1, 1.65, 2.6])
 
     xgc = xgc_proba1 @ weights
     xgc2 = xgc_proba2 @ weights    
@@ -978,8 +978,8 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
     team_pred_visual1=pd.read_csv("Team_prediction_visual1.csv")
     team_pred_visual2=pd.read_csv("Team_prediction_visual2.csv")
     
-    team_pred_visual1[["home_goals","away_goals"]]=team_pred_visual1[["home_goals","away_goals"]]*0.6+team_pred_visual2[["home_goals","away_goals"]]*0.4
-    team_pred_visual1[["Clean_Sheet_home","Clean_Sheet_away"]]=team_pred_visual1[["Clean_Sheet_home","Clean_Sheet_away"]]*0.6+team_pred_visual2[["Clean_Sheet_home","Clean_Sheet_away"]]*0.4
+    team_pred_visual1[["home_goals","away_goals"]]=team_pred_visual1[["home_goals","away_goals"]]*0.5+team_pred_visual2[["home_goals","away_goals"]]*0.5
+    team_pred_visual1[["Clean_Sheet_home","Clean_Sheet_away"]]=team_pred_visual1[["Clean_Sheet_home","Clean_Sheet_away"]]*0.5+team_pred_visual2[["Clean_Sheet_home","Clean_Sheet_away"]]*0.5
 
     team_pred_visual1.to_csv("Team_prediction_visual.csv")
     
