@@ -27,6 +27,7 @@ import {
   Calendar,
   Menu,
   X,
+  Wrench,
 } from "lucide-react";
 
 export default function App() {
@@ -85,12 +86,14 @@ export default function App() {
           </div>
 
           {/* Mobile Menu Button */}
-          <div className="md:hidden">
+          <div className="md:hidden flex items-center">
             <button
               onClick={() => setMenuOpen(true)}
-              className="p-2 rounded border border-royal-gold"
+              className="px-4 rounded border border-royal-gold  flex items-center"
             >
+              <span className="text-lg mr-2">All Tools</span>
               <Menu size={22} />
+              
             </button>
           </div>
         </div>
