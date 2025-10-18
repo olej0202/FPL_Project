@@ -164,7 +164,7 @@ def get_my_team(team_id=46805,Last_GW=4):
 
 
 
-def optimize_my_team(team_id=6758079,wildcard_round=8, bb_round=40,free_hit_round=40,Last_GW=4,banned_list=[],GW_list=["0","5","6","7","8","9"],n_hits=0, current_player_path="Raw_Data_25/current_players.csv"):
+def optimize_my_team(team_id=7025308,wildcard_round=8, bb_round=10,free_hit_round=40,Last_GW=7,banned_list=[],GW_list=["0","8","9","10","11","12","13","14"],n_hits=0, current_player_path="Raw_Data_25/current_players.csv"):
     current_fixture_path="Raw_Data_25/Fantasy_season_2025_Fixtures.csv"
     Last_GW=Get_times(current_fixture_path)
     start = max(Last_GW + 1, 1)  # avoid duplicating '0' if n < 0
