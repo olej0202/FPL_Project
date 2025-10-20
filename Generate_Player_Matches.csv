@@ -28,7 +28,7 @@
 26,Albert_Sambi Lokonga,Sambi,Albert Sambi Lokonga,100.0,name-strict,Albert Sambi Lokonga,MC,1
 27,Kai_Havertz,Havertz,Kai Havertz,100.0,name-strict,Kai Havertz,FW,1
 28,Gabriel_Fernando de Jesus,G.Jesus,Gabriel Jesus,100.0,name-strict,Gabriel Jesus,FW,1
-29,Eberechi_Eze,Eze,Eberechi Eze,100.0,name-strict,Eberechi Eze,LW,1
+29,Eberechi_Eze,Eze,Eberechi Eze,100.0,name-strict,Eberechi Eze,MC,1
 30,Cristhian_Mosquera,Mosquera,Cristhian Mosquera,100.0,name-strict,Cristhian Mosquera,CB,1
 31,Viktor_Gyökeres,Gyökeres,Viktor Gyokeres,100.0,name-strict,Viktor Gyokeres,FW,1
 32,Max_Dowman,Dowman,Max Dowman,100.0,name-strict,Max Dowman,SUB,1
@@ -54,8 +54,8 @@
 52,Leon_Bailey,Bailey,Leon Bailey,100.0,name-strict,Leon Bailey,RW,1
 53,Emiliano_Buendía Stati,Buendía,Emiliano Buendía,95.0,name-strict,Emiliano Buendía,LW,1
 54,Samuel_Iling-Junior,Iling Jr,Unknown for understat,,no-match,,SUB,1
-55,Donyell_Malen,Malen,Donyell Malen,100.0,name-strict,Donyell Malen,RW,1
-56,John_McGinn,McGinn,John McGinn,100.0,name-strict,John McGinn,RW,1
+55,Donyell_Malen,Malen,Donyell Malen,100.0,name-strict,Donyell Malen,FW,1
+56,John_McGinn,McGinn,John McGinn,100.0,name-strict,John McGinn,DM,1
 57,Ross_Barkley,Barkley,Ross Barkley,100.0,name-strict,Ross Barkley,DM,1
 58,Enzo_Barrenechea,Barrenechea,Unknown for understat,,no-match,,SUB,1
 59,Lewis_Dobbin,Dobbin,Lewis Dobbin,100.0,name-strict,Lewis Dobbin,LW,1
@@ -86,7 +86,7 @@
 84,Hjalmar_Ekdal,Ekdal,Hjalmar Ekdal,100.0,name-strict,Hjalmar Ekdal,CB,1
 85,Maxime_Estève,Estève,Maxime Estève,100.0,name-strict,Maxime Estève,CB,1
 86,Quilindschy_Hartman,Hartman,Quilindschy Hartman,100.0,name-strict,Quilindschy Hartman,DL,1
-87,Bashir_Humphreys,Humphreys,Unknown for understat,,no-match,,SUB,1
+87,Bashir_Humphreys,Humphreys,Bashir Humphreys,100.0,name-strict,Bashir Humphreys,SUB,1
 88,Jordan_Beyer,Jordan,Jordan Ayew,90.0,web_name-relaxed,Jordan Ayew,AMC,1
 89,Lucas_Pires Silva,Lucas Pires,Unknown for understat,,no-match,,SUB,1
 90,Shurandy_Sambo,Sambo,Unknown for understat,,no-match,,SUB,1
@@ -108,13 +108,13 @@
 106,Oluwaseun_Adewumi,Adewumi,Unknown for understat,,no-match,,SUB,1
 107,Jaydon_Banel,Banel,Unknown for understat,,no-match,,SUB,1
 108,Mike_Trésor Ndayishimiye,Trésor,Mike Trésor,90.0,name-relaxed,Mike Trésor,LW,1
-109,Zian_Flemming,Flemming,Zian Flemming,100.0,name-strict,Zian Flemming,SUB,1
+109,Zian_Flemming,Flemming,Zian Flemming,100.0,name-strict,Zian Flemming,FW,1
 110,Zeki_Amdouni,Amdouni,Zeki Amdouni,100.0,name-strict,Zeki Amdouni,FW,1
 111,Lyle_Foster,Foster,Lyle Foster,100.0,name-strict,Lyle Foster,FW,1
-112,Ashley_Barnes,Barnes,Harvey Barnes,90.0,web_name-relaxed,Harvey Barnes,LW,1
+112,Ashley_Barnes,Barnes,Ashley Barnes,100.0,name-strict,Ashley Barnes,SUB,1
 113,Michael_Obafemi,Obafemi,Michael Obafemi,100.0,name-strict,Michael Obafemi,SUB,1
 114,Martin_Dúbravka,Dúbravka,Martin Dubravka,100.0,name-strict,Martin Dubravka,GK,1
-115,Lesley_Ugochukwu,Ugochukwu,Chimuanya Ugochukwu,90.0,web_name-relaxed,Chimuanya Ugochukwu,MC,1
+115,Lesley_Ugochukwu,Ugochukwu,Chimuanya Ugochukwu,90.0,web_name-relaxed,Chimuanya Ugochukwu,AMC,1
 116,Armando_Broja,Broja,Armando Broja,100.0,name-strict,Armando Broja,FW,1
 117,Florentino_Ibrain Morris Luís,Florentino,Florentino Luís,90.0,web_name-relaxed,Florentino Luís,MC,1
 118,Norberto_Murara Neto,Neto,Neto,90.0,name-relaxed,Neto,GK,1
@@ -136,7 +136,7 @@
 134,Antoine_Semenyo,Semenyo,Antoine Semenyo,100.0,name-strict,Antoine Semenyo,RW,1
 135,Marcus_Tavernier,Tavernier,Marcus Tavernier,100.0,name-strict,Marcus Tavernier,AMC,1
 136,Tyler_Adams,Adams,Tyler Adams,100.0,name-strict,Tyler Adams,DM,1
-137,David_Brooks,Brooks,David Brooks,100.0,name-strict,David Brooks,LW,1
+137,David_Brooks,Brooks,David Brooks,100.0,name-strict,David Brooks,RW,1
 138,Ryan_Christie,Christie,Ryan Christie,100.0,name-strict,Ryan Christie,DM,1
 139,Lewis_Cook,Cook,Lewis Cook,100.0,name-strict,Lewis Cook,DM,1
 140,Philip_Billing,Philip,Philip Billing,100.0,name-strict,Philip Billing,AMC,1
@@ -150,11 +150,11 @@
 148,Francisco_Evanilson de Lima Barbosa,Evanilson,Evanilson,90.0,name-relaxed,Evanilson,FW,1
 149,Enes_Ünal,Enes Ünal,Enes Ünal,100.0,name-strict,Enes Ünal,FW,1
 150,Daniel_Adu-Adjei,Adu-Adjei,Unknown for understat,,no-match,,SUB,1
-151,Eli_Junior Kroupi,Kroupi.Jr,Eli Junior Kroupi,100.0,name-strict,Eli Junior Kroupi,SUB,1
+151,Eli_Junior Kroupi,Kroupi.Jr,Eli Junior Kroupi,100.0,name-strict,Eli Junior Kroupi,FW,1
 152,Ben_Gannon-Doak,Gannon-Doak,Unknown for understat,,no-match,,SUB,1
 153,Bafodé_Diakité,Diakité,Bafode Diakite,100.0,name-strict,Bafode Diakite,CB,1
 154,Remy_Rees-Dottin,Rees-Dottin,Remy Rees-Dottin,100.0,name-strict,Remy Rees-Dottin,SUB,1
-155,Amine_Adli,Adli,Amine Adli,100.0,name-strict,Amine Adli,SUB,1
+155,Amine_Adli,Adli,Amine Adli,100.0,name-strict,Amine Adli,AMC,1
 156,Álex_Jiménez Sánchez,A.Jimenez,Unknown for understat,,no-match,,SUB,1
 157,Veljko_Milosavljevic,Milosavljević,Veljko Milosavljevic,100.0,name-strict,Veljko Milosavljevic,CB,1
 158,Reiss_Nelson,Nelson,Reiss Nelson,100.0,name-strict,Reiss Nelson,LW,1
@@ -166,7 +166,7 @@
 164,Hákon_Rafn Valdimarsson,Valdimarsson,Hákon Valdimarsson,95.0,name-strict,Hákon Valdimarsson,GK,1
 165,Nathan_Collins,Collins,Nathan Collins,100.0,name-strict,Nathan Collins,CB,1
 166,Keane_Lewis-Potter,Lewis-Potter,Keane Lewis-Potter,100.0,name-strict,Keane Lewis-Potter,DL,1
-167,Kristoffer_Ajer,Ajer,Kristoffer Ajer,100.0,name-strict,Kristoffer Ajer,DR,1
+167,Kristoffer_Ajer,Ajer,Kristoffer Ajer,100.0,name-strict,Kristoffer Ajer,CB,1
 168,Rico_Henry,Henry,Rico Henry,100.0,name-strict,Rico Henry,DL,1
 169,Michael_Kayode,Kayode,Michael Kayode,100.0,name-strict,Michael Kayode,DR,1
 170,Ethan_Pinnock,Pinnock,Ethan Pinnock,100.0,name-strict,Ethan Pinnock,CB,1
@@ -186,7 +186,7 @@
 184,Mathias_Jensen,Jensen,Mathias Jensen,100.0,name-strict,Mathias Jensen,MC,1
 185,Gustavo_Nunes Fernandes Gomes,Nunes,Gustavo Nunes,90.0,name-relaxed,Gustavo Nunes,SUB,1
 186,Frank_Onyeka,Onyeka,Frank Onyeka,100.0,name-strict,Frank Onyeka,MC,1
-187,Yehor_Yarmoliuk,Yarmoliuk,Yehor Yarmolyuk,93.33333333333333,name-relaxed,Yehor Yarmolyuk,DM,1
+187,Yehor_Yarmoliuk,Yarmoliuk,Yehor Yarmolyuk,93.33333333333333,name-relaxed,Yehor Yarmolyuk,MC,1
 188,Romelle_Donovan,Donovan,Unknown for understat,,no-match,,SUB,1
 189,Yunus_Emre Konak,Konak,Yunus Konak,95.0,name-strict,Yunus Konak,SUB,1
 190,Paris_Maghoma,Maghoma,Paris Maghoma,100.0,name-strict,Paris Maghoma,SUB,1
@@ -213,11 +213,11 @@
 211,Jacob_Slater,Slater,Unknown for understat,,no-match,,SUB,1
 212,Charlie_Tasker,Tasker,Unknown for understat,,no-match,,SUB,1
 213,Mitoma_Kaoru,Mitoma,Kaoru Mitoma,95.0,name-strict,Kaoru Mitoma,LW,1
-214,Georginio_Rutter,Georginio,Georginio Rutter,100.0,name-strict,Georginio Rutter,FW,1
+214,Georginio_Rutter,Georginio,Georginio Rutter,100.0,name-strict,Georginio Rutter,AMC,1
 215,Solly_March,March,Solly March,100.0,name-strict,Solly March,RW,1
 216,Yankuba_Minteh,Minteh,Yankuba Minteh,100.0,name-strict,Yankuba Minteh,RW,1
 217,Julio_Enciso Espínola,Enciso,Julio Enciso,90.0,name-relaxed,Julio Enciso,AMC,1
-218,Brajan_Gruda,Gruda,Brajan Gruda,100.0,name-strict,Brajan Gruda,AMC,1
+218,Brajan_Gruda,Gruda,Brajan Gruda,100.0,name-strict,Brajan Gruda,RW,1
 219,Jack_Hinshelwood,Hinshelwood,Jack Hinshelwood,100.0,name-strict,Jack Hinshelwood,DM,1
 220,Matt_O'Riley,O'Riley,Matt O&#039;Riley,95.0,name-strict,Matt O&#039;Riley,AMC,1
 221,Abdallah_Sima,Sima,Unknown for understat,,no-match,,SUB,1
@@ -235,510 +235,512 @@
 233,Danny_Welbeck,Welbeck,Danny Welbeck,100.0,name-strict,Danny Welbeck,FW,1
 234,Evan_Ferguson,Ferguson,Evan Ferguson,100.0,name-strict,Evan Ferguson,FW,1
 235,Stefanos_Tzimas,Tzimas,Stefanos Tzimas,100.0,name-strict,Stefanos Tzimas,SUB,1
-236,Charalampos_Kostoulas,Kostoulas,Unknown for understat,,no-match,,SUB,1
-237,Facundo_Buonanotte,Buonanotte,Facundo Buonanotte,100.0,name-strict,Facundo Buonanotte,AMC,1
-238,Robert_Sánchez,Sánchez,Robert Sánchez,100.0,name-strict,Robert Sánchez,GK,1
-239,Filip_Jörgensen,Jörgensen,Filip Jorgensen,100.0,name-strict,Filip Jorgensen,GK,1
-240,Mike_Penders,Penders,Unknown for understat,,no-match,,SUB,1
-241,Gabriel_Słonina,Slonina,Gabriel,90.0,name-relaxed,Gabriel,CB,1
-242,Marc_Cucurella Saseta,Cucurella,Marc Cucurella,90.0,name-relaxed,Marc Cucurella,DL,1
-243,Reece_James,James,Reece James,100.0,name-strict,Reece James,DR,1
-244,Trevoh_Chalobah,Chalobah,Trevoh Chalobah,100.0,name-strict,Trevoh Chalobah,CB,1
-245,Levi_Colwill,Colwill,Levi Colwill,100.0,name-strict,Levi Colwill,CB,1
-246,Malo_Gusto,Gusto,Malo Gusto,100.0,name-strict,Malo Gusto,DR,1
-247,Benoît_Badiashile Mukinayi,B.Badiashile,Benoit Badiashile Mukinayi,100.0,name-strict,Benoit Badiashile Mukinayi,CB,1
-248,Wesley_Fofana,Fofana,Wesley Fofana,100.0,name-strict,Wesley Fofana,DR,1
-249,Mamadou_Sarr,M.Sarr,Unknown for understat,,no-match,,SUB,1
-250,Tosin_Adarabioyo,Tosin,Tosin Adarabioyo,100.0,name-strict,Tosin Adarabioyo,CB,1
-251,Josh_Acheampong,Acheampong,Josh Acheampong,100.0,name-strict,Josh Acheampong,CB,1
-252,Aarón_Anselmino,Anselmino,Unknown for understat,,no-match,,SUB,1
-253,Cole_Palmer,Palmer,Cole Palmer,100.0,name-strict,Cole Palmer,AMC,1
-254,Pedro_Lomba Neto,Neto,Neto,90.0,name-relaxed,Neto,GK,1
-255,Enzo_Fernández,Enzo,Enzo Fernández,100.0,name-strict,Enzo Fernández,AMC,1
-256,Estêvão_Almeida de Oliveira Gonçalves,Estêvão,Estêvão,90.0,name-relaxed,Estêvão,RW,1
-257,Jamie_Bynoe-Gittens,Gittens,Jamie Bynoe-Gittens,100.0,name-strict,Jamie Bynoe-Gittens,LW,1
-258,Christopher_Nkunku,Nkunku,Christopher Nkunku,100.0,name-strict,Christopher Nkunku,LW,1
-259,Moisés_Caicedo Corozo,Caicedo,Moisés Caicedo,90.0,name-relaxed,Moisés Caicedo,DM,1
-260,Tyrique_George,George,Tyrique George,100.0,name-strict,Tyrique George,FW,1
-261,Roméo_Lavia,Lavia,Romeo Lavia,100.0,name-strict,Romeo Lavia,DM,1
-262,Mykhailo_Mudryk,Mudryk,Mykhailo Mudryk,100.0,name-strict,Mykhailo Mudryk,LW,1
-263,Andrey_Nascimento dos Santos,Andrey Santos,André,90.0,name-relaxed,André,MC,1
-264,Dário_Luís Essugo,D.Essugo,Unknown for understat,,no-match,,SUB,1
-265,Kendry_Páez Andrade,Paez,Unknown for understat,,no-match,,SUB,1
-266,João_Pedro Junqueira de Jesus,João Pedro,João Pedro,90.0,name-relaxed,João Pedro,AMC,1
-267,Liam_Delap,Delap,Liam Delap,100.0,name-strict,Liam Delap,FW,1
-268,Nicolas_Jackson,N.Jackson,Nicolas Jackson,100.0,name-strict,Nicolas Jackson,FW,1
-269,Marc_Guiu Paz,Marc Guiu,Marc Guiu,95.0,name-strict,Marc Guiu,SUB,1
-270,Alejandro_Garnacho,Garnacho,Alejandro Garnacho,100.0,name-strict,Alejandro Garnacho,AMC,1
-271,Jorrel_Hato,Hato,Jorrel Hato,100.0,name-strict,Jorrel Hato,DL,1
-272,Dean_Henderson,Henderson,Dean Henderson,100.0,name-strict,Dean Henderson,GK,1
-273,Walter_Benítez,Benitez,Unknown for understat,,no-match,,SUB,1
-274,Remi_Matthews,Matthews,Remi Matthews,100.0,name-strict,Remi Matthews,SUB,1
-275,Daniel_Muñoz,Muñoz,Daniel Muñoz,100.0,name-strict,Daniel Muñoz,DR,1
-276,Maxence_Lacroix,Lacroix,Maxence Lacroix,100.0,name-strict,Maxence Lacroix,CB,1
-277,Tyrick_Mitchell,Mitchell,Tyrick Mitchell,100.0,name-strict,Tyrick Mitchell,DL,1
-278,Borna_Sosa,Sosa,Ramón Sosa,90.0,web_name-relaxed,Ramón Sosa,LW,1
-279,Marc_Guéhi,Guéhi,Marc Guehi,100.0,name-strict,Marc Guehi,CB,1
-280,Chris_Richards,Richards,Chris Richards,100.0,name-strict,Chris Richards,CB,1
-281,Chadi_Riad Dnanou,Chadi Riad,Chadi Riad,90.0,name-relaxed,Chadi Riad,CB,1
-282,Nathaniel_Clyne,Clyne,Nathaniel Clyne,100.0,name-strict,Nathaniel Clyne,CB,1
-283,Rob_Holding,Holding,Rob Holding,100.0,name-strict,Rob Holding,CB,1
-284,Caleb_Kporha,Kporha,Caleb Kporha,100.0,name-strict,Caleb Kporha,SUB,1
-285,Ismaïla_Sarr,Sarr,Ismaila Sarr,100.0,name-strict,Ismaila Sarr,AMC,1
-286,Cheick_Doucouré,Doucouré,Cheick Oumar Doucoure,95.0,name-strict,Cheick Oumar Doucoure,MC,1
-287,Romain_Esse,Esse,Romain Esse,100.0,name-strict,Romain Esse,AMC,1
-288,Will_Hughes,Hughes,Will Hughes,100.0,name-strict,Will Hughes,MC,1
-289,Daichi_Kamada,Kamada,Daichi Kamada,100.0,name-strict,Daichi Kamada,MC,1
-290,Jefferson_Lerma Solís,Lerma,Jefferson Lerma,95.0,name-strict,Jefferson Lerma,MC,1
-291,Adam_Wharton,Wharton,Adam Wharton,100.0,name-strict,Adam Wharton,MC,1
-292,Asher_Agbinone,Agbinone,Asher Agbinone,100.0,name-strict,Asher Agbinone,SUB,1
-293,Naouirou_Ahamada,Ahamada,Naouirou Ahamada,100.0,name-strict,Naouirou Ahamada,SUB,1
-294,Justin_Devenny,Devenny,Justin Devenny,100.0,name-strict,Justin Devenny,LW,1
-295,Malcolm_Ebiowei,Ebiowei,Malcolm Ebiowei,100.0,name-strict,Malcolm Ebiowei,SUB,1
-296,Jesurun_Rak-Sakyi,J.Rak-Sakyi,Jesurun Rak-Sakyi,100.0,name-strict,Jesurun Rak-Sakyi,SUB,1
-297,Matheus_França de Oliveira,M.França,Matheus França,90.0,name-relaxed,Matheus França,LW,1
-298,David_Ozoh,Ozoh,David Ozoh,100.0,name-strict,David Ozoh,SUB,1
-299,Kaden_Rodney,Rodney,Unknown for understat,,no-match,,SUB,1
-300,Franco_Umeh-Chibueze,Umeh,Unknown for understat,,no-match,,SUB,1
-301,Jean-Philippe_Mateta,Mateta,Jean-Philippe Mateta,100.0,name-strict,Jean-Philippe Mateta,FW,1
-302,Eddie_Nketiah,Nketiah,Eddie Nketiah,100.0,name-strict,Eddie Nketiah,FW,1
-303,Odsonne_Édouard,Édouard,Odsonne Edouard,100.0,name-strict,Odsonne Edouard,AMC,1
-304,Zach_Marsh,Marsh,Marshall Munetsi,90.0,web_name-relaxed,Marshall Munetsi,RW,1
-305,Rio_Cardines,Cardines,Unknown for understat,,no-match,,SUB,1
-306,Yéremy_Pino Santos,Yeremy,Unknown for understat,,no-match,,SUB,1
-307,Jaydee_Canvot,Canvot,Unknown for understat,,no-match,,SUB,1
-308,Christantus_Uche,Uche,Christantus Uche,100.0,name-strict,Christantus Uche,SUB,1
-309,Kiernan_Dewsbury-Hall,Dewsbury-Hall,Kiernan Dewsbury-Hall,100.0,name-strict,Kiernan Dewsbury-Hall,AMC,1
-310,Jordan_Pickford,Pickford,Jordan Pickford,100.0,name-strict,Jordan Pickford,GK,1
-311,Mark_Travers,Travers,Mark Travers,100.0,name-strict,Mark Travers,GK,1
-312,Harry_Tyrer,Tyrer,Unknown for understat,,no-match,,SUB,1
-313,Jarrad_Branthwaite,Branthwaite,Jarrad Branthwaite,100.0,name-strict,Jarrad Branthwaite,CB,1
-314,James_Tarkowski,Tarkowski,James Tarkowski,100.0,name-strict,James Tarkowski,CB,1
-315,Vitalii_Mykolenko,Mykolenko,Vitalii Mykolenko,100.0,name-strict,Vitalii Mykolenko,DL,1
-316,Jake_O'Brien,O'Brien,Jake O&#039;Brien,95.0,name-strict,Jake O&#039;Brien,DR,1
-317,Séamus_Coleman,Coleman,Seamus Coleman,100.0,name-strict,Seamus Coleman,DR,1
-318,Michael_Keane,Keane,Michael Keane,100.0,name-strict,Michael Keane,CB,1
-319,Nathan_Patterson,Patterson,Nathan Patterson,100.0,name-strict,Nathan Patterson,DR,1
-320,Roman_Dixon,Dixon,Roman Dixon,100.0,name-strict,Roman Dixon,DR,1
-321,Reece_Welch,Welch,Unknown for understat,,no-match,,SUB,1
-322,Iliman_Ndiaye,Ndiaye,Iliman Ndiaye,100.0,name-strict,Iliman Ndiaye,RW,1
-323,Dwight_McNeil,McNeil,Dwight McNeil,100.0,name-strict,Dwight McNeil,RW,1
-324,Carlos_Alcaraz Durán,Alcaraz,Carlos Alcaraz,95.0,name-strict,Carlos Alcaraz,RW,1
-325,Idrissa_Gueye,Gana,Idrissa Gueye,100.0,name-strict,Idrissa Gueye,DM,1
-326,James_Garner,Garner,James Garner,100.0,name-strict,James Garner,DL,1
-327,Tim_Iroegbunam,Iroegbunam,Tim Iroegbunam,100.0,name-strict,Tim Iroegbunam,DM,1
-328,Harrison_Armstrong,Armstrong,Harrison Armstrong,100.0,name-strict,Harrison Armstrong,SUB,1
-329,Callum_Bates,Bates,Unknown for understat,,no-match,,SUB,1
-330,Coby_Ebere,Ebere,Eberechi Eze,90.0,web_name-relaxed,Eberechi Eze,AMC,1
-331,Isaac_Heath,Heath,Unknown for understat,,no-match,,SUB,1
-332,Jenson_Metcalfe,Metcalfe,Unknown for understat,,no-match,,SUB,1
-333,Thierno_Barry,Barry,Thierno Barry,100.0,name-strict,Thierno Barry,FW,1
-334,Norberto_Bercique Gomes Betuncal,Beto,Beto,100.0,web_name-strict,Beto,FW,1
-335,Youssef_Ramalho Chermiti,Y.Chermiti,Unknown for understat,,no-match,,SUB,1
-336,Martin_Sherif,Sherif,Unknown for understat,,no-match,,SUB,1
-337,Jack_Grealish,Grealish,Jack Grealish,100.0,name-strict,Jack Grealish,LW,1
-338,Tom_King,King,Tom King,100.0,name-strict,Tom King,SUB,1
-339,Adam_Aznou,Aznou,Unknown for understat,,no-match,,SUB,1
-340,Tyler_Onyango,Onyango,Tyler Onyango,100.0,name-strict,Tyler Onyango,SUB,1
-341,Elijah_Campbell,Campbell,Chem Campbell,90.0,web_name-relaxed,Chem Campbell,SUB,1
-342,Tyler_Dibling,Dibling,Tyler Dibling,100.0,name-strict,Tyler Dibling,AMC,1
-343,Merlin_Röhl,Röhl,Merlin Röhl,100.0,name-strict,Merlin Röhl,SUB,1
-344,Bernd_Leno,Leno,Bernd Leno,100.0,name-strict,Bernd Leno,GK,1
-345,Steven_Benda,Benda,Unknown for understat,,no-match,,SUB,1
-346,Antonee_Robinson,Robinson,Antonee Robinson,100.0,name-strict,Antonee Robinson,DL,1
-347,Joachim_Andersen,Andersen,Joachim Andersen,100.0,name-strict,Joachim Andersen,CB,1
-348,Calvin_Bassey,Bassey,Calvin Bassey,100.0,name-strict,Calvin Bassey,CB,1
-349,Timothy_Castagne,Castagne,Timothy Castagne,100.0,name-strict,Timothy Castagne,RW,1
-350,Issa_Diop,Diop,Issa Diop,100.0,name-strict,Issa Diop,CB,1
-351,Jorge_Cuenca Barreno,J.Cuenca,Jorge Cuenca,90.0,name-relaxed,Jorge Cuenca,CB,1
-352,Kenny_Tete,Tete,Kenny Tete,100.0,name-strict,Kenny Tete,DR,1
-353,Samuel_Amissah,Amissah,Unknown for understat,,no-match,,SUB,1
-354,Alex_Iwobi,Iwobi,Alex Iwobi,100.0,name-strict,Alex Iwobi,LW,1
-355,Emile_Smith Rowe,Smith Rowe,Emile Smith-Rowe,100.0,name-strict,Emile Smith-Rowe,AMC,1
-356,Adama_Traoré Diarra,Adama,Adama Traoré,90.0,name-relaxed,Adama Traoré,LW,1
-357,Andreas_Hoelgebaum Pereira,Andreas,André,90.0,name-relaxed,André,MC,1
-358,Ryan_Sessegnon,Sessegnon,Ryan Sessegnon,100.0,name-strict,Ryan Sessegnon,DL,1
-359,Harry_Wilson,Wilson,Harry Wilson,100.0,name-strict,Harry Wilson,RW,1
-360,Sander_Berge,Berge,Sander Berge,100.0,name-strict,Sander Berge,DM,1
-361,Tom_Cairney,Cairney,Tom Cairney,100.0,name-strict,Tom Cairney,DM,1
-362,Saša_Lukić,Lukić,Sasa Lukic,100.0,name-strict,Sasa Lukic,DM,1
-363,Martial_Godo,Godo,Martial Godo,100.0,name-strict,Martial Godo,SUB,1
-364,Luke_Harris,Harris,Luke Harris,100.0,name-strict,Luke Harris,SUB,1
-365,Josh_King,King,Joshua King,90.0,name-relaxed,Joshua King,AMC,1
-366,Harrison_Reed,Reed,Harrison Reed,100.0,name-strict,Harrison Reed,DM,1
-367,Raúl_Jiménez,Raúl,Raúl Jiménez,100.0,name-strict,Raúl Jiménez,FW,1
-368,Rodrigo_Muniz Carvalho,Muniz,Rodrigo,90.0,name-relaxed,Rodrigo,RW,1
-369,Benjamin_Lecomte,Lecomte,Unknown for understat,,no-match,,SUB,1
-370,Samuel_Chukwueze,Chukwueze,Unknown for understat,,no-match,,SUB,1
-371,Kevin_Santos Lopes de Macedo,Kevin,Kevin,90.0,name-relaxed,Kevin,SUB,1
-372,Jonah_Kusi-Asare,Kusi-Asare,Unknown for understat,,no-match,,SUB,1
-373,Illan_Meslier,Meslier,Illan Meslier,100.0,name-strict,Illan Meslier,GK,1
-374,Alex_Cairns,Cairns,Unknown for understat,,no-match,,SUB,1
-375,Karl_Darlow,Darlow,Karl Darlow,100.0,name-strict,Karl Darlow,GK,1
-376,Jayden_Bogle,Bogle,Jayden Bogle,100.0,name-strict,Jayden Bogle,DR,1
-377,Pascal_Struijk,Struijk,Pascal Struijk,100.0,name-strict,Pascal Struijk,CB,1
-378,Jaka_Bijol,Bijol,Unknown for understat,,no-match,,SUB,1
-379,Sebastiaan_Bornauw,Bornauw,Unknown for understat,,no-match,,SUB,1
-380,Sam_Byram,Byram,Sam Byram,100.0,name-strict,Sam Byram,SUB,1
-381,Gabriel_Gudmundsson,Gudmundsson,Gabriel Gudmundsson,100.0,name-strict,Gabriel Gudmundsson,DL,1
-382,Joe_Rodon,Rodon,Joe Rodon,100.0,name-strict,Joe Rodon,CB,1
-383,Isaac_Schmidt,Schmidt,Unknown for understat,,no-match,,SUB,1
-384,Brenden_Aaronson,Aaronson,Brenden Aaronson,100.0,name-strict,Brenden Aaronson,RW,1
-385,Wilfried_Gnonto,Gnonto,Wilfried Gnonto,100.0,name-strict,Wilfried Gnonto,LW,1
-386,Jack_Harrison,Harrison,Jack Harrison,100.0,name-strict,Jack Harrison,RW,1
-387,Daniel_James,James,Daniel James,100.0,name-strict,Daniel James,RW,1
-388,Ethan_Ampadu,Ampadu,Ethan Ampadu,100.0,name-strict,Ethan Ampadu,MC,1
-389,Sam_Greenwood,Greenwood,Sam Greenwood,100.0,name-strict,Sam Greenwood,MC,1
-390,Ilia_Gruev,Gruev,Ilia Gruev,100.0,name-strict,Ilia Gruev,MC,1
-391,Largie_Ramazani,Ramazani,Unknown for understat,,no-match,,SUB,1
-392,Tanaka_Ao,Tanaka,Ao Tanaka,95.0,name-strict,Ao Tanaka,MC,1
-393,Charlie_Crew,Crew,Unknown for understat,,no-match,,SUB,1
-394,Joe_Gelhardt,Gelhardt,Joe Gelhardt,100.0,name-strict,Joe Gelhardt,FW,1
-395,Darko_Gyabi,Gyabi,Darko Gyabi,100.0,name-strict,Darko Gyabi,SUB,1
-396,Joël_Piroe,Piroe,Joël Piroe,100.0,name-strict,Joël Piroe,FW,1
-397,Patrick_Bamford,Bamford,Patrick Bamford,100.0,name-strict,Patrick Bamford,FW,1
-398,Mateo_Joseph Fernández-Regatillo,Mateo Joseph,Mateo Joseph,90.0,name-relaxed,Mateo Joseph,SUB,1
-399,Lukas_Nmecha,Nmecha,Lukas Nmecha,100.0,name-strict,Lukas Nmecha,FW,1
-400,Sean_Longstaff,Longstaff,Sean Longstaff,100.0,name-strict,Sean Longstaff,MC,1
-401,Anton_Stach,Stach,Anton Stach,100.0,name-strict,Anton Stach,MC,1
-402,Lucas_Estella Perri,Perri,Lucas Perri,90.0,web_name-relaxed,Lucas Perri,GK,1
-403,Dominic_Calvert-Lewin,Calvert-Lewin,Dominic Calvert-Lewin,100.0,name-strict,Dominic Calvert-Lewin,FW,1
-404,Noah_Okafor,Okafor,Noah Okafor,100.0,name-strict,Noah Okafor,LW,1
-405,James_Justin,Justin,James Justin,100.0,name-strict,James Justin,DR,1
-406,Harry_Gray,Gray,Demarai Gray,90.0,web_name-relaxed,Demarai Gray,FW,1
-407,Alisson_Ramses Becker,A.Becker,Alisson,90.0,name-relaxed,Alisson,GK,1
-408,Giorgi_Mamardashvili,Mamardashvili,Unknown for understat,,no-match,,GK,1
-409,Ármin_Pécsi,Pécsi,Unknown for understat,,no-match,,SUB,1
-410,Freddie_Woodman,Woodman,Fred,90.0,name-relaxed,Fred,DM,1
-411,Jeremie_Frimpong,Frimpong,Jeremie Frimpong,100.0,name-strict,Jeremie Frimpong,DR,1
-412,Milos_Kerkez,Kerkez,Milos Kerkez,100.0,name-strict,Milos Kerkez,DL,1
-413,Andrew_Robertson,Robertson,Andrew Robertson,100.0,name-strict,Andrew Robertson,DL,1
-414,Virgil_van Dijk,Virgil,Virgil van Dijk,100.0,name-strict,Virgil van Dijk,CB,1
-415,Ibrahima_Konaté,Konaté,Ibrahima Konaté,100.0,name-strict,Ibrahima Konaté,CB,1
-416,Conor_Bradley,Bradley,Conor Bradley,100.0,name-strict,Conor Bradley,DR,1
-417,Joe_Gomez,Gomez,Joseph Gomez,90.0,web_name-relaxed,Joseph Gomez,CB,1
-418,Konstantinos_Tsimikas,Tsimikas,Konstantinos Tsimikas,100.0,name-strict,Konstantinos Tsimikas,DL,1
-419,Amara_Nallo,Nallo,Unknown for understat,,no-match,,SUB,1
-420,Rhys_Williams,R.Williams,Unknown for understat,,no-match,,SUB,1
-421,Calvin_Ramsay,Ramsay,Unknown for understat,,no-match,,SUB,1
-422,Mohamed_Salah,M.Salah,Mohamed Salah,100.0,name-strict,Mohamed Salah,RW,1
-423,Florian_Wirtz,Wirtz,Florian Wirtz,100.0,name-strict,Florian Wirtz,AMC,1
-424,Luis_Díaz,Luis Díaz,Luis Díaz,100.0,name-strict,Luis Díaz,FW,1
-425,Cody_Gakpo,Gakpo,Cody Gakpo,100.0,name-strict,Cody Gakpo,LW,1
-426,Federico_Chiesa,Chiesa,Federico Chiesa,100.0,name-strict,Federico Chiesa,FW,1
-427,Alexis_Mac Allister,Mac Allister,Alexis Mac Allister,100.0,name-strict,Alexis Mac Allister,DM,1
-428,Dominik_Szoboszlai,Szoboszlai,Dominik Szoboszlai,100.0,name-strict,Dominik Szoboszlai,DR,1
-429,Curtis_Jones,C.Jones,Curtis Jones,100.0,name-strict,Curtis Jones,DM,1
-430,Ryan_Gravenberch,Gravenberch,Ryan Gravenberch,100.0,name-strict,Ryan Gravenberch,DM,1
-431,Endo_Wataru,Endo,Wataru Endo,95.0,name-strict,Wataru Endo,DM,1
-432,Stefan_Bajčetić Maquieira,Bajcetic,Stefan Bajcetic,90.0,name-relaxed,Stefan Bajcetic,MC,1
-433,James_McConnell,McConnell,James McConnell,100.0,name-strict,James McConnell,SUB,1
-434,Tyler_Morton,Morton,Unknown for understat,,no-match,,SUB,1
-435,Trey_Nyoni,Nyoni,Unknown for understat,,no-match,,SUB,1
-436,Darwin_Núñez Ribeiro,Darwin,Darwin Núñez,90.0,name-relaxed,Darwin Núñez,FW,1
-437,Jayden_Danns,Danns,Jayden Danns,100.0,name-strict,Jayden Danns,SUB,1
-438,Alexander_Isak,Isak,Alexander Isak,100.0,name-strict,Alexander Isak,FW,1
-439,Hugo_Ekitiké,Ekitiké,Hugo Ekitike,100.0,name-strict,Hugo Ekitike,FW,1
-440,Rio_Ngumoha,Ngumoha,Rio Ngumoha,100.0,name-strict,Rio Ngumoha,SUB,1
-441,Giovanni_Leoni,Leoni,Unknown for understat,,no-match,,SUB,1
-442,James_Trafford,Trafford,James Trafford,100.0,name-strict,James Trafford,GK,1
-443,Ederson_Santana de Moraes,Ederson M.,Ederson,90.0,name-relaxed,Ederson,GK,1
-444,Stefan_Ortega Moreno,Ortega Moreno,Stefan Ortega Moreno,100.0,name-strict,Stefan Ortega Moreno,GK,1
-445,Marcus_Bettinelli,Bettinelli,Unknown for understat,,no-match,,SUB,1
-446,Rayan_Aït-Nouri,Aït-Nouri,Rayan Ait Nouri,100.0,name-strict,Rayan Ait Nouri,DL,1
-447,Joško_Gvardiol,Gvardiol,Josko Gvardiol,100.0,name-strict,Josko Gvardiol,DL,1
-448,Manuel_Akanji,Akanji,Manuel Akanji,100.0,name-strict,Manuel Akanji,CB,1
-449,Nathan_Aké,Aké,Nathan Aké,100.0,name-strict,Nathan Aké,CB,1
-450,Abdukodir_Khusanov,Khusanov,Abduqodir Khusanov,94.44444444444444,name-relaxed,Abduqodir Khusanov,DR,1
-451,Matheus_Nunes,Matheus N.,Matheus Nunes,100.0,name-strict,Matheus Nunes,DR,1
-452,Rúben_Gato Alves Dias,Rúben,Rúben Neves,90.0,web_name-relaxed,Rúben Neves,MC,1
-453,John_Stones,Stones,John Stones,100.0,name-strict,John Stones,CB,1
-454,Rico_Lewis,Lewis,Rico Lewis,100.0,name-strict,Rico Lewis,DR,1
-455,Nico_O'Reilly,O’Reilly,Nico O&#039;Reilly,95.0,name-strict,Nico O&#039;Reilly,DL,1
-456,Vitor_de Oliveira Nunes dos Reis,Vitor Reis,Vitor Reis,100.0,web_name-strict,Vitor Reis,SUB,1
-457,Omar_Marmoush,Marmoush,Omar Marmoush,100.0,name-strict,Omar Marmoush,LW,1
-458,Phil_Foden,Foden,Phil Foden,100.0,name-strict,Phil Foden,RW,1
-459,Sávio_'Savinho' Moreira de Oliveira,Savinho,Sávio,90.0,name-relaxed,Sávio,LW,1
-460,Bernardo_Veiga de Carvalho e Silva,Bernardo,Bernardo Silva,90.0,web_name-relaxed,Bernardo Silva,MC,1
-461,Rayan_Cherki,Cherki,Mathis Cherki,90.0,web_name-relaxed,Mathis Cherki,MC,1
-462,Jérémy_Doku,Doku,Jéremy Doku,100.0,name-strict,Jéremy Doku,LW,1
-463,İlkay_Gündoğan,Gündoğan,Ilkay Gündogan,100.0,name-strict,Ilkay Gündogan,AMC,1
-464,Rodrigo_Hernandez,Rodrigo,Rodrigo,90.0,name-relaxed,Rodrigo,RW,1
-465,Mateo_Kovačić,Kovačić,Mateo Kovacic,100.0,name-strict,Mateo Kovacic,DM,1
-466,Nico_González Iglesias,N.Gonzalez,Nico González,90.0,name-relaxed,Nico González,DM,1
-467,Oscar_Bobb,Bobb,Oscar Bobb,100.0,name-strict,Oscar Bobb,RW,1
-468,Claudio_Echeverri,Echeverri,Claudio Echeverri,100.0,name-strict,Claudio Echeverri,SUB,1
-469,Tijjani_Reijnders,Reijnders,Tijjani Reijnders,100.0,name-strict,Tijjani Reijnders,MC,1
-470,Sverre_Nypan,Nypan,Unknown for understat,,no-match,,SUB,1
-471,Kalvin_Phillips,Phillips,Kalvin Phillips,100.0,name-strict,Kalvin Phillips,DM,1
-472,Erling_Haaland,Haaland,Erling Haaland,100.0,name-strict,Erling Haaland,FW,1
-473,Gianluigi_Donnarumma,Donnarumma,Gianluigi Donnarumma,100.0,name-strict,Gianluigi Donnarumma,GK,1
-474,Divine_Mukasa,Mukasa,Unknown for understat,,no-match,,SUB,1
-475,Stephen_Mfuni,Mfuni,Unknown for understat,,no-match,,SUB,1
-476,Bryan_Mbeumo,Mbeumo,Bryan Mbeumo,100.0,name-strict,Bryan Mbeumo,AMC,1
-477,Altay_Bayındır,Bayindir,Altay Bayindir,90.0,web_name-relaxed,Altay Bayindir,GK,1
-478,André_Onana,Onana,André Onana,100.0,name-strict,André Onana,GK,1
-479,Elyh_Harrison,Harrison,Jack Harrison,90.0,web_name-relaxed,Jack Harrison,RW,1
-480,Tom_Heaton,Heaton,Unknown for understat,,no-match,,SUB,1
-481,Dermot_Mee,Mee,Ben Mee,90.0,web_name-relaxed,Ben Mee,CB,1
-482,Matthijs_de Ligt,De Ligt,Matthijs de Ligt,100.0,name-strict,Matthijs de Ligt,CB,1
-483,Lisandro_Martínez,Martinez,Lisandro Martínez,100.0,name-strict,Lisandro Martínez,CB,1
-484,Noussair_Mazraoui,Mazraoui,Noussair Mazraoui,100.0,name-strict,Noussair Mazraoui,DR,1
-485,Diego_León Blanco,D.Leon,Unknown for understat,,no-match,,SUB,1
-486,Diogo_Dalot Teixeira,Dalot,Diogo Dalot,90.0,name-relaxed,Diogo Dalot,DL,1
-487,Patrick_Dorgu,Dorgu,Patrick Dorgu,100.0,name-strict,Patrick Dorgu,DL,1
-488,Harry_Maguire,Maguire,Harry Maguire,100.0,name-strict,Harry Maguire,CB,1
-489,Luke_Shaw,Shaw,Luke Shaw,100.0,name-strict,Luke Shaw,CB,1
-490,Leny_Yoro,Yoro,Leny Yoro,100.0,name-strict,Leny Yoro,CB,1
-491,Harry_Amass,Amass,Harry Amass,100.0,name-strict,Harry Amass,DL,1
-492,Tyler_Fredricson,Fredricson,Tyler Fredricson,100.0,name-strict,Tyler Fredricson,CB,1
-493,Ayden_Heaven,Heaven,Ayden Heaven,100.0,name-strict,Ayden Heaven,CB,1
-494,Tyrell_Malacia,Malacia,Tyrell Malacia,100.0,name-strict,Tyrell Malacia,DL,1
-495,Bruno_Borges Fernandes,B.Fernandes,Bruno Fernandes,95.0,name-strict,Bruno Fernandes,MC,1
-496,Matheus_Santos Carneiro Da Cunha,Cunha,Matheus Cunha,90.0,web_name-relaxed,Matheus Cunha,FW,1
-497,Marcus_Rashford,Rashford,Marcus Rashford,100.0,name-strict,Marcus Rashford,FW,1
-498,Amad_Diallo,Amad,Amadou Diallo,91.66666666666666,name-relaxed,Amadou Diallo,DR,1
-499,Antony_dos Santos,Antony,Antony,90.0,name-relaxed,Antony,RW,1
-500,Mason_Mount,Mount,Mason Mount,100.0,name-strict,Mason Mount,AMC,1
-501,Carlos_Henrique Casimiro,Casemiro,Casemiro,100.0,web_name-strict,Casemiro,MC,1
-502,Kobbie_Mainoo,Mainoo,Kobbie Mainoo,100.0,name-strict,Kobbie Mainoo,MC,1
-503,Manuel_Ugarte Ribeiro,Ugarte,Manuel Ugarte,90.0,name-relaxed,Manuel Ugarte,MC,1
-504,Toby_Collyer,Collyer,Toby Collyer,100.0,name-strict,Toby Collyer,SUB,1
-505,Jayce_Fitzgerald,Fitzgerald,Unknown for understat,,no-match,,SUB,1
-506,Jack_Fletcher,J.Fletcher,Unknown for understat,,no-match,,SUB,1
-507,Sékou_Koné,Kone,Unknown for understat,,no-match,,SUB,1
-508,Jack_Moorhouse,Moorhouse,Unknown for understat,,no-match,,SUB,1
-509,Rasmus_Højlund,Højlund,Rasmus Højlund,100.0,name-strict,Rasmus Højlund,FW,1
-510,Joshua_Zirkzee,Zirkzee,Joshua Zirkzee,100.0,name-strict,Joshua Zirkzee,FW,1
-511,Chido_Obi,Obi,Chido Obi-Martin,90.0,name-relaxed,Chido Obi-Martin,FW,1
-512,Ethan_Wheatley,Wheatley,Ethan Wheatley,100.0,name-strict,Ethan Wheatley,SUB,1
-513,Benjamin_Sesko,Šeško,Benjamin Sesko,100.0,name-strict,Benjamin Sesko,FW,1
-514,Senne_Lammens,Lammens,Unknown for understat,,no-match,,GK,1
-515,Jacob_Ramsey,J.Ramsey,Jacob Ramsey,100.0,name-strict,Jacob Ramsey,MC,1
-516,Yoane_Wissa,Wissa,Yoane Wissa,100.0,name-strict,Yoane Wissa,FW,1
-517,Nick_Pope,Pope,Nick Pope,100.0,name-strict,Nick Pope,GK,1
-518,Mark_Gillespie,Gillespie,Unknown for understat,,no-match,,SUB,1
-519,Odysseas_Vlachodimos,Odysseas,Odisseas Vlachodimos,95.0,name-strict,Odisseas Vlachodimos,GK,1
-520,Lewis_Hall,Hall,Lewis Hall,100.0,name-strict,Lewis Hall,DL,1
-521,Fabian_Schär,Schär,Fabian Schär,100.0,name-strict,Fabian Schär,CB,1
-522,Sven_Botman,Botman,Sven Botman,100.0,name-strict,Sven Botman,CB,1
-523,Dan_Burn,Burn,Dan Burn,100.0,name-strict,Dan Burn,CB,1
-524,Tino_Livramento,Livramento,Valentino Livramento,90.0,web_name-relaxed,Valentino Livramento,DL,1
-525,Kieran_Trippier,Trippier,Kieran Trippier,100.0,name-strict,Kieran Trippier,DR,1
-526,Emil_Krafth,Krafth,Emil Krafth,100.0,name-strict,Emil Krafth,CB,1
-527,Jamaal_Lascelles,Lascelles,Jamaal Lascelles,100.0,name-strict,Jamaal Lascelles,CB,1
-528,Alex_Murphy,A.Murphy,Alex Murphy,100.0,name-strict,Alex Murphy,SUB,1
-529,Harrison_Ashby,Ashby,Unknown for understat,,no-match,,SUB,1
-530,Miodrag_Pivaš,Pivas,Unknown for understat,,no-match,,SUB,1
-531,Matt_Targett,Targett,Matt Targett,100.0,name-strict,Matt Targett,DL,1
-532,Anthony_Gordon,Gordon,Anthony Gordon,100.0,name-strict,Anthony Gordon,LW,1
-533,Anthony_Elanga,Elanga,Anthony Elanga,100.0,name-strict,Anthony Elanga,RW,1
-534,Harvey_Barnes,Barnes,Harvey Barnes,100.0,name-strict,Harvey Barnes,LW,1
-535,Bruno_Guimarães Rodriguez Moura,Bruno G.,Bruno Guimarães,90.0,name-relaxed,Bruno Guimarães,MC,1
-536,Jacob_Murphy,J.Murphy,Jacob Murphy,100.0,name-strict,Jacob Murphy,RW,1
-537,Joelinton_Cássio Apolinário de Lira,Joelinton,Joelinton,90.0,name-relaxed,Joelinton,MC,1
-538,Sandro_Tonali,Tonali,Sandro Tonali,100.0,name-strict,Sandro Tonali,MC,1
-539,Antoñito_Cordero Campillo,Antoñito C.,Unknown for understat,,no-match,,SUB,1
-540,Joe_Willock,Willock,Joe Willock,100.0,name-strict,Joe Willock,MC,1
-541,Isaac_Hayden,Hayden,Kaine Hayden,90.0,web_name-relaxed,Kaine Hayden,SUB,1
-542,Garang_Kuol,Kuol,Unknown for understat,,no-match,,SUB,1
-543,Lewis_Miley,L.Miley,Lewis Miley,100.0,name-strict,Lewis Miley,MC,1
-544,Joe_White,White,Joe White,100.0,name-strict,Joe White,SUB,1
-545,William_Osula,Osula,William Osula,100.0,name-strict,William Osula,FW,1
-546,Sean_Neave,Neave,Unknown for understat,,no-match,,SUB,1
-547,Aaron_Ramsdale,Ramsdale,Aaron Ramsdale,100.0,name-strict,Aaron Ramsdale,GK,1
-548,Malick_Thiaw,Thiaw,Malick Thiaw,100.0,name-strict,Malick Thiaw,CB,1
-549,Seung-Soo_Park,Seung soo,Unknown for understat,,no-match,,SUB,1
-550,Nick_Woltemade,Woltemade,Nick Woltemade,100.0,name-strict,Nick Woltemade,FW,1
-551,Oleksandr_Zinchenko,Zinchenko,Oleksandr Zinchenko,100.0,name-strict,Oleksandr Zinchenko,DL,1
-552,James_McAtee,McAtee,James McAtee,100.0,name-strict,James McAtee,RW,1
-553,Matz_Sels,Sels,Matz Sels,100.0,name-strict,Matz Sels,GK,1
-554,Carlos_Miguel dos Santos Pereira,C.Miguel,Unknown for understat,,no-match,,SUB,1
-555,Matt_Turner,Turner,Matt Turner,100.0,name-strict,Matt Turner,GK,1
-556,Nikola_Milenković,Milenković,Nikola Milenkovic,100.0,name-strict,Nikola Milenkovic,CB,1
-557,Murillo_Costa dos Santos,Murillo,Murillo,90.0,name-relaxed,Murillo,CB,1
-558,Ola_Aina,Aina,Ola Aina,100.0,name-strict,Ola Aina,DR,1
-559,Neco_Williams,N.Williams,Neco Williams,100.0,name-strict,Neco Williams,DL,1
-560,David_Mota Veiga Teixeira do Carmo,David Carmo,Unknown for understat,,no-match,,SUB,1
-561,Jair_Paula da Cunha Filho,Jair Cunha,Unknown for understat,,no-match,,SUB,1
-562,Felipe_Rodrigues da Silva,Morato,Rodri,90.0,name-relaxed,Rodri,DM,1
-563,Omar_Richards,O.Richards,Unknown for understat,,no-match,,SUB,1
-564,Zach_Abbott,Abbott,George Abbott,90.0,web_name-relaxed,George Abbott,SUB,1
-565,Willy_Boly,Boly,Willy Boly,100.0,name-strict,Willy Boly,CB,1
-566,Morgan_Gibbs-White,Gibbs-White,Morgan Gibbs-White,100.0,name-strict,Morgan Gibbs-White,AMC,1
-567,Callum_Hudson-Odoi,Hudson-Odoi,Callum Hudson-Odoi,100.0,name-strict,Callum Hudson-Odoi,LW,1
-568,Elliot_Anderson,Anderson,Elliot Anderson,100.0,name-strict,Elliot Anderson,DM,1
-569,João_Pedro Ferreira da Silva,Jota,João Pedro,90.0,name-relaxed,João Pedro,FW,1
-570,Nicolás_Domínguez,Dominguez,Nicolás Domínguez,100.0,name-strict,Nicolás Domínguez,MC,1
-571,Lewis_O'Brien,O'Brien,Lewis O&#039;Brien,95.0,name-strict,Lewis O&#039;Brien,MC,1
-572,Ibrahim_Sangaré,Sangaré,Ibrahim Sangare,100.0,name-strict,Ibrahim Sangare,DM,1
-573,Ryan_Yates,Yates,Ryan Yates,100.0,name-strict,Ryan Yates,DM,1
-574,Eric_da Silva Moreira,Da Silva Moreira,Eric da Silva Moreira,100.0,name-strict,Eric da Silva Moreira,SUB,1
-575,Marko_Stamenić,Stamenic,Unknown for understat,,no-match,,SUB,1
-576,Chris_Wood,Wood,Chris Wood,100.0,name-strict,Chris Wood,FW,1
-577,Igor_Jesus Maciel da Cruz,Igor Jesus,Igor Jesus,90.0,name-relaxed,Igor Jesus,SUB,1
-578,Taiwo_Awoniyi,Awoniyi,Taiwo Awoniyi,100.0,name-strict,Taiwo Awoniyi,FW,1
-579,Dan_Ndoye,Ndoye,Dan Ndoye,100.0,name-strict,Dan Ndoye,RW,1
-580,Angus_Gunn,Gunn,Unknown for understat,,no-match,,SUB,1
-581,Omari_Hutchinson,Hutchinson,Omari Hutchinson,100.0,name-strict,Omari Hutchinson,RW,1
-582,Arnaud_Kalimuendo,Kalimuendo,Arnaud Kalimuendo Muinga,95.0,name-strict,Arnaud Kalimuendo Muinga,SUB,1
-583,Douglas_Luiz Soares de Paulo,Douglas Luiz,Douglas Luiz,90.0,name-relaxed,Douglas Luiz,DM,1
-584,John_Victor Maciel Furtado,John,Brennan Johnson,90.0,web_name-relaxed,Brennan Johnson,LW,1
-585,Nicolò_Savona,Savona,Nicolò Savona,100.0,name-strict,Nicolò Savona,SUB,1
-586,Luis_Eduardo Soares da Silva,Cuiabano,Unknown for understat,,no-match,,SUB,1
-587,Dilane_Bakwa,Bakwa,Dilane Bakwa,100.0,name-strict,Dilane Bakwa,RW,1
-588,Anthony_Patterson,Patterson,Nathan Patterson,90.0,web_name-relaxed,Nathan Patterson,DR,1
-589,Simon_Moore,Moore,Kieffer Moore,90.0,web_name-relaxed,Kieffer Moore,SUB,1
-590,Blondy_Nna Noukeu,Nna Noukeu,Unknown for understat,,no-match,,SUB,1
-591,Daniel_Ballard,Ballard,Dominic Ballard,90.0,web_name-relaxed,Dominic Ballard,SUB,1
-592,Trai_Hume,Hume,Trai Hume,100.0,name-strict,Trai Hume,DR,1
-593,Aji_Alese,Alese,Unknown for understat,,no-match,,SUB,1
-594,Joe_Anderson,Anderson,Elliot Anderson,90.0,web_name-relaxed,Elliot Anderson,SUB,1
-595,Dennis_Cirkin,Cirkin,Unknown for understat,,no-match,,SUB,1
-596,Leo_Fuhr Hjelde,Hjelde,Unknown for understat,,no-match,,SUB,1
-597,Niall_Huggins,Huggins,Unknown for understat,,no-match,,SUB,1
-598,Zak_Johnson,Johnson,Brennan Johnson,90.0,web_name-relaxed,Brennan Johnson,LW,1
-599,Luke_O'Nien,O'Nien,Unknown for understat,,no-match,,SUB,1
-600,Timothée_Pembélé,Pembele,Unknown for understat,,no-match,,SUB,1
-601,Reinildo_Mandava,Reinildo,Reinildo,90.0,name-relaxed,Reinildo,DL,1
-602,Jenson_Seelt,Seelt,Jenson Seelt,100.0,name-strict,Jenson Seelt,CB,1
-603,Simon_Adingra,Adingra,Simon Adingra,100.0,name-strict,Simon Adingra,LW,1
-604,Habib_Diarra,Diarra,Habib Diarra,100.0,name-strict,Habib Diarra,MC,1
-605,Patrick_Roberts,Roberts,Patrick Roberts,100.0,name-strict,Patrick Roberts,SUB,1
-606,Milan_Aleksić,Aleksić,Unknown for understat,,no-match,,SUB,1
-607,Enzo_Le Fée,E.Le Fée,Enzo Le Fée,100.0,name-strict,Enzo Le Fée,LW,1
-608,Romaine_Mundle,Mundle,Unknown for understat,,no-match,,SUB,1
-609,Dan_Neil,Neil,Dan Neil,100.0,name-strict,Dan Neil,SUB,1
-610,Ian_Poveda-Ocampo,Poveda,Unknown for understat,,no-match,,SUB,1
-611,Chris_Rigg,Rigg,Chris Rigg,100.0,name-strict,Chris Rigg,MC,1
-612,Noah_Sadiki,Sadiki,Noah Sadiki,100.0,name-strict,Noah Sadiki,MC,1
-613,Chemsdine_Talbi,Talbi,Chemsdine Talbi,100.0,name-strict,Chemsdine Talbi,RW,1
-614,Abdoullah_Ba,Ba,Harvey Barnes,90.0,web_name-relaxed,Harvey Barnes,LW,1
-615,Alan_Browne,Browne,Unknown for understat,,no-match,,SUB,1
-616,Pierre_Ekwah Elimby,Ekwah,Unknown for understat,,no-match,,SUB,1
-617,Harrison_Jones,H.Jones,Unknown for understat,,no-match,,SUB,1
-618,Jay_Matete,Matete,Tetê,90.0,name-relaxed,Tetê,RW,1
-619,Nectarios_Triantis,Triantis,Unknown for understat,,no-match,,SUB,1
-620,Wilson_Isidor,Isidor,Wilson Isidor,100.0,name-strict,Wilson Isidor,FW,1
-621,Eliezer_Mayenda Dossou,Mayenda,Eliezer Mayenda,95.0,name-strict,Eliezer Mayenda,FW,1
-622,Ahmed_Abdullahi,Abdullahi,Unknown for understat,,no-match,,SUB,1
-623,Luís_Hemir Silva Semedo,Luís Hemir,Unknown for understat,,no-match,,SUB,1
-624,Nazarii_Rusyn,Rusyn,Unknown for understat,,no-match,,SUB,1
-625,Granit_Xhaka,Xhaka,Granit Xhaka,100.0,name-strict,Granit Xhaka,MC,1
-626,Robin_Roefs,Roefs,Robin Roefs,100.0,name-strict,Robin Roefs,GK,1
-627,Arthur_Masuaku,Masuaku,Arthur Masuaku,100.0,name-strict,Arthur Masuaku,SUB,1
-628,Omar_Alderete,Alderete,Omar Alderete,100.0,name-strict,Omar Alderete,CB,1
-629,Nordi_Mukiele,Mukiele,Nordi Mukiele,100.0,name-strict,Nordi Mukiele,CB,1
-630,Lutsharel_Geertruida,Geertruida,Lutsharel Geertruida,100.0,name-strict,Lutsharel Geertruida,SUB,1
-631,Brian_Brobbey,Brobbey,Brian Brobbey,100.0,name-strict,Brian Brobbey,SUB,1
-632,Bertrand_Traoré,Traoré,Bertrand Traoré,100.0,name-strict,Bertrand Traoré,RW,1
-633,Guglielmo_Vicario,Vicario,Guglielmo Vicario,100.0,name-strict,Guglielmo Vicario,GK,1
-634,Brandon_Austin,Austin,Brandon Austin,100.0,name-strict,Brandon Austin,GK,1
-635,Antonín_Kinský,Kinsky,Antonín Kinsky,100.0,name-strict,Antonín Kinsky,GK,1
-636,Pedro_Porro,Pedro Porro,Pedro Porro,100.0,name-strict,Pedro Porro,DR,1
-637,Cristian_Romero,Romero,Cristian Romero,100.0,name-strict,Cristian Romero,CB,1
-638,Kevin_Danso,Danso,Kevin Danso,100.0,name-strict,Kevin Danso,CB,1
-639,Ben_Davies,Davies,Ben Davies,100.0,name-strict,Ben Davies,CB,1
-640,Radu_Drăgușin,Dragusin,Radu Dragusin,100.0,name-strict,Radu Dragusin,CB,1
-641,Djed_Spence,Spence,Djed Spence,100.0,name-strict,Djed Spence,DL,1
-642,Destiny_Udogie,Udogie,Iyenoma Destiny Udogie,90.0,name-relaxed,Iyenoma Destiny Udogie,DL,1
-643,Micky_van de Ven,Van de Ven,Micky van de Ven,100.0,name-strict,Micky van de Ven,CB,1
-644,Ashley_Phillips,Phillips,Nathaniel Phillips,90.0,web_name-relaxed,Nathaniel Phillips,CB,1
-645,Takai_Kōta,Takai,Unknown for understat,,no-match,,SUB,1
-646,Luka_Vušković,Vuskovic,Unknown for understat,,no-match,,SUB,1
-647,Son_Heung-min,Son,Son Heung-Min,100.0,name-strict,Son Heung-Min,LW,1
-648,Brennan_Johnson,Johnson,Brennan Johnson,100.0,name-strict,Brennan Johnson,LW,1
-649,James_Maddison,Maddison,James Maddison,100.0,name-strict,James Maddison,MC,1
-650,Mohammed_Kudus,Kudus,Mohammed Kudus,100.0,name-strict,Mohammed Kudus,RW,1
-651,Dejan_Kulusevski,Kulusevski,Dejan Kulusevski,100.0,name-strict,Dejan Kulusevski,MC,1
-652,Mathys_Tel,Tel,Mathys Tel,100.0,name-strict,Mathys Tel,FW,1
-653,Rodrigo_Bentancur,Bentancur,Rodrigo Bentancur,100.0,name-strict,Rodrigo Bentancur,MC,1
-654,Lucas_Bergvall,Bergvall,Lucas Bergvall,100.0,name-strict,Lucas Bergvall,MC,1
-655,Yves_Bissouma,Bissouma,Yves Bissouma,100.0,name-strict,Yves Bissouma,MC,1
-656,Wilson_Odobert,Odobert,Wilson Odobert,100.0,name-strict,Wilson Odobert,LW,1
-657,Manor_Solomon,Solomon,Manor Solomon,100.0,name-strict,Manor Solomon,LW,1
-658,Bryan_Gil Salvatierra,Bryan,Bryan Gil Salvatierra,100.0,name-strict,Bryan Gil Salvatierra,LW,1
-659,Archie_Gray,Gray,Archie Gray,100.0,name-strict,Archie Gray,MC,1
-660,Mikey_Moore,Moore,Mikey Moore,100.0,name-strict,Mikey Moore,RW,1
-661,Pape_Matar Sarr,P.M.Sarr,Unknown for understat,,no-match,,SUB,1
-662,Yang_Min-hyeok,Min-hyeok,Unknown for understat,,no-match,,SUB,1
-663,Callum_Olusesi,Olusesi,Unknown for understat,,no-match,,SUB,1
-664,Dominic_Solanke-Mitchell,Solanke,Dominic Solanke,90.0,name-relaxed,Dominic Solanke,FW,1
-665,Richarlison_de Andrade,Richarlison,Richarlison,90.0,name-relaxed,Richarlison,FW,1
-666,Will_Lankshear,Lankshear,Will Lankshear,100.0,name-strict,Will Lankshear,SUB,1
-667,Dane_Scarlett,Scarlett,Dane Scarlett,100.0,name-strict,Dane Scarlett,SUB,1
-668,João_Maria Lobo Alves Palhares Costa Palhinha Gonçalves,J.Palhinha,Unknown for understat,,no-match,,SUB,1
-669,Xavi_Simons,Xavi,Xavi Simons,100.0,name-strict,Xavi Simons,LW,1
-670,Randal_Kolo Muani,Kolo Muani,Unknown for understat,,no-match,,SUB,1
-671,Igor_Julio dos Santos de Paulo,Igor,Igor Julio,90.0,name-relaxed,Igor Julio,DL,1
-672,Alphonse_Areola,Areola,Alphonse Areola,100.0,name-strict,Alphonse Areola,GK,1
-673,Wes_Foderingham,Foderingham,Wes Foderingham,100.0,name-strict,Wes Foderingham,GK,1
-674,Krisztián_Hegyi,Hegyi,Unknown for understat,,no-match,,SUB,1
-675,El_Hadji Malick Diouf,Diouf,El Hadji Malick Diouf,100.0,name-strict,El Hadji Malick Diouf,DL,1
-676,Emerson_Palmieri dos Santos,Emerson,Emerson,90.0,name-relaxed,Emerson,DL,1
-677,Maximilian_Kilman,Kilman,Max Kilman,90.0,web_name-relaxed,Max Kilman,CB,1
-678,Konstantinos_Mavropanos,Mavropanos,Konstantinos Mavropanos,100.0,name-strict,Konstantinos Mavropanos,CB,1
-679,Nayef_Aguerd,N.Aguerd,Unknown for understat,,no-match,,SUB,1
-680,Ollie_Scarles,Scarles,Oliver Scarles,90.0,web_name-relaxed,Oliver Scarles,DL,1
-681,Jean-Clair_Todibo,Todibo,Jean-Clair Todibo,100.0,name-strict,Jean-Clair Todibo,CB,1
-682,Aaron_Wan-Bissaka,Wan-Bissaka,Aaron Wan-Bissaka,100.0,name-strict,Aaron Wan-Bissaka,RW,1
-683,Kaelan_Casey,Casey,Kaelan Casey,100.0,name-strict,Kaelan Casey,SUB,1
-684,Lucas_Tolentino Coelho de Lima,L.Paquetá,Unknown for understat,,no-match,,SUB,1
-685,Tomáš_Souček,Souček,Tomas Soucek,100.0,name-strict,Tomas Soucek,DM,1
-686,James_Ward-Prowse,Ward-Prowse,James Ward-Prowse,100.0,name-strict,James Ward-Prowse,DM,1
-687,Crysencio_Summerville,Summerville,Crysencio Summerville,100.0,name-strict,Crysencio Summerville,LW,1
-688,Edson_Álvarez Velázquez,Álvarez,Edson Álvarez,90.0,name-relaxed,Edson Álvarez,DM,1
-689,Maxwel_Cornet,Cornet,Maxwel Cornet,100.0,name-strict,Maxwel Cornet,RW,1
-690,Guido_Rodríguez,G.Rodriguez,Guido Rodríguez,100.0,name-strict,Guido Rodríguez,MC,1
-691,Luis_Guilherme Lira dos Santos,L.Guilherme,Luis Guilherme,90.0,name-relaxed,Luis Guilherme,AMC,1
-692,George_Earthy,Earthy,George Earthy,100.0,name-strict,George Earthy,SUB,1
-693,Andy_Irving,Irving,Andy Irving,100.0,name-strict,Andy Irving,MC,1
-694,Lewis_Orford,Orford,Lewis Orford,100.0,name-strict,Lewis Orford,SUB,1
-695,Freddie_Potts,Potts,Freddie Potts,100.0,name-strict,Freddie Potts,SUB,1
-696,Jarrod_Bowen,Bowen,Jarrod Bowen,100.0,name-strict,Jarrod Bowen,RW,1
-697,Niclas_Füllkrug,Füllkrug,Niclas Füllkrug,100.0,name-strict,Niclas Füllkrug,FW,1
-698,Callum_Marshall,Marshall,Marshall Munetsi,90.0,web_name-relaxed,Marshall Munetsi,RW,1
-699,Kyle_Walker-Peters,Walker-Peters,Kyle Walker-Peters,100.0,name-strict,Kyle Walker-Peters,DR,1
-700,Callum_Wilson,Wilson,Callum Wilson,100.0,name-strict,Callum Wilson,FW,1
-701,Mads_Hermansen,Hermansen,Mads Hermansen,100.0,name-strict,Mads Hermansen,GK,1
-702,Mateus_Gonçalo Espanha Fernandes,M.Fernandes,Unknown for understat,,no-match,,SUB,1
-703,Soungoutou_Magassa,S.Magassa,Soungoutou Magassa,100.0,name-strict,Soungoutou Magassa,SUB,1
-704,Lukasz_Fabianski,Fabianski,Lukasz Fabianski,100.0,name-strict,Lukasz Fabianski,GK,1
-705,Sam_Johnstone,Johnstone,Sam Johnstone,100.0,name-strict,Sam Johnstone,GK,1
-706,José_Malheiro de Sá,José Sá,José Sá,100.0,web_name-strict,José Sá,GK,1
-707,Daniel_Bentley,Bentley,Daniel Bentley,100.0,name-strict,Daniel Bentley,GK,1
-708,Emmanuel_Agbadou,Agbadou,Emmanuel Agbadou,100.0,name-strict,Emmanuel Agbadou,CB,1
-709,Matt_Doherty,Doherty,Matt Doherty,100.0,name-strict,Matt Doherty,CB,1
-710,Hugo_Bueno López,H.Bueno,Hugo Bueno,90.0,name-relaxed,Hugo Bueno,DR,1
-711,Yerson_Mosquera Valdelamar,Mosquera,Yerson Mosquera,90.0,name-relaxed,Yerson Mosquera,CB,1
-712,Rodrigo_Martins Gomes,R.Gomes,Rodrigo,90.0,name-relaxed,Rodrigo,RW,1
-713,Santiago_Ignacio Bueno,S.Bueno,Unknown for understat,,no-match,,SUB,1
-714,Toti_Gomes,Toti,Toti,90.0,name-relaxed,Toti,CB,1
-715,Ki-Jana_Hoever,Hoever,Ki-Jana Hoever,100.0,name-strict,Ki-Jana Hoever,DR,1
-716,Bastien_Meupiyou Menadjou,Meupiyou,Unknown for understat,,no-match,,SUB,1
-717,Pedro_Cardoso de Lima,Pedro Lima,Pedro Lima,100.0,web_name-strict,Pedro Lima,DR,1
-718,Alfie_Pond,Pond,Alfie Pond,100.0,name-strict,Alfie Pond,SUB,1
-719,Hwang_Hee-chan,Hee Chan,Hee-Chan Hwang,95.0,name-strict,Hee-Chan Hwang,FW,1
-720,André_Trindade da Costa Neto,André,Neto,90.0,name-relaxed,Neto,GK,1
-721,Jean-Ricner_Bellegarde,Bellegarde,Jean-Ricner Bellegarde,100.0,name-strict,Jean-Ricner Bellegarde,AMC,1
-722,Fer_López González,Fer López,Unknown for understat,,no-match,,SUB,1
-723,João_Victor Gomes da Silva,Gomes,João Gomes,90.0,web_name-relaxed,João Gomes,MC,1
-724,Gonçalo_Manuel Ganchinho Guedes,Guedes,Gonçalo Guedes,90.0,web_name-relaxed,Gonçalo Guedes,FW,1
-725,Marshall_Munetsi,Munetsi,Marshall Munetsi,100.0,name-strict,Marshall Munetsi,RW,1
-726,Boubacar_Traoré,B.Traore,Boubacar Traore,100.0,name-strict,Boubacar Traore,MC,1
-727,Tawanda_Chirewa,Chirewa,Tawanda Chirewa,100.0,name-strict,Tawanda Chirewa,FW,1
-728,Tom_Edozie,Edozie,Samuel Edozie,90.0,web_name-relaxed,Samuel Edozie,RW,1
-729,Enso_González Medina,Gonzalez,Enso González,90.0,name-relaxed,Enso González,SUB,1
-730,Joe_Hodge,Hodge,Joseph Hodge,90.0,web_name-relaxed,Joseph Hodge,MC,1
-731,Jørgen_Strand Larsen,Strand Larsen,Jørgen Strand Larsen,100.0,name-strict,Jørgen Strand Larsen,FW,1
-732,Fábio_Soares Silva,Fábio Silva,Fabio Silva,100.0,web_name-strict,Fabio Silva,FW,1
-733,Saša_Kalajdžić,Kalajdžić,Sasa Kalajdzic,100.0,name-strict,Sasa Kalajdzic,FW,1
-734,Leon_Chiwome,Chiwome,Leon Chiwome,100.0,name-strict,Leon Chiwome,FW,1
-735,Nathan_Fraser,Fraser,Nathan Fraser,100.0,name-strict,Nathan Fraser,FW,1
-736,Jhon_Arias,J.Arias,Jhon Arias,100.0,name-strict,Jhon Arias,LW,1
-737,David_Møller Wolfe,Møller Wolfe,David Møller Wolfe,100.0,name-strict,David Møller Wolfe,DL,1
-738,Jackson_Tchatchoua,Tchatchoua,Jackson Tchatchoua,100.0,name-strict,Jackson Tchatchoua,DR,1
-739,Ladislav_Krejcí,Krejčí,Ladislav Krejcí,100.0,name-strict,Ladislav Krejcí,MC,1
-740,Tolu_Arokodare,Tolu,Tolu Arokodare,100.0,name-strict,Tolu Arokodare,FW,1
-741,Ryan_McAidoo,Tolu,Tolu Arokodare,100.0,name-strict,Tolu Arokodare,SUB,1
-742,Landon_Emenalo,Tolu,Tolu Arokodare,100.0,name-strict,Tolu Arokodare,SUB,1 
+236,Charalampos_Kostoulas,Kostoulas,Charalampos Kostoulas,100.0,name-strict,Charalampos Kostoulas,SUB,1
+237,Nehemiah_Oriola,Oriola,Unknown for understat,,no-match,,SUB,1
+238,Facundo_Buonanotte,Buonanotte,Facundo Buonanotte,100.0,name-strict,Facundo Buonanotte,AMC,1
+239,Robert_Sánchez,Sánchez,Robert Sánchez,100.0,name-strict,Robert Sánchez,GK,1
+240,Filip_Jörgensen,Jörgensen,Filip Jorgensen,100.0,name-strict,Filip Jorgensen,GK,1
+241,Mike_Penders,Penders,Unknown for understat,,no-match,,SUB,1
+242,Gabriel_Słonina,Slonina,Gabriel,90.0,name-relaxed,Gabriel,CB,1
+243,Marc_Cucurella Saseta,Cucurella,Marc Cucurella,90.0,name-relaxed,Marc Cucurella,DL,1
+244,Reece_James,James,Reece James,100.0,name-strict,Reece James,DR,1
+245,Trevoh_Chalobah,Chalobah,Trevoh Chalobah,100.0,name-strict,Trevoh Chalobah,CB,1
+246,Levi_Colwill,Colwill,Levi Colwill,100.0,name-strict,Levi Colwill,CB,1
+247,Malo_Gusto,Gusto,Malo Gusto,100.0,name-strict,Malo Gusto,DM,1
+248,Benoît_Badiashile Mukinayi,B.Badiashile,Benoit Badiashile Mukinayi,100.0,name-strict,Benoit Badiashile Mukinayi,CB,1
+249,Wesley_Fofana,Fofana,Wesley Fofana,100.0,name-strict,Wesley Fofana,DR,1
+250,Mamadou_Sarr,M.Sarr,Unknown for understat,,no-match,,SUB,1
+251,Tosin_Adarabioyo,Tosin,Tosin Adarabioyo,100.0,name-strict,Tosin Adarabioyo,CB,1
+252,Josh_Acheampong,Acheampong,Josh Acheampong,100.0,name-strict,Josh Acheampong,CB,1
+253,Aarón_Anselmino,Anselmino,Unknown for understat,,no-match,,SUB,1
+254,Cole_Palmer,Palmer,Cole Palmer,100.0,name-strict,Cole Palmer,AMC,1
+255,Pedro_Lomba Neto,Neto,Neto,90.0,name-relaxed,Neto,GK,1
+256,Enzo_Fernández,Enzo,Enzo Fernández,100.0,name-strict,Enzo Fernández,DM,1
+257,Estêvão_Almeida de Oliveira Gonçalves,Estêvão,Estêvão,90.0,name-relaxed,Estêvão,RW,1
+258,Jamie_Bynoe-Gittens,Gittens,Jamie Bynoe-Gittens,100.0,name-strict,Jamie Bynoe-Gittens,LW,1
+259,Christopher_Nkunku,Nkunku,Christopher Nkunku,100.0,name-strict,Christopher Nkunku,LW,1
+260,Moisés_Caicedo Corozo,Caicedo,Moisés Caicedo,90.0,name-relaxed,Moisés Caicedo,DM,1
+261,Tyrique_George,George,Tyrique George,100.0,name-strict,Tyrique George,FW,1
+262,Roméo_Lavia,Lavia,Romeo Lavia,100.0,name-strict,Romeo Lavia,DM,1
+263,Mykhailo_Mudryk,Mudryk,Mykhailo Mudryk,100.0,name-strict,Mykhailo Mudryk,LW,1
+264,Andrey_Nascimento dos Santos,Andrey Santos,André,90.0,name-relaxed,André,MC,1
+265,Dário_Luís Essugo,D.Essugo,Unknown for understat,,no-match,,SUB,1
+266,Kendry_Páez Andrade,Paez,Unknown for understat,,no-match,,SUB,1
+267,João_Pedro Junqueira de Jesus,João Pedro,João Pedro,90.0,name-relaxed,João Pedro,FW,1
+268,Liam_Delap,Delap,Liam Delap,100.0,name-strict,Liam Delap,FW,1
+269,Nicolas_Jackson,N.Jackson,Nicolas Jackson,100.0,name-strict,Nicolas Jackson,FW,1
+270,Marc_Guiu Paz,Marc Guiu,Marc Guiu,95.0,name-strict,Marc Guiu,SUB,1
+271,Alejandro_Garnacho,Garnacho,Alejandro Garnacho,100.0,name-strict,Alejandro Garnacho,LW,1
+272,Jorrel_Hato,Hato,Jorrel Hato,100.0,name-strict,Jorrel Hato,CB,1
+273,Landon_Emenalo,Emenalo,Unknown for understat,,no-match,,SUB,1
+274,Dean_Henderson,Henderson,Dean Henderson,100.0,name-strict,Dean Henderson,GK,1
+275,Walter_Benítez,Benitez,Unknown for understat,,no-match,,SUB,1
+276,Remi_Matthews,Matthews,Remi Matthews,100.0,name-strict,Remi Matthews,SUB,1
+277,Daniel_Muñoz,Muñoz,Daniel Muñoz,100.0,name-strict,Daniel Muñoz,DR,1
+278,Maxence_Lacroix,Lacroix,Maxence Lacroix,100.0,name-strict,Maxence Lacroix,CB,1
+279,Tyrick_Mitchell,Mitchell,Tyrick Mitchell,100.0,name-strict,Tyrick Mitchell,DL,1
+280,Borna_Sosa,Sosa,Ramón Sosa,90.0,web_name-relaxed,Ramón Sosa,LW,1
+281,Marc_Guéhi,Guéhi,Marc Guehi,100.0,name-strict,Marc Guehi,CB,1
+282,Chris_Richards,Richards,Chris Richards,100.0,name-strict,Chris Richards,CB,1
+283,Chadi_Riad Dnanou,Chadi Riad,Chadi Riad,90.0,name-relaxed,Chadi Riad,CB,1
+284,Nathaniel_Clyne,Clyne,Nathaniel Clyne,100.0,name-strict,Nathaniel Clyne,CB,1
+285,Rob_Holding,Holding,Rob Holding,100.0,name-strict,Rob Holding,CB,1
+286,Caleb_Kporha,Kporha,Caleb Kporha,100.0,name-strict,Caleb Kporha,SUB,1
+287,Ismaïla_Sarr,Sarr,Ismaila Sarr,100.0,name-strict,Ismaila Sarr,AMC,1
+288,Cheick_Doucouré,Doucouré,Cheick Oumar Doucoure,95.0,name-strict,Cheick Oumar Doucoure,MC,1
+289,Romain_Esse,Esse,Romain Esse,100.0,name-strict,Romain Esse,AMC,1
+290,Will_Hughes,Hughes,Will Hughes,100.0,name-strict,Will Hughes,MC,1
+291,Daichi_Kamada,Kamada,Daichi Kamada,100.0,name-strict,Daichi Kamada,MC,1
+292,Jefferson_Lerma Solís,Lerma,Jefferson Lerma,95.0,name-strict,Jefferson Lerma,MC,1
+293,Adam_Wharton,Wharton,Adam Wharton,100.0,name-strict,Adam Wharton,MC,1
+294,Asher_Agbinone,Agbinone,Asher Agbinone,100.0,name-strict,Asher Agbinone,SUB,1
+295,Naouirou_Ahamada,Ahamada,Naouirou Ahamada,100.0,name-strict,Naouirou Ahamada,SUB,1
+296,Justin_Devenny,Devenny,Justin Devenny,100.0,name-strict,Justin Devenny,LW,1
+297,Malcolm_Ebiowei,Ebiowei,Malcolm Ebiowei,100.0,name-strict,Malcolm Ebiowei,SUB,1
+298,Jesurun_Rak-Sakyi,J.Rak-Sakyi,Jesurun Rak-Sakyi,100.0,name-strict,Jesurun Rak-Sakyi,SUB,1
+299,Matheus_França de Oliveira,M.França,Matheus França,90.0,name-relaxed,Matheus França,LW,1
+300,David_Ozoh,Ozoh,David Ozoh,100.0,name-strict,David Ozoh,SUB,1
+301,Kaden_Rodney,Rodney,Unknown for understat,,no-match,,SUB,1
+302,Franco_Umeh-Chibueze,Umeh,Unknown for understat,,no-match,,SUB,1
+303,Jean-Philippe_Mateta,Mateta,Jean-Philippe Mateta,100.0,name-strict,Jean-Philippe Mateta,FW,1
+304,Eddie_Nketiah,Nketiah,Eddie Nketiah,100.0,name-strict,Eddie Nketiah,FW,1
+305,Odsonne_Édouard,Édouard,Odsonne Edouard,100.0,name-strict,Odsonne Edouard,AMC,1
+306,Zach_Marsh,Marsh,Marshall Munetsi,90.0,web_name-relaxed,Marshall Munetsi,MC,1
+307,Rio_Cardines,Cardines,Unknown for understat,,no-match,,SUB,1
+308,Yéremy_Pino Santos,Yeremy,Unknown for understat,,no-match,,SUB,1
+309,Jaydee_Canvot,Canvot,Unknown for understat,,no-match,,SUB,1
+310,Christantus_Uche,Uche,Christantus Uche,100.0,name-strict,Christantus Uche,SUB,1
+311,Kiernan_Dewsbury-Hall,Dewsbury-Hall,Kiernan Dewsbury-Hall,100.0,name-strict,Kiernan Dewsbury-Hall,AMC,1
+312,Jordan_Pickford,Pickford,Jordan Pickford,100.0,name-strict,Jordan Pickford,GK,1
+313,Mark_Travers,Travers,Mark Travers,100.0,name-strict,Mark Travers,GK,1
+314,Harry_Tyrer,Tyrer,Unknown for understat,,no-match,,SUB,1
+315,Jarrad_Branthwaite,Branthwaite,Jarrad Branthwaite,100.0,name-strict,Jarrad Branthwaite,CB,1
+316,James_Tarkowski,Tarkowski,James Tarkowski,100.0,name-strict,James Tarkowski,CB,1
+317,Vitalii_Mykolenko,Mykolenko,Vitalii Mykolenko,100.0,name-strict,Vitalii Mykolenko,DL,1
+318,Jake_O'Brien,O'Brien,Jake O&#039;Brien,95.0,name-strict,Jake O&#039;Brien,DR,1
+319,Séamus_Coleman,Coleman,Seamus Coleman,100.0,name-strict,Seamus Coleman,DR,1
+320,Michael_Keane,Keane,Michael Keane,100.0,name-strict,Michael Keane,CB,1
+321,Nathan_Patterson,Patterson,Nathan Patterson,100.0,name-strict,Nathan Patterson,DR,1
+322,Roman_Dixon,Dixon,Roman Dixon,100.0,name-strict,Roman Dixon,DR,1
+323,Reece_Welch,Welch,Unknown for understat,,no-match,,SUB,1
+324,Iliman_Ndiaye,Ndiaye,Iliman Ndiaye,100.0,name-strict,Iliman Ndiaye,RW,1
+325,Dwight_McNeil,McNeil,Dwight McNeil,100.0,name-strict,Dwight McNeil,RW,1
+326,Carlos_Alcaraz Durán,Alcaraz,Carlos Alcaraz,95.0,name-strict,Carlos Alcaraz,LW,1
+327,Idrissa_Gueye,Gana,Idrissa Gueye,100.0,name-strict,Idrissa Gueye,DM,1
+328,James_Garner,Garner,James Garner,100.0,name-strict,James Garner,DM,1
+329,Tim_Iroegbunam,Iroegbunam,Tim Iroegbunam,100.0,name-strict,Tim Iroegbunam,DM,1
+330,Harrison_Armstrong,Armstrong,Harrison Armstrong,100.0,name-strict,Harrison Armstrong,SUB,1
+331,Callum_Bates,Bates,Unknown for understat,,no-match,,SUB,1
+332,Coby_Ebere,Ebere,Eberechi Eze,90.0,web_name-relaxed,Eberechi Eze,MC,1
+333,Isaac_Heath,Heath,Unknown for understat,,no-match,,SUB,1
+334,Jenson_Metcalfe,Metcalfe,Unknown for understat,,no-match,,SUB,1
+335,Thierno_Barry,Barry,Thierno Barry,100.0,name-strict,Thierno Barry,FW,1
+336,Norberto_Bercique Gomes Betuncal,Beto,Beto,100.0,web_name-strict,Beto,FW,1
+337,Youssef_Ramalho Chermiti,Y.Chermiti,Unknown for understat,,no-match,,SUB,1
+338,Martin_Sherif,Sherif,Unknown for understat,,no-match,,SUB,1
+339,Jack_Grealish,Grealish,Jack Grealish,100.0,name-strict,Jack Grealish,LW,1
+340,Tom_King,King,Tom King,100.0,name-strict,Tom King,SUB,1
+341,Adam_Aznou,Aznou,Unknown for understat,,no-match,,SUB,1
+342,Tyler_Onyango,Onyango,Tyler Onyango,100.0,name-strict,Tyler Onyango,SUB,1
+343,Elijah_Campbell,Campbell,Chem Campbell,90.0,web_name-relaxed,Chem Campbell,SUB,1
+344,Tyler_Dibling,Dibling,Tyler Dibling,100.0,name-strict,Tyler Dibling,RW,1
+345,Merlin_Röhl,Röhl,Merlin Röhl,100.0,name-strict,Merlin Röhl,SUB,1
+346,Bernd_Leno,Leno,Bernd Leno,100.0,name-strict,Bernd Leno,GK,1
+347,Steven_Benda,Benda,Unknown for understat,,no-match,,SUB,1
+348,Antonee_Robinson,Robinson,Antonee Robinson,100.0,name-strict,Antonee Robinson,DL,1
+349,Joachim_Andersen,Andersen,Joachim Andersen,100.0,name-strict,Joachim Andersen,CB,1
+350,Calvin_Bassey,Bassey,Calvin Bassey,100.0,name-strict,Calvin Bassey,CB,1
+351,Timothy_Castagne,Castagne,Timothy Castagne,100.0,name-strict,Timothy Castagne,DR,1
+352,Issa_Diop,Diop,Issa Diop,100.0,name-strict,Issa Diop,CB,1
+353,Jorge_Cuenca Barreno,J.Cuenca,Jorge Cuenca,90.0,name-relaxed,Jorge Cuenca,CB,1
+354,Kenny_Tete,Tete,Kenny Tete,100.0,name-strict,Kenny Tete,DR,1
+355,Samuel_Amissah,Amissah,Unknown for understat,,no-match,,SUB,1
+356,Alex_Iwobi,Iwobi,Alex Iwobi,100.0,name-strict,Alex Iwobi,LW,1
+357,Emile_Smith Rowe,Smith Rowe,Emile Smith-Rowe,100.0,name-strict,Emile Smith-Rowe,AMC,1
+358,Adama_Traoré Diarra,Adama,Adama Traoré,90.0,name-relaxed,Adama Traoré,LW,1
+359,Andreas_Hoelgebaum Pereira,Andreas,André,90.0,name-relaxed,André,MC,1
+360,Ryan_Sessegnon,Sessegnon,Ryan Sessegnon,100.0,name-strict,Ryan Sessegnon,DL,1
+361,Harry_Wilson,Wilson,Harry Wilson,100.0,name-strict,Harry Wilson,RW,1
+362,Sander_Berge,Berge,Sander Berge,100.0,name-strict,Sander Berge,DM,1
+363,Tom_Cairney,Cairney,Tom Cairney,100.0,name-strict,Tom Cairney,DM,1
+364,Saša_Lukić,Lukić,Sasa Lukic,100.0,name-strict,Sasa Lukic,DM,1
+365,Martial_Godo,Godo,Martial Godo,100.0,name-strict,Martial Godo,SUB,1
+366,Luke_Harris,Harris,Luke Harris,100.0,name-strict,Luke Harris,SUB,1
+367,Josh_King,King,Joshua King,90.0,name-relaxed,Joshua King,AMC,1
+368,Harrison_Reed,Reed,Harrison Reed,100.0,name-strict,Harrison Reed,DM,1
+369,Raúl_Jiménez,Raúl,Raúl Jiménez,100.0,name-strict,Raúl Jiménez,FW,1
+370,Rodrigo_Muniz Carvalho,Muniz,Rodrigo,90.0,name-relaxed,Rodrigo,RW,1
+371,Benjamin_Lecomte,Lecomte,Unknown for understat,,no-match,,SUB,1
+372,Samuel_Chukwueze,Chukwueze,Samuel Chukwueze,100.0,name-strict,Samuel Chukwueze,SUB,1
+373,Kevin_Santos Lopes de Macedo,Kevin,Kevin,90.0,name-relaxed,Kevin,SUB,1
+374,Jonah_Kusi-Asare,Kusi-Asare,Unknown for understat,,no-match,,SUB,1
+375,Illan_Meslier,Meslier,Illan Meslier,100.0,name-strict,Illan Meslier,GK,1
+376,Alex_Cairns,Cairns,Unknown for understat,,no-match,,SUB,1
+377,Karl_Darlow,Darlow,Karl Darlow,100.0,name-strict,Karl Darlow,GK,1
+378,Jayden_Bogle,Bogle,Jayden Bogle,100.0,name-strict,Jayden Bogle,DR,1
+379,Pascal_Struijk,Struijk,Pascal Struijk,100.0,name-strict,Pascal Struijk,CB,1
+380,Jaka_Bijol,Bijol,Unknown for understat,,no-match,,SUB,1
+381,Sebastiaan_Bornauw,Bornauw,Unknown for understat,,no-match,,SUB,1
+382,Sam_Byram,Byram,Sam Byram,100.0,name-strict,Sam Byram,SUB,1
+383,Gabriel_Gudmundsson,Gudmundsson,Gabriel Gudmundsson,100.0,name-strict,Gabriel Gudmundsson,DL,1
+384,Joe_Rodon,Rodon,Joe Rodon,100.0,name-strict,Joe Rodon,CB,1
+385,Isaac_Schmidt,Schmidt,Unknown for understat,,no-match,,SUB,1
+386,Brenden_Aaronson,Aaronson,Brenden Aaronson,100.0,name-strict,Brenden Aaronson,RW,1
+387,Wilfried_Gnonto,Gnonto,Wilfried Gnonto,100.0,name-strict,Wilfried Gnonto,LW,1
+388,Jack_Harrison,Harrison,Jack Harrison,100.0,name-strict,Jack Harrison,LW,1
+389,Daniel_James,James,Daniel James,100.0,name-strict,Daniel James,RW,1
+390,Ethan_Ampadu,Ampadu,Ethan Ampadu,100.0,name-strict,Ethan Ampadu,MC,1
+391,Sam_Greenwood,Greenwood,Sam Greenwood,100.0,name-strict,Sam Greenwood,MC,1
+392,Ilia_Gruev,Gruev,Ilia Gruev,100.0,name-strict,Ilia Gruev,MC,1
+393,Largie_Ramazani,Ramazani,Unknown for understat,,no-match,,SUB,1
+394,Tanaka_Ao,Tanaka,Ao Tanaka,95.0,name-strict,Ao Tanaka,MC,1
+395,Charlie_Crew,Crew,Unknown for understat,,no-match,,SUB,1
+396,Joe_Gelhardt,Gelhardt,Joe Gelhardt,100.0,name-strict,Joe Gelhardt,FW,1
+397,Darko_Gyabi,Gyabi,Darko Gyabi,100.0,name-strict,Darko Gyabi,SUB,1
+398,Joël_Piroe,Piroe,Joël Piroe,100.0,name-strict,Joël Piroe,FW,1
+399,Patrick_Bamford,Bamford,Patrick Bamford,100.0,name-strict,Patrick Bamford,FW,1
+400,Mateo_Joseph Fernández-Regatillo,Mateo Joseph,Mateo Joseph,90.0,name-relaxed,Mateo Joseph,SUB,1
+401,Lukas_Nmecha,Nmecha,Lukas Nmecha,100.0,name-strict,Lukas Nmecha,FW,1
+402,Sean_Longstaff,Longstaff,Sean Longstaff,100.0,name-strict,Sean Longstaff,MC,1
+403,Anton_Stach,Stach,Anton Stach,100.0,name-strict,Anton Stach,MC,1
+404,Lucas_Estella Perri,Perri,Lucas Perri,90.0,web_name-relaxed,Lucas Perri,GK,1
+405,Dominic_Calvert-Lewin,Calvert-Lewin,Dominic Calvert-Lewin,100.0,name-strict,Dominic Calvert-Lewin,FW,1
+406,Noah_Okafor,Okafor,Noah Okafor,100.0,name-strict,Noah Okafor,LW,1
+407,James_Justin,Justin,James Justin,100.0,name-strict,James Justin,DR,1
+408,Harry_Gray,Gray,Demarai Gray,90.0,web_name-relaxed,Demarai Gray,FW,1
+409,Alisson_Ramses Becker,A.Becker,Alisson,90.0,name-relaxed,Alisson,GK,1
+410,Giorgi_Mamardashvili,Mamardashvili,Giorgi Mamardashvili,100.0,name-strict,Giorgi Mamardashvili,GK,1
+411,Ármin_Pécsi,Pécsi,Unknown for understat,,no-match,,SUB,1
+412,Freddie_Woodman,Woodman,Fred,90.0,name-relaxed,Fred,DM,1
+413,Jeremie_Frimpong,Frimpong,Jeremie Frimpong,100.0,name-strict,Jeremie Frimpong,DR,1
+414,Milos_Kerkez,Kerkez,Milos Kerkez,100.0,name-strict,Milos Kerkez,DL,1
+415,Andrew_Robertson,Robertson,Andrew Robertson,100.0,name-strict,Andrew Robertson,DL,1
+416,Virgil_van Dijk,Virgil,Virgil van Dijk,100.0,name-strict,Virgil van Dijk,CB,1
+417,Ibrahima_Konaté,Konaté,Ibrahima Konaté,100.0,name-strict,Ibrahima Konaté,CB,1
+418,Conor_Bradley,Bradley,Conor Bradley,100.0,name-strict,Conor Bradley,DR,1
+419,Joe_Gomez,Gomez,Joseph Gomez,90.0,web_name-relaxed,Joseph Gomez,CB,1
+420,Konstantinos_Tsimikas,Tsimikas,Konstantinos Tsimikas,100.0,name-strict,Konstantinos Tsimikas,DL,1
+421,Amara_Nallo,Nallo,Unknown for understat,,no-match,,SUB,1
+422,Rhys_Williams,R.Williams,Unknown for understat,,no-match,,SUB,1
+423,Calvin_Ramsay,Ramsay,Unknown for understat,,no-match,,SUB,1
+424,Mohamed_Salah,M.Salah,Mohamed Salah,100.0,name-strict,Mohamed Salah,RW,1
+425,Florian_Wirtz,Wirtz,Florian Wirtz,100.0,name-strict,Florian Wirtz,LW,1
+426,Luis_Díaz,Luis Díaz,Luis Díaz,100.0,name-strict,Luis Díaz,FW,1
+427,Cody_Gakpo,Gakpo,Cody Gakpo,100.0,name-strict,Cody Gakpo,LW,1
+428,Federico_Chiesa,Chiesa,Federico Chiesa,100.0,name-strict,Federico Chiesa,FW,1
+429,Alexis_Mac Allister,Mac Allister,Alexis Mac Allister,100.0,name-strict,Alexis Mac Allister,DM,1
+430,Dominik_Szoboszlai,Szoboszlai,Dominik Szoboszlai,100.0,name-strict,Dominik Szoboszlai,AMC,1
+431,Curtis_Jones,C.Jones,Curtis Jones,100.0,name-strict,Curtis Jones,DM,1
+432,Ryan_Gravenberch,Gravenberch,Ryan Gravenberch,100.0,name-strict,Ryan Gravenberch,DM,1
+433,Endo_Wataru,Endo,Wataru Endo,95.0,name-strict,Wataru Endo,DM,1
+434,Stefan_Bajčetić Maquieira,Bajcetic,Stefan Bajcetic,90.0,name-relaxed,Stefan Bajcetic,MC,1
+435,James_McConnell,McConnell,James McConnell,100.0,name-strict,James McConnell,SUB,1
+436,Tyler_Morton,Morton,Unknown for understat,,no-match,,SUB,1
+437,Trey_Nyoni,Nyoni,Unknown for understat,,no-match,,SUB,1
+438,Darwin_Núñez Ribeiro,Darwin,Darwin Núñez,90.0,name-relaxed,Darwin Núñez,FW,1
+439,Jayden_Danns,Danns,Jayden Danns,100.0,name-strict,Jayden Danns,SUB,1
+440,Alexander_Isak,Isak,Alexander Isak,100.0,name-strict,Alexander Isak,FW,1
+441,Hugo_Ekitiké,Ekitiké,Hugo Ekitike,100.0,name-strict,Hugo Ekitike,FW,1
+442,Rio_Ngumoha,Ngumoha,Rio Ngumoha,100.0,name-strict,Rio Ngumoha,SUB,1
+443,Giovanni_Leoni,Leoni,Unknown for understat,,no-match,,SUB,1
+444,James_Trafford,Trafford,James Trafford,100.0,name-strict,James Trafford,GK,1
+445,Ederson_Santana de Moraes,Ederson M.,Ederson,90.0,name-relaxed,Ederson,GK,1
+446,Stefan_Ortega Moreno,Ortega Moreno,Stefan Ortega Moreno,100.0,name-strict,Stefan Ortega Moreno,GK,1
+447,Marcus_Bettinelli,Bettinelli,Unknown for understat,,no-match,,SUB,1
+448,Rayan_Aït-Nouri,Aït-Nouri,Rayan Ait Nouri,100.0,name-strict,Rayan Ait Nouri,DL,1
+449,Joško_Gvardiol,Gvardiol,Josko Gvardiol,100.0,name-strict,Josko Gvardiol,CB,1
+450,Manuel_Akanji,Akanji,Manuel Akanji,100.0,name-strict,Manuel Akanji,CB,1
+451,Nathan_Aké,Aké,Nathan Aké,100.0,name-strict,Nathan Aké,CB,1
+452,Abdukodir_Khusanov,Khusanov,Abduqodir Khusanov,94.44444444444444,name-relaxed,Abduqodir Khusanov,DR,1
+453,Matheus_Nunes,Matheus N.,Matheus Nunes,100.0,name-strict,Matheus Nunes,DR,1
+454,Rúben_Gato Alves Dias,Rúben,Rúben Neves,90.0,web_name-relaxed,Rúben Neves,MC,1
+455,John_Stones,Stones,John Stones,100.0,name-strict,John Stones,CB,1
+456,Rico_Lewis,Lewis,Rico Lewis,100.0,name-strict,Rico Lewis,DR,1
+457,Nico_O'Reilly,O’Reilly,Nico O&#039;Reilly,95.0,name-strict,Nico O&#039;Reilly,DL,1
+458,Vitor_de Oliveira Nunes dos Reis,Vitor Reis,Vitor Reis,100.0,web_name-strict,Vitor Reis,SUB,1
+459,Omar_Marmoush,Marmoush,Omar Marmoush,100.0,name-strict,Omar Marmoush,LW,1
+460,Phil_Foden,Foden,Phil Foden,100.0,name-strict,Phil Foden,MC,1
+461,Sávio_'Savinho' Moreira de Oliveira,Savinho,Sávio,90.0,name-relaxed,Sávio,RW,1
+462,Bernardo_Veiga de Carvalho e Silva,Bernardo,Bernardo Silva,90.0,web_name-relaxed,Bernardo Silva,MC,1
+463,Rayan_Cherki,Cherki,Mathis Cherki,90.0,web_name-relaxed,Mathis Cherki,MC,1
+464,Jérémy_Doku,Doku,Jéremy Doku,100.0,name-strict,Jéremy Doku,LW,1
+465,İlkay_Gündoğan,Gündoğan,Ilkay Gündogan,100.0,name-strict,Ilkay Gündogan,AMC,1
+466,Rodrigo_Hernandez,Rodrigo,Rodrigo,90.0,name-relaxed,Rodrigo,RW,1
+467,Mateo_Kovačić,Kovačić,Mateo Kovacic,100.0,name-strict,Mateo Kovacic,DM,1
+468,Nico_González Iglesias,N.Gonzalez,Nico González,90.0,name-relaxed,Nico González,DM,1
+469,Oscar_Bobb,Bobb,Oscar Bobb,100.0,name-strict,Oscar Bobb,RW,1
+470,Claudio_Echeverri,Echeverri,Claudio Echeverri,100.0,name-strict,Claudio Echeverri,SUB,1
+471,Tijjani_Reijnders,Reijnders,Tijjani Reijnders,100.0,name-strict,Tijjani Reijnders,MC,1
+472,Sverre_Nypan,Nypan,Unknown for understat,,no-match,,SUB,1
+473,Kalvin_Phillips,Phillips,Kalvin Phillips,100.0,name-strict,Kalvin Phillips,DM,1
+474,Erling_Haaland,Haaland,Erling Haaland,100.0,name-strict,Erling Haaland,FW,1
+475,Gianluigi_Donnarumma,Donnarumma,Gianluigi Donnarumma,100.0,name-strict,Gianluigi Donnarumma,GK,1
+476,Divine_Mukasa,Mukasa,Unknown for understat,,no-match,,SUB,1
+477,Stephen_Mfuni,Mfuni,Unknown for understat,,no-match,,SUB,1
+478,Ryan_McAidoo,McAidoo,Unknown for understat,,no-match,,SUB,1
+479,Bryan_Mbeumo,Mbeumo,Bryan Mbeumo,100.0,name-strict,Bryan Mbeumo,AMC,1
+480,Altay_Bayındır,Bayindir,Altay Bayindir,90.0,web_name-relaxed,Altay Bayindir,GK,1
+481,André_Onana,Onana,André Onana,100.0,name-strict,André Onana,GK,1
+482,Elyh_Harrison,Harrison,Jack Harrison,90.0,web_name-relaxed,Jack Harrison,LW,1
+483,Tom_Heaton,Heaton,Unknown for understat,,no-match,,SUB,1
+484,Dermot_Mee,Mee,Ben Mee,90.0,web_name-relaxed,Ben Mee,CB,1
+485,Matthijs_de Ligt,De Ligt,Matthijs de Ligt,100.0,name-strict,Matthijs de Ligt,CB,1
+486,Lisandro_Martínez,Martinez,Lisandro Martínez,100.0,name-strict,Lisandro Martínez,CB,1
+487,Noussair_Mazraoui,Mazraoui,Noussair Mazraoui,100.0,name-strict,Noussair Mazraoui,DR,1
+488,Diego_León Blanco,D.Leon,Unknown for understat,,no-match,,SUB,1
+489,Diogo_Dalot Teixeira,Dalot,Diogo Dalot,90.0,name-relaxed,Diogo Dalot,DL,1
+490,Patrick_Dorgu,Dorgu,Patrick Dorgu,100.0,name-strict,Patrick Dorgu,DL,1
+491,Harry_Maguire,Maguire,Harry Maguire,100.0,name-strict,Harry Maguire,CB,1
+492,Luke_Shaw,Shaw,Luke Shaw,100.0,name-strict,Luke Shaw,CB,1
+493,Leny_Yoro,Yoro,Leny Yoro,100.0,name-strict,Leny Yoro,CB,1
+494,Harry_Amass,Amass,Harry Amass,100.0,name-strict,Harry Amass,DL,1
+495,Tyler_Fredricson,Fredricson,Tyler Fredricson,100.0,name-strict,Tyler Fredricson,CB,1
+496,Ayden_Heaven,Heaven,Ayden Heaven,100.0,name-strict,Ayden Heaven,CB,1
+497,Tyrell_Malacia,Malacia,Tyrell Malacia,100.0,name-strict,Tyrell Malacia,DL,1
+498,Bruno_Borges Fernandes,B.Fernandes,Bruno Fernandes,95.0,name-strict,Bruno Fernandes,MC,1
+499,Matheus_Santos Carneiro Da Cunha,Cunha,Matheus Cunha,90.0,web_name-relaxed,Matheus Cunha,FW,1
+500,Marcus_Rashford,Rashford,Marcus Rashford,100.0,name-strict,Marcus Rashford,FW,1
+501,Amad_Diallo,Amad,Amadou Diallo,91.66666666666666,name-relaxed,Amadou Diallo,SUB,1
+502,Antony_dos Santos,Antony,Antony,90.0,name-relaxed,Antony,RW,1
+503,Mason_Mount,Mount,Mason Mount,100.0,name-strict,Mason Mount,AMC,1
+504,Carlos_Henrique Casimiro,Casemiro,Casemiro,100.0,web_name-strict,Casemiro,MC,1
+505,Kobbie_Mainoo,Mainoo,Kobbie Mainoo,100.0,name-strict,Kobbie Mainoo,AMC,1
+506,Manuel_Ugarte Ribeiro,Ugarte,Manuel Ugarte,90.0,name-relaxed,Manuel Ugarte,MC,1
+507,Toby_Collyer,Collyer,Toby Collyer,100.0,name-strict,Toby Collyer,SUB,1
+508,Jayce_Fitzgerald,Fitzgerald,Unknown for understat,,no-match,,SUB,1
+509,Jack_Fletcher,J.Fletcher,Unknown for understat,,no-match,,SUB,1
+510,Sékou_Koné,Kone,Unknown for understat,,no-match,,SUB,1
+511,Jack_Moorhouse,Moorhouse,Unknown for understat,,no-match,,SUB,1
+512,Rasmus_Højlund,Højlund,Rasmus Højlund,100.0,name-strict,Rasmus Højlund,FW,1
+513,Joshua_Zirkzee,Zirkzee,Joshua Zirkzee,100.0,name-strict,Joshua Zirkzee,FW,1
+514,Chido_Obi,Obi,Chido Obi-Martin,90.0,name-relaxed,Chido Obi-Martin,FW,1
+515,Ethan_Wheatley,Wheatley,Ethan Wheatley,100.0,name-strict,Ethan Wheatley,SUB,1
+516,Benjamin_Sesko,Šeško,Benjamin Sesko,100.0,name-strict,Benjamin Sesko,FW,1
+517,Senne_Lammens,Lammens,Senne Lammens,100.0,name-strict,Senne Lammens,GK,1
+518,Jacob_Ramsey,J.Ramsey,Jacob Ramsey,100.0,name-strict,Jacob Ramsey,MC,1
+519,Yoane_Wissa,Wissa,Yoane Wissa,100.0,name-strict,Yoane Wissa,FW,1
+520,Nick_Pope,Pope,Nick Pope,100.0,name-strict,Nick Pope,GK,1
+521,Mark_Gillespie,Gillespie,Unknown for understat,,no-match,,SUB,1
+522,Odysseas_Vlachodimos,Odysseas,Odisseas Vlachodimos,95.0,name-strict,Odisseas Vlachodimos,GK,1
+523,Lewis_Hall,Hall,Lewis Hall,100.0,name-strict,Lewis Hall,DL,1
+524,Fabian_Schär,Schär,Fabian Schär,100.0,name-strict,Fabian Schär,CB,1
+525,Sven_Botman,Botman,Sven Botman,100.0,name-strict,Sven Botman,CB,1
+526,Dan_Burn,Burn,Dan Burn,100.0,name-strict,Dan Burn,DL,1
+527,Tino_Livramento,Livramento,Valentino Livramento,90.0,web_name-relaxed,Valentino Livramento,DL,1
+528,Kieran_Trippier,Trippier,Kieran Trippier,100.0,name-strict,Kieran Trippier,DR,1
+529,Emil_Krafth,Krafth,Emil Krafth,100.0,name-strict,Emil Krafth,CB,1
+530,Jamaal_Lascelles,Lascelles,Jamaal Lascelles,100.0,name-strict,Jamaal Lascelles,CB,1
+531,Alex_Murphy,A.Murphy,Alex Murphy,100.0,name-strict,Alex Murphy,SUB,1
+532,Harrison_Ashby,Ashby,Unknown for understat,,no-match,,SUB,1
+533,Miodrag_Pivaš,Pivas,Unknown for understat,,no-match,,SUB,1
+534,Matt_Targett,Targett,Matt Targett,100.0,name-strict,Matt Targett,DL,1
+535,Anthony_Gordon,Gordon,Anthony Gordon,100.0,name-strict,Anthony Gordon,LW,1
+536,Anthony_Elanga,Elanga,Anthony Elanga,100.0,name-strict,Anthony Elanga,RW,1
+537,Harvey_Barnes,Barnes,Harvey Barnes,100.0,name-strict,Harvey Barnes,LW,1
+538,Bruno_Guimarães Rodriguez Moura,Bruno G.,Bruno Guimarães,90.0,name-relaxed,Bruno Guimarães,MC,1
+539,Jacob_Murphy,J.Murphy,Jacob Murphy,100.0,name-strict,Jacob Murphy,RW,1
+540,Joelinton_Cássio Apolinário de Lira,Joelinton,Joelinton,90.0,name-relaxed,Joelinton,MC,1
+541,Sandro_Tonali,Tonali,Sandro Tonali,100.0,name-strict,Sandro Tonali,MC,1
+542,Antoñito_Cordero Campillo,Antoñito C.,Unknown for understat,,no-match,,SUB,1
+543,Joe_Willock,Willock,Joe Willock,100.0,name-strict,Joe Willock,MC,1
+544,Isaac_Hayden,Hayden,Kaine Hayden,90.0,web_name-relaxed,Kaine Hayden,SUB,1
+545,Garang_Kuol,Kuol,Unknown for understat,,no-match,,SUB,1
+546,Lewis_Miley,L.Miley,Lewis Miley,100.0,name-strict,Lewis Miley,MC,1
+547,Joe_White,White,Joe White,100.0,name-strict,Joe White,SUB,1
+548,William_Osula,Osula,William Osula,100.0,name-strict,William Osula,FW,1
+549,Sean_Neave,Neave,Unknown for understat,,no-match,,SUB,1
+550,Aaron_Ramsdale,Ramsdale,Aaron Ramsdale,100.0,name-strict,Aaron Ramsdale,GK,1
+551,Malick_Thiaw,Thiaw,Malick Thiaw,100.0,name-strict,Malick Thiaw,CB,1
+552,Seung-Soo_Park,Seung soo,Unknown for understat,,no-match,,SUB,1
+553,Nick_Woltemade,Woltemade,Nick Woltemade,100.0,name-strict,Nick Woltemade,FW,1
+554,Oleksandr_Zinchenko,Zinchenko,Oleksandr Zinchenko,100.0,name-strict,Oleksandr Zinchenko,DL,1
+555,James_McAtee,McAtee,James McAtee,100.0,name-strict,James McAtee,AMC,1
+556,Matz_Sels,Sels,Matz Sels,100.0,name-strict,Matz Sels,GK,1
+557,Carlos_Miguel dos Santos Pereira,C.Miguel,Unknown for understat,,no-match,,SUB,1
+558,Matt_Turner,Turner,Matt Turner,100.0,name-strict,Matt Turner,GK,1
+559,Nikola_Milenković,Milenković,Nikola Milenkovic,100.0,name-strict,Nikola Milenkovic,CB,1
+560,Murillo_Costa dos Santos,Murillo,Murillo,90.0,name-relaxed,Murillo,CB,1
+561,Ola_Aina,Aina,Ola Aina,100.0,name-strict,Ola Aina,DR,1
+562,Neco_Williams,N.Williams,Neco Williams,100.0,name-strict,Neco Williams,DR,1
+563,David_Mota Veiga Teixeira do Carmo,David Carmo,Unknown for understat,,no-match,,SUB,1
+564,Jair_Paula da Cunha Filho,Jair Cunha,Jair,90.0,name-relaxed,Jair,CB,1
+565,Felipe_Rodrigues da Silva,Morato,Rodri,90.0,name-relaxed,Rodri,DM,1
+566,Omar_Richards,O.Richards,Unknown for understat,,no-match,,SUB,1
+567,Zach_Abbott,Abbott,George Abbott,90.0,web_name-relaxed,George Abbott,SUB,1
+568,Willy_Boly,Boly,Willy Boly,100.0,name-strict,Willy Boly,CB,1
+569,Morgan_Gibbs-White,Gibbs-White,Morgan Gibbs-White,100.0,name-strict,Morgan Gibbs-White,AMC,1
+570,Callum_Hudson-Odoi,Hudson-Odoi,Callum Hudson-Odoi,100.0,name-strict,Callum Hudson-Odoi,LW,1
+571,Elliot_Anderson,Anderson,Elliot Anderson,100.0,name-strict,Elliot Anderson,DM,1
+572,João_Pedro Ferreira da Silva,Jota,João Pedro,90.0,name-relaxed,João Pedro,FW,1
+573,Nicolás_Domínguez,Dominguez,Nicolás Domínguez,100.0,name-strict,Nicolás Domínguez,MC,1
+574,Lewis_O'Brien,O'Brien,Lewis O&#039;Brien,95.0,name-strict,Lewis O&#039;Brien,MC,1
+575,Ibrahim_Sangaré,Sangaré,Ibrahim Sangare,100.0,name-strict,Ibrahim Sangare,DM,1
+576,Ryan_Yates,Yates,Ryan Yates,100.0,name-strict,Ryan Yates,MC,1
+577,Eric_da Silva Moreira,Da Silva Moreira,Eric da Silva Moreira,100.0,name-strict,Eric da Silva Moreira,SUB,1
+578,Marko_Stamenić,Stamenic,Unknown for understat,,no-match,,SUB,1
+579,Chris_Wood,Wood,Chris Wood,100.0,name-strict,Chris Wood,FW,1
+580,Igor_Jesus Maciel da Cruz,Igor Jesus,Igor Jesus,90.0,name-relaxed,Igor Jesus,SUB,1
+581,Taiwo_Awoniyi,Awoniyi,Taiwo Awoniyi,100.0,name-strict,Taiwo Awoniyi,FW,1
+582,Dan_Ndoye,Ndoye,Dan Ndoye,100.0,name-strict,Dan Ndoye,LW,1
+583,Angus_Gunn,Gunn,Unknown for understat,,no-match,,SUB,1
+584,Omari_Hutchinson,Hutchinson,Omari Hutchinson,100.0,name-strict,Omari Hutchinson,RW,1
+585,Arnaud_Kalimuendo,Kalimuendo,Arnaud Kalimuendo Muinga,95.0,name-strict,Arnaud Kalimuendo Muinga,SUB,1
+586,Douglas_Luiz Soares de Paulo,Douglas Luiz,Douglas Luiz,90.0,name-relaxed,Douglas Luiz,DM,1
+587,John_Victor Maciel Furtado,John,Brennan Johnson,90.0,web_name-relaxed,Brennan Johnson,RW,1
+588,Nicolò_Savona,Savona,Nicolò Savona,100.0,name-strict,Nicolò Savona,DR,1
+589,Luis_Eduardo Soares da Silva,Cuiabano,Unknown for understat,,no-match,,SUB,1
+590,Dilane_Bakwa,Bakwa,Dilane Bakwa,100.0,name-strict,Dilane Bakwa,RW,1
+591,Anthony_Patterson,Patterson,Nathan Patterson,90.0,web_name-relaxed,Nathan Patterson,DR,1
+592,Simon_Moore,Moore,Kieffer Moore,90.0,web_name-relaxed,Kieffer Moore,SUB,1
+593,Blondy_Nna Noukeu,Nna Noukeu,Unknown for understat,,no-match,,SUB,1
+594,Daniel_Ballard,Ballard,Dominic Ballard,90.0,web_name-relaxed,Dominic Ballard,SUB,1
+595,Trai_Hume,Hume,Trai Hume,100.0,name-strict,Trai Hume,DR,1
+596,Aji_Alese,Alese,Unknown for understat,,no-match,,SUB,1
+597,Joe_Anderson,Anderson,Elliot Anderson,90.0,web_name-relaxed,Elliot Anderson,SUB,1
+598,Dennis_Cirkin,Cirkin,Unknown for understat,,no-match,,SUB,1
+599,Leo_Fuhr Hjelde,Hjelde,Unknown for understat,,no-match,,SUB,1
+600,Niall_Huggins,Huggins,Unknown for understat,,no-match,,SUB,1
+601,Zak_Johnson,Johnson,Brennan Johnson,90.0,web_name-relaxed,Brennan Johnson,RW,1
+602,Luke_O'Nien,O'Nien,Unknown for understat,,no-match,,SUB,1
+603,Timothée_Pembélé,Pembele,Unknown for understat,,no-match,,SUB,1
+604,Reinildo_Mandava,Reinildo,Reinildo,90.0,name-relaxed,Reinildo,DL,1
+605,Jenson_Seelt,Seelt,Jenson Seelt,100.0,name-strict,Jenson Seelt,CB,1
+606,Simon_Adingra,Adingra,Simon Adingra,100.0,name-strict,Simon Adingra,LW,1
+607,Habib_Diarra,Diarra,Habib Diarra,100.0,name-strict,Habib Diarra,MC,1
+608,Patrick_Roberts,Roberts,Patrick Roberts,100.0,name-strict,Patrick Roberts,SUB,1
+609,Milan_Aleksić,Aleksić,Unknown for understat,,no-match,,SUB,1
+610,Enzo_Le Fée,E.Le Fée,Enzo Le Fée,100.0,name-strict,Enzo Le Fée,LW,1
+611,Romaine_Mundle,Mundle,Unknown for understat,,no-match,,SUB,1
+612,Dan_Neil,Neil,Dan Neil,100.0,name-strict,Dan Neil,SUB,1
+613,Ian_Poveda-Ocampo,Poveda,Unknown for understat,,no-match,,SUB,1
+614,Chris_Rigg,Rigg,Chris Rigg,100.0,name-strict,Chris Rigg,AMC,1
+615,Noah_Sadiki,Sadiki,Noah Sadiki,100.0,name-strict,Noah Sadiki,DM,1
+616,Chemsdine_Talbi,Talbi,Chemsdine Talbi,100.0,name-strict,Chemsdine Talbi,RW,1
+617,Abdoullah_Ba,Ba,Harvey Barnes,90.0,web_name-relaxed,Harvey Barnes,LW,1
+618,Alan_Browne,Browne,Unknown for understat,,no-match,,SUB,1
+619,Pierre_Ekwah Elimby,Ekwah,Unknown for understat,,no-match,,SUB,1
+620,Harrison_Jones,H.Jones,Unknown for understat,,no-match,,SUB,1
+621,Jay_Matete,Matete,Tetê,90.0,name-relaxed,Tetê,RW,1
+622,Nectarios_Triantis,Triantis,Unknown for understat,,no-match,,SUB,1
+623,Wilson_Isidor,Isidor,Wilson Isidor,100.0,name-strict,Wilson Isidor,FW,1
+624,Eliezer_Mayenda Dossou,Mayenda,Eliezer Mayenda,95.0,name-strict,Eliezer Mayenda,FW,1
+625,Ahmed_Abdullahi,Abdullahi,Unknown for understat,,no-match,,SUB,1
+626,Luís_Hemir Silva Semedo,Luís Hemir,Unknown for understat,,no-match,,SUB,1
+627,Nazarii_Rusyn,Rusyn,Unknown for understat,,no-match,,SUB,1
+628,Granit_Xhaka,Xhaka,Granit Xhaka,100.0,name-strict,Granit Xhaka,DM,1
+629,Robin_Roefs,Roefs,Robin Roefs,100.0,name-strict,Robin Roefs,GK,1
+630,Arthur_Masuaku,Masuaku,Arthur Masuaku,100.0,name-strict,Arthur Masuaku,DL,1
+631,Omar_Alderete,Alderete,Omar Alderete,100.0,name-strict,Omar Alderete,CB,1
+632,Nordi_Mukiele,Mukiele,Nordi Mukiele,100.0,name-strict,Nordi Mukiele,CB,1
+633,Lutsharel_Geertruida,Geertruida,Lutsharel Geertruida,100.0,name-strict,Lutsharel Geertruida,SUB,1
+634,Brian_Brobbey,Brobbey,Brian Brobbey,100.0,name-strict,Brian Brobbey,SUB,1
+635,Bertrand_Traoré,Traoré,Bertrand Traoré,100.0,name-strict,Bertrand Traoré,RW,1
+636,Guglielmo_Vicario,Vicario,Guglielmo Vicario,100.0,name-strict,Guglielmo Vicario,GK,1
+637,Brandon_Austin,Austin,Brandon Austin,100.0,name-strict,Brandon Austin,GK,1
+638,Antonín_Kinský,Kinsky,Antonín Kinsky,100.0,name-strict,Antonín Kinsky,GK,1
+639,Pedro_Porro,Pedro Porro,Pedro Porro,100.0,name-strict,Pedro Porro,DR,1
+640,Cristian_Romero,Romero,Cristian Romero,100.0,name-strict,Cristian Romero,CB,1
+641,Kevin_Danso,Danso,Kevin Danso,100.0,name-strict,Kevin Danso,CB,1
+642,Ben_Davies,Davies,Ben Davies,100.0,name-strict,Ben Davies,CB,1
+643,Radu_Drăgușin,Dragusin,Radu Dragusin,100.0,name-strict,Radu Dragusin,CB,1
+644,Djed_Spence,Spence,Djed Spence,100.0,name-strict,Djed Spence,DL,1
+645,Destiny_Udogie,Udogie,Iyenoma Destiny Udogie,90.0,name-relaxed,Iyenoma Destiny Udogie,DL,1
+646,Micky_van de Ven,Van de Ven,Micky van de Ven,100.0,name-strict,Micky van de Ven,CB,1
+647,Ashley_Phillips,Phillips,Nathaniel Phillips,90.0,web_name-relaxed,Nathaniel Phillips,CB,1
+648,Takai_Kōta,Takai,Unknown for understat,,no-match,,SUB,1
+649,Luka_Vušković,Vuskovic,Unknown for understat,,no-match,,SUB,1
+650,Son_Heung-min,Son,Son Heung-Min,100.0,name-strict,Son Heung-Min,LW,1
+651,Brennan_Johnson,Johnson,Brennan Johnson,100.0,name-strict,Brennan Johnson,RW,1
+652,James_Maddison,Maddison,James Maddison,100.0,name-strict,James Maddison,MC,1
+653,Mohammed_Kudus,Kudus,Mohammed Kudus,100.0,name-strict,Mohammed Kudus,RW,1
+654,Dejan_Kulusevski,Kulusevski,Dejan Kulusevski,100.0,name-strict,Dejan Kulusevski,MC,1
+655,Mathys_Tel,Tel,Mathys Tel,100.0,name-strict,Mathys Tel,FW,1
+656,Rodrigo_Bentancur,Bentancur,Rodrigo Bentancur,100.0,name-strict,Rodrigo Bentancur,DM,1
+657,Lucas_Bergvall,Bergvall,Lucas Bergvall,100.0,name-strict,Lucas Bergvall,MC,1
+658,Yves_Bissouma,Bissouma,Yves Bissouma,100.0,name-strict,Yves Bissouma,MC,1
+659,Wilson_Odobert,Odobert,Wilson Odobert,100.0,name-strict,Wilson Odobert,LW,1
+660,Manor_Solomon,Solomon,Manor Solomon,100.0,name-strict,Manor Solomon,LW,1
+661,Bryan_Gil Salvatierra,Bryan,Bryan Gil Salvatierra,100.0,name-strict,Bryan Gil Salvatierra,LW,1
+662,Archie_Gray,Gray,Archie Gray,100.0,name-strict,Archie Gray,MC,1
+663,Mikey_Moore,Moore,Mikey Moore,100.0,name-strict,Mikey Moore,RW,1
+664,Pape_Matar Sarr,P.M.Sarr,Unknown for understat,,no-match,,SUB,1
+665,Yang_Min-hyeok,Min-hyeok,Unknown for understat,,no-match,,SUB,1
+666,Callum_Olusesi,Olusesi,Unknown for understat,,no-match,,SUB,1
+667,Dominic_Solanke-Mitchell,Solanke,Dominic Solanke,90.0,name-relaxed,Dominic Solanke,FW,1
+668,Richarlison_de Andrade,Richarlison,Richarlison,90.0,name-relaxed,Richarlison,FW,1
+669,Will_Lankshear,Lankshear,Will Lankshear,100.0,name-strict,Will Lankshear,SUB,1
+670,Dane_Scarlett,Scarlett,Dane Scarlett,100.0,name-strict,Dane Scarlett,SUB,1
+671,João_Maria Lobo Alves Palhares Costa Palhinha Gonçalves,J.Palhinha,Unknown for understat,,no-match,,SUB,1
+672,Xavi_Simons,Xavi,Xavi Simons,100.0,name-strict,Xavi Simons,AMC,1
+673,Randal_Kolo Muani,Kolo Muani,Randal Kolo Muani,100.0,name-strict,Randal Kolo Muani,SUB,1
+674,Jun'ai_Byfield,Byfield,Unknown for understat,,no-match,,SUB,1
+675,Igor_Julio dos Santos de Paulo,Igor,Igor Julio,90.0,name-relaxed,Igor Julio,DL,1
+676,Alphonse_Areola,Areola,Alphonse Areola,100.0,name-strict,Alphonse Areola,GK,1
+677,Wes_Foderingham,Foderingham,Wes Foderingham,100.0,name-strict,Wes Foderingham,GK,1
+678,Krisztián_Hegyi,Hegyi,Unknown for understat,,no-match,,SUB,1
+679,El_Hadji Malick Diouf,Diouf,El Hadji Malick Diouf,100.0,name-strict,El Hadji Malick Diouf,DL,1
+680,Emerson_Palmieri dos Santos,Emerson,Emerson,90.0,name-relaxed,Emerson,DL,1
+681,Maximilian_Kilman,Kilman,Max Kilman,90.0,web_name-relaxed,Max Kilman,CB,1
+682,Konstantinos_Mavropanos,Mavropanos,Konstantinos Mavropanos,100.0,name-strict,Konstantinos Mavropanos,CB,1
+683,Nayef_Aguerd,N.Aguerd,Unknown for understat,,no-match,,SUB,1
+684,Ollie_Scarles,Scarles,Oliver Scarles,90.0,web_name-relaxed,Oliver Scarles,DL,1
+685,Jean-Clair_Todibo,Todibo,Jean-Clair Todibo,100.0,name-strict,Jean-Clair Todibo,CB,1
+686,Aaron_Wan-Bissaka,Wan-Bissaka,Aaron Wan-Bissaka,100.0,name-strict,Aaron Wan-Bissaka,RW,1
+687,Kaelan_Casey,Casey,Kaelan Casey,100.0,name-strict,Kaelan Casey,SUB,1
+688,Lucas_Tolentino Coelho de Lima,L.Paquetá,Unknown for understat,,no-match,,SUB,1
+689,Tomáš_Souček,Souček,Tomas Soucek,100.0,name-strict,Tomas Soucek,DM,1
+690,James_Ward-Prowse,Ward-Prowse,James Ward-Prowse,100.0,name-strict,James Ward-Prowse,DM,1
+691,Crysencio_Summerville,Summerville,Crysencio Summerville,100.0,name-strict,Crysencio Summerville,LW,1
+692,Edson_Álvarez Velázquez,Álvarez,Edson Álvarez,90.0,name-relaxed,Edson Álvarez,DM,1
+693,Maxwel_Cornet,Cornet,Maxwel Cornet,100.0,name-strict,Maxwel Cornet,RW,1
+694,Guido_Rodríguez,G.Rodriguez,Guido Rodríguez,100.0,name-strict,Guido Rodríguez,MC,1
+695,Luis_Guilherme Lira dos Santos,L.Guilherme,Luis Guilherme,90.0,name-relaxed,Luis Guilherme,AMC,1
+696,George_Earthy,Earthy,George Earthy,100.0,name-strict,George Earthy,SUB,1
+697,Andy_Irving,Irving,Andy Irving,100.0,name-strict,Andy Irving,MC,1
+698,Lewis_Orford,Orford,Lewis Orford,100.0,name-strict,Lewis Orford,SUB,1
+699,Freddie_Potts,Potts,Freddie Potts,100.0,name-strict,Freddie Potts,SUB,1
+700,Jarrod_Bowen,Bowen,Jarrod Bowen,100.0,name-strict,Jarrod Bowen,RW,1
+701,Niclas_Füllkrug,Füllkrug,Niclas Füllkrug,100.0,name-strict,Niclas Füllkrug,FW,1
+702,Callum_Marshall,Marshall,Callum Marshall,100.0,name-strict,Callum Marshall,SUB,1
+703,Kyle_Walker-Peters,Walker-Peters,Kyle Walker-Peters,100.0,name-strict,Kyle Walker-Peters,DR,1
+704,Callum_Wilson,Wilson,Callum Wilson,100.0,name-strict,Callum Wilson,FW,1
+705,Mads_Hermansen,Hermansen,Mads Hermansen,100.0,name-strict,Mads Hermansen,GK,1
+706,Mateus_Gonçalo Espanha Fernandes,M.Fernandes,Unknown for understat,,no-match,,SUB,1
+707,Soungoutou_Magassa,S.Magassa,Soungoutou Magassa,100.0,name-strict,Soungoutou Magassa,DM,1
+708,Lukasz_Fabianski,Fabianski,Lukasz Fabianski,100.0,name-strict,Lukasz Fabianski,GK,1
+709,Sam_Johnstone,Johnstone,Sam Johnstone,100.0,name-strict,Sam Johnstone,GK,1
+710,José_Malheiro de Sá,José Sá,José Sá,100.0,web_name-strict,José Sá,GK,1
+711,Daniel_Bentley,Bentley,Daniel Bentley,100.0,name-strict,Daniel Bentley,GK,1
+712,Emmanuel_Agbadou,Agbadou,Emmanuel Agbadou,100.0,name-strict,Emmanuel Agbadou,CB,1
+713,Matt_Doherty,Doherty,Matt Doherty,100.0,name-strict,Matt Doherty,CB,1
+714,Hugo_Bueno López,H.Bueno,Hugo Bueno,90.0,name-relaxed,Hugo Bueno,DL,1
+715,Yerson_Mosquera Valdelamar,Mosquera,Yerson Mosquera,90.0,name-relaxed,Yerson Mosquera,CB,1
+716,Rodrigo_Martins Gomes,R.Gomes,Rodrigo,90.0,name-relaxed,Rodrigo,RW,1
+717,Santiago_Ignacio Bueno,S.Bueno,Unknown for understat,,no-match,,SUB,1
+718,Toti_Gomes,Toti,Toti,90.0,name-relaxed,Toti,CB,1
+719,Ki-Jana_Hoever,Hoever,Ki-Jana Hoever,100.0,name-strict,Ki-Jana Hoever,DR,1
+720,Bastien_Meupiyou Menadjou,Meupiyou,Unknown for understat,,no-match,,SUB,1
+721,Pedro_Cardoso de Lima,Pedro Lima,Pedro Lima,100.0,web_name-strict,Pedro Lima,DR,1
+722,Alfie_Pond,Pond,Alfie Pond,100.0,name-strict,Alfie Pond,SUB,1
+723,Hwang_Hee-chan,Hee Chan,Hee-Chan Hwang,95.0,name-strict,Hee-Chan Hwang,LW,1
+724,André_Trindade da Costa Neto,André,Neto,90.0,name-relaxed,Neto,GK,1
+725,Jean-Ricner_Bellegarde,Bellegarde,Jean-Ricner Bellegarde,100.0,name-strict,Jean-Ricner Bellegarde,AMC,1
+726,Fer_López González,Fer López,Unknown for understat,,no-match,,SUB,1
+727,João_Victor Gomes da Silva,Gomes,João Gomes,90.0,web_name-relaxed,João Gomes,MC,1
+728,Gonçalo_Manuel Ganchinho Guedes,Guedes,Gonçalo Guedes,90.0,web_name-relaxed,Gonçalo Guedes,FW,1
+729,Marshall_Munetsi,Munetsi,Marshall Munetsi,100.0,name-strict,Marshall Munetsi,MC,1
+730,Boubacar_Traoré,B.Traore,Boubacar Traore,100.0,name-strict,Boubacar Traore,MC,1
+731,Tawanda_Chirewa,Chirewa,Tawanda Chirewa,100.0,name-strict,Tawanda Chirewa,FW,1
+732,Tom_Edozie,Edozie,Samuel Edozie,90.0,web_name-relaxed,Samuel Edozie,RW,1
+733,Enso_González Medina,Gonzalez,Enso González,90.0,name-relaxed,Enso González,SUB,1
+734,Joe_Hodge,Hodge,Joseph Hodge,90.0,web_name-relaxed,Joseph Hodge,MC,1
+735,Jørgen_Strand Larsen,Strand Larsen,Jørgen Strand Larsen,100.0,name-strict,Jørgen Strand Larsen,FW,1
+736,Fábio_Soares Silva,Fábio Silva,Fabio Silva,100.0,web_name-strict,Fabio Silva,FW,1
+737,Saša_Kalajdžić,Kalajdžić,Sasa Kalajdzic,100.0,name-strict,Sasa Kalajdzic,FW,1
+738,Leon_Chiwome,Chiwome,Leon Chiwome,100.0,name-strict,Leon Chiwome,FW,1
+739,Nathan_Fraser,Fraser,Nathan Fraser,100.0,name-strict,Nathan Fraser,FW,1
+740,Jhon_Arias,J.Arias,Jhon Arias,100.0,name-strict,Jhon Arias,RW,1
+741,David_Møller Wolfe,Møller Wolfe,David Møller Wolfe,100.0,name-strict,David Møller Wolfe,DL,1
+742,Jackson_Tchatchoua,Tchatchoua,Jackson Tchatchoua,100.0,name-strict,Jackson Tchatchoua,DR,1
+743,Ladislav_Krejcí,Krejčí,Ladislav Krejcí,100.0,name-strict,Ladislav Krejcí,CB,1
+744,Tolu_Arokodare,Tolu,Tolu Arokodare,100.0,name-strict,Tolu Arokodare,FW,1
