@@ -505,7 +505,7 @@ def Generate_Understat_dataset(current_players,run_player_pos):
 
         for i in range(n):
             # decay offset (scalar)
-            offset = 2.0 - (i + 1) * 0.05
+            offset = 1.5 - (i + 1) * 0.05
             if offset < 1.0:
                 offset = 1.0
 
