@@ -42,7 +42,7 @@ def Data_Extraction(season,is_new_season,has_been_error):
 
 
 def Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos):
-    #main_Transform()
+    main_Transform()
     Generate_Understat_dataset(current_player_path,run_player_pos)
     team_data(current_team_path)
     GeneratePlayerData(time_list, current_fixture_path,current_player_path,current_team_path)
@@ -84,7 +84,7 @@ def Get_times(current_fixture_path,n_points_in_future):
 def Main_Orchestration():
     season=25
     is_new_season=0
-    has_been_error=0
+    has_been_error=1
     n_points_in_future=8
     budget=100
     ownership=0.9

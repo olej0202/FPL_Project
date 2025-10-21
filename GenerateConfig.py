@@ -25,17 +25,16 @@ Spurs,6
 ,Ipswich,40"""
 
 
-Manual_team_offensive_adjustments = {4:0.9,17:1.15,94:0.85,36:0.9 }
+Manual_team_offensive_adjustments = {4:0.9,17:1.15,94:0.9,36:0.9 }
     
     
     
-Manual_team_defensive_adjustments = {6:0.9,94:1.15 }
+Manual_team_defensive_adjustments = {6:0.9,94:1.1 }
 
 
 Manual_NewPlayer_Adjustments={
         "Benjamin_Sesko":["Kai_Havertz","Rasmus_Højlund","Marcus_Rashford"], 
         "Hugo_Ekitiké":["Kai_Havertz","Alexander_Isak" ],
-        "Nick_Woltemade":["Kai_Havertz","Alexander_Isak","Anthony_Gordon" ],  
     }
 
 Manual_Player_Adjustments={
@@ -52,7 +51,7 @@ Manual_Player_Risk={
         "Mohammed_Kudus":0.7,
         "Benjamin_Sesko":0.7,
         "Hugo_Ekitiké":0.5,
-        "Nick_Woltemade":0.6
+        "Nick_Woltemade":0.8
         
 }
 
