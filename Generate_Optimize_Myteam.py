@@ -212,7 +212,7 @@ def optimize_my_team(team_id=7025308,wildcard_round=8, bb_round=10,free_hit_roun
             banned_mask,
             0,
             
-            data[col] * data["minutes_multiplier"]
+            data[col]
             
         )
     
