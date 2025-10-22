@@ -454,7 +454,7 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
             
             last = player_row["defcon_avg"].iloc[-1] if not player_row["defcon_avg"].empty else np.nan
             cbi_hist = cbi_ind if pd.isna(last) else last
-            player_row["CBI"]=cbi_ind*0.8+0.2*cbi_hist
+            player_row["CBI"]=cbi_ind*0.2+0.8*cbi_hist
         else:
             last = player_row["defcon_avg"].iloc[-1] if not player_row["defcon_avg"].empty else np.nan
             player_row["CBI"]=last
@@ -479,8 +479,10 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
         print(player_understat_pos)
         print(team_code)
         print(name)
-        if len(player_row)<7:
-            player_risiko=0.6
+        if len(player_row)<6:
+            player_risiko=0.8
+        if len(player_row)<10:
+            player_risiko=0.7
         if(name in Manual_Player_Risk):
                 player_risiko = Manual_Player_Risk[name]
         

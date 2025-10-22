@@ -25,7 +25,7 @@ Spurs,6
 ,Ipswich,40"""
 
 
-Manual_team_offensive_adjustments = {4:0.9,17:1.15,94:0.9,36:0.9 }
+Manual_team_offensive_adjustments = {4:0.9,17:1.15,94:0.85,36:0.9 }
     
     
     
@@ -38,20 +38,19 @@ Manual_NewPlayer_Adjustments={
     }
 
 Manual_Player_Adjustments={
+        "Nick_Woltemade":["Anthony_Gordon" ],
+        "Nordi_Mukiele":["Vitalii_Mykolenko"]
+        
      }
 
 
 Manual_Player_Risk={
         "Alexander_Isak":0.7,
-        "Igor_Thiago Nascimento Rodrigues":0.5,
         "Jack_Grealish":0.6,
-        "Yoane_Wissa":0.7,
+        "Yoane_Wissa":0.8,
         "Bryan_Mbeumo":0.5,
         "Matheus_Santos Carneiro Da Cunha":0.6,
         "Mohammed_Kudus":0.7,
-        "Benjamin_Sesko":0.7,
-        "Hugo_Ekitiké":0.5,
-        "Nick_Woltemade":0.8
         
 }
 
