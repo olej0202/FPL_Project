@@ -216,66 +216,116 @@ def team_data(
 
 
 
+import pandas as pd
+import numpy as np
+
 def add_team_share_per90(
     minutes_col: str = "average_minutes",
     team_col: str = "Team",
     name_col: str = "name",
+    gw_col: str = "GW",
     per: int = 90,
     share_suffix: str = "_share",
     add_percent: bool = False,
     percent_suffix: str = "_share_pct",
     round_pct: int = 2,
+    metric_is_per90: bool = True,   # set False if your metrics are raw (not per-90)
 ) -> pd.DataFrame:
-    df = pd.read_csv("Player_Prediction_set.csv")
-    metrics=["Rolling_adjusted_XG","rolling_Threat","Rolling_adjusted_XA","Rolling_creativity","Rolling_adjusted_BPS","rolling_XG", "rolling_XA"]
-    
-    # 0) Precompute minutes per (team, name) once
-    player_mins = (
-        df.groupby([team_col, name_col], as_index=True)[minutes_col]
-          .sum()
-          .rename("mins_sum")
-    )
+    """
+    Compute team share per metric **per GW** so that varying minutes per player per GW are respected.
 
-    # Work on a copy to avoid mutating caller's DataFrame unexpectedly
+    If metric_is_per90=True (default):
+        row_contrib = metric_value * (minutes / per)
+      (e.g., a per-90 rate scaled by that row's minutes)
+
+    If metric_is_per90=False (raw metric per row):
+        row_contrib = metric_value
+      (you can change this to (metric/minutes)*per * (minutes/per) = metric if needed)
+
+    The team share for a player's row is:
+        player_contrib(team, name, GW) / sum_contrib(team, GW)
+
+    The share is attached back to every original row.
+    """
+    df = pd.read_csv("Player_Prediction_set.csv")
+
+    # Ensure the GW column exists and is string (helps with joins/pivots)
+    if gw_col not in df.columns:
+        raise ValueError(f"Column '{gw_col}' not found in Player_Prediction_set.csv")
+    df[gw_col] = df[gw_col].astype(str)
+
+    # Metrics to process
+    metrics = [
+        "Rolling_adjusted_XG","rolling_Threat","Rolling_adjusted_XA",
+        "Rolling_creativity","Rolling_adjusted_BPS","rolling_XG","rolling_XA"
+    ]
+    for m in metrics:
+        if m not in df.columns:
+            raise ValueError(f"Metric column '{m}' not found in Player_Prediction_set.csv")
+
+    # Work on a copy
     out = df.copy()
 
+    # Minutes sanity
+    out[minutes_col] = pd.to_numeric(out[minutes_col], errors="coerce").fillna(0.0)
+    # Avoid divide-by-zero
+    safe_minutes = out[minutes_col].replace(0, np.nan)
+
     for metric in metrics:
-        # 1) Player-level metric sum
-        player_metric = (
-            df.groupby([team_col, name_col], as_index=True)[metric]
-              .sum()
-              .rename("metric_sum")
+        # Per-row contribution for this metric
+        if metric_is_per90:
+            # metric is per-90, scale by minutes/per
+            contrib = out[metric].astype(float) * (out[minutes_col] / float(per))
+        else:
+            # metric is already a raw amount per row (not per-90)
+            contrib = out[metric].astype(float)
+
+        contrib_col = f"{metric}_contrib"
+        out[contrib_col] = contrib.fillna(0.0)
+
+        # Aggregate to (team, GW, player)
+        player_gw_contrib = (
+            out.groupby([team_col, gw_col, name_col], as_index=False)[contrib_col]
+               .sum()
+               .rename(columns={contrib_col: "player_contrib"})
         )
 
-        # 2) Combine minutes + metric; compute per-<per> rate
-        player_agg = pd.concat([player_mins, player_metric], axis=1)
-        player_agg["per_val"] = (
-            player_agg["metric_sum"]*player_agg["mins_sum"]/ per)
-
-        # 3) Team total of that same per-<per> metric
-        team_total = (
-            player_agg.groupby(level=0)["per_val"]
-                      .sum()
-                      .rename("team_per_total")
+        # Team total per (team, GW)
+        team_gw_total = (
+            player_gw_contrib.groupby([team_col, gw_col], as_index=False)["player_contrib"]
+                             .sum()
+                             .rename(columns={"player_contrib": "team_total"})
         )
 
-        # 4) Join team totals and compute share; guard against divide-by-zero
-        player_agg = player_agg.join(team_total, on=team_col)
+        # Join team totals back to player_gw
+        player_gw_contrib = player_gw_contrib.merge(team_gw_total, on=[team_col, gw_col], how="left")
+
+        # Compute share (guard against zero)
         share_col = f"{metric}{share_suffix}"
-        player_agg[share_col] = (
-            player_agg["per_val"] / player_agg["team_per_total"]
-        ).fillna(0.0)
+        player_gw_contrib[share_col] = np.where(
+            player_gw_contrib["team_total"] > 0,
+            player_gw_contrib["player_contrib"] / player_gw_contrib["team_total"],
+            0.0
+        )
 
-        # 5) Attach back to every original row for that (team, name)
-        out = out.join(player_agg[[share_col]], on=[team_col, name_col])
+        # Attach share back to every original row matching (team, GW, player)
+        out = out.merge(
+            player_gw_contrib[[team_col, gw_col, name_col, share_col]],
+            on=[team_col, gw_col, name_col],
+            how="left"
+        )
 
-        # 6) Optional percent column
+        # Optional percent column
         if add_percent:
             pct_col = f"{metric}{percent_suffix}"
-            out[pct_col] = (out[share_col] * 100).round(round_pct)
+            out[pct_col] = (out[share_col].fillna(0.0) * 100.0).round(round_pct)
 
+        # Clean scratch cols for next loop
+        out.drop(columns=[contrib_col], inplace=True)
+
+    # Save & return
     out.to_csv("Player_Prediction_set.csv", index=False)
-
+    return out
 
 
 
@@ -324,7 +374,7 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
     
     relevant_players["name"] = relevant_players["name"].apply(lambda n: name_map.get(n, n))
 
-    xmins=pd.read_csv("GenerateXmins.csv")
+    xmins=pd.read_csv("GenerateXmins2.csv")
     xmins["name"] = xmins["name"].apply(lambda n: name_map.get(n, n))
     cbi_data["name"] = cbi_data["name"].apply(lambda n: name_map.get(n, n))
     current_players["name"] = current_players["name"].apply(lambda n: name_map.get(n, n))
@@ -345,7 +395,7 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
             pen_number=player_pen_takers["Is_taker"].values[0]
         playerMins=xmins[xmins["name"]==name]
         playerCBI=cbi_data[cbi_data["name"]==name]
-        minutes=playerMins["minutes"].values[0]
+        minutes=playerMins["Final_minutes_Adjusted"].values
         print(name)
         player_understat_pos=understat_pos[understat_pos["fpl_name"]==name]["Matched_Pos"].values[0]      
 
@@ -450,7 +500,7 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
             
         if(len(playerCBI)>0):
             print(minutes)
-            cbi_ind=((playerCBI["CBI"].values[0]/90)*minutes)
+            cbi_ind=((playerCBI["CBI"].values[0]/90)*minutes[0])
             
             last = player_row["defcon_avg"].iloc[-1] if not player_row["defcon_avg"].empty else np.nan
             cbi_hist = cbi_ind if pd.isna(last) else last
@@ -498,6 +548,7 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
         player_row["Goal_Index"]=player_row["Understat_POSXG"]*0.5+0.5*player_row["Rolling_adjusted_XG"]
         player_row["Assist_Index"]=player_row["Understat_POSXA"]*0.5+0.5*player_row["Rolling_adjusted_XA"]
         
+        
         if(len(clusters)<2):
             break
         for i in range(len(clusters)):
@@ -515,10 +566,10 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
                 player_row["played_XGC"] = played_XGC[i]
                 player_row["played_XG"] = played_XG[i]
                 player_row["opp_code"] = opp_code[i]
-                player_row["average_minutes"] = minutes
                 player_row["Team"]=team_code
                 player_row["Average_Overscore"]=overscore
                 player_row["Average_OverAssist"]=overassist
+                player_row["average_minutes"] = minutes[i]
                 
         
                 

@@ -40,7 +40,7 @@ def GenerateOptimizeSet(Current_data_path):
     visual_df['offset'] = 1
     visual_df["selected"] = visual_df["selected"]/100
     visual_df["value"] = visual_df["value"]/10
-    visual_df["minutes_multiplier"] = np.minimum(1, visual_df['average_minutes'] / 85)
+    visual_df["minutes_multiplier"] = np.minimum(1, visual_df['average_minutes'] / 75)
     visual_df["selected"] = visual_df["selected"].clip(lower=0.01)
     visual_df["minutes_multiplier"] = visual_df["minutes_multiplier"].clip(lower=0.01)
     visual_df["news"] = visual_df["news"].fillna("No news")
@@ -52,7 +52,7 @@ def GenerateOptimizeSet(Current_data_path):
     
     cols_to_offset=["Goal_pred","Assist_pred","Points_prediction"]
     for col in cols_to_offset:
-        visual_df[col] = np.where(visual_df["offset"] < 1, visual_df[col] * visual_df["offset"], visual_df[col] * visual_df["minutes_multiplier"])
+        visual_df[col] = visual_df[col] * visual_df["minutes_multiplier"]
     
 
     
@@ -107,7 +107,7 @@ def GenerateOptimizeSet(Current_data_path):
 
     optimized_player_set["selected"] = optimized_player_set["selected"]/100
     optimized_player_set["value"] = optimized_player_set["value"]/10
-    optimized_player_set["minutes_multiplier"] = np.minimum(1, optimized_player_set['average_minutes'] / 85)
+    optimized_player_set["minutes_multiplier"] = np.minimum(1, optimized_player_set['average_minutes'] / 75)
     optimized_player_set["0"] = 0
     
     optimized_player_set["Points_prediction"] = np.where(
@@ -115,9 +115,10 @@ def GenerateOptimizeSet(Current_data_path):
     optimized_player_set["Points_prediction"] * 0.8,
     optimized_player_set["Points_prediction"]
 )
+    optimized_player_set["Points_prediction"] = optimized_player_set["Points_prediction"] * optimized_player_set["minutes_multiplier"]
     
 
-    constant_cols = ["name", "position","value", 'team_code','selected','web_name','DefCon','Point_STD','offset', 'minutes_multiplier','0']
+    constant_cols = ["name", "position","value", 'team_code','selected','web_name','DefCon','Point_STD','offset','0']
     
 
     pivoted_df = optimized_player_set.pivot_table(

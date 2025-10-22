@@ -54,6 +54,12 @@ Manual_Player_Risk={
         
 }
 
+Manual_min=[
+        {"name": "Bukayo_Saka", "type": "const",   "GW": "any", "value": 90},
+    ]
+        
+
+
 NEW_TEAMS=[56]
 
 

@@ -211,11 +211,9 @@ def optimize_my_team(team_id=7025308,wildcard_round=8, bb_round=10,free_hit_roun
         data[col] = np.where(
             banned_mask,
             0,
-            np.where(
-                data["offset"] < 1,
-                data[col] * data["offset"],
-                data[col] * data["minutes_multiplier"]
-            )
+            
+            data[col] * data["minutes_multiplier"]
+            
         )
     
     

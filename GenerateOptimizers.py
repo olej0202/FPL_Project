@@ -10,12 +10,9 @@ def wildcard_optimize_team(sel_thresh, budget, columns, file_path="Model_Optimiz
     # Load and preprocess data
     data = pd.read_csv(file_path)
     current_players=pd.read_csv(current_player_path)
-    for col in columns:
-        data[col] = np.where(
-            data["offset"] < 1,
-            data[col] * data["offset"],
-            data[col] * data["minutes_multiplier"]
-        )
+    """for col in columns:
+        data[col] = data[col] * data["minutes_multiplier"]"""
+        
         
         
 
@@ -206,8 +203,8 @@ def freeHit_optimize_team(sel_thresh, budget, columns, file_path="Model_Optimize
 
     data = pd.read_csv(file_path)
     cols = columns
-    for col in cols:
-        data[col] = np.where(data["offset"] < 1, data[col] * data["offset"], data[col] * data["minutes_multiplier"])
+    """for col in cols:
+        data[col] =data[col] * data["minutes_multiplier"]"""
     budget = budget
     sel_tresh = sel_thresh
     players = data['name'].tolist()
@@ -322,7 +319,7 @@ def freeHit_values(sel_thresh, budget, columns, file_path="Model_Optimizer.csv",
     print(columns)
     cols = columns
     
-    data[cols] = np.where(data["offset"] < 1, data[cols] * data["offset"], data[cols] * data["minutes_multiplier"])
+    """data[cols] = data[cols] * data["minutes_multiplier"]"""
     budget = budget
     sel_tresh = sel_thresh
     players = data['name'].tolist()

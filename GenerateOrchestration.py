@@ -10,6 +10,10 @@ from GenerateVisualDataset import Generate_ALL_datasets
 from GenerateDataset_Understat import Generate_Understat_dataset
 from chatgpt import main_GPT_News
 from Generate_Optimize_wildcardshocks import wildcard_optimize_team_shocks
+from GenerateXmins import GetXmins
+from GenerateConfig import Manual_min
+
+
 
 import pandas as pd
 import torch
@@ -42,9 +46,10 @@ def Data_Extraction(season,is_new_season,has_been_error):
 
 
 def Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos):
-    main_Transform()
+    #main_Transform()
     Generate_Understat_dataset(current_player_path,run_player_pos)
     team_data(current_team_path)
+    GetXmins(current_player_path, time_list, scenarios=Manual_min)
     GeneratePlayerData(time_list, current_fixture_path,current_player_path,current_team_path)
 
     
@@ -106,10 +111,10 @@ def Main_Orchestration():
     
     
     #Transform data
-    Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos)
+    #Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos)
     
     #Predict data
-    Data_Predictions(current_fixture_path,current_team_path, n_points_in_future)
+    #Data_Predictions(current_fixture_path,current_team_path, n_points_in_future)
     
     Data_Generation(ownership,budget,GW_list_wildcard,GW_list_freehit,current_player_path,current_team_path )
     
