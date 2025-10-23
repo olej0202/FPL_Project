@@ -158,7 +158,7 @@ def GetXmins(current_players, n_future, scenarios=None, position_slots=None):
             minutes_prophet = 0 if not np.isfinite(m_prophet) else round(m_prophet, 2)
             multiplier = min(1.0, round(mult + (j * 0.1 * ispercent), 2))
             final_minutes = ((m_final + minutes_prophet) / 2) * multiplier
-            if (final_minutes - last5_avg) >= 45:
+            if (final_minutes - last5_avg) >= 40:
                 final_minutes = (final_minutes + last5_avg) / 2
             out_rows.append({
                 "name": name,

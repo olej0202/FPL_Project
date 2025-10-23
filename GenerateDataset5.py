@@ -1213,7 +1213,7 @@ def main_Transform():
             player_df["rolling_Chain"] = player_df['xGChain'].rolling(window=10, min_periods=1).mean()
             player_df["Overscore"] = player_df["rolling_GS"]/player_df["rolling_XG"]
             #player_df["Average_Overscore"]=player_df["Overscore"].rolling(window=12, min_periods=1).mean()
-            player_df["Average_Overscore"]=player_df['goals_scored'].rolling(window=30, min_periods=1).sum()/player_df['expected_goals'].rolling(window=30, min_periods=1).sum()
+            player_df["Average_Overscore"]=player_df['goals_scored'].rolling(window=50, min_periods=1).sum()/player_df['expected_goals'].rolling(window=50, min_periods=1).sum()
             player_df["rolling_ICT"] = player_df['ICT'].ewm(span=lookback, adjust=False).mean()
             player_df["rolling_ICT"] = adjust_measure(player_df, 'ICT')
             #player_df["rolling_Threat"] = player_df['Threat'].ewm(span=lookback, adjust=False).mean()
@@ -1295,8 +1295,8 @@ def main_Transform():
 
             adjusted_xg_mean_feature=player_df["Adjusted_XG_Mean"].values[-1]
             #player_df["Average_OverAssist"]=player_df["OverAssist"].rolling(window=12, min_periods=1).mean()
-            player_df["Average_OverAssist"]=player_df['assists'].rolling(window=15, min_periods=1).sum()/player_df['expected_assists'].rolling(window=15, min_periods=1).sum()
-            
+            player_df["Average_OverAssist"]=player_df['assists'].rolling(window=50, min_periods=1).sum()/player_df['expected_assists'].rolling(window=50, min_periods=1).sum()
+            #player_df["Average_OverAssist"] = (player_df["assists"].fillna(0).expanding(min_periods=1).sum()/ player_df["expected_assists"].fillna(0).expanding(min_periods=1).sum()).replace([np.inf, -np.inf], 0)
             player_df["Clipped_XG"]=player_df['expected_goals'].clip(upper=0.8) 
             player_df["Clipped_XA"]=player_df['expected_assists'].clip(upper=0.8) 
             player_df["Clipped_PBS"]=player_df['bps'].clip(upper=35) 

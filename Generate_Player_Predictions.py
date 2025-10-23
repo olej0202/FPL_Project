@@ -754,7 +754,7 @@ def Generate_point_predictions():
 
                 bps.append(max(0.5,(xgb_bps_player["pred"].values[i]*0.3
                                    +stat_bps_player["pred"].values[i]*0.6
-                                   +max(0.5,cluster_bps_player["pred"].values[i]*0.1*0.04)))*0.7)
+                                   +max(0.5,cluster_bps_player["pred"].values[i]*0.1*0.04)))*0.6)
             except:
                 bps.append(0)
 
