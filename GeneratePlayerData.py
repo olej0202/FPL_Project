@@ -224,7 +224,7 @@ def add_team_share_per90(
     team_col: str = "Team",
     name_col: str = "name",
     gw_col: str = "GW",
-    per: int = 90,
+    per: int = 75,
     share_suffix: str = "_share",
     add_percent: bool = False,
     percent_suffix: str = "_share_pct",
@@ -275,7 +275,7 @@ def add_team_share_per90(
         # Per-row contribution for this metric
         if metric_is_per90:
             # metric is per-90, scale by minutes/per
-            contrib = out[metric].astype(float) * (out[minutes_col] / float(per))
+            contrib = out[metric].astype(float) * (out[minutes_col].astype(float) / float(per)).clip(upper=1.0) 
         else:
             # metric is already a raw amount per row (not per-90)
             contrib = out[metric].astype(float)
