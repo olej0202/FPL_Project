@@ -56,9 +56,8 @@ Manual_Player_Risk={
 
 Manual_min=[
         {"name": "Bukayo_Saka", "type": "const",   "GW": "any", "value": 90},
-        {"name": "Cody_Gakpo", "type": "const",   "GW": "any", "value": 70},
         {"name": "Hugo_Ekitiké", "type": "const",   "GW": "any", "value": 70},
-        {"name": "Eli_Junior Kroupi", "type": "const",   "GW": "any", "value": 70},
+        {"name": "Eli_Junior Kroupi", "type": "const",   "GW": "any", "value": 75},
     ]
         
 

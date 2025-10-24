@@ -733,18 +733,18 @@ def Generate_point_predictions():
 
         for i in range(len(player_data)):
             try:
-                goals.append(((xgb_goals_player["pred"].values[i]*0.15
-                         +stat_goals_player["pred"].values[i]*0.7
-                         +DNN_goals_player["pred"].values[i]*0.15
+                goals.append(((xgb_goals_player["pred"].values[i]*0
+                         +stat_goals_player["pred"].values[i]*0.8
+                         +DNN_goals_player["pred"].values[i]*0.2
                          +CLUSTER_goals_player["pred"].values[i]*0.0))*overscore)
             except:
                 goals.append(0)
 
             try:
 
-                assist.append(((xgb_assist_player["pred"].values[i]*0.15
-                                    +stat_assist_player["pred"].values[i]*0.6
-                                    +DNN_assist_player["pred"].values[i]*0.15
+                assist.append(((xgb_assist_player["pred"].values[i]*0
+                                    +stat_assist_player["pred"].values[i]*0.8
+                                    +DNN_assist_player["pred"].values[i]*0.2
                                     +historic_Assist*0.1
                                     +CLUSTER_assist_player["pred"].values[i]*0.0))*overassist)
             except:
