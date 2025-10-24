@@ -224,7 +224,7 @@ def add_team_share_per90(
     team_col: str = "Team",
     name_col: str = "name",
     gw_col: str = "GW",
-    per: int = 75,
+    per: int = 80,
     share_suffix: str = "_share",
     add_percent: bool = False,
     percent_suffix: str = "_share_pct",
@@ -345,6 +345,7 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
     team_pen_data=pd.read_csv("Team_Penalties.csv")
     pen_takers=pd.read_csv("GeneratePenTakers.csv")
     kmeans = joblib.load('kmeans_Groundmodel.pkl')
+    history_data=pd.read_csv("testML4.csv").iloc[:,1:]
     relevant_players = current_players.copy()
     name_map = {
     "Pedro_Porro Sauceda":          "Pedro_Porro",
@@ -389,6 +390,7 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
         ]        
         player_row2=current_players[current_players["name"]==name]
         player_pen_takers=pen_takers[pen_takers["name"]==name]
+        history_player=history_data[history_data["name"]==name]
         if(len(player_pen_takers)==0):
             pen_number=0
         else:
@@ -529,10 +531,10 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
         print(player_understat_pos)
         print(team_code)
         print(name)
-        if len(player_row)<6:
-            player_risiko=0.8
-        if len(player_row)<10:
+        if len(history_player)<6:
             player_risiko=0.7
+        if len(history_player)<10:
+            player_risiko=0.6
         if(name in Manual_Player_Risk):
                 player_risiko = Manual_Player_Risk[name]
         
