@@ -754,7 +754,7 @@ def Generate_point_predictions():
 
                 bps.append(max(0.5,(xgb_bps_player["pred"].values[i]*0.3
                                    +stat_bps_player["pred"].values[i]*0.6
-                                   +max(0.5,cluster_bps_player["pred"].values[i]*0.1*0.04)))*0.6)
+                                   +max(0.5,cluster_bps_player["pred"].values[i]*0.1*0.04)))*0.7)
             except:
                 bps.append(0)
 
@@ -814,7 +814,7 @@ def Generate_point_predictions():
             summary_dataset["Points_prediction"]=(1+summary_dataset["Goal_pred"]*6
                                                   +summary_dataset["Assist_pred"]*4
                                                   +summary_dataset["Bonus_pred"]
-                                                  +summary_dataset["GC_pred"]*5)*0.8+0.2*summary_dataset["Fantasy_pred"]+((summary_dataset["CBI_pred"]/10)*0.7+0.3*cbi_hit_rate)*1*2
+                                                  +summary_dataset["GC_pred"]*5)*0.8+0.2*summary_dataset["Fantasy_pred"]+((summary_dataset["CBI_pred"]/10)*0.7+0.3*cbi_hit_rate)*0.8*2
         
         
         full_df=pd.concat([full_df, summary_dataset], axis=0, ignore_index=True)

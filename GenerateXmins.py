@@ -353,8 +353,7 @@ def GetXmins(current_players, n_future, scenarios=None, position_slots=None):
                 additions[key] = additions.get(key, 0.0) + add
                 delta -= add
 
-            if delta <= 1e-9:
-                break
+
         # any leftover delta is dropped (no eligible complements with headroom)
 
     # Apply additions
