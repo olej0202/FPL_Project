@@ -22,12 +22,12 @@ def wildcard_optimize_team_shocks(
     data = pd.read_csv(file_path)
     current_players = pd.read_csv(current_player_path)
 
-    for col in columns:
+    """for col in columns:
         data[col] = np.where(
             data["offset"] < 1,
             data[col] * data["offset"],
             data[col] * data["minutes_multiplier"]
-        )
+        )"""
 
     players   = data['name'].tolist()
     positions = data['position'].tolist()
