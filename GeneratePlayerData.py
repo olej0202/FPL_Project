@@ -533,12 +533,12 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
         print(name)
         if len(history_player)<=6:
             player_risiko=0.7
-            player_row["Average_Overscore"]=1
-            player_row["Average_OverAssist"]=1
+            overscore=1
+            overassist=1
         if len(history_player)<=10:
             player_risiko=0.5
-            player_row["Average_Overscore"]=1
-            player_row["Average_OverAssist"]=1
+            overscore=1
+            overassist=1
         if(name in Manual_Player_Risk):
                 player_risiko = Manual_Player_Risk[name]
         
