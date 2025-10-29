@@ -219,7 +219,7 @@ export default function TeamPredictionRankingsTable() {
 
         {/* Table */}
         <div className="w-full overflow-x-auto rounded-2xl border border-white/10 bg-white/5">
-          <table className="min-w-full border-collapse table-fixed">
+          <table className="min-w-2 border-collapse table-fixed">
             <thead className="sticky top-0 z-10">
               <tr className="text-[13px]">
                 <th className="px-3 py-2 text-left border-b border-white/10 bg-black/60 w-10">#</th>
@@ -238,7 +238,7 @@ export default function TeamPredictionRankingsTable() {
                 const rank = idx + 1;
                 return (
                   <tr key={row.team_name} className="odd:bg-black/20 even:bg-black/10 hover:bg-black/30">
-                    <td className="px-3 py-2 border-b border-white/5 align-top w-10 tabular-nums">{rank}</td>
+                    <td className="px-3 py-2 border-b border-white/5 align-top w-5 tabular-nums">{rank}</td>
                     <td className="px-3 py-2 border-b border-white/5 align-top whitespace-nowrap">
                       <div className="flex items-center gap-2 min-w-0">
                         {logoSrc ? (
