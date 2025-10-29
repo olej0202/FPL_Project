@@ -345,7 +345,7 @@ export default function MyTeamOptimize() {
 
         {/* Squad Pitch */}
         {data && (
-          <section className="mb-8">
+          <section className="mb-8 ">
             <div
               className="w-full max-w-[400px] aspect-[1/2] bg-no-repeat bg-cover bg-center border border-white rounded-lg px-2 py-1 relative"
               style={{ backgroundImage: `url(${pitch})` }}
