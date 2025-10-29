@@ -169,6 +169,7 @@ function PlayerRow({ players, isBench = false, navigate,fallbackUrl }) {
               isBench ? "text-black opacity-90" : "text-white"
             }`}
           >
+            
             {player.Is_captain && (
               <div
                 className="
@@ -215,6 +216,8 @@ function TransferCard({ player, label, navigate,fallbackUrl }) {
                 state: { selectedPlayer: player.Name },
               })
             }>
+
+              
       <img
         src={player.photo}
         alt={name}

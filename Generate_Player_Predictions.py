@@ -716,7 +716,7 @@ def Generate_point_predictions():
         overscore=min(1.15,overscore)
 
         overassist=max(0.9,player_data["Average_OverAssist"].values[0])
-        overassist=min(1.3,overassist)
+        overassist=min(1.15,overassist)
         
         historic_xg=player_data["rolling_XG_historic"].values[0]
         historic_Assist=player_data["rolling_Assist_historic"].values[-1]
@@ -754,7 +754,7 @@ def Generate_point_predictions():
 
                 bps.append(max(0.5,(xgb_bps_player["pred"].values[i]*0.3
                                    +stat_bps_player["pred"].values[i]*0.6
-                                   +max(0.5,cluster_bps_player["pred"].values[i]*0.1*0.04)))*0.8)
+                                   +max(0.5,cluster_bps_player["pred"].values[i]*0.1*0.04)))*0.85)
             except:
                 bps.append(0)
 
@@ -814,7 +814,7 @@ def Generate_point_predictions():
             summary_dataset["Points_prediction"]=(1+summary_dataset["Goal_pred"]*6
                                                   +summary_dataset["Assist_pred"]*3
                                                   +summary_dataset["Bonus_pred"]
-                                                  +summary_dataset["GC_pred"]*5)*0.8+0.2*summary_dataset["Fantasy_pred"]+((summary_dataset["CBI_pred"]/10)*0.7+0.3*cbi_hit_rate)*2
+                                                  +summary_dataset["GC_pred"]*5)*0.8+0.2*summary_dataset["Fantasy_pred"]+((summary_dataset["CBI_pred"]/10)*0.7+0.3*cbi_hit_rate)*0.9*2
         
         
         full_df=pd.concat([full_df, summary_dataset], axis=0, ignore_index=True)

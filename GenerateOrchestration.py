@@ -66,7 +66,7 @@ def Data_Generation(ownership,budget,GW_list_wildcard,GW_list_freehit,current_pl
     #main_GPT_News()
     
 def Specials(ownership,budget,GW_list_wildcard,current_player_path ):
-    wildcard_optimize_team_shocks(ownership,budget,GW_list_wildcard,current_player_path=current_player_path,robust_trials=10,lock_from_freq=True,lock_counts={"FWD":2, "MID":3, "DEF":3},lock_scope="t0",lock_as_starters=False)
+    wildcard_optimize_team_shocks(ownership,budget,GW_list_wildcard,current_player_path=current_player_path,robust_trials=15,lock_from_freq=True,lock_counts={"FWD":2, "MID":3, "DEF":3},lock_scope="t0",lock_as_starters=False)
 
 
 def Get_times(current_fixture_path,n_points_in_future):
@@ -120,7 +120,7 @@ def Main_Orchestration():
     
     Data_Generation(ownership,budget,GW_list_wildcard,GW_list_freehit,current_player_path,current_team_path )
     
-    Specials(ownership,budget,GW_list_wildcard,current_player_path )
+    #Specials(ownership,budget,GW_list_wildcard,current_player_path )
     
 if __name__ == "__main__":
     Main_Orchestration()

@@ -556,13 +556,12 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
         eval_metric="mlogloss",
         tree_method="hist",
         grow_policy="lossguide",
-        max_depth=6,
-        learning_rate=0.1,
+        max_depth=5,
+        learning_rate=0.01,
         n_estimators=100,
         reg_lambda=2.0,
         gamma=0.1,
         min_child_weight=8,
-        random_state=42,
         enable_categorical=True
     )
 
@@ -605,13 +604,12 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
         eval_metric="mlogloss",
         tree_method="hist",
         grow_policy="lossguide",
-        max_depth=6,
-        learning_rate=0.1,
+        max_depth=5,
+        learning_rate=0.01,
         n_estimators=100,
         reg_lambda=2.0,
         gamma=0.1,
         min_child_weight=8,
-        random_state=42,
         enable_categorical=True
     )
     
@@ -820,7 +818,7 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
 
     proba1 = model_xg.predict_proba(new_input_XG)
     proba2 = model_xg.predict_proba(new_input_XG2)
-    weights = np.array([0.4, 1.1, 1.65, 2.6])
+    weights = np.array([0.4, 1.1, 1.45, 2.5])
     
 
     xg = proba1 @ weights
@@ -882,7 +880,7 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
 
     xgc_proba1 = model_xgc.predict_proba(new_input_XGC)
     xgc_proba2 = model_xgc.predict_proba(new_input_XGC2)
-    weights = np.array([0.4, 1.1, 1.65, 2.6])
+    weights = np.array([0.4, 1.1, 1.45, 2.5])
 
     xgc = xgc_proba1 @ weights
     xgc2 = xgc_proba2 @ weights    
@@ -926,8 +924,8 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     result_df["away_goals"]=((xgc+xg2)/2)
     result_df["Clean_Sheet_home"]=css_stat_home
     result_df["Clean_Sheet_away"]=css_stat_away
-    result_df["test_XG"]=css1
-    result_df["test_cluster"]=css2
+    result_df["test_XG"]=xg
+    result_df["test_cluster"]=xgc2
     result_df["test_opp_XGC"]=xg2
     result_df.to_csv("Team_prediction_visual2.csv")
 
@@ -969,7 +967,7 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
     team_pred1=pd.read_csv("Team_prediction1.csv")
     team_pred2=pd.read_csv("Team_prediction2.csv")
     
-    team_pred1[["XG","XGC"]]=team_pred1[["XG","XGC"]]*0.5+team_pred2[["XG","XGC"]]*0.5
+    team_pred1[["XG","XGC"]]=team_pred1[["XG","XGC"]]*0.7+team_pred2[["XG","XGC"]]*0.3
     team_pred1[["CS"]]=team_pred1[["CS"]]*0.5+team_pred2[["CS"]]*0.5
 
     

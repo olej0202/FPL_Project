@@ -29,7 +29,7 @@ Manual_team_offensive_adjustments = {4:0.9,17:1.15,94:0.85,36:0.9 }
     
     
     
-Manual_team_defensive_adjustments = {6:0.9,94:1.1 }
+Manual_team_defensive_adjustments = {94:1.1,7:1.15,31:1.1 }
 
 
 Manual_NewPlayer_Adjustments={
@@ -56,6 +56,7 @@ Manual_min=[
         {"name": "Bukayo_Saka", "type": "const",   "GW": "any", "value": 90},
         {"name": "Hugo_Ekitiké", "type": "const",   "GW": "any", "value": 70},
         {"name": "Eli_Junior Kroupi", "type": "const",   "GW": "any", "value": 75},
+        {"name": "Karl_Darlow", "type": "const",   "GW": "any", "value": 60},
     ]
         
 

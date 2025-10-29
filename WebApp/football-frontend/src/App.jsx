@@ -58,7 +58,7 @@ export default function App() {
     <div className="min-h-screen bg-black text-white">
       {/* Top Navbar */}
       <nav className="relative bg-royal-beige text-royal-gold shadow">
-        <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-1">
+        <div className="max-w-7xl mx-auto flex items-center justify-between px-2 py-1">
           {/* Logo + Title */}
           <div className="flex items-center gap-1">
             <img
@@ -89,10 +89,10 @@ export default function App() {
           <div className="md:hidden flex items-center">
             <button
               onClick={() => setMenuOpen(true)}
-              className="px-4 rounded border border-royal-gold  flex items-center"
+              className="px-3 rounded border border-royal-gold  flex items-center"
             >
-              <span className="text-lg mr-2">All Tools</span>
-              <Menu size={22} />
+              <span className=" mr-1">All Tools</span>
+              <Wrench size={20} />
               
             </button>
           </div>
