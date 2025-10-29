@@ -1,68 +1,68 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import teamLogos from "./utils/team_logos";
-import teamKits from "./utils/team_kits";
+import pitch from "./assets/pitch_lineup.png";
 import {
   LineChart,
   Line,
   XAxis,
   YAxis,
-  CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  BarChart,
-  Bar,
-  LabelList,
+  CartesianGrid,
 } from "recharts";
 import { useLocation } from "react-router-dom";
 import { useStatsData } from "./Contexts/StatsContext";
-import pitch from "./assets/pitch_lineup.png";
 
 export default function Team_Analytics_Individual() {
-  const { fetchIfNeeded, TeamData,TeamThreatData,TeamLineupsData,selected_team, setselected_team  } = useStatsData();
+  const { fetchIfNeeded, TeamData, TeamThreatData, TeamLineupsData, selected_team, setselected_team } = useStatsData();
   const API_URL = "https://fpl-project-t5e9.onrender.com/Teams";
+
   const [eloData, setEloData] = useState([]);
-  const [offData, setoffData] = useState([]);
-  const [defData, setdefData] = useState([]);
+  const [offData, setOffData] = useState([]);
+  const [defData, setDefData] = useState([]);
+
   const [data, setData] = useState([]);
   const [teamFilter, setTeamFilter] = useState(selected_team);
   const [teams, setTeams] = useState([]);
   const [latestStats, setLatestStats] = useState({});
   const [showOffensive, setShowOffensive] = useState(true);
-  const [chartType, setChartType] = useState("elo");     // ← 'elo'|'off'|'def'
-  const [chartHeight, setChartHeight] = useState(300);
+  const [chartType, setChartType] = useState("elo"); // 'elo'|'off'|'def'
+
   const location = useLocation();
 
+  // ---------- Init & fetch ----------
   useEffect(() => {
     const init = async () => {
       await fetchIfNeeded();
-      const eloRes = await fetch(API_URL);
-      const eloRaw = await eloRes.json();
-      const latestPerTeam = eloRaw.reduce((acc, row) => {
-        const team = row.name || row.Team;
-        if (!acc[team] || new Date(row.kickoff_time) > new Date(acc[team].kickoff_time)) {
-          acc[team] = row;
-        }
-        return acc;
-      }, {});
-      setEloData(Object.values(eloRaw).map(r => ({
-        kickoff_time: r.kickoff_time,
-        Elo_Rating: Number(parseFloat(r.Elo_Rating).toFixed(1)),
-        name: r.name || r.Team
-      })));
-      setoffData(Object.values(eloRaw).map(r => ({
-        kickoff_time: r.kickoff_time,
-        XG_avg: Number(parseFloat(r.XG_avg).toFixed(3)),
-        name: r.name || r.Team
-      })));
-      setdefData(Object.values(eloRaw).map(r => ({
-        kickoff_time: r.kickoff_time,
-        XGC_avg: Number(parseFloat(r.XGC_avg).toFixed(3)),
-        name: r.name || r.Team
-      })));
+      const res = await fetch(API_URL);
+      const rows = await res.json();
+
+      setEloData(
+        rows.map((r) => ({
+          kickoff_time: r.kickoff_time,
+          Elo_Rating: Number(parseFloat(r.Elo_Rating).toFixed(1)),
+          name: r.name || r.Team,
+        }))
+      );
+      setOffData(
+        rows.map((r) => ({
+          kickoff_time: r.kickoff_time,
+          XG_avg: Number(parseFloat(r.XG_avg).toFixed(3)),
+          name: r.name || r.Team,
+        }))
+      );
+      setDefData(
+        rows.map((r) => ({
+          kickoff_time: r.kickoff_time,
+          XGC_avg: Number(parseFloat(r.XGC_avg).toFixed(3)),
+          name: r.name || r.Team,
+        }))
+      );
     };
     init();
   }, [fetchIfNeeded]);
 
+  // Teams list & initial selection
   useEffect(() => {
     if (!TeamData?.current || TeamData.current.length === 0) return;
     const uniqueTeams = [...new Set(TeamData.current.map((d) => d.name || d.Team))]
@@ -71,22 +71,16 @@ export default function Team_Analytics_Individual() {
     setTeams(uniqueTeams);
     const passed = location.state?.selectedTeam;
     setTeamFilter(passed && uniqueTeams.includes(passed) ? passed : selected_team);
-  }, [TeamData?.current?.length, location.state]);
+  }, [TeamData?.current?.length, location.state, selected_team]);
 
-  useEffect(() => {
-    const handleResize = () => setChartHeight(window.innerWidth < 640 ? 400 : 300);
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
+  // Current team history + latest stats
   useEffect(() => {
     if (!teamFilter || !TeamData?.current) return;
     const teamHistory = TeamData.current
       .filter((r) => (r.name || r.Team) === teamFilter)
       .sort((a, b) => new Date(a.kickoff_time) - new Date(b.kickoff_time));
     setData(teamHistory);
-    const latest = teamHistory[teamHistory.length - 1];
+    const latest = teamHistory.at(-1);
     if (latest) {
       setLatestStats({
         XGA: latest.XGA || 0,
@@ -101,6 +95,7 @@ export default function Team_Analytics_Individual() {
     }
   }, [teamFilter, TeamData?.current]);
 
+  // ---------- Derived data ----------
   const statCards = showOffensive
     ? [
         { title: "Away Attack Index", value: latestStats.XGA },
@@ -112,419 +107,368 @@ export default function Team_Analytics_Individual() {
         { title: "Away Defence Index", value: latestStats.XGCA },
         { title: "Home Defence Index", value: latestStats.XGCH },
         { title: "Overall Defence Index", value: latestStats.XGC_avg },
-        { title: "Defensive Form", value: latestStats.XGC_slope*-1 },
+        { title: "Defensive Form", value: (latestStats.XGC_slope ?? 0) * -1 },
       ];
 
-  // Filter for selected team Elo history
-  const eloChartData = eloData.filter(d => d.name === teamFilter);
+  const eloChartData = useMemo(() => eloData.filter((d) => d.name === teamFilter), [eloData, teamFilter]);
+  const offChartData = useMemo(() => offData.filter((d) => d.name === teamFilter), [offData, teamFilter]);
+  const defChartData = useMemo(() => defData.filter((d) => d.name === teamFilter), [defData, teamFilter]);
 
- const offChartData = offData.filter(d => d.name === teamFilter);
+  // Threat list (vs selected team) → aggregate per role and display on mirrored pitch
+  const threatRows = useMemo(() => {
+    const src = Array.isArray(TeamThreatData?.current)
+      ? TeamThreatData.current
+      : Array.isArray(TeamThreatData)
+      ? TeamThreatData
+      : [];
+    return src
+      .filter((r) => (r?.opponent ?? r?.Opponent) === teamFilter)
+      .map((r) => ({
+        pos_group: r?.pos_group ?? r?.position_group ?? r?.PosGroup ?? "Unknown",
+        threat: Number(r?.Threat ?? r?.Treat ?? r?.threat ?? r?.treat ?? NaN),
+      }))
+      .filter((r) => Number.isFinite(r.threat))
+      .sort((a, b) => b.threat - a.threat);
+  }, [TeamThreatData, teamFilter]);
 
+  // Latest lineup — appearance % over last 5 matches
+  const lineupLatestStats = useMemo(() => {
+    const src = Array.isArray(TeamLineupsData?.current)
+      ? TeamLineupsData.current
+      : Array.isArray(TeamLineupsData)
+      ? TeamLineupsData
+      : [];
+    return src
+      .map((r) => ({
+        player_name: r.player_name ?? r.Player ?? r.name ?? "",
+        player_team: r.player_team ?? r.Team ?? r.team ?? "",
+        pos_latest: r.pos_latest ?? r.pos_group ?? r.position_group ?? r.PosGroup ?? r.position ?? "UNK",
+        start_percantage: r.appear_pct_last5 ?? 0,
+      }))
+      .filter((r) => r.player_team === teamFilter);
+  }, [TeamLineupsData, teamFilter]);
 
-const defChartData = defData.filter(d => d.name === teamFilter);
-// Threat list for the currently selected team
-const threatRows = React.useMemo(() => {
-  if (!teamFilter) return [];
+  // For shirt images
+  const teamCode = useMemo(() => {
+    const src = Array.isArray(TeamData?.current) ? TeamData.current : [];
+    const row = src
+      .filter((r) => (r.name || r.Team) === teamFilter)
+      .sort((a, b) => new Date(a.kickoff_time) - new Date(b.kickoff_time))
+      .at(-1);
+    return row?.code ?? row?.team_code ?? row?.Code ?? null;
+  }, [TeamData, teamFilter]);
 
-  const src = Array.isArray(TeamThreatData?.current)
-    ? TeamThreatData.current
-    : Array.isArray(TeamThreatData)
-    ? TeamThreatData
-    : [];
+  // ---------- Helpers: role placement on pitch ----------
+  const normalizeRole = (pos_latest = "") => {
+    const p = String(pos_latest).toLowerCase();
+    if (p.includes("gk")) return "GK";
+    if (p.includes("lw")) return "LW";
+    if (p.includes("rw")) return "RW";
+    if (p.includes("lb") || p.includes("dl") || p.includes("lwb")) return "LB";
+    if (p.includes("rb") || p.includes("dr") || p.includes("rwb")) return "RB";
+    if (p.includes("cb") || (p.includes("def") && !p.includes("wb"))) return "CB";
+    if (p.includes("cdm") || p.includes("dm")) return "DM";
+    if (p.includes("cam") || p.includes("am")) return "AM";
+    if (p.includes("cm") || p.includes("mc") || p.includes("mid")) return "CM";
+    if (p.includes("st") || p.includes("cf") || p.includes("fw") || p.includes("fwd") || p.includes("striker")) return "ST";
+    return "CM";
+  };
 
-  if (src.length === 0) return [];
+  const BASE = {
+    GK: { x: 50, y: 92 },
+    LB: { x: 14, y: 60 },
+    CB: { x: 50, y: 73 },
+    RB: { x: 88, y: 60 },
+    DM: { x: 50, y: 55 },
+    CM: { x: 50, y: 45 },
+    AM: { x: 50, y: 29 },
+    LW: { x: 14, y: 25 },
+    RW: { x: 88, y: 25 },
+    ST: { x: 50, y: 10 },
+  };
 
-  return src
-    .filter(r => (r?.opponent ?? r?.Opponent) === teamFilter)
-    .map(r => {
-      const threat = Number(
-        r?.Threat ?? r?.Treat ?? r?.threat ?? r?.treat ?? NaN
-      );
-      const pos = r?.pos_group ?? r?.position_group ?? r?.PosGroup ?? "Unknown";
-      return { pos_group: pos, threat };
-    })
-    .filter(r => Number.isFinite(r.threat))
-    .sort((a, b) => b.threat - a.threat);
-}, [TeamThreatData, teamFilter]);
+  const ROLE_SPAN_MAX = { ST: 34, AM: 30, CM: 42, DM: 30, CB: 28, LB: 18, RB: 18, LW: 24, RW: 24, GK: 0 };
+  const ROLE_MIN_GAP = { ST: 10, AM: 9, CM: 12, DM: 10, CB: 9, LB: 8, RB: 8, LW: 10, RW: 10, GK: 0 };
+  const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
 
-// Latest lineup — appearance % over last 5 dates (from TeamLineupsData)
-const lineupLatestStats = React.useMemo(() => {
-  if (!teamFilter) return [];
+  const placeWithinRow = (base, i, n, role) => {
+    if (n <= 1) return base;
+    const maxSpan = ROLE_SPAN_MAX[role] ?? 26;
+    const gap = ROLE_MIN_GAP[role] ?? 9;
+    let totalSpan = Math.min(maxSpan, gap * (n - 1));
+    if (role === "CM" && n >= 3) totalSpan = Math.max(totalSpan, 50);
+    if (role === "CM" && n >= 2) totalSpan = Math.max(totalSpan, 32);
+    if (role === "CB" && n >= 3) totalSpan = Math.max(totalSpan, 55);
+    if (role === "CB" && n >= 2) totalSpan = Math.max(totalSpan, 32);
+    if (role === "DM" && n >= 2) totalSpan = Math.max(totalSpan, 26);
+    if (role === "ST" && n >= 2) totalSpan = Math.max(totalSpan, 32);
+    if (role === "AM" && n >= 2) totalSpan = Math.max(totalSpan, 32);
+    const step = totalSpan / (n - 1);
+    const start = base.x - totalSpan / 2;
+    const x = clamp(start + step * i, 5, 95);
+    const y = base.y;
+    return { x, y };
+  };
 
-  // normalize source shape
-  const src = Array.isArray(TeamLineupsData?.current)
-    ? TeamLineupsData.current
-    : Array.isArray(TeamLineupsData)
-    ? TeamLineupsData
-    : [];
-  if (src.length === 0) return [];
+  const lineupOnPitch = useMemo(() => {
+    if (!Array.isArray(lineupLatestStats) || lineupLatestStats.length === 0) return [];
+    const groups = lineupLatestStats.reduce((acc, r) => {
+      const role = normalizeRole(r.pos_latest ?? r.pos_group ?? r.position);
+      (acc[role] ||= []).push(r);
+      return acc;
+    }, {});
 
-  // map + filter by current team
-  return src
-    .map(r => ({
-      player_name: r.player_name ?? r.Player ?? r.name ?? "",
-      player_team: r.player_team ?? r.Team ?? r.team ?? "",
-      pos_latest:  r.pos_latest  ?? r.pos_group ?? r.position_group ?? r.PosGroup ?? r.position ?? "UNK",
-      start_percantage:  r.appear_pct_last5  ?? 0,
-    }))
-    .filter(r => r.player_team === teamFilter);
-}, [TeamLineupsData, teamFilter]);
-
-const teamCode = React.useMemo(() => {
-  const src = Array.isArray(TeamData?.current) ? TeamData.current : [];
-  const row = src
-    .filter(r => (r.name || r.Team) === teamFilter)
-    .sort((a,b) => new Date(a.kickoff_time) - new Date(b.kickoff_time))
-    .at(-1); // latest entry for this team
-  return row?.code ?? row?.team_code ?? row?.Code ?? null;
-}, [TeamData, teamFilter]);
-
-// anywhere in your JSX:
-{teamCode != null && (
-  <div className="text-sm text-royal-gold">FPL team code: {teamCode}</div>
-)}
-
-
-// Normalize various position labels into layout roles
-// ── Role normalizer (keeps your mappings, adds a few aliases) ─────────────────
-const normalizeRole = (pos_latest = "") => {
-  const p = String(pos_latest).toLowerCase();
-  if (p.includes("gk")) return "GK";
-  if (p.includes("lw")) return "LW";
-  if (p.includes("rw")) return "RW";
-  if (p.includes("lb") || p.includes("dl") || p.includes("lwb")) return "LB";
-  if (p.includes("rb") || p.includes("dr") || p.includes("rwb")) return "RB";
-  if (p.includes("cb") || (p.includes("def") && !p.includes("wb"))) return "CB";
-  if (p.includes("cdm") || p.includes("dm")) return "DM";
-  if (p.includes("cam") || p.includes("am")) return "AM";
-  if (p.includes("cm") || p.includes("mc") || p.includes("mid")) return "CM";
-  if (p.includes("st") || p.includes("cf") || p.includes("fw") || p.includes("fwd") || p.includes("striker")) return "ST";
-  return "CM"; // sensible default
-};
-
-// ── Base anchors (top=attack 0% → bottom 100%) ───────────────────────────────
-const BASE = {
-  GK: { x: 50, y: 92 },
-  LB: { x: 14, y: 60 },
-  CB: { x: 50, y: 73 },
-  RB: { x: 88, y: 60 },
-  DM: { x: 50, y: 55 },
-  CM: { x: 50, y: 40 },
-  AM: { x: 50, y: 25 },
-  LW: { x: 14, y: 25 },
-  RW: { x: 88, y: 25 },
-  ST: { x: 50, y: 10 },
-};
-
-// ── Dynamic spacing config (wider for CM/FW, tighter for CB) ─────────────────
-const ROLE_SPAN_MAX = {
-  ST: 34, AM: 30, CM: 42, DM: 30, CB: 28, LB: 18, RB: 18, LW: 24, RW: 24, GK: 0,
-};
-const ROLE_MIN_GAP = {
-  ST: 10, AM: 9,  CM: 12, DM: 10, CB: 9,  LB: 8,  RB: 8,  LW: 10, RW: 10, GK: 0,
-};
-const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
-
-// Spread multiple players across a row (role-aware)
-const placeWithinRow = (base, i, n, role) => {
-  if (n <= 1) return base;
-
-  const maxSpan = ROLE_SPAN_MAX[role] ?? 26;
-  const gap     = ROLE_MIN_GAP[role] ?? 9;
-
-  // Span grows with count but is capped; give midfield 3 a guaranteed boost
-  let totalSpan = Math.min(maxSpan, gap * (n - 1));
-  if (role === "CM" && n >= 3) totalSpan = Math.max(totalSpan, 50);
-  if (role === "CM" && n >= 2) totalSpan = Math.max(totalSpan, 32);
-  if (role === "CB" && n >= 3) totalSpan = Math.max(totalSpan, 55);
-  if (role === "CB" && n >= 2) totalSpan = Math.max(totalSpan, 32);
-  if (role === "DM" && n >= 2) totalSpan = Math.max(totalSpan, 26);
-  if (role === "ST" && n >= 2) totalSpan = Math.max(totalSpan, 32);
-  if (role === "AM" && n >= 2) totalSpan = Math.max(totalSpan, 32);
-
-  const step  = totalSpan / (n - 1);
-  const start = base.x - totalSpan / 2;
-  const x     = clamp(start + step * i, 5, 95); // keep inside pitch edges
-  const y     = base.y;
-  return { x, y };
-};
-
-// ── Build positioned lineup items ────────────────────────────────────────────
-const lineupOnPitch = React.useMemo(() => {
-  if (!Array.isArray(lineupLatestStats) || lineupLatestStats.length === 0) return [];
-
-  // group by normalized role
-  const groups = lineupLatestStats.reduce((acc, r) => {
-    const role = normalizeRole(r.pos_latest ?? r.pos_group ?? r.position);
-    (acc[role] ||= []).push(r);
-    return acc;
-  }, {});
-
-  const rolesOrder = ["ST","LW","RW","AM","CM","DM","LB","CB","RB","GK"];
-  const out = [];
-
-  rolesOrder.forEach(role => {
-    const arr  = groups[role] || [];
-    const n    = arr.length;
-    const base = BASE[role] || BASE.CM;
-
-    // stable order: highest start % first, then name
-    arr
-      .slice()
-      .sort((a, b) =>
-        (b.start_percantage ?? 0) - (a.start_percantage ?? 0) ||
-        String(a.player_name).localeCompare(String(b.player_name))
-      )
-      .forEach((player, i) => {
-        const { x, y } = placeWithinRow(base, i, n, role);
-        const pct = player.start_percantage ?? null;
-
-        out.push({
-          key: `${player.player_name}-${role}-${i}`,
-          name: player.player_name ?? "",
-          role,
-          x, y,
-          pct: (typeof pct === "number" && isFinite(pct)) ? pct : null,
+    const rolesOrder = ["ST", "LW", "RW", "AM", "CM", "DM", "LB", "CB", "RB", "GK"];
+    const out = [];
+    rolesOrder.forEach((role) => {
+      const arr = groups[role] || [];
+      const n = arr.length;
+      const base = BASE[role] || BASE.CM;
+      arr
+        .slice()
+        .sort(
+          (a, b) => (b.start_percantage ?? 0) - (a.start_percantage ?? 0) || String(a.player_name).localeCompare(String(b.player_name))
+        )
+        .forEach((player, i) => {
+          const { x, y } = placeWithinRow(base, i, n, role);
+          const pct = player.start_percantage ?? null;
+          out.push({
+            key: `${player.player_name}-${role}-${i}`,
+            name: player.player_name ?? "",
+            role,
+            x,
+            y,
+            pct: typeof pct === "number" && isFinite(pct) ? pct : null,
+          });
         });
-      });
-  });
+    });
+    return out;
+  }, [lineupLatestStats]);
 
-  return out;
-}, [lineupLatestStats]);
+  const mirrorBase = ({ x, y }) => ({ x: 100 - x, y: 100 - y });
 
-// mirror helper (flip both axes relative to the pitch)
-const mirrorBase = ({ x, y }) => ({ x: 100 - x, y: 100 - y });
+  const threatsOnPitch = useMemo(() => {
+    if (!Array.isArray(threatRows) || threatRows.length === 0) return [];
+    const byRole = threatRows.reduce((acc, r) => {
+      const role = normalizeRole(r.pos_group);
+      const val = Number(r.threat) || 0;
+      acc[role] = (acc[role] ?? 0) + val;
+      return acc;
+    }, {});
+    const out = Object.entries(byRole).map(([role, threat]) => {
+      const base = BASE[role] || BASE.CM;
+      const { x, y } = mirrorBase(base);
+      return { role, threat, x, y };
+    });
+    out.sort((a, b) => b.threat - a.threat || a.role.localeCompare(b.role));
+    return out;
+  }, [threatRows]);
 
-// Aggregate threat per normalized role, then place at mirrored coords
-const threatsOnPitch = React.useMemo(() => {
-  if (!Array.isArray(threatRows) || threatRows.length === 0) return [];
-
-  // sum threats per role (change to average if you prefer)
-  const byRole = threatRows.reduce((acc, r) => {
-    const role = normalizeRole(r.pos_group);
-    const val  = Number(r.threat) || 0;
-    acc[role] = (acc[role] ?? 0) + val;
-    return acc;
-  }, {});
-
-  const out = Object.entries(byRole).map(([role, threat]) => {
-    const base = BASE[role] || BASE.CM;
-    const { x, y } = mirrorBase(base); // ← flip to the “opposite” side
-    return { role, threat, x, y };
-  });
-
-  // optional: stable order, highest threat first
-  out.sort((a, b) => b.threat - a.threat || a.role.localeCompare(b.role));
-  return out;
-}, [threatRows]);
-
-const [minT, maxT] = React.useMemo(() => {
-  if (!threatsOnPitch.length) return [0, 1];
-  const vals = threatsOnPitch.map(d => d.threat);
-  return [Math.min(...vals), Math.max(...vals)];
-}, [threatsOnPitch]);
-
-
+  const [minT, maxT] = useMemo(() => {
+    if (!threatsOnPitch.length) return [0, 1];
+    const vals = threatsOnPitch.map((d) => d.threat);
+    return [Math.min(...vals), Math.max(...vals)];
+  }, [threatsOnPitch]);
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col items-center px-4 py-8 space-y-10">
-      <h1 className="text-4xl font-bold text-center text-royal-beige">Team Analytics</h1>
+    <div className="min-h-screen bg-gradient-to-b from-neutral-950 to-black text-neutral-100">
+      <div className="mx-auto max-w-6xl px-4 py-6 sm:py-10">
+        {/* Header */}
+        <header className="mb-6 sm:mb-8 text-center">
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">Team Analytics</h1>
+          <p className="text-xs sm:text-sm text-neutral-400 mt-1">Switch teams, view recent form, lineups, and where they’re most vulnerable.</p>
+        </header>
 
-      <img src={teamLogos[teamFilter] || ""} alt={`${teamFilter} logo`} className="h-28 object-contain" />
-
-      <select
-        className="border border-royal-gold w-full max-w-sm text-black text-center py-2"
-        value={teamFilter}
-        onChange={(e) => setTeamFilter(e.target.value)&setselected_team?.(e.target.value)}
-      >
-        {teams.map((t) => (
-          <option key={t} value={t}>{t}</option>
-        ))}
-      </select>
-
-      <div className="flex justify-center gap-6">
-        <button onClick={() => setShowOffensive(true)} className={showOffensive ? " focus:outline-none underline text-royal-gold bg-transparent border-none" : "focus:outline-none text-royal-beige bg-transparent border-none"}>Offensive</button>
-        <button onClick={() => setShowOffensive(false)} className={!showOffensive ? "focus:outline-none underline text-royal-gold bg-transparent border-none": " focus:outline-none text-royal-beige bg-transparent border-none"}>Defensive</button>
-      </div>
-
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 w-full max-w-6xl">
-        {statCards.map((stat) => {
-          const val = parseFloat(stat.value);
-          const disp = stat.title.includes("Form")
-            ? ""
-            : isNaN(val) ? "—" : val.toFixed(2);
-          const arrow = stat.title.includes("Form")
-            ? val >= 0.03 ? "↑↑" : val > 0 ? "↑" : val <= -0.03 ? "↓↓" : val < 0 ? "↓" : ""
-            : "";
-          return (
-            <div key={stat.title} className="bg-royal-red text-royal-beige p-3 border border-royal-gold rounded-lg">
-              <h2 className="font-semibold text-center">{stat.title}</h2>
-              <p className="text-2xl text-center">{disp} {arrow}</p>
+        {/* Team selector */}
+        <section className="mb-8 rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <img src={teamLogos[teamFilter] || ""} alt={`${teamFilter} logo`} className="h-14 w-14 object-contain" />
+              <div>
+                <div className="text-lg font-semibold">{teamFilter || "Select a team"}</div>
+                {teamCode != null && <div className="text-xs text-royal-gold"></div>}
+              </div>
             </div>
-          );
-        })}
-      </div>
 
-       <h2 className="text-xl font-semibold mb-3 text-center text-royal-beige mb-2">
-      Latest Lineup — % Starts last 5 matches
-    </h2>
-{/* Lineup on Pitch */}
-{teamFilter && (
-  <div
-  className="w-full max-w-[480px] aspect-[1/2] bg-no-repeat bg-cover border border-royal-gold rounded-lg relative mt-4"
-  style={{
-    backgroundImage: `url(${pitch})`,
-    backgroundPosition: "50% 50%",
-  }}
->
- 
-    {lineupOnPitch.map(p => (
-      <div
-  key={p.key}
-  className="absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center text-center"
-  style={{ left: `${p.x}%`, top: `${p.y}%` }}
->
-  <img
-    src={`https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_${teamCode}-110.png`}
-    alt=""
-    width={50}
-    height={50}
-    className="block mx-auto w-[50px] h-[50px] object-contain mb-1 pointer-events-none select-none"
-    onError={(e) => { e.currentTarget.style.display = "none"; }}
-  />
+            <select
+              className="h-10 w-full sm:w-64 rounded-md border border-white/10 bg-black/60 px-3 text-neutral-100 focus:outline-none focus:ring-2 focus:ring-royal-gold/60"
+              value={teamFilter || ""}
+              onChange={(e) => {
+                const val = e.target.value;
+                setTeamFilter(val);
+                if (typeof setselected_team === "function") setselected_team(val);
+              }}
+              aria-label="Select team"
+            >
+              {teams.map((t) => (
+                <option key={t} value={t} className="bg-black text-neutral-100">
+                  {t}
+                </option>
+              ))}
+            </select>
+          </div>
+        </section>
 
-  <div className="px-3 py-1 rounded-md bg-black/70 border border-royal-gold shadow">
-    <div className="text-xs font-semibold text-white whitespace-nowrap">{(p.name ?? "").trim().split(/[,\s;]+/).pop() || ""}</div>
-    <div className="text-[12px] text-white">
-      {Number.isFinite(p.pct) ? `${Math.round(p.pct)}%` : "—"}
-    </div>
-  </div>
-</div>
-    ))}
-  </div>
-)}
+        {/* Off/Def toggle & stat cards */}
+        <section className="mb-8 text-center">
+          <div className="flex items-center justify-center gap-4 mb-4 text-center">
+            <button
+              onClick={() => setShowOffensive(true)}
+              className={`h-9 px-3 rounded-md border text-sm transition focus:outline-none focus:ring-0 focus:outline-none focus:ring-royal-gold/60 hover:border-none ${
+                showOffensive ? "text-royal-gold bg-black" : "bg-black text-neutral-200  "
+              }`}
+            >
+              Offensive
+            </button>
+            <button
+              onClick={() => setShowOffensive(false)}
+              className={`h-10 px-5 rounded-md border text-sm transition focus:outline-none focus:ring-0 focus:ring-royal-gold/60 hover:border-none ${
+                !showOffensive ? "text-royal-gold bg-black" : "bg-black text-neutral-200 "
+              }`}
+            >
+              Defensive
+            </button>
+          </div>
 
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 w-full">
+            {statCards.map((stat) => {
+              const val = Number(stat.value);
+              const isForm = /Form/i.test(stat.title);
+              const disp = isForm ? null : Number.isFinite(val) ? val.toFixed(2) : "—";
+              const arrow = isForm
+                ? val >= 0.03
+                  ? "↑↑"
+                  : val > 0
+                  ? "↑"
+                  : val <= -0.03
+                  ? "↓↓"
+                  : val < 0
+                  ? "↓"
+                  : ""
+                : "";
+              return (
+                <div key={stat.title} className="rounded-xl border border-white/10 bg-white/5 p-3 text-center">
+                  <h3 className="text-xs uppercase tracking-wide text-neutral-400 mb-1">{stat.title}</h3>
+                  <div className="text-xl font-semibold text-royal-gold min-h-[28px]">{disp ?? ""} {arrow}</div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
 
-<h2 className="text-xl font-semibold mb-4 text-center text-royal-beige">
-      Threat by Opposition Position
-    </h2>
+        {/* Latest Lineup on Pitch */}
+        {teamFilter && (
+          <section className="mb-10">
+            <h2 className="text-lg font-semibold text-center mb-3">Latest Lineup — % Starts last 5 matches</h2>
+            <div
+              className="mx-auto w-full max-w-[520px] aspect-[1/1.6] bg-no-repeat bg-cover rounded-2xl border border-white/10 shadow relative"
+              style={{ backgroundImage: `url(${pitch})`, backgroundPosition: "50% 50%" }}
+            >
+              {lineupOnPitch.map((p) => (
+                <div
+                  key={p.key}
+                  className="absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center text-center"
+                  style={{ left: `${p.x}%`, top: `${p.y}%` }}
+                >
+                  {/* Shirt */}
+                  {teamCode && (
+                    <img
+                      src={`https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_${teamCode}-110.png`}
+                      alt=""
+                      width={48}
+                      height={48}
+                      className="block mx-auto w-[48px] h-[48px] object-contain mb-1 pointer-events-none select-none"
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                      }}
+                    />
+                  )}
 
-{/* Threats Faced — mirrored positions */}
-{teamFilter && (
-  <div
-    className="w-full max-w-[480px] aspect-[1/2] bg-no-repeat bg-cover border border-royal-gold rounded-lg relative mt-6"
-    style={{ backgroundImage: `url(${pitch})`, backgroundPosition: "50% 50%" }}
-  >
-    
-    {threatsOnPitch.map(t => {
-      const alpha =
-        maxT > minT ? 0.35 + 0.5 * ((t.threat - minT) / (maxT - minT)) : 0.5;
+                  {/* Label */}
+                  <div className="px-2 py-1 rounded-md bg-black/70 border border-white/10 shadow">
+                    <div className="text-[11px] font-semibold text-white whitespace-nowrap">
+                      {(p.name ?? "").trim().split(/[\,\s;]+/).pop() || ""}
+                    </div>
+                    <div className="text-[10px] text-neutral-300">
+                      {Number.isFinite(p.pct) ? `${Math.round(p.pct)}%` : "—"}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
-      return (
-        <div
-          key={t.role}
-          className="absolute -translate-x-1/2 -translate-y-1/2 text-center flex flex-col items-center"
-          style={{ left: `${t.x}%`, top: `${t.y}%` }}
-        >
+        {/* Threat by Opposition Position (mirrored) */}
+        {teamFilter && (
+          <section className="mb-10">
+            <h2 className="text-lg font-semibold text-center mb-3">Threat by Opposition Position</h2>
+            <div
+              className="mx-auto w-full max-w-[520px] aspect-[1/1.6] bg-no-repeat bg-cover rounded-2xl border border-white/10 shadow relative"
+              style={{ backgroundImage: `url(${pitch})`, backgroundPosition: "50% 50%" }}
+            >
+              {threatsOnPitch.map((t) => {
+                const alpha = maxT > minT ? 0.35 + 0.5 * ((t.threat - minT) / (maxT - minT)) : 0.5;
+                return (
+                  <div
+                    key={t.role}
+                    className="absolute -translate-x-1/2 -translate-y-1/2 text-center flex flex-col items-center"
+                    style={{ left: `${t.x}%`, top: `${t.y}%` }}
+                  >
+                    <div className="px-2 py-1 rounded-md border border-white/10 shadow"
+                      style={{ backgroundColor: `rgba(185,28,28,${alpha})` }}
+                    >
+                      <div className="text-[11px] font-semibold text-royal-gold">{t.role}</div>
+                      <div className="text-xs font-bold text-white">{Number.isFinite(t.threat) ? t.threat.toFixed(2) : "—"}</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
+        <h2 className="text-lg font-semibold text-center mb-3">Team Historical Developement</h2>
+        {/* Chart type toggle */}
+        <div className="flex items-center justify-center gap-2 mb-4">
           
-          <div
-            className="px-3 py-1 rounded-md border border-royal-gold shadow"
-            style={{ backgroundColor: `rgba(185, 28, 28, ${alpha})` }} // intensity by threat
-          >
-            <div className="text-[11px] font-semibold text-royal-gold">{t.role}</div>
-            <div className="text-sm font-bold text-white">
-              {Number.isFinite(t.threat) ? t.threat.toFixed(2) : "—"}
+          {["elo", "off", "def"].map((type) => {
+            const labels = { elo: "ELO", off: "Offensive", def: "Defensive" };
+            const isSel = chartType === type;
+            return (
+              <button
+                key={type}
+                onClick={() => setChartType(type)}
+                className={`h-9 px-3 rounded-md border text-sm transition hover:border-none outline:border-none focus:outline-none focus:ring-2 focus:ring-royal-gold/60 ${
+                  isSel ? "bg-royal-gold text-black border-yellow-400" : "bg-white/5 text-neutral-200 border-white/10 hover:bg-white/10"
+                }`}
+                aria-pressed={isSel}
+              >
+                {labels[type]}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Line chart */}
+        <section className="mb-8">
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
+            <h3 className="text-center text-sm uppercase tracking-wide text-neutral-400 mb-2">
+              {chartType === "elo" ? "ELO Rating Over Time" : chartType === "off" ? "Off Rating Over Time" : "Def Rating Over Time"}
+            </h3>
+            <div className="h-72">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={chartType === "elo" ? eloChartData : chartType === "off" ? offChartData : defChartData} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
+                  <CartesianGrid stroke="#333" />
+                  <XAxis dataKey="kickoff_time" tick={{ fontSize: 10, fill: "#e5e7eb" }} stroke="#fff" />
+                  <YAxis hide domain={["dataMin", "dataMax"]} />
+                  <Tooltip contentStyle={{ backgroundColor: "#111", borderColor: "#FFD700", color: "#fff" }} />
+                  <Line type="monotone" dataKey={chartType === "elo" ? "Elo_Rating" : chartType === "off" ? "XG_avg" : "XGC_avg"} stroke="#FFD700" dot={false} />
+                </LineChart>
+              </ResponsiveContainer>
             </div>
           </div>
-        </div>
-      );
-    })}
-  </div>
-)}
-
-
-{/* Chart-type buttons */}
-<div className="flex justify-center space-x-2 focus:outline-none focus:ring-0 active:outline-none active:ring-0  hover:outline-none hover:ring-0">
-  {["elo","off","def"].map((type, i) => {
-    const labels = { elo: "ELO", off: "Offensive", def: "Defensive" };
-    const isSel = chartType === type;
-    return (
-      <button
-        key={type}
-        onClick={() => setChartType(type)}
-        className={`
-          px-2 py-1 bg-transparent focus:outline-none focus:ring-0 active:outline-none active:ring-0 border-none
-          ${isSel ? "text-royal-gold underline" : "text-white"}
-        `}
-      >
-        {labels[type]}
-      </button>
-    );
-  })}
-</div>
-
-      {/* Line Chart */}
-      <div className="bg-royal-red p-1 rounded shadow border border-royal-gold w-full max-w-6xl mt-8">
-        <h2 className="text-xl font-semibold mb-4 text-center text-royal-beige capitalize">
-          {chartType === "elo"
-            ? "ELO Rating Over Time"
-            : chartType === "off"
-            ? "Off Rating Over Time"
-            : "Def Rating Over Time"}
-        </h2>
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart
-            data={
-              chartType === "elo"
-                ? eloChartData
-                : chartType === "off"
-                ? offChartData
-                : defChartData
-            }
-            margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
-          >
-
-
-            <XAxis
-              dataKey="kickoff_time"
-              tick={{ fontSize: 10 }}
-              stroke="#fff"
-            />
-            <YAxis hide stroke="#fff" domain={["dataMin", "dataMax"]} />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: "#5A0000",
-                color: "#FFD700",
-                border: "1px solid #FFD700",
-              }}
-            />
-            <Line
-              type="monotone"
-              dataKey={
-                chartType === "elo"
-                  ? "Elo_Rating"
-                  : chartType === "off"
-                  ? "XG_avg"
-                  : "XGC_avg"
-              }
-              stroke="#FFD700"
-              dot={false}
-            />
-          </LineChart>
-        </ResponsiveContainer>
+        </section>
       </div>
-      {/* Positional Threat list */}
-
-
-
-
-
-
-
-
     </div>
   );
 }
-
-
-

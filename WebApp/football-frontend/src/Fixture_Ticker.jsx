@@ -64,9 +64,7 @@ export default function TeamPredictionRankingsTable() {
   }, []);
 
   // Filter to current range
-  const filtered = useMemo(() => {
-    return rowsRaw.filter((d) => d.GW >= GWRange[0] && d.GW <= GWRange[1]);
-  }, [rowsRaw, GWRange]);
+  const filtered = useMemo(() => rowsRaw.filter((d) => d.GW >= GWRange[0] && d.GW <= GWRange[1]), [rowsRaw, GWRange]);
 
   // Compute list of GW columns in the range
   const gwColumns = useMemo(() => {
@@ -75,7 +73,7 @@ export default function TeamPredictionRankingsTable() {
     return cols;
   }, [GWRange]);
 
-  // Visible GW columns (max 3 on mobile) — cap start at (len - 3)
+  // Visible GW columns (max 3 on mobile)
   const visibleGwColumns = useMemo(() => {
     if (!isMobile) return gwColumns;
     const maxStart = Math.max(0, gwColumns.length - 3);
@@ -94,6 +92,7 @@ export default function TeamPredictionRankingsTable() {
       if (!acc.has(team)) acc.set(team, { team_name: team, perGW: {}, total: 0 });
       const entry = acc.get(team);
       const existing = entry.perGW[item.GW];
+      // keep the instance with larger absolute magnitude for this GW
       if (!existing || Math.abs(metricVal) > Math.abs(existing.value || 0)) {
         entry.perGW[item.GW] = {
           opponent_name: item.opponent_name ?? item.Opponent_team ?? item.Opponent ?? "",
@@ -113,17 +112,15 @@ export default function TeamPredictionRankingsTable() {
     }
 
     const arr = Array.from(acc.values());
-
     arr.sort((a, b) => {
       const dir = ASCENDING_METRICS.includes(selectedMetric) ? 1 : -1; // 1 = ascending, -1 = descending
       if (a.total === b.total) return a.team_name.localeCompare(b.team_name);
       return dir * (a.total - b.total);
     });
-
     return arr;
   }, [filtered, selectedMetric, gwColumns]);
 
-  // Value formatting: show CS as %
+  // Value formatting
   const formatCellValue = (val) => {
     if (!Number.isFinite(val)) return "-";
     if (selectedMetric === "CS") {
@@ -133,188 +130,181 @@ export default function TeamPredictionRankingsTable() {
     return val.toFixed(2);
   };
 
-  const formatTotalValue = (val) => {
-    if (!Number.isFinite(val)) return "-";
-    return val.toFixed(2);
-  };
+  const formatTotalValue = (val) => (Number.isFinite(val) ? val.toFixed(2) : "-");
 
   const maxGwWindowStart = Math.max(0, gwColumns.length - 3);
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col items-center py-8 px-2 space-y-8">
-      <h1 className="text-3xl font-bold text-center text-white">
-        {METRIC_LABELS[selectedMetric]}
-      </h1>
+    <div className="min-h-screen bg-gradient-to-b from-neutral-950 to-black text-neutral-100">
+      <div className="mx-auto max-w-7xl px-3 sm:px-4 py-6 sm:py-10">
+        {/* Header */}
+        <header className="text-center mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{METRIC_LABELS[selectedMetric]}</h1>
+          <p className="text-xs sm:text-sm text-neutral-400 mt-1">Rank fixtures by predicted output across your chosen gameweek range.</p>
+        </header>
 
-      {/* Metric selector */}
-      <div className="flex flex-wrap justify-center gap-1 sm:gap-1 mt-4">
-        {Object.entries(METRIC_LABELS).map(([key, label]) => (
-          <button
-            key={key}
-            className={`w-36 sm:w-40 text-sm sm:text-base font-bold px-3 py-2 rounded transition-all duration-200 ${
-              selectedMetric === key
-                ? "bg-royal-beige text-royal-gold underline underline-offset-4 hover:border-none border-none"
-                : "bg-royal-beige text-black hover:text-royal-gold hover:border-none border-none"
-            } focus:outline-none`}
-            onClick={() => setSelectedMetric(key)}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-
-      {/* GW Slider */}
-      {minGW !== null && maxGW !== null && (
-        <Box sx={{ width: 320, color: "white" }}>
-          <Typography gutterBottom align="center" className="whitespace-pre-line">
-            {`GW Range:`} {GWRange[0]} - {GWRange[1]}
-          </Typography>
-          <Slider
-            value={GWRange}
-            min={minGW}
-            max={maxGW}
-            onChange={(event, newValue) => {
-              setGWRange(newValue);
-              setGwWindowStart(0); // reset window when range changes
-            }}
-            valueLabelDisplay="auto"
-            step={1}
-            marks={[
-              { value: minGW, label: `GW ${minGW}` },
-              { value: maxGW, label: `GW ${maxGW}` },
-            ]}
-            sx={{
-              color: "#B8860B",
-              "& .MuiSlider-thumb": { backgroundColor: "#B8860B" },
-            }}
-          />
-        </Box>
-      )}
-
-      {/* Mobile GW pager */}
-      {isMobile && gwColumns.length > 3 && (
-        <div className="flex items-center gap-3">
-          <button
-            className="px-3 py-1 rounded bg-royal-beige text-black disabled:opacity-40"
-            onClick={() => setGwWindowStart((s) => Math.max(0, s - 1))}
-            disabled={gwWindowStart <= 0}
-          >
-            ◀ Prev
-          </button>
-          <span className="text-sm text-neutral-300">
-            Showing GW {visibleGwColumns[0]}–{visibleGwColumns[visibleGwColumns.length - 1]}
-          </span>
-          <button
-            className="px-3 py-1 rounded bg-royal-beige text-black disabled:opacity-40"
-            onClick={() => setGwWindowStart((s) => Math.min(maxGwWindowStart, s + 1))}
-            disabled={gwWindowStart >= maxGwWindowStart}
-          >
-            Next ▶
-          </button>
-        </div>
-      )}
-
-      {/* Dynamic table */}
-      <div className="w-full max-w-7xl overflow-x-auto">
-        <table className="min-w-full border-collapse table-fixed">
-          <thead className="sticky top-0 z-10">
-            <tr className="text-sm">
-              <th className="px-3 py-2 text-left border-b border-neutral-800 bg-[#121212] w-10">#</th>
-              <th className="px-3 py-2 text-left border-b border-neutral-800 bg-[#121212] min-w-[140px]">
-                Team
-              </th>
-              {visibleGwColumns.map((gw) => (
-                <th
-                  key={`h-gw-${gw}`}
-                  className="px-3 py-2 text-left border-b border-neutral-800 bg-[#121212] min-w-[88px] w-[88px]"
-                >
-                  GW {gw}
-                </th>
-              ))}
-              <th className="px-3 py-2 text-left border-b border-neutral-800 bg-[#121212] min-w-[90px] w-[90px]">
-                Total
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {tableData.map((row, idx) => {
-              const logoSrc = teamLogos[row.team_name];
-              const rank = idx + 1;
+        {/* Metric selector (segmented) */}
+        <section className="mb-6">
+          <div className="flex flex-wrap justify-center gap-2">
+            {Object.entries(METRIC_LABELS).map(([key, label]) => {
+              const active = selectedMetric === key;
               return (
-                <tr key={row.team_name} className="odd:bg-[#0a0a0a] even:bg-[#101010] hover:bg-[#171717]">
-                  <td className="px-3 py-2 border-b border-neutral-900 align-top w-10">{rank}</td>
-                  <td className="px-3 py-2 border-b border-neutral-900 align-top whitespace-nowrap">
-                    <div className="flex items-center gap-2">
-                      {logoSrc ? (
-                        <img src={logoSrc} alt={`${row.team_name} logo`} className="h-6 w-6" />
-                      ) : (
-                        <span className="text-neutral-500">—</span>
-                      )}
-                      <span>{row.team_name}</span>
-                    </div>
-                  </td>
-
-                  {visibleGwColumns.map((gw) => {
-                    const cell = row.perGW[gw];
-                    const opp = cell?.opponent_name || "";
-                    const hav = formatHAV(cell?.Home);
-                    const rawVal = Number.isFinite(cell?.value) ? cell.value : null;
-
-                    // Background color per metric thresholds
-                    let bg = "";
-                    if (rawVal !== null) {
-                      if (selectedMetric === "XG") {
-                        bg = rawVal > 1.7 ? "bg-green-900/90" : rawVal < 1.1 ? "bg-red-900/90" : "bg-yellow-900/90";
-                      } else if (selectedMetric === "Opposition_XGC") {
-                        bg = rawVal > 1.6 ? "bg-green-900/90" : rawVal < 1.1 ? "bg-red-900/90" : "bg-yellow-900/90";
-                      } else if (selectedMetric === "Opposition_XG") {
-                        bg = rawVal < 1.1 ? "bg-green-900/90" : rawVal > 1.6 ? "bg-red-900/90" : "bg-yellow-900/90";
-                      } else if (selectedMetric === "CS") {
-                        const p = rawVal > 1 ? rawVal / 100 : rawVal; // normalize to 0-1
-                        bg = p > 0.35 ? "bg-green-900/90" : p < 0.25 ? "bg-red-900/90" : "bg-yellow-900/90";
-                      }
-                    }
-
-                    return (
-                      <td
-                        key={`${row.team_name}-gw-${gw}`}
-                        className="px-1 sm:px-1 py-1 sm:py-2 border-b border-neutral-900 align-top text-center min-w-[88px] w-[88px]"
-                      >
-                        {cell ? (
-                          <div className={`flex flex-col text-sm leading-tight rounded-md px-1 py-1 ${bg}`}>
-                            <span className="font-medium truncate" title={opp}>
-                              {opp || "TBD"}
-                            </span>
-                            <span className="text-xs text-neutral-300">({hav})</span>
-                            <span className="text-xs">{rawVal !== null ? formatCellValue(rawVal) : "-"}</span>
-                          </div>
-                        ) : (
-                          <span className="text-neutral-600">–</span>
-                        )}
-                      </td>
-                    );
-                  })}
-
-                  <td className="px-3 py-2 border-b border-neutral-900 align-top font-semibold min-w-[90px] w-[90px]">
-                    {formatTotalValue(row.total)}
-                  </td>
-                </tr>
+                <button
+                  key={key}
+                  onClick={() => setSelectedMetric(key)}
+                  className={`h-10 px-3 rounded-md border text-sm transition focus:outline-none focus:ring-2 focus:ring-royal-gold/60 hover:border-none ${
+                    active ? "bg-royal-gold text-black border-yellow-400" : "bg-white/5 text-neutral-200 border-white/10 hover:bg-white/10"
+                  }`}
+                  aria-pressed={active}
+                >
+                  {label}
+                </button>
               );
             })}
-          </tbody>
-        </table>
+          </div>
+        </section>
 
-        {tableData.length === 0 && (
-          <div className="text-center text-neutral-400 py-10">No data in this range.</div>
+        {/* GW Slider */}
+        {minGW !== null && maxGW !== null && (
+          <section className="mb-4">
+            <Box sx={{ width: 360, maxWidth: "100%", margin: "0 auto" }}>
+              <Typography gutterBottom align="center" className="!text-xs !text-neutral-300 !mb-1">
+                GW Range: {GWRange[0]} – {GWRange[1]}
+              </Typography>
+              <Slider
+                value={GWRange}
+                min={minGW}
+                max={maxGW}
+                onChange={(event, newValue) => {
+                  setGWRange(newValue);
+                  setGwWindowStart(0);
+                }}
+                valueLabelDisplay="auto"
+                step={1}
+                marks={[
+                  { value: minGW, label: `GW ${minGW}` },
+                  { value: maxGW, label: `GW ${maxGW}` },
+                ]}
+                sx={{ color: "#B8860B" }}
+                aria-label="Filter by gameweek range"
+              />
+            </Box>
+          </section>
         )}
-      </div>
 
-      {/* Legend / helper text */}
-      <div className="text-xs text-neutral-400 max-w-7xl w-full">
-        <p>
-          On small screens, only Team, Logo, Total and up to three GW columns are shown. Use the pager to view more GWs.
+        {/* Mobile GW pager */}
+        {isMobile && gwColumns.length > 3 && (
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <button
+              className="h-9 px-3 rounded-md border bg-white/5 text-neutral-200 border-white/10 hover:bg-white/10 disabled:opacity-40"
+              onClick={() => setGwWindowStart((s) => Math.max(0, s - 1))}
+              disabled={gwWindowStart <= 0}
+              aria-label="Previous gameweeks"
+            >
+              ◀ Prev
+            </button>
+            <span className="text-xs text-neutral-400">
+              Showing GW {visibleGwColumns[0]}–{visibleGwColumns[visibleGwColumns.length - 1]}
+            </span>
+            <button
+              className="h-9 px-3 rounded-md border bg-white/5 text-neutral-200 border-white/10 hover:bg-white/10 disabled:opacity-40"
+              onClick={() => setGwWindowStart((s) => Math.min(maxGwWindowStart, s + 1))}
+              disabled={gwWindowStart >= maxGwWindowStart}
+              aria-label="Next gameweeks"
+            >
+              Next ▶
+            </button>
+          </div>
+        )}
+
+        {/* Table */}
+        <div className="w-full overflow-x-auto rounded-2xl border border-white/10 bg-white/5">
+          <table className="min-w-full border-collapse table-fixed">
+            <thead className="sticky top-0 z-10">
+              <tr className="text-[13px]">
+                <th className="px-3 py-2 text-left border-b border-white/10 bg-black/60 w-10">#</th>
+                <th className="px-3 py-2 text-left border-b border-white/10 bg-black/60 min-w-[160px]">Team</th>
+                {visibleGwColumns.map((gw) => (
+                  <th key={`h-gw-${gw}`} className="px-3 py-2 text-left border-b border-white/10 bg-black/60 min-w-[96px] w-[96px]">
+                    GW {gw}
+                  </th>
+                ))}
+                <th className="px-3 py-2 text-left border-b border-white/10 bg-black/60 min-w-[96px] w-[96px]">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {tableData.map((row, idx) => {
+                const logoSrc = teamLogos[row.team_name];
+                const rank = idx + 1;
+                return (
+                  <tr key={row.team_name} className="odd:bg-black/20 even:bg-black/10 hover:bg-black/30">
+                    <td className="px-3 py-2 border-b border-white/5 align-top w-10 tabular-nums">{rank}</td>
+                    <td className="px-3 py-2 border-b border-white/5 align-top whitespace-nowrap">
+                      <div className="flex items-center gap-2 min-w-0">
+                        {logoSrc ? (
+                          <img src={logoSrc} alt={`${row.team_name} logo`} className="h-6 w-6 object-contain" />
+                        ) : (
+                          <span className="text-neutral-500">—</span>
+                        )}
+                        <span className="truncate">{row.team_name}</span>
+                      </div>
+                    </td>
+
+                    {visibleGwColumns.map((gw) => {
+                      const cell = row.perGW[gw];
+                      const opp = cell?.opponent_name || "";
+                      const hav = formatHAV(cell?.Home);
+                      const rawVal = Number.isFinite(cell?.value) ? cell.value : null;
+
+                      let bg = "";
+                      if (rawVal !== null) {
+                        if (selectedMetric === "XG") {
+                          bg = rawVal > 1.7 ? "bg-green-900/90" : rawVal < 1.1 ? "bg-red-900/90" : "bg-yellow-900/90";
+                        } else if (selectedMetric === "Opposition_XGC") {
+                          bg = rawVal > 1.6 ? "bg-green-900/90" : rawVal < 1.1 ? "bg-red-900/90" : "bg-yellow-900/90";
+                        } else if (selectedMetric === "Opposition_XG") {
+                          bg = rawVal < 1.1 ? "bg-green-900/90" : rawVal > 1.6 ? "bg-red-900/90" : "bg-yellow-900/90";
+                        } else if (selectedMetric === "CS") {
+                          const p = rawVal > 1 ? rawVal / 100 : rawVal; // normalize to 0-1
+                          bg = p > 0.35 ? "bg-green-900/90" : p < 0.25 ? "bg-red-900/90" : "bg-yellow-900/90";
+                        }
+                      }
+
+                      return (
+                        <td key={`${row.team_name}-gw-${gw}`} className="px-1 sm:px-2 py-1 sm:py-2 border-b border-white/5 align-top text-center min-w-[96px] w-[96px]">
+                          {cell ? (
+                            <div className={`flex flex-col text-[13px] leading-tight rounded-md px-1 py-1 ${bg}`}>
+                              <span className="font-medium truncate" title={opp}>
+                                {opp || "TBD"}
+                              </span>
+                              <span className="text-[11px] text-neutral-300">({hav})</span>
+                              <span className="text-[11px]">{rawVal !== null ? formatCellValue(rawVal) : "-"}</span>
+                            </div>
+                          ) : (
+                            <span className="text-neutral-600">–</span>
+                          )}
+                        </td>
+                      );
+                    })}
+
+                    <td className="px-3 py-2 border-b border-white/5 align-top font-semibold min-w-[96px] w-[96px] tabular-nums">
+                      {formatTotalValue(row.total)}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+
+          {tableData.length === 0 && (
+            <div className="text-center text-neutral-400 py-10">No data in this range.</div>
+          )}
+        </div>
+
+        {/* Legend / helper text */}
+        <p className="text-xs text-neutral-400 mt-3 text-center">
+          On small screens, up to three GW columns are shown. Use the pager to view more GWs.
         </p>
-        
       </div>
     </div>
   );
