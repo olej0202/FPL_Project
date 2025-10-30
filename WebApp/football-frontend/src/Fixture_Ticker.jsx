@@ -145,24 +145,42 @@ export default function TeamPredictionRankingsTable() {
 
         {/* Metric selector (segmented) */}
         <section className="mb-6">
-          <div className="flex flex-wrap justify-center gap-2">
-            {Object.entries(METRIC_LABELS).map(([key, label]) => {
-              const active = selectedMetric === key;
-              return (
-                <button
-                  key={key}
-                  onClick={() => setSelectedMetric(key)}
-                  className={`h-10 px-3 rounded-md border text-sm transition focus:outline-none focus:ring-2 focus:ring-royal-gold/60 hover:border-none ${
-                    active ? "bg-royal-gold text-black border-yellow-400" : "bg-white/5 text-neutral-200 border-white/10 hover:bg-white/10"
-                  }`}
-                  aria-pressed={active}
-                >
-                  {label}
-                </button>
-              );
-            })}
-          </div>
-        </section>
+  <div className="max-w-xs mx-auto w-full border-royal-gold">
+    <label
+      htmlFor="metric"
+      className="block text-xs uppercase tracking-wide text-neutral-400 mb-1"
+    >
+      Metric
+    </label>
+
+    <select
+      id="metric"
+      value={selectedMetric}
+      onChange={(e) => setSelectedMetric(e.target.value)}
+      style={{ colorScheme: "dark" }}  // better dark popover in most browsers
+      className="
+        w-full h-10 rounded-md
+        border border-royal-gold
+        bg-black/70 text-neutral-100 text-sm
+        px-3
+        outline-royal-gold focus:outline-none
+        ring-royal-gold/60
+        focus:ring-2 focus-visible:ring-2 focus-visible:ring-royal-gold/60
+        
+      "
+      aria-label="Select ranking metric"
+    >
+      {Object.entries(METRIC_LABELS).map(([key, label]) => (
+        <option key={key} value={key} className="bg-black text-neutral-100">
+          {label}
+        </option>
+      ))}
+    </select>
+  </div>
+</section>
+
+
+
 
         {/* GW Slider */}
         {minGW !== null && maxGW !== null && (
@@ -194,28 +212,41 @@ export default function TeamPredictionRankingsTable() {
 
         {/* Mobile GW pager */}
         {isMobile && gwColumns.length > 3 && (
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <button
-              className="h-9 px-3 rounded-md border bg-white/5 text-neutral-200 border-white/10 hover:bg-white/10 disabled:opacity-40"
-              onClick={() => setGwWindowStart((s) => Math.max(0, s - 1))}
-              disabled={gwWindowStart <= 0}
-              aria-label="Previous gameweeks"
-            >
-              ◀ Prev
-            </button>
-            <span className="text-xs text-neutral-400">
-              Showing GW {visibleGwColumns[0]}–{visibleGwColumns[visibleGwColumns.length - 1]}
-            </span>
-            <button
-              className="h-9 px-3 rounded-md border bg-white/5 text-neutral-200 border-white/10 hover:bg-white/10 disabled:opacity-40"
-              onClick={() => setGwWindowStart((s) => Math.min(maxGwWindowStart, s + 1))}
-              disabled={gwWindowStart >= maxGwWindowStart}
-              aria-label="Next gameweeks"
-            >
-              Next ▶
-            </button>
-          </div>
-        )}
+  <div className="flex items-center justify-center gap-3 mb-4">
+    <button
+      className="
+        h-9 w-24
+        inline-flex items-center justify-center text-center
+        rounded-md border bg-white/5 text-neutral-200 border-white/10
+        hover:bg-white/10 disabled:opacity-40
+      "
+      onClick={() => setGwWindowStart((s) => Math.max(0, s - 1))}
+      disabled={gwWindowStart <= 0}
+      aria-label="Previous gameweeks"
+    >
+      ◀ Prev
+    </button>
+
+    <span className="text-xs text-neutral-400">
+      Showing GW {visibleGwColumns[0]}–{visibleGwColumns[visibleGwColumns.length - 1]}
+    </span>
+
+    <button
+      className="
+        h-9 w-24
+        inline-flex items-center justify-center text-center
+        rounded-md border bg-white/5 text-neutral-200 border-white/10
+        hover:bg-white/10 disabled:opacity-40
+      "
+      onClick={() => setGwWindowStart((s) => Math.min(maxGwWindowStart, s + 1))}
+      disabled={gwWindowStart >= maxGwWindowStart}
+      aria-label="Next gameweeks"
+    >
+      Next ▶
+    </button>
+  </div>
+)}
+
 
         {/* Table */}
         <div className="w-full overflow-x-auto rounded-2xl border border-white/10 bg-white/5">

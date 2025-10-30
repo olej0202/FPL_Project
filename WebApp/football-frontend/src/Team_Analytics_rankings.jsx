@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useStatsData } from "./Contexts/StatsContext";
 import { useNavigate } from "react-router-dom";
+import teamLogos from "./utils/team_logos";
 
 const METRICS = {
   XG_avg: "Offensive Index",
@@ -140,12 +141,32 @@ export default function TeamAnalyticsList() {
                     />
 
                     <div className="relative z-10 flex items-center justify-between">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <span className="text-royal-gold font-bold w-6 text-right tabular-nums">{idx + 1}.</span>
-                        <span className="truncate">{team.name}</span>
-                      </div>
-                      <span className="font-semibold tabular-nums text-royal-gold">{team.value.toFixed(2)}</span>
-                    </div>
+  <div className="flex items-center gap-3 min-w-0">
+    <span className="text-royal-gold font-bold w-6 text-right tabular-nums">
+      {idx + 1}.
+    </span>
+
+    {/* Logo + name */}
+    <div className="flex items-center gap-2 min-w-0">
+      {teamLogos[team.name] ? (
+        <img
+          src={teamLogos[team.name]}
+          alt={`${team.name} logo`}
+          className="h-6 w-6 object-contain flex-shrink-0"
+          onError={(e) => { e.currentTarget.style.visibility = "hidden"; }}
+        />
+      ) : (
+        <span className="h-6 w-6" /> // keeps alignment if no logo
+      )}
+      <span className="truncate">{team.name}</span>
+    </div>
+  </div>
+
+  <span className="font-semibold tabular-nums text-royal-gold">
+    {team.value.toFixed(2)}
+  </span>
+</div>
+
                   </li>
                 );
               })}

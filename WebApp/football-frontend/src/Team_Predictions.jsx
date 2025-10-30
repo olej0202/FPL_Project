@@ -202,31 +202,41 @@ export default function Team_Predictions() {
                 }`}
               >
                 {/* Header */}
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm uppercase tracking-wide text-neutral-400">Match</span>
-                  <span className="text-sm uppercase tracking-wide text-neutral-400">Score</span>
-                  <span className="text-sm uppercase tracking-wide text-neutral-400">CS odds</span>
-                </div>
+                {/* Header (aligned with row grid) */}
+<div className="grid grid-cols-[minmax(0,1fr)_64px_92px] items-center gap-3 mb-2">
+  <span className="text-xs uppercase tracking-wide text-neutral-400">Match</span>
+  <span className="text-xs uppercase tracking-wide text-neutral-400 text-right">Score</span>
+  <span className="text-xs uppercase tracking-wide text-neutral-400 text-right">CS odds</span>
+</div>
 
-                {/* Home Team Row */}
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-3 min-w-0">
-                    {crest(match.home_team)}
-                    <span className="text-base font-medium truncate">{match.home_team}</span>
-                  </div>
-                  <span className="text-xl font-semibold tabular-nums">{Number(match.home_goals).toFixed(1)}</span>
-                  <span className="text-xl font-semibold tabular-nums">{formatPct(Number(match.Clean_Sheet_home))}</span>
-                </div>
+{/* Home Team Row */}
+<div className="grid grid-cols-[minmax(0,1fr)_64px_92px] items-center gap-3 mb-2">
+  <div className="flex items-center gap-3 min-w-0">
+    {crest(match.home_team)}
+    <span className="text-base font-medium truncate">{match.home_team}</span>
+  </div>
+  <span className="text-xl font-semibold tabular-nums text-right">
+    {Number(match.home_goals).toFixed(1)}
+  </span>
+  <span className="text-xl font-semibold tabular-nums text-right">
+    {formatPct(Number(match.Clean_Sheet_home))}
+  </span>
+</div>
 
-                {/* Away Team Row */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3 min-w-0">
-                    {crest(match.away_team)}
-                    <span className="text-base font-medium truncate">{match.away_team}</span>
-                  </div>
-                  <span className="text-xl font-semibold tabular-nums">{Number(match.away_goals).toFixed(1)}</span>
-                  <span className="text-xl font-semibold tabular-nums">{formatPct(Number(match.Clean_Sheet_away))}</span>
-                </div>
+{/* Away Team Row */}
+<div className="grid grid-cols-[minmax(0,1fr)_64px_92px] items-center gap-3">
+  <div className="flex items-center gap-3 min-w-0">
+    {crest(match.away_team)}
+    <span className="text-base font-medium truncate">{match.away_team}</span>
+  </div>
+  <span className="text-xl font-semibold tabular-nums text-right">
+    {Number(match.away_goals).toFixed(1)}
+  </span>
+  <span className="text-xl font-semibold tabular-nums text-right">
+    {formatPct(Number(match.Clean_Sheet_away))}
+  </span>
+</div>
+
               </div>
             ))}
 

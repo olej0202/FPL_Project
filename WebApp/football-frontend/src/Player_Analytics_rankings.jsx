@@ -167,7 +167,7 @@ export default function Player_analytics_rankings() {
                   <button
                     key={pos}
                     onClick={() => setSelectedPos(pos)}
-                    className={`h-10 px-3 rounded-md border text-sm transition focus:outline-none focus:ring-2 focus:ring-royal-gold/60 ${
+                    className={`h-10 px-3 rounded-md border text-sm transition focus:outline-none focus:ring-2 focus:ring-royal-gold/60 hover:border-none ${
                       selectedPos === pos
                         ? "bg-royal-gold text-black border-yellow-400"
                         : "bg-black/60 text-neutral-200 border-white/10 hover:bg-white/10"

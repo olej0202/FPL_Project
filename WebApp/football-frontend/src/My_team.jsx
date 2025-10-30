@@ -282,13 +282,13 @@ export default function MyTeamOptimize() {
             {/* Hits counter */}
             <div className="flex flex-col gap-1">
               <label className="text-xs uppercase tracking-wide text-neutral-300">Hits</label>
-              <div className="h-10 bg-black/60 border border-white/10 rounded-md flex items-center justify-between px-2">
+              <div className="h-10 bg-black/60 border border-white/10 rounded-md flex items-center justify-between px-2 hover:border-none">
                 <IconButton
                   ariaLabel="Decrease hits"
                   onClick={() => setn_hits(Math.max(0, Number(n_hits || 0) - 1))}
                   label="−"
                 />
-                <div className="flex flex-col items-center leading-none select-none">
+                <div className="flex flex-col items-center leading-none select-none hover:border-none">
                   <span className="text-[10px] uppercase tracking-wide text-neutral-400">Count</span>
                   <span className="text-sm font-semibold">{Number(n_hits || 0)}</span>
                 </div>
@@ -518,7 +518,7 @@ function IconButton({ ariaLabel, onClick, label }) {
       type="button"
       aria-label={ariaLabel}
       onClick={onClick}
-      className="inline-flex items-center justify-center w-7 h-7 rounded-full border border-royal-gold/60 text-royal-gold/90 bg-black/60 hover:bg-royal-gold hover:text-black transition leading-none"
+      className="inline-flex items-center justify-center w-7 h-7 rounded-full border border-royal-gold/60 text-royal-gold/90 bg-black/60 hover:bg-royal-gold hover:text-black transition leading-none hover:border-none"
     >
       {label}
     </button>
