@@ -126,9 +126,9 @@ export default function NewsBlog() {
                 key={t.key}
                 onClick={() => toggle(t.key)}
                 aria-pressed={!!open[t.key]}
-                className={`h-9 px-3 rounded-full text-sm border transition focus:outline-none focus:ring-2 focus:ring-royal-gold/60 ${
+                className={`h-9 px-3 rounded-full text-sm border transition focus:outline-none focus:ring-2 focus:ring-royal-gold/60 hover:border-none ${
                   open[t.key]
-                    ? "bg-royal-gold text-black border-yellow-400"
+                    ? "bg-royal-gold text-black"
                     : "bg-white/5 text-neutral-200 border-white/10 hover:bg-white/10"
                 }`}
               >
@@ -154,7 +154,7 @@ export default function NewsBlog() {
                   type="button"
                   onClick={() => toggle(topic)}
                   aria-expanded={!!open[topic]}
-                  className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-white/10"
+                  className="bg-white/10 w-full flex items-center justify-between px-4 py-3 text-left hover:bg-white/20 hover:border-none"
                 >
                   <div className="flex items-center gap-3">
                     <span className="text-lg font-semibold text-royal-gold">{topic}</span>
@@ -183,7 +183,7 @@ export default function NewsBlog() {
                             </div>
                             <time className="text-[11px] text-neutral-400">{toRelative(article.date)}</time>
                           </div>
-                          <p className="text-sm leading-5 text-neutral-100 whitespace-pre-line">
+                          <p className="text-[17px] leading-5 text-neutral-100 whitespace-pre-line">
                             {article.content}
                           </p>
                         </div>
