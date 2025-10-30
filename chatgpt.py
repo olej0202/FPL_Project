@@ -22,7 +22,7 @@ def fetch_premier_league_news():
         "Premier League", "Arsenal", "Manchester United", "Manchester City",
         "Liverpool", "Chelsea", "Tottenham", "Newcastle United", "Aston Villa",
         "Brighton", "West Ham", "Brentford", "Fulham", "Wolves",
-        "Crystal Palace", "Nottingham Forest", "Bournemouth"
+        "Crystal Palace", "Nottingham Forest", "Bournemouth",
     ]
 
     all_articles = []

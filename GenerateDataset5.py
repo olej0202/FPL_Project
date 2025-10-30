@@ -569,10 +569,10 @@ def Generate_team_data():
         team_data=full_team_data[full_team_data["name"]==team]
         away_team=team_data[team_data["was_home"]==False]
         home_team=team_data[team_data["was_home"]==True]
-        home_team['XGH']=np.clip(home_team['XG'], None, 3).rolling(window=8, min_periods=1).mean()
-        home_team['XGCH']=np.clip(home_team['XGC'], None, 3).rolling(window=8, min_periods=1).mean()
-        away_team['XGA']=np.clip(away_team['XG'], None, 3).rolling(window=8, min_periods=1).mean()
-        away_team['XGCA']=np.clip(away_team['XGC'], None, 3).rolling(window=8, min_periods=1).mean()
+        home_team['XGH']=np.clip(home_team['XG'], None, 2.8).rolling(window=10, min_periods=1).mean()
+        home_team['XGCH']=np.clip(home_team['XGC'], None, 2.8).rolling(window=10, min_periods=1).mean()
+        away_team['XGA']=np.clip(away_team['XG'], None, 2.8).rolling(window=10, min_periods=1).mean()
+        away_team['XGCA']=np.clip(away_team['XGC'], None, 2.8).rolling(window=10, min_periods=1).mean()
         
         home_team["XG_DEF"]=home_team['XG_DEF'].ewm(span=8, adjust=False).mean()
         home_team["XG_MID"]=home_team['XG_MID'].ewm(span=8, adjust=False).mean()
@@ -586,12 +586,12 @@ def Generate_team_data():
         columns_to_ffill = ['XGA', 'XGCA', 'XGH', 'XGCH']
         new_team[columns_to_ffill] = new_team[columns_to_ffill].ffill()
         new_team[columns_to_ffill] = new_team[columns_to_ffill].fillna(1.5)
-        new_team['XGH']=new_team['XGH']*0.5+np.clip(new_team['XG'], None, 3.5).rolling(window=15, min_periods=1).mean()*0.5
-        new_team['XGA']=new_team['XGA']*0.5+np.clip(new_team['XG'], None, 3.5).rolling(window=15, min_periods=1).mean()*0.5
-        new_team['XGCH']=new_team['XGCH']*0.5+np.clip(new_team['XGC'], None, 3.5).rolling(window=15, min_periods=1).mean()*0.5
-        new_team['XGCA']=new_team['XGCA']*0.5+np.clip(new_team['XGC'], None, 3.5).rolling(window=15, min_periods=1).mean()*0.5
-        new_team['XG_avg']=new_team['XG'].rolling(window=10, min_periods=1).mean()
-        new_team['XGC_avg']=new_team['XGC'].rolling(window=10, min_periods=1).mean()
+        new_team['XGH']=new_team['XGH']*0.5+np.clip(new_team['XG'], None, 2.8).rolling(window=15, min_periods=1).mean()*0.5
+        new_team['XGA']=new_team['XGA']*0.5+np.clip(new_team['XG'], None, 2.8).rolling(window=15, min_periods=1).mean()*0.5
+        new_team['XGCH']=new_team['XGCH']*0.5+np.clip(new_team['XGC'], None, 2.8).rolling(window=15, min_periods=1).mean()*0.5
+        new_team['XGCA']=new_team['XGCA']*0.5+np.clip(new_team['XGC'], None, 2.8).rolling(window=15, min_periods=1).mean()*0.5
+        new_team['XG_avg']=new_team['XG'].rolling(window=15, min_periods=1).mean()
+        new_team['XGC_avg']=new_team['XGC'].rolling(window=15, min_periods=1).mean()
         
         new_team['Rolling_Threat']=new_team['Threat'].ewm(span=15, adjust=False).mean()
         new_team['Rolling_Threat_Against']=new_team['Threat_against'].ewm(span=15, adjust=False).mean()
@@ -790,7 +790,7 @@ def team_transformed2():
 
         k_def = 0.06
         k_off=0.06
-        min_val=1
+        min_val=0.8
 
         actual_goals = xg
         if was_home==1:
@@ -902,7 +902,7 @@ def team_transformed2():
     new_team_df=pd.read_csv("Team_data_transformed.csv").iloc[:,1:]
     new_team_df_newest=pd.read_csv("Team_data_newest.csv").iloc[:,1:]
 
-    overall_weight=0.25
+    overall_weight=0.3
 
     team_transformed_df=pd.DataFrame()
     team_transformed_df_newest=pd.DataFrame()
@@ -1169,8 +1169,8 @@ def main_Transform():
             player_df, most_common = get_understat(player_df,Own_team_name,pos,element_list,season_list,pos)
             player_df=player_df[player_df['minutes'] > 0]
             player_df["rolling_form"] = player_df['total_points'].ewm(span=lookback, adjust=False).mean()
-            player_df["rolling_XG"] = player_df['expected_goals'].clip(upper=1.8).ewm(span=lookback, adjust=False).mean()
-            player_df["rolling_XA"] = player_df['expected_assists'].clip(upper=1.8).ewm(span=lookback, adjust=False).mean()
+            player_df["rolling_XG"] = player_df['expected_goals'].clip(upper=0.9).ewm(span=lookback, adjust=False).mean()
+            player_df["rolling_XA"] = player_df['expected_assists'].clip(upper=0.9).ewm(span=lookback, adjust=False).mean()
             player_df["rolling_GC"] = player_df['goals_conceded'].ewm(span=lb2, adjust=False).mean()
             player_df["rolling_bps"] = player_df['bps'].ewm(span=lookback, adjust=False).mean()
             player_df["rolling_GS"] = player_df['goals_scored'].clip(upper=2).ewm(span=lookback, adjust=False).mean()
