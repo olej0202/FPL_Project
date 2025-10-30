@@ -49,3 +49,6 @@
 .recharts-tooltip-wrapper {
   background-color: transparent !important;
 }
+
+* { -webkit-tap-highlight-color: transparent; }
+

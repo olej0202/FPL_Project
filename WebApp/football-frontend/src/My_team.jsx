@@ -189,7 +189,7 @@ export default function MyTeamOptimize() {
         <header className="mb-6 sm:mb-8 flex items-center justify-between">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Optimize My Team</h1>
-            <p className="text-xs sm:text-sm text-neutral-400 mt-1">Set your chips, adjust hits, and generate the best XI for the next gameweek.</p>
+            <p className="text-xs sm:text-sm text-neutral-400 mt-1">Set your chips, adjust hits, and Optimize your team</p>
           </div>
           <button
             onClick={() => {
@@ -454,25 +454,35 @@ function ChipSelect({ label, show, onShow, onHide, value, onChange, minGW, maxGW
   return (
     <div className="flex flex-col gap-1">
       <label className="text-xs uppercase tracking-wide text-neutral-300">{label}</label>
+
       {show ? (
         <div className="relative">
           <select
-            value={value || ""}
-            onChange={(e) => onChange(e.target.value)}
-            className="w-full h-10 pl-3 pr-9 rounded-md border border-white/10 bg-black/60 text-neutral-100 text-sm focus:outline-none focus:ring-2 focus:ring-royal-gold/60"
-          >
-            <option value="" disabled>
-              {label}
-            </option>
-            {Array.from({ length: maxGW - minGW + 1 }, (_, i) => minGW + i).map((gw) => (
-              <option key={gw} value={gw}>
-                GW {gw}
-              </option>
-            ))}
-          </select>
+  value={value || ""}
+  onChange={(e) => onChange(e.target.value)}
+  style={{ colorScheme: "dark" }}               // <- key line
+  className="
+    w-full h-10 pl-3 pr-9 rounded-md
+    border border-white/10
+    bg-black/70 text-neutral-100 text-sm
+    outline-none focus:outline-none
+    focus:ring-0 focus-visible:ring-2 focus-visible:ring-royal-gold/60
+  "
+>
+  <option value="" disabled className="text-neutral-400">{label}</option>
+  {Array.from({ length: maxGW - minGW + 1 }, (_, i) => minGW + i).map((gw) => (
+    <option key={gw} value={gw}>GW {gw}</option>
+  ))}
+</select>
+
+
           <button
             onClick={onHide}
-            className="absolute inset-y-0 right-0 px-3 flex items-center text-rose-400 hover:text-rose-300"
+            className="
+              absolute inset-y-0 right-0 px-3 flex items-center
+              text-rose-400 hover:text-rose-300
+              outline-none focus:outline-none focus:ring-0
+            "
             aria-label={`Clear ${label}`}
             type="button"
           >
@@ -483,7 +493,16 @@ function ChipSelect({ label, show, onShow, onHide, value, onChange, minGW, maxGW
         <button
           onClick={onShow}
           type="button"
-          className="h-10 w-full inline-flex items-center justify-center rounded-md border border-dashed border-royal-gold/60 text-royal-gold/90 text-sm hover:bg-yellow-300 hover:text-black transition"
+          className="
+            h-10 w-full inline-flex items-center justify-center rounded-md
+            border border-dashed border-royal-gold/40
+            bg-royal-gold/10 text-royal-gold
+            text-sm transition
+            hover:bg-royal-gold hover:text-black
+            outline-none focus:outline-none focus:ring-0
+            focus-visible:ring-2 focus-visible:ring-royal-gold/60
+            hover:border-none
+          "
         >
           + {addLabel}
         </button>
@@ -491,6 +510,7 @@ function ChipSelect({ label, show, onShow, onHide, value, onChange, minGW, maxGW
     </div>
   );
 }
+
 
 function IconButton({ ariaLabel, onClick, label }) {
   return (
