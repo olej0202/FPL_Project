@@ -1186,7 +1186,7 @@ def main_Transform():
             player_df["rolling_Threat_historic"] = mid_table['Threat_min'].rolling(window=30, min_periods=1).mean()
             player_df["rolling_Creativity_historic"] = mid_table['Creativity_min'].rolling(window=30, min_periods=1).mean()
             
-            player_df["rolling_bps_historic"] = player_df['bps'].rolling(window=30, min_periods=1).mean()
+            
             player_df["rolling_bonus_historic"] = player_df['bonus'].rolling(window=30, min_periods=1).mean()
             player_df["rolling_bonus"] = player_df['bonus'].ewm(span=lookback, adjust=False).mean()
             player_df["rolling_GS_historic"] = player_df['goals_scored'].rolling(window=30, min_periods=1).mean()
@@ -1246,8 +1246,38 @@ def main_Transform():
                     player_df["bps"].clip(upper=50) / player_df["XGCA"],  # True: expected_goals / XGCA
                     player_df["bps"].clip(upper=50) / player_df["XGCH"]  # False: expected_goals / XGCh
                     )
-            player_df["Rolling_adjusted_BPS"]=player_df['Adjusted_BPS'].ewm(span=lookback, adjust=False).mean()
-            player_df["Rolling_adjusted_BPS"]=adjust_measure(player_df, 'bps')
+            
+            FACTS = {
+                "GKP": (0.0, 0.0, 10),
+                "DEF": (10,  9.0, 10),
+                "MID": (15,  9.0, 0.0),
+                "FWD": (20,  9.0, 0.0),
+            }
+            DEFAULT = (0.0, 0.0, 0.0)
+
+            # Optional: normalize position labels to match keys
+            # player_df["position"] = player_df["position"].str.upper().str[:3]  # example
+
+            f1_map = {k: v[0] for k, v in FACTS.items()}
+            f2_map = {k: v[1] for k, v in FACTS.items()}
+            f3_map = {k: v[2] for k, v in FACTS.items()}
+
+            f1 = player_df["position"].map(f1_map).fillna(DEFAULT[0]).to_numpy()
+            f2 = player_df["position"].map(f2_map).fillna(DEFAULT[1]).to_numpy()
+            f3 = player_df["position"].map(f3_map).fillna(DEFAULT[2]).to_numpy()
+
+            cs_flag = (player_df["goals_conceded"] < 1).to_numpy().astype(int)
+
+            player_df["Adjusted_BPS"] = (
+                player_df["bps"].to_numpy()
+                - f1 * player_df["goals_scored"].to_numpy()
+                - f2 * player_df["assists"].to_numpy()
+                - f3 * cs_flag
+            )
+
+            player_df["Rolling_adjusted_BPS"]=player_df['Adjusted_BPS'].rolling(window=15, min_periods=1).mean()
+            player_df["rolling_bps_historic"] = player_df['Adjusted_BPS'].rolling(window=30, min_periods=1).mean()
+            #player_df["Rolling_adjusted_BPS"]=adjust_measure(player_df, 'bps')
             player_df["Adjusted_Fantasy"] = np.where(
                     player_df["was_home"] == 1,  # Condition: if was_home is 1
                     player_df["total_points"].clip(upper=11) / player_df["XGCA"],  # True: expected_goals / XGCA
