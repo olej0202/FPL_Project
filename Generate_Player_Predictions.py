@@ -106,7 +106,7 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
             
             if(pred_variable=="bps"):
                real_variable="bonus" 
-               player_preds.append(max(df['Rolling_adjusted_BPS'].values[h]*0.6+df['rolling_bps_historic'].values[h]*0.4,5)*0.05)
+               player_preds.append(max(df['Rolling_adjusted_BPS'].values[h]*0.6+df['rolling_bps_historic'].values[h]*0.4,5)*0.04)
                
             if(pred_variable=="CBI"):
                real_variable="cbi" 
@@ -752,8 +752,8 @@ def Generate_point_predictions():
 
             try:
 
-                bps.append(max(0.5,(xgb_bps_player["pred"].values[i]*0
-                                   +stat_bps_player["pred"].values[i]*1
+                bps.append(max(0.3,(xgb_bps_player["pred"].values[i]*0.2
+                                   +stat_bps_player["pred"].values[i]*0.8
                                    +max(0.5,cluster_bps_player["pred"].values[i]*0.0*0.04)*0))*1)
             except:
                 bps.append(0)
@@ -841,9 +841,9 @@ def Make_Predictions ():
         position_filter=positions[y]
         Stat_preds(is_pred, position_filter,column_list,predlength)
 
-        pred2=XGB(position_filter,"FWD",column_list,predlength)        
-        Generate_LSTM_preds(position_filter,column_list,predlength)
-        CLUSTER_preds(position_filter)
+        #pred2=XGB(position_filter,"FWD",column_list,predlength)        
+        #Generate_LSTM_preds(position_filter,column_list,predlength)
+        #CLUSTER_preds(position_filter)
 
 
 
