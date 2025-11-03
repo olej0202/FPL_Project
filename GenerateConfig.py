@@ -25,7 +25,7 @@ Spurs,6
 ,Ipswich,40"""
 
 
-Manual_team_offensive_adjustments = {4:0.9,17:1.15,94:0.85,36:0.9 }
+Manual_team_offensive_adjustments = {4:0.9,17:1.15,94:0.85,36:0.9,54:1.1 }
     
     
     
@@ -57,6 +57,7 @@ Manual_min=[
         {"name": "Eli_Junior Kroupi", "type": "const",   "GW": "any", "value": 60},
         {"name": "Karl_Darlow", "type": "const",   "GW": "any", "value": 60},
         {"name": "Giorgi_Mamardashvili", "type": "const",   "GW": "any", "value": 60},
+        {"name": "Tijjani_Reijnders", "type": "const",   "GW": "any", "value": 75},
     ]
         
 
