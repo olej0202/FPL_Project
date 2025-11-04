@@ -89,7 +89,7 @@ def Get_times(current_fixture_path,n_points_in_future):
 def Main_Orchestration():
     season=25
     is_new_season=0
-    has_been_error=0
+    has_been_error=1
     n_points_in_future=8
     budget=100
     ownership=0.9
