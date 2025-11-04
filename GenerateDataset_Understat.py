@@ -451,26 +451,26 @@ def Generate_Understat_dataset(current_players,run_player_pos):
     # EWM(15) for xG per team & position group
     agg_enriched["Rolling_Adjusted_XG"] = (
         agg_enriched.groupby(["player_team", "pos_group"])["Adjusted_XG"]
-              .transform(lambda s: s.ewm(span=15, adjust=False, min_periods=1).mean())
+              .transform(lambda s: s.ewm(span=20, adjust=False, min_periods=1).mean())
     )
     agg_enriched["Rolling_Adjusted_XA"] = (
         agg_enriched.groupby(["player_team", "pos_group"])["assists"]
-              .transform(lambda s: s.ewm(span=15, adjust=False, min_periods=1).mean())
+              .transform(lambda s: s.ewm(span=20, adjust=False, min_periods=1).mean())
     )
 
     agg_enriched["Rolling_XG_Share"] = (
         agg_enriched.groupby(["player_team", "pos_group"])["npxG_share"]
-          .transform(lambda s: s.rolling(window=15, min_periods=1).mean())
+          .transform(lambda s: s.rolling(window=20, min_periods=1).mean())
     )
-    
+
     agg_enriched["Rolling_XA_Share"] = (
         agg_enriched.groupby(["player_team", "pos_group"])["xA_share"]
-          .transform(lambda s: s.rolling(window=15, min_periods=1).mean())
+          .transform(lambda s: s.rolling(window=20, min_periods=1).mean())
     )
 
     def adjust_measure_safe(g: pd.DataFrame, measure_name: str,
                             w_threat: float = 0.4, w_xgc: float = 0.6,
-                            smoothing: float = 0.08, min_std_mult: float = 1.3,
+                            smoothing: float = 0.07, min_std_mult: float = 1.2,
                             start_from: str = "mean") -> pd.Series:
         """Stateful smoother per group; returns a Series aligned to g.index."""
         # ensure expected columns exist

@@ -1156,7 +1156,7 @@ def main_Transform():
         if (player_df["minutes"].sum() < 100):
             unwanted_players.append([name_string, len(player_df),player_df["minutes"].mean()])
         if (len(player_df) > (4)) and (player_df["minutes"].sum() > 100):
-            lookback=12
+            lookback=15
             lb2=12
             poslist = [pos] * len(player_df)
             namelist = [name_string] * len(player_df)
