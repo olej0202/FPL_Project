@@ -110,7 +110,7 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
                
             if(pred_variable=="CBI"):
                real_variable="cbi" 
-               player_preds.append((min(12,df['CBI'].values[h])**2)/13)
+               player_preds.append((min(12,df['CBI'].values[h])**2)/12)
         
             if(pred_variable=="Fantasy"):
                real_variable="total_points"
