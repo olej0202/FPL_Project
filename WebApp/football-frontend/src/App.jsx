@@ -13,6 +13,7 @@ import Player_analytics_rankings from "./Player_Analytics_rankings";
 import PlayerAnalyticsIndividual from "./Player_Analytics_individual";
 import NewsBlog from "./News";
 import TeamPredictionsFuture from "./Fixture_Ticker";
+import Season_Analysis from "./SeasonAnalysis"
 import AITeams from "./AITeams";
 import AITeamNav from "./components/team_navigation";
 import Team_Analytics_Analysis from "./Team_Analytics_Analysis";
@@ -40,6 +41,7 @@ export default function App() {
     { to: "/TeamPredictionsFuture", icon: Calendar, label: "Fixture Analytics" },
     { to: "/Score_Predictions", icon: Trophy, label: "Score Predictions" },
     { to: "/News", icon: Newspaper, label: "PL News" },
+    {to: "/Season_Analysis", icon: Wrench, label: "Season Analysis"}
   ];
 
    const menuItems = [
@@ -165,6 +167,7 @@ export default function App() {
           />
         </Route>
         <Route path="/News" element={<NewsBlog />} />
+
         <Route
           path="/TeamPredictionsFuture"
           element={<TeamPredictionsFuture />}
