@@ -94,7 +94,7 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
                real_variable="expected_goals" 
             if(pred_variable=="Assist"):
                #own_data_xa_pred=((df['Rolling_adjusted_XA'].values[h]*0.7+df['rolling_Adjusted_XA_historic'].values[h]*0.3)*df["opposition_xgc"].values[h]+df['Share_of_XA'].values[h]*team_xg)*(0.5)
-               own_data_xa_pred=((df['rolling_XA_share'].values[h]*0.33+df['Rolling_adjusted_XA_share'].values[h]*0.33+0.33*df['Rolling_creativity_share'].values[h])*team_xg)*0.8+0.2*((df['Rolling_adjusted_XA'].values[h]*0.7+df['rolling_Adjusted_XA_historic'].values[h]*0.3)*df["opposition_xgc"].values[h])
+               own_data_xa_pred=((df['rolling_XA_share'].values[h]*0.2+df['Rolling_adjusted_XA_share'].values[h]*0.45+0.35*df['Rolling_creativity_share'].values[h])*team_xg)*0.8+0.2*((df['Rolling_adjusted_XA'].values[h]*0.7+df['rolling_Adjusted_XA_historic'].values[h]*0.3)*df["opposition_xgc"].values[h])
                team_data_xa_pred=(df['Understat_POSXA'].values[h]*df["opposition_xgc"].values[h]+df['Understat_POSXA_Share'].values[h]*team_xg)*(0.5)
                player_preds.append(own_data_xa_pred*(1-fordelings_faktor)+fordelings_faktor*team_data_xa_pred)        
                real_variable="expected_assists"            
@@ -110,7 +110,8 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
                
             if(pred_variable=="CBI"):
                real_variable="cbi" 
-               player_preds.append((min(12,df['CBI'].values[h])**2)/12)
+               #player_preds.append((min(12,df['CBI'].values[h])**2)/12)
+               player_preds.append(df['CBI'].values[h])
         
             if(pred_variable=="Fantasy"):
                real_variable="total_points"
@@ -743,7 +744,7 @@ def Generate_point_predictions():
 
             try:
 
-                assist.append(((xgb_assist_player["pred"].values[i]*0.1
+                assist.append(((xgb_assist_player["pred"].values[i]*0
                                     +stat_assist_player["pred"].values[i]*0.8
                                     +DNN_assist_player["pred"].values[i]*0.1
                                     +historic_Assist*0.1
@@ -804,7 +805,7 @@ def Generate_point_predictions():
             summary_dataset["Points_prediction"]=(2+summary_dataset["Goal_pred"]*6
                                                   +summary_dataset["Assist_pred"]*4
                                                   +summary_dataset["Bonus_pred"]
-                                                  +summary_dataset["GC_pred"])*0.9+0.1*summary_dataset["Fantasy_pred"]+((summary_dataset["CBI_pred"]/12)*0.7+0.3*cbi_hit_rate)*0.8*2
+                                                  +summary_dataset["GC_pred"])*0.9+0.1*summary_dataset["Fantasy_pred"]+(min(1,summary_dataset["CBI_pred"]/12)*0.7+0.3*cbi_hit_rate)*0.8*2
             
         elif(position=="GKP"):
             summary_dataset["Points_prediction"]=(2
@@ -815,7 +816,7 @@ def Generate_point_predictions():
             summary_dataset["Points_prediction"]=(1+summary_dataset["Goal_pred"]*6.5
                                                   +summary_dataset["Assist_pred"]*3.5
                                                   +summary_dataset["Bonus_pred"]
-                                                  +summary_dataset["GC_pred"]*5)*0.8+0.2*summary_dataset["Fantasy_pred"]+((summary_dataset["CBI_pred"]/10)*0.7+0.3*cbi_hit_rate)*1*2
+                                                  +summary_dataset["GC_pred"]*5)*0.8+0.2*summary_dataset["Fantasy_pred"]+(min(1,summary_dataset["CBI_pred"]/10)*0.7+0.3*cbi_hit_rate)*1*2
         
         
         full_df=pd.concat([full_df, summary_dataset], axis=0, ignore_index=True)
