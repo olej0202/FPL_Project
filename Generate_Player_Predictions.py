@@ -196,7 +196,7 @@ def XGB_Make_dataset(position,position2):
                                "Team","name","time","minutes","season","rolling_Threat2","position","rolling_XG_historic","Rolling_adjusted_XG2","rolling_Adjusted_XG_historic"]]
         
         test_columns=["expected_goals","played_XGC","Rolling_adjusted_XG_form","rolling_shots",
-                               "Team","name","time","minutes","season","rolling_Threat","position","rolling_XG_historic","Rolling_adjusted_XG","rolling_Adjusted_XG_historic"]
+                               "Team","name","time","average_minutes","season","rolling_Threat","position","rolling_XG_historic","Rolling_adjusted_XG","rolling_Adjusted_XG_historic"]
         target_value="expected_goals"
         
     elif(position=='Assist2'):
@@ -236,7 +236,7 @@ def XGB_Make_dataset(position,position2):
         trainingdf=trainingdf[["expected_assists","opposition_xgc","XA_slope","rolling_key_passes",
                                "Team","name","time","minutes","season","Rolling_creativity2","position","rolling_XA_historic","Cluster","Rolling_adjusted_XA2","Rolling_adjusted_XA_form","rolling_Adjusted_XA_historic"]]
         test_columns=["expected_assists","played_XGC","XA_slope","rolling_key_passes",
-                               "Team","name","time","minutes","season","Rolling_creativity","position","rolling_XA_historic","Cluster","Rolling_adjusted_XA","Rolling_adjusted_XA_form","rolling_Adjusted_XA_historic"]
+                               "Team","name","time","average_minutes","season","Rolling_creativity","position","rolling_XA_historic","Cluster","Rolling_adjusted_XA","Rolling_adjusted_XA_form","rolling_Adjusted_XA_historic"]
         target_value="expected_assists"
              
 
@@ -386,7 +386,7 @@ def XGB_Make_Pred(trainingdf,target_value,position2,column_list,predlength,posit
             row=filtered_df.iloc[[y]] 
             dtest = xgb.DMatrix(row, label=[y],enable_categorical=True)
         
-            if(position in ["GOALS","Assist"]):
+            if(position in ["GOALS2","Assist2"]):
                 svr_test=row.drop(columns=['position'])
                 svr_test=svr_test.fillna(0)
                 svr_test_scaled = scaler.transform(svr_test) 
@@ -433,6 +433,7 @@ def Generate_LSTM_preds(pred,column_list,predlength):
         time_cols=["name","Threat", "time","expected_goals", "opposition_xgc","minutes", "Own_Attacking_form", "rolling_Adjusted_XG_historic","Share_of_XG"]
         lagged_cols=[ "opposition_xgc","Threat","Share_of_XG"]
         aux_cols = ["minutes", "Own_Attacking_form", "rolling_Adjusted_XG_historic", "opposition_xgc","Share_of_XG"]
+
         target_col = "expected_goals"
         n_lags=13
 
@@ -733,18 +734,18 @@ def Generate_point_predictions():
 
         for i in range(len(player_data)):
             try:
-                goals.append(((xgb_goals_player["pred"].values[i]*0.0
+                goals.append(((xgb_goals_player["pred"].values[i]*0.1
                          +stat_goals_player["pred"].values[i]*0.8
-                         +DNN_goals_player["pred"].values[i]*0.2
+                         +DNN_goals_player["pred"].values[i]*0.1
                          +CLUSTER_goals_player["pred"].values[i]*0.0))*overscore)
             except:
                 goals.append(0)
 
             try:
 
-                assist.append(((xgb_assist_player["pred"].values[i]*0
+                assist.append(((xgb_assist_player["pred"].values[i]*0.1
                                     +stat_assist_player["pred"].values[i]*0.8
-                                    +DNN_assist_player["pred"].values[i]*0.2
+                                    +DNN_assist_player["pred"].values[i]*0.1
                                     +historic_Assist*0.1
                                     +CLUSTER_assist_player["pred"].values[i]*0.0))*overassist)
             except:
@@ -841,9 +842,9 @@ def Make_Predictions ():
         position_filter=positions[y]
         Stat_preds(is_pred, position_filter,column_list,predlength)
 
-        #pred2=XGB(position_filter,"FWD",column_list,predlength)        
-        #Generate_LSTM_preds(position_filter,column_list,predlength)
-        #CLUSTER_preds(position_filter)
+        pred2=XGB(position_filter,"FWD",column_list,predlength)        
+        Generate_LSTM_preds(position_filter,column_list,predlength)
+        CLUSTER_preds(position_filter)
 
 
 
