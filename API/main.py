@@ -57,6 +57,8 @@ def load_and_transform(endpoint):
         csv_path = os.path.join(parent_dir, "Team_lineups.csv")   
     elif endpoint=="Teams_Analysis": 
         csv_path = os.path.join(parent_dir, "Teams_Visual_Analysis.csv")   
+    elif endpoint=="Season_Analysis": 
+        csv_path = os.path.join(parent_dir, "Season_analysis.csv")   
         
         
     else:
@@ -86,6 +88,11 @@ def get_data():
 @app.get("/News")
 def get_data():
     df = load_and_transform("News")
+    return df.to_dict(orient="records")
+
+@app.get("/Season_Analysis")
+def get_data():
+    df = load_and_transform("Season_Analysis")
     return df.to_dict(orient="records")
 
 @app.get("/Team_Predictions")
