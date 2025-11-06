@@ -59,10 +59,10 @@ def Data_Predictions(current_fixture_path,current_team_path, n_points_in_future)
     Generate_point_predictions()
     
    
-def Data_Generation(ownership,budget,GW_list_wildcard,GW_list_freehit,current_player_path,current_team_path ):
+def Data_Generation(ownership,budget,GW_list_wildcard,GW_list_freehit,current_player_path,current_team_path,current_season_path ):
     GenerateOptimizeSet(current_player_path)
     generate_optimizers(ownership=ownership,budget=budget,GW_list_wildcard=GW_list_wildcard,GW_list_freehit=GW_list_freehit  )
-    Generate_ALL_datasets(current_team_path)
+    Generate_ALL_datasets(current_team_path,current_player_path,current_season_path)
     #main_GPT_News()
     
 def Specials(ownership,budget,GW_list_wildcard,current_player_path ):
@@ -97,6 +97,7 @@ def Main_Orchestration():
     current_fixture_path="Raw_Data_25\Fantasy_season_2025_Fixtures.csv"
     current_player_path="Raw_Data_25/current_players.csv"
     current_team_path="Raw_Data_25\current_teams.csv"
+    current_season_path="Raw_Data_25\Fantasy_season_2025_data.csv"
     #current_raw_data_path="Raw_Data_24\Fantasy_season_2024_data.csv"
     time_list=Get_times(current_fixture_path,n_points_in_future)
     
@@ -118,7 +119,7 @@ def Main_Orchestration():
     #Predict data
     Data_Predictions(current_fixture_path,current_team_path, n_points_in_future)
     
-    Data_Generation(ownership,budget,GW_list_wildcard,GW_list_freehit,current_player_path,current_team_path )
+    Data_Generation(ownership,budget,GW_list_wildcard,GW_list_freehit,current_player_path,current_team_path,current_season_path )
     
     #Specials(ownership,budget,GW_list_wildcard,current_player_path )
     

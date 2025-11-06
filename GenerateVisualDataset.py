@@ -219,12 +219,68 @@ def Generate_Player_Rankings(current_teams):
     df3 = df3.drop(columns=["name2", "GW2"])
     df3["DefCon"]=df3["CBI"].values
     df3.to_csv("Model_Predictions_visual2.csv")
-def Generate_ALL_datasets(current_teams):
+    
+
+def Generate_season_data(current_player_path, current_season_path):
+
+    df=pd.read_csv(current_season_path).iloc[:,1:]
+    players_current=pd.read_csv(current_player_path)
+
+    name_map = {
+        "Pedro_Porro Sauceda":          "Pedro_Porro",
+        "Sávio_Moreira de Oliveira":    "Sávio_'Savinho' Moreira de Oliveira",
+        "Daniel_Muñoz Mejía":           "Daniel_Muñoz",
+        "Bernardo_Mota Veiga de Carvalho e Silva": "Bernardo_Veiga de Carvalho e Silva",
+        "Ederson_Santana de Moraes":    "Ederson_Santana de Moraes",
+        "Levi_Samuels Colwill":         "Levi_Colwill",
+        "Marcos_Senesi Barón":          "Marcos_Senesi",
+        "Raúl_Jiménez Rodríguez":       "Raúl_Jiménez",
+        "Robert_Lynch Sánchez":         "Robert_Sánchez",
+        "Rodrigo_'Rodri' Hernandez Cascante": "Rodrigo_Hernandez",
+        "Rúben_dos Santos Gato Alves Dias":   "Rúben_Gato Alves Dias",
+        "Kaoru_Mitoma":                 "Mitoma_Kaoru",
+        "Matheus_Santos Carneiro da Cunha": "Matheus_Santos Carneiro Da Cunha",
+        "David_Raya Martín":"David_Raya Martin",
+        "Kepa_Arrizabalaga Revuelta": "Kepa_Arrizabalaga",
+        "Idrissa_Gana Gueye": "Idrissa_Gueye",
+        "Alisson_Becker": "Alisson_Ramses Becker",
+        "Luis_Díaz Marulanda": "Luis_Díaz",
+        "Matheus Luiz_Nunes":"Matheus_Nunes",
+        "Alejandro_Garnacho Ferreyra":"Alejandro_Garnacho",
+        "Francisco Evanilson_de Lima Barbosa":"Francisco_Evanilson de Lima Barbosa"
+    }
+
+
+    df["Full_Name"] = df["Full_Name"].apply(lambda n: name_map.get(n, n))
+    merged = df.merge(players_current, left_on='Full_Name',right_on='name', how='left')
+    columns=["expected_goals_x","total_points","position", "Full_Name", "web_name","round","goals_scored","minutes_x","assists","clean_sheets","goals_conceded","yellow_cards","saves","bonus","defensive_contribution_x","expected_assists","expected_goal_involvements","expected_goals_conceded","value"]
+    merged=merged[columns]
+    merged = merged.rename(columns=lambda c: c[:-2] if c.endswith("_x") else c)
+    merged=merged[merged["minutes"]>0]
+    merged["GW"]=merged["round"].astype(int)
+    merged["GOALS-XG"]=merged["goals_scored"]-merged["expected_goals"]
+    merged["Assist-XA"]=merged["assists"]-merged["expected_assists"]
+
+    merged['defcon_hit'] = (
+        ((merged['position'] == 'DEF') & (merged['defensive_contribution'] >= 10)) |
+        ((merged['position'] != 'DEF') & (merged['defensive_contribution'] >= 12))
+    ).astype(int)
+    merged["Type"]="Players"
+    merged = merged.replace([np.inf, -np.inf], np.nan)
+    merged = merged.fillna(0)
+    print(merged)
+    merged.to_csv("Season_analysis.csv")
+
+
+
+    
+def Generate_ALL_datasets(current_teams,current_player_path,current_season_path):
     Generate_Player_Historical()
     Generate_Player_Rankings(current_teams)
     Generate_Team_threats()
     Generate_Lineups()
     Visual_Teams_history()
+    Generate_season_data(current_player_path, current_season_path)
 
 if __name__ == "__main__":
     Generate_ALL_datasets()

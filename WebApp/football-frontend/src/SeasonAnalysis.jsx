@@ -1,218 +1,552 @@
 import React, { useEffect, useMemo, useState } from "react";
+import Box from "@mui/material/Box";
+import Slider from "@mui/material/Slider";
+import TextField from "@mui/material/TextField";
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  LabelList,
+  // Scatter view
+  ScatterChart,
+  Scatter,
+  ZAxis,
+  Legend,
+  ReferenceLine,
+} from "recharts";
 import { useOtherData } from "./Contexts/OtherContext";
 
-// Small helpers
-const toRelative = (iso) => {
-  if (!iso) return "";
-  const now = Date.now();
-  const t = new Date(iso).getTime();
-  const diff = Math.max(0, Math.floor((now - t) / 1000));
-  if (diff < 60) return `${diff}s ago`;
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-  return new Date(iso).toLocaleString();
-};
+/**
+ * PlayerMeasureAveragesChart (with Double Measure → Scatter)
+ * Data source: SeasonData.current (array of per-GW player rows)
+ * Filters: GW range, Position set
+ * Aggregation: Average | Total
+ */
 
-const getFavicon = (url) => {
-  try {
-    const { origin } = new URL(url);
-    return `${origin}/favicon.ico`;
-  } catch {
-    return null;
-  }
-};
+const MEASURE_OPTIONS = [
+  { key: "total_points", label: "Total Points" },
+  { key: "expected_goals", label: "Expected Goals" },
+  { key: "goals_scored", label: "Goals Scored" },
+  { key: "assists", label: "Assists" },
+  { key: "expected_assists", label: "Expected Assists" },
+  { key: "defcon_hit", label: "Defcon Hit" },
+  { key: "GOALS-XG", label: "GOALS-XG" },
+  { key: "Assist-XA", label: "Assist-XA" },
+  { key: "saves", label: "Saves" },
+  { key: "yellow_cards", label: "Yellow Cards" },
+  { key: "clean_sheets", label: "Clean Sheets" },
+];
 
-export default function Season_Analysis() {
-  const [articles, setArticles] = useState([]);
-  const [groupedNews, setGroupedNews] = useState({});
-  const [query, setQuery] = useState("");
-  const [open, setOpen] = useState({}); // topic -> bool
+export default function PlayerMeasureAveragesChart() {
+  const { fetchIfNeeded, SeasonData } = useOtherData();
 
-  const { fetchIfNeeded, NewsData, loading } = useOtherData();
+  const [rowsRaw, setRowsRaw] = useState([]);
+  const [selectedMeasure, setSelectedMeasure] = useState(MEASURE_OPTIONS[0].key);
+  const [selectedMeasure2, setSelectedMeasure2] = useState(""); // empty = disabled
+
+  const [GWRange, setGWRange] = useState([1, 38]);
+  const [minGW, setMinGW] = useState(null);
+  const [maxGW, setMaxGW] = useState(null);
+
+  const [topX, setTopX] = useState(10);
+  const [mode, setMode] = useState("average"); // 'average' | 'total'
+  const [posFilter, setPosFilter] = useState(new Set()); // empty = all
+
+  // Top/Bottom switch (kept for your “delta” style metrics)
+  const [rankDirection, setRankDirection] = useState("top"); // 'top' | 'bottom'
+  const bottomEligibleKeys = new Set(["GOALS-XG", "Assist-XA"]);
+  const bottomEligible = bottomEligibleKeys.has(selectedMeasure);
 
   useEffect(() => {
-    const loadNews = async () => {
-      await fetchIfNeeded();
-      if (!NewsData.current) return;
+    if (!bottomEligible) setRankDirection("top");
+  }, [bottomEligible]);
 
-      const parsed = NewsData.current.map((article) => {
-        let sourceObj = {};
-        try {
-          sourceObj = JSON.parse(String(article.source || "{}").replace(/'\s*:\s*'/g, '"$1"').replace(/'/g, '"'));
-        } catch {
-          // keep empty sourceObj if parse fails
-        }
-        return { ...article, parsedSource: sourceObj };
-      });
+  // Load data
+  useEffect(() => {
+    (async () => {
+      await fetchIfNeeded?.();
+      const data = SeasonData?.current ?? [];
+      if (!Array.isArray(data)) return;
 
-      setArticles(parsed);
+      setRowsRaw(data);
+      const gws = data.map((d) => Number(d.GW)).filter(Number.isFinite);
+      if (gws.length) {
+        const min = Math.min(...gws);
+        const max = Math.max(...gws);
+        setMinGW(min);
+        setMaxGW(max);
+        setGWRange([min, max]);
+      }
+    })();
+  }, [fetchIfNeeded, SeasonData]);
 
-      const grouped = parsed.reduce((acc, a) => {
-        const k = a.topic || "Other";
-        (acc[k] ||= []).push(a);
-        return acc;
-      }, {});
+  // Distinct positions
+  const allPositions = useMemo(() => {
+    const s = new Set();
+    for (const r of rowsRaw) {
+      const p = r?.position ?? r?.Position;
+      if (p) s.add(String(p));
+    }
+    return Array.from(s).sort((a, b) => a.localeCompare(b));
+  }, [rowsRaw]);
 
-      // default: all topics open
-      const defaults = Object.keys(grouped).reduce((m, k) => ((m[k] = true), m), {});
-      setOpen(defaults);
-      setGroupedNews(grouped);
-    };
-    loadNews();
-  }, [fetchIfNeeded, NewsData]);
+  const togglePos = (p) => {
+    setPosFilter((prev) => {
+      const n = new Set(prev);
+      n.has(p) ? n.delete(p) : n.add(p);
+      return n;
+    });
+  };
 
-  // Topic list + counts
-  const topics = useMemo(() => {
-    return Object.entries(groupedNews)
-      .map(([k, arr]) => ({ key: k, count: arr.length }))
-      .sort((a, b) => a.key.localeCompare(b.key));
-  }, [groupedNews]);
-
-  // Filtered by query (search in content + source name)
+  // Apply GW + position filters
   const filtered = useMemo(() => {
-    if (!query.trim()) return groupedNews;
-    const q = query.toLowerCase();
-    const out = {};
-    for (const [topic, arr] of Object.entries(groupedNews)) {
-      const hit = arr.filter((a) => {
-        const c = String(a.content || "").toLowerCase();
-        const s = String(a.parsedSource?.name || "").toLowerCase();
-        return c.includes(q) || s.includes(q);
+    const [gmin, gmax] = GWRange;
+    return rowsRaw.filter((r) => {
+      const gw = Number(r?.GW);
+      if (!Number.isFinite(gw)) return false;
+      if (gw < gmin || gw > gmax) return false;
+      if (posFilter.size > 0) {
+        const p = String(r?.position ?? r?.Position ?? "");
+        if (!posFilter.has(p)) return false;
+      }
+      return true;
+    });
+  }, [rowsRaw, GWRange, posFilter]);
+
+  // Aggregate helper (for any metric key) over filtered rows
+  const aggregateByPlayer = React.useCallback(
+    (metricKey) => {
+      const acc = new Map();
+      for (const r of filtered) {
+        const fullName = String(
+          r?.Full_Name ?? r?.full_name ?? r?.name ?? ""
+        ).trim();
+        if (!fullName) continue;
+
+        const val = Number(r?.[metricKey]);
+        if (!Number.isFinite(val)) continue;
+
+        if (!acc.has(fullName)) {
+          acc.set(fullName, {
+            id: fullName,
+            name: r?.web_name && r?.web_name !== "0" ? r.web_name : fullName,
+            sum: 0,
+            samples: 0,
+          });
+        }
+        const e = acc.get(fullName);
+        e.sum += val;
+        e.samples += 1;
+      }
+
+      const out = [];
+      for (const e of acc.values()) {
+        if (e.samples <= 0) continue;
+        const avg = e.sum / e.samples;
+        out.push({
+          id: e.id,
+          name: e.name,
+          avg,
+          total: e.sum,
+          samples: e.samples,
+        });
+      }
+
+      // Sort desc by chosen aggregation
+      out.sort((a, b) => {
+        const va = mode === "average" ? a.avg : a.total;
+        const vb = mode === "average" ? b.avg : b.total;
+        return vb - va || a.name.localeCompare(b.name);
       });
-      if (hit.length) out[topic] = hit;
+      return out;
+    },
+    [filtered, mode]
+  );
+
+  // Aggregation for primary measure
+  const groupedA = useMemo(
+    () => aggregateByPlayer(selectedMeasure),
+    [aggregateByPlayer, selectedMeasure]
+  );
+
+  // Rank & trim A
+  const rankedRows = useMemo(() => {
+    const n = Math.max(1, Math.min(200, Number(topX) || 10));
+    if (bottomEligible && rankDirection === "bottom") {
+      const asc = [...groupedA].reverse(); // lowest first
+      return asc.slice(0, n);
+    }
+    return groupedA.slice(0, n);
+  }, [groupedA, topX, bottomEligible, rankDirection]);
+
+  // Bar chart data (single measure)
+  const chartData = useMemo(
+    () =>
+      rankedRows.map((r) => ({
+        name: r.name,
+        Value: Number((mode === "average" ? r.avg : r.total).toFixed(3)),
+      })),
+    [rankedRows, mode]
+  );
+
+  // Double measure?
+  const isDoubleMeasure =
+    !!selectedMeasure2 && selectedMeasure2 !== selectedMeasure;
+
+  // Aggregation for second measure (only when needed)
+  const groupedB = useMemo(
+    () => (isDoubleMeasure ? aggregateByPlayer(selectedMeasure2) : []),
+    [aggregateByPlayer, selectedMeasure2, isDoubleMeasure]
+  );
+
+  const mapB = useMemo(() => {
+    const m = new Map();
+    for (const r of groupedB) m.set(r.id, r);
+    return m;
+  }, [groupedB]);
+
+  const valueForMode = (row) => (mode === "average" ? row.avg : row.total);
+
+  // Scatter data joins rankedRows (A) with aggregated B by id
+  const scatterData = useMemo(() => {
+    if (!isDoubleMeasure) return [];
+    const out = [];
+    for (const a of rankedRows) {
+      const b = mapB.get(a.id);
+      if (!b) continue;
+      out.push({
+        id: a.id,
+        name: a.name,
+        x: Number(valueForMode(a)),
+        y: Number(valueForMode(b)),
+      });
     }
     return out;
-  }, [groupedNews, query]);
+  }, [isDoubleMeasure, rankedRows, mapB]);
 
-  const toggle = (t) => setOpen((o) => ({ ...o, [t]: !o[t] }));
+  const labelOf = (key) =>
+    MEASURE_OPTIONS.find((m) => m.key === key)?.label || key;
 
-  // Skeleton card
-  const Skeleton = () => (
-    <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-      <div className="h-3 w-24 bg-neutral-800 rounded mb-3 animate-pulse" />
-      <div className="h-4 w-40 bg-neutral-800 rounded mb-2 animate-pulse" />
-      <div className="h-4 w-3/4 bg-neutral-800 rounded mb-1 animate-pulse" />
-      <div className="h-4 w-2/3 bg-neutral-800 rounded animate-pulse" />
-    </div>
-  );
+  const NameLabel = ({ x, y, value }) => (
+  <text
+    x={x}
+    y={y - 6}           // nudge above the dot
+    fontSize={11}       // ← set your size here
+    fill="#fff"
+    textAnchor="middle"
+    style={{ pointerEvents: "none" }}
+  >
+    {value}
+  </text>
+);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-neutral-950 to-black text-neutral-100">
-      <div className="mx-auto max-w-6xl px-4 py-6 sm:py-10">
+      <div className="mx-auto max-w-7xl px-3 sm:px-4 py-6 sm:py-10">
         {/* Header */}
         <header className="mb-6 sm:mb-8 text-center">
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-royal-beige">
-            Premier League News
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+            Current Season Player Analysis
           </h1>
-          <p className="text-xs sm:text-sm text-neutral-400 mt-2">
-            Latest headlines, grouped by topic. Click a topic to collapse/expand.
-          </p>
         </header>
 
-        {/* Toolbar */}
-        <div className="mb-6 grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3">
-          <div className="rounded-xl border border-white/10 bg-white/5 p-2">
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search news (team, player, source)…"
-              className="w-full h-10 rounded-md bg-black/60 text-sm px-3 border border-white/10 outline-none focus:ring-2 focus:ring-royal-gold/60"
-            />
+        {/* Controls */}
+        <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-6">
+          {/* Measure A */}
+          <div className="col-span-1">
+            <label className="block text-xs uppercase tracking-wide text-neutral-400 mb-1">
+              Measure A
+            </label>
+            <select
+              value={selectedMeasure}
+              onChange={(e) => setSelectedMeasure(e.target.value)}
+              className="w-full h-10 rounded-md border border-royal-gold bg-black/70 text-neutral-100 text-sm px-3 outline-royal-gold focus:outline-none ring-royal-gold/60 focus:ring-2"
+              style={{ colorScheme: "dark" }}
+            >
+              {MEASURE_OPTIONS.map((m) => (
+                <option key={m.key} value={m.key} className="bg-black text-neutral-100">
+                  {m.label}
+                </option>
+              ))}
+            </select>
           </div>
-          {/* Topic chips */}
-          <div className="flex flex-wrap items-center gap-2">
-            {topics.map((t) => (
+
+          {/* Measure B (optional) */}
+          <div className="col-span-1">
+            <label className="block text-xs uppercase tracking-wide text-neutral-400 mb-1">
+              Second Measure (optional)
+            </label>
+            <select
+              value={selectedMeasure2}
+              onChange={(e) => setSelectedMeasure2(e.target.value)}
+              className="w-full h-10 rounded-md border border-royal-gold bg-black/70 text-neutral-100 text-sm px-3 outline-royal-gold focus:outline-none ring-royal-gold/60 focus:ring-2"
+              style={{ colorScheme: "dark" }}
+            >
+              <option value="">— None —</option>
+              {MEASURE_OPTIONS.map((m) => (
+                <option key={m.key} value={m.key} className="bg-black text-neutral-100">
+                  {m.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Aggregation toggle */}
+          <div className="col-span-1">
+            <label className="block text-xs uppercase tracking-wide text-neutral-400 mb-1">
+              Aggregation
+            </label>
+            <div className="flex h-10 rounded-md overflow-hidden border border-royal-gold">
               <button
-                key={t.key}
-                onClick={() => toggle(t.key)}
-                aria-pressed={!!open[t.key]}
-                className={`h-9 px-3 rounded-full text-sm border transition focus:outline-none focus:ring-2 focus:ring-royal-gold/60 hover:border-none ${
-                  open[t.key]
-                    ? "bg-royal-gold text-black"
-                    : "bg-white/5 text-neutral-200 border-white/10 hover:bg-white/10"
+                type="button"
+                onClick={() => setMode("average")}
+                className={`flex-1 text-sm px-3 ${
+                  mode === "average"
+                    ? "bg-emerald-600/20 text-emerald-200"
+                    : "bg-black/70 text-neutral-200 hover:bg-white/10"
                 }`}
               >
-                {t.key} <span className="opacity-70 ml-1">({t.count})</span>
+                Average
               </button>
-            ))}
+              <button
+                type="button"
+                onClick={() => setMode("total")}
+                className={`flex-1 text-sm px-3 ${
+                  mode === "total"
+                    ? "bg-emerald-600/20 text-emerald-200"
+                    : "bg-black/70 text-neutral-200 hover:bg-white/10"
+                }`}
+              >
+                Total
+              </button>
+            </div>
+          </div>
+
+          {/* Top/Bottom X + rank direction */}
+          <div className="col-span-1">
+            <label className="block text-xs uppercase tracking-wide text-neutral-400 mb-1">
+              {bottomEligible && rankDirection === "bottom" ? "Bottom X" : "Top X"}
+            </label>
+            <TextField
+              type="number"
+              size="small"
+              inputProps={{ min: 1, max: 200 }}
+              value={topX}
+              onChange={(e) => setTopX(e.target.value)}
+              fullWidth
+              sx={{ input: { color: "#eee" } }}
+            />
+            {bottomEligible && (
+              <div className="mt-2 flex rounded-md overflow-hidden border border-royal-gold">
+                <button
+                  type="button"
+                  onClick={() => setRankDirection("top")}
+                  className={`flex-1 text-xs px-2 py-1 ${
+                    rankDirection === "top"
+                      ? "bg-emerald-600/20 text-emerald-200"
+                      : "bg-black/70 text-neutral-200 hover:bg-white/10"
+                  }`}
+                >
+                  Top
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRankDirection("bottom")}
+                  className={`flex-1 text-xs px-2 py-1 ${
+                    rankDirection === "bottom"
+                      ? "bg-emerald-600/20 text-emerald-200"
+                      : "bg-black/70 text-neutral-200 hover:bg-white/10"
+                  }`}
+                >
+                  Bottom
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* GW Slider */}
+          <div className="col-span-2">
+            {minGW !== null && maxGW !== null && (
+              <Box sx={{ width: "100%" }}>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs uppercase tracking-wide text-neutral-400">
+                    GW Range
+                  </span>
+                  <span className="text-xs text-neutral-300">
+                    {GWRange[0]} – {GWRange[1]}
+                  </span>
+                </div>
+                <Slider
+                  value={GWRange}
+                  min={minGW}
+                  max={maxGW}
+                  onChange={(_, v) => setGWRange(v)}
+                  valueLabelDisplay="auto"
+                  step={1}
+                  sx={{ color: "#B8860B" }}
+                />
+              </Box>
+            )}
           </div>
         </div>
 
-        {/* Content */}
-        {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {Array.from({ length: 9 }).map((_, i) => (
-              <Skeleton key={i} />
-            ))}
-          </div>
-        ) : (
-          <div className="space-y-8">
-            {Object.entries(filtered).map(([topic, entries]) => (
-              <section key={topic} className="rounded-2xl border border-white/10 bg-white/5 overflow-hidden">
-                {/* Topic header */}
-                <button
-                  type="button"
-                  onClick={() => toggle(topic)}
-                  aria-expanded={!!open[topic]}
-                  className="bg-white/10 w-full flex items-center justify-between px-4 py-3 text-left hover:bg-white/20 hover:border-none"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="text-lg font-semibold text-royal-gold">{topic}</span>
-                    <span className="text-xs text-neutral-400">{entries.length} articles</span>
-                  </div>
-                  <span className="text-royal-gold text-sm">{open[topic] ? "▲" : "▼"}</span>
-                </button>
-
-                {/* Articles */}
-                {open[topic] && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4 pt-0">
-                    {entries.map((article, idx) => {
-                      const isFPLTips = article.topic === "FPL tips";
-                      const url = article.parsedSource?.url || "";
-                      const sourceName = article.parsedSource?.name || "";
-                      const Favicon = getFavicon(url);
-
-                      const Card = (
-                        <div className="h-full rounded-xl border border-white/10 bg-black/60 p-4 shadow-sm hover:shadow-md transition">
-                          <div className="flex items-center justify-between gap-3 mb-2">
-                            <div className="flex items-center gap-2 min-w-0">
-                              {Favicon ? (
-                                <img src={Favicon} alt="" className="h-4 w-4 object-contain" onError={(e)=> (e.currentTarget.style.display='none')} />
-                              ) : null}
-                              <span className="text-[11px] text-neutral-400 truncate">{sourceName || (isFPLTips ? "FPL Tips" : "")}</span>
-                            </div>
-                            <time className="text-[11px] text-neutral-400">{toRelative(article.date)}</time>
-                          </div>
-                          <p className="text-[17px] leading-5 text-neutral-100 whitespace-pre-line">
-                            {article.content}
-                          </p>
-                        </div>
-                      );
-
-                      return isFPLTips ? (
-                        <div key={idx}>{Card}</div>
-                      ) : (
-                        <a
-                          key={idx}
-                          href={url || "#"}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="block text-inherit no-underline"
-                        >
-                          {Card}
-                        </a>
-                      );
-                    })}
-                  </div>
-                )}
-              </section>
-            ))}
-
-            {Object.keys(filtered).length === 0 && (
-              <div className="text-center text-neutral-400 py-10">No articles match your search.</div>
+        {/* Position filter */}
+        <div className="mb-6">
+          <div className="border border-white/10 rounded-2xl p-3 bg-white/5">
+            <div className="text-xs uppercase tracking-wide text-neutral-400 mb-2">
+              Filter — Position
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {allPositions.map((p) => {
+                const active = posFilter.has(p);
+                return (
+                  <button
+                    key={p}
+                    onClick={() => togglePos(p)}
+                    className={`px-3 py-1 rounded-full border text-sm transition-colors ${
+                      active
+                        ? "bg-emerald-600/20 border-emerald-500/40 text-emerald-200"
+                        : "bg-black/40 border-white/10 text-neutral-300 hover:bg-white/10"
+                    }`}
+                  >
+                    {p}
+                  </button>
+                );
+              })}
+              {allPositions.length === 0 && (
+                <span className="text-neutral-400 text-sm">No positions found.</span>
+              )}
+            </div>
+            {posFilter.size > 0 && (
+              <button
+                onClick={() => setPosFilter(new Set())}
+                className="mt-3 text-xs text-neutral-400 underline hover:text-neutral-200"
+              >
+                Clear position filter
+              </button>
             )}
           </div>
-        )}
+        </div>
+
+        {/* Chart */}
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
+          {/* Single-measure BarChart */}
+          {!isDoubleMeasure && chartData.length > 0 && (
+            <div
+              style={{
+                width: "100%",
+                height: Math.max(200, rankedRows.length * 50),
+              }}
+            >
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={chartData}
+                  layout="vertical"
+                  margin={{ top: 10, right: 20, left: 0, bottom: 10 }}
+                >
+                  <CartesianGrid stroke="#333" strokeDasharray="3 3" />
+                  <YAxis
+                    dataKey="name"
+                    type="category"
+                    width={110}
+                    tick={{ fontSize: 12, fill: "#fff" }}
+                  />
+                  <XAxis type="number" tick={{ fontSize: 12, fill: "#fff" }} />
+                  <Tooltip
+                    formatter={(v) => Number(v).toFixed(3)}
+                    labelFormatter={(l) => l}
+                    contentStyle={{
+                      backgroundColor: "#111",
+                      border: "1px solid #333",
+                      color: "#eee",
+                    }}
+                  />
+                  <Bar dataKey="Value" fill="#b8870bc9">
+                    <LabelList
+                      dataKey="Value"
+                      position="right"
+                      formatter={(v) => Number(v).toFixed(1)}
+                      fill="#fff"
+                    />
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+
+          {isDoubleMeasure && scatterData.length > 0 && (
+  <div style={{ width: "100%", height: 480 }}>
+    <ResponsiveContainer width="100%" height="100%">
+      <ScatterChart margin={{ top: 20, right: 20, left: 10, bottom: 10 }}>
+        <CartesianGrid stroke="#333" strokeDasharray="3 3" />
+
+        <XAxis
+          dataKey="x"
+          type="number"
+          name={labelOf(selectedMeasure)}
+          tick={{ fill: "#fff" }}
+          label={{
+            value: labelOf(selectedMeasure),
+            position: "insideBottom",
+            offset: -10,
+            fill: "#bbb",
+          }}
+        />
+        <YAxis
+          dataKey="y"
+          type="number"
+          name={labelOf(selectedMeasure2)}
+          tick={{ fill: "#fff" }}
+          label={{
+            value: labelOf(selectedMeasure2),
+            angle: -90,
+            position: "insideLeft",
+            fill: "#bbb",
+          }}
+        />
+
+        <Tooltip
+          cursor={{ strokeDasharray: "3 3" }}
+          contentStyle={{
+            backgroundColor: "#111",
+            border: "1px solid #333",
+          }}
+          // make tooltip text white
+          labelStyle={{ color: "#fff" }}
+          itemStyle={{ color: "#fff" }}
+          formatter={(v, n) => [Number(v).toFixed(3), n]}
+          labelFormatter={(_, payload) => payload?.[0]?.payload?.name ?? ""}
+        />
+
+        {/* Removed <Legend /> */}
+
+        <ReferenceLine x={0} stroke="#666" />
+        <ReferenceLine y={0} stroke="#666" />
+
+        <Scatter data={scatterData} fill="#b8870bc9">
+          {/* Add labels (player names) above each point */}
+          <LabelList dataKey="name" content={<NameLabel />} />
+          {/* constant point size */}
+          <ZAxis dataKey={null} range={[80, 80]} />
+        </Scatter>
+      </ScatterChart>
+    </ResponsiveContainer>
+  </div>
+)}
+
+
+          {/* Empty state */}
+          {((!isDoubleMeasure && chartData.length === 0) ||
+            (isDoubleMeasure && scatterData.length === 0)) && (
+            <div className="text-center text-neutral-400 py-10">
+              No data after filters.
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

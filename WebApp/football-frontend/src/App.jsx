@@ -29,6 +29,7 @@ import {
   Menu,
   X,
   Wrench,
+  BarChart2,
 } from "lucide-react";
 
 export default function App() {
@@ -41,7 +42,7 @@ export default function App() {
     { to: "/TeamPredictionsFuture", icon: Calendar, label: "Fixture Analytics" },
     { to: "/Score_Predictions", icon: Trophy, label: "Score Predictions" },
     { to: "/News", icon: Newspaper, label: "PL News" },
-    {to: "/Season_Analysis", icon: Wrench, label: "Season Analysis"}
+    {to: "/Season_Analysis", icon: BarChart2, label: "Season Analysis"}
   ];
 
    const menuItems = [
@@ -167,7 +168,7 @@ export default function App() {
           />
         </Route>
         <Route path="/News" element={<NewsBlog />} />
-
+        <Route path="/Season_Analysis" element={<Season_Analysis />} />
         <Route
           path="/TeamPredictionsFuture"
           element={<TeamPredictionsFuture />}
