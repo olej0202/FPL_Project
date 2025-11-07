@@ -226,6 +226,7 @@ def Generate_season_data(current_player_path, current_season_path):
     df=pd.read_csv(current_season_path).iloc[:,1:]
     players_current=pd.read_csv(current_player_path)
 
+
     name_map = {
         "Pedro_Porro Sauceda":          "Pedro_Porro",
         "Sávio_Moreira de Oliveira":    "Sávio_'Savinho' Moreira de Oliveira",
@@ -247,20 +248,22 @@ def Generate_season_data(current_player_path, current_season_path):
         "Luis_Díaz Marulanda": "Luis_Díaz",
         "Matheus Luiz_Nunes":"Matheus_Nunes",
         "Alejandro_Garnacho Ferreyra":"Alejandro_Garnacho",
-        "Francisco Evanilson_de Lima Barbosa":"Francisco_Evanilson de Lima Barbosa"
+        "Francisco Evanilson_de Lima Barbosa":"Francisco_Evanilson de Lima Barbosa",
+        "João Pedro_Junqueira de Jesus": "João_Pedro Junqueira de Jesus",
+        "Igor Thiago_Nascimento Rodrigues":"Igor_Thiago Nascimento Rodrigues"
     }
 
 
     df["Full_Name"] = df["Full_Name"].apply(lambda n: name_map.get(n, n))
     merged = df.merge(players_current, left_on='Full_Name',right_on='name', how='left')
-    columns=["expected_goals_x","total_points","position", "Full_Name", "web_name","round","goals_scored","minutes_x","assists","clean_sheets","goals_conceded","yellow_cards","saves","bonus","defensive_contribution_x","expected_assists","expected_goal_involvements","expected_goals_conceded","value"]
+    columns=["expected_goals_x","total_points","position", "Full_Name", "web_name","round","goals_scored","minutes_x","assists","clean_sheets","goals_conceded","yellow_cards","saves","bonus","defensive_contribution_x","expected_assists","expected_goal_involvements","expected_goals_conceded","value","team_name"]
     merged=merged[columns]
     merged = merged.rename(columns=lambda c: c[:-2] if c.endswith("_x") else c)
     merged=merged[merged["minutes"]>0]
     merged["GW"]=merged["round"].astype(int)
     merged["GOALS-XG"]=merged["goals_scored"]-merged["expected_goals"]
     merged["Assist-XA"]=merged["assists"]-merged["expected_assists"]
-
+    merged["GOALSCONCEEDED-XGOALSCONCEEDED"]=merged["goals_conceded"]-merged["expected_goals_conceded"]
     merged['defcon_hit'] = (
         ((merged['position'] == 'DEF') & (merged['defensive_contribution'] >= 10)) |
         ((merged['position'] != 'DEF') & (merged['defensive_contribution'] >= 12))
@@ -268,8 +271,54 @@ def Generate_season_data(current_player_path, current_season_path):
     merged["Type"]="Players"
     merged = merged.replace([np.inf, -np.inf], np.nan)
     merged = merged.fillna(0)
-    print(merged)
-    merged.to_csv("Season_analysis.csv")
+
+    max_cols = ["clean_sheets", "expected_goals_conceded", "goals_conceded","GOALSCONCEEDED-XGOALSCONCEEDED"]
+
+    # all numeric columns in merged (we'll sum these except the max_cols and GW which is a group key)
+    numeric_cols = merged.select_dtypes(include=[np.number]).columns.tolist()
+
+    # build aggregation dict: sum for numeric columns except the ones in max_cols and GW
+    sum_cols = [c for c in numeric_cols if c not in set(max_cols + ["GW"])]
+    agg_dict = {c: "sum" for c in sum_cols}
+    for c in max_cols:
+        if c in merged.columns:
+            agg_dict[c] = "max"
+
+    # If you want to keep any *non-numeric* derived numeric-like fields that might be strings,
+    # add them explicitly here with 'sum' or 'max' as appropriate (usually not needed).
+
+    # Perform aggregation per team_name and GW
+    team_agg = (
+        merged
+        .groupby(["team_name", "GW"], as_index=False)
+        .agg(agg_dict)
+    )
+
+    # Set identity/meta fields to match your player schema expectations
+    team_agg["Full_Name"] = team_agg["team_name"]
+    team_agg["position"] = 0
+    team_agg["web_name"] = ""
+    team_agg["Type"] = "Teams"
+
+    # Make sure all columns expected by downstream code exist, with sane defaults,
+    # and order columns to match `merged` so you can concat safely.
+    cols_in_merged = list(merged.columns)
+    for col in cols_in_merged:
+        if col not in team_agg.columns:
+            # default numeric -> 0, string/object -> ""
+            team_agg[col] = 0 if col in numeric_cols else ""
+
+    # Keep only the columns present in `merged` and in the same order
+    team_agg = team_agg[cols_in_merged]
+
+    # Optional: combine players + teams in one dataframe for export/analytics
+    season_with_teams = pd.concat([merged[cols_in_merged], team_agg], ignore_index=True)
+
+    season_with_teams.to_csv("Season_analysis.csv")
+
+
+
+    
 
 
 
