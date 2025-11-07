@@ -13,7 +13,9 @@ import Player_analytics_rankings from "./Player_Analytics_rankings";
 import PlayerAnalyticsIndividual from "./Player_Analytics_individual";
 import NewsBlog from "./News";
 import TeamPredictionsFuture from "./Fixture_Ticker";
-import Season_Analysis from "./SeasonAnalysis"
+import SeasonAnalytics from "./SeasonAnalysis"
+import PlayerMeasureAveragesChart_TEAMS from "./Season_Analyticss_Teams"
+import PlayerMeasureAveragesChart_Player from "./Season_Analytics_Players"
 import AITeams from "./AITeams";
 import AITeamNav from "./components/team_navigation";
 import Team_Analytics_Analysis from "./Team_Analytics_Analysis";
@@ -168,7 +170,17 @@ export default function App() {
           />
         </Route>
         <Route path="/News" element={<NewsBlog />} />
-        <Route path="/Season_Analysis" element={<Season_Analysis />} />
+
+
+        <Route path="/Season_Analysis" element={<SeasonAnalytics />}>
+          <Route index element={<PlayerMeasureAveragesChart_Player />} />
+          <Route path="Season_Teams" element={<PlayerMeasureAveragesChart_TEAMS />} />
+          <Route
+            path="Season_Players"
+            element={<PlayerMeasureAveragesChart_Player />}
+          />
+
+        </Route>
         <Route
           path="/TeamPredictionsFuture"
           element={<TeamPredictionsFuture />}
