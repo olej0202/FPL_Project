@@ -45,10 +45,7 @@ Manual_Player_Adjustments={
 
 Manual_Player_Risk={
         "Alexander_Isak":0.7,
-        "Jack_Grealish":0.5,
-        "Yoane_Wissa":0.8,
-        "Mohammed_Kudus":0.4,
-        
+        "Yoane_Wissa":0.8,        
 }
 
 Manual_min=[

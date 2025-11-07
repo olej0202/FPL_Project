@@ -197,7 +197,7 @@ export default function MyTeamOptimize() {
               sethas_changed(false);
             }}
             disabled={!has_changed}
-            className={`inline-flex items-center gap-2 font-semibold px-4 py-2 rounded-lg transition shadow-sm border
+            className={`inline-flex items-center gap-2 font-semibold px-4 py-2 rounded-lg transition shadow-sm border hover:border-none
               ${has_changed ? "bg-royal-gold text-black hover:bg-yellow-300 border-yellow-400" : "bg-neutral-800 text-neutral-400 border-neutral-700 cursor-not-allowed"}`}
             aria-disabled={!has_changed}
           >
@@ -318,7 +318,7 @@ export default function MyTeamOptimize() {
                   <span className="truncate max-w-[8rem]">{player.web_name}</span>
                   <button
                     onClick={() => removeBan(player.Name)}
-                    className="absolute -top-1 -right-1 bg-black/60 rounded-full p-0.5 hover:bg-black/80"
+                    className="absolute -top-1 -right-1 bg-black/60 rounded-full p-0.5 hover:bg-black/80 hover:border-none"
                     aria-label={`Remove ${player.web_name} from unwanted`}
                   >
                     <X size={12} className="text-white" />
@@ -334,7 +334,7 @@ export default function MyTeamOptimize() {
           <section className="mb-8 text-center">
             <div className="inline-flex flex-col items-center rounded-xl border border-white/10 bg-white/5 backdrop-blur px-4 py-3">
               <div className="text-sm uppercase tracking-wide text-neutral-400">Team for GW {minGW}</div>
-              <div className="text-[11px] uppercase tracking-wide text-neutral-400">Total predicted points</div>
+              <div className="text-[11px] uppercase tracking-wide text-neutral-400">Total predicted points GW {minGW}-{maxGW}</div>
               <div className="text-royal-gold font-bold text-xl">{totalPredPoints.toFixed(2)}</div>
               <p className="max-w-md text-center text-xs leading-tight text-neutral-400 mt-1">
                 Click a player to view stats, or add them to <span className="font-medium">Unwanted</span>
@@ -345,7 +345,7 @@ export default function MyTeamOptimize() {
 
         {/* Squad Pitch */}
         {data && (
-          <section className="mb-8 ">
+          <section className="mb-8 flex justify-center">
             <div
               className="w-full max-w-[400px] aspect-[1/2] bg-no-repeat bg-cover bg-center border border-white rounded-lg px-2 py-1 relative"
               style={{ backgroundImage: `url(${pitch})` }}
@@ -482,6 +482,7 @@ function ChipSelect({ label, show, onShow, onHide, value, onChange, minGW, maxGW
               absolute inset-y-0 right-0 px-3 flex items-center
               text-rose-400 hover:text-rose-300
               outline-none focus:outline-none focus:ring-0
+              hover:border-none
             "
             aria-label={`Clear ${label}`}
             type="button"
@@ -553,7 +554,7 @@ function PlayerRow({ players, isBench = false, toggleBan, bannedList, navigate }
           />
           <button
             onClick={() => toggleBan(p.Name)}
-            className="absolute top-1 -right-2 bg-black/70 p-1 rounded-full hover:bg-black/90"
+            className="absolute top-1 -right-2 bg-black/70 p-1 rounded-full hover:bg-black/90 hover:border-none"
             aria-label={`Toggle unwanted for ${p.web_name}`}
           >
             <X size={12} className={bannedList.includes(p.Name) ? "text-rose-500" : "text-royal-gold"} />
