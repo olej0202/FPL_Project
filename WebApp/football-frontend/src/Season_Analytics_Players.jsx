@@ -263,13 +263,16 @@ export default function PlayerMeasureAveragesChart_Player() {
         <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-6">
           {/* Measure A */}
           <div className="col-span-1">
-            <label className="block text-xs uppercase tracking-wide text-neutral-400 mb-1">
+            <label className="block uppercase tracking-wide text-neutral-400 mb-1
+                  text-[clamp(0.75rem,0.6vw+0.6rem,1rem)]">
               Measure A
             </label>
             <select
               value={selectedMeasure}
               onChange={(e) => setSelectedMeasure(e.target.value)}
-              className="w-full h-10 rounded-md border border-royal-gold bg-black/70 text-neutral-100 text-sm px-3 outline-royal-gold focus:outline-none ring-royal-gold/60 focus:ring-2"
+              className="w-full rounded-md border border-royal-gold bg-black/70 text-neutral-100 px-3
+             outline-royal-gold focus:outline-none ring-royal-gold/60 focus:ring-2
+             text-[clamp(0.875rem,0.7vw+0.7rem,1.125rem)] h-[clamp(2.5rem,1vw+2.2rem,3rem)]"
               style={{ colorScheme: "dark" }}
             >
               {MEASURE_OPTIONS.map((m) => (
@@ -282,14 +285,16 @@ export default function PlayerMeasureAveragesChart_Player() {
 
           {/* Measure B (optional) */}
           <div className="col-span-1">
-            <label className="block text-xs uppercase tracking-wide text-neutral-400 mb-1">
-              Second Measure (optional)
+            <label className="block uppercase tracking-wide text-neutral-400 mb-1
+                  text-[clamp(0.75rem,0.6vw+0.6rem,1rem)]">
+              Second Measure
             </label>
             <select
               value={selectedMeasure2}
               onChange={(e) => setSelectedMeasure2(e.target.value)}
-              className="w-full h-10 rounded-md border border-royal-gold bg-black/70 text-neutral-100 text-sm px-3 outline-royal-gold focus:outline-none ring-royal-gold/60 focus:ring-2"
-              style={{ colorScheme: "dark" }}
+              className="w-full rounded-md border border-royal-gold bg-black/70 text-neutral-100 px-3
+             outline-royal-gold focus:outline-none ring-royal-gold/60 focus:ring-2
+             text-[clamp(0.875rem,0.7vw+0.7rem,1.125rem)] h-[clamp(2.5rem,1vw+2.2rem,3rem)]"
             >
               <option value="">— None —</option>
               {MEASURE_OPTIONS.map((m) => (
