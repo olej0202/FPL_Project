@@ -297,7 +297,8 @@ def Generate_season_data(current_player_path, current_season_path):
     # Set identity/meta fields to match your player schema expectations
     team_agg["Full_Name"] = team_agg["team_name"]
     team_agg["position"] = 0
-    team_agg["web_name"] = ""
+    team_agg["web_name"] = team_agg["Full_Name"]
+
     team_agg["Type"] = "Teams"
 
     # Make sure all columns expected by downstream code exist, with sane defaults,
