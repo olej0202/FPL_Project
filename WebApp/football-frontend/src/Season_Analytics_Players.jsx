@@ -103,19 +103,24 @@ export default function PlayerMeasureAveragesChart_Player() {
   };
 
   // Apply GW + position filters
-  const filtered = useMemo(() => {
-    const [gmin, gmax] = GWRange;
-    return rowsRaw.filter((r) => {
-      const gw = Number(r?.GW);
-      if (!Number.isFinite(gw)) return false;
-      if (gw < gmin || gw > gmax) return false;
-      if (posFilter.size > 0) {
-        const p = String(r?.position ?? r?.Position ?? "");
-        if (!posFilter.has(p)) return false;
-      }
-      return true;
-    });
-  }, [rowsRaw, GWRange, posFilter]);
+ const filtered = useMemo(() => {
+  const [gmin, gmax] = GWRange;
+  return rowsRaw.filter((r) => {
+    // keep only player rows
+    const type = String(r?.Type ?? r?.type ?? "").toLowerCase();
+    if (type !== "players") return false;
+
+    const gw = Number(r?.GW);
+    if (!Number.isFinite(gw)) return false;
+    if (gw < gmin || gw > gmax) return false;
+
+    if (posFilter.size > 0) {
+      const p = String(r?.position ?? r?.Position ?? "");
+      if (!posFilter.has(p)) return false;
+    }
+    return true;
+  });
+}, [rowsRaw, GWRange, posFilter]);
 
   // Aggregate helper (for any metric key) over filtered rows
   const aggregateByPlayer = React.useCallback(

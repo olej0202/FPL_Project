@@ -1,6 +1,6 @@
 // File: src/App.jsx
 import React, { useState } from "react";
-import { Routes, Route, NavLink } from "react-router-dom";
+import { Routes, Route, NavLink,Navigate  } from "react-router-dom";
 import Team_Analytics from "./Team_Analytics";
 import Team_Analytics_Rankings from "./Team_Analytics_rankings";
 import Team_Analytics_Individual from "./Team_Analytics_individual";
@@ -14,7 +14,7 @@ import PlayerAnalyticsIndividual from "./Player_Analytics_individual";
 import NewsBlog from "./News";
 import TeamPredictionsFuture from "./Fixture_Ticker";
 import SeasonAnalytics from "./SeasonAnalysis"
-import PlayerMeasureAveragesChart_TEAMS from "./Seasson_Analyticss_Teams"
+import PlayerMeasureAveragesChart_TEAMS from "./Season_Analyticss_Teams"
 import PlayerMeasureAveragesChart_Player from "./Season_Analytics_Players"
 import AITeams from "./AITeams";
 import AITeamNav from "./components/team_navigation";
@@ -173,14 +173,12 @@ export default function App() {
 
 
         <Route path="/Season_Analysis" element={<SeasonAnalytics />}>
-          <Route index element={<PlayerMeasureAveragesChart_Player />} />
+          {/* IMPORTANT: redirect index to Season_Players so the tab is active */}
+          <Route index element={<Navigate to="Season_Players" replace />} />
           <Route path="Season_Teams" element={<PlayerMeasureAveragesChart_TEAMS />} />
-          <Route
-            path="Season_Players"
-            element={<PlayerMeasureAveragesChart_Player />}
-          />
-
+          <Route path="Season_Players" element={<PlayerMeasureAveragesChart_Player />} />
         </Route>
+
         <Route
           path="/TeamPredictionsFuture"
           element={<TeamPredictionsFuture />}

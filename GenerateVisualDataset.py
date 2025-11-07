@@ -311,6 +311,8 @@ def Generate_season_data(current_player_path, current_season_path):
 
     # Keep only the columns present in `merged` and in the same order
     team_agg = team_agg[cols_in_merged]
+    team_agg["GOALSCONCEEDED-XGOALSCONCEEDED"]=team_agg["goals_conceded"]-team_agg["expected_goals_conceded"]
+
 
     # Optional: combine players + teams in one dataframe for export/analytics
     season_with_teams = pd.concat([merged[cols_in_merged], team_agg], ignore_index=True)

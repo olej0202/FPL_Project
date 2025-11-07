@@ -1,24 +1,14 @@
-import React, { useEffect, useState } from "react";
-import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
-import { User, BarChart } from "lucide-react";
+import React from "react";
+import { NavLink, Outlet } from "react-router-dom";
+import { User, Users} from "lucide-react";
 
 export default function SeasonAnalytics() {
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  // Redirect to Rankings if on /Player_Analytics
-  useEffect(() => {
-    if (location.pathname === "/SeasonAnalytics_Player") {
-      navigate("/SeasonAnalytics/Player");
-    }
-  }, [location, navigate]);
-
   return (
     <div className="min-h-screen bg-black text-white px-1 py-3 space-y-8">
       {/* Tabs */}
       <div className="flex justify-center gap-4 mb-3">
         <NavLink
-          to="SeasonAnalyticsPlayer"
+          to="Season_Players"
           end
           className={({ isActive }) =>
             `flex items-center gap-2 px-4 py-1 font-semibold  ${
@@ -28,12 +18,12 @@ export default function SeasonAnalytics() {
             }`
           }
         >
-          <BarChart size={18} />
+          <User size={18} />
           Players
         </NavLink>
 
         <NavLink
-          to="SeasonAnalyticsTeams"
+          to="Season_Teams"
           className={({ isActive }) =>
             `flex items-center gap-2 px-4 py-1 font-semibold ${
               isActive
@@ -42,12 +32,12 @@ export default function SeasonAnalytics() {
             }`
           }
         >
-          <User size={18} />
+          <Users size={18} />
           Teams
         </NavLink>
       </div>
 
-      {/* 🔽 This renders the nested content */}
+      {/* Nested content */}
       <Outlet />
     </div>
   );

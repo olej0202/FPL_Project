@@ -28,17 +28,18 @@ import { useOtherData } from "./Contexts/OtherContext";
  */
 
 const MEASURE_OPTIONS = [
-  { key: "total_points", label: "Total Points" },
+  { key: "total_points", label: "Total FPL Points" },
   { key: "expected_goals", label: "Expected Goals" },
   { key: "goals_scored", label: "Goals Scored" },
-  { key: "assists", label: "Assists" },
-  { key: "expected_assists", label: "Expected Assists" },
-  { key: "defcon_hit", label: "Defcon Hit" },
+  { key: "expected_goals_conceded", label: "Expected Goals Conceded" },
+  { key: "goals_conceded", label: "Goals Conceded" },
+  { key: "GOALSCONCEEDED-XGOALSCONCEEDED", label: "Goals Conceded -XGC" },
+{ key: "defcon_hit", label: "Defcon Hit" },
   { key: "GOALS-XG", label: "GOALS-XG" },
-  { key: "Assist-XA", label: "Assist-XA" },
   { key: "saves", label: "Saves" },
   { key: "yellow_cards", label: "Yellow Cards" },
   { key: "clean_sheets", label: "Clean Sheets" },
+
 ];
 
 export default function PlayerMeasureAveragesChart_TEAMS() {
@@ -58,7 +59,7 @@ export default function PlayerMeasureAveragesChart_TEAMS() {
 
   // Top/Bottom switch (kept for your “delta” style metrics)
   const [rankDirection, setRankDirection] = useState("top"); // 'top' | 'bottom'
-  const bottomEligibleKeys = new Set(["GOALS-XG", "Assist-XA"]);
+  const bottomEligibleKeys = new Set(["GOALS-XG", "Goals Conceded -XGC"]);
   const bottomEligible = bottomEligibleKeys.has(selectedMeasure);
 
   useEffect(() => {
@@ -103,19 +104,24 @@ export default function PlayerMeasureAveragesChart_TEAMS() {
   };
 
   // Apply GW + position filters
-  const filtered = useMemo(() => {
-    const [gmin, gmax] = GWRange;
-    return rowsRaw.filter((r) => {
-      const gw = Number(r?.GW);
-      if (!Number.isFinite(gw)) return false;
-      if (gw < gmin || gw > gmax) return false;
-      if (posFilter.size > 0) {
-        const p = String(r?.position ?? r?.Position ?? "");
-        if (!posFilter.has(p)) return false;
-      }
-      return true;
-    });
-  }, [rowsRaw, GWRange, posFilter]);
+const filtered = useMemo(() => {
+  const [gmin, gmax] = GWRange;
+  return rowsRaw.filter((r) => {
+    // keep only player rows
+    const type = String(r?.Type ?? r?.type ?? "").toLowerCase();
+    if (type !== "teams") return false;
+
+    const gw = Number(r?.GW);
+    if (!Number.isFinite(gw)) return false;
+    if (gw < gmin || gw > gmax) return false;
+
+    if (posFilter.size > 0) {
+      const p = String(r?.position ?? r?.Position ?? "");
+      if (!posFilter.has(p)) return false;
+    }
+    return true;
+  });
+}, [rowsRaw, GWRange, posFilter]);
 
   // Aggregate helper (for any metric key) over filtered rows
   const aggregateByPlayer = React.useCallback(
@@ -394,43 +400,7 @@ export default function PlayerMeasureAveragesChart_TEAMS() {
           </div>
         </div>
 
-        {/* Position filter */}
-        <div className="mb-6">
-          <div className="border border-white/10 rounded-2xl p-3 bg-white/5">
-            <div className="text-xs uppercase tracking-wide text-neutral-400 mb-2">
-              Filter — Position
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {allPositions.map((p) => {
-                const active = posFilter.has(p);
-                return (
-                  <button
-                    key={p}
-                    onClick={() => togglePos(p)}
-                    className={`px-3 py-1 rounded-full border text-sm transition-colors ${
-                      active
-                        ? "bg-emerald-600/20 border-emerald-500/40 text-emerald-200"
-                        : "bg-black/40 border-white/10 text-neutral-300 hover:bg-white/10"
-                    }`}
-                  >
-                    {p}
-                  </button>
-                );
-              })}
-              {allPositions.length === 0 && (
-                <span className="text-neutral-400 text-sm">No positions found.</span>
-              )}
-            </div>
-            {posFilter.size > 0 && (
-              <button
-                onClick={() => setPosFilter(new Set())}
-                className="mt-3 text-xs text-neutral-400 underline hover:text-neutral-200"
-              >
-                Clear position filter
-              </button>
-            )}
-          </div>
-        </div>
+
 
         {/* Chart */}
         <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
