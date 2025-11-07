@@ -12,7 +12,9 @@ from fastapi import HTTPException
 from fastapi.responses import PlainTextResponse
 from Generate_Optimize_Myteam import optimize_my_team
 from typing import List, Optional
-
+from fastapi.encoders import jsonable_encoder
+import math
+from fastapi.responses import JSONResponse
 app = FastAPI()
 
 # Allow frontend to access backend
@@ -93,7 +95,13 @@ def get_data():
 @app.get("/Season_Analysis")
 def get_data():
     df = load_and_transform("Season_Analysis")
-    return df.to_dict(orient="records")
+
+
+    safe = jsonable_encoder(
+        df,
+        custom_encoder={float: (lambda x: x if math.isfinite(x) else None)}
+    )
+    return JSONResponse(content=safe)
 
 @app.get("/Team_Predictions")
 def get_data():

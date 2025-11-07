@@ -14,7 +14,7 @@ import PlayerAnalyticsIndividual from "./Player_Analytics_individual";
 import NewsBlog from "./News";
 import TeamPredictionsFuture from "./Fixture_Ticker";
 import SeasonAnalytics from "./SeasonAnalysis"
-import PlayerMeasureAveragesChart_TEAMS from "./Season_Analyticss_Teams"
+import PlayerMeasureAveragesChart_TEAMS from "./Seasson_Analyticss_Teams"
 import PlayerMeasureAveragesChart_Player from "./Season_Analytics_Players"
 import AITeams from "./AITeams";
 import AITeamNav from "./components/team_navigation";
