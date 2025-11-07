@@ -920,8 +920,8 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     result_df["away_team"]=df_merged["team_a_name"]
     result_df["home_code"]=df_merged["team_h"]
     result_df["away_code"]=df_merged["team_a"]
-    result_df["home_goals"]=((xg+xgc2)/2)
-    result_df["away_goals"]=((xgc+xg2)/2)
+    result_df["home_goals"]=(xg)
+    result_df["away_goals"]=(xg2)
     result_df["Clean_Sheet_home"]=css_stat_home
     result_df["Clean_Sheet_away"]=css_stat_away
     result_df["test_XG"]=xg
