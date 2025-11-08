@@ -56,6 +56,7 @@ Manual_min=[
         {"name": "Giorgi_Mamardashvili", "type": "const",   "GW": "any", "value": 60},
         {"name": "Tijjani_Reijnders", "type": "const",   "GW": "any", "value": 75},
         {"name": "Callum_Wilson", "type": "const",   "GW": "any", "value": 75},
+        {"name": "Iliman_Ndiaye", "type": "const",   "GW": "any", "value": 80},
     ]
         
 
