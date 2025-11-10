@@ -133,7 +133,7 @@
 131,Chris_Mepham,Mepham,Chris Mepham,100.0,name-strict,Chris Mepham,CB,1
 132,Julio_Soler Barreto,Soler,Julio Soler,90.0,name-relaxed,Julio Soler,SUB,1
 133,Justin_Kluivert,Kluivert,Justin Kluivert,100.0,name-strict,Justin Kluivert,AMC,1
-134,Antoine_Semenyo,Semenyo,Antoine Semenyo,100.0,name-strict,Antoine Semenyo,RW,1
+134,Antoine_Semenyo,Semenyo,Antoine Semenyo,100.0,name-strict,Antoine Semenyo,LW,1
 135,Marcus_Tavernier,Tavernier,Marcus Tavernier,100.0,name-strict,Marcus Tavernier,AMC,1
 136,Tyler_Adams,Adams,Tyler Adams,100.0,name-strict,Tyler Adams,DM,1
 137,David_Brooks,Brooks,David Brooks,100.0,name-strict,David Brooks,RW,1
@@ -255,7 +255,7 @@
 253,Aarón_Anselmino,Anselmino,Unknown for understat,,no-match,,SUB,1
 254,Cole_Palmer,Palmer,Cole Palmer,100.0,name-strict,Cole Palmer,AMC,1
 255,Pedro_Lomba Neto,Neto,Neto,90.0,name-relaxed,Neto,GK,1
-256,Enzo_Fernández,Enzo,Enzo Fernández,100.0,name-strict,Enzo Fernández,AMC,1
+256,Enzo_Fernández,Enzo,Enzo Fernández,100.0,name-strict,Enzo Fernández,DM,1
 257,Estêvão_Almeida de Oliveira Gonçalves,Estêvão,Estêvão,90.0,name-relaxed,Estêvão,RW,1
 258,Jamie_Bynoe-Gittens,Gittens,Jamie Bynoe-Gittens,100.0,name-strict,Jamie Bynoe-Gittens,LW,1
 259,Christopher_Nkunku,Nkunku,Christopher Nkunku,100.0,name-strict,Christopher Nkunku,LW,1
@@ -266,7 +266,7 @@
 264,Andrey_Nascimento dos Santos,Andrey Santos,André,90.0,name-relaxed,André,MC,1
 265,Dário_Luís Essugo,D.Essugo,Unknown for understat,,no-match,,SUB,1
 266,Kendry_Páez Andrade,Paez,Unknown for understat,,no-match,,SUB,1
-267,João_Pedro Junqueira de Jesus,João Pedro,João Pedro,90.0,name-relaxed,João Pedro,FW,1
+267,João_Pedro Junqueira de Jesus,João Pedro,João Pedro,90.0,name-relaxed,João Pedro,AMC,1
 268,Liam_Delap,Delap,Liam Delap,100.0,name-strict,Liam Delap,FW,1
 269,Nicolas_Jackson,N.Jackson,Nicolas Jackson,100.0,name-strict,Nicolas Jackson,FW,1
 270,Marc_Guiu Paz,Marc Guiu,Marc Guiu,95.0,name-strict,Marc Guiu,SUB,1
@@ -307,7 +307,7 @@
 305,Odsonne_Édouard,Édouard,Odsonne Edouard,100.0,name-strict,Odsonne Edouard,AMC,1
 306,Zach_Marsh,Marsh,Marshall Munetsi,90.0,web_name-relaxed,Marshall Munetsi,MC,1
 307,Rio_Cardines,Cardines,Unknown for understat,,no-match,,SUB,1
-308,Yéremy_Pino Santos,Yeremy,Unknown for understat,,no-match,,SUB,1
+308,Yéremy_Pino Santos,Yeremy,Unknown for understat,,no-match,,AMC,1
 309,Jaydee_Canvot,Canvot,Unknown for understat,,no-match,,SUB,1
 310,Christantus_Uche,Uche,Christantus Uche,100.0,name-strict,Christantus Uche,SUB,1
 311,Kiernan_Dewsbury-Hall,Dewsbury-Hall,Kiernan Dewsbury-Hall,100.0,name-strict,Kiernan Dewsbury-Hall,AMC,1
@@ -462,7 +462,7 @@
 460,Phil_Foden,Foden,Phil Foden,100.0,name-strict,Phil Foden,MC,1
 461,Sávio_'Savinho' Moreira de Oliveira,Savinho,Sávio,90.0,name-relaxed,Sávio,RW,1
 462,Bernardo_Veiga de Carvalho e Silva,Bernardo,Bernardo Silva,90.0,web_name-relaxed,Bernardo Silva,MC,1
-463,Rayan_Cherki,Cherki,Mathis Cherki,90.0,web_name-relaxed,Mathis Cherki,MC,1
+463,Rayan_Cherki,Cherki,Mathis Cherki,90.0,web_name-relaxed,Mathis Cherki,AMC,1
 464,Jérémy_Doku,Doku,Jéremy Doku,100.0,name-strict,Jéremy Doku,LW,1
 465,İlkay_Gündoğan,Gündoğan,Ilkay Gündogan,100.0,name-strict,Ilkay Gündogan,AMC,1
 466,Rodrigo_Hernandez,Rodrigo,Rodrigo,90.0,name-relaxed,Rodrigo,RW,1
@@ -500,7 +500,7 @@
 498,Bruno_Borges Fernandes,B.Fernandes,Bruno Fernandes,95.0,name-strict,Bruno Fernandes,MC,1
 499,Matheus_Santos Carneiro Da Cunha,Cunha,Matheus Cunha,90.0,web_name-relaxed,Matheus Cunha,FW,1
 500,Marcus_Rashford,Rashford,Marcus Rashford,100.0,name-strict,Marcus Rashford,FW,1
-501,Amad_Diallo,Amad,Amadou Diallo,91.66666666666666,name-relaxed,Amadou Diallo,SUB,1
+501,Amad_Diallo,Amad,Amadou Diallo,91.66666666666666,name-relaxed,Amadou Diallo,DR,1
 502,Antony_dos Santos,Antony,Antony,90.0,name-relaxed,Antony,RW,1
 503,Mason_Mount,Mount,Mason Mount,100.0,name-strict,Mason Mount,AMC,1
 504,Carlos_Henrique Casimiro,Casemiro,Casemiro,100.0,web_name-strict,Casemiro,MC,1
@@ -579,7 +579,7 @@
 577,Eric_da Silva Moreira,Da Silva Moreira,Eric da Silva Moreira,100.0,name-strict,Eric da Silva Moreira,SUB,1
 578,Marko_Stamenić,Stamenic,Unknown for understat,,no-match,,SUB,1
 579,Chris_Wood,Wood,Chris Wood,100.0,name-strict,Chris Wood,FW,1
-580,Igor_Jesus Maciel da Cruz,Igor Jesus,Igor Jesus,90.0,name-relaxed,Igor Jesus,SUB,1
+580,Igor_Jesus Maciel da Cruz,Igor Jesus,Igor Jesus,90.0,name-relaxed,Igor Jesus,FW,1
 581,Taiwo_Awoniyi,Awoniyi,Taiwo Awoniyi,100.0,name-strict,Taiwo Awoniyi,FW,1
 582,Dan_Ndoye,Ndoye,Dan Ndoye,100.0,name-strict,Dan Ndoye,LW,1
 583,Angus_Gunn,Gunn,Unknown for understat,,no-match,,SUB,1
