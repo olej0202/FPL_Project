@@ -51,12 +51,10 @@ Manual_Player_Risk={
 Manual_min=[
         {"name": "Bukayo_Saka", "type": "const",   "GW": "any", "value": 90},
         {"name": "Hugo_Ekitiké", "type": "const",   "GW": "any", "value": 70},
-        {"name": "Eli_Junior Kroupi", "type": "const",   "GW": "any", "value": 60},
         {"name": "Karl_Darlow", "type": "const",   "GW": "any", "value": 60},
         {"name": "Giorgi_Mamardashvili", "type": "const",   "GW": "any", "value": 60},
         {"name": "Tijjani_Reijnders", "type": "const",   "GW": "any", "value": 75},
         {"name": "Callum_Wilson", "type": "const",   "GW": "any", "value": 75},
-        {"name": "Iliman_Ndiaye", "type": "const",   "GW": "any", "value": 80},
     ]
         
 
