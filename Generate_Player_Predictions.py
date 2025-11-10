@@ -87,14 +87,14 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
 
 
                #own_data_xg_pred=((df['Rolling_adjusted_XG'].values[h]*0.7+df['rolling_Adjusted_XG_historic'].values[h]*0.3)*df["opposition_xgc"].values[h]+df['Share_of_XG'].values[h]*team_xg)*(0.5)
-               own_data_xg_pred=((df['rolling_XG_share'].values[h]*0.2+df['Rolling_adjusted_XG_share'].values[h]*0.5+0.3*df['rolling_Threat_share'].values[h])*team_xg)*0.8+0.2*((df['Rolling_adjusted_XG'].values[h]*0.7+df['rolling_Adjusted_XG_historic'].values[h]*0.3)*df["opposition_xgc"].values[h])
+               own_data_xg_pred=((df['Share_of_XG_share'].values[h]*0.2+df['rolling_XG_share'].values[h]*0.2+df['Rolling_adjusted_XG_share'].values[h]*0.4+0.2*df['rolling_Threat_share'].values[h])*team_xg)*0.8+0.2*((df['Rolling_adjusted_XG'].values[h]*0.7+df['rolling_Adjusted_XG_historic'].values[h]*0.3)*df["opposition_xgc"].values[h])
                team_data_xg_pred=(df['Understat_POSXG'].values[h]*df["opposition_xgc"].values[h]+df['Understat_POSXG_Share'].values[h]*team_xg)*(0.5) 
         
                player_preds.append(own_data_xg_pred*(1-fordelings_faktor)+fordelings_faktor*team_data_xg_pred+df['Team_Pen_Data'].values[h]*df['Pen_Number'].values[h]*0.8)
                real_variable="expected_goals" 
             if(pred_variable=="Assist"):
                #own_data_xa_pred=((df['Rolling_adjusted_XA'].values[h]*0.7+df['rolling_Adjusted_XA_historic'].values[h]*0.3)*df["opposition_xgc"].values[h]+df['Share_of_XA'].values[h]*team_xg)*(0.5)
-               own_data_xa_pred=((df['rolling_XA_share'].values[h]*0.2+df['Rolling_adjusted_XA_share'].values[h]*0.45+0.35*df['Rolling_creativity_share'].values[h])*team_xg)*0.8+0.2*((df['Rolling_adjusted_XA'].values[h]*0.7+df['rolling_Adjusted_XA_historic'].values[h]*0.3)*df["opposition_xgc"].values[h])
+               own_data_xa_pred=((df['Share_of_XA_share'].values[h]*0.2+df['rolling_XA_share'].values[h]*0.2+df['Rolling_adjusted_XA_share'].values[h]*0.4+0.2*df['Rolling_creativity_share'].values[h])*team_xg)*0.8+0.2*((df['Rolling_adjusted_XA'].values[h]*0.7+df['rolling_Adjusted_XA_historic'].values[h]*0.3)*df["opposition_xgc"].values[h])
                team_data_xa_pred=(df['Understat_POSXA'].values[h]*df["opposition_xgc"].values[h]+df['Understat_POSXA_Share'].values[h]*team_xg)*(0.5)
                player_preds.append(own_data_xa_pred*(1-fordelings_faktor)+fordelings_faktor*team_data_xa_pred)        
                real_variable="expected_assists"            

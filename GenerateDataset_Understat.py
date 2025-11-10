@@ -469,8 +469,8 @@ def Generate_Understat_dataset(current_players,run_player_pos):
     )
 
     def adjust_measure_safe(g: pd.DataFrame, measure_name: str,
-                            w_threat: float = 0.4, w_xgc: float = 0.6,
-                            smoothing: float = 0.07, min_std_mult: float = 1.2,
+                            w_threat: float = 0.5, w_xgc: float = 0.5,
+                            smoothing: float = 0.08, min_std_mult: float = 1.2,
                             start_from: str = "mean") -> pd.Series:
         """Stateful smoother per group; returns a Series aligned to g.index."""
         # ensure expected columns exist
@@ -505,9 +505,7 @@ def Generate_Understat_dataset(current_players,run_player_pos):
 
         for i in range(n):
             # decay offset (scalar)
-            offset = 1.5 - (i + 1) * 0.05
-            if offset < 1.0:
-                offset = 1.0
+            offset = 1
 
             # predicted = current * opp_fac[i] (guard NaN)
             fac_i = opp_fac[i] if np.isfinite(opp_fac[i]) else 1.0
@@ -549,8 +547,8 @@ def Generate_Understat_dataset(current_players,run_player_pos):
     )
 
 
-    agg_enriched["XGIndex"]= agg_enriched["Rolling_Adjusted_XG2"]*0.5+agg_enriched["Rolling_Adjusted_XG"]*0.5
-    agg_enriched["XAIndex"]= agg_enriched["Rolling_Adjusted_XA2"]*0.5+agg_enriched["Rolling_Adjusted_XA"]*0.5
+    agg_enriched["XGIndex"]= agg_enriched["Rolling_Adjusted_XG2"]*0.3+agg_enriched["Rolling_Adjusted_XG"]*0.7
+    agg_enriched["XAIndex"]= agg_enriched["Rolling_Adjusted_XA2"]*0.3+agg_enriched["Rolling_Adjusted_XA"]*0.7
 
 
     # 5) (Optional) save
