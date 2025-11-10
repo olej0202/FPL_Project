@@ -25,11 +25,11 @@ Spurs,6
 ,Ipswich,40"""
 
 
-Manual_team_offensive_adjustments = {4:0.9,17:1.15,94:0.85,36:0.9,54:1.1 }
+Manual_team_offensive_adjustments = {4:0.9,17:1.1,94:0.9,54:1.1 }
     
     
     
-Manual_team_defensive_adjustments = {94:1.1,7:1.15,31:1.1 }
+Manual_team_defensive_adjustments = {94:1.1,7:1.1,31:1.1 }
 
 
 Manual_NewPlayer_Adjustments={
@@ -38,7 +38,7 @@ Manual_NewPlayer_Adjustments={
     }
 
 Manual_Player_Adjustments={
-        "Nordi_Mukiele":["Vitalii_Mykolenko"]
+        "Mohamed_Salah":["Florian_Wirtz"]
         
      }
 
@@ -55,6 +55,7 @@ Manual_min=[
         {"name": "Giorgi_Mamardashvili", "type": "const",   "GW": "any", "value": 60},
         {"name": "Tijjani_Reijnders", "type": "const",   "GW": "any", "value": 75},
         {"name": "Callum_Wilson", "type": "const",   "GW": "any", "value": 75},
+        {"name": "Enzo_Fernández", "type": "const",   "GW": "any", "value": 90},
     ]
         
 

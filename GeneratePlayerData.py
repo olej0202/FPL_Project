@@ -257,7 +257,7 @@ def add_team_share_per90(
     # Metrics to process
     metrics = [
         "Rolling_adjusted_XG","rolling_Threat","Rolling_adjusted_XA",
-        "Rolling_creativity","Rolling_adjusted_BPS","rolling_XG","rolling_XA","Share_of_XG","Share_of_XA"
+        "Rolling_creativity","Rolling_adjusted_BPS","rolling_XG","rolling_XA","Share_of_XG","Share_of_XA", "rolling_Adjusted_XG_historic","rolling_Adjusted_XA_historic"
     ]
     for m in metrics:
         if m not in df.columns:

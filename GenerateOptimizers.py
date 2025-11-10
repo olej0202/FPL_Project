@@ -38,7 +38,7 @@ def wildcard_optimize_team(sel_thresh, budget, columns, file_path="Model_Optimiz
     bench_gk = {t: LpVariable(cat='Binary', name=f"bench_gk_{t}") for t in gameweeks}
     transfer_in = {(i, t): LpVariable(cat='Binary', name=f"transfer_in_{i}_{t}") for i in range(num_players) for t in range(1, 8)}
     transfer_out = {(i, t): LpVariable(cat='Binary', name=f"transfer_out_{i}_{t}") for i in range(num_players) for t in range(1, 8)}
-    saved_transfers = {t: LpVariable(cat='Integer', lowBound=0, upBound=4, name=f"saved_transfers_{t}") for t in range(8)}
+    saved_transfers = {t: LpVariable(cat='Integer', lowBound=0, upBound=5, name=f"saved_transfers_{t}") for t in range(8)}
     capt = {
         (i, t): LpVariable(cat="Binary", name=f"capt_{i}_{t}")
         for i in range(num_players)
@@ -111,7 +111,7 @@ def wildcard_optimize_team(sel_thresh, budget, columns, file_path="Model_Optimiz
             model += transfer_out[i, t] <= x[i, t - 1]
         model += lpSum(transfer_in[i, t] for i in range(num_players)) <= 1 + saved_transfers[t - 1]
         model += saved_transfers[t] == saved_transfers[t - 1] + (1 - lpSum(transfer_in[i, t] for i in range(num_players)))
-        model += saved_transfers[t] <= 3
+        model += saved_transfers[t] <= 5
 
     model += saved_transfers[0] == 0
 
