@@ -822,6 +822,15 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     
 
     xg = proba1 @ weights
+    
+    new_input_XG["off_fac"]=new_input_XG["Own_XG"]*0.7+0.3*new_input_XG["Own_XG_avg"]
+    new_input_XG["def_fac"]=new_input_XG["Opposition_XGC"]*0.7+0.3*new_input_XG["Opposition_XGC_avg"]
+    xg_stat_h=(new_input_XG["off_fac"]*new_input_XG["def_fac"]/1.5)*0.5+0.5*(new_input_XG["off_fac"]*0.5+0.5*new_input_XG["def_fac"])
+    
+    new_input_XG2["off_fac"]=new_input_XG2["Own_XG"]*0.7+0.3*new_input_XG2["Own_XG_avg"]
+    new_input_XG2["def_fac"]=new_input_XG2["Opposition_XGC"]*0.7+0.3*new_input_XG2["Opposition_XGC_avg"]
+    xg_stat_a=(new_input_XG2["off_fac"]*new_input_XG2["def_fac"]/1.5)*0.5+0.5*(new_input_XG2["off_fac"]*0.5+0.5*new_input_XG2["def_fac"])
+    
     xg2 = proba2 @ weights    
 
 
@@ -920,12 +929,12 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     result_df["away_team"]=df_merged["team_a_name"]
     result_df["home_code"]=df_merged["team_h"]
     result_df["away_code"]=df_merged["team_a"]
-    result_df["home_goals"]=(xg)
-    result_df["away_goals"]=(xg2)
+    result_df["home_goals"]=(xg+xg_stat_h)*0.5
+    result_df["away_goals"]=(xg2+xg_stat_a)*0.5
     result_df["Clean_Sheet_home"]=css_stat_home
     result_df["Clean_Sheet_away"]=css_stat_away
-    result_df["test_XG"]=xg
-    result_df["test_cluster"]=xgc2
+    result_df["test_XG"]=xg_stat_h
+    result_df["test_cluster"]=xg_stat_a
     result_df["test_opp_XGC"]=xg2
     result_df.to_csv("Team_prediction_visual2.csv")
 
