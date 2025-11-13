@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from pulp import LpMaximize, LpProblem, LpVariable, lpSum
-
+import re
 import pandas as pd
 import numpy as np
 from pulp import LpMaximize, LpProblem, LpVariable, lpSum
@@ -25,6 +25,10 @@ def wildcard_optimize_team(sel_thresh, budget, columns, file_path="Model_Optimiz
     predicted_points = data[columns].values
 
     GW_range = len(columns)
+    gw_numbers = []
+    for idx, col in enumerate(columns):
+        m = re.search(r'(\d+)', str(col))
+        gw_numbers.append(int(m.group(1)) if m else (idx + 1))
     gameweeks = range(GW_range)
     num_players = len(players)
 
@@ -110,7 +114,12 @@ def wildcard_optimize_team(sel_thresh, budget, columns, file_path="Model_Optimiz
             model += transfer_out[i, t] >= x[i, t - 1] - x[i, t]
             model += transfer_out[i, t] <= x[i, t - 1]
         model += lpSum(transfer_in[i, t] for i in range(num_players)) <= 1 + saved_transfers[t - 1]
-        model += saved_transfers[t] == saved_transfers[t - 1] + (1 - lpSum(transfer_in[i, t] for i in range(num_players)))
+        if gw_numbers[t] == 17:
+            # Bump right after GW16: hard set the bank at GW17 to 5
+            model += saved_transfers[t] == 5
+        else:
+            # Normal accumulation rule elsewhere
+            model += saved_transfers[t] == saved_transfers[t - 1] + (1 - lpSum(transfer_in[i, t] for i in range(num_players)))
         model += saved_transfers[t] <= 5
 
     model += saved_transfers[0] == 0

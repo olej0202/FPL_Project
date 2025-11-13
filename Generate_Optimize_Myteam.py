@@ -52,21 +52,35 @@ def played_free_hit(team_id):
             free_hit_gw_played=39
     return free_hit_gw_played
 
-def initial_transfers(df,max_event):
-    transfers1=df
+def initial_transfers(df, max_event):
+    """
+    df: DataFrame with columns ['event', 'count'] where each row is the number of transfers made in that GW.
+    max_event: last completed GW (e.g., 16 means we've just processed GW16).
+    Returns the saved-transfers bank after simulating up through max_event.
+    """
+    transfers1 = df
     saved_transfers = 0
     last_event = 0
 
-    for h in range(max_event):
+    for _ in range(max_event):
         new_event = last_event + 1
+
+        # Apply weekly effect
         if new_event in transfers1["event"].values:
-            ind = transfers1["event"].tolist().index(new_event)
-            transfers_made = transfers1["count"].values[ind]
-            saved_transfers = saved_transfers - transfers_made
-            saved_transfers = max(0, saved_transfers)
+            transfers_made = int(transfers1.loc[transfers1["event"] == new_event, "count"].iloc[0])
+            saved_transfers = max(0, saved_transfers - transfers_made)
         else:
             saved_transfers += 1
+
+        # Bump occurs *after GW16*, i.e. at the transition into GW17
+        if new_event == 16:
+            saved_transfers = 5
+
+        # FPL cap each week
+        saved_transfers = min(saved_transfers, 5)
+
         last_event = new_event
+
     return saved_transfers
     
 
@@ -118,11 +132,16 @@ def get_my_team(team_id=46805,Last_GW=4):
         else:
             gameweek = Last_GW  # Replace with the desired gameweek
     except:
-        df=pd.DataFrame()
-        saved_transfers=min(5,Last_GW)-1
-        gameweek=Last_GW
-
-        initial_saved=saved_transfers+hit
+        df = pd.DataFrame()
+        # Approximate bank if we couldn't fetch history:
+            # start from 0, +1 per week up to cap 5, but bump to 5 after GW16
+        if Last_GW >= 16:
+            approx_bank = 5
+        else:
+            approx_bank = min(5, Last_GW)
+        saved_transfers = max(0, approx_bank - 1)  # bank at t=0 will be for the *upcoming* GW
+        gameweek = Last_GW
+        initial_saved = saved_transfers + hit
 
     url = f"https://fantasy.premierleague.com/api/entry/{team_id}/event/{gameweek}/picks/"
 
@@ -287,6 +306,8 @@ def optimize_my_team(team_id=7025308,wildcard_round=8, bb_round=10,free_hit_roun
 
     optimize_range = len(GW_list) # Number of gameweeks to optimize
     gameweeks = range(optimize_range)
+    abs_gw_num = {t: (int(GW_list[t]) if str(GW_list[t]).isdigit() else None) for t in gameweeks}
+
     num_players = len(players)
 
     def_indices   = [i for i, pos in enumerate(positions) if pos == 'DEF']
@@ -398,14 +419,20 @@ def optimize_my_team(team_id=7025308,wildcard_round=8, bb_round=10,free_hit_roun
 
     for t in gameweeks[1:]:
         if t == wildcard_round:
-            model += saved_transfers[t] == 0 # Reset after wildcard       
+            # Wildcard round: bank resets to 0
+            model += saved_transfers[t] == 0
         else:
-            if(t == week_to_remove_transfer):
-                model += saved_transfers[t] == saved_transfers[t-1] + (1 - lpSum(transfer_in[i, t] for i in range(num_players)))-1
-                model += saved_transfers[t] <= 5
+            if abs_gw_num.get(t) == 17:
+                # Bump right after GW16: bank is set to 5 at GW17
+                model += saved_transfers[t] == 5
             else:
-                model += saved_transfers[t] == saved_transfers[t-1] + (1 - lpSum(transfer_in[i, t] for i in range(num_players)))
-                model += saved_transfers[t] <= 5
+                # Normal accumulation; optionally remove one in the post-free-hit accounting week
+                if t == week_to_remove_transfer:
+                    model += saved_transfers[t] == saved_transfers[t-1] + (1 - lpSum(transfer_in[i, t] for i in range(num_players))) - 1
+                else:
+                    model += saved_transfers[t] == saved_transfers[t-1] + (1 - lpSum(transfer_in[i, t] for i in range(num_players)))
+        # Cap (also enforced by variable upBound=5)
+        model += saved_transfers[t] <= 5
 
     # --- Initial Transfers & Bank ---
     model += saved_transfers[0] == initial_saved
