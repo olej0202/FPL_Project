@@ -19,7 +19,7 @@ from sklearn.svm import SVR
 import torch
 import torch.nn as nn
 from torch.utils.data import TensorDataset, DataLoader
-
+import joblib
 criterion = nn.L1Loss()
 
 def setup_dataset():
@@ -52,24 +52,31 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
     data['rolling_key_passes'] = data['rolling_key_passes'].fillna(0.5)
     data['rolling_ICT'] = data['rolling_ICT'].fillna(5)
     data['Rolling_creativity'] = data['Rolling_creativity'].fillna(10)
+    xgb_model = joblib.load( f"XGB_XG_SHARE_MODEL.joblib")
+    rf_model=joblib.load( f"RF_XG_SHARE_MODEL.joblib")
+    
     
     players=data["name"].unique()
     all_preds=[]
+    all_preds_model=[]
     MSE=[]
     for i in range(len(players)):
         preds=[]
         val_preds=[]
         val_real=[]
         df=data[data["name"]==players[i]]
-        df=df.sort_values(by='GW')
+        df=df.sort_values(by='GW').reset_index(drop=True)
         team=df['Team'].values[-1]
 
         
         for h in range(len(df)):
             player_preds=[]
+            player_model=[]
             player_preds.append(players[i])
             GW=df["GW"].values[h]
             player_preds.append(GW)
+            player_model.append(players[i])
+            player_model.append(GW)
             team_stats=team_data[(team_data["team_code"]==team) & (team_data["GW"]==GW)].copy()
 
             if(len(team_stats)<1):
@@ -87,14 +94,19 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
 
 
                #own_data_xg_pred=((df['Rolling_adjusted_XG'].values[h]*0.7+df['rolling_Adjusted_XG_historic'].values[h]*0.3)*df["opposition_xgc"].values[h]+df['Share_of_XG'].values[h]*team_xg)*(0.5)
-               own_data_xg_pred=((df['Share_of_XG_share'].values[h]*0.2+df['rolling_XG_share'].values[h]*0.2+df['Rolling_adjusted_XG_share'].values[h]*0.4+0.2*df['rolling_Threat_share'].values[h])*team_xg)*0.8+0.2*((df['Rolling_adjusted_XG'].values[h]*0.7+df['rolling_Adjusted_XG_historic'].values[h]*0.3)*df["opposition_xgc"].values[h])
+               own_data_xg_pred=((df['rolling_Adjusted_XG_historic_share'].values[h]*0.1+df['rolling_XG_share'].values[h]*0.1+df['Rolling_adjusted_XG_share'].values[h]*0.4+0.4*df['rolling_Threat_share'].values[h])*team_xg)*0.8+0.2*((df['Rolling_adjusted_XG'].values[h]*0.7+df['rolling_Adjusted_XG_historic'].values[h]*0.3)*df["opposition_xgc"].values[h])
                team_data_xg_pred=(df['Understat_POSXG'].values[h]*df["opposition_xgc"].values[h]*0.3+0.7*df['Understat_POSXG_Share'].values[h]*team_xg)
         
                player_preds.append(own_data_xg_pred*(1-fordelings_faktor)+fordelings_faktor*team_data_xg_pred+df['Team_Pen_Data'].values[h]*df['Pen_Number'].values[h]*0.8)
                real_variable="expected_goals" 
+               base = df.loc[h, ['rolling_Adjusted_XG_historic_share','Rolling_adjusted_XG_share','rolling_Threat_share','rolling_XG_share','Rolling_adjusted_XG']].to_numpy(dtype=float)      # 1D array length 4
+               row = np.hstack([base, team_xg]).reshape(1, -1)  
+               pred=xgb_model.predict(row)[0]*0.5+0.5*rf_model.predict(row)[0]
+               print(pred)
+               player_model.append(pred)
             if(pred_variable=="Assist"):
                #own_data_xa_pred=((df['Rolling_adjusted_XA'].values[h]*0.7+df['rolling_Adjusted_XA_historic'].values[h]*0.3)*df["opposition_xgc"].values[h]+df['Share_of_XA'].values[h]*team_xg)*(0.5)
-               own_data_xa_pred=((df['Share_of_XA_share'].values[h]*0.2+df['rolling_XA_share'].values[h]*0.2+df['Rolling_adjusted_XA_share'].values[h]*0.4+0.2*df['Rolling_creativity_share'].values[h])*team_xg)*0.8+0.2*((df['Rolling_adjusted_XA'].values[h]*0.7+df['rolling_Adjusted_XA_historic'].values[h]*0.3)*df["opposition_xgc"].values[h])
+               own_data_xa_pred=((df['Share_of_XA_share'].values[h]*0+df['rolling_XA_share'].values[h]*0.1+df['Rolling_adjusted_XA_share'].values[h]*0.4+0.5*df['Rolling_creativity_share'].values[h])*team_xg)*0.8+0.2*((df['Rolling_adjusted_XA'].values[h]*0.7+df['rolling_Adjusted_XA_historic'].values[h]*0.3)*df["opposition_xgc"].values[h])
                team_data_xa_pred=(df['Understat_POSXA'].values[h]*df["opposition_xgc"].values[h]*0.3+0.7*df['Understat_POSXA_Share'].values[h]*team_xg)
                player_preds.append(own_data_xa_pred*(1-fordelings_faktor)+fordelings_faktor*team_data_xa_pred)        
                real_variable="expected_assists"            
@@ -117,13 +129,20 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
                real_variable="total_points"
                player_preds.append(df['Rolling_adjusted_Fantasy'].values[h]*0.04)
             player_preds.append(df["position"].values[0])
+            player_model.append(df["position"].values[0])
             player_preds.append(xggc)
+            player_model.append(xggc)
             all_preds.append(player_preds)
+            all_preds_model.append(player_model)
             
         
     columns=["Name", "GW", "pred", "position", "opp_stat"]
     data_f=pd.DataFrame(all_preds, columns=columns)
+    if(pred_variable in ["expected_goals"]):
+        data_f_model=pd.DataFrame(all_preds_model, columns=columns)
+        data_f_model.to_csv(f"STAT2_{pred_variable}.csv", index=False)
     data_f.to_csv(f"STAT_{pred_variable}.csv", index=False)
+    
 def XGB_Make_dataset(position,position2):
     df=pd.read_csv("ML_training2.csv").iloc[:,1:]
 

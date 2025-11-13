@@ -1169,8 +1169,8 @@ def main_Transform():
             player_df, most_common = get_understat(player_df,Own_team_name,pos,element_list,season_list,pos)
             player_df=player_df[player_df['minutes'] > 0]
             player_df["rolling_form"] = player_df['total_points'].ewm(span=lookback, adjust=False).mean()
-            player_df["rolling_XG"] = player_df['expected_goals'].clip(upper=0.9).ewm(span=lookback, adjust=False).mean()
-            player_df["rolling_XA"] = player_df['expected_assists'].clip(upper=0.9).ewm(span=lookback, adjust=False).mean()
+            player_df["rolling_XG"] = player_df['expected_goals'].clip(upper=0.9).rolling(window=10, min_periods=1).mean()
+            player_df["rolling_XA"] = player_df['expected_assists'].clip(upper=0.9).rolling(window=10, min_periods=1).mean()
             player_df["rolling_GC"] = player_df['goals_conceded'].ewm(span=lb2, adjust=False).mean()
             player_df["rolling_bps"] = player_df['bps'].ewm(span=lookback, adjust=False).mean()
             player_df["rolling_GS"] = player_df['goals_scored'].clip(upper=2).ewm(span=lookback, adjust=False).mean()
