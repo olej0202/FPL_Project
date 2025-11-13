@@ -1459,10 +1459,10 @@ def adjust_measure(df, measure_name):
     n_matches=len(player_df)
     new_expected_goals=[]
     if(n_matches>10):
-        current_expected_goals_start_value=player_df[measure_name].mean()
-        min_val=std*1.1
+        current_expected_goals_start_value=player_df[measure_name].mean()*0.8
+        min_val=std*1
     else:
-        current_expected_goals_start_value=player_df[measure_name].mean()*0.7
+        current_expected_goals_start_value=player_df[measure_name].mean()*0.8
         min_val=std*1
     current_expected_goals=current_expected_goals_start_value
     smoothing_f=0.07
