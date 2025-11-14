@@ -57,6 +57,10 @@ Manual_min=[
         {"name": "Callum_Wilson", "type": "const",   "GW": "any", "value": 75},
         {"name": "Enzo_Fernández", "type": "const",   "GW": "any", "value": 90},
         {"name": "Nico_O'Reilly", "type": "const",   "GW": "any", "value": 70},
+        {"name": "Mohamed_Salah", "type": "adjust_from",   "GW": "16", "value": 0},
+        {"name": "Ismaïla_Sarr", "type": "adjust_from",   "GW": "16", "value": 0},
+        {"name": "Mohammed_Kudus", "type": "adjust_from",   "GW": "16", "value": 0},
+        {"name": "Bryan_Mbeumo", "type": "adjust_from",   "GW": "16", "value": 0},
     ]
         
 

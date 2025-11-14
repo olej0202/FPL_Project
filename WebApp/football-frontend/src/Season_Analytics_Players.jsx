@@ -85,14 +85,17 @@ export default function PlayerMeasureAveragesChart_Player() {
   }, [fetchIfNeeded, SeasonData]);
 
   // Distinct positions
-  const allPositions = useMemo(() => {
-    const s = new Set();
-    for (const r of rowsRaw) {
-      const p = r?.position ?? r?.Position;
-      if (p) s.add(String(p));
+const allPositions = useMemo(() => {
+  const s = new Set();
+  for (const r of rowsRaw) {
+    const p = r?.position ?? r?.Position;
+    const str = String(p);
+    if (p != null && str !== "0" && str !== "") {
+      s.add(str);
     }
-    return Array.from(s).sort((a, b) => a.localeCompare(b));
-  }, [rowsRaw]);
+  }
+  return Array.from(s).sort((a, b) => a.localeCompare(b));
+}, [rowsRaw]);
 
   const togglePos = (p) => {
     setPosFilter((prev) => {
@@ -417,7 +420,7 @@ export default function PlayerMeasureAveragesChart_Player() {
                   <button
                     key={p}
                     onClick={() => togglePos(p)}
-                    className={`px-3 py-1 rounded-full border text-sm transition-colors ${
+                    className={`px-3 py-1 rounded-full hover:border-none text-sm transition-colors  ${
                       active
                         ? "bg-emerald-600/20 border-emerald-500/40 text-emerald-200"
                         : "bg-black/40 border-white/10 text-neutral-300 hover:bg-white/10"
@@ -434,7 +437,7 @@ export default function PlayerMeasureAveragesChart_Player() {
             {posFilter.size > 0 && (
               <button
                 onClick={() => setPosFilter(new Set())}
-                className="mt-3 text-xs text-neutral-400 underline hover:text-neutral-200"
+                className="mt-3 text-xs text-neutral-700 underline hover:text-neutral-500"
               >
                 Clear position filter
               </button>
@@ -456,13 +459,13 @@ export default function PlayerMeasureAveragesChart_Player() {
                 <BarChart
                   data={chartData}
                   layout="vertical"
-                  margin={{ top: 10, right: 20, left: 0, bottom: 10 }}
+                  margin={{ top: 10, right: 0, left: 0, bottom: 10 }}
                 >
                   <CartesianGrid stroke="#333" strokeDasharray="3 3" />
                   <YAxis
                     dataKey="name"
                     type="category"
-                    width={110}
+                    width={100}
                     tick={{ fontSize: 12, fill: "#fff" }}
                   />
                   <XAxis type="number" tick={{ fontSize: 12, fill: "#fff" }} />
@@ -478,7 +481,7 @@ export default function PlayerMeasureAveragesChart_Player() {
                   <Bar dataKey="Value" fill="#b8870bc9">
                     <LabelList
                       dataKey="Value"
-                      position="right"
+                      position="inside"
                       formatter={(v) => Number(v).toFixed(1)}
                       fill="#fff"
                     />

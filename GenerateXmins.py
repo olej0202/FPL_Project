@@ -176,47 +176,57 @@ def GetXmins(current_players, n_future, scenarios=None, position_slots=None):
     out["minutes_scenario"] = out["Final minutes"].astype(float)
 
     def _apply_shape_to_series(orig_series, gws, pivot_gw, target_value, mode):
-        n = len(orig_series)
+        """
+        Supported modes:
+          - 'const'       : set all GWs to target_value
+          - 'adjust_from' : set all GWs strictly AFTER pivot_gw to target_value
+          - 'linear_from' : from pivot_gw, linearly move toward target_value,
+                            reach it after 3 GWs (pivot+3); hold target thereafter
+        """
+        import numpy as np
+
+        orig = np.asarray(orig_series, dtype=float).copy()
+        n = len(orig)
         if n == 0:
-            return orig_series.copy()
+            return orig
+
         gws_norm = [str(x) for x in gws]
         pivot_str = str(pivot_gw)
-        if pivot_str not in gws_norm:
-            return orig_series.copy()
-        k = gws_norm.index(pivot_str)
-        orig = orig_series.astype(float).copy()
         tgt = float(target_value)
-        new_vals = orig.copy()
-        start_val = float(orig[0])
-        def lerp(a, b, f): return a + f * (b - a)
 
-        if mode in ("up_down", "growing"):
-            if k > 0:
-                for i in range(0, k + 1):
-                    frac = i / k if k != 0 else 1.0
-                    new_vals[i] = lerp(start_val, tgt, frac)
-            else:
-                new_vals[0] = tgt
-            tail_len = (n - 1 - k)
-            if tail_len > 0:
-                for i in range(k, n):
-                    frac = (i - k) / tail_len if tail_len != 0 else 1.0
-                    new_vals[i] = lerp(tgt, orig[i], frac)
-        elif mode == "down_up":
-            if k > 0:
-                for i in range(0, k + 1):
-                    frac = i / k if k != 0 else 1.0
-                    new_vals[i] = lerp(start_val, tgt, frac)
-            else:
-                new_vals[0] = tgt
-            tail_len = (n - 1 - k)
-            if tail_len > 0:
-                for i in range(k, n):
-                    frac = (i - k) / tail_len if tail_len != 0 else 1.0
-                    new_vals[i] = lerp(tgt, orig[i], frac)
-        else:
-            return orig
-        return np.clip(new_vals, 0.0, 90.0)
+        # const: ignore pivot; apply to whole horizon
+        if mode == "const":
+            return np.clip(np.full(n, tgt, dtype=float), 0.0, 90.0)
+
+        # For the other modes we need the pivot inside the horizon
+        if pivot_str not in gws_norm:
+            return np.clip(orig, 0.0, 90.0)
+
+        k = gws_norm.index(pivot_str)
+
+        if mode == "adjust_from":
+            new_vals = orig.copy()
+            # strictly AFTER the pivot GW
+            if k + 1 < n:
+                new_vals[k+1:] = tgt
+            return np.clip(new_vals, 0.0, 90.0)
+
+        if mode == "linear_from":
+            new_vals = orig.copy()
+            # reach target at pivot+3 (or end of horizon if shorter)
+            end_idx = min(k + 3, n - 1)
+            start_val = float(orig[k])
+            span = max(1, end_idx - k)
+            for i in range(k, end_idx + 1):
+                f = (i - k) / span
+                new_vals[i] = start_val + f * (tgt - start_val)
+            # hold target after reaching it
+            if end_idx + 1 < n:
+                new_vals[end_idx + 1:] = tgt
+            return np.clip(new_vals, 0.0, 90.0)
+
+        # Fallback
+        return np.clip(orig, 0.0, 90.0)
 
     if scenarios:
         out["GW"] = out["GW"].astype(str)
@@ -230,14 +240,25 @@ def GetXmins(current_players, n_future, scenarios=None, position_slots=None):
                 mask_p = out["name"].eq(nm)
                 if not mask_p.any():
                     continue
+
+                # const ignores pivot
                 if tp == "const":
-                    out.loc[mask_p, "minutes_scenario"] = np.clip(val, 0.0, 90.0)
+                    shaped = _apply_shape_to_series(
+                        out.loc[mask_p, "minutes_scenario"].to_numpy(dtype=float),
+                        gws_horizon, gw_pivot, val, "const"
+                    )
+                    out.loc[mask_p, "minutes_scenario"] = shaped
                     continue
+
+                # adjust_from / linear_from require a pivot
                 if gw_pivot is None:
                     continue
+
                 orig_series = out.loc[mask_p, "minutes_scenario"].to_numpy(dtype=float)
-                shaped = _apply_shape_to_series(orig_series, gws_horizon, gw_pivot, val, tp)
-                out.loc[mask_p, "minutes_scenario"] = shaped
+                if tp in ("adjust_from", "linear_from"):
+                    shaped = _apply_shape_to_series(orig_series, gws_horizon, gw_pivot, val, tp)
+                    out.loc[mask_p, "minutes_scenario"] = shaped
+                # silently ignore unknown types
             except Exception:
                 continue
 
@@ -369,6 +390,3 @@ def GetXmins(current_players, n_future, scenarios=None, position_slots=None):
 
     # Save & return
     out.to_csv("GenerateXmins2.csv", index=False)
-
-
-
