@@ -29,7 +29,7 @@ Manual_team_offensive_adjustments = {4:0.9,17:1.1,94:0.9,54:1.1 }
     
     
     
-Manual_team_defensive_adjustments = {94:1.1,7:1.1,31:1.1 }
+Manual_team_defensive_adjustments = {94:1.15,7:1.1,31:1.1 }
 
 
 Manual_NewPlayer_Adjustments={
@@ -56,11 +56,13 @@ Manual_min=[
         {"name": "Tijjani_Reijnders", "type": "const",   "GW": "any", "value": 75},
         {"name": "Callum_Wilson", "type": "const",   "GW": "any", "value": 75},
         {"name": "Enzo_Fernández", "type": "const",   "GW": "any", "value": 90},
-        {"name": "Nico_O'Reilly", "type": "const",   "GW": "any", "value": 70},
+        {"name": "Nico_O'Reilly", "type": "const",   "GW": "any", "value": 75},
         {"name": "Mohamed_Salah", "type": "adjust_from",   "GW": "16", "value": 0},
         {"name": "Ismaïla_Sarr", "type": "adjust_from",   "GW": "16", "value": 0},
         {"name": "Mohammed_Kudus", "type": "adjust_from",   "GW": "16", "value": 0},
         {"name": "Bryan_Mbeumo", "type": "adjust_from",   "GW": "16", "value": 0},
+        {"name": "Antoine_Semenyo", "type": "const",   "GW": "any", "value": 90},
+
     ]
         
 
