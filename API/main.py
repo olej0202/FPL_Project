@@ -61,6 +61,8 @@ def load_and_transform(endpoint):
         csv_path = os.path.join(parent_dir, "Season_analysis.csv") 
     elif endpoint=="Team_result_adjust":  
         csv_path = os.path.join(parent_dir, "Visual_adjust_Team_results.csv") 
+    elif endpoint=="Player_result_adjust":
+        csv_path=os.path.join(parent_dir,"Player_Adjusted_data.csv")
         
         
     else:
@@ -171,6 +173,12 @@ def get_player_rankings():
             "Access-Control-Allow-Origin": "*",
         },
     )
+@app.get("/Player_result_adjust")
+def get_data():
+    df = load_and_transform("Player_result_adjust")
+    df=df.fillna(0)
+    return df.to_dict(orient="records")    
+
 @app.get("/Team_current")
 def get_data():
     df = load_and_transform("Team_current")

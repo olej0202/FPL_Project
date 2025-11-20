@@ -320,6 +320,72 @@ def Generate_season_data(current_player_path, current_season_path):
     season_with_teams.to_csv("Season_analysis.csv")
 
 
+def Generate_Team_Adjustments():
+    df = pd.read_csv("Team_prediction.csv").iloc[:, 2:]
+
+    team_data_home = pd.read_csv("Team_data_newest3.csv").iloc[:, 1:][[
+        "name", "code", "XG_avg", "XGC_avg", "XGH", "XGA", "XGCH", "XGCA"
+    ]]
+
+    # Create home metrics
+    team_data_home["H_Att_E"] = (team_data_home["XGH"] - team_data_home["XGA"])/2
+    team_data_home["H_def_E"] = (team_data_home["XGCH"] - team_data_home["XGCA"])/2
+    team_data_home = team_data_home[["name", "code", "XG_avg", "XGC_avg", "H_Att_E", "H_def_E"]]
+
+    # Away uses the same base table (same numbers), just joined on name instead of code
+    team_data_away = team_data_home.copy()
+
+    # ---------- HOME MERGE (own_ prefix) ----------
+    home_merge = team_data_home[["code", "XG_avg", "XGC_avg", "H_Att_E", "H_def_E"]].rename(
+        columns={
+            "XG_avg": "own_XG_avg",
+            "XGC_avg": "own_XGC_avg",
+            "H_Att_E": "own_H_Att_E",
+            "H_def_E": "own_H_def_E",
+        }
+    )
+
+    df = df.merge(
+        home_merge,
+        how="left",
+        left_on="team_code",
+        right_on="code",
+    )
+
+    # If you don’t need the extra 'code' column from the merge:
+    df = df.drop(columns=["code"])
+
+    # ---------- AWAY MERGE (opponent_ prefix) ----------
+    away_merge = team_data_away[["name", "XG_avg", "XGC_avg", "H_Att_E", "H_def_E"]].rename(
+        columns={
+            "XG_avg": "opponent_XG_avg",
+            "XGC_avg": "opponent_XGC_avg",
+            "H_Att_E": "opponent_H_Att_E",
+            "H_def_E": "opponent_H_def_E",
+        }
+    )
+
+    df = df.merge(
+        away_merge,
+        how="left",
+        left_on="Opponent_team",
+        right_on="name",
+    )
+
+    # If you don’t need the extra 'name' column from the merge:
+    df = df.drop(columns=["name"])
+
+    df["GW"] = pd.to_numeric(df["GW"], errors="coerce")
+
+    # Define limits
+    min_gw = df["GW"].min()
+    max_gw = min_gw + 4
+
+    # Filter DF to only include those GWs
+    df_filtered = df[(df["GW"] >= min_gw) & (df["GW"] <= max_gw)]
+
+    df_filtered.to_csv("Visual_adjust_Team_results.csv")
+
 
     
 
@@ -333,6 +399,7 @@ def Generate_ALL_datasets(current_teams,current_player_path,current_season_path)
     Generate_Lineups()
     Visual_Teams_history()
     Generate_season_data(current_player_path, current_season_path)
+    Generate_Team_Adjustments()
 
 if __name__ == "__main__":
     Generate_ALL_datasets()

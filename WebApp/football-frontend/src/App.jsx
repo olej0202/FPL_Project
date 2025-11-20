@@ -16,6 +16,8 @@ import TeamPredictionsFuture from "./Fixture_Ticker";
 import SeasonAnalytics from "./SeasonAnalysis"
 import PlayerMeasureAveragesChart_TEAMS from "./Season_Analyticss_Teams"
 import PlayerMeasureAveragesChart_Player from "./Season_Analytics_Players"
+import AdjustmentAnalytics from "./Adjustment_Analytics"
+import TeamAdjustmentsPage from "./Adjustment_Analytics_Team"
 import AITeams from "./AITeams";
 import AITeamNav from "./components/team_navigation";
 import Team_Analytics_Analysis from "./Team_Analytics_Analysis";
@@ -44,7 +46,8 @@ export default function App() {
     { to: "/TeamPredictionsFuture", icon: Calendar, label: "Fixture Analytics" },
     { to: "/Score_Predictions", icon: Trophy, label: "Score Predictions" },
     { to: "/News", icon: Newspaper, label: "PL News" },
-    {to: "/Season_Analysis", icon: BarChart2, label: "Season Analysis"}
+    {to: "/Season_Analysis", icon: BarChart2, label: "Season Analysis"},
+    {to: "/Adjustment_Analysis", icon: BarChart2, label: "Adjust data"}
   ];
 
    const menuItems = [
@@ -177,6 +180,12 @@ export default function App() {
           <Route index element={<Navigate to="Season_Players" replace />} />
           <Route path="Season_Teams" element={<PlayerMeasureAveragesChart_TEAMS />} />
           <Route path="Season_Players" element={<PlayerMeasureAveragesChart_Player />} />
+        </Route>
+
+        <Route path="/Adjustment_Analysis" element={<AdjustmentAnalytics />}>
+          {/* IMPORTANT: redirect index to Season_Players so the tab is active */}
+          <Route index element={<Navigate to="Adjustment_Teams" replace />} />
+          <Route path="Adjustment_Teams" element={<TeamAdjustmentsPage />} />
         </Route>
 
         <Route
