@@ -8,7 +8,7 @@ export default function AdjustmentAnalytics() {
       {/* Tabs */}
       <div className="flex justify-center gap-4 mb-3">
         <NavLink
-          to="Adjustment_Players"
+          to="Adjustment_Player"
           end
           className={({ isActive }) =>
             `flex items-center gap-2 px-4 py-1 font-semibold  ${

@@ -18,6 +18,7 @@ import PlayerMeasureAveragesChart_TEAMS from "./Season_Analyticss_Teams"
 import PlayerMeasureAveragesChart_Player from "./Season_Analytics_Players"
 import AdjustmentAnalytics from "./Adjustment_Analytics"
 import TeamAdjustmentsPage from "./Adjustment_Analytics_Team"
+import PlayerAdjustmentsPage from "./Adjustment_Analytics_Player"
 import AITeams from "./AITeams";
 import AITeamNav from "./components/team_navigation";
 import Team_Analytics_Analysis from "./Team_Analytics_Analysis";
@@ -186,6 +187,7 @@ export default function App() {
           {/* IMPORTANT: redirect index to Season_Players so the tab is active */}
           <Route index element={<Navigate to="Adjustment_Teams" replace />} />
           <Route path="Adjustment_Teams" element={<TeamAdjustmentsPage />} />
+          <Route path="Adjustment_Player" element={<PlayerAdjustmentsPage/>} />
         </Route>
 
         <Route
