@@ -26,11 +26,14 @@ function SearchableMultiSelect({
 
   const filteredOptions = useMemo(() => {
     const term = search.toLowerCase();
-    return options.filter(
-      (opt) =>
-        opt.label.toLowerCase().includes(term) ||
-        opt.value.toLowerCase().includes(term)
-    );
+    return options.filter((opt) => {
+      const labelStr = (opt.label ?? "").toString().toLowerCase();
+      const valueStr = (opt.value ?? "").toString().toLowerCase();
+      return (
+        labelStr.includes(term) ||
+        valueStr.includes(term)
+      );
+    });
   }, [options, search]);
 
   const toggleValue = (value) => {
@@ -127,10 +130,11 @@ function SearchableMultiSelect({
               </div>
             ) : (
               filteredOptions.map((opt) => {
-                const checked = selectedValues.includes(opt.value);
+                const value = opt.value;
+                const checked = selectedValues.includes(value);
                 return (
                   <label
-                    key={opt.value}
+                    key={value}
                     style={{
                       display: "flex",
                       alignItems: "center",
@@ -148,7 +152,7 @@ function SearchableMultiSelect({
                     <input
                       type="checkbox"
                       checked={checked}
-                      onChange={() => toggleValue(opt.value)}
+                      onChange={() => toggleValue(value)}
                       style={{
                         margin: 0,
                         accentColor: PALETTE.gold,
@@ -184,9 +188,9 @@ export default function PlayerAdjustmentsPage() {
   ); // web_name[]
   const [selectedTeamCodes, setSelectedTeamCodes] = useState([]); // team_code[]
   const [selectedPositions, setSelectedPositions] = useState([]); // position[]
-  const [valueThreshold, setValueThreshold] = useState(null); // min value for measure filter
+  const [valueThreshold, setValueThreshold] = useState(null); // min value for 'value' filter
 
-  // Sorting state
+  // Sorting state (by GW columns)
   const [sortConfig, setSortConfig] = useState({
     gw: null,
     direction: "desc", // "asc" | "desc"
@@ -224,10 +228,11 @@ export default function PlayerAdjustmentsPage() {
 
     if (teamsState) {
       teamsState.forEach((t) => {
-        const key = `${t.team_code}_${t.GW}`;
+        const code = String(t.team_code);
+        const key = `${code}_${t.GW}`;
         lookup.set(key, t);
-        if (!names.has(t.team_code)) {
-          names.set(t.team_code, t.team_name);
+        if (!names.has(code)) {
+          names.set(code, t.team_name);
         }
       });
     }
@@ -261,6 +266,7 @@ export default function PlayerAdjustmentsPage() {
     const goalFactor = Number(playerRow.Goal_factor) || 0;
     const assistFactor = Number(playerRow.Assist_factor) || 0;
     const csFactor = Number(playerRow.CS_factor) || 0;
+    const defaultPoints = Number(playerRow.default_points) || 0;
 
     const xg = teamRow ? Number(teamRow.XG) || 0 : 0;
     const cs = teamRow ? Number(teamRow.CS) || 0 : 0;
@@ -271,12 +277,12 @@ export default function PlayerAdjustmentsPage() {
     const goalScored = (goalShare * xg + penData) * minutesAdj;
     const assists = assistShare * xg * minutesAdj;
     const points =
-      1 +
+      defaultPoints +
       goalScored * goalFactor +
       assists * assistFactor +
       cs * csFactor * minutesAdj +
       bps * minutesAdj +
-      cbi * 2; // CBI contribution unchanged
+      cbi * 2;
 
     const avgMinutes = avgMin;
 
@@ -294,33 +300,32 @@ export default function PlayerAdjustmentsPage() {
 
   /**
    * Pivot playersState by web_name, compute measures per GW and
-   * compute global min/max for the selected measure.
+   * compute global min/max for the value-filter.
    */
   const {
     playerTableRows,
-    globalMinMeasure,
-    globalMaxMeasure,
+    globalMinValue,
+    globalMaxValue,
     allPlayerNames,
     allTeamOptions,
   } = useMemo(() => {
     if (!playersState || !teamsState) {
       return {
         playerTableRows: [],
-        globalMinMeasure: 0,
-        globalMaxMeasure: 0,
+        globalMinValue: 0,
+        globalMaxValue: 0,
         allPlayerNames: [],
         allTeamOptions: [],
       };
     }
 
     const playerMap = new Map(); // web_name -> { ...info, rowsByGW: Map }
-    const allMeasureValues = [];
 
     playersState.forEach((p) => {
       const web = p.web_name;
       if (!web) return;
 
-      const teamCode = p.Team;
+      const teamCode = String(p.Team);
       const teamName = teamNamesByCode.get(teamCode) || "";
 
       if (!playerMap.has(web)) {
@@ -336,22 +341,15 @@ export default function PlayerAdjustmentsPage() {
       }
       const entry = playerMap.get(web);
       entry.rowsByGW.set(p.GW, p);
-
-      // compute measure for this GW
-      const key = `${teamCode}_${p.GW}`;
-      const teamRow = teamLookup.get(key);
-      const measures = computeMeasures(p, teamRow);
-      const val = measures[selectedMeasure];
-      if (typeof val === "number" && !Number.isNaN(val)) {
-        allMeasureValues.push(val);
-      }
     });
 
     const tableRows = [];
+    let minValue = Infinity;
+    let maxValue = -Infinity;
 
     playerMap.forEach((entry) => {
       const gwValues = {};
-      let maxMeasureForPlayer = -Infinity;
+      let totalMeasure = 0;
 
       allGWs.forEach((gw) => {
         const playerRow = entry.rowsByGW.get(gw);
@@ -363,26 +361,26 @@ export default function PlayerAdjustmentsPage() {
         const measures = computeMeasures(playerRow, teamRow);
         const v = measures[selectedMeasure];
         gwValues[gw] = v;
-        if (typeof v === "number" && v > maxMeasureForPlayer) {
-          maxMeasureForPlayer = v;
+        if (typeof v === "number" && !Number.isNaN(v)) {
+          totalMeasure += v;
         }
       });
+
+      const value = entry.value;
+      if (!Number.isNaN(value)) {
+        minValue = Math.min(minValue, value);
+        maxValue = Math.max(maxValue, value);
+      }
 
       tableRows.push({
         ...entry,
         gwValues,
-        maxMeasure: maxMeasureForPlayer,
+        totalMeasure,
       });
     });
 
-    const minVal =
-      allMeasureValues.length > 0
-        ? Math.min(...allMeasureValues)
-        : 0;
-    const maxVal =
-      allMeasureValues.length > 0
-        ? Math.max(...allMeasureValues)
-        : 0;
+    if (minValue === Infinity) minValue = 0;
+    if (maxValue === -Infinity) maxValue = 0;
 
     const playerNames = Array.from(playerMap.keys()).sort();
     const teamOptions = Array.from(teamNamesByCode.entries()).map(
@@ -391,8 +389,8 @@ export default function PlayerAdjustmentsPage() {
 
     return {
       playerTableRows: tableRows,
-      globalMinMeasure: minVal,
-      globalMaxMeasure: maxVal,
+      globalMinValue: minValue,
+      globalMaxValue: maxValue,
       allPlayerNames: playerNames,
       allTeamOptions: teamOptions,
     };
@@ -408,13 +406,13 @@ export default function PlayerAdjustmentsPage() {
   // Initialize valueThreshold from global min once
   useEffect(() => {
     if (
-      globalMinMeasure != null &&
-      globalMaxMeasure != null &&
+      globalMinValue != null &&
+      globalMaxValue != null &&
       valueThreshold === null
     ) {
-      setValueThreshold(globalMinMeasure);
+      setValueThreshold(globalMinValue);
     }
-  }, [globalMinMeasure, globalMaxMeasure, valueThreshold]);
+  }, [globalMinValue, globalMaxValue, valueThreshold]);
 
   // Filtering + sorting
   const filteredPlayerRows = useMemo(() => {
@@ -435,11 +433,11 @@ export default function PlayerAdjustmentsPage() {
       rows = rows.filter((r) => set.has(r.position));
     }
 
+    // Filter on 'value' (price) now
     const threshold =
-      valueThreshold != null ? valueThreshold : globalMinMeasure;
-
+      valueThreshold != null ? valueThreshold : globalMinValue;
     if (threshold != null && !Number.isNaN(threshold)) {
-      rows = rows.filter((r) => r.maxMeasure >= threshold);
+      rows = rows.filter((r) => r.value >= threshold);
     }
 
     // Sort by selected GW column if set
@@ -470,7 +468,7 @@ export default function PlayerAdjustmentsPage() {
     selectedTeamCodes,
     selectedPositions,
     valueThreshold,
-    globalMinMeasure,
+    globalMinValue,
     sortConfig,
   ]);
 
@@ -650,7 +648,7 @@ export default function PlayerAdjustmentsPage() {
   }));
 
   const teamOptions = allTeamOptions.map((t) => ({
-    value: t.code,
+    value: String(t.code),
     label: t.name,
   }));
 
@@ -782,7 +780,7 @@ export default function PlayerAdjustmentsPage() {
           }}
         >
           <SearchableMultiSelect
-            label="Players (web_name)"
+            label="Players"
             options={playerOptions}
             selectedValues={selectedPlayerNames}
             onChange={setSelectedPlayerNames}
@@ -869,7 +867,7 @@ export default function PlayerAdjustmentsPage() {
           </div>
         </div>
 
-        {/* Value slider */}
+        {/* Value slider (filter on 'value') */}
         <div
           style={{
             padding: "0.75rem",
@@ -887,21 +885,21 @@ export default function PlayerAdjustmentsPage() {
               fontSize: "0.85rem",
             }}
           >
-            Min {selectedMeasure} filter
+            Min value filter
           </label>
           <input
             type="range"
-            min={globalMinMeasure}
+            min={globalMinValue}
             max={
-              globalMaxMeasure > globalMinMeasure
-                ? globalMaxMeasure
-                : globalMinMeasure + 1
+              globalMaxValue > globalMinValue
+                ? globalMaxValue
+                : globalMinValue + 1
             }
-            step={(globalMaxMeasure - globalMinMeasure) / 100 || 1}
+            step={(globalMaxValue - globalMinValue) / 100 || 1}
             value={
               valueThreshold != null
                 ? valueThreshold
-                : globalMinMeasure
+                : globalMinValue
             }
             onChange={(e) =>
               setValueThreshold(Number(e.target.value))
@@ -916,10 +914,10 @@ export default function PlayerAdjustmentsPage() {
             }}
           >
             {valueThreshold != null
-              ? valueThreshold.toFixed(2)
-              : globalMinMeasure.toFixed(2)}{" "}
-            (range {globalMinMeasure.toFixed(2)} –{" "}
-            {globalMaxMeasure.toFixed(2)})
+              ? valueThreshold.toFixed(1)
+              : globalMinValue.toFixed(1)}{" "}
+            (range {globalMinValue.toFixed(1)} –{" "}
+            {globalMaxValue.toFixed(1)})
           </div>
         </div>
       </div>
@@ -939,7 +937,7 @@ export default function PlayerAdjustmentsPage() {
           style={{
             borderCollapse: "collapse",
             width: "100%",
-            minWidth: "700px",
+            minWidth: "750px",
             fontSize: "0.85rem",
           }}
         >
@@ -957,7 +955,7 @@ export default function PlayerAdjustmentsPage() {
                   fontWeight: 600,
                 }}
               >
-                web_name
+                Name
               </th>
               <th
                 style={{
@@ -980,6 +978,17 @@ export default function PlayerAdjustmentsPage() {
                 }}
               >
                 Team
+              </th>
+              <th
+                style={{
+                  borderBottom: `1px solid ${PALETTE.gold}`,
+                  padding: "0.5rem",
+                  backgroundColor: "#111111",
+                  textAlign: "right",
+                  fontWeight: 600,
+                }}
+              >
+                Price
               </th>
               {allGWs.map((gw) => {
                 const isSorted = sortConfig.gw === gw;
@@ -1008,6 +1017,17 @@ export default function PlayerAdjustmentsPage() {
                   </th>
                 );
               })}
+              <th
+                style={{
+                  borderBottom: `1px solid ${PALETTE.gold}`,
+                  padding: "0.5rem",
+                  backgroundColor: "#111111",
+                  textAlign: "right",
+                  fontWeight: 600,
+                }}
+              >
+                Total
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -1051,6 +1071,17 @@ export default function PlayerAdjustmentsPage() {
                 >
                   {row.teamName}
                 </td>
+                <td
+                  style={{
+                    borderBottom: "1px solid #222222",
+                    padding: "0.5rem",
+                    textAlign: "right",
+                  }}
+                >
+                  {row.value != null && !Number.isNaN(row.value)
+                    ? row.value.toFixed(1)
+                    : "-"}
+                </td>
                 {allGWs.map((gw) => (
                   <td
                     key={gw}
@@ -1066,12 +1097,26 @@ export default function PlayerAdjustmentsPage() {
                       : "-"}
                   </td>
                 ))}
+                <td
+                  style={{
+                    borderBottom: "1px solid #222222",
+                    padding: "0.5rem",
+                    textAlign: "right",
+                    fontWeight: 600,
+                    color: PALETTE.gold,
+                  }}
+                >
+                  {row.totalMeasure != null &&
+                  !Number.isNaN(row.totalMeasure)
+                    ? row.totalMeasure.toFixed(2)
+                    : "-"}
+                </td>
               </tr>
             ))}
             {filteredPlayerRows.length === 0 && (
               <tr>
                 <td
-                  colSpan={3 + allGWs.length}
+                  colSpan={4 + allGWs.length}
                   style={{
                     padding: "1rem",
                     textAlign: "center",

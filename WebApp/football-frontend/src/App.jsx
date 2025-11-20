@@ -42,13 +42,14 @@ export default function App() {
 
   const navItems = [
     { to: "/My_Team", icon: Brain, label: "AI Teams" },
+    {to: "/Adjustment_Analysis", icon: BarChart2, label: "Statistical Model"},
     { to: "/Team_Analytics", icon: Users, label: "Team Analytics" },
     { to: "/Player_Analytics", icon: User, label: "Player Analytics" },
     { to: "/TeamPredictionsFuture", icon: Calendar, label: "Fixture Analytics" },
     { to: "/Score_Predictions", icon: Trophy, label: "Score Predictions" },
     { to: "/News", icon: Newspaper, label: "PL News" },
     {to: "/Season_Analysis", icon: BarChart2, label: "Season Analysis"},
-    {to: "/Adjustment_Analysis", icon: BarChart2, label: "Adjust data"}
+    
   ];
 
    const menuItems = [
