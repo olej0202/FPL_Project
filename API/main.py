@@ -58,7 +58,9 @@ def load_and_transform(endpoint):
     elif endpoint=="Teams_Analysis": 
         csv_path = os.path.join(parent_dir, "Teams_Visual_Analysis.csv")   
     elif endpoint=="Season_Analysis": 
-        csv_path = os.path.join(parent_dir, "Season_analysis.csv")   
+        csv_path = os.path.join(parent_dir, "Season_analysis.csv") 
+    elif endpoint=="Team_result_adjust":  
+        csv_path = os.path.join(parent_dir, "Visual_adjust_Team_results.csv") 
         
         
     else:
@@ -179,6 +181,11 @@ def get_data():
 @app.get("/free-hit")
 def get_data():
     df = load_and_transform("free-hit")
+    return df.to_dict(orient="records")
+
+@app.get("/Team_result_adjust")
+def get_data():
+    df = load_and_transform("Team_result_adjust")
     return df.to_dict(orient="records")
 
 @app.get("/wildcard")
