@@ -29,10 +29,7 @@ function SearchableMultiSelect({
     return options.filter((opt) => {
       const labelStr = (opt.label ?? "").toString().toLowerCase();
       const valueStr = (opt.value ?? "").toString().toLowerCase();
-      return (
-        labelStr.includes(term) ||
-        valueStr.includes(term)
-      );
+      return labelStr.includes(term) || valueStr.includes(term);
     });
   }, [options, search]);
 
@@ -188,10 +185,11 @@ export default function PlayerAdjustmentsPage() {
   ); // web_name[]
   const [selectedTeamCodes, setSelectedTeamCodes] = useState([]); // team_code[]
   const [selectedPositions, setSelectedPositions] = useState([]); // position[]
-  const [valueThreshold, setValueThreshold] = useState(null); // min value for 'value' filter
+  const [valueThreshold, setValueThreshold] = useState(null); // max value for 'value' filter
 
-  // Sorting state (by GW columns)
+  // Sorting state: by GW column or Total
   const [sortConfig, setSortConfig] = useState({
+    type: null, // "gw" | "total" | null
     gw: null,
     direction: "desc", // "asc" | "desc"
   });
@@ -313,7 +311,7 @@ export default function PlayerAdjustmentsPage() {
       return {
         playerTableRows: [],
         globalMinValue: 0,
-        globalMaxValue: 0,
+        globalMaxValue: 150,
         allPlayerNames: [],
         allTeamOptions: [],
       };
@@ -380,7 +378,7 @@ export default function PlayerAdjustmentsPage() {
     });
 
     if (minValue === Infinity) minValue = 0;
-    if (maxValue === -Infinity) maxValue = 0;
+    if (maxValue === -Infinity) maxValue = 150;
 
     const playerNames = Array.from(playerMap.keys()).sort();
     const teamOptions = Array.from(teamNamesByCode.entries()).map(
@@ -403,14 +401,14 @@ export default function PlayerAdjustmentsPage() {
     teamNamesByCode,
   ]);
 
-  // Initialize valueThreshold from global min once
+  // Initialize valueThreshold as MAX value (max filter, "start at top")
   useEffect(() => {
     if (
       globalMinValue != null &&
       globalMaxValue != null &&
       valueThreshold === null
     ) {
-      setValueThreshold(globalMinValue);
+      setValueThreshold(globalMaxValue);
     }
   }, [globalMinValue, globalMaxValue, valueThreshold]);
 
@@ -433,15 +431,15 @@ export default function PlayerAdjustmentsPage() {
       rows = rows.filter((r) => set.has(r.position));
     }
 
-    // Filter on 'value' (price) now
+    // Filter on 'value' (price) as MAX threshold: keep value <= slider
     const threshold =
-      valueThreshold != null ? valueThreshold : globalMinValue;
+      valueThreshold != null ? valueThreshold : globalMaxValue;
     if (threshold != null && !Number.isNaN(threshold)) {
-      rows = rows.filter((r) => r.value >= threshold);
+      rows = rows.filter((r) => r.value <= threshold);
     }
 
-    // Sort by selected GW column if set
-    if (sortConfig.gw != null) {
+    // Sorting
+    if (sortConfig.type === "gw" && sortConfig.gw != null) {
       const gwKey = sortConfig.gw;
       const dir = sortConfig.direction;
       rows = [...rows].sort((a, b) => {
@@ -459,6 +457,23 @@ export default function PlayerAdjustmentsPage() {
         if (dir === "asc") return va - vb;
         return vb - va;
       });
+    } else if (sortConfig.type === "total") {
+      const dir = sortConfig.direction;
+      rows = [...rows].sort((a, b) => {
+        const va =
+          typeof a.totalMeasure === "number"
+            ? a.totalMeasure
+            : -Infinity;
+        const vb =
+          typeof b.totalMeasure === "number"
+            ? b.totalMeasure
+            : -Infinity;
+        if (Number.isNaN(va) && Number.isNaN(vb)) return 0;
+        if (Number.isNaN(va)) return 1;
+        if (Number.isNaN(vb)) return -1;
+        if (dir === "asc") return va - vb;
+        return vb - va;
+      });
     }
 
     return rows;
@@ -468,20 +483,34 @@ export default function PlayerAdjustmentsPage() {
     selectedTeamCodes,
     selectedPositions,
     valueThreshold,
-    globalMinValue,
+    globalMaxValue,
     sortConfig,
   ]);
 
-  // Sorting handler
+  // Sorting handlers
   const handleSortByGW = (gw) => {
     setSortConfig((prev) => {
-      if (prev.gw === gw) {
+      if (prev.type === "gw" && prev.gw === gw) {
         return {
+          type: "gw",
           gw,
           direction: prev.direction === "asc" ? "desc" : "asc",
         };
       }
-      return { gw, direction: "desc" };
+      return { type: "gw", gw, direction: "desc" };
+    });
+  };
+
+  const handleSortByTotal = () => {
+    setSortConfig((prev) => {
+      if (prev.type === "total") {
+        return {
+          type: "total",
+          gw: null,
+          direction: prev.direction === "asc" ? "desc" : "asc",
+        };
+      }
+      return { type: "total", gw: null, direction: "desc" };
     });
   };
 
@@ -496,7 +525,7 @@ export default function PlayerAdjustmentsPage() {
     setSelectedTeamCodes([]);
     setSelectedPositions([]);
     setValueThreshold(null);
-    setSortConfig({ gw: null, direction: "desc" });
+    setSortConfig({ type: null, gw: null, direction: "desc" });
 
     await fetchIfNeeded();
 
@@ -583,20 +612,15 @@ export default function PlayerAdjustmentsPage() {
     });
   };
 
-  // Dragging handlers for line chart (minutes) – also update context
-  const handleCircleMouseDown = (gw, e) => {
-    e.preventDefault();
-    setDraggingGW(gw);
-  };
-
-  const handleSvgMouseMove = (e) => {
-    if (!draggingGW || !svgRef.current || !activePlayerName) return;
+  // Pointer / touch helpers for minutes drag
+  const updateMinutesFromClientY = (clientY) => {
+    if (!svgRef.current || !activePlayerName || !draggingGW) return;
 
     const svgRect = svgRef.current.getBoundingClientRect();
     const height = svgRect.height;
     const padding = 20;
 
-    const y = e.clientY - svgRect.top;
+    const y = clientY - svgRect.top;
     const clampedY = Math.max(
       padding,
       Math.min(height - padding, y)
@@ -621,7 +645,36 @@ export default function PlayerAdjustmentsPage() {
     });
   };
 
+  const handleCircleMouseDown = (gw, e) => {
+    e.preventDefault();
+    setDraggingGW(gw);
+  };
+
+  const handleCircleTouchStart = (gw, e) => {
+    e.preventDefault();
+    setDraggingGW(gw);
+    if (e.touches && e.touches[0]) {
+      updateMinutesFromClientY(e.touches[0].clientY);
+    }
+  };
+
+  const handleSvgMouseMove = (e) => {
+    if (!draggingGW) return;
+    updateMinutesFromClientY(e.clientY);
+  };
+
+  const handleSvgTouchMove = (e) => {
+    if (!draggingGW) return;
+    const touch = e.touches && e.touches[0];
+    if (!touch) return;
+    updateMinutesFromClientY(touch.clientY);
+  };
+
   const handleSvgMouseUp = () => {
+    setDraggingGW(null);
+  };
+
+  const handleSvgTouchEnd = () => {
     setDraggingGW(null);
   };
 
@@ -867,7 +920,7 @@ export default function PlayerAdjustmentsPage() {
           </div>
         </div>
 
-        {/* Value slider (filter on 'value') */}
+        {/* Value slider (MAX filter) */}
         <div
           style={{
             padding: "0.75rem",
@@ -885,21 +938,17 @@ export default function PlayerAdjustmentsPage() {
               fontSize: "0.85rem",
             }}
           >
-            Min value filter
+            Max value filter
           </label>
           <input
             type="range"
             min={globalMinValue}
-            max={
-              globalMaxValue > globalMinValue
-                ? globalMaxValue
-                : globalMinValue + 1
-            }
+            max={globalMaxValue || globalMinValue + 1}
             step={(globalMaxValue - globalMinValue) / 100 || 1}
             value={
               valueThreshold != null
                 ? valueThreshold
-                : globalMinValue
+                : globalMaxValue
             }
             onChange={(e) =>
               setValueThreshold(Number(e.target.value))
@@ -915,7 +964,7 @@ export default function PlayerAdjustmentsPage() {
           >
             {valueThreshold != null
               ? valueThreshold.toFixed(1)
-              : globalMinValue.toFixed(1)}{" "}
+              : globalMaxValue.toFixed(1)}{" "}
             (range {globalMinValue.toFixed(1)} –{" "}
             {globalMaxValue.toFixed(1)})
           </div>
@@ -991,7 +1040,8 @@ export default function PlayerAdjustmentsPage() {
                 Price
               </th>
               {allGWs.map((gw) => {
-                const isSorted = sortConfig.gw === gw;
+                const isSorted =
+                  sortConfig.type === "gw" && sortConfig.gw === gw;
                 const arrow =
                   isSorted && sortConfig.direction === "asc"
                     ? "▲"
@@ -1018,15 +1068,24 @@ export default function PlayerAdjustmentsPage() {
                 );
               })}
               <th
+                onClick={handleSortByTotal}
                 style={{
                   borderBottom: `1px solid ${PALETTE.gold}`,
                   padding: "0.5rem",
                   backgroundColor: "#111111",
                   textAlign: "right",
                   fontWeight: 600,
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                  color:
+                    sortConfig.type === "total"
+                      ? PALETTE.gold
+                      : PALETTE.beige,
                 }}
               >
-                Total
+                Total{" "}
+                {sortConfig.type === "total" &&
+                  (sortConfig.direction === "asc" ? "▲" : "▼")}
               </th>
             </tr>
           </thead>
@@ -1137,6 +1196,9 @@ export default function PlayerAdjustmentsPage() {
           onMouseMove={handleSvgMouseMove}
           onMouseUp={handleSvgMouseUp}
           onMouseLeave={handleSvgMouseUp}
+          onTouchMove={handleSvgTouchMove}
+          onTouchEnd={handleSvgTouchEnd}
+          onTouchCancel={handleSvgTouchEnd}
           style={{
             position: "fixed",
             inset: 0,
@@ -1241,7 +1303,10 @@ export default function PlayerAdjustmentsPage() {
                     Number(activePlayerFirstRow.Goal_share) || 0
                   }
                   onChange={handleGoalShareChange}
-                  style={{ width: "100%" }}
+                  style={{
+                    width: "100%",
+                    touchAction: "pan-y",
+                  }}
                 />
                 <div
                   style={{
@@ -1282,7 +1347,10 @@ export default function PlayerAdjustmentsPage() {
                     Number(activePlayerFirstRow.Assist_share) || 0
                   }
                   onChange={handleAssistShareChange}
-                  style={{ width: "100%" }}
+                  style={{
+                    width: "100%",
+                    touchAction: "pan-y",
+                  }}
                 />
                 <div
                   style={{
@@ -1322,6 +1390,7 @@ export default function PlayerAdjustmentsPage() {
                     border: `1px solid ${PALETTE.gold}`,
                     borderRadius: "0.75rem",
                     background: "#000000",
+                    touchAction: "none", // important for mobile drag
                   }}
                 >
                   {(() => {
@@ -1412,7 +1481,7 @@ export default function PlayerAdjustmentsPage() {
                             <circle
                               cx={p.x}
                               cy={p.y}
-                              r={6}
+                              r={8}
                               fill={
                                 draggingGW === p.gw
                                   ? PALETTE.red
@@ -1423,6 +1492,9 @@ export default function PlayerAdjustmentsPage() {
                               style={{ cursor: "ns-resize" }}
                               onMouseDown={(e) =>
                                 handleCircleMouseDown(p.gw, e)
+                              }
+                              onTouchStart={(e) =>
+                                handleCircleTouchStart(p.gw, e)
                               }
                             />
                             <text
