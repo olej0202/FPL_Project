@@ -66,6 +66,8 @@ def apply_points_override_from_long(
         .pivot_table(index="name", columns="GW", values="Points", aggfunc="sum")
         .fillna(0.0)
     )
+    if 0 not in pivot.columns:
+        pivot[0] = 0.0
 
     # 3) We'll overwrite only GW columns that exist in both gw_list and pivot
     gw_int_to_col = {}
@@ -353,11 +355,9 @@ def optimize_my_team(
 
     # ------------- Apply override (if provided) -------------
     if players_override is not None and not players_override.empty:
-        data = apply_points_override_from_long(
-            base_data=data,
-            long_df=players_override,
-            gw_list=GW_list,
-        )
+
+        override_long = players_override[["name", "GW", "Points"]].copy()
+        data = apply_points_override_from_long(data, override_long, GW_list)
         print(data)
 
     # ------------- Apply banned list (zero out GW columns) -------------
