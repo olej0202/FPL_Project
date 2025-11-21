@@ -291,8 +291,8 @@ export default function PlayerAdjustmentsPage() {
     const minutesAdj = avgMin ? Math.min(1, avgMin / 80) : 0;
 
     // New formulas using minutesAdj
-    const goalScored = (goalShare * xg + penData) * minutesAdj;
-    const assists = assistShare * xg * minutesAdj;
+    const goalScored = (goalShare * xg*1.1 + penData) * minutesAdj;
+    const assists = assistShare * xg*1.1 * minutesAdj;
     const points =
       defaultPoints*minutesAdj +
       goalScored * goalFactor +
@@ -1372,8 +1372,7 @@ export default function PlayerAdjustmentsPage() {
                     marginTop: "0.1rem",
                   }}
                 >
-                  {activePlayerFirstRow.position} ·{" "}
-                  {activePlayerFirstRow.Team}
+                  {activePlayerFirstRow.position}
                 </div>
               </div>
               <button
@@ -1416,7 +1415,7 @@ export default function PlayerAdjustmentsPage() {
                     fontSize: "0.85rem",
                   }}
                 >
-                  Goal_share (first GW)
+                  Goal_share
                 </label>
                 <input
                   type="range"
@@ -1460,7 +1459,7 @@ export default function PlayerAdjustmentsPage() {
                     fontSize: "0.85rem",
                   }}
                 >
-                  Assist_share (first GW)
+                  Assist_share
                 </label>
                 <input
                   type="range"

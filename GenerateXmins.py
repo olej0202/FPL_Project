@@ -64,6 +64,8 @@ def GetXmins(current_players, n_future, scenarios=None, position_slots=None):
         if m:
             pct = int(m.group(1)); pct = max(0, min(100, pct))
             return min(1, pct / 100.0), 1.0
+        
+        
         try:
             if chance_val is not None and not pd.isna(chance_val):
                 return min(1, float(chance_val) / 100.0), 1.0
@@ -142,6 +144,8 @@ def GetXmins(current_players, n_future, scenarios=None, position_slots=None):
         name = r.get("name", code)
         news = r.get("news", "")
         chance = 100
+        
+        is_suspended = "suspended" in str(news).lower()
 
         # History for modeling (non-zero)
         pdf = hist.loc[hist[code_col] == code, ["kickoff_time", "minutes"]].copy()
@@ -160,6 +164,8 @@ def GetXmins(current_players, n_future, scenarios=None, position_slots=None):
             final_minutes = ((m_final + minutes_prophet) / 2) * multiplier
             if (final_minutes - last5_avg) >= 40:
                 final_minutes = (final_minutes + last5_avg) / 2
+            if is_suspended and j == 0:
+                final_minutes = 0.0
             out_rows.append({
                 "name": name,
                 "GW": str(gw),
@@ -387,6 +393,8 @@ def GetXmins(current_players, n_future, scenarios=None, position_slots=None):
     out["Final_minutes_Adjusted"] = (
         out["minutes_scenario"].astype(float) + out["comp_minutes_added"].fillna(0).astype(float)
     ).clip(upper=90.0)
+    
+   
 
     # Save & return
     out.to_csv("GenerateXmins2.csv", index=False)
