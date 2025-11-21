@@ -491,66 +491,86 @@ function TeamScatterPlot({ teamPoints, onTeamDrag }) {
     </div>
   );
 }
-
-function DraggableDot({ cx = 0, cy = 0, payload, onTeamDrag, bounds }) {
+function DraggableDot({
+  cx = 0,
+  cy = 0,
+  payload,
+  onTeamDrag,
+  bounds,
+}) {
   const [pos, setPos] = useState({ x: cx, y: cy });
   const nodeRef = useRef(null);
 
+  // keep Draggable in sync when Recharts repositions the point
   useEffect(() => {
     setPos({ x: cx, y: cy });
   }, [cx, cy]);
 
   const handleStop = (e, d) => {
-    if (!payload) return;
+    if (!payload || !nodeRef.current) return;
 
     const dx = d.x - cx;
     const dy = d.y - cy;
 
-    // Map pixels to data units (smaller sensitivity for smoother feel)
-    const approxWidth = 1100;
-    const approxHeight = 700;
+    // Find the surrounding <svg> to get real pixel size
+    const svg = nodeRef.current.closest("svg");
+    const rect = svg?.getBoundingClientRect();
+
+    // Fallback values if something weird happens
+    const plotWidth = rect?.width || 600;
+    const plotHeight = rect?.height || 400;
+
     const spanX = bounds.maxX - bounds.minX || 1;
     const spanY = bounds.maxY - bounds.minY || 1;
 
-    const sensitivity = 0.8; // tweak this for more/less movement per drag
-    const deltaDataX = sensitivity * (dx / approxWidth) * spanX;
-    const deltaDataY = -sensitivity * (dy / approxHeight) * spanY; // invert Y
+    // Dampen a bit for smoother “feel”
+    const damping = 0.9;
+
+    const deltaDataX = damping * (dx / plotWidth) * spanX;
+    const deltaDataY = -damping * (dy / plotHeight) * spanY; // invert Y
 
     let newXg = payload.own_XG_avg + deltaDataX;
     let newXgc = payload.own_XGC_avg + deltaDataY;
 
-    // Clamp to chart domain so the dot can't leave the chart
+    // Clamp to chart domain
     newXg = Math.max(bounds.minX, Math.min(bounds.maxX, newXg));
     newXgc = Math.max(bounds.minY, Math.min(bounds.maxY, newXgc));
 
     onTeamDrag(payload.team_name, newXg, newXgc);
   };
 
-  // Arrow from baseline (orig) to current (payload values)
+  // Arrow from baseline (orig) to current (payload values) in *local* space
   const arrowLine = (() => {
     const origX = payload?.orig_XG_avg;
     const origY = payload?.orig_XGC_avg;
     if (origX == null || origY == null) return null;
 
-    const approxWidth = 1100;
-    const approxHeight = 700;
+    const svg = nodeRef.current?.closest("svg");
+    const rect = svg?.getBoundingClientRect();
+    const plotWidth = rect?.width || 600;
+    const plotHeight = rect?.height || 400;
+
     const spanX = bounds.maxX - bounds.minX || 1;
     const spanY = bounds.maxY - bounds.minY || 1;
 
+    // Current data pos
+    const currX = payload.own_XG_avg;
+    const currY = payload.own_XGC_avg;
+
     const origNormX = (origX - bounds.minX) / spanX;
     const origNormY = (bounds.maxY - origY) / spanY;
-    const currNormX = (payload.own_XG_avg - bounds.minX) / spanX;
-    const currNormY = (bounds.maxY - payload.own_XGC_avg) / spanY;
+    const currNormX = (currX - bounds.minX) / spanX;
+    const currNormY = (bounds.maxY - currY) / spanY;
 
-    const origScreenX = origNormX * approxWidth;
-    const origScreenY = origNormY * approxHeight;
-    const currScreenX = currNormX * approxWidth;
-    const currScreenY = currNormY * approxHeight;
+    const origScreenX = origNormX * plotWidth;
+    const origScreenY = origNormY * plotHeight;
+    const currScreenX = currNormX * plotWidth;
+    const currScreenY = currNormY * plotHeight;
 
     const dx = currScreenX - origScreenX;
     const dy = currScreenY - origScreenY;
 
-    // In the local group, the current dot is at (0,0)
+    // In local <g>, current dot is (0,0)
     const x1 = -dx;
     const y1 = -dy;
     const x2 = 0;
@@ -581,14 +601,12 @@ function DraggableDot({ cx = 0, cy = 0, payload, onTeamDrag, bounds }) {
             strokeDasharray="3 3"
           />
         )}
-        {/* Background circle / border */}
         <circle
           r={size / 2 + 2}
           fill={PALETTE.black}
           stroke={PALETTE.gold}
           strokeWidth={2}
         />
-        {/* Logo image centered at (0,0) */}
         {logoUrl ? (
           <image
             href={logoUrl}
@@ -621,6 +639,7 @@ function DraggableDot({ cx = 0, cy = 0, payload, onTeamDrag, bounds }) {
     </Draggable>
   );
 }
+
 
 /* ========== Fixture table (unchanged except logo use) ========== */
 

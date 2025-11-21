@@ -381,8 +381,8 @@ def Generate_Understat_dataset(current_players,run_player_pos):
     team_tot_xg = agg_df.groupby(["date","player_team"])["npxG_sum"].transform("sum")
     team_tot_xa = agg_df.groupby(["date","player_team"])["xA"].transform("sum")
 
-    agg_df["npxG_share"] = (agg_df["npxG_sum"] / team_tot_xg).replace([np.inf, -np.inf], np.nan).fillna(0)
-    agg_df["xA_share"] = (agg_df["xA_sum"] / team_tot_xa).replace([np.inf, -np.inf], np.nan).fillna(0)
+    agg_df["npxG_share"] = (agg_df["npxG"] / team_tot_xg).replace([np.inf, -np.inf], np.nan).fillna(0)
+    agg_df["xA_share"] = (agg_df["xA"] / team_tot_xa).replace([np.inf, -np.inf], np.nan).fillna(0)
 
     print(agg_df)
 
