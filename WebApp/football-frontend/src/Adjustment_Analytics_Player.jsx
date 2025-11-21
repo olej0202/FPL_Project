@@ -13,6 +13,8 @@ const PALETTE = {
   beige: "#f7ead6",
 };
 
+const FILTERS_STORAGE_KEY = "player_adjustments_filters_v2";
+
 /** Simple reusable searchable multi-select dropdown */
 function SearchableMultiSelect({
   label,
@@ -199,8 +201,15 @@ export default function PlayerAdjustmentsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // For line-chart drag
-  const svgRef = useRef(null);
+  const svgRefMinutes = useRef(null);
   const [draggingGW, setDraggingGW] = useState(null);
+
+  // Filter persistence
+  const [filtersHydrated, setFiltersHydrated] = useState(false);
+
+  // Minutes bounds
+  const MIN_MINUTES = 0;
+  const MAX_MINUTES = 90;
 
   // Fetch data when needed
   useEffect(() => {
@@ -255,7 +264,12 @@ export default function PlayerAdjustmentsPage() {
 
   // Helper: compute measures for a single player row & matching team row
   function computeMeasures(playerRow, teamRow) {
-    const avgMin = Number(playerRow.average_minutes) || 0;
+    const avgMinRaw = Number(playerRow.average_minutes) || 0;
+    const avgMin = Math.max(
+      MIN_MINUTES,
+      Math.min(MAX_MINUTES, avgMinRaw)
+    );
+
     const goalShare = Number(playerRow.Goal_share) || 0;
     const assistShare = Number(playerRow.Assist_share) || 0;
     const penData = Number(playerRow.Pen_data) || 0;
@@ -275,12 +289,12 @@ export default function PlayerAdjustmentsPage() {
     const goalScored = (goalShare * xg + penData) * minutesAdj;
     const assists = assistShare * xg * minutesAdj;
     const points =
-      defaultPoints +
+      defaultPoints*minutesAdj +
       goalScored * goalFactor +
       assists * assistFactor +
       cs * csFactor * minutesAdj +
       bps * minutesAdj +
-      cbi * 2;
+      cbi * 2*minutesAdj;
 
     const avgMinutes = avgMin;
 
@@ -295,6 +309,32 @@ export default function PlayerAdjustmentsPage() {
       CBI_Predictions: cbiPredictions,
     };
   }
+
+  // One-time effect: compute points for every Playerdata row and store in context as calc_points
+  useEffect(() => {
+    if (!Playerdata?.current || !Teamdata?.current) return;
+
+    const teamLookupLocal = new Map();
+    Teamdata.current.forEach((t) => {
+      const code = String(t.team_code);
+      const key = `${code}_${t.GW}`;
+      teamLookupLocal.set(key, t);
+    });
+
+    const updated = Playerdata.current.map((row) => {
+      const teamCode = String(row.Team);
+      const key = `${teamCode}_${row.GW}`;
+      const teamRow = teamLookupLocal.get(key);
+      const measures = computeMeasures(row, teamRow);
+      return { ...row, calc_points: measures.Points };
+    });
+
+    // Update context
+    Playerdata.current = updated;
+
+    // Optionally sync local state if it's already loaded
+    setPlayersState((prev) => (prev ? updated : prev));
+  }, [Playerdata, Teamdata]); // refs only, so this runs once
 
   /**
    * Pivot playersState by web_name, compute measures per GW and
@@ -311,7 +351,7 @@ export default function PlayerAdjustmentsPage() {
       return {
         playerTableRows: [],
         globalMinValue: 0,
-        globalMaxValue: 150,
+        globalMaxValue: 0,
         allPlayerNames: [],
         allTeamOptions: [],
       };
@@ -378,7 +418,7 @@ export default function PlayerAdjustmentsPage() {
     });
 
     if (minValue === Infinity) minValue = 0;
-    if (maxValue === -Infinity) maxValue = 150;
+    if (maxValue === -Infinity) maxValue = 0;
 
     const playerNames = Array.from(playerMap.keys()).sort();
     const teamOptions = Array.from(teamNamesByCode.entries()).map(
@@ -411,6 +451,74 @@ export default function PlayerAdjustmentsPage() {
       setValueThreshold(globalMaxValue);
     }
   }, [globalMinValue, globalMaxValue, valueThreshold]);
+
+  // Hydrate filters from localStorage once data is ready
+  useEffect(() => {
+    if (!isDataReady || filtersHydrated) return;
+    if (typeof window === "undefined") return;
+
+    try {
+      const stored = window.localStorage.getItem(
+        FILTERS_STORAGE_KEY
+      );
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed.selectedMeasure) {
+          setSelectedMeasure(parsed.selectedMeasure);
+        }
+        if (Array.isArray(parsed.selectedPlayerNames)) {
+          setSelectedPlayerNames(parsed.selectedPlayerNames);
+        }
+        if (Array.isArray(parsed.selectedTeamCodes)) {
+          setSelectedTeamCodes(parsed.selectedTeamCodes);
+        }
+        if (Array.isArray(parsed.selectedPositions)) {
+          setSelectedPositions(parsed.selectedPositions);
+        }
+        if (
+          typeof parsed.valueThreshold === "number" &&
+          !Number.isNaN(parsed.valueThreshold)
+        ) {
+          setValueThreshold(parsed.valueThreshold);
+        }
+        if (parsed.sortConfig) {
+          setSortConfig(parsed.sortConfig);
+        }
+      }
+    } catch {
+      // ignore parse errors
+    } finally {
+      setFiltersHydrated(true);
+    }
+  }, [isDataReady, filtersHydrated]);
+
+  // Persist filters to localStorage
+  useEffect(() => {
+    if (!isDataReady || !filtersHydrated) return;
+    if (typeof window === "undefined") return;
+
+    const payload = {
+      selectedMeasure,
+      selectedPlayerNames,
+      selectedTeamCodes,
+      selectedPositions,
+      valueThreshold,
+      sortConfig,
+    };
+    window.localStorage.setItem(
+      FILTERS_STORAGE_KEY,
+      JSON.stringify(payload)
+    );
+  }, [
+    isDataReady,
+    filtersHydrated,
+    selectedMeasure,
+    selectedPlayerNames,
+    selectedTeamCodes,
+    selectedPositions,
+    valueThreshold,
+    sortConfig,
+  ]);
 
   // Filtering + sorting
   const filteredPlayerRows = useMemo(() => {
@@ -521,10 +629,7 @@ export default function PlayerAdjustmentsPage() {
 
     setTeamsState(null);
     setPlayersState(null);
-    setSelectedPlayerNames([]);
-    setSelectedTeamCodes([]);
-    setSelectedPositions([]);
-    setValueThreshold(null);
+    // keep filters as-is (since you want them persistent)
     setSortConfig({ type: null, gw: null, direction: "desc" });
 
     await fetchIfNeeded();
@@ -563,18 +668,30 @@ export default function PlayerAdjustmentsPage() {
       : null;
 
   // Derived chart data for active player
-  const chartData = useMemo(() => {
+  const chartDataMinutes = useMemo(() => {
     if (!activePlayerRowsByGW || activePlayerRowsByGW.length === 0) {
       return [];
     }
     return activePlayerRowsByGW.map((row) => ({
       GW: row.GW,
-      minutes: Number(row.average_minutes) || 0,
+      minutes: Math.max(
+        MIN_MINUTES,
+        Math.min(MAX_MINUTES, Number(row.average_minutes) || 0)
+      ),
     }));
   }, [activePlayerRowsByGW]);
 
-  const MIN_MINUTES = 0;
-  const MAX_MINUTES = 120;
+  const chartDataPoints = useMemo(() => {
+    if (!activePlayerRowsByGW || activePlayerRowsByGW.length === 0) {
+      return [];
+    }
+    return activePlayerRowsByGW.map((row) => {
+      const teamCode = String(row.Team);
+      const teamRow = teamLookup.get(`${teamCode}_${row.GW}`);
+      const measures = computeMeasures(row, teamRow);
+      return { GW: row.GW, points: measures.Points };
+    });
+  }, [activePlayerRowsByGW, teamLookup]);
 
   // Update all Goal_share values for active player (and context)
   const handleGoalShareChange = (e) => {
@@ -614,9 +731,10 @@ export default function PlayerAdjustmentsPage() {
 
   // Pointer / touch helpers for minutes drag
   const updateMinutesFromClientY = (clientY) => {
-    if (!svgRef.current || !activePlayerName || !draggingGW) return;
+    if (!svgRefMinutes.current || !activePlayerName || !draggingGW)
+      return;
 
-    const svgRect = svgRef.current.getBoundingClientRect();
+    const svgRect = svgRefMinutes.current.getBoundingClientRect();
     const height = svgRect.height;
     const padding = 20;
 
@@ -1037,7 +1155,7 @@ export default function PlayerAdjustmentsPage() {
                   fontWeight: 600,
                 }}
               >
-                Price
+                Value
               </th>
               {allGWs.map((gw) => {
                 const isSorted =
@@ -1367,7 +1485,7 @@ export default function PlayerAdjustmentsPage() {
             </div>
 
             {/* Line chart of average_minutes */}
-            <div>
+            <div style={{ marginBottom: "1rem" }}>
               <h3
                 style={{
                   marginTop: 0,
@@ -1377,13 +1495,13 @@ export default function PlayerAdjustmentsPage() {
               >
                 Average minutes per GW (drag dots to adjust)
               </h3>
-              {chartData.length === 0 ? (
+              {chartDataMinutes.length === 0 ? (
                 <div style={{ fontSize: "0.85rem" }}>
                   No minute data for this player.
                 </div>
               ) : (
                 <svg
-                  ref={svgRef}
+                  ref={svgRefMinutes}
                   width="100%"
                   height="250"
                   style={{
@@ -1395,14 +1513,14 @@ export default function PlayerAdjustmentsPage() {
                 >
                   {(() => {
                     const padding = 20;
-                    const width = svgRef.current
-                      ? svgRef.current.getBoundingClientRect()
+                    const width = svgRefMinutes.current
+                      ? svgRefMinutes.current.getBoundingClientRect()
                           .width
                       : 600;
                     const height = 250;
 
-                    const n = chartData.length;
-                    const points = chartData.map((d, i) => {
+                    const n = chartDataMinutes.length;
+                    const points = chartDataMinutes.map((d, i) => {
                       const x =
                         padding +
                         (n === 1
@@ -1446,7 +1564,7 @@ export default function PlayerAdjustmentsPage() {
 
                         {/* vertical GW markers */}
                         {points.map((p, idx) => (
-                          <g key={`tick-${p.gw}-${idx}`}>
+                          <g key={`tick-min-${p.gw}-${idx}`}>
                             <line
                               x1={p.x}
                               y1={height - padding}
@@ -1477,7 +1595,7 @@ export default function PlayerAdjustmentsPage() {
 
                         {/* draggable circles */}
                         {points.map((p) => (
-                          <g key={`pt-${p.gw}`}>
+                          <g key={`pt-min-${p.gw}`}>
                             <circle
                               cx={p.x}
                               cy={p.y}
@@ -1505,6 +1623,150 @@ export default function PlayerAdjustmentsPage() {
                               fill={PALETTE.beige}
                             >
                               {Number(p.minutes).toFixed(0)}
+                            </text>
+                          </g>
+                        ))}
+                      </>
+                    );
+                  })()}
+                </svg>
+              )}
+            </div>
+
+            {/* Line chart of calculated points */}
+            <div>
+              <h3
+                style={{
+                  marginTop: 0,
+                  marginBottom: "0.4rem",
+                  fontSize: "0.95rem",
+                }}
+              >
+                Calculated points per GW
+              </h3>
+              {chartDataPoints.length === 0 ? (
+                <div style={{ fontSize: "0.85rem" }}>
+                  No point data for this player.
+                </div>
+              ) : (
+                <svg
+                  width="100%"
+                  height="250"
+                  style={{
+                    border: `1px solid ${PALETTE.gold}`,
+                    borderRadius: "0.75rem",
+                    background: "#000000",
+                  }}
+                >
+                  {(() => {
+                    const padding = 20;
+                    const width = 600; // SVG width in CSS pixels is flexible, but we can treat 600 as layout basis
+                    const height = 250;
+
+                    const n = chartDataPoints.length;
+                    const vals = chartDataPoints.map(
+                      (d) => d.points
+                    );
+                    const minP =
+                      vals.length > 0
+                        ? Math.min(...vals)
+                        : 0;
+                    const maxP =
+                      vals.length > 0
+                        ? Math.max(...vals)
+                        : 1;
+                    const range = maxP - minP || 1;
+
+                    const points = chartDataPoints.map((d, i) => {
+                      const x =
+                        padding +
+                        (n === 1
+                          ? (width - 2 * padding) / 2
+                          : (i / (n - 1)) *
+                            (width - 2 * padding));
+                      const ratio = (d.points - minP) / range;
+                      const y =
+                        height -
+                        padding -
+                        ratio * (height - 2 * padding);
+                      return { x, y, gw: d.GW, points: d.points };
+                    });
+
+                    const polyPoints = points
+                      .map((p) => `${p.x},${p.y}`)
+                      .join(" ");
+
+                    return (
+                      <>
+                        {/* Axes labels */}
+                        <text
+                          x={padding}
+                          y={12}
+                          fontSize="10"
+                          fill="#d1c3a9"
+                        >
+                          Points
+                        </text>
+                        <text
+                          x={width - padding}
+                          y={height - 5}
+                          textAnchor="end"
+                          fontSize="10"
+                          fill="#d1c3a9"
+                        >
+                          GW
+                        </text>
+
+                        {/* vertical GW markers */}
+                        {points.map((p, idx) => (
+                          <g key={`tick-pts-${p.gw}-${idx}`}>
+                            <line
+                              x1={p.x}
+                              y1={height - padding}
+                              x2={p.x}
+                              y2={height - padding + 4}
+                              stroke="#555555"
+                              strokeWidth="1"
+                            />
+                            <text
+                              x={p.x}
+                              y={height - 5}
+                              fontSize="9"
+                              textAnchor="middle"
+                              fill="#d1c3a9"
+                            >
+                              {p.gw}
+                            </text>
+                          </g>
+                        ))}
+
+                        {/* line */}
+                        <polyline
+                          points={polyPoints}
+                          fill="none"
+                          stroke={PALETTE.gold}
+                          strokeWidth="2"
+                        />
+
+                        {/* points */}
+                        {points.map((p) => (
+                          <g key={`pt-pts-${p.gw}`}>
+                            <circle
+                              cx={p.x}
+                              cy={p.y}
+                              r={6}
+                              fill={PALETTE.gold}
+                              stroke={PALETTE.black}
+                              strokeWidth="2"
+                            />
+                            <text
+                              x={p.x}
+                              y={p.y - 10}
+                              fontSize="9"
+                              textAnchor="middle"
+                              fill={PALETTE.beige}
+                            >
+                              {Number(p.points).toFixed(1)}
                             </text>
                           </g>
                         ))}

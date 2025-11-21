@@ -5,8 +5,6 @@ import React, {
   useRef,
 } from "react";
 import { useAdjustmentData } from "./Contexts/AdjustmentsContext";
-// Optional: if you have a logo map like in your other file, uncomment this:
-// import teamLogos from "./utils/team_logos";
 import {
   ScatterChart,
   Scatter,
@@ -17,6 +15,14 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import Draggable from "react-draggable";
+import teamLogos from "./utils/team_logos";
+
+const PALETTE = {
+  red: "#5A0000",
+  gold: "#B8860B",
+  black: "#000000",
+  beige: "#f7ead6",
+};
 
 const normalizeName = (s) => String(s ?? "").trim().toLowerCase();
 
@@ -24,7 +30,6 @@ function TeamAdjustmentsPage() {
   const { fetchIfNeeded, loading, Teamdata } = useAdjustmentData();
   const [data, setData] = useState([]);
   const [resetting, setResetting] = useState(false);
-  const [originalPositions, setOriginalPositions] = useState(null); // for arrows
 
   // --- Helper to (re)initialize from context data ---
   const initializeFromContext = (raw) => {
@@ -46,21 +51,16 @@ function TeamAdjustmentsPage() {
       opponent_XGC_avg: Number(r.opponent_XGC_avg ?? 0),
       opponent_H_Att_E: Number(r.opponent_H_Att_E ?? 0),
       opponent_H_def_E: Number(r.opponent_H_def_E ?? 0),
+      // baseline fields may already be there (if context persisted them)
+      base_own_XG_avg:
+        r.base_own_XG_avg != null
+          ? Number(r.base_own_XG_avg)
+          : null,
+      base_own_XGC_avg:
+        r.base_own_XGC_avg != null
+          ? Number(r.base_own_XGC_avg)
+          : null,
     }));
-
-    // store original positions for arrows (first time only)
-    if (!originalPositions) {
-      const orig = {};
-      for (const r of cleaned) {
-        if (!orig[r.team_name]) {
-          orig[r.team_name] = {
-            x: r.own_XG_avg,
-            y: r.own_XGC_avg,
-          };
-        }
-      }
-      setOriginalPositions(orig);
-    }
 
     const withMetrics = recomputeMetrics(cleaned);
     setData(withMetrics);
@@ -77,30 +77,43 @@ function TeamAdjustmentsPage() {
     })();
   }, [fetchIfNeeded, Teamdata]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Unique team points for scatter (attach original positions)
+  // Unique team points for scatter (read baseline from data rows)
   const teamPoints = useMemo(() => {
     const byTeam = new Map();
+
     for (const r of data) {
       if (!byTeam.has(r.team_name)) {
-        const orig = originalPositions?.[r.team_name];
+        // Use per-row baseline if present, else first observed value
+        const origX =
+          r.base_own_XG_avg != null
+            ? r.base_own_XG_avg
+            : r.own_XG_avg;
+        const origY =
+          r.base_own_XGC_avg != null
+            ? r.base_own_XGC_avg
+            : r.own_XGC_avg;
+
         byTeam.set(r.team_name, {
           team_name: r.team_name,
           own_XG_avg: r.own_XG_avg,
           own_XGC_avg: r.own_XGC_avg,
-          orig_XG_avg: orig?.x,
-          orig_XGC_avg: orig?.y,
+          orig_XG_avg: origX,
+          orig_XGC_avg: origY,
+          logo: teamLogos[r.team_name] || null,
         });
       }
     }
     return Array.from(byTeam.values());
-  }, [data, originalPositions]);
+  }, [data]);
 
   // Table data: gws, teams, rowMap, totals per team
   const tableData = useMemo(() => {
     const gws = Array.from(new Set(data.map((r) => r.GW))).sort(
       (a, b) => Number(a) - Number(b)
     );
-    const teams = Array.from(new Set(data.map((r) => r.team_name))).sort();
+    const teams = Array.from(
+      new Set(data.map((r) => r.team_name))
+    ).sort();
 
     const key = (team, gw) => `${team}__${gw}`;
     const rowMap = new Map();
@@ -139,18 +152,31 @@ function TeamAdjustmentsPage() {
         const ownName = normalizeName(clone.team_name);
         const oppName = normalizeName(clone.opponent_team);
 
-        // Update as "own" team
+        // Keep baseline fields untouched (they store original API strengths)
+        const base_own_XG_avg =
+          clone.base_own_XG_avg != null
+            ? clone.base_own_XG_avg
+            : clone.own_XG_avg;
+        const base_own_XGC_avg =
+          clone.base_own_XGC_avg != null
+            ? clone.base_own_XGC_avg
+            : clone.own_XGC_avg;
+
         if (ownName === target) {
           clone.own_XG_avg = newXg;
           clone.own_XGC_avg = newXgc;
         }
 
-        // Update wherever they are the opponent
         if (oppName === target) {
           clone.opponent_XG_avg = newXg;
           clone.opponent_XGC_avg = newXgc;
         }
-        return clone;
+
+        return {
+          ...clone,
+          base_own_XG_avg,
+          base_own_XGC_avg,
+        };
       });
 
       // Recompute XG & CS for ALL rows (both sides affected)
@@ -167,7 +193,6 @@ function TeamAdjustmentsPage() {
       Teamdata.current = null; // so fetchIfNeeded actually refetches
       await fetchIfNeeded();
       if (Teamdata.current) {
-        setOriginalPositions(null); // reset arrows
         initializeFromContext(Teamdata.current);
       }
     } catch (e) {
@@ -178,64 +203,121 @@ function TeamAdjustmentsPage() {
   };
 
   if ((loading && data.length === 0) || resetting) {
-    return <div style={{ padding: 20 }}>Loading team data…</div>;
+    return (
+      <div
+        style={{
+          padding: "2rem",
+          minHeight: "100vh",
+          background: `radial-gradient(circle at top, ${PALETTE.red}, ${PALETTE.black})`,
+          color: PALETTE.beige,
+          fontFamily:
+            "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+        }}
+      >
+        Loading team data…
+      </div>
+    );
   }
 
   if (!loading && data.length === 0) {
-    return <div style={{ padding: 20 }}>No data found.</div>;
+    return (
+      <div
+        style={{
+          padding: "2rem",
+          minHeight: "100vh",
+          background: `radial-gradient(circle at top, ${PALETTE.red}, ${PALETTE.black})`,
+          color: PALETTE.beige,
+          fontFamily:
+            "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+        }}
+      >
+        No data found.
+      </div>
+    );
   }
 
   return (
-    <div style={{ padding: "20px", fontFamily: "system-ui, sans-serif" }}>
-      <header style={{ marginBottom: 20 }}>
-        <h1
-          style={{
-            margin: 0,
-            textAlign: "center",
-          }}
-        >
-          Team Adjustment Tool
-        </h1>
-        <p
-          style={{
-            marginTop: 8,
-            fontSize: 14,
-            color: "#e6e2e2ff",
-            textAlign: "center",
-          }}
-        >
-          Drag a team in the scatter plot to adjust its{" "}
-          <b>Offensive </b>and <b>Defensive </b>
-          strength. All fixtures (Goals &amp; CS) update automatically for that
-          team and its opponents.
-        </p>
+    <div
+      style={{
+        padding: "1.5rem",
+        minHeight: "100vh",
+        background: `radial-gradient(circle at top, ${PALETTE.red} 0, ${PALETTE.black} 45%, #000000 100%)`,
+        color: PALETTE.beige,
+        fontFamily:
+          "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      }}
+    >
+      <header
+        style={{
+          marginBottom: "1.25rem",
+          display: "flex",
+          flexDirection: "column",
+          gap: "0.5rem",
+        }}
+      >
         <div
           style={{
             display: "flex",
-            justifyContent: "flex-end",
-            marginTop: 8,
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: "1rem",
+            flexWrap: "wrap",
           }}
         >
+          <div>
+            <h1
+              style={{
+                margin: 0,
+                fontSize: "1.5rem",
+                fontWeight: 700,
+              }}
+            >
+              Team Adjustment Tool
+            </h1>
+            <p
+              style={{
+                marginTop: "0.25rem",
+                fontSize: "0.85rem",
+                color: "#d1c3a9",
+                maxWidth: "640px",
+              }}
+            >
+              Drag a team in the scatter plot to adjust its{" "}
+              <b>Offensive</b> and <b>Defensive</b> strength. All
+              fixtures (XG &amp; CS) update automatically for that
+              team and its opponents.
+            </p>
+          </div>
           <button
             onClick={handleReset}
             style={{
-              padding: "8px 16px",
-              borderRadius: 999,
-              border: "none",
-              background: "#1976d2",
-              color: "#fff",
+              padding: "0.45rem 0.9rem",
+              borderRadius: "999px",
+              border: `1px solid ${PALETTE.gold}`,
+              background:
+                "linear-gradient(135deg, rgba(0,0,0,0.9), rgba(90,0,0,0.95))",
+              color: PALETTE.beige,
               cursor: "pointer",
-              fontSize: 13,
-              fontWeight: 600,
-              boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+              fontSize: "0.85rem",
+              fontWeight: 500,
+              boxShadow: "0 10px 30px rgba(0,0,0,0.8)",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.4rem",
             }}
           >
-            🔄 Reset data
+            <span>⟳</span>
+            <span>Reset data</span>
           </button>
         </div>
       </header>
 
-      <section style={{ marginTop: 10, marginBottom: 40 }}>
+      <section
+        style={{
+          marginTop: "0.5rem",
+          marginBottom: "1.75rem",
+        }}
+      >
         <TeamScatterPlot
           teamPoints={teamPoints}
           onTeamDrag={handleTeamDrag}
@@ -243,14 +325,22 @@ function TeamAdjustmentsPage() {
       </section>
 
       <section>
-        <h2 style={{ marginBottom: 10 }}>Fixture Table (XG &amp; CS per GW)</h2>
+        <h2
+          style={{
+            marginBottom: "0.75rem",
+            fontSize: "1rem",
+            fontWeight: 600,
+          }}
+        >
+          Fixture Table (XG &amp; CS per GW)
+        </h2>
         <FixturesTable tableData={tableData} />
       </section>
     </div>
   );
 }
 
-/* ========== recompute XG & CS ========== */
+/* ========== recompute XG & CS (also lock in baseline once) ========== */
 
 function recomputeMetrics(rows) {
   return rows.map((r) => {
@@ -260,6 +350,12 @@ function recomputeMetrics(rows) {
     const oppXGC = Number(r.opponent_XGC_avg ?? 0);
     const ownAttE = Number(r.own_H_Att_E ?? 0);
     const oppDefE = Number(r.opponent_H_def_E ?? 0);
+
+    // Baseline: keep the very first strengths as base_* (if not already set)
+    const base_own_XG_avg =
+      r.base_own_XG_avg != null ? r.base_own_XG_avg : ownXG;
+    const base_own_XGC_avg =
+      r.base_own_XGC_avg != null ? r.base_own_XGC_avg : ownXGC;
 
     // XG formula (home/away adjustments)
     let xg;
@@ -287,13 +383,15 @@ function recomputeMetrics(rows) {
 
     return {
       ...r,
+      base_own_XG_avg,
+      base_own_XGC_avg,
       XG: xg,
       CS: csProb,
     };
   });
 }
 
-/* ========== Scatter plot with draggable dots + arrows ========== */
+/* ========== Scatter plot with draggable logo dots + arrows ========== */
 
 function TeamScatterPlot({ teamPoints, onTeamDrag }) {
   // Fixed domain
@@ -307,26 +405,33 @@ function TeamScatterPlot({ teamPoints, onTeamDrag }) {
       style={{
         width: "100%",
         height: 400,
-        background: "#111",
-        borderRadius: 8,
+        background:
+          "linear-gradient(145deg, rgba(0,0,0,0.98), rgba(90,0,0,0.85))",
+        borderRadius: 12,
         padding: "8px 4px 8px 0",
+        border: `1px solid ${PALETTE.gold}`,
+        boxShadow: "0 18px 40px rgba(0,0,0,0.9)",
       }}
     >
       <ResponsiveContainer>
-        <ScatterChart margin={{ top: 10, right: 20, bottom: 20, left: 20 }}>
-          <CartesianGrid stroke="#444" />
+        <ScatterChart
+          margin={{ top: 10, right: 20, bottom: 30, left: 30 }}
+        >
+          <CartesianGrid stroke="#333" strokeDasharray="3 3" />
           <XAxis
             type="number"
             dataKey="own_XG_avg"
             name="Offensive"
             domain={[minX, maxX]}
-            tick={false}
-            axisLine={{ stroke: "#888" }}
+            tick={{ fill: PALETTE.beige, fontSize: 10 }}
+            axisLine={{ stroke: "#666" }}
+            tickLine={{ stroke: "#666" }}
             label={{
               value: "Offensive",
               position: "insideBottom",
               offset: -5,
-              fill: "#fff",
+              fill: PALETTE.beige,
+              fontSize: 11,
             }}
           />
           <YAxis
@@ -334,32 +439,37 @@ function TeamScatterPlot({ teamPoints, onTeamDrag }) {
             dataKey="own_XGC_avg"
             name="Defensive"
             domain={[minY, maxY]}
-            tick={false}
-            axisLine={{ stroke: "#888" }}
+            tick={{ fill: PALETTE.beige, fontSize: 10 }}
+            axisLine={{ stroke: "#666" }}
+            tickLine={{ stroke: "#666" }}
             label={{
               value: "Defensive",
               angle: -90,
               position: "insideLeft",
-              fill: "#fff",
+              fill: PALETTE.beige,
+              fontSize: 11,
             }}
           />
           <Tooltip
-            cursor={{ strokeDasharray: "3 3" }}
+            cursor={{ strokeDasharray: "3 3", stroke: "#555" }}
             content={({ active, payload }) => {
               if (!active || !payload || !payload.length) return null;
               const p = payload[0].payload;
               return (
                 <div
                   style={{
-                    background: "#222",
-                    color: "#fff",
+                    background: "#111",
+                    color: PALETTE.beige,
                     padding: "6px 8px",
-                    borderRadius: 4,
+                    borderRadius: 6,
                     fontSize: 12,
-                    border: "1px solid #555",
+                    border: `1px solid ${PALETTE.gold}`,
+                    boxShadow: "0 10px 25px rgba(0,0,0,0.9)",
                   }}
                 >
-                  <div style={{ fontWeight: 600 }}>{p.team_name}</div>
+                  <div style={{ fontWeight: 600 }}>
+                    {p.team_name}
+                  </div>
                   <div>Offensive: {p.own_XG_avg.toFixed(2)}</div>
                   <div>Defensive: {p.own_XGC_avg.toFixed(2)}</div>
                 </div>
@@ -396,24 +506,27 @@ function DraggableDot({ cx = 0, cy = 0, payload, onTeamDrag, bounds }) {
     const dx = d.x - cx;
     const dy = d.y - cy;
 
-    // Less sensitive mapping from pixels to data units
+    // Map pixels to data units (smaller sensitivity for smoother feel)
     const approxWidth = 1100;
     const approxHeight = 700;
     const spanX = bounds.maxX - bounds.minX || 1;
     const spanY = bounds.maxY - bounds.minY || 1;
 
-    const sensitivity = 1; // tweak if needed
+    const sensitivity = 0.8; // tweak this for more/less movement per drag
     const deltaDataX = sensitivity * (dx / approxWidth) * spanX;
-    // Invert Y so dragging up increases defensive value
-    const deltaDataY = -sensitivity * (dy / approxHeight) * spanY;
+    const deltaDataY = -sensitivity * (dy / approxHeight) * spanY; // invert Y
 
-    const newXg = payload.own_XG_avg + deltaDataX;
-    const newXgc = payload.own_XGC_avg + deltaDataY;
+    let newXg = payload.own_XG_avg + deltaDataX;
+    let newXgc = payload.own_XGC_avg + deltaDataY;
+
+    // Clamp to chart domain so the dot can't leave the chart
+    newXg = Math.max(bounds.minX, Math.min(bounds.maxX, newXg));
+    newXgc = Math.max(bounds.minY, Math.min(bounds.maxY, newXgc));
 
     onTeamDrag(payload.team_name, newXg, newXgc);
   };
 
-  // Draw approximate arrow from original to current in local <g> coords
+  // Arrow from baseline (orig) to current (payload values)
   const arrowLine = (() => {
     const origX = payload?.orig_XG_avg;
     const origY = payload?.orig_XGC_avg;
@@ -424,7 +537,6 @@ function DraggableDot({ cx = 0, cy = 0, payload, onTeamDrag, bounds }) {
     const spanX = bounds.maxX - bounds.minX || 1;
     const spanY = bounds.maxY - bounds.minY || 1;
 
-    // original in [0,1] screen space
     const origNormX = (origX - bounds.minX) / spanX;
     const origNormY = (bounds.maxY - origY) / spanY;
     const currNormX = (payload.own_XG_avg - bounds.minX) / spanX;
@@ -447,6 +559,9 @@ function DraggableDot({ cx = 0, cy = 0, payload, onTeamDrag, bounds }) {
     return { x1, y1, x2, y2 };
   })();
 
+  const logoUrl = payload?.logo;
+  const size = 26;
+
   return (
     <Draggable
       nodeRef={nodeRef}
@@ -466,31 +581,48 @@ function DraggableDot({ cx = 0, cy = 0, payload, onTeamDrag, bounds }) {
             strokeDasharray="3 3"
           />
         )}
-        <circle r={6} fill="#4caf50" stroke="#fff" strokeWidth={1} />
-        {payload && (
-          <>
-            <text
-              x={10}
-              y={-10}
-              fontSize={10}
-              fill="#fff"
-              style={{ pointerEvents: "none" }}
-            >
-              {payload.team_name}
-            </text>
-            <title>
-              {`${payload.team_name}: Off ${payload.own_XG_avg.toFixed(
-                2
-              )}, Def ${payload.own_XGC_avg.toFixed(2)}`}
-            </title>
-          </>
+        {/* Background circle / border */}
+        <circle
+          r={size / 2 + 2}
+          fill={PALETTE.black}
+          stroke={PALETTE.gold}
+          strokeWidth={2}
+        />
+        {/* Logo image centered at (0,0) */}
+        {logoUrl ? (
+          <image
+            href={logoUrl}
+            x={-size / 2}
+            y={-size / 2}
+            width={size}
+            height={size}
+            preserveAspectRatio="xMidYMid slice"
+            clipPath="circle(50%)"
+          />
+        ) : (
+          <text
+            x={0}
+            y={4}
+            textAnchor="middle"
+            fontSize={8}
+            fill={PALETTE.beige}
+          >
+            {payload?.team_name?.slice(0, 3) ?? ""}
+          </text>
         )}
+        <title>
+          {payload
+            ? `${payload.team_name}: Off ${payload.own_XG_avg.toFixed(
+                2
+              )}, Def ${payload.own_XGC_avg.toFixed(2)}`
+            : ""}
+        </title>
       </g>
     </Draggable>
   );
 }
 
-/* ========== Fixture table (styled like your example, with sorting) ========== */
+/* ========== Fixture table (unchanged except logo use) ========== */
 
 function FixturesTable({ tableData }) {
   const { gws, teams, rowMap, totalsByTeam } = tableData;
@@ -509,7 +641,10 @@ function FixturesTable({ tableData }) {
     if (sortConfig.key === "default") return arr;
 
     const getValue = (team) => {
-      const totals = totalsByTeam[team] || { totalXG: 0, avgCS: 0 };
+      const totals = totalsByTeam[team] || {
+        totalXG: 0,
+        avgCS: 0,
+      };
 
       if (sortConfig.key === "totalXG") return totals.totalXG;
       if (sortConfig.key === "totalCS") return totals.avgCS;
@@ -546,7 +681,7 @@ function FixturesTable({ tableData }) {
 
   const headerArrow = (keyName, gw = null) => {
     if (sortConfig.key !== keyName || sortConfig.gw !== gw) return "";
-    return sortConfig.dir === "desc" ? " ↓" : " ↑";
+    return sortConfig.dir === "desc" ? "▼" : "▲";
   };
 
   const formatHAV = (Home) => {
@@ -563,25 +698,34 @@ function FixturesTable({ tableData }) {
   return (
     <div
       style={{
-        borderRadius: 16,
-        border: "1px solid rgba(0,0,0,0.08)",
-        boxShadow: "0 6px 20px rgba(0,0,0,0.06)",
+        borderRadius: 12,
+        border: `1px solid ${PALETTE.gold}`,
         overflowX: "auto",
-        background: "#f9fafb",
+        background:
+          "linear-gradient(155deg, rgba(0,0,0,0.98), rgba(0,0,0,0.9))",
+        boxShadow: "0 18px 40px rgba(0,0,0,0.95)",
       }}
     >
-      {/* Sort buttons (prettier) */}
+      {/* Sort buttons */}
       <div
         style={{
           padding: "8px 12px",
           display: "flex",
           gap: 8,
           alignItems: "center",
-          borderBottom: "1px solid rgba(0,0,0,0.06)",
-          background: "#fff",
+          borderBottom: `1px solid ${PALETTE.gold}`,
+          background:
+            "linear-gradient(145deg, rgba(0,0,0,0.95), rgba(90,0,0,0.9))",
         }}
       >
-        <span style={{ fontSize: 12, color: "#555" }}>Sort teams by:</span>
+        <span
+          style={{
+            fontSize: 12,
+            color: "#d1c3a9",
+          }}
+        >
+          Sort teams by:
+        </span>
         <button
           onClick={() =>
             setSortConfig({ key: "default", dir: "desc", gw: null })
@@ -609,6 +753,7 @@ function FixturesTable({ tableData }) {
           borderCollapse: "collapse",
           minWidth: "100%",
           fontSize: 13,
+          color: PALETTE.beige,
         }}
       >
         <thead>
@@ -618,14 +763,13 @@ function FixturesTable({ tableData }) {
                 position: "sticky",
                 left: 0,
                 zIndex: 3,
-                background: "#f3f4f6",
-                borderBottom: "1px solid #e5e7eb",
+                backgroundColor: "#111111",
+                borderBottom: `1px solid ${PALETTE.gold}`,
                 padding: "8px 10px",
                 textAlign: "left",
                 width: 40,
                 fontWeight: 700,
                 fontSize: 12,
-                color: "#111827",
               }}
             >
               #
@@ -635,14 +779,13 @@ function FixturesTable({ tableData }) {
                 position: "sticky",
                 left: 40,
                 zIndex: 3,
-                background: "#f3f4f6",
-                borderBottom: "1px solid #e5e7eb",
+                backgroundColor: "#111111",
+                borderBottom: `1px solid ${PALETTE.gold}`,
                 padding: "8px 10px",
                 textAlign: "left",
                 minWidth: 150,
                 fontWeight: 700,
                 fontSize: 12,
-                color: "#111827",
               }}
             >
               Team
@@ -652,65 +795,69 @@ function FixturesTable({ tableData }) {
                 key={gw}
                 onClick={() => toggleSort("gwXG", gw)}
                 style={{
-                  borderBottom: "1px solid #e5e7eb",
+                  borderBottom: `1px solid ${PALETTE.gold}`,
                   padding: "8px 10px",
                   textAlign: "center",
-                  background: "#f3f4f6",
+                  backgroundColor: "#111111",
                   minWidth: 120,
                   fontWeight: 700,
                   fontSize: 12,
-                  color: "#111827",
                   cursor: "pointer",
                   userSelect: "none",
+                  color:
+                    sortConfig.key === "gwXG" &&
+                    sortConfig.gw === gw
+                      ? PALETTE.gold
+                      : PALETTE.beige,
                 }}
               >
-                GW {gw}
-                {headerArrow("gwXG", gw)}
+                GW {gw} {headerArrow("gwXG", gw)}
               </th>
             ))}
             <th
               onClick={() => toggleSort("totalXG", null)}
               style={{
-                borderBottom: "1px solid #e5e7eb",
+                borderBottom: `1px solid ${PALETTE.gold}`,
                 padding: "8px 10px",
                 textAlign: "center",
-                background: "#f3f4f6",
+                backgroundColor: "#111111",
                 minWidth: 130,
                 fontWeight: 700,
                 fontSize: 12,
-                color: "#111827",
                 cursor: "pointer",
                 userSelect: "none",
+                color:
+                  sortConfig.key === "totalXG"
+                    ? PALETTE.gold
+                    : PALETTE.beige,
               }}
             >
-              Total
-              {headerArrow("totalXG", null)}
+              Total {headerArrow("totalXG", null)}
             </th>
           </tr>
         </thead>
         <tbody>
           {sortedTeams.map((team, rowIdx) => {
-            const totals = totalsByTeam[team] || { totalXG: 0, avgCS: 0 };
+            const totals = totalsByTeam[team] || {
+              totalXG: 0,
+              avgCS: 0,
+            };
             const rank = rowIdx + 1;
+            const rowBg =
+              rowIdx % 2 === 0 ? "#080808" : "#151515";
+            const logoUrl = teamLogos[team];
 
             return (
-              <tr
-                key={team}
-                style={{
-                  backgroundColor: rowIdx % 2 === 0 ? "#ffffff" : "#f9fafb",
-                }}
-              >
+              <tr key={team} style={{ backgroundColor: rowBg }}>
                 <td
                   style={{
                     position: "sticky",
                     left: 0,
                     zIndex: 2,
-                    borderBottom: "1px solid #e5e7eb",
+                    borderBottom: "1px solid #222222",
                     padding: "6px 10px",
                     fontSize: 12,
-                    color: "#374151",
-                    backgroundColor:
-                      rowIdx % 2 === 0 ? "#ffffff" : "#f9fafb",
+                    backgroundColor: rowBg,
                   }}
                 >
                   {rank}
@@ -720,10 +867,9 @@ function FixturesTable({ tableData }) {
                     position: "sticky",
                     left: 40,
                     zIndex: 2,
-                    borderBottom: "1px solid #e5e7eb",
+                    borderBottom: "1px solid #222222",
                     padding: "6px 10px",
-                    backgroundColor:
-                      rowIdx % 2 === 0 ? "#ffffff" : "#f9fafb",
+                    backgroundColor: rowBg,
                   }}
                 >
                   <div
@@ -734,28 +880,33 @@ function FixturesTable({ tableData }) {
                       minWidth: 0,
                     }}
                   >
-                    {/* If you have logos, uncomment this and import teamLogos:
-                    {teamLogos?.[team] ? (
+                    {logoUrl ? (
                       <img
-                        src={teamLogos[team]}
+                        src={logoUrl}
                         alt={`${team} logo`}
-                        style={{ height: 22, width: 22, objectFit: "contain" }}
+                        style={{
+                          height: 24,
+                          width: 24,
+                          borderRadius: "999px",
+                          objectFit: "contain",
+                          backgroundColor: "#000",
+                          border: `1px solid ${PALETTE.gold}`,
+                        }}
                       />
                     ) : (
                       <div
                         style={{
-                          height: 22,
-                          width: 22,
+                          height: 24,
+                          width: 24,
                           borderRadius: "999px",
-                          background: "#e5e7eb",
+                          background: "#27272a",
+                          border: `1px solid ${PALETTE.gold}`,
                         }}
                       />
                     )}
-                    */}
                     <span
                       style={{
                         fontWeight: 600,
-                        color: "#111827",
                         whiteSpace: "nowrap",
                         overflow: "hidden",
                         textOverflow: "ellipsis",
@@ -773,10 +924,10 @@ function FixturesTable({ tableData }) {
                       <td
                         key={gw}
                         style={{
-                          borderBottom: "1px solid #e5e7eb",
+                          borderBottom: "1px solid #222222",
                           padding: "6px 10px",
                           textAlign: "center",
-                          color: "#9ca3af",
+                          color: "#6b7280",
                         }}
                       >
                         –
@@ -789,17 +940,17 @@ function FixturesTable({ tableData }) {
                   const oppName = row.opponent_team || "";
                   const hav = formatHAV(row.Home);
 
-                  // Simple heat coloring based on XG
-                  let bg = "#f3f4f6";
-                  if (xgVal > 1.7) bg = "#dcfce7"; // strong green
-                  else if (xgVal < 1.1) bg = "#fee2e2"; // red
-                  else bg = "#fef9c3"; // yellow
+                  // Simple heat coloring based on XG (dark theme)
+                  let bg = "#1f2933";
+                  if (xgVal > 1.7) bg = "rgba(22,163,74,0.45)"; // green-ish
+                  else if (xgVal < 1.1) bg = "rgba(220,38,38,0.45)"; // red-ish
+                  else bg = "rgba(202,138,4,0.45)"; // golden
 
                   return (
                     <td
                       key={gw}
                       style={{
-                        borderBottom: "1px solid #e5e7eb",
+                        borderBottom: "1px solid #222222",
                         padding: "6px 10px",
                         textAlign: "center",
                         minWidth: 120,
@@ -819,7 +970,6 @@ function FixturesTable({ tableData }) {
                           style={{
                             fontSize: 12,
                             fontWeight: 600,
-                            color: "#111827",
                             whiteSpace: "nowrap",
                             overflow: "hidden",
                             textOverflow: "ellipsis",
@@ -831,7 +981,7 @@ function FixturesTable({ tableData }) {
                         <span
                           style={{
                             fontSize: 11,
-                            color: "#4b5563",
+                            color: "#e5e7eb",
                           }}
                         >
                           ({hav})
@@ -839,7 +989,7 @@ function FixturesTable({ tableData }) {
                         <span
                           style={{
                             fontSize: 11,
-                            color: "#111827",
+                            color: PALETTE.beige,
                           }}
                         >
                           XG: {formatXG(xgVal)}
@@ -847,7 +997,7 @@ function FixturesTable({ tableData }) {
                         <span
                           style={{
                             fontSize: 11,
-                            color: "#111827",
+                            color: PALETTE.beige,
                           }}
                         >
                           CS: {formatCS(csVal)}
@@ -860,12 +1010,12 @@ function FixturesTable({ tableData }) {
                 {/* Total column */}
                 <td
                   style={{
-                    borderBottom: "1px solid #e5e7eb",
+                    borderBottom: "1px solid #222222",
                     padding: "6px 10px",
                     textAlign: "center",
                     minWidth: 130,
                     fontWeight: 600,
-                    color: "#111827",
+                    color: PALETTE.gold,
                   }}
                 >
                   <div
@@ -875,8 +1025,15 @@ function FixturesTable({ tableData }) {
                       gap: 2,
                     }}
                   >
-                    <span>Total XG: {totals.totalXG.toFixed(2)}</span>
-                    <span style={{ fontSize: 11, color: "#4b5563" }}>
+                    <span>
+                      Total XG: {totals.totalXG.toFixed(2)}
+                    </span>
+                    <span
+                      style={{
+                        fontSize: 11,
+                        color: "#d1c3a9",
+                      }}
+                    >
                       Avg CS: {(totals.avgCS * 100).toFixed(1)}%
                     </span>
                   </div>
@@ -894,12 +1051,19 @@ function sortButtonStyle(active) {
   return {
     padding: "4px 10px",
     borderRadius: 999,
-    border: active ? "1px solid #2563eb" : "1px solid #d1d5db",
-    background: active ? "#dbeafe" : "#f3f4f6",
+    border: active
+      ? `1px solid ${PALETTE.gold}`
+      : "1px solid #4b5563",
+    background: active
+      ? "rgba(184,134,11,0.2)"
+      : "rgba(0,0,0,0.9)",
     cursor: "pointer",
     fontSize: 12,
     fontWeight: active ? 700 : 500,
-    color: "#111827",
+    color: PALETTE.beige,
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 4,
   };
 }
 

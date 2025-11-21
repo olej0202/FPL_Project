@@ -386,6 +386,162 @@ def Generate_Team_Adjustments():
 
     df_filtered.to_csv("Visual_adjust_Team_results.csv")
 
+def Player_adjustements(current_player_path):
+
+
+    df = pd.read_csv("Player_Prediction_set.csv")
+
+    # Base columns you want to keep
+    columns = [
+        "name","position", "GW", "Team",
+        "Understat_POSXG_Share", "Understat_POSXA_Share",
+        "Team_Pen_Data", "Pen_Number", "player_risiko",
+        "Rolling_adjusted_XG_share", "average_minutes",
+        "rolling_Threat_share", "Rolling_adjusted_XA_share",
+        "Rolling_creativity_share", "rolling_Adjusted_XA_historic_share",
+        "rolling_Adjusted_XG_historic_share", "Rolling_adjusted_BPS",
+        "CBI", "Average_Overscore", "Average_OverAssist","defcon_avg_hit_rate"
+    ]
+
+    # Goal & assist shares (blend model vs Understat, weighted by risk)
+    risk_adj_minutes_factor = np.maximum(1, 75 / (df["average_minutes"]+0.01))
+    # alternatively: df["average_minutes"].rdiv(75).clip(lower=1)
+
+    df["Goal_share"] = (
+        (
+            df["Rolling_adjusted_XG_share"] * 0.5
+            + df["rolling_Threat_share"] * 0.3
+            + df["rolling_Adjusted_XG_historic_share"] * 0.2
+        )
+        * (1 - df["player_risiko"])
+        * risk_adj_minutes_factor
+        + df["player_risiko"] * df["Understat_POSXG_Share"]
+    )
+
+    df["Assist_share"] = (
+        (df["Rolling_adjusted_XA_share"] * 0.5
+         + df["Rolling_creativity_share"] * 0.3
+         + df["rolling_Adjusted_XA_historic_share"] * 0.2)
+        * (1 - df["player_risiko"])
+        * risk_adj_minutes_factor
+        + df["player_risiko"] * df["Understat_POSXA_Share"]
+    )
+
+    # Cap overscore/overassist factors per player in [0.9, 1.15]
+    overscore_factor = df["Average_Overscore"].clip(0.9, 1.15)
+    overassist_factor = df["Average_OverAssist"].clip(0.9, 1.2)
+
+    df["Goal_share"] = df["Goal_share"] * overscore_factor
+    df["Assist_share"] = df["Assist_share"] * overassist_factor
+    # Penalty data
+    df["Pen_data"] = df["Team_Pen_Data"] * df["Pen_Number"]
+    divisor = np.where(df["position"] == "DEF", 10, 12)
+
+    cbi_scaled = np.minimum(1, df["CBI"] / divisor) 
+
+    df["CBI_Percent"] = (
+        df["defcon_avg_hit_rate"] * 0.6
+        + 0.4 * cbi_scaled
+    )*0.9
+
+    bps_scaled = np.maximum(5, df["Rolling_adjusted_BPS"]) 
+    df["BPS"]=bps_scaled*0.045
+    # Final columns (including the new ones)
+    final_cols =["name","position", "GW", "Team","average_minutes","Goal_share", "Assist_share", "Pen_data","CBI_Percent","BPS"]
+    df = df[final_cols]
+
+    import numpy as np
+
+    # ---- Goal Factor ----
+    df["Goal_factor"] = np.select(
+        [
+            df["position"] == "FWD",
+            df["position"] == "MID",
+            df["position"] == "DEF",
+        ],
+        [
+            5.5,  # FWD
+            5.0,  # MID
+            6.0,  # DEF
+        ],
+        default=0,
+    )
+
+    # ---- Assist Factor ----
+    df["Assist_factor"] = np.select(
+        [
+            df["position"] == "FWD",
+            df["position"] == "MID",
+            df["position"] == "DEF",
+        ],
+        [
+            3.0,   # FWD
+            3.5,   # MID
+            3.0,   # DEF
+        ],
+        default=0,
+    )
+
+    # ---- Clean Sheet Factor ----
+    df["CS_factor"] = np.select(
+        [
+            df["position"] == "FWD",
+            df["position"] == "MID",
+            df["position"] == "DEF",
+        ],
+        [
+            0.0,   # FWD
+            0.8,   # MID
+            4.5,   # DEF
+        ],
+        default=5.0,  # "else"
+    )
+
+    df["default_points"] = np.select(
+        [
+            df["position"] == "FWD",
+            df["position"] == "MID",
+            df["position"] == "DEF",
+        ],
+        [
+            2,   # FWD
+            2,   # MID
+            1,   # DEF
+        ],
+        default=1,  # "else"
+    )
+    df["GW"] = pd.to_numeric(df["GW"], errors="coerce")
+
+    # Define limits
+    min_gw = df["GW"].min()
+    max_gw = min_gw + 4
+
+    # Filter DF to only include those GWs
+    df_filtered = df[(df["GW"] >= min_gw) & (df["GW"] <= max_gw)]
+
+    current_players=pd.read_csv(current_player_path)
+    result = (
+            current_players
+              .groupby("name")[["now_cost","team_code","news","selected_by_percent","web_name","defensive_contribution_per_90"]]
+              .first()                   # take the first row in each group
+              .reset_index()             # turn the group key back into a column
+        )
+
+    result = result.rename(columns={
+            "name": "Name2",
+            "now_cost": "value",
+            "selected_by_percent": "selected",
+    })
+
+    merge_cols = ['Name2', 'value','selected',"web_name"]
+    result = result[merge_cols]
+
+    merged_df = df_filtered.merge(result, how='left', left_on='name', right_on='Name2')
+
+    merged_df.drop(columns=['Name2'], inplace=True)
+    # MERGE med verdi og navn og selected
+    merged_df.to_csv("Player_Adjusted_data.csv")
+
 
     
 
@@ -400,6 +556,7 @@ def Generate_ALL_datasets(current_teams,current_player_path,current_season_path)
     Visual_Teams_history()
     Generate_season_data(current_player_path, current_season_path)
     Generate_Team_Adjustments()
+    Player_adjustements(current_player_path)
 
 if __name__ == "__main__":
     Generate_ALL_datasets()
