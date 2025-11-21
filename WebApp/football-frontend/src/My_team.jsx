@@ -427,15 +427,18 @@ const hasStatisticalData = useMemo(() => {
                 </button>
               </div>
               <p className="text-[11px] text-neutral-400 mt-0.5">
-                Statistical model uses your player-adjusted predicted
-                points.{" "}
-                {!hasStatisticalData && (
-                  <span className="text-amber-300">
-                    Open the Player Adjustment page and compute
-                    points first to enable this.
-                  </span>
-                )}
-              </p>
+  Statistical model uses your player-adjusted predicted points.{" "}
+  <button
+    type="button"
+    onClick={() => navigate("/Adjustment_Analysis")}
+    className="inline-flex items-center gap-1 text-royal-gold hover:text-yellow-300 underline decoration-dotted"
+  >
+    Open Player Adjustments
+  </button>
+  {!hasStatisticalData && (
+    <span className="text-amber-300"> (needed to enable the model)</span>
+  )}
+</p>
             </div>
           </div>
         </section>

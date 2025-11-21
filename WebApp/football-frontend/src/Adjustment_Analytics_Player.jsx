@@ -173,8 +173,8 @@ function SearchableMultiSelect({
  * New page component using AdjustmentDataProvider
  */
 export default function PlayerAdjustmentsPage() {
-  const { fetchIfNeeded, loading, Teamdata, Playerdata } =
-    useAdjustmentData();
+  const { fetchIfNeeded, loading, Teamdata, Playerdata, dataVersion } =
+  useAdjustmentData();
 
   const [playersState, setPlayersState] = useState(null); // editable copy of Playerdata
   const [teamsState, setTeamsState] = useState(null); // copy of Teamdata
@@ -218,15 +218,20 @@ export default function PlayerAdjustmentsPage() {
 
   // Initialize editable copies once data is available
   useEffect(() => {
-    if (Teamdata?.current && !teamsState) {
-      setTeamsState([...Teamdata.current]);
-    }
-    if (Playerdata?.current && !playersState) {
-      setPlayersState([...Playerdata.current]);
-    }
-  }, [Teamdata, Playerdata, teamsState, playersState]);
+  // whenever dataVersion changes, refs have new data
+  if (Teamdata?.current && !teamsState) {
+    setTeamsState([...Teamdata.current]);
+  }
+  if (Playerdata?.current && !playersState) {
+    setPlayersState([...Playerdata.current]);
+  }
+}, [dataVersion, Teamdata, Playerdata, teamsState, playersState]);
 
-  const isDataReady = !!playersState && !!teamsState && !loading;
+  const isDataReady =
+  Array.isArray(playersState) &&
+  Array.isArray(teamsState) &&
+  !loading;
+
 
   // Build team lookups
   const { teamLookup, teamNamesByCode } = useMemo(() => {
@@ -351,7 +356,7 @@ export default function PlayerAdjustmentsPage() {
       return {
         playerTableRows: [],
         globalMinValue: 0,
-        globalMaxValue: 0,
+        globalMaxValue: 150,
         allPlayerNames: [],
         allTeamOptions: [],
       };
@@ -418,7 +423,7 @@ export default function PlayerAdjustmentsPage() {
     });
 
     if (minValue === Infinity) minValue = 0;
-    if (maxValue === -Infinity) maxValue = 0;
+    if (maxValue === -Infinity) maxValue = 150;
 
     const playerNames = Array.from(playerMap.keys()).sort();
     const teamOptions = Array.from(teamNamesByCode.entries()).map(
@@ -797,21 +802,23 @@ export default function PlayerAdjustmentsPage() {
   };
 
   if (!isDataReady) {
-    return (
-      <div
-        style={{
-          padding: "2rem",
-          minHeight: "100vh",
-          background: `radial-gradient(circle at top, ${PALETTE.red}, ${PALETTE.black})`,
-          color: PALETTE.beige,
-          fontFamily:
-            "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-        }}
-      >
-        {loading ? "Loading data..." : "No data available."}
-      </div>
-    );
-  }
+  // While either playersState or teamsState is still null/undefined,
+  // or loading is true, treat this as "still loading", not "no data".
+  return (
+    <div
+      style={{
+        padding: "2rem",
+        minHeight: "100vh",
+        background: `radial-gradient(circle at top, ${PALETTE.red}, ${PALETTE.black})`,
+        color: PALETTE.beige,
+        fontFamily:
+          "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      }}
+    >
+      Loading data…
+    </div>
+  );
+}
 
   const playerOptions = allPlayerNames.map((name) => ({
     value: name,
@@ -852,7 +859,7 @@ export default function PlayerAdjustmentsPage() {
               fontWeight: 700,
             }}
           >
-            Player Adjustment Dashboard
+            Player Adjustment Tool
           </h1>
           <p
             style={{
@@ -861,8 +868,7 @@ export default function PlayerAdjustmentsPage() {
               color: "#d1c3a9",
             }}
           >
-            Tune shares & minutes, compare projections across
-            gameweeks, and recalculate on the fly.
+            Integrated with team predictions. Click a player and adjust minutes, Goal and Assist shares
           </p>
         </div>
         <button

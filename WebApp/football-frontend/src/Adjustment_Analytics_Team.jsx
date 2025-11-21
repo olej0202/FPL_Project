@@ -284,7 +284,7 @@ function TeamAdjustmentsPage() {
             >
               Drag a team in the scatter plot to adjust its{" "}
               <b>Offensive</b> and <b>Defensive</b> strength. All
-              fixtures (XG &amp; CS) update automatically for that
+              fixtures update automatically for that
               team and its opponents.
             </p>
           </div>

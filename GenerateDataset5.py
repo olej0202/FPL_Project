@@ -914,10 +914,11 @@ def team_transformed2():
         slope_df["XGC"]=def_rating_history[team]
         slope_df["XGC_slope"]=slope_df['XGC'].rolling(window=6, min_periods=1).apply(rolling_slope, raw=True)
         selected_team_df=new_team_df[new_team_df["code"]==team].copy()
-        selected_team_df["XGA"]=((1-overall_weight) * np.array(off_rating_away_history[team][:-1]) +overall_weight * selected_team_df["XGA"])
-        selected_team_df["XGCA"]=((1-overall_weight)  * np.array(def_rating_away_history[team][:-1]) +overall_weight * selected_team_df["XGCA"])
-        selected_team_df["XGH"]=((1-overall_weight)  * np.array(off_rating_home_history[team][:-1]) +overall_weight * selected_team_df["XGH"]) 
-        selected_team_df["XGCH"]=((1-overall_weight)  * np.array(def_rating_home_history[team][:-1]) +overall_weight* selected_team_df["XGCH"])
+        selected_team_df["XGA"]=((1-overall_weight) * np.array(off_rating_away_history[team][:-1]) +overall_weight * selected_team_df["XGA"])*0.7+0.3*selected_team_df["Rolling_Threat"]
+
+        selected_team_df["XGCA"]=((1-overall_weight)  * np.array(def_rating_away_history[team][:-1]) +overall_weight * selected_team_df["XGCA"])*0.7+0.3*selected_team_df["Rolling_Threat_Against"]
+        selected_team_df["XGH"]=((1-overall_weight)  * np.array(off_rating_home_history[team][:-1]) +overall_weight * selected_team_df["XGH"])*0.7+0.3*selected_team_df["Rolling_Threat"]
+        selected_team_df["XGCH"]=((1-overall_weight)  * np.array(def_rating_home_history[team][:-1]) +overall_weight* selected_team_df["XGCH"])*0.7+0.3*selected_team_df["Rolling_Threat_Against"]
         selected_team_df["XG_avg"]=selected_team_df["XGH"]*0.5+selected_team_df["XGA"]*0.5
         selected_team_df["XGC_avg"]=selected_team_df["XGCH"]*0.5+selected_team_df["XGCA"]*0.5
         #selected_team_df["XG_avg"]=((1-overall_weight)  * np.array(off_rating_history[team][:-1]) +overall_weight* selected_team_df["XG_avg"])
@@ -928,10 +929,10 @@ def team_transformed2():
         team_transformed_df=pd.concat([team_transformed_df, selected_team_df], axis=0, ignore_index=True)
 
         newest_selected_team_df=new_team_df_newest[new_team_df_newest["code"]==team].copy()
-        newest_selected_team_df["XGA"]=off_rating_away_history[team][-1]*(1-overall_weight) +overall_weight * newest_selected_team_df["XGA"]
-        newest_selected_team_df["XGCA"]=def_rating_away_history[team][-1]*(1-overall_weight) +overall_weight * newest_selected_team_df["XGCA"]
-        newest_selected_team_df["XGH"]=off_rating_home_history[team][-1]*(1-overall_weight) +overall_weight * newest_selected_team_df["XGH"]
-        newest_selected_team_df["XGCH"]=def_rating_home_history[team][-1]*(1-overall_weight) +overall_weight * newest_selected_team_df["XGCH"]
+        newest_selected_team_df["XGA"]=(off_rating_away_history[team][-1]*(1-overall_weight) +overall_weight * newest_selected_team_df["XGA"])*0.7+0.3*newest_selected_team_df["Rolling_Threat"]
+        newest_selected_team_df["XGCA"]=(def_rating_away_history[team][-1]*(1-overall_weight) +overall_weight * newest_selected_team_df["XGCA"])*0.7+0.3*newest_selected_team_df["Rolling_Threat_Against"]
+        newest_selected_team_df["XGH"]=(off_rating_home_history[team][-1]*(1-overall_weight) +overall_weight * newest_selected_team_df["XGH"])*0.7+0.3*newest_selected_team_df["Rolling_Threat"]
+        newest_selected_team_df["XGCH"]=(def_rating_home_history[team][-1]*(1-overall_weight) +overall_weight * newest_selected_team_df["XGCH"])*0.7+0.3*newest_selected_team_df["Rolling_Threat_Against"]
         newest_selected_team_df["XG_avg"]=newest_selected_team_df["XGH"]*0.5+newest_selected_team_df["XGA"]*0.5
         newest_selected_team_df["XGC_avg"]=newest_selected_team_df["XGCH"]*0.5+newest_selected_team_df["XGCA"]*0.5
         #newest_selected_team_df["XG_avg"]=off_rating_history[team][-1]*(1-overall_weight) +overall_weight * newest_selected_team_df["XG_avg"]
