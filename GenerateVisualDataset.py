@@ -400,33 +400,33 @@ def Player_adjustements(current_player_path):
         "rolling_Threat_share", "Rolling_adjusted_XA_share",
         "Rolling_creativity_share", "rolling_Adjusted_XA_historic_share",
         "rolling_Adjusted_XG_historic_share", "Rolling_adjusted_BPS",
-        "CBI", "Average_Overscore", "Average_OverAssist","defcon_avg_hit_rate"
+        "CBI", "Average_Overscore", "Average_OverAssist","defcon_avg_hit_rate", "Share_of_XG_share", "Share_of_XA_share"
     ]
-
+    
     # Goal & assist shares (blend model vs Understat, weighted by risk)
     risk_adj_minutes_factor = np.maximum(1, 75 / (df["average_minutes"]+0.01))
     # alternatively: df["average_minutes"].rdiv(75).clip(lower=1)
-
+    
     df["Goal_share"] = (
         (
-            df["Rolling_adjusted_XG_share"] * 0.5
+            df["Rolling_adjusted_XG_share"] * 0.4
             + df["rolling_Threat_share"] * 0.3
-            + df["rolling_Adjusted_XG_historic_share"] * 0.2
+            + df["Share_of_XG_share"] * 0.3
         )
         * (1 - df["player_risiko"])
         * risk_adj_minutes_factor
         + df["player_risiko"] * df["Understat_POSXG_Share"]
     )
-
+    
     df["Assist_share"] = (
-        (df["Rolling_adjusted_XA_share"] * 0.5
+        (df["Rolling_adjusted_XA_share"] * 0.4
          + df["Rolling_creativity_share"] * 0.3
-         + df["rolling_Adjusted_XA_historic_share"] * 0.2)
+         + df["Share_of_XA_share"] * 0.3)
         * (1 - df["player_risiko"])
         * risk_adj_minutes_factor
         + df["player_risiko"] * df["Understat_POSXA_Share"]
     )
-
+    
     # Cap overscore/overassist factors per player in [0.9, 1.15]
     overscore_factor = df["Average_Overscore"].clip(0.9, 1.15)
     overassist_factor = df["Average_OverAssist"].clip(0.9, 1.2)
