@@ -1,42 +1,90 @@
 // src/context/DataContext.jsx
-import React, { createContext, useContext, useRef, useState } from "react";
-
+import React, { createContext, useContext, useState } from "react";
 
 const MyTeamDataContext = createContext();
 
 export const useMyteamData = () => useContext(MyTeamDataContext);
 
 export function MyTeamDataContextProvider({ children }) {
-  const [teamId, setTeamId] = useState('');
-  const [bbRound, setBbRound] = useState('');
-  const [wildRound, setWildRound] = useState('');
-  const [freehitROund, setfreehitROund] = useState('');
+  const [teamId, setTeamId] = useState("");
+  const [bbRound, setBbRound] = useState("");
+  const [wildRound, setWildRound] = useState("");
+  const [freehitROund, setfreehitROund] = useState("");
   const [bannedList, setBannedList] = useState([]);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [has_changed, sethas_changed] = useState(false);
   const [bannedPlayersData, setBannedPlayersData] = useState([]);
-  const [n_hits, setn_hits] = useState('');
-  const fetchTeam = async () => {
-    if (!teamId) return alert('Team ID is required');
+  const [n_hits, setn_hits] = useState("");
+
+  /**
+   * fetchTeam can now optionally take:
+   *  - useStatisticalModel: boolean
+   *  - playersData: array of player rows (from AdjustmentData)
+   *
+   * Example: fetchTeam({ useStatisticalModel: true, playersData })
+   */
+  const fetchTeam = async (options = {}) => {
+    const {
+      useStatisticalModel = false,
+      playersData = null,
+    } = options;
+
+    if (!teamId) return alert("Team ID is required");
     setLoading(true);
     try {
       const params = new URLSearchParams({ team_id: teamId });
-      if (bbRound)   params.append('bb_round', bbRound);
-      if (wildRound) params.append('wildcard_round', wildRound);
-      if (freehitROund) params.append('freehit_round', freehitROund);
-      bannedList.forEach((id) => params.append('banned_list', id));
-      if (n_hits) params.append('n_hits', n_hits);
 
-      const resp = await fetch(
-        `https://fpl-project-t5e9.onrender.com/My_Team_Optimize?${params}`
-      );
+      if (bbRound) params.append("bb_round", bbRound);
+      if (wildRound) params.append("wildcard_round", wildRound);
+      if (freehitROund) params.append("freehit_round", freehitROund);
+      bannedList.forEach((id) => params.append("banned_list", id));
+      if (n_hits) params.append("n_hits", n_hits);
+
+      // Tell backend which model we intend to use
+      params.append("model_type", useStatisticalModel ? "statistical" : "ai");
+
+      const url = `https://fpl-project-t5e9.onrender.com/My_Team_Optimize?${params.toString()}`;
+
+      let resp;
+
+      // If using the statistical model and we have player data, send as POST body
+      if (
+        useStatisticalModel &&
+        Array.isArray(playersData) &&
+        playersData.length > 0
+      ) {
+        // Slim the payload a bit (adjust fields as your API expects)
+        const slimPlayers = playersData.map((p) => ({
+          name: p.name,
+          web_name: p.web_name,
+          Team: p.Team,
+          GW: p.GW,
+          position: p.position,
+          value: p.value,
+          Points: p.calc_points, // computed in PlayerAdjustmentsPage
+        }));
+
+        resp = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            players: slimPlayers,
+          }),
+        });
+      } else {
+        // Default behavior: simple GET
+        resp = await fetch(url);
+      }
+
       if (!resp.ok) throw new Error(await resp.text());
       const json = await resp.json();
       setData(json);
     } catch (err) {
       console.error(err);
-      alert('Error: ' + err.message);
+      alert("Error: " + err.message);
     } finally {
       setLoading(false);
     }
@@ -44,20 +92,16 @@ export function MyTeamDataContextProvider({ children }) {
 
   const toggleBan = (id) => {
     const sid = id.toString();
-    setBannedList((prev) =>
-      prev.includes(sid) ? prev : [...prev, sid]
-    );
+    setBannedList((prev) => (prev.includes(sid) ? prev : [...prev, sid]));
     const player = data?.find((p) => p.Name.toString() === sid);
     if (player) {
       const slim = {
-        Name:      player.Name,
-        web_name:  player.web_name,
-        photo:     player.photo,
+        Name: player.Name,
+        web_name: player.web_name,
+        photo: player.photo,
       };
       setBannedPlayersData((prev) =>
-        prev.find((p) => p.Name.toString() === sid)
-          ? prev
-          : [...prev, slim]
+        prev.find((p) => p.Name.toString() === sid) ? prev : [...prev, slim]
       );
     }
   };
@@ -67,10 +111,9 @@ export function MyTeamDataContextProvider({ children }) {
     setBannedList((prev) =>
       prev.includes(sid) ? prev.filter((x) => x !== sid) : prev
     );
-       setBannedPlayersData((prev) =>
-     prev.filter((p) => p.Name.toString() !== sid)
-   );
-
+    setBannedPlayersData((prev) =>
+      prev.filter((p) => p.Name.toString() !== sid)
+    );
   };
 
   return (
@@ -83,7 +126,7 @@ export function MyTeamDataContextProvider({ children }) {
         setBbRound,
         wildRound,
         setWildRound,
-        freehitROund, 
+        freehitROund,
         setfreehitROund,
         bannedList,
         data,
@@ -93,11 +136,11 @@ export function MyTeamDataContextProvider({ children }) {
         removeBan,
         has_changed,
         sethas_changed,
-        n_hits, 
-        setn_hits
+        n_hits,
+        setn_hits,
       }}
     >
       {children}
     </MyTeamDataContext.Provider>
   );
-};
+}

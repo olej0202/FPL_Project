@@ -186,7 +186,7 @@ export default function App() {
 
         <Route path="/Adjustment_Analysis" element={<AdjustmentAnalytics />}>
           {/* IMPORTANT: redirect index to Season_Players so the tab is active */}
-          <Route index element={<Navigate to="Adjustment_Teams" replace />} />
+          <Route index element={<Navigate to="Adjustment_Player" replace />} />
           <Route path="Adjustment_Teams" element={<TeamAdjustmentsPage />} />
           <Route path="Adjustment_Player" element={<PlayerAdjustmentsPage/>} />
         </Route>
