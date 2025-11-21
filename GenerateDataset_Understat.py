@@ -381,8 +381,8 @@ def Generate_Understat_dataset(current_players,run_player_pos):
     team_tot_xg = agg_df.groupby(["date","player_team"])["npxG_sum"].transform("sum")
     team_tot_xa = agg_df.groupby(["date","player_team"])["xA"].transform("sum")
 
-    agg_df["npxG_share"] = (agg_df["npxG"] / team_tot_xg).replace([np.inf, -np.inf], np.nan).fillna(0)
-    agg_df["xA_share"] = (agg_df["xA"] / team_tot_xa).replace([np.inf, -np.inf], np.nan).fillna(0)
+    agg_df["npxG_share"] = (agg_df["npxG_sum"] / team_tot_xg).replace([np.inf, -np.inf], np.nan).fillna(0)
+    agg_df["xA_share"] = (agg_df["xA_sum"] / team_tot_xa).replace([np.inf, -np.inf], np.nan).fillna(0)
 
     print(agg_df)
 
@@ -460,12 +460,12 @@ def Generate_Understat_dataset(current_players,run_player_pos):
 
     agg_enriched["Rolling_XG_Share"] = (
         agg_enriched.groupby(["player_team", "pos_group"])["npxG_share"]
-          .transform(lambda s: s.rolling(window=20, min_periods=1).mean())
+          .transform(lambda s: s.rolling(window=15, min_periods=1).mean())
     )
 
     agg_enriched["Rolling_XA_Share"] = (
         agg_enriched.groupby(["player_team", "pos_group"])["xA_share"]
-          .transform(lambda s: s.rolling(window=20, min_periods=1).mean())
+          .transform(lambda s: s.rolling(window=15, min_periods=1).mean())
     )
 
     def adjust_measure_safe(g: pd.DataFrame, measure_name: str,
