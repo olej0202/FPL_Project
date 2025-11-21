@@ -17,69 +17,82 @@ from pulp import (
 # Helper: pivot long (player, GW, Points) → wide GW columns + GW 0 = 0
 # =====================================================================
 
+import pandas as pd
+import numpy as np
+
 def apply_points_override_from_long(
-    base_data: pd.DataFrame,        # e.g. Model_Optimizer.csv
-    long_df: pd.DataFrame,          # columns: player, GW, Points
-    gw_list: list[str],             # e.g. ['0', '5', '6', '7', '8', '9']
+    model_df: pd.DataFrame,
+    df_long: pd.DataFrame,
+    gw_list: list[str],
 ) -> pd.DataFrame:
     """
-    Take long-format override data (player, GW, Points),
-    pivot to wide GW columns, ensure a GW '0' column with 0s,
-    then override the corresponding GW columns in base_data.
-    base_data must have a 'name' column matching `player`.
+    model_df: your Model_Optimizer.csv dataframe with columns:
+              ['name', 'position', 'team_code', 'value', '0', '5', '6', ...]
+    df_long:  long-format override with columns like:
+              name/player, GW, Points
+    gw_list: list of GW columns used in optimization, e.g. ['0','5','6','7','8','9'].
+
+    Returns a copy of model_df with the given GW columns replaced by the override Points
+    where we have overrides; other players / GWs stay as in model_df.
     """
-    if long_df is None or long_df.empty:
-        return base_data
+    if df_long is None or df_long.empty:
+        return model_df
 
-    df_long = long_df.copy()
+    df_long = df_long.copy()
 
-    # Ensure correct dtypes
-    df_long["player"] = df_long["player"].astype(str)
+    # 1) Detect the name column: 'player', 'name', 'Name', 'web_name'
+    name_col = None
+    for cand in ["player", "name", "Name", "web_name"]:
+        if cand in df_long.columns:
+            name_col = cand
+            break
+
+    if name_col is None:
+        raise ValueError("Override dataframe must have one of columns: 'player', 'name', 'Name', 'web_name'.")
+
+    # Normalise column names
+    df_long = df_long.rename(columns={name_col: "name"})
+    if "GW" not in df_long.columns or "Points" not in df_long.columns:
+        raise ValueError("Override dataframe must have columns 'GW' and 'Points'.")
+
+    # Ensure types
+    df_long["name"] = df_long["name"].astype(str)
     df_long["GW"] = df_long["GW"].astype(int)
-    df_long["Points"] = df_long["Points"].astype(float)
+    df_long["Points"] = pd.to_numeric(df_long["Points"], errors="coerce").fillna(0.0)
 
-    # Pivot to wide: one row per player, one column per GW
-    pivot = df_long.pivot_table(
-        index="player",
-        columns="GW",
-        values="Points",
-        aggfunc="sum",
-        fill_value=0.0,
+    # 2) Pivot to wide: rows = name, cols = GW, values = Points
+    pivot = (
+        df_long
+        .pivot_table(index="name", columns="GW", values="Points", aggfunc="sum")
+        .fillna(0.0)
     )
 
-    # Add GW 0 column = 0 for all if missing
-    if 0 not in pivot.columns:
-        pivot[0] = 0.0
+    # 3) We'll overwrite only GW columns that exist in both gw_list and pivot
+    gw_int_to_col = {}
+    for gw_str in gw_list:
+        try:
+            gw_int = int(gw_str)
+        except ValueError:
+            continue
+        gw_int_to_col[gw_int] = gw_str
 
-    # Make all GW columns string type to align with GW_list / your data
-    pivot.columns = pivot.columns.astype(str)
+    # 4) Copy model_df and override values
+    out = model_df.copy()
 
-    # Ensure all GWs in gw_list exist in pivot (default 0)
-    for gw in gw_list:
-        gw_str = str(gw)
-        if gw_str not in pivot.columns:
-            pivot[gw_str] = 0.0
+    # Ensure we can look up by name quickly
+    out["name"] = out["name"].astype(str)
 
-    pivot = pivot.reset_index().rename(columns={"player": "name"})
+    for player_name, row in pivot.iterrows():
+        mask = out["name"] == player_name
+        if not mask.any():
+            # No such player in Model_Optimizer.csv – skip
+            continue
 
-    # Merge onto base_data on 'name'
-    merged = base_data.merge(pivot, on="name", how="left", suffixes=("", "_ovr"))
+        for gw_int, gw_str in gw_int_to_col.items():
+            if gw_int in row.index:
+                out.loc[mask, gw_str] = row[gw_int]
 
-    # Override per GW if we have *_ovr columns
-    for gw in gw_list:
-        col = str(gw)
-        col_ovr = f"{col}_ovr"
-        if col_ovr in merged.columns:
-            merged[col] = merged[col_ovr].where(
-                ~merged[col_ovr].isna(),
-                merged.get(col, 0.0),
-            )
-
-    # Drop helper *_ovr columns
-    keep_cols = [c for c in merged.columns if not c.endswith("_ovr")]
-    merged = merged[keep_cols]
-
-    return merged
+    return out
 
 
 # =====================================================================
