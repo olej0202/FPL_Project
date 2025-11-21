@@ -11,8 +11,34 @@ import numpy as np
 from fastapi import HTTPException
 from fastapi.responses import PlainTextResponse
 from Generate_Optimize_Myteam import optimize_my_team
-from typing import List, Optional
+from typing import List, Optional, Literal
+from pydantic import BaseModel
 
+class PlayerInput(BaseModel):
+    name: str
+    web_name: str
+    Team: int
+    GW: int
+    position: str
+    value: float
+    Points: float   # from PlayerAdjustmentsPage computed Points
+
+class OptimizeRequest(BaseModel):
+    team_id: int
+
+    # keep same semantics / defaults as current endpoint
+    banned_list: List[str] = []
+    bb_round: int = 40
+    wildcard_round: int = 40
+    freehit_round: int = 40
+    n_hits: int = 0
+
+    # which engine to use
+    model_type: Literal["ai", "statistical"] = "ai"
+
+    # optional: passed only when model_type == "statistical"
+    players: Optional[List[PlayerInput]] = None
+    
 app = FastAPI()
 
 # Allow frontend to access backend
@@ -110,6 +136,46 @@ def get_data():
     df = load_and_transform("Team_Predictions_Future")
     return df.to_dict(orient="records")
 
+
+
+@app.post("/My_Team_Optimize")
+def post_my_team_optimize(req: OptimizeRequest):
+    """
+    POST variant:
+    - model_type = "ai": behave like the existing GET endpoint
+    - model_type = "statistical": use user-provided `players` Points
+    """
+    # Optional: basic validation
+    if req.model_type == "statistical" and not req.players:
+        raise HTTPException(
+            status_code=400,
+            detail="players payload is required when model_type='statistical'",
+        )
+
+    players_df = None
+    if req.players:
+        # turn list[PlayerInput] -> DataFrame
+        players_df = pd.DataFrame([p.dict() for p in req.players])
+
+    try:
+      
+        df = optimize_my_team(
+            team_id=req.team_id,
+            banned_list=req.banned_list,
+            bb_round=req.bb_round,
+            wildcard_round=req.wildcard_round,
+            free_hit_round=req.freehit_round,
+            Last_GW=4,
+            GW_list=["0", "5", "6", "7", "8", "9"],
+            n_hits=req.n_hits,
+            current_player_path="Raw_Data_25/current_players.csv",
+            players_override=players_df,  # <-- NEW ARG (you implement inside)
+        )
+
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Team not found")
+
+    return df.to_dict(orient="records")
 
 @app.get("/My_Team_Optimize")
 def get_my_team_optimize(
