@@ -1,9 +1,4 @@
-import React, {
-  useEffect,
-  useMemo,
-  useState,
-  useRef,
-} from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import { useAdjustmentData } from "./Contexts/AdjustmentsContext";
 
 const PALETTE = {
@@ -14,6 +9,14 @@ const PALETTE = {
 };
 
 const FILTERS_STORAGE_KEY = "player_adjustments_filters_v2";
+
+const MEASURE_LABELS = {
+  Points: "Predicted Points",
+  Goal_Scored: "Predicted Goals",
+  Assists: "Predicted Assists",
+  Avg_Minutes: "Predicted Minutes",
+  CBI_Predictions: "Predicted CBI",
+};
 
 /** Simple reusable searchable multi-select dropdown */
 function SearchableMultiSelect({
@@ -43,10 +46,16 @@ function SearchableMultiSelect({
     }
   };
 
+  const handleSelectAll = () => {
+    onChange(options.map((o) => o.value));
+  };
+
+  const handleClearAll = () => {
+    onChange([]);
+  };
+
   const selectedLabel =
-    selectedValues.length === 0
-      ? "All"
-      : `${selectedValues.length} selected`;
+    selectedValues.length === 0 ? "All" : `${selectedValues.length} selected`;
 
   return (
     <div style={{ position: "relative" }}>
@@ -111,6 +120,46 @@ function SearchableMultiSelect({
                 fontSize: "0.8rem",
               }}
             />
+            <div
+              style={{
+                marginTop: "0.35rem",
+                display: "flex",
+                justifyContent: "space-between",
+                gap: "0.35rem",
+                fontSize: "0.75rem",
+              }}
+            >
+              <button
+                type="button"
+                onClick={handleSelectAll}
+                style={{
+                  flex: 1,
+                  padding: "0.2rem 0.35rem",
+                  borderRadius: "999px",
+                  border: `1px solid ${PALETTE.gold}`,
+                  background: "rgba(0,0,0,0.9)",
+                  color: PALETTE.beige,
+                  cursor: "pointer",
+                }}
+              >
+                Select all
+              </button>
+              <button
+                type="button"
+                onClick={handleClearAll}
+                style={{
+                  flex: 1,
+                  padding: "0.2rem 0.35rem",
+                  borderRadius: "999px",
+                  border: "1px solid #4b5563",
+                  background: "rgba(0,0,0,0.9)",
+                  color: "#e5e7eb",
+                  cursor: "pointer",
+                }}
+              >
+                Clear
+              </button>
+            </div>
           </div>
           <div
             style={{
@@ -170,73 +219,98 @@ function SearchableMultiSelect({
 }
 
 /**
- * New page component using AdjustmentDataProvider
+ * Page using AdjustmentDataProvider
  */
 export default function PlayerAdjustmentsPage() {
-  const { fetchIfNeeded, loading, Teamdata, Playerdata, dataVersion } =
-  useAdjustmentData();
+  const {
+    fetchIfNeeded,
+    loading,
+    Teamdata,
+    Playerdata,
+    dataVersion,
+    changes,
+    updateChanges,
+    changesVersion,
+    updatePlayerData,
+  } = useAdjustmentData();
 
-  const [playersState, setPlayersState] = useState(null); // editable copy of Playerdata
-  const [teamsState, setTeamsState] = useState(null); // copy of Teamdata
+  const [playersState, setPlayersState] = useState(null); // "saved" copy
+  const [teamsState, setTeamsState] = useState(null);
+  const [hasHydratedFromContext, setHasHydratedFromContext] =
+    useState(false);
 
   const [selectedMeasure, setSelectedMeasure] =
-    useState("Points"); // "Goal_Scored" | "Assists" | "Points" | "Avg_Minutes" | "CBI_Predictions"
+    useState("Points"); // default: Predicted Points
 
-  const [selectedPlayerNames, setSelectedPlayerNames] = useState(
-    []
-  ); // web_name[]
-  const [selectedTeamCodes, setSelectedTeamCodes] = useState([]); // team_code[]
-  const [selectedPositions, setSelectedPositions] = useState([]); // position[]
-  const [valueThreshold, setValueThreshold] = useState(null); // max value for 'value' filter
+  const [selectedPlayerNames, setSelectedPlayerNames] = useState([]);
+  const [selectedTeamCodes, setSelectedTeamCodes] = useState([]);
+  const [selectedPositions, setSelectedPositions] = useState([]);
+  const [valueThreshold, setValueThreshold] = useState(null);
 
-  // Sorting state: by GW column or Total
   const [sortConfig, setSortConfig] = useState({
     type: null, // "gw" | "total" | null
     gw: null,
-    direction: "desc", // "asc" | "desc"
+    direction: "desc",
   });
 
   // Modal state
-  const [activePlayerName, setActivePlayerName] = useState(null);
+  const [activePlayerKey, setActivePlayerKey] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // For line-chart drag
+  // Local unsaved draft for shares (per active player)
+  const [pendingGoalShare, setPendingGoalShare] = useState(null);
+  const [pendingAssistShare, setPendingAssistShare] = useState(null);
+
+  // Local unsaved draft for minutes (per active player, per GW) *******
+  const [minutesDraft, setMinutesDraft] = useState({}); // { [gw]: minutes }
+
+  // For line-chart drag (minutes)
   const svgRefMinutes = useRef(null);
   const [draggingGW, setDraggingGW] = useState(null);
+  const dragGWRef = useRef(null);
 
-  // Filter persistence
   const [filtersHydrated, setFiltersHydrated] = useState(false);
 
-  // Minutes bounds
+  const adjustments = useMemo(
+    () => (changes?.current ? changes.current : []),
+    [changes, changesVersion]
+  );
+
   const MIN_MINUTES = 0;
   const MAX_MINUTES = 90;
 
-  // Fetch data when needed
+  const getPlayerKey = (p) =>
+    p.name || `${p.web_name || "unknown"}_${p.Team || "NA"}`;
+
   useEffect(() => {
     fetchIfNeeded();
   }, [fetchIfNeeded]);
 
-  // Initialize editable copies once data is available
+  // Hydrate from context once
   useEffect(() => {
-  // whenever dataVersion changes, refs have new data
-  if (Teamdata?.current && !teamsState) {
-    setTeamsState([...Teamdata.current]);
-  }
-  if (Playerdata?.current && !playersState) {
-    setPlayersState([...Playerdata.current]);
-  }
-}, [dataVersion, Teamdata, Playerdata, teamsState, playersState]);
+    if (hasHydratedFromContext) return;
+
+    if (Teamdata?.current) {
+      setTeamsState([...Teamdata.current]);
+    }
+    if (Playerdata?.current) {
+      setPlayersState([...Playerdata.current]);
+    }
+
+    if (Teamdata?.current || Playerdata?.current) {
+      setHasHydratedFromContext(true);
+    }
+  }, [Teamdata, Playerdata, hasHydratedFromContext]);
 
   const isDataReady =
-  Array.isArray(playersState) &&
-  Array.isArray(teamsState) &&
-  !loading;
-
+    Array.isArray(playersState) &&
+    Array.isArray(teamsState) &&
+    !loading;
 
   // Build team lookups
   const { teamLookup, teamNamesByCode } = useMemo(() => {
-    const lookup = new Map(); // key: `${team_code}_${GW}` -> teamRow
-    const names = new Map(); // team_code -> team_name
+    const lookup = new Map();
+    const names = new Map();
 
     if (teamsState) {
       teamsState.forEach((t) => {
@@ -251,7 +325,6 @@ export default function PlayerAdjustmentsPage() {
     return { teamLookup: lookup, teamNamesByCode: names };
   }, [teamsState]);
 
-  // All GWs available in player data
   const allGWs = useMemo(() => {
     if (!playersState) return [];
     const set = new Set();
@@ -259,7 +332,6 @@ export default function PlayerAdjustmentsPage() {
     return Array.from(set).sort((a, b) => Number(a) - Number(b));
   }, [playersState]);
 
-  // All distinct positions
   const allPositions = useMemo(() => {
     if (!playersState) return [];
     const set = new Set();
@@ -267,13 +339,9 @@ export default function PlayerAdjustmentsPage() {
     return Array.from(set);
   }, [playersState]);
 
-  // Helper: compute measures for a single player row & matching team row
   function computeMeasures(playerRow, teamRow) {
     const avgMinRaw = Number(playerRow.average_minutes) || 0;
-    const avgMin = Math.max(
-      MIN_MINUTES,
-      Math.min(MAX_MINUTES, avgMinRaw)
-    );
+    const avgMin = Math.max(MIN_MINUTES, Math.min(MAX_MINUTES, avgMinRaw));
 
     const goalShare = Number(playerRow.Goal_share) || 0;
     const assistShare = Number(playerRow.Assist_share) || 0;
@@ -290,20 +358,17 @@ export default function PlayerAdjustmentsPage() {
 
     const minutesAdj = avgMin ? Math.min(1, avgMin / 80) : 0;
 
-    // New formulas using minutesAdj
-    const goalScored = (goalShare * xg*1.1 + penData) * minutesAdj;
-    const assists = assistShare * xg*1.1 * minutesAdj;
+    const goalScored = (goalShare * xg * 1.1 + penData) * minutesAdj;
+    const assists = assistShare * xg * 1.1 * minutesAdj;
     const points =
-      defaultPoints*minutesAdj +
+      defaultPoints * minutesAdj +
       goalScored * goalFactor +
       assists * assistFactor +
       cs * csFactor * minutesAdj +
       bps * minutesAdj +
-      cbi * 2*minutesAdj;
+      cbi * 1.5 * minutesAdj;
 
     const avgMinutes = avgMin;
-
-    // CBI Predictions as its own measure (scaled with minutesAdj)
     const cbiPredictions = cbi * minutesAdj;
 
     return {
@@ -315,41 +380,39 @@ export default function PlayerAdjustmentsPage() {
     };
   }
 
-  // One-time effect: compute points for every Playerdata row and store in context as calc_points
+  // CONTEXT SYNC: only runs when playersState / teamsState change.
+  // Since we now only change playersState on SAVE, context + table
+  // are effectively recalculated only on save.
   useEffect(() => {
-    if (!Playerdata?.current || !Teamdata?.current) return;
+    if (!playersState || !teamsState) return;
 
-    const teamLookupLocal = new Map();
-    Teamdata.current.forEach((t) => {
-      const code = String(t.team_code);
-      const key = `${code}_${t.GW}`;
-      teamLookupLocal.set(key, t);
-    });
+    const timeoutId = setTimeout(() => {
+      const teamLookupLocal = new Map();
+      teamsState.forEach((t) => {
+        const code = String(t.team_code);
+        const key = `${code}_${t.GW}`;
+        teamLookupLocal.set(key, t);
+      });
 
-    const updated = Playerdata.current.map((row) => {
-      const teamCode = String(row.Team);
-      const key = `${teamCode}_${row.GW}`;
-      const teamRow = teamLookupLocal.get(key);
-      const measures = computeMeasures(row, teamRow);
-      return { ...row, calc_points: measures.Points };
-    });
+      const updated = playersState.map((row) => {
+        const teamCode = String(row.Team);
+        const key = `${teamCode}_${row.GW}`;
+        const teamRow = teamLookupLocal.get(key);
+        const measures = computeMeasures(row, teamRow);
+        return { ...row, calc_points: measures.Points };
+      });
 
-    // Update context
-    Playerdata.current = updated;
+      updatePlayerData(() => updated);
+    }, 150);
 
-    // Optionally sync local state if it's already loaded
-    setPlayersState((prev) => (prev ? updated : prev));
-  }, [Playerdata, Teamdata]); // refs only, so this runs once
+    return () => clearTimeout(timeoutId);
+  }, [playersState, teamsState, updatePlayerData]);
 
-  /**
-   * Pivot playersState by web_name, compute measures per GW and
-   * compute global min/max for the value-filter.
-   */
+  // Pivot + table data (uses playersState = saved state)
   const {
     playerTableRows,
     globalMinValue,
     globalMaxValue,
-    allPlayerNames,
     allTeamOptions,
   } = useMemo(() => {
     if (!playersState || !teamsState) {
@@ -357,24 +420,26 @@ export default function PlayerAdjustmentsPage() {
         playerTableRows: [],
         globalMinValue: 0,
         globalMaxValue: 150,
-        allPlayerNames: [],
         allTeamOptions: [],
       };
     }
 
-    const playerMap = new Map(); // web_name -> { ...info, rowsByGW: Map }
+    const playerMap = new Map();
 
     playersState.forEach((p) => {
-      const web = p.web_name;
-      if (!web) return;
+      const key = getPlayerKey(p);
+      if (!key) return;
 
       const teamCode = String(p.Team);
       const teamName = teamNamesByCode.get(teamCode) || "";
+      const displayName = p.web_name || p.name || key;
 
-      if (!playerMap.has(web)) {
-        playerMap.set(web, {
-          web_name: web,
+      if (!playerMap.has(key)) {
+        playerMap.set(key, {
+          nameKey: key,
+          displayName,
           name: p.name,
+          web_name: p.web_name,
           position: p.position,
           teamCode,
           teamName,
@@ -382,7 +447,7 @@ export default function PlayerAdjustmentsPage() {
           rowsByGW: new Map(),
         });
       }
-      const entry = playerMap.get(web);
+      const entry = playerMap.get(key);
       entry.rowsByGW.set(p.GW, p);
     });
 
@@ -425,7 +490,6 @@ export default function PlayerAdjustmentsPage() {
     if (minValue === Infinity) minValue = 0;
     if (maxValue === -Infinity) maxValue = 150;
 
-    const playerNames = Array.from(playerMap.keys()).sort();
     const teamOptions = Array.from(teamNamesByCode.entries()).map(
       ([code, name]) => ({ code, name })
     );
@@ -434,7 +498,6 @@ export default function PlayerAdjustmentsPage() {
       playerTableRows: tableRows,
       globalMinValue: minValue,
       globalMaxValue: maxValue,
-      allPlayerNames: playerNames,
       allTeamOptions: teamOptions,
     };
   }, [
@@ -446,7 +509,7 @@ export default function PlayerAdjustmentsPage() {
     teamNamesByCode,
   ]);
 
-  // Initialize valueThreshold as MAX value (max filter, "start at top")
+  // Init value slider
   useEffect(() => {
     if (
       globalMinValue != null &&
@@ -457,15 +520,13 @@ export default function PlayerAdjustmentsPage() {
     }
   }, [globalMinValue, globalMaxValue, valueThreshold]);
 
-  // Hydrate filters from localStorage once data is ready
+  // Hydrate filters from localStorage
   useEffect(() => {
     if (!isDataReady || filtersHydrated) return;
     if (typeof window === "undefined") return;
 
     try {
-      const stored = window.localStorage.getItem(
-        FILTERS_STORAGE_KEY
-      );
+      const stored = window.localStorage.getItem(FILTERS_STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
         if (parsed.selectedMeasure) {
@@ -491,13 +552,13 @@ export default function PlayerAdjustmentsPage() {
         }
       }
     } catch {
-      // ignore parse errors
+      // ignore
     } finally {
       setFiltersHydrated(true);
     }
   }, [isDataReady, filtersHydrated]);
 
-  // Persist filters to localStorage
+  // Persist filters
   useEffect(() => {
     if (!isDataReady || !filtersHydrated) return;
     if (typeof window === "undefined") return;
@@ -510,10 +571,7 @@ export default function PlayerAdjustmentsPage() {
       valueThreshold,
       sortConfig,
     };
-    window.localStorage.setItem(
-      FILTERS_STORAGE_KEY,
-      JSON.stringify(payload)
-    );
+    window.localStorage.setItem(FILTERS_STORAGE_KEY, JSON.stringify(payload));
   }, [
     isDataReady,
     filtersHydrated,
@@ -525,13 +583,13 @@ export default function PlayerAdjustmentsPage() {
     sortConfig,
   ]);
 
-  // Filtering + sorting
+  // Filtering + sorting (still based on saved playersState only)
   const filteredPlayerRows = useMemo(() => {
     let rows = playerTableRows;
 
     if (selectedPlayerNames.length > 0) {
       const set = new Set(selectedPlayerNames);
-      rows = rows.filter((r) => set.has(r.web_name));
+      rows = rows.filter((r) => set.has(r.nameKey));
     }
 
     if (selectedTeamCodes.length > 0) {
@@ -544,26 +602,20 @@ export default function PlayerAdjustmentsPage() {
       rows = rows.filter((r) => set.has(r.position));
     }
 
-    // Filter on 'value' (price) as MAX threshold: keep value <= slider
     const threshold =
       valueThreshold != null ? valueThreshold : globalMaxValue;
     if (threshold != null && !Number.isNaN(threshold)) {
       rows = rows.filter((r) => r.value <= threshold);
     }
 
-    // Sorting
     if (sortConfig.type === "gw" && sortConfig.gw != null) {
       const gwKey = sortConfig.gw;
       const dir = sortConfig.direction;
       rows = [...rows].sort((a, b) => {
         const va =
-          typeof a.gwValues[gwKey] === "number"
-            ? a.gwValues[gwKey]
-            : -Infinity;
+          typeof a.gwValues[gwKey] === "number" ? a.gwValues[gwKey] : -Infinity;
         const vb =
-          typeof b.gwValues[gwKey] === "number"
-            ? b.gwValues[gwKey]
-            : -Infinity;
+          typeof b.gwValues[gwKey] === "number" ? b.gwValues[gwKey] : -Infinity;
         if (Number.isNaN(va) && Number.isNaN(vb)) return 0;
         if (Number.isNaN(va)) return 1;
         if (Number.isNaN(vb)) return -1;
@@ -574,13 +626,9 @@ export default function PlayerAdjustmentsPage() {
       const dir = sortConfig.direction;
       rows = [...rows].sort((a, b) => {
         const va =
-          typeof a.totalMeasure === "number"
-            ? a.totalMeasure
-            : -Infinity;
+          typeof a.totalMeasure === "number" ? a.totalMeasure : -Infinity;
         const vb =
-          typeof b.totalMeasure === "number"
-            ? b.totalMeasure
-            : -Infinity;
+          typeof b.totalMeasure === "number" ? b.totalMeasure : -Infinity;
         if (Number.isNaN(va) && Number.isNaN(vb)) return 0;
         if (Number.isNaN(va)) return 1;
         if (Number.isNaN(vb)) return -1;
@@ -600,7 +648,6 @@ export default function PlayerAdjustmentsPage() {
     sortConfig,
   ]);
 
-  // Sorting handlers
   const handleSortByGW = (gw) => {
     setSortConfig((prev) => {
       if (prev.type === "gw" && prev.gw === gw) {
@@ -627,15 +674,15 @@ export default function PlayerAdjustmentsPage() {
     });
   };
 
-  // Reset handler: clear local state and refetch context data
   const handleResetData = async () => {
     if (Teamdata) Teamdata.current = null;
     if (Playerdata) Playerdata.current = null;
 
     setTeamsState(null);
     setPlayersState(null);
-    // keep filters as-is (since you want them persistent)
     setSortConfig({ type: null, gw: null, direction: "desc" });
+    updateChanges([]);
+    setHasHydratedFromContext(false);
 
     await fetchIfNeeded();
 
@@ -647,45 +694,72 @@ export default function PlayerAdjustmentsPage() {
     }
   };
 
-  // Modal-related helpers
-  const openPlayerModal = (webName) => {
-    setActivePlayerName(webName);
+  // Modal helpers
+  const openPlayerModal = (nameKey) => {
+    setActivePlayerKey(nameKey);
     setIsModalOpen(true);
   };
 
   const closeModal = () => {
     setIsModalOpen(false);
-    setActivePlayerName(null);
+    setActivePlayerKey(null);
     setDraggingGW(null);
+    dragGWRef.current = null;
+    setPendingGoalShare(null);
+    setPendingAssistShare(null);
+    setMinutesDraft({});
   };
 
-  // Get data for active player (for modal)
   const activePlayerRowsByGW = useMemo(() => {
-    if (!playersState || !activePlayerName) return [];
+    if (!playersState || !activePlayerKey) return [];
     return playersState
-      .filter((p) => p.web_name === activePlayerName)
+      .filter((p) => getPlayerKey(p) === activePlayerKey)
       .sort((a, b) => Number(a.GW) - Number(b.GW));
-  }, [playersState, activePlayerName]);
+  }, [playersState, activePlayerKey]);
 
   const activePlayerFirstRow =
-    activePlayerRowsByGW.length > 0
-      ? activePlayerRowsByGW[0]
-      : null;
+    activePlayerRowsByGW.length > 0 ? activePlayerRowsByGW[0] : null;
 
-  // Derived chart data for active player
+  // Initialize modal drafts from saved data ********************************
+  useEffect(() => {
+    if (activePlayerFirstRow) {
+      setPendingGoalShare(Number(activePlayerFirstRow.Goal_share) || 0);
+      setPendingAssistShare(Number(activePlayerFirstRow.Assist_share) || 0);
+
+      const draft = {};
+      activePlayerRowsByGW.forEach((row) => {
+        draft[row.GW] = Math.max(
+          MIN_MINUTES,
+          Math.min(MAX_MINUTES, Number(row.average_minutes) || 0)
+        );
+      });
+      setMinutesDraft(draft);
+    } else {
+      setPendingGoalShare(null);
+      setPendingAssistShare(null);
+      setMinutesDraft({});
+    }
+  }, [activePlayerFirstRow, activePlayerRowsByGW]);
+
+  // Chart data (MINUTES) uses draft, so it updates live without touching table
   const chartDataMinutes = useMemo(() => {
     if (!activePlayerRowsByGW || activePlayerRowsByGW.length === 0) {
       return [];
     }
-    return activePlayerRowsByGW.map((row) => ({
-      GW: row.GW,
-      minutes: Math.max(
+    return activePlayerRowsByGW.map((row) => {
+      const original = Math.max(
         MIN_MINUTES,
         Math.min(MAX_MINUTES, Number(row.average_minutes) || 0)
-      ),
-    }));
-  }, [activePlayerRowsByGW]);
+      );
+      const minutes = minutesDraft[row.GW] ?? original;
+      return {
+        GW: row.GW,
+        minutes,
+      };
+    });
+  }, [activePlayerRowsByGW, minutesDraft]);
 
+  // Chart data (POINTS) uses draft minutes as well (preview effect)
   const chartDataPoints = useMemo(() => {
     if (!activePlayerRowsByGW || activePlayerRowsByGW.length === 0) {
       return [];
@@ -693,89 +767,167 @@ export default function PlayerAdjustmentsPage() {
     return activePlayerRowsByGW.map((row) => {
       const teamCode = String(row.Team);
       const teamRow = teamLookup.get(`${teamCode}_${row.GW}`);
-      const measures = computeMeasures(row, teamRow);
+      const overrideMinutes = minutesDraft[row.GW];
+      const effectiveRow =
+        overrideMinutes != null
+          ? { ...row, average_minutes: overrideMinutes }
+          : row;
+      const measures = computeMeasures(effectiveRow, teamRow);
       return { GW: row.GW, points: measures.Points };
     });
-  }, [activePlayerRowsByGW, teamLookup]);
+  }, [activePlayerRowsByGW, teamLookup, minutesDraft]);
 
-  // Update all Goal_share values for active player (and context)
-  const handleGoalShareChange = (e) => {
-    const newVal = Number(e.target.value);
-    if (!activePlayerName || Number.isNaN(newVal)) return;
-
-    setPlayersState((prev) => {
-      const updated = prev.map((p) =>
-        p.web_name === activePlayerName
-          ? { ...p, Goal_share: newVal }
-          : p
-      );
-      if (Playerdata) {
-        Playerdata.current = updated;
-      }
-      return updated;
-    });
+  const logAdjustment = (entry) => {
+    updateChanges((prev) => [
+      {
+        id: `${Date.now()}_${Math.random().toString(36).slice(2)}`,
+        timestamp: new Date().toISOString(),
+        ...entry,
+      },
+      ...(prev || []),
+    ]);
   };
 
-  // Update all Assist_share values for active player (and context)
-  const handleAssistShareChange = (e) => {
-    const newVal = Number(e.target.value);
-    if (!activePlayerName || Number.isNaN(newVal)) return;
-
-    setPlayersState((prev) => {
-      const updated = prev.map((p) =>
-        p.web_name === activePlayerName
-          ? { ...p, Assist_share: newVal }
-          : p
-      );
-      if (Playerdata) {
-        Playerdata.current = updated;
+  const displayAdjustments = useMemo(() => {
+    const map = new Map();
+    (adjustments || []).forEach((a) => {
+      const playerKey = a.playerKey || a.webName || a.playerName;
+      const type = a.type || "Unknown";
+      const key = `${playerKey}__${type}`;
+      const prev = map.get(key);
+      if (!prev) {
+        map.set(key, a);
+      } else {
+        const prevTime = new Date(prev.timestamp).getTime();
+        const currTime = new Date(a.timestamp).getTime();
+        if (currTime > prevTime) {
+          map.set(key, a);
+        }
       }
-      return updated;
     });
+    return Array.from(map.values()).sort(
+      (a, b) =>
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    );
+  }, [adjustments]);
+
+  // SAVE: apply shares + minutesDraft to playersState & log changes **********
+  const handleSavePlayerChanges = () => {
+    if (!activePlayerKey || !playersState || !activePlayerFirstRow) return;
+
+    const baselineRows = playersState.filter(
+      (p) => getPlayerKey(p) === activePlayerKey
+    );
+
+    const oldGoal = Number(activePlayerFirstRow.Goal_share) || 0;
+    const oldAssist = Number(activePlayerFirstRow.Assist_share) || 0;
+
+    const newGoal = Number(pendingGoalShare ?? oldGoal);
+    const newAssist = Number(pendingAssistShare ?? oldAssist);
+
+    const adjustmentsToLog = [];
+
+    if (newGoal !== oldGoal) {
+      adjustmentsToLog.push({
+        type: "Goal_share",
+        playerKey: activePlayerKey,
+        playerName: activePlayerFirstRow.name,
+        webName: activePlayerFirstRow.web_name,
+        oldValue: oldGoal,
+        newValue: newGoal,
+      });
+    }
+
+    if (newAssist !== oldAssist) {
+      adjustmentsToLog.push({
+        type: "Assist_share",
+        playerKey: activePlayerKey,
+        playerName: activePlayerFirstRow.name,
+        webName: activePlayerFirstRow.web_name,
+        oldValue: oldAssist,
+        newValue: newAssist,
+      });
+    }
+
+    // Minutes changes per GW
+    baselineRows.forEach((row) => {
+      const gw = row.GW;
+      const oldMin = Math.max(
+        MIN_MINUTES,
+        Math.min(MAX_MINUTES, Number(row.average_minutes) || 0)
+      );
+      const draftVal = minutesDraft[gw];
+      if (draftVal != null && draftVal !== oldMin) {
+        adjustmentsToLog.push({
+          type: "Minutes",
+          playerKey: activePlayerKey,
+          playerName: row.name,
+          webName: row.web_name,
+          gw,
+          oldValue: oldMin,
+          newValue: draftVal,
+        });
+      }
+    });
+
+    if (adjustmentsToLog.length === 0) {
+      return; // nothing changed
+    }
+
+    // Commit to playersState (this triggers context + table recalculation)
+    setPlayersState((prev) => {
+      if (!prev) return prev;
+      return prev.map((p) => {
+        if (getPlayerKey(p) !== activePlayerKey) return p;
+        const gw = p.GW;
+        const updated = { ...p };
+        updated.Goal_share = newGoal;
+        updated.Assist_share = newAssist;
+        if (minutesDraft[gw] != null) {
+          updated.average_minutes = minutesDraft[gw];
+        }
+        return updated;
+      });
+    });
+
+    adjustmentsToLog.forEach(logAdjustment);
   };
 
-  // Pointer / touch helpers for minutes drag
+  const handleSaveAndClose = () => {
+    handleSavePlayerChanges();
+    closeModal();
+  };
+
+  // Pointer / touch helpers for minutes drag (only update minutesDraft) *****
   const updateMinutesFromClientY = (clientY) => {
-    if (!svgRefMinutes.current || !activePlayerName || !draggingGW)
-      return;
+    if (!svgRefMinutes.current || !activePlayerKey || !draggingGW) return;
 
     const svgRect = svgRefMinutes.current.getBoundingClientRect();
     const height = svgRect.height;
     const padding = 20;
 
     const y = clientY - svgRect.top;
-    const clampedY = Math.max(
-      padding,
-      Math.min(height - padding, y)
-    );
+    const clampedY = Math.max(padding, Math.min(height - padding, y));
     const ratio =
-      (height - padding - clampedY) /
-      (height - 2 * padding || 1);
-    const minutes =
-      MIN_MINUTES + ratio * (MAX_MINUTES - MIN_MINUTES);
+      (height - padding - clampedY) / (height - 2 * padding || 1);
+    const minutes = MIN_MINUTES + ratio * (MAX_MINUTES - MIN_MINUTES);
     const rounded = Math.round(minutes);
 
-    setPlayersState((prev) => {
-      const updated = prev.map((p) =>
-        p.web_name === activePlayerName && p.GW === draggingGW
-          ? { ...p, average_minutes: rounded }
-          : p
-      );
-      if (Playerdata) {
-        Playerdata.current = updated;
-      }
-      return updated;
-    });
+    setMinutesDraft((prev) => ({
+      ...prev,
+      [dragGWRef.current]: rounded,
+    }));
   };
 
   const handleCircleMouseDown = (gw, e) => {
     e.preventDefault();
     setDraggingGW(gw);
+    dragGWRef.current = gw;
   };
 
   const handleCircleTouchStart = (gw, e) => {
-    e.preventDefault();
     setDraggingGW(gw);
+    dragGWRef.current = gw;
     if (e.touches && e.touches[0]) {
       updateMinutesFromClientY(e.touches[0].clientY);
     }
@@ -795,40 +947,65 @@ export default function PlayerAdjustmentsPage() {
 
   const handleSvgMouseUp = () => {
     setDraggingGW(null);
+    dragGWRef.current = null;
   };
 
   const handleSvgTouchEnd = () => {
     setDraggingGW(null);
+    dragGWRef.current = null;
+  };
+
+  // Player options for filter
+  const playerDisplayByKey = useMemo(() => {
+    const m = new Map();
+    playerTableRows.forEach((r) => {
+      if (!m.has(r.nameKey)) {
+        m.set(r.nameKey, r.displayName || r.web_name || r.nameKey);
+      }
+    });
+    return m;
+  }, [playerTableRows]);
+
+  const playerOptions = useMemo(
+    () =>
+      Array.from(playerDisplayByKey.entries()).map(([key, label]) => ({
+        value: key,
+        label,
+      })),
+    [playerDisplayByKey]
+  );
+
+  const teamOptions = useMemo(
+    () =>
+      allTeamOptions.map((t) => ({
+        value: String(t.code),
+        label: t.name,
+      })),
+    [allTeamOptions]
+  );
+
+  const handleSelectAllPositions = () => {
+    setSelectedPositions(allPositions);
+  };
+
+  const handleClearPositions = () => {
+    setSelectedPositions([]);
   };
 
   if (!isDataReady) {
-  // While either playersState or teamsState is still null/undefined,
-  // or loading is true, treat this as "still loading", not "no data".
-  return (
-    <div
-      style={{
-        padding: "2rem",
-        minHeight: "100vh",
-        background: `radial-gradient(circle at top, ${PALETTE.red}, ${PALETTE.black})`,
-        color: PALETTE.beige,
-        fontFamily:
-          "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-      }}
-    >
-      Loading data…
-    </div>
-  );
-}
-
-  const playerOptions = allPlayerNames.map((name) => ({
-    value: name,
-    label: name,
-  }));
-
-  const teamOptions = allTeamOptions.map((t) => ({
-    value: String(t.code),
-    label: t.name,
-  }));
+    return (
+      <div
+        style={{
+          padding: "2rem",
+          minHeight: "100vh",
+          background: `radial-gradient(circle at top, ${PALETTE.red}, ${PALETTE.black})`,
+          color: PALETTE.beige,
+        }}
+      >
+        Loading data…
+      </div>
+    );
+  }
 
   return (
     <div
@@ -868,7 +1045,8 @@ export default function PlayerAdjustmentsPage() {
               color: "#d1c3a9",
             }}
           >
-            Integrated with team predictions. Click a player and adjust minutes, Goal and Assist shares
+            Integrated with team predictions. Click a player and adjust
+            minutes, Goal and Assist shares
           </p>
         </div>
         <button
@@ -899,8 +1077,7 @@ export default function PlayerAdjustmentsPage() {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns:
-            "repeat(auto-fit, minmax(230px, 1fr))",
+          gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))",
           gap: "1rem",
           marginBottom: "1.5rem",
         }}
@@ -938,15 +1115,19 @@ export default function PlayerAdjustmentsPage() {
               fontSize: "0.9rem",
             }}
           >
-            <option value="Goal_Scored">Goal_Scored</option>
-            <option value="Assists">Assists</option>
-            <option value="Points">Points</option>
-            <option value="Avg_Minutes">Avg_Minutes</option>
-            <option value="CBI_Predictions">CBI Predictions</option>
+            <option value="Points">{MEASURE_LABELS["Points"]}</option>
+            <option value="Goal_Scored">{MEASURE_LABELS["Goal_Scored"]}</option>
+            <option value="Assists">{MEASURE_LABELS["Assists"]}</option>
+            <option value="Avg_Minutes">
+              {MEASURE_LABELS["Avg_Minutes"]}
+            </option>
+            <option value="CBI_Predictions">
+              {MEASURE_LABELS["CBI_Predictions"]}
+            </option>
           </select>
         </div>
 
-        {/* Player multi-select (searchable) */}
+        {/* Player multi-select */}
         <div
           style={{
             padding: "0.75rem",
@@ -965,7 +1146,7 @@ export default function PlayerAdjustmentsPage() {
           />
         </div>
 
-        {/* Team multi-select (searchable) */}
+        {/* Team multi-select */}
         <div
           style={{
             padding: "0.75rem",
@@ -1007,6 +1188,46 @@ export default function PlayerAdjustmentsPage() {
           <div
             style={{
               display: "flex",
+              gap: "0.4rem",
+              marginTop: "0.25rem",
+              marginBottom: "0.4rem",
+              flexWrap: "wrap",
+            }}
+          >
+            <button
+              type="button"
+              onClick={handleSelectAllPositions}
+              style={{
+                padding: "0.2rem 0.6rem",
+                borderRadius: "999px",
+                border: `1px solid ${PALETTE.gold}`,
+                background: "rgba(0,0,0,0.9)",
+                color: PALETTE.beige,
+                fontSize: "0.75rem",
+                cursor: "pointer",
+              }}
+            >
+              Select all
+            </button>
+            <button
+              type="button"
+              onClick={handleClearPositions}
+              style={{
+                padding: "0.2rem 0.6rem",
+                borderRadius: "999px",
+                border: "1px solid #4b5563",
+                background: "rgba(0,0,0,0.9)",
+                color: "#e5e7eb",
+                fontSize: "0.75rem",
+                cursor: "pointer",
+              }}
+            >
+              Clear
+            </button>
+          </div>
+          <div
+            style={{
+              display: "flex",
               flexWrap: "wrap",
               gap: "0.4rem",
               marginTop: "0.25rem",
@@ -1044,7 +1265,7 @@ export default function PlayerAdjustmentsPage() {
           </div>
         </div>
 
-        {/* Value slider (MAX filter) */}
+        {/* Value slider */}
         <div
           style={{
             padding: "0.75rem",
@@ -1070,13 +1291,9 @@ export default function PlayerAdjustmentsPage() {
             max={globalMaxValue || globalMinValue + 1}
             step={(globalMaxValue - globalMinValue) / 100 || 1}
             value={
-              valueThreshold != null
-                ? valueThreshold
-                : globalMaxValue
+              valueThreshold != null ? valueThreshold : globalMaxValue
             }
-            onChange={(e) =>
-              setValueThreshold(Number(e.target.value))
-            }
+            onChange={(e) => setValueThreshold(Number(e.target.value))}
             style={{ width: "100%" }}
           />
           <div
@@ -1095,7 +1312,117 @@ export default function PlayerAdjustmentsPage() {
         </div>
       </div>
 
-      {/* Data table */}
+      {/* Changes made dropdown */}
+      <div style={{ marginBottom: "1.5rem" }}>
+        <details
+          style={{
+            borderRadius: "0.75rem",
+            border: `1px solid ${PALETTE.gold}`,
+            background:
+              "linear-gradient(145deg, rgba(0,0,0,0.96), rgba(0,0,0,0.9))",
+            boxShadow: "0 14px 30px rgba(0,0,0,0.9)",
+          }}
+        >
+          <summary
+            style={{
+              listStyle: "none",
+              padding: "0.6rem 0.9rem",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              fontSize: "0.9rem",
+              fontWeight: 600,
+            }}
+          >
+            <span>
+              Changes made{" "}
+              <span
+                style={{
+                  marginLeft: "0.3rem",
+                  fontWeight: 400,
+                  fontSize: "0.8rem",
+                  color: "#e5e7eb",
+                }}
+              >
+                ({displayAdjustments.length})
+              </span>
+            </span>
+            <span
+              style={{
+                fontSize: "1rem",
+                opacity: 0.9,
+              }}
+            >
+              ▾
+            </span>
+          </summary>
+          <div
+            style={{
+              padding: "0.6rem 0.9rem 0.8rem",
+              fontSize: "0.8rem",
+              maxHeight: 260,
+              overflowY: "auto",
+            }}
+          >
+            {displayAdjustments.length === 0 ? (
+              <div style={{ color: "#9ca3af" }}>
+                No manual adjustments yet.
+              </div>
+            ) : (
+              <ul
+                style={{
+                  listStyle: "none",
+                  padding: 0,
+                  margin: 0,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "0.35rem",
+                }}
+              >
+                {displayAdjustments.map((a) => (
+                  <li
+                    key={a.id}
+                    style={{
+                      padding: "0.35rem 0.45rem",
+                      borderRadius: "0.5rem",
+                      backgroundColor: "#111827",
+                      border: "1px solid #1f2937",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontWeight: 600,
+                        marginBottom: "0.1rem",
+                      }}
+                    >
+                      {a.playerName} ({a.webName})
+                    </div>
+                    <div>
+                      <span style={{ color: "#e5e7eb" }}>
+                        {a.type === "Goal_share"
+                          ? "Goal share"
+                          : a.type === "Assist_share"
+                          ? "Assist share"
+                          : "Minutes"}
+                        {a.gw != null ? ` · GW ${a.gw}` : ""}:{" "}
+                      </span>
+                      <span>
+                        {a.oldValue} →{" "}
+                        <span style={{ color: PALETTE.gold }}>
+                          {a.newValue}
+                        </span>
+                      </span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </details>
+      </div>
+
+      {/* Data table (uses saved state only) */}
       <div
         style={{
           overflowX: "auto",
@@ -1216,8 +1543,8 @@ export default function PlayerAdjustmentsPage() {
           <tbody>
             {filteredPlayerRows.map((row, idx) => (
               <tr
-                key={row.web_name}
-                onClick={() => openPlayerModal(row.web_name)}
+                key={row.nameKey}
+                onClick={() => openPlayerModal(row.nameKey)}
                 style={{
                   cursor: "pointer",
                   backgroundColor:
@@ -1236,7 +1563,7 @@ export default function PlayerAdjustmentsPage() {
                     fontWeight: 600,
                   }}
                 >
-                  {row.web_name}
+                  {row.displayName}
                 </td>
                 <td
                   style={{
@@ -1314,7 +1641,7 @@ export default function PlayerAdjustmentsPage() {
         </table>
       </div>
 
-      {/* Modal for player details */}
+      {/* Modal */}
       {isModalOpen && activePlayerFirstRow && (
         <div
           onMouseMove={handleSvgMouseMove}
@@ -1394,7 +1721,8 @@ export default function PlayerAdjustmentsPage() {
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "1fr 1fr",
+                gridTemplateColumns:
+                  "repeat(auto-fit, minmax(0, 1fr))",
                 gap: "1rem",
                 marginBottom: "1rem",
               }}
@@ -1422,10 +1750,10 @@ export default function PlayerAdjustmentsPage() {
                   min={0}
                   max={1}
                   step={0.01}
-                  value={
-                    Number(activePlayerFirstRow.Goal_share) || 0
+                  value={pendingGoalShare ?? 0}
+                  onChange={(e) =>
+                    setPendingGoalShare(Number(e.target.value))
                   }
-                  onChange={handleGoalShareChange}
                   style={{
                     width: "100%",
                     touchAction: "pan-y",
@@ -1438,9 +1766,7 @@ export default function PlayerAdjustmentsPage() {
                     color: "#d1c3a9",
                   }}
                 >
-                  {(
-                    Number(activePlayerFirstRow.Goal_share) || 0
-                  ).toFixed(3)}
+                  {(pendingGoalShare ?? 0).toFixed(3)}
                 </div>
               </div>
               <div
@@ -1466,10 +1792,10 @@ export default function PlayerAdjustmentsPage() {
                   min={0}
                   max={1}
                   step={0.01}
-                  value={
-                    Number(activePlayerFirstRow.Assist_share) || 0
+                  value={pendingAssistShare ?? 0}
+                  onChange={(e) =>
+                    setPendingAssistShare(Number(e.target.value))
                   }
-                  onChange={handleAssistShareChange}
                   style={{
                     width: "100%",
                     touchAction: "pan-y",
@@ -1482,14 +1808,40 @@ export default function PlayerAdjustmentsPage() {
                     color: "#d1c3a9",
                   }}
                 >
-                  {(
-                    Number(activePlayerFirstRow.Assist_share) || 0
-                  ).toFixed(3)}
+                  {(pendingAssistShare ?? 0).toFixed(3)}
                 </div>
               </div>
             </div>
 
-            {/* Line chart of average_minutes */}
+            {/* Save button */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                marginBottom: "0.75rem",
+              }}
+            >
+              <button
+                type="button"
+                onClick={handleSaveAndClose}
+                style={{
+                  padding: "0.4rem 0.9rem",
+                  borderRadius: "999px",
+                  border: `1px solid ${PALETTE.gold}`,
+                  background:
+                    "linear-gradient(135deg, rgba(0,0,0,0.9), rgba(90,0,0,0.95))",
+                  color: PALETTE.beige,
+                  fontSize: "0.85rem",
+                  fontWeight: 500,
+                  cursor: "pointer",
+                  boxShadow: "0 10px 30px rgba(0,0,0,0.8)",
+                }}
+              >
+                Save changes
+              </button>
+            </div>
+
+            {/* Minutes chart */}
             <div style={{ marginBottom: "1rem" }}>
               <h3
                 style={{
@@ -1508,12 +1860,12 @@ export default function PlayerAdjustmentsPage() {
                 <svg
                   ref={svgRefMinutes}
                   width="100%"
-                  height="250"
+                  height="280"
                   style={{
                     border: `1px solid ${PALETTE.gold}`,
                     borderRadius: "0.75rem",
                     background: "#000000",
-                    touchAction: "none", // important for mobile drag
+                    touchAction: "none",
                   }}
                 >
                   {(() => {
@@ -1522,7 +1874,7 @@ export default function PlayerAdjustmentsPage() {
                       ? svgRefMinutes.current.getBoundingClientRect()
                           .width
                       : 600;
-                    const height = 250;
+                    const height = 280;
 
                     const n = chartDataMinutes.length;
                     const points = chartDataMinutes.map((d, i) => {
@@ -1548,7 +1900,6 @@ export default function PlayerAdjustmentsPage() {
 
                     return (
                       <>
-                        {/* Axes labels */}
                         <text
                           x={padding}
                           y={12}
@@ -1567,7 +1918,6 @@ export default function PlayerAdjustmentsPage() {
                           GW
                         </text>
 
-                        {/* vertical GW markers */}
                         {points.map((p, idx) => (
                           <g key={`tick-min-${p.gw}-${idx}`}>
                             <line
@@ -1590,7 +1940,6 @@ export default function PlayerAdjustmentsPage() {
                           </g>
                         ))}
 
-                        {/* line */}
                         <polyline
                           points={polyPoints}
                           fill="none"
@@ -1598,13 +1947,12 @@ export default function PlayerAdjustmentsPage() {
                           strokeWidth="2"
                         />
 
-                        {/* draggable circles */}
                         {points.map((p) => (
                           <g key={`pt-min-${p.gw}`}>
                             <circle
                               cx={p.x}
                               cy={p.y}
-                              r={8}
+                              r={12}
                               fill={
                                 draggingGW === p.gw
                                   ? PALETTE.red
@@ -1622,7 +1970,7 @@ export default function PlayerAdjustmentsPage() {
                             />
                             <text
                               x={p.x}
-                              y={p.y - 10}
+                              y={p.y - 12}
                               fontSize="9"
                               textAnchor="middle"
                               fill={PALETTE.beige}
@@ -1638,7 +1986,7 @@ export default function PlayerAdjustmentsPage() {
               )}
             </div>
 
-            {/* Line chart of calculated points */}
+            {/* Points chart */}
             <div>
               <h3
                 style={{
@@ -1665,21 +2013,13 @@ export default function PlayerAdjustmentsPage() {
                 >
                   {(() => {
                     const padding = 20;
-                    const width = 600; // SVG width in CSS pixels is flexible, but we can treat 600 as layout basis
+                    const width = 600;
                     const height = 250;
 
                     const n = chartDataPoints.length;
-                    const vals = chartDataPoints.map(
-                      (d) => d.points
-                    );
-                    const minP =
-                      vals.length > 0
-                        ? Math.min(...vals)
-                        : 0;
-                    const maxP =
-                      vals.length > 0
-                        ? Math.max(...vals)
-                        : 1;
+                    const vals = chartDataPoints.map((d) => d.points);
+                    const minP = vals.length > 0 ? Math.min(...vals) : 0;
+                    const maxP = vals.length > 0 ? Math.max(...vals) : 1;
                     const range = maxP - minP || 1;
 
                     const points = chartDataPoints.map((d, i) => {
@@ -1703,7 +2043,6 @@ export default function PlayerAdjustmentsPage() {
 
                     return (
                       <>
-                        {/* Axes labels */}
                         <text
                           x={padding}
                           y={12}
@@ -1722,7 +2061,6 @@ export default function PlayerAdjustmentsPage() {
                           GW
                         </text>
 
-                        {/* vertical GW markers */}
                         {points.map((p, idx) => (
                           <g key={`tick-pts-${p.gw}-${idx}`}>
                             <line
@@ -1745,7 +2083,6 @@ export default function PlayerAdjustmentsPage() {
                           </g>
                         ))}
 
-                        {/* line */}
                         <polyline
                           points={polyPoints}
                           fill="none"
@@ -1753,7 +2090,6 @@ export default function PlayerAdjustmentsPage() {
                           strokeWidth="2"
                         />
 
-                        {/* points */}
                         {points.map((p) => (
                           <g key={`pt-pts-${p.gw}`}>
                             <circle

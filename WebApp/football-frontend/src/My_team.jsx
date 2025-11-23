@@ -30,7 +30,9 @@ export default function MyTeamOptimize() {
   } = useMyteamData();
 
   // NEW: access player adjustment data (with computed points)
-  const { Playerdata } = useAdjustmentData();
+  // NEW: access player adjustment data (with computed points)
+const { Playerdata, dataVersion } = useAdjustmentData();
+
 
   const navigate = useNavigate();
 
@@ -47,7 +49,7 @@ const hasStatisticalData = useMemo(() => {
       p.calc_points != null &&
       Number.isFinite(Number(p.calc_points))
   );
-}, [Playerdata]);
+}, [Playerdata,dataVersion]);
 
   // If we lose statistical data (e.g. context reset), ensure we fall back to AI
   useEffect(() => {
@@ -403,7 +405,7 @@ const hasStatisticalData = useMemo(() => {
                   className={`flex-1 inline-flex items-center justify-center px-3 py-1.5 rounded-md text-xs sm:text-sm border transition ${
                     modelType === "ai"
                       ? "bg-royal-gold text-black border-yellow-400"
-                      : "bg-black/60 text-neutral-300 border-white/10 hover:bg-black/80"
+                      : "bg-black/60 text-neutral-300 border-white/10 hover:bg-black/80  hover:border-none"
                   }`}
                 >
                   AI model
@@ -419,8 +421,8 @@ const hasStatisticalData = useMemo(() => {
                     !hasStatisticalData
                       ? "bg-black/40 text-neutral-500 border-neutral-700 cursor-not-allowed"
                       : modelType === "statistical"
-                      ? "bg-royal-gold text-black border-yellow-400"
-                      : "bg-black/60 text-neutral-300 border-white/10 hover:bg-black/80"
+                      ? "bg-royal-gold text-black border-yellow-400 "
+                      : "bg-black/60 text-neutral-300 border-white/10 hover:bg-black/80 hover:border-none"
                   }`}
                 >
                   Statistical model

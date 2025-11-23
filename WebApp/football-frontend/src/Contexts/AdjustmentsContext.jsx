@@ -14,11 +14,15 @@ export const useAdjustmentData = () => useContext(AdjustmentContext);
 export function AdjustmentDataProvider({ children }) {
   const TeamRef = useRef(null);
   const PlayerRef = useRef(null);
+  const ChangesRef = useRef([]);
 
   const [loading, setLoading] = useState(false);
 
-  // 🔥 This is what lets consumers know "data changed"
+  // 🔥 global version for "data changed"
   const [dataVersion, setDataVersion] = useState(0);
+
+  // separate version for changes (so consumers can cheaply re-render)
+  const [changesVersion, setChangesVersion] = useState(0);
 
   const fetchIfNeeded = useCallback(async () => {
     // if both already loaded, do nothing
@@ -56,15 +60,54 @@ export function AdjustmentDataProvider({ children }) {
     await fetchIfNeeded(); // will fetch and bump version again
   }, [fetchIfNeeded]);
 
+  // 🔹 Helper to update PLAYER data and bump dataVersion
+  const updatePlayerData = useCallback((updater) => {
+    if (typeof updater === "function") {
+      PlayerRef.current = updater(PlayerRef.current || []);
+    } else {
+      PlayerRef.current = updater || [];
+    }
+    setDataVersion((v) => v + 1);
+  }, []);
+
+  // 🔹 Helper to update TEAM data and bump dataVersion (if needed later)
+  const updateTeamData = useCallback((updater) => {
+    if (typeof updater === "function") {
+      TeamRef.current = updater(TeamRef.current || []);
+    } else {
+      TeamRef.current = updater || [];
+    }
+    setDataVersion((v) => v + 1);
+  }, []);
+
+  // 🔹 Changes list lives in context as well, with its own version,
+  // and ALSO bumps dataVersion whenever changes change (per your request)
+  const updateChanges = useCallback((updater) => {
+    if (typeof updater === "function") {
+      ChangesRef.current = updater(ChangesRef.current || []);
+    } else {
+      ChangesRef.current = updater || [];
+    }
+    setChangesVersion((v) => v + 1);
+    setDataVersion((v) => v + 1); // also bump global dataVersion on change
+  }, []);
+
   return (
     <AdjustmentContext.Provider
       value={{
         fetchIfNeeded,
-        forceRefetch,   // optional; use in your reset button if you like
+        forceRefetch,
         loading,
         Teamdata: TeamRef,
         Playerdata: PlayerRef,
-        dataVersion,    // 👈 use this in PlayerAdjustmentsPage
+        dataVersion,
+        // 🔹 changes API
+        changes: ChangesRef,
+        updateChanges,
+        changesVersion,
+        // 🔹 data update helpers
+        updatePlayerData,
+        updateTeamData,
       }}
     >
       {children}
