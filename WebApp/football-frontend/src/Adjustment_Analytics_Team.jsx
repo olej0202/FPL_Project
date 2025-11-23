@@ -27,7 +27,7 @@ const PALETTE = {
 const normalizeName = (s) => String(s ?? "").trim().toLowerCase();
 
 function TeamAdjustmentsPage() {
-  const { fetchIfNeeded, loading, Teamdata } = useAdjustmentData();
+  const { fetchIfNeeded, loading, Teamdata, updateTeamData,dataVersion, forceRefetch} = useAdjustmentData();
   const [data, setData] = useState([]);
   const [resetting, setResetting] = useState(false);
 
@@ -64,18 +64,18 @@ function TeamAdjustmentsPage() {
 
     const withMetrics = recomputeMetrics(cleaned);
     setData(withMetrics);
-    Teamdata.current = withMetrics; // keep context in sync
+    updateTeamData(withMetrics)
   };
 
   // Initial fetch
   useEffect(() => {
     (async () => {
       await fetchIfNeeded();
-      if (Teamdata.current) {
+      if (!data.length && Teamdata.current) {
         initializeFromContext(Teamdata.current);
       }
     })();
-  }, [fetchIfNeeded, Teamdata]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [fetchIfNeeded, Teamdata, data.length, dataVersion]);
 
   // Unique team points for scatter (read baseline from data rows)
   const teamPoints = useMemo(() => {
@@ -181,7 +181,7 @@ function TeamAdjustmentsPage() {
 
       // Recompute XG & CS for ALL rows (both sides affected)
       const withMetrics = recomputeMetrics(updated);
-      Teamdata.current = withMetrics; // also update context with new XG & CS
+      updateTeamData(withMetrics);
       return withMetrics;
     });
   };
@@ -190,11 +190,8 @@ function TeamAdjustmentsPage() {
   const handleReset = async () => {
     try {
       setResetting(true);
-      Teamdata.current = null; // so fetchIfNeeded actually refetches
-      await fetchIfNeeded();
-      if (Teamdata.current) {
-        initializeFromContext(Teamdata.current);
-      }
+      setData([]);
+      await forceRefetch();
     } catch (e) {
       console.error("Failed to reset:", e);
     } finally {

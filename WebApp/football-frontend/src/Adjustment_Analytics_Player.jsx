@@ -228,16 +228,19 @@ export default function PlayerAdjustmentsPage() {
     Teamdata,
     Playerdata,
     dataVersion,
+    teamVersion, 
     changes,
     updateChanges,
     changesVersion,
     updatePlayerData,
   } = useAdjustmentData();
 
-  const [playersState, setPlayersState] = useState(null); // "saved" copy
+  const [playersState, setPlayersState] = useState(null); // saved copy
   const [teamsState, setTeamsState] = useState(null);
   const [hasHydratedFromContext, setHasHydratedFromContext] =
     useState(false);
+  const [hasInitialContextSync, setHasInitialContextSync] = useState(false);
+
 
   const [selectedMeasure, setSelectedMeasure] =
     useState("Points"); // default: Predicted Points
@@ -261,11 +264,15 @@ export default function PlayerAdjustmentsPage() {
   const [pendingGoalShare, setPendingGoalShare] = useState(null);
   const [pendingAssistShare, setPendingAssistShare] = useState(null);
 
-  // Local unsaved draft for minutes (per active player, per GW) *******
+  // Local unsaved draft for minutes (per active player, per GW)
   const [minutesDraft, setMinutesDraft] = useState({}); // { [gw]: minutes }
+
+  // Baseline snapshot of active player rows (for modal only)
+  const [modalBaselineRows, setModalBaselineRows] = useState([]);
 
   // For line-chart drag (minutes)
   const svgRefMinutes = useRef(null);
+  const svgRefPoints = useRef(null);
   const [draggingGW, setDraggingGW] = useState(null);
   const dragGWRef = useRef(null);
 
@@ -286,7 +293,7 @@ export default function PlayerAdjustmentsPage() {
     fetchIfNeeded();
   }, [fetchIfNeeded]);
 
-  // Hydrate from context once
+  // 🔁 Hydrate from context ONCE per load/reset (prevents constant overwrites)
   useEffect(() => {
     if (hasHydratedFromContext) return;
 
@@ -300,9 +307,16 @@ export default function PlayerAdjustmentsPage() {
     if (Teamdata?.current || Playerdata?.current) {
       setHasHydratedFromContext(true);
     }
-  }, [Teamdata, Playerdata, hasHydratedFromContext]);
+  }, [Teamdata, Playerdata, dataVersion, hasHydratedFromContext]);
+
+  useEffect(() => {
+  if (!Teamdata?.current) return;
+  // don’t touch playersState (we don't want to blow away pending share changes)
+  setTeamsState([...Teamdata.current]);
+}, [teamVersion, Teamdata]);
 
   const isDataReady =
+    hasHydratedFromContext &&
     Array.isArray(playersState) &&
     Array.isArray(teamsState) &&
     !loading;
@@ -379,10 +393,35 @@ export default function PlayerAdjustmentsPage() {
       CBI_Predictions: cbiPredictions,
     };
   }
+useEffect(() => {
+  if (!isDataReady) return;
+  if (!playersState || !teamsState) return;
+  if (hasInitialContextSync) return;
 
-  // CONTEXT SYNC: only runs when playersState / teamsState change.
-  // Since we now only change playersState on SAVE, context + table
-  // are effectively recalculated only on save.
+  // Wait 1 animation frame so React finishes painting the table
+  requestAnimationFrame(() => {
+    // Build local team lookup
+    const localTeamLookup = new Map();
+    teamsState.forEach((t) => {
+      const code = String(t.team_code);
+      const key = `${code}_${t.GW}`;
+      localTeamLookup.set(key, t);
+    });
+
+    // Recalculate points BEFORE loading into context
+    const updated = playersState.map((row) => {
+      const teamCode = String(row.Team);
+      const key = `${teamCode}_${row.GW}`;
+      const teamRow = localTeamLookup.get(key);
+      const measures = computeMeasures(row, teamRow);
+      return { ...row, calc_points: measures.Points };
+    });
+
+    updatePlayerData(() => updated);
+    setHasInitialContextSync(true);
+  });
+}, [isDataReady, playersState, teamsState, computeMeasures, updatePlayerData, hasInitialContextSync]);
+  // 🔁 Sync into context only when saved data changes
   useEffect(() => {
     if (!playersState || !teamsState) return;
 
@@ -408,7 +447,17 @@ export default function PlayerAdjustmentsPage() {
     return () => clearTimeout(timeoutId);
   }, [playersState, teamsState, updatePlayerData]);
 
-  // Pivot + table data (uses playersState = saved state)
+  /**
+ * Sync the recalculated playersState back into context *once*
+ * AFTER:
+ *   - Data has hydrated
+ *   - computeMeasures has run
+ *   - The table has rendered at least once
+ */
+
+
+
+  // Pivot + table data (uses saved playersState)
   const {
     playerTableRows,
     globalMinValue,
@@ -583,7 +632,7 @@ export default function PlayerAdjustmentsPage() {
     sortConfig,
   ]);
 
-  // Filtering + sorting (still based on saved playersState only)
+  // Filtering + sorting
   const filteredPlayerRows = useMemo(() => {
     let rows = playerTableRows;
 
@@ -682,16 +731,9 @@ export default function PlayerAdjustmentsPage() {
     setPlayersState(null);
     setSortConfig({ type: null, gw: null, direction: "desc" });
     updateChanges([]);
-    setHasHydratedFromContext(false);
+    setHasHydratedFromContext(false); // allow fresh hydrate
 
     await fetchIfNeeded();
-
-    if (Teamdata?.current) {
-      setTeamsState([...Teamdata.current]);
-    }
-    if (Playerdata?.current) {
-      setPlayersState([...Playerdata.current]);
-    }
   };
 
   // Modal helpers
@@ -708,26 +750,37 @@ export default function PlayerAdjustmentsPage() {
     setPendingGoalShare(null);
     setPendingAssistShare(null);
     setMinutesDraft({});
+    setModalBaselineRows([]);
   };
 
-  const activePlayerRowsByGW = useMemo(() => {
-    if (!playersState || !activePlayerKey) return [];
-    return playersState
-      .filter((p) => getPlayerKey(p) === activePlayerKey)
-      .sort((a, b) => Number(a.GW) - Number(b.GW));
-  }, [playersState, activePlayerKey]);
-
+  // Derived: first row from modal baseline
   const activePlayerFirstRow =
-    activePlayerRowsByGW.length > 0 ? activePlayerRowsByGW[0] : null;
+    modalBaselineRows.length > 0 ? modalBaselineRows[0] : null;
 
-  // Initialize modal drafts from saved data ********************************
+  // Snapshot baseline rows when modal opens (once per open)
   useEffect(() => {
-    if (activePlayerFirstRow) {
-      setPendingGoalShare(Number(activePlayerFirstRow.Goal_share) || 0);
-      setPendingAssistShare(Number(activePlayerFirstRow.Assist_share) || 0);
+    if (!isModalOpen || !activePlayerKey || !playersState) {
+      setModalBaselineRows([]);
+      setPendingGoalShare(null);
+      setPendingAssistShare(null);
+      setMinutesDraft({});
+      return;
+    }
+
+    const rows = playersState
+      .filter((p) => getPlayerKey(p) === activePlayerKey)
+      .sort((a, b) => Number(a.GW) - Number(b.GW))
+      .map((r) => ({ ...r }));
+
+    setModalBaselineRows(rows);
+
+    const first = rows[0];
+    if (first) {
+      setPendingGoalShare(Number(first.Goal_share) || 0);
+      setPendingAssistShare(Number(first.Assist_share) || 0);
 
       const draft = {};
-      activePlayerRowsByGW.forEach((row) => {
+      rows.forEach((row) => {
         draft[row.GW] = Math.max(
           MIN_MINUTES,
           Math.min(MAX_MINUTES, Number(row.average_minutes) || 0)
@@ -739,14 +792,14 @@ export default function PlayerAdjustmentsPage() {
       setPendingAssistShare(null);
       setMinutesDraft({});
     }
-  }, [activePlayerFirstRow, activePlayerRowsByGW]);
+  }, [isModalOpen, activePlayerKey, playersState]);
 
-  // Chart data (MINUTES) uses draft, so it updates live without touching table
+  // Minutes chart data (local)
   const chartDataMinutes = useMemo(() => {
-    if (!activePlayerRowsByGW || activePlayerRowsByGW.length === 0) {
+    if (!modalBaselineRows || modalBaselineRows.length === 0) {
       return [];
     }
-    return activePlayerRowsByGW.map((row) => {
+    return modalBaselineRows.map((row) => {
       const original = Math.max(
         MIN_MINUTES,
         Math.min(MAX_MINUTES, Number(row.average_minutes) || 0)
@@ -757,25 +810,40 @@ export default function PlayerAdjustmentsPage() {
         minutes,
       };
     });
-  }, [activePlayerRowsByGW, minutesDraft]);
+  }, [modalBaselineRows, minutesDraft]);
 
-  // Chart data (POINTS) uses draft minutes as well (preview effect)
+  // Points chart data (local predicted)
   const chartDataPoints = useMemo(() => {
-    if (!activePlayerRowsByGW || activePlayerRowsByGW.length === 0) {
+    if (!modalBaselineRows || modalBaselineRows.length === 0) {
       return [];
     }
-    return activePlayerRowsByGW.map((row) => {
+
+    return modalBaselineRows.map((row) => {
       const teamCode = String(row.Team);
       const teamRow = teamLookup.get(`${teamCode}_${row.GW}`);
+
       const overrideMinutes = minutesDraft[row.GW];
-      const effectiveRow =
-        overrideMinutes != null
-          ? { ...row, average_minutes: overrideMinutes }
-          : row;
+
+      const effectiveRow = {
+        ...row,
+        average_minutes:
+          overrideMinutes != null ? overrideMinutes : row.average_minutes,
+        Goal_share:
+          pendingGoalShare != null ? pendingGoalShare : row.Goal_share,
+        Assist_share:
+          pendingAssistShare != null ? pendingAssistShare : row.Assist_share,
+      };
+
       const measures = computeMeasures(effectiveRow, teamRow);
       return { GW: row.GW, points: measures.Points };
     });
-  }, [activePlayerRowsByGW, teamLookup, minutesDraft]);
+  }, [
+    modalBaselineRows,
+    teamLookup,
+    minutesDraft,
+    pendingGoalShare,
+    pendingAssistShare,
+  ]);
 
   const logAdjustment = (entry) => {
     updateChanges((prev) => [
@@ -788,12 +856,19 @@ export default function PlayerAdjustmentsPage() {
     ]);
   };
 
+  const formatAdjustmentValue = (a, field) => {
+    const v = a[field];
+    if (typeof v !== "number") return v;
+    if (a.type === "Minutes") return v.toFixed(0);
+    return v.toFixed(2);
+  };
+
   const displayAdjustments = useMemo(() => {
     const map = new Map();
     (adjustments || []).forEach((a) => {
       const playerKey = a.playerKey || a.webName || a.playerName;
       const type = a.type || "Unknown";
-      const key = `${playerKey}__${type}`;
+      const key = `${playerKey}__${type}__${a.gw ?? "all"}`;
       const prev = map.get(key);
       if (!prev) {
         map.set(key, a);
@@ -811,13 +886,51 @@ export default function PlayerAdjustmentsPage() {
     );
   }, [adjustments]);
 
-  // SAVE: apply shares + minutesDraft to playersState & log changes **********
-  const handleSavePlayerChanges = () => {
-    if (!activePlayerKey || !playersState || !activePlayerFirstRow) return;
+  const hasPlayerChanges = useMemo(() => {
+    if (!activePlayerFirstRow || !modalBaselineRows.length) return false;
 
-    const baselineRows = playersState.filter(
-      (p) => getPlayerKey(p) === activePlayerKey
-    );
+    const oldGoal = Number(activePlayerFirstRow.Goal_share) || 0;
+    const oldAssist = Number(activePlayerFirstRow.Assist_share) || 0;
+
+    const newGoal = Number(pendingGoalShare ?? oldGoal);
+    const newAssist = Number(pendingAssistShare ?? oldAssist);
+
+    if (newGoal !== oldGoal) return true;
+    if (newAssist !== oldAssist) return true;
+
+    for (const row of modalBaselineRows) {
+      const gw = row.GW;
+      const oldMin = Math.max(
+        MIN_MINUTES,
+        Math.min(MAX_MINUTES, Number(row.average_minutes) || 0)
+      );
+      if (
+        minutesDraft[gw] != null &&
+        Number(minutesDraft[gw]) !== Number(oldMin)
+      ) {
+        return true;
+      }
+    }
+
+    return false;
+  }, [
+    activePlayerFirstRow,
+    modalBaselineRows,
+    pendingGoalShare,
+    pendingAssistShare,
+    minutesDraft,
+  ]);
+
+  const handleSavePlayerChanges = () => {
+    if (
+      !activePlayerKey ||
+      !playersState ||
+      !activePlayerFirstRow ||
+      !hasPlayerChanges
+    )
+      return;
+
+    const baselineRows = modalBaselineRows;
 
     const oldGoal = Number(activePlayerFirstRow.Goal_share) || 0;
     const oldAssist = Number(activePlayerFirstRow.Assist_share) || 0;
@@ -849,7 +962,6 @@ export default function PlayerAdjustmentsPage() {
       });
     }
 
-    // Minutes changes per GW
     baselineRows.forEach((row) => {
       const gw = row.GW;
       const oldMin = Math.max(
@@ -857,7 +969,7 @@ export default function PlayerAdjustmentsPage() {
         Math.min(MAX_MINUTES, Number(row.average_minutes) || 0)
       );
       const draftVal = minutesDraft[gw];
-      if (draftVal != null && draftVal !== oldMin) {
+      if (draftVal != null && Number(draftVal) !== Number(oldMin)) {
         adjustmentsToLog.push({
           type: "Minutes",
           playerKey: activePlayerKey,
@@ -870,11 +982,8 @@ export default function PlayerAdjustmentsPage() {
       }
     });
 
-    if (adjustmentsToLog.length === 0) {
-      return; // nothing changed
-    }
+    if (adjustmentsToLog.length === 0) return;
 
-    // Commit to playersState (this triggers context + table recalculation)
     setPlayersState((prev) => {
       if (!prev) return prev;
       return prev.map((p) => {
@@ -898,7 +1007,7 @@ export default function PlayerAdjustmentsPage() {
     closeModal();
   };
 
-  // Pointer / touch helpers for minutes drag (only update minutesDraft) *****
+  // Pointer / touch helpers for minutes drag (only minutesDraft)
   const updateMinutesFromClientY = (clientY) => {
     if (!svgRefMinutes.current || !activePlayerKey || !draggingGW) return;
 
@@ -1069,7 +1178,7 @@ export default function PlayerAdjustmentsPage() {
           }}
         >
           <span>⟳</span>
-          <span>Reset & Refetch</span>
+          <span>Reset</span>
         </button>
       </div>
 
@@ -1408,9 +1517,9 @@ export default function PlayerAdjustmentsPage() {
                         {a.gw != null ? ` · GW ${a.gw}` : ""}:{" "}
                       </span>
                       <span>
-                        {a.oldValue} →{" "}
+                        {formatAdjustmentValue(a, "oldValue")} →{" "}
                         <span style={{ color: PALETTE.gold }}>
-                          {a.newValue}
+                          {formatAdjustmentValue(a, "newValue")}
                         </span>
                       </span>
                     </div>
@@ -1422,7 +1531,7 @@ export default function PlayerAdjustmentsPage() {
         </details>
       </div>
 
-      {/* Data table (uses saved state only) */}
+      {/* Data table (saved state only) */}
       <div
         style={{
           overflowX: "auto",
@@ -1743,7 +1852,7 @@ export default function PlayerAdjustmentsPage() {
                     fontSize: "0.85rem",
                   }}
                 >
-                  Goal_share
+                  Goal Share
                 </label>
                 <input
                   type="range"
@@ -1766,7 +1875,7 @@ export default function PlayerAdjustmentsPage() {
                     color: "#d1c3a9",
                   }}
                 >
-                  {(pendingGoalShare ?? 0).toFixed(3)}
+                  {(pendingGoalShare ?? 0).toFixed(2)}
                 </div>
               </div>
               <div
@@ -1785,7 +1894,7 @@ export default function PlayerAdjustmentsPage() {
                     fontSize: "0.85rem",
                   }}
                 >
-                  Assist_share
+                  Assist Share
                 </label>
                 <input
                   type="range"
@@ -1808,7 +1917,7 @@ export default function PlayerAdjustmentsPage() {
                     color: "#d1c3a9",
                   }}
                 >
-                  {(pendingAssistShare ?? 0).toFixed(3)}
+                  {(pendingAssistShare ?? 0).toFixed(2)}
                 </div>
               </div>
             </div>
@@ -1824,6 +1933,7 @@ export default function PlayerAdjustmentsPage() {
               <button
                 type="button"
                 onClick={handleSaveAndClose}
+                disabled={!hasPlayerChanges}
                 style={{
                   padding: "0.4rem 0.9rem",
                   borderRadius: "999px",
@@ -1833,8 +1943,9 @@ export default function PlayerAdjustmentsPage() {
                   color: PALETTE.beige,
                   fontSize: "0.85rem",
                   fontWeight: 500,
-                  cursor: "pointer",
+                  cursor: hasPlayerChanges ? "pointer" : "not-allowed",
                   boxShadow: "0 10px 30px rgba(0,0,0,0.8)",
+                  opacity: hasPlayerChanges ? 1 : 0.5,
                 }}
               >
                 Save changes
@@ -1850,7 +1961,7 @@ export default function PlayerAdjustmentsPage() {
                   fontSize: "0.95rem",
                 }}
               >
-                Average minutes per GW (drag dots to adjust)
+                Predicted minutes per GW (drag dots to adjust)
               </h3>
               {chartDataMinutes.length === 0 ? (
                 <div style={{ fontSize: "0.85rem" }}>
@@ -1995,7 +2106,7 @@ export default function PlayerAdjustmentsPage() {
                   fontSize: "0.95rem",
                 }}
               >
-                Calculated points per GW
+                Calculated Points
               </h3>
               {chartDataPoints.length === 0 ? (
                 <div style={{ fontSize: "0.85rem" }}>
@@ -2003,6 +2114,7 @@ export default function PlayerAdjustmentsPage() {
                 </div>
               ) : (
                 <svg
+                  ref={svgRefPoints}
                   width="100%"
                   height="250"
                   style={{
@@ -2013,7 +2125,10 @@ export default function PlayerAdjustmentsPage() {
                 >
                   {(() => {
                     const padding = 20;
-                    const width = 600;
+                    const width = svgRefPoints.current
+                      ? svgRefPoints.current.getBoundingClientRect()
+                          .width
+                      : 600;
                     const height = 250;
 
                     const n = chartDataPoints.length;
@@ -2107,7 +2222,7 @@ export default function PlayerAdjustmentsPage() {
                               textAnchor="middle"
                               fill={PALETTE.beige}
                             >
-                              {Number(p.points).toFixed(1)}
+                              {Number(p.points).toFixed(2)}
                             </text>
                           </g>
                         ))}

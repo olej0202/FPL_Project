@@ -433,7 +433,7 @@ const hasStatisticalData = useMemo(() => {
   <button
     type="button"
     onClick={() => navigate("/Adjustment_Analysis")}
-    className="inline-flex items-center gap-1 text-royal-gold hover:text-yellow-300 underline decoration-dotted"
+    className="ml-5 mt-4 inline-flex items-center gap-1 text-royal-gold hover:text-yellow-300 underline decoration-dotted"
   >
     Open Player Adjustments
   </button>
