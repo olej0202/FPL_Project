@@ -39,10 +39,10 @@ class DeepNN(nn.Module):
 
 
 def Data_Extraction(season,is_new_season,has_been_error):
-    #main_Extract(season, is_new_season, has_been_error)
+    main_Extract(season, is_new_season, has_been_error)
     current_players(season)
     current_teams(season)
-    #main_Extract_Understat(season)
+    main_Extract_Understat(season)
 
 
 def Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos):
@@ -61,9 +61,9 @@ def Data_Predictions(current_fixture_path,current_team_path, n_points_in_future)
    
 def Data_Generation(ownership,budget,GW_list_wildcard,GW_list_freehit,current_player_path,current_team_path,current_season_path ):
     GenerateOptimizeSet(current_player_path)
-    #generate_optimizers(ownership=ownership,budget=budget,GW_list_wildcard=GW_list_wildcard,GW_list_freehit=GW_list_freehit  )
+    generate_optimizers(ownership=ownership,budget=budget,GW_list_wildcard=GW_list_wildcard,GW_list_freehit=GW_list_freehit  )
     Generate_ALL_datasets(current_team_path,current_player_path,current_season_path)
-    #main_GPT_News()
+    main_GPT_News()
     
 def Specials(ownership,budget,GW_list_wildcard,current_player_path ):
     wildcard_optimize_team_shocks(ownership,budget,GW_list_wildcard,current_player_path=current_player_path,robust_trials=15,lock_from_freq=True,lock_counts={"FWD":2, "MID":3, "DEF":3},lock_scope="t0",lock_as_starters=False)
