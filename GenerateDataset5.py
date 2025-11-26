@@ -593,8 +593,8 @@ def Generate_team_data():
         new_team['XG_avg']=new_team['XG'].rolling(window=15, min_periods=1).mean()
         new_team['XGC_avg']=new_team['XGC'].rolling(window=15, min_periods=1).mean()
         
-        new_team['Rolling_Threat']=new_team['Threat'].ewm(span=15, adjust=False).mean()
-        new_team['Rolling_Threat_Against']=new_team['Threat_against'].ewm(span=15, adjust=False).mean()
+        new_team['Rolling_Threat']=new_team['Threat'].ewm(span=20, adjust=False).mean()
+        new_team['Rolling_Threat_Against']=new_team['Threat_against'].ewm(span=20, adjust=False).mean()
         
         new_team['XG_slope']=new_team['XG_avg'].rolling(window=6, min_periods=1).apply(rolling_slope, raw=True)
         new_team['XGC_slope']=new_team['XGC_avg'].rolling(window=6, min_periods=1).apply(rolling_slope, raw=True)
@@ -788,8 +788,8 @@ def team_transformed2():
 
 
 
-        k_def = 0.06
-        k_off=0.06
+        k_def = 0.07
+        k_off=0.07
         min_val=0.8
 
         actual_goals = xg
@@ -1219,7 +1219,7 @@ def main_Transform():
             player_df["rolling_ICT"] = adjust_measure(player_df, 'ICT')
             #player_df["rolling_Threat"] = player_df['Threat'].ewm(span=lookback, adjust=False).mean()
             player_df["rolling_Threat"]=adjust_measure(player_df, 'Threat')
-            player_df["Threat_Mean"] = player_df['Threat'].ewm(span=15, adjust=False).mean()
+            player_df["Threat_Mean"] = player_df['Threat'].ewm(span=20, adjust=False).mean()
             player_df["Influence_Mean"] = player_df['influence'].rolling(window=15, min_periods=1).mean()
             threat_mean_feature=player_df["Threat_Mean"].values[-1]
             player_df["Adjusted_XG"] = np.where(
@@ -1461,10 +1461,10 @@ def adjust_measure(df, measure_name):
     new_expected_goals=[]
     if(n_matches>10):
         current_expected_goals_start_value=player_df[measure_name].mean()*0.8
-        min_val=std*1
+        min_val=std*0.8
     else:
         current_expected_goals_start_value=player_df[measure_name].mean()*0.8
-        min_val=std*1
+        min_val=std*0.8
     current_expected_goals=current_expected_goals_start_value
     smoothing_f=0.07
     

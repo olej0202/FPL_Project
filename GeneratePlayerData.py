@@ -187,7 +187,7 @@ def team_data(
             col_means = col_means.fillna(0)          # or choose another fallback
 
             # 4) Assign (broadcast to all masked rows)
-            teams_dataset.loc[mask, cols] = col_means.values*0.5+teams_dataset.loc[mask, cols].values*0.5
+            teams_dataset.loc[mask, cols] = col_means.values*0.3+teams_dataset.loc[mask, cols].values*0.7
 
     # ---- APPLY TEAM-SPECIFIC MULTIPLIERS ----
     def _apply_factors(df, factors, cols,is_offensive):
@@ -257,7 +257,7 @@ def add_team_share_per90(
     # Metrics to process
     metrics = [
         "Rolling_adjusted_XG","rolling_Threat","Rolling_adjusted_XA",
-        "Rolling_creativity","Rolling_adjusted_BPS","rolling_XG","rolling_XA","Share_of_XG","Share_of_XA", "rolling_Adjusted_XG_historic","rolling_Adjusted_XA_historic"
+        "Rolling_creativity","Rolling_adjusted_BPS","rolling_XG","rolling_XA","Share_of_XG","Share_of_XA", "rolling_Adjusted_XG_historic","rolling_Adjusted_XA_historic","Threat_Mean"
     ]
     for m in metrics:
         if m not in df.columns:

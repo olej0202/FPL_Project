@@ -25,7 +25,7 @@ Spurs,6
 ,Ipswich,40"""
 
 
-Manual_team_offensive_adjustments = {17:1.1,54:1.1,1:1.1,36:0.9,11:1.1 }
+Manual_team_offensive_adjustments = {17:1.1,1:1.1,36:0.9,11:1.1 }
     
     
     
@@ -61,7 +61,7 @@ Manual_min=[
         {"name": "Ismaïla_Sarr", "type": "adjust_from",   "GW": "16", "value": 0},
         {"name": "Mohammed_Kudus", "type": "adjust_from",   "GW": "16", "value": 0},
         {"name": "Bryan_Mbeumo", "type": "adjust_from",   "GW": "16", "value": 0},
-        {"name": "Antoine_Semenyo", "type": "const",   "GW": "any", "value": 90},
+        {"name": "Antoine_Semenyo", "type": "adjust_from",   "GW": "16", "value": 0},
 
     ]
         
