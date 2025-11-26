@@ -372,7 +372,7 @@ export default function PlayerAdjustmentsPage() {
 
     const minutesAdj = avgMin ? Math.min(1, avgMin / 80) : 0;
 
-    const goalScored = (goalShare * xg * 1.1 + penData) * minutesAdj;
+    const goalScored = (goalShare * xg * 1.1 + penData*0.7) * minutesAdj;
     const assists = assistShare * xg * 1.1 * minutesAdj;
     const points =
       defaultPoints * minutesAdj +

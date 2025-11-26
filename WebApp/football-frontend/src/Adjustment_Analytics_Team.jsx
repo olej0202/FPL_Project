@@ -345,8 +345,8 @@ function recomputeMetrics(rows) {
     const ownXGC = Number(r.own_XGC_avg ?? 0);
     const oppXG = Number(r.opponent_XG_avg ?? 0);
     const oppXGC = Number(r.opponent_XGC_avg ?? 0);
-    const ownAttE = Number(r.own_H_Att_E ?? 0);
-    const oppDefE = Number(r.opponent_H_def_E ?? 0);
+    const ownAttE = Number(r.own_H_Att_E ?? 0)*0.9;
+    const oppDefE = Number(r.opponent_H_def_E ?? 0)*0.9;
 
     // Baseline: keep the very first strengths as base_* (if not already set)
     const base_own_XG_avg =
@@ -358,18 +358,18 @@ function recomputeMetrics(rows) {
     let xg;
     if (r.Home === "H") {
       xg =
-        (ownXG + ownAttE) * 0.25 +
-        0.25 * (oppXGC - oppDefE) +
-        (1 / 3) * (ownXG + ownAttE) * (oppXGC - oppDefE);
+        (ownXG + ownAttE) * 0.3 +
+        0.2 * (oppXGC - oppDefE) +
+         0.375* ((ownXG + ownAttE)) * ((oppXGC - oppDefE));
     } else {
       xg =
-        (ownXG - ownAttE) * 0.25 +
-        0.25 * (oppXGC + oppDefE) +
-        (1 / 3) * (ownXG - ownAttE) * (oppXGC + oppDefE);
+        (ownXG - ownAttE) * 0.3 +
+        0.2 * (oppXGC + oppDefE) +
+         0.375* ((ownXG - ownAttE)) * ((oppXGC + oppDefE));
     }
 
     // CS formula: 0.4 / (0.6 * own_XGC_avg + 0.4 * opponent_XG_avg)
-    const denom = 0.6 * ownXGC + 0.4 * oppXG;
+    const denom = 0.5 * ownXGC + 0.5 * oppXG;
     let csProb;
     if (denom <= 0) {
       csProb = 1;

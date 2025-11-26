@@ -410,9 +410,9 @@ def Player_adjustements(current_player_path):
 
     df["Goal_share"] = (
         (
-            df["Rolling_adjusted_XG_share"] * 0.4
-            + df["rolling_Threat_share"] * 0.3
-            + df["Share_of_XG_share"] * 0.3
+            df["Rolling_adjusted_XG_share"] * 0.35
+            + df["rolling_Threat_share"] * 0.35
+            + df["rolling_Adjusted_XG_historic_share"] * 0.3
         )
         * (1 - df["player_risiko"])
         * risk_adj_minutes_factor
@@ -420,9 +420,9 @@ def Player_adjustements(current_player_path):
     )
 
     df["Assist_share"] = (
-        (df["Rolling_adjusted_XA_share"] * 0.4
-         + df["Rolling_creativity_share"] * 0.3
-         + df["Share_of_XA_share"] * 0.3)
+        (df["Rolling_adjusted_XA_share"] * 0.35
+         + df["Rolling_creativity_share"] * 0.35
+         + df["rolling_Adjusted_XA_historic_share"] * 0.3)
         * (1 - df["player_risiko"])
         * risk_adj_minutes_factor
         + df["player_risiko"] * df["Understat_POSXA_Share"]
@@ -441,8 +441,8 @@ def Player_adjustements(current_player_path):
     cbi_scaled = np.minimum(1, df["CBI"] / divisor) 
 
     df["CBI_Percent"] = (
-        df["defcon_avg_hit_rate"] * 0.6
-        + 0.4 * cbi_scaled
+        df["defcon_avg_hit_rate"] * 0.4
+        + 0.6 * cbi_scaled
     )
 
     bps_scaled = np.maximum(4, df["Rolling_adjusted_BPS"]) 
