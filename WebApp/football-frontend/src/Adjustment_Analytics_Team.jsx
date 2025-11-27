@@ -345,8 +345,10 @@ function recomputeMetrics(rows) {
     const ownXGC = Number(r.own_XGC_avg ?? 0);
     const oppXG = Number(r.opponent_XG_avg ?? 0);
     const oppXGC = Number(r.opponent_XGC_avg ?? 0);
-    const ownAttE = Number(r.own_H_Att_E ?? 0)*0.9;
-    const oppDefE = Number(r.opponent_H_def_E ?? 0)*0.9;
+    const ownAttE = Number(r.own_H_Att_E ?? 0);
+    const oppDefE = Number(r.opponent_H_def_E ?? 0);
+    const ownDEFE = Number(r.own_H_def_E ?? 0);
+    const oppATTE = Number(r.opponent_H_Att_E ?? 0);
 
     // Baseline: keep the very first strengths as base_* (if not already set)
     const base_own_XG_avg =
@@ -357,25 +359,33 @@ function recomputeMetrics(rows) {
     // XG formula (home/away adjustments)
     let xg;
     if (r.Home === "H") {
-      xg =
-        (ownXG + ownAttE) * 0.3 +
-        0.2 * (oppXGC - oppDefE) +
-         0.375* ((ownXG + ownAttE)) * ((oppXGC - oppDefE));
+      xg =-0.17+
+        (ownXG + ownAttE) * 0.37 +
+        0.37 * (oppXGC - oppDefE) +
+         0.275* ((ownXG + ownAttE)) * ((oppXGC - oppDefE));
     } else {
-      xg =
-        (ownXG - ownAttE) * 0.3 +
-        0.2 * (oppXGC + oppDefE) +
-         0.375* ((ownXG - ownAttE)) * ((oppXGC + oppDefE));
+      xg =-0.17+
+        (ownXG - ownAttE) * 0.37 +
+        0.37 * (oppXGC + oppDefE) +
+         0.275* ((ownXG - ownAttE)) * ((oppXGC + oppDefE));
     }
 
     // CS formula: 0.4 / (0.6 * own_XGC_avg + 0.4 * opponent_XG_avg)
     const denom = 0.5 * ownXGC + 0.5 * oppXG;
+
     let csProb;
-    if (denom <= 0) {
-      csProb = 1;
+    if (r.Home === "H") {
+      csProb =0.58+
+        (ownXGC + ownDEFE) * -0.08 +
+        -0.13 * (oppXG - oppATTE) +
+         0.01* ((ownXGC + ownDEFE)) * ((oppXG - oppATTE));
     } else {
-      csProb = 0.4 / denom;
+      csProb =0.58+
+        (ownXGC - ownDEFE) * -0.08 +
+        -0.13 * (oppXG + oppATTE) +
+         0.01* ((ownXGC - ownDEFE)) * ((oppXG + oppATTE));
     }
+
     csProb = Math.max(0, Math.min(1, csProb)); // clamp [0,1]
 
     return {

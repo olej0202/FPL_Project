@@ -17,7 +17,7 @@ from sklearn.metrics import (precision_recall_curve, average_precision_score,
                              log_loss, brier_score_loss, roc_auc_score, classification_report, confusion_matrix)
 import tensorflow as tf
 from tensorflow.keras import layers, regularizers, callbacks, Model, Input,Sequential,losses
-
+import joblib
 from sklearn.utils.class_weight import compute_class_weight
 
 def GenerateTeamPredictions1(fixture_path, current_team_path,horizon):
@@ -38,6 +38,7 @@ def GenerateTeamPredictions1(fixture_path, current_team_path,horizon):
                    left_on=['opponent', 'kickoff_time'], 
                    right_on=['code', 'kickoff_time'], 
                    how='left', suffixes=('_team', '_opp'))
+    
 
 
     new_pred_df=pd.DataFrame()
@@ -825,11 +826,13 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     
     new_input_XG["off_fac"]=new_input_XG["Own_XG"]*0.7+0.3*new_input_XG["Own_XG_avg"]
     new_input_XG["def_fac"]=new_input_XG["Opposition_XGC"]*0.7+0.3*new_input_XG["Opposition_XGC_avg"]
-    xg_stat_h=(new_input_XG["off_fac"]*new_input_XG["def_fac"]/1.5)*0.5+0.5*(new_input_XG["off_fac"]*0.5+0.5*new_input_XG["def_fac"])
+    
+         
+    xg_stat_h=-0.17+(new_input_XG["off_fac"]*new_input_XG["def_fac"])*0.275+(new_input_XG["off_fac"]*0.37+0.37*new_input_XG["def_fac"])
     
     new_input_XG2["off_fac"]=new_input_XG2["Own_XG"]*0.7+0.3*new_input_XG2["Own_XG_avg"]
     new_input_XG2["def_fac"]=new_input_XG2["Opposition_XGC"]*0.7+0.3*new_input_XG2["Opposition_XGC_avg"]
-    xg_stat_a=(new_input_XG2["off_fac"]*new_input_XG2["def_fac"]/1.5)*0.5+0.5*(new_input_XG2["off_fac"]*0.5+0.5*new_input_XG2["def_fac"])
+    xg_stat_a=-0.17+(new_input_XG2["off_fac"]*new_input_XG2["def_fac"])*0.275+(new_input_XG2["off_fac"]*0.37+0.37*new_input_XG2["def_fac"])
     
     xg2 = proba2 @ weights    
 
@@ -854,6 +857,7 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     new_input_XGC.to_csv("teams_preds_test2.csv")
     
     
+         
     css_stat_home=0.4/(new_input_XGC["Own_XGC"]*0.6+0.4*new_input_XGC["Opposition_XG"])
 
     

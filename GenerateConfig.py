@@ -25,11 +25,11 @@ Spurs,6
 ,Ipswich,40"""
 
 
-Manual_team_offensive_adjustments = {17:1.1,1:1.1,36:0.9,11:1.1 }
+Manual_team_offensive_adjustments = {17:1.1,1:1.1,36:0.9,11:1.1,94:0.9,31:1.1 }
     
     
     
-Manual_team_defensive_adjustments = {94:1.15,7:1.1,31:1.1,1:0.9,2:0.9 }
+Manual_team_defensive_adjustments = {94:1.1,7:1.1,31:1.1,1:0.9}
 
 
 Manual_NewPlayer_Adjustments={
@@ -55,8 +55,7 @@ Manual_min=[
         {"name": "Giorgi_Mamardashvili", "type": "const",   "GW": "any", "value": 60},
         {"name": "Tijjani_Reijnders", "type": "const",   "GW": "any", "value": 75},
         {"name": "Callum_Wilson", "type": "const",   "GW": "any", "value": 75},
-        {"name": "Enzo_Fernández", "type": "const",   "GW": "any", "value": 90},
-        {"name": "Nico_O'Reilly", "type": "const",   "GW": "any", "value": 75},
+        {"name": "Nico_O'Reilly", "type": "adjust_from",   "GW": "13", "value": 75},
         {"name": "Mohamed_Salah", "type": "adjust_from",   "GW": "16", "value": 0},
         {"name": "Ismaïla_Sarr", "type": "adjust_from",   "GW": "16", "value": 0},
         {"name": "Mohammed_Kudus", "type": "adjust_from",   "GW": "16", "value": 0},
