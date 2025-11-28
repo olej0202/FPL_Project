@@ -788,8 +788,8 @@ def team_transformed2():
 
 
 
-        k_def = 0.06
-        k_off=0.06
+        k_def = 0.065
+        k_off=0.065
         min_val=0.8
 
         actual_goals = xg
@@ -914,11 +914,11 @@ def team_transformed2():
         slope_df["XGC"]=def_rating_history[team]
         slope_df["XGC_slope"]=slope_df['XGC'].rolling(window=6, min_periods=1).apply(rolling_slope, raw=True)
         selected_team_df=new_team_df[new_team_df["code"]==team].copy()
-        selected_team_df["XGA"]=((1-overall_weight) * np.array(off_rating_away_history[team][:-1]) +overall_weight * selected_team_df["XGA"])*0.75+0.25*selected_team_df["Rolling_Threat"]
+        selected_team_df["XGA"]=((1-overall_weight) * np.array(off_rating_away_history[team][:-1]) +overall_weight * selected_team_df["XGA"])*0.7+0.3*selected_team_df["Rolling_Threat"]
 
-        selected_team_df["XGCA"]=((1-overall_weight)  * np.array(def_rating_away_history[team][:-1]) +overall_weight * selected_team_df["XGCA"])*0.75+0.25*selected_team_df["Rolling_Threat_Against"]
-        selected_team_df["XGH"]=((1-overall_weight)  * np.array(off_rating_home_history[team][:-1]) +overall_weight * selected_team_df["XGH"])*0.75+0.25*selected_team_df["Rolling_Threat"]
-        selected_team_df["XGCH"]=((1-overall_weight)  * np.array(def_rating_home_history[team][:-1]) +overall_weight* selected_team_df["XGCH"])*0.75+0.25*selected_team_df["Rolling_Threat_Against"]
+        selected_team_df["XGCA"]=((1-overall_weight)  * np.array(def_rating_away_history[team][:-1]) +overall_weight * selected_team_df["XGCA"])*0.7+0.3*selected_team_df["Rolling_Threat_Against"]
+        selected_team_df["XGH"]=((1-overall_weight)  * np.array(off_rating_home_history[team][:-1]) +overall_weight * selected_team_df["XGH"])*0.7+0.3*selected_team_df["Rolling_Threat"]
+        selected_team_df["XGCH"]=((1-overall_weight)  * np.array(def_rating_home_history[team][:-1]) +overall_weight* selected_team_df["XGCH"])*0.7+0.3*selected_team_df["Rolling_Threat_Against"]
         selected_team_df["XG_avg"]=selected_team_df["XGH"]*0.5+selected_team_df["XGA"]*0.5
         selected_team_df["XGC_avg"]=selected_team_df["XGCH"]*0.5+selected_team_df["XGCA"]*0.5
         #selected_team_df["XG_avg"]=((1-overall_weight)  * np.array(off_rating_history[team][:-1]) +overall_weight* selected_team_df["XG_avg"])

@@ -14,6 +14,13 @@ import Typography from "@mui/material/Typography";
 import { useNavigate } from "react-router-dom";
 import { useStatsData } from "./Contexts/StatsContext";
 
+const PALETTE = {
+  red: "#5A0000",
+  gold: "#B8860B",
+  black: "#000000",
+  beige: "#f7ead6",
+};
+
 const METRICS = {
   Points_prediction: "Points Predicted",
   Goal_pred: "Goals Predicted",
@@ -48,7 +55,9 @@ export default function Player_analytics_rankings() {
         const data = PlayersData.current;
         setRawData(data);
 
-        const GWs = data.map((d) => d.GW).filter((n) => Number.isFinite(n));
+        const GWs = data
+          .map((d) => d.GW)
+          .filter((n) => Number.isFinite(n));
         const prices = data.map((d) => d.value || 0);
 
         const minGWVal = Math.min(...GWs);
@@ -74,7 +83,9 @@ export default function Player_analytics_rankings() {
       data = data.filter((d) => d.position === selectedPos);
     }
 
-    data = data.filter((d) => d.value >= valueRange[0] && d.value <= valueRange[1]);
+    data = data.filter(
+      (d) => d.value >= valueRange[0] && d.value <= valueRange[1]
+    );
 
     if (selectedMetric === "DefCon") {
       data = data.filter((d) => {
@@ -86,7 +97,9 @@ export default function Player_analytics_rankings() {
     let aggregated;
 
     if (SUM_METRICS.includes(selectedMetric)) {
-      const filteredByGW = data.filter((d) => d.GW >= GWRange[0] && d.GW <= GWRange[1]);
+      const filteredByGW = data.filter(
+        (d) => d.GW >= GWRange[0] && d.GW <= GWRange[1]
+      );
 
       aggregated = Object.values(
         filteredByGW.reduce((acc, curr) => {
@@ -119,40 +132,147 @@ export default function Player_analytics_rankings() {
     );
   }, [rawData, selectedMetric, GWRange, selectedPos, valueRange]);
 
-  const minValue = filtered.length ? Math.min(...filtered.map((d) => d.value)) : 0;
-  const maxValue = filtered.length ? Math.max(...filtered.map((d) => d.value)) : 1;
+  const minValue = filtered.length
+    ? Math.min(...filtered.map((d) => d.value))
+    : 0;
+  const maxValue = filtered.length
+    ? Math.max(...filtered.map((d) => d.value))
+    : 1;
 
-  // Skeleton row for loading state
-  const SkeletonRow = ({ i }) => (
-    <li className="relative py-3 px-4">
-      <div className="h-6 w-1/2 bg-neutral-800 rounded mb-2 animate-pulse" />
-      <div className="h-4 w-1/3 bg-neutral-800 rounded animate-pulse" />
+  const SkeletonRow = () => (
+    <li
+      style={{
+        position: "relative",
+        padding: "0.75rem 1rem",
+      }}
+    >
+      <div
+        style={{
+          height: "1.4rem",
+          width: "50%",
+          backgroundColor: "#111827",
+          borderRadius: "0.4rem",
+          marginBottom: "0.35rem",
+          animation: "pulse 1.5s ease-in-out infinite",
+        }}
+      />
+      <div
+        style={{
+          height: "1rem",
+          width: "33%",
+          backgroundColor: "#111827",
+          borderRadius: "0.4rem",
+          animation: "pulse 1.5s ease-in-out infinite",
+        }}
+      />
     </li>
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-neutral-950 to-black text-neutral-100">
-      <div className="mx-auto max-w-6xl px-4 py-6 sm:py-10">
+    <div
+      style={{
+        minHeight: "100vh",
+        padding: "1.5rem 1rem 2.5rem",
+        background: `radial-gradient(circle at top, ${PALETTE.red} 0, ${PALETTE.black} 45%, #000000 100%)`,
+        color: PALETTE.beige,
+        fontFamily:
+          "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      }}
+    >
+      <div
+        style={{
+          maxWidth: "72rem",
+          margin: "0 auto",
+        }}
+      >
         {/* Header */}
-        <header className="mb-6 sm:mb-8 text-center">
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Player Rankings</h1>
-          <p className="text-xs sm:text-sm text-neutral-400 mt-1">Rank top performers by predicted output or form indexes. Refine by position, price, and gameweeks.</p>
+        <header
+          style={{
+            marginBottom: "1.75rem",
+            textAlign: "center",
+          }}
+        >
+          <h1
+            style={{
+              margin: 0,
+              fontSize: "1.9rem",
+              fontWeight: 700,
+            }}
+          >
+            Player Rankings
+          </h1>
+          <p
+            style={{
+              marginTop: "0.4rem",
+              fontSize: "0.85rem",
+              color: "#d1c3a9",
+              maxWidth: "40rem",
+              marginLeft: "auto",
+              marginRight: "auto",
+            }}
+          >
+            Rank top performers by predicted output or form indexes. Refine by
+            position, price, and gameweeks.
+          </p>
         </header>
 
-        {/* Controls */}
-        <section className="mb-8 rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Controls card */}
+        <section
+          style={{
+            marginBottom: "1.75rem",
+            borderRadius: "1rem",
+            border: `1px solid ${PALETTE.gold}`,
+            background:
+              "linear-gradient(145deg, rgba(0,0,0,0.96), rgba(90,0,0,0.9))",
+            boxShadow: "0 18px 40px rgba(0,0,0,0.9)",
+            padding: "1rem 1.25rem",
+          }}
+        >
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+              gap: "1rem",
+              alignItems: "flex-start",
+            }}
+          >
             {/* Metric select */}
-            <div className="flex flex-col gap-1">
-              <label className="text-xs uppercase tracking-wide text-neutral-400">Metric</label>
+            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <label
+                style={{
+                  fontSize: "0.7rem",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.08em",
+                  color: "#d1c3a9",
+                }}
+              >
+                Metric
+              </label>
               <select
                 value={selectedMetric}
                 onChange={(e) => setSelectedMetric(e.target.value)}
-                className="h-10 w-full rounded-md border border-white/10 bg-black/60 px-3 text-neutral-100 focus:outline-none focus:ring-2 focus:ring-royal-gold/60"
                 aria-label="Select ranking metric"
+                style={{
+                  height: "2.4rem",
+                  width: "100%",
+                  borderRadius: "0.6rem",
+                  border: `1px solid ${PALETTE.gold}`,
+                  backgroundColor: "rgba(0,0,0,0.9)",
+                  color: PALETTE.beige,
+                  padding: "0 0.75rem",
+                  fontSize: "0.9rem",
+                  outline: "none",
+                }}
               >
                 {Object.entries(METRICS).map(([key, label]) => (
-                  <option key={key} value={key} className="bg-black text-neutral-100">
+                  <option
+                    key={key}
+                    value={key}
+                    style={{
+                      backgroundColor: "#000000",
+                      color: PALETTE.beige,
+                    }}
+                  >
                     {label}
                   </option>
                 ))}
@@ -160,31 +280,76 @@ export default function Player_analytics_rankings() {
             </div>
 
             {/* Positions */}
-            <div className="flex flex-col gap-1">
-              <label className="text-xs uppercase tracking-wide text-neutral-400">Positions</label>
-              <div className="flex flex-wrap gap-2">
-                {["ALL", "GKP", "DEF", "MID", "FWD"].map((pos) => (
-                  <button
-                    key={pos}
-                    onClick={() => setSelectedPos(pos)}
-                    className={`h-10 px-3 rounded-md border text-sm transition focus:outline-none focus:ring-2 focus:ring-royal-gold/60 hover:border-none ${
-                      selectedPos === pos
-                        ? "bg-royal-gold text-black border-yellow-400"
-                        : "bg-black/60 text-neutral-200 border-white/10 hover:bg-white/10"
-                    }`}
-                    aria-pressed={selectedPos === pos}
-                  >
-                    {pos}
-                  </button>
-                ))}
+            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <label
+                style={{
+                  fontSize: "0.7rem",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.08em",
+                  color: "#d1c3a9",
+                }}
+              >
+                Positions
+              </label>
+              <div
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: "0.5rem",
+                }}
+              >
+                {["ALL", "GKP", "DEF", "MID", "FWD"].map((pos) => {
+                  const active = selectedPos === pos;
+                  return (
+                    <button
+                      key={pos}
+                      type="button"
+                      onClick={() => setSelectedPos(pos)}
+                      aria-pressed={active}
+                      style={{
+                        height: "2.2rem",
+                        padding: "0 0.9rem",
+                        borderRadius: "999px",
+                        border: `1px solid ${
+                          active ? PALETTE.gold : "rgba(148,163,184,0.5)"
+                        }`,
+                        backgroundColor: active
+                          ? PALETTE.gold
+                          : "rgba(0,0,0,0.7)",
+                        color: active ? PALETTE.black : PALETTE.beige,
+                        fontSize: "0.8rem",
+                        fontWeight: 500,
+                        cursor: "pointer",
+                      }}
+                    >
+                      {pos}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
             {/* Price slider */}
-            <div className="flex flex-col gap-1">
-              <label className="text-xs uppercase tracking-wide text-neutral-400">Price Range</label>
+            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <label
+                style={{
+                  fontSize: "0.7rem",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.08em",
+                  color: "#d1c3a9",
+                }}
+              >
+                Price Range
+              </label>
               <Box sx={{ width: "100%" }}>
-                <Typography gutterBottom className="!text-xs !text-neutral-300 !mb-1">
+                <Typography
+                  gutterBottom
+                  sx={{
+                    fontSize: "0.75rem",
+                    color: "#e5e7eb",
+                    mb: 0.5,
+                  }}
+                >
                   {valueRange[0]}M – {valueRange[1]}M
                 </Typography>
                 <Slider
@@ -194,7 +359,7 @@ export default function Player_analytics_rankings() {
                   onChange={(e, newVal) => setValueRange(newVal)}
                   valueLabelDisplay="auto"
                   step={0.1}
-                  sx={{ color: "#B8860B" }}
+                  sx={{ color: PALETTE.gold }}
                   aria-label="Filter by price range"
                 />
               </Box>
@@ -202,70 +367,190 @@ export default function Player_analytics_rankings() {
           </div>
 
           {/* GW slider (only for sum metrics) */}
-          {SUM_METRICS.includes(selectedMetric) && minGW != null && maxGW != null && (
-            <div className="mt-4">
-              <label className="text-xs uppercase tracking-wide text-neutral-400">GW Range</label>
-              <Box sx={{ width: "100%" }}>
-                <Typography gutterBottom className="!text-xs !text-neutral-300 !mb-1">
-                  {GWRange[0]} – {GWRange[1]}
-                </Typography>
-                <Slider
-                  value={GWRange}
-                  min={minGW}
-                  max={maxGW}
-                  onChange={(e, newVal) => setGWRange(newVal)}
-                  valueLabelDisplay="auto"
-                  step={1}
-                  sx={{ color: "#B8860B" }}
-                  aria-label="Filter by gameweek range"
-                />
-              </Box>
-            </div>
-          )}
+          {SUM_METRICS.includes(selectedMetric) &&
+            minGW != null &&
+            maxGW != null && (
+              <div style={{ marginTop: "1rem" }}>
+                <label
+                  style={{
+                    fontSize: "0.7rem",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                    color: "#d1c3a9",
+                    display: "block",
+                    marginBottom: "0.2rem",
+                  }}
+                >
+                  GW Range
+                </label>
+                <Box sx={{ width: "100%" }}>
+                  <Typography
+                    gutterBottom
+                    sx={{
+                      fontSize: "0.75rem",
+                      color: "#e5e7eb",
+                      mb: 0.5,
+                    }}
+                  >
+                    {GWRange[0]} – {GWRange[1]}
+                  </Typography>
+                  <Slider
+                    value={GWRange}
+                    min={minGW}
+                    max={maxGW}
+                    onChange={(e, newVal) => setGWRange(newVal)}
+                    valueLabelDisplay="auto"
+                    step={1}
+                    sx={{ color: PALETTE.gold }}
+                    aria-label="Filter by gameweek range"
+                  />
+                </Box>
+              </div>
+            )}
         </section>
 
-        {/* Rankings */}
+        {/* Rankings list */}
         <section>
           {loading ? (
-            <ul className="w-full max-w-3xl mx-auto divide-y divide-white/5 rounded-2xl border border-white/10 bg-white/5">
+            <ul
+              style={{
+                width: "100%",
+                maxWidth: "48rem",
+                margin: "0 auto",
+                borderRadius: "1rem",
+                border: `1px solid ${PALETTE.gold}`,
+                background:
+                  "linear-gradient(145deg, rgba(0,0,0,0.97), rgba(0,0,0,0.9))",
+                boxShadow: "0 18px 40px rgba(0,0,0,0.95)",
+                listStyle: "none",
+                padding: 0,
+                marginBottom: "1.5rem",
+              }}
+            >
               {Array.from({ length: 8 }).map((_, i) => (
-                <SkeletonRow key={i} i={i} />
+                <SkeletonRow key={i} />
               ))}
             </ul>
           ) : (
-            <ul className="w-full max-w-3xl mx-auto divide-y divide-white/5 rounded-2xl border border-white/10 bg-white/5">
+            <ul
+              style={{
+                width: "100%",
+                maxWidth: "48rem",
+                margin: "0 auto",
+                borderRadius: "1rem",
+                border: `1px solid ${PALETTE.gold}`,
+                background:
+                  "linear-gradient(145deg, rgba(0,0,0,0.97), rgba(0,0,0,0.9))",
+                boxShadow: "0 18px 40px rgba(0,0,0,0.95)",
+                listStyle: "none",
+                padding: 0,
+                marginBottom: "1.5rem",
+              }}
+            >
               {filtered.map((player, idx) => {
-                const percentage = maxValue === minValue ? 100 : ((player.value - minValue) / (maxValue - minValue)) * 100;
+                const percentage =
+                  maxValue === minValue
+                    ? 100
+                    : ((player.value - minValue) /
+                        (maxValue - minValue)) *
+                      100;
                 const displayName = player.web_name;
                 return (
                   <li
                     key={player.id}
-                    className="relative py-3 px-4 cursor-pointer group"
                     onClick={() =>
                       navigate("/Player_Analytics/Individual", {
                         state: { selectedPlayer: player.id },
                       })
                     }
                     title={`View ${displayName}`}
+                    style={{
+                      position: "relative",
+                      padding: "0.7rem 1rem",
+                      cursor: "pointer",
+                      borderBottom: "1px solid rgba(31,41,55,0.8)",
+                      overflow: "hidden",
+                    }}
                   >
                     {/* background bar */}
                     <div
-                      className="absolute inset-y-0 left-0 bg-royal-gold/25 rounded-r transition-[width] duration-300"
-                      style={{ width: `${percentage}%` }}
+                      style={{
+                        position: "absolute",
+                        insetBlock: 0,
+                        left: 0,
+                        width: `${percentage}%`,
+                        backgroundColor: "rgba(184,134,11,0.22)",
+                        borderTopRightRadius: "999px",
+                        borderBottomRightRadius: "999px",
+                        transition: "width 0.3s ease",
+                      }}
                     />
 
-                    <div className="relative z-10 flex items-center justify-between">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <span className="text-royal-gold font-bold w-6 text-right tabular-nums">{idx + 1}.</span>
-                        <span className="truncate">{displayName}</span>
+                    <div
+                      style={{
+                        position: "relative",
+                        zIndex: 1,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: "0.75rem",
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "0.75rem",
+                          minWidth: 0,
+                        }}
+                      >
+                        <span
+                          style={{
+                            color: PALETTE.gold,
+                            fontWeight: 700,
+                            width: "1.6rem",
+                            textAlign: "right",
+                            fontVariantNumeric: "tabular-nums",
+                          }}
+                        >
+                          {idx + 1}.
+                        </span>
+                        <span
+                          style={{
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            fontSize: "0.9rem",
+                          }}
+                        >
+                          {displayName}
+                        </span>
                       </div>
-                      <span className="font-semibold tabular-nums text-royal-gold">{player.value.toFixed(2)}</span>
+                      <span
+                        style={{
+                          fontWeight: 600,
+                          fontVariantNumeric: "tabular-nums",
+                          color: PALETTE.gold,
+                          fontSize: "0.9rem",
+                        }}
+                      >
+                        {player.value.toFixed(2)}
+                      </span>
                     </div>
                   </li>
                 );
               })}
               {filtered.length === 0 && (
-                <li className="py-6 text-center text-neutral-400">No players match your filters.</li>
+                <li
+                  style={{
+                    padding: "1.25rem 1rem",
+                    textAlign: "center",
+                    color: "#d1c3a9",
+                    fontSize: "0.9rem",
+                  }}
+                >
+                  No players match your filters.
+                </li>
               )}
             </ul>
           )}

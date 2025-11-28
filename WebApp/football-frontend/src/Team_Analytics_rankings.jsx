@@ -1,7 +1,15 @@
+// src/Team_Analytics_rankings.jsx (or wherever this lives)
 import React, { useEffect, useMemo, useState } from "react";
 import { useStatsData } from "./Contexts/StatsContext";
 import { useNavigate } from "react-router-dom";
 import teamLogos from "./utils/team_logos";
+
+const PALETTE = {
+  red: "#5A0000",
+  gold: "#B8860B",
+  black: "#000000",
+  beige: "#f7ead6",
+};
 
 const METRICS = {
   XG_avg: "Offensive Index",
@@ -33,10 +41,7 @@ export default function TeamAnalyticsList() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const loadData = async () => {
-      await fetchIfNeeded();
-    };
-    loadData();
+    fetchIfNeeded();
   }, [fetchIfNeeded]);
 
   useEffect(() => {
@@ -48,12 +53,16 @@ export default function TeamAnalyticsList() {
         if (selectedMetric === "XGH-XGA") {
           value = parseFloat(team.XGH || 0) - parseFloat(team.XGA || 0);
         } else if (selectedMetric === "XGCH-XGCA") {
-          value = -1*(parseFloat(team.XGCH || 0) - parseFloat(team.XGCA || 0));
+          // note: same sign logic you had
+          value = -1 * (parseFloat(team.XGCH || 0) - parseFloat(team.XGCA || 0));
         } else {
           value = parseFloat(team[selectedMetric] || 0);
         }
         const name = team.name || team.Team || "";
-        return { name, value: Number.isFinite(value) ? Number(value.toFixed(2)) : 0 };
+        return {
+          name,
+          value: Number.isFinite(value) ? Number(value.toFixed(2)) : 0,
+        };
       })
       .filter((d) => d.name && !Number.isNaN(d.value));
 
@@ -62,9 +71,8 @@ export default function TeamAnalyticsList() {
       : (a, b) => b.value - a.value;
 
     setRankingData(data.sort(sortFn));
-  }, [TeamData?.current, selectedMetric]);
+  }, [TeamData, selectedMetric]);
 
-  // Safe min/max for percentage bands
   const { minValue, maxValue } = useMemo(() => {
     if (!rankingData.length) return { minValue: 0, maxValue: 1 };
     const vals = rankingData.map((d) => d.value);
@@ -72,38 +80,139 @@ export default function TeamAnalyticsList() {
   }, [rankingData]);
 
   const SkeletonRow = () => (
-    <li className="relative py-3 px-4">
-      <div className="h-6 w-1/2 bg-neutral-800 rounded mb-2 animate-pulse" />
-      <div className="h-4 w-1/3 bg-neutral-800 rounded animate-pulse" />
+    <li
+      style={{
+        position: "relative",
+        padding: "0.75rem 1rem",
+      }}
+    >
+      <div className="animate-pulse">
+        <div
+          style={{
+            height: "1.25rem",
+            width: "50%",
+            borderRadius: "999px",
+            backgroundColor: "#111827",
+            marginBottom: "0.35rem",
+          }}
+        />
+        <div
+          style={{
+            height: "0.9rem",
+            width: "30%",
+            borderRadius: "999px",
+            backgroundColor: "#111827",
+          }}
+        />
+      </div>
     </li>
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-neutral-950 to-black text-neutral-100">
-      <div className="mx-auto max-w-5xl px-4 py-6 sm:py-10">
+    <div
+      style={{
+        minHeight: "100vh",
+        padding: "1.5rem 1rem 2.5rem",
+        background: `radial-gradient(circle at top, ${PALETTE.red} 0, ${PALETTE.black} 45%, #000000 100%)`,
+        color: PALETTE.beige,
+        fontFamily:
+          "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      }}
+    >
+      <div
+        style={{
+          maxWidth: "56rem",
+          margin: "0 auto",
+        }}
+      >
         {/* Header */}
-        <header className="mb-6 sm:mb-8 text-center">
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Team Rankings</h1>
-          <p className="text-xs sm:text-sm text-neutral-400 mt-1">
+        <header
+          style={{
+            marginBottom: "1.75rem",
+            textAlign: "center",
+          }}
+        >
+          <h1
+            style={{
+              margin: 0,
+              fontSize: "1.75rem",
+              fontWeight: 700,
+            }}
+          >
+            Team Rankings
+          </h1>
+          <p
+            style={{
+              marginTop: "0.4rem",
+              fontSize: "0.85rem",
+              color: "#d1c3a9",
+              maxWidth: "40rem",
+              marginLeft: "auto",
+              marginRight: "auto",
+            }}
+          >
             {METRIC_DESCRIPTIONS[selectedMetric]}
           </p>
         </header>
 
         {/* Controls */}
-        <section className="mb-6 rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-6">
-          <div className="max-w-xs mx-auto">
-            <label htmlFor="metric" className="block text-xs uppercase tracking-wide text-neutral-400 mb-1">
+        <section
+          style={{
+            marginBottom: "1.5rem",
+            borderRadius: "1rem",
+            border: `1px solid ${PALETTE.gold}`,
+            background:
+              "linear-gradient(145deg, rgba(0,0,0,0.96), rgba(90,0,0,0.9))",
+            boxShadow: "0 18px 40px rgba(0,0,0,0.8)",
+            padding: "1rem 1.25rem",
+          }}
+        >
+          <div
+            style={{
+              maxWidth: "18rem",
+              margin: "0 auto",
+            }}
+          >
+            <label
+              htmlFor="metric"
+              style={{
+                display: "block",
+                fontSize: "0.75rem",
+                textTransform: "uppercase",
+                letterSpacing: "0.08em",
+                color: "#e5e7eb",
+                marginBottom: "0.25rem",
+              }}
+            >
               Metric
             </label>
             <select
               id="metric"
               value={selectedMetric}
               onChange={(e) => setSelectedMetric(e.target.value)}
-              className="h-10 w-full rounded-md border border-white/10 bg-black/60 px-3 text-neutral-100 focus:outline-none focus:ring-2 focus:ring-royal-gold/60 text-center"
+              style={{
+                height: "2.4rem",
+                width: "100%",
+                borderRadius: "0.6rem",
+                border: `1px solid ${PALETTE.gold}`,
+                backgroundColor: "rgba(0,0,0,0.9)",
+                color: PALETTE.beige,
+                padding: "0 0.75rem",
+                fontSize: "0.9rem",
+                textAlign: "center",
+                outline: "none",
+              }}
               aria-label="Select ranking metric"
             >
               {Object.entries(METRICS).map(([key, label]) => (
-                <option key={key} value={key} className="bg-black text-neutral-100">
+                <option
+                  key={key}
+                  value={key}
+                  style={{
+                    backgroundColor: "#000000",
+                    color: PALETTE.beige,
+                  }}
+                >
                   {label}
                 </option>
               ))}
@@ -113,68 +222,189 @@ export default function TeamAnalyticsList() {
 
         {/* Rankings */}
         <section>
-          {loading ? (
-            <ul className="w-full max-w-3xl mx-auto divide-y divide-white/5 rounded-2xl border border-white/10 bg-white/5">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <SkeletonRow key={i} />
-              ))}
-            </ul>
-          ) : (
-            <ul className="w-full max-w-3xl mx-auto divide-y divide-white/5 rounded-2xl border border-white/10 bg-white/5">
-              {rankingData.map((team, idx) => {
-                const denom = maxValue - minValue;
-                const pct = denom <= 0 ? 100 : ((team.value - minValue) / denom) * 100;
-                return (
+          <div
+            style={{
+              width: "100%",
+              maxWidth: "44rem",
+              margin: "0 auto",
+              borderRadius: "1rem",
+              border: `1px solid ${PALETTE.gold}`,
+              background:
+                "linear-gradient(155deg, rgba(0,0,0,0.98), rgba(0,0,0,0.9))",
+              boxShadow: "0 18px 40px rgba(0,0,0,0.95)",
+              overflow: "hidden",
+            }}
+          >
+            {loading ? (
+              <ul
+                style={{
+                  listStyle: "none",
+                  padding: 0,
+                  margin: 0,
+                }}
+              >
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <SkeletonRow key={i} />
+                ))}
+              </ul>
+            ) : (
+              <ul
+                style={{
+                  listStyle: "none",
+                  padding: 0,
+                  margin: 0,
+                }}
+              >
+                {rankingData.map((team, idx) => {
+                  const denom = maxValue - minValue;
+                  const pct =
+                    denom <= 0
+                      ? 100
+                      : ((team.value - minValue) / denom) * 100;
+
+                  return (
+                    <li
+                      key={team.name}
+                      onClick={() => {
+                        if (typeof setselected_team === "function") {
+                          setselected_team(team.name);
+                        }
+                        navigate("/Team_Analytics/Team_Individual", {
+                          state: { selectedTeam: team.name },
+                        });
+                      }}
+                      title={`View ${team.name}`}
+                      style={{
+                        position: "relative",
+                        padding: "0.75rem 1rem",
+                        cursor: "pointer",
+                        borderBottom: "1px solid #111827",
+                        overflow: "hidden",
+                      }}
+                    >
+                      {/* Background bar */}
+                      <div
+                        style={{
+                          position: "absolute",
+                          inset: 0,
+                          width: `${pct}%`,
+                          background:
+                            "linear-gradient(90deg, rgba(184,134,11,0.35), rgba(184,134,11,0.05))",
+                          transformOrigin: "left",
+                          transition: "width 0.3s ease-out, opacity 0.2s",
+                          opacity: 0.95,
+                        }}
+                      />
+
+                      {/* Foreground content */}
+                      <div
+                        style={{
+                          position: "relative",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          gap: "0.75rem",
+                          zIndex: 1,
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "0.5rem",
+                            minWidth: 0,
+                          }}
+                        >
+                          {/* Rank */}
+                          <span
+                            style={{
+                              color: PALETTE.gold,
+                              fontWeight: 700,
+                              width: "2rem",
+                              textAlign: "right",
+                              fontVariantNumeric: "tabular-nums",
+                            }}
+                          >
+                            {idx + 1}.
+                          </span>
+
+                          {/* Logo + name */}
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "0.4rem",
+                              minWidth: 0,
+                            }}
+                          >
+                            {teamLogos[team.name] ? (
+                              <img
+                                src={teamLogos[team.name]}
+                                alt={`${team.name} logo`}
+                                style={{
+                                  height: "1.5rem",
+                                  width: "1.5rem",
+                                  objectFit: "contain",
+                                  flexShrink: 0,
+                                  filter:
+                                    "drop-shadow(0 0 6px rgba(0,0,0,0.7))",
+                                }}
+                                onError={(e) => {
+                                  e.currentTarget.style.visibility = "hidden";
+                                }}
+                              />
+                            ) : (
+                              <span
+                                style={{
+                                  height: "1.5rem",
+                                  width: "1.5rem",
+                                  display: "inline-block",
+                                }}
+                              />
+                            )}
+                            <span
+                              style={{
+                                whiteSpace: "nowrap",
+                                textOverflow: "ellipsis",
+                                overflow: "hidden",
+                                fontSize: "0.95rem",
+                              }}
+                            >
+                              {team.name}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Value */}
+                        <span
+                          style={{
+                            fontWeight: 600,
+                            color: PALETTE.gold,
+                            fontVariantNumeric: "tabular-nums",
+                            fontSize: "0.95rem",
+                          }}
+                        >
+                          {team.value.toFixed(2)}
+                        </span>
+                      </div>
+                    </li>
+                  );
+                })}
+
+                {rankingData.length === 0 && !loading && (
                   <li
-                    key={team.name}
-                    className="relative py-3 px-4 cursor-pointer group"
-                    onClick={() => {
-                      if (typeof setselected_team === "function") setselected_team(team.name);
-                      navigate("/Team_Analytics/Team_Individual", { state: { selectedTeam: team.name } });
+                    style={{
+                      padding: "1.25rem",
+                      textAlign: "center",
+                      color: "#9ca3af",
                     }}
-                    title={`View ${team.name}`}
                   >
-                    {/* background bar */}
-                    <div
-                      className="absolute inset-y-0 left-0 bg-royal-gold/25 rounded-r transition-[width] duration-300"
-                      style={{ width: `${pct}%` }}
-                    />
-
-                    <div className="relative z-10 flex items-center justify-between">
-  <div className="flex items-center gap-3 min-w-0">
-    <span className="text-royal-gold font-bold w-6 text-right tabular-nums">
-      {idx + 1}.
-    </span>
-
-    {/* Logo + name */}
-    <div className="flex items-center gap-2 min-w-0">
-      {teamLogos[team.name] ? (
-        <img
-          src={teamLogos[team.name]}
-          alt={`${team.name} logo`}
-          className="h-6 w-6 object-contain flex-shrink-0"
-          onError={(e) => { e.currentTarget.style.visibility = "hidden"; }}
-        />
-      ) : (
-        <span className="h-6 w-6" /> // keeps alignment if no logo
-      )}
-      <span className="truncate">{team.name}</span>
-    </div>
-  </div>
-
-  <span className="font-semibold tabular-nums text-royal-gold">
-    {team.value.toFixed(2)}
-  </span>
-</div>
-
+                    No teams available.
                   </li>
-                );
-              })}
-              {rankingData.length === 0 && (
-                <li className="py-6 text-center text-neutral-400">No teams available.</li>
-              )}
-            </ul>
-          )}
+                )}
+              </ul>
+            )}
+          </div>
         </section>
       </div>
     </div>

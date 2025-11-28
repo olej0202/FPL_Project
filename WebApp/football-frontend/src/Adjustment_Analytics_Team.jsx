@@ -375,9 +375,9 @@ function recomputeMetrics(rows) {
 
     let csProb;
     if (r.Home === "H") {
-      csProb =0.58+
-        (ownXGC + ownDEFE) * -0.08 +
-        -0.13 * (oppXG - oppATTE) +
+      csProb =0.65+
+        (ownXGC + ownDEFE) * -0.16 +
+        -0.15 * (oppXG - oppATTE) +
          0.01* ((ownXGC + ownDEFE)) * ((oppXG - oppATTE));
     } else {
       csProb =0.58+
@@ -764,7 +764,7 @@ function FixturesTable({ tableData }) {
           onClick={() => toggleSort("totalXG", null)}
           style={sortButtonStyle(sortConfig.key === "totalXG")}
         >
-          Total XG
+          Total Goals
         </button>
         <button
           onClick={() => toggleSort("totalCS", null)}
@@ -1018,7 +1018,7 @@ function FixturesTable({ tableData }) {
                             color: PALETTE.beige,
                           }}
                         >
-                          XG: {formatXG(xgVal)}
+                          Goals {formatXG(xgVal)}
                         </span>
                         <span
                           style={{
@@ -1026,7 +1026,7 @@ function FixturesTable({ tableData }) {
                             color: PALETTE.beige,
                           }}
                         >
-                          CS: {formatCS(csVal)}
+                          CS Odds: {formatCS(csVal)}
                         </span>
                       </div>
                     </td>
@@ -1052,7 +1052,7 @@ function FixturesTable({ tableData }) {
                     }}
                   >
                     <span>
-                      Total XG: {totals.totalXG.toFixed(2)}
+                      Total Goals: {totals.totalXG.toFixed(2)}
                     </span>
                     <span
                       style={{
@@ -1060,7 +1060,7 @@ function FixturesTable({ tableData }) {
                         color: "#d1c3a9",
                       }}
                     >
-                      Avg CS: {(totals.avgCS * 100).toFixed(1)}%
+                      Avg Clean Sheets: {(totals.avgCS * 100).toFixed(1)}%
                     </span>
                   </div>
                 </td>
