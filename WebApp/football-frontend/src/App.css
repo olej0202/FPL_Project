@@ -1,10 +1,6 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
-}
+/* Remove the old #root layout from Vite template */
 
+/* Logo stuff (if still used somewhere) */
 .logo {
   height: 6em;
   padding: 1.5em;
@@ -50,5 +46,67 @@
   background-color: transparent !important;
 }
 
-* { -webkit-tap-highlight-color: transparent; }
+* {
+  -webkit-tap-highlight-color: transparent;
+}
 
+/* ===========================
+   GLOBAL BACKGROUND
+   =========================== */
+
+/* If you want the whole page black (good for your app) */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  background: #000;            /* full black */
+  color: #fff;                 /* default text */
+  font-family: system-ui, Arial, sans-serif;
+}
+
+/* Let React root fill the viewport width */
+#root {
+  min-height: 100%;
+}
+
+/* Content wrapper elements — optional if you use these classes */
+.main-wrapper,
+.content-wrapper,
+.container,
+.page-body {
+  background: transparent;
+}
+
+/* ===========================
+   MOBILE TWEAK (optional)
+   If you want DIFFERENT background on mobile
+   =========================== */
+/*
+@media (max-width: 768px) {
+  body,
+  #root {
+    background-color: #000000;
+    color: #ffffff;
+  }
+}
+*/
+
+/* ===========================
+   OPTIONAL — Auto Dark Mode
+   (You probably don't need this since you're already dark)
+   =========================== */
+/*
+@media (max-width: 768px) and (prefers-color-scheme: dark) {
+  body,
+  .main-wrapper,
+  .content-wrapper,
+  .container {
+    background-color: #0f0f0f !important;
+    color: #eaeaea !important;
+  }
+}
+*/
