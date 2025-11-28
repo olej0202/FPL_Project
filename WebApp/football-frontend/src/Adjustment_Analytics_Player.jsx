@@ -15,7 +15,7 @@ const MEASURE_LABELS = {
   Goal_Scored: "Predicted Goals",
   Assists: "Predicted Assists",
   Avg_Minutes: "Predicted Minutes",
-  CBI_Predictions: "Predicted CBI",
+  CBI_Predictions: "Predicted Defcon",
 };
 
 /** Simple reusable searchable multi-select dropdown */

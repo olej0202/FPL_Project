@@ -1,6 +1,13 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useOtherData } from "./Contexts/OtherContext";
 
+const PALETTE = {
+  red: "#5A0000",
+  gold: "#B8860B",
+  black: "#000000",
+  beige: "#f7ead6",
+};
+
 // Small helpers
 const toRelative = (iso) => {
   if (!iso) return "";
@@ -38,9 +45,13 @@ export default function NewsBlog() {
       const parsed = NewsData.current.map((article) => {
         let sourceObj = {};
         try {
-          sourceObj = JSON.parse(String(article.source || "{}").replace(/'\s*:\s*'/g, '"$1"').replace(/'/g, '"'));
+          sourceObj = JSON.parse(
+            String(article.source || "{}")
+              .replace(/'\s*:\s*'/g, '"$1"')
+              .replace(/'/g, '"')
+          );
         } catch {
-          // keep empty sourceObj if parse fails
+          // ignore parse errors, keep empty sourceObj
         }
         return { ...article, parsedSource: sourceObj };
       });
@@ -53,8 +64,11 @@ export default function NewsBlog() {
         return acc;
       }, {});
 
-      // default: all topics open
-      const defaults = Object.keys(grouped).reduce((m, k) => ((m[k] = true), m), {});
+      const defaults = Object.keys(grouped).reduce((m, k) => {
+        m[k] = true;
+        return m;
+      }, {});
+
       setOpen(defaults);
       setGroupedNews(grouped);
     };
@@ -62,11 +76,13 @@ export default function NewsBlog() {
   }, [fetchIfNeeded, NewsData]);
 
   // Topic list + counts
-  const topics = useMemo(() => {
-    return Object.entries(groupedNews)
-      .map(([k, arr]) => ({ key: k, count: arr.length }))
-      .sort((a, b) => a.key.localeCompare(b.key));
-  }, [groupedNews]);
+  const topics = useMemo(
+    () =>
+      Object.entries(groupedNews)
+        .map(([k, arr]) => ({ key: k, count: arr.length }))
+        .sort((a, b) => a.key.localeCompare(b.key)),
+    [groupedNews]
+  );
 
   // Filtered by query (search in content + source name)
   const filtered = useMemo(() => {
@@ -88,7 +104,7 @@ export default function NewsBlog() {
 
   // Skeleton card
   const Skeleton = () => (
-    <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+    <div className="rounded-xl border border-royal-gold/40 bg-black/70 p-4">
       <div className="h-3 w-24 bg-neutral-800 rounded mb-3 animate-pulse" />
       <div className="h-4 w-40 bg-neutral-800 rounded mb-2 animate-pulse" />
       <div className="h-4 w-3/4 bg-neutral-800 rounded mb-1 animate-pulse" />
@@ -97,100 +113,188 @@ export default function NewsBlog() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-neutral-950 to-black text-neutral-100">
-      <div className="mx-auto max-w-6xl px-4 py-6 sm:py-10">
+    <div
+      style={{
+        minHeight: "100vh",
+        padding: "1.5rem 1rem 2.5rem",
+        background: `radial-gradient(circle at top, ${PALETTE.red} 0, ${PALETTE.black} 45%, #000000 100%)`,
+        color: PALETTE.beige,
+        fontFamily:
+          "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      }}
+    >
+      <div className="mx-auto max-w-7xl">
         {/* Header */}
         <header className="mb-6 sm:mb-8 text-center">
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-royal-beige">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight">
             Premier League News
           </h1>
-          <p className="text-xs sm:text-sm text-neutral-400 mt-2">
-            Latest headlines, grouped by topic. Click a topic to collapse/expand.
+          <p className="text-xs sm:text-sm text-neutral-300 mt-2 max-w-2xl mx-auto">
+            Latest headlines, grouped by topic. Click a topic to collapse or expand, or search across all articles.
           </p>
         </header>
 
         {/* Toolbar */}
-        <div className="mb-6 grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3">
-          <div className="rounded-xl border border-white/10 bg-white/5 p-2">
+        <section className="mb-6 space-y-3">
+          {/* Search card */}
+          <div className="max-w-xl mx-auto w-full rounded-2xl border border-royal-gold bg-black/80 shadow-xl px-3 sm:px-4 py-2 sm:py-3">
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search news (team, player, source)…"
-              className="w-full h-10 rounded-md bg-black/60 text-sm px-3 border border-white/10 outline-none focus:ring-2 focus:ring-royal-gold/60"
+              className="
+                w-full h-10
+                rounded-md
+                bg-black/70
+                text-sm
+                px-3
+                border border-royal-gold/70
+                outline-none
+                text-royal-beige
+                focus:ring-2 focus:ring-royal-gold
+              "
             />
           </div>
-          {/* Topic chips */}
-          <div className="flex flex-wrap items-center gap-2">
+
+          {/* Topic chips – horizontally scrollable on small screens */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1">
             {topics.map((t) => (
               <button
                 key={t.key}
                 onClick={() => toggle(t.key)}
                 aria-pressed={!!open[t.key]}
-                className={`h-9 px-3 rounded-full text-sm border transition focus:outline-none focus:ring-2 focus:ring-royal-gold/60 hover:border-none ${
-                  open[t.key]
-                    ? "bg-royal-gold text-black"
-                    : "bg-white/5 text-neutral-200 border-white/10 hover:bg-white/10"
-                }`}
+                className={`
+                  flex-shrink-0
+                  h-8 sm:h-9 px-3 rounded-full
+                  text-xs sm:text-sm
+                  border
+                  transition
+                  focus:outline-none focus:ring-2 focus:ring-royal-gold
+                  ${
+                    open[t.key]
+                      ? "bg-royal-gold text-black border-yellow-400"
+                      : "bg-black/70 text-royal-beige border-royal-gold/60 hover:bg-black/90"
+                  }
+                `}
               >
-                {t.key} <span className="opacity-70 ml-1">({t.count})</span>
+                <span className="truncate max-w-[120px] sm:max-w-none">
+                  {t.key}
+                </span>
+                <span className="opacity-70 ml-1">({t.count})</span>
               </button>
             ))}
           </div>
-        </div>
+        </section>
 
         {/* Content */}
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
             {Array.from({ length: 9 }).map((_, i) => (
               <Skeleton key={i} />
             ))}
           </div>
         ) : (
-          <div className="space-y-8">
+          <div className="space-y-6 sm:space-y-8 mt-4">
             {Object.entries(filtered).map(([topic, entries]) => (
-              <section key={topic} className="rounded-2xl border border-white/10 bg-white/5 overflow-hidden">
+              <section
+                key={topic}
+                className="
+                  rounded-2xl
+                  border border-royal-gold
+                  bg-black/80
+                  shadow-2xl
+                  overflow-hidden
+                "
+              >
                 {/* Topic header */}
                 <button
                   type="button"
                   onClick={() => toggle(topic)}
                   aria-expanded={!!open[topic]}
-                  className="bg-white/10 w-full flex items-center justify-between px-4 py-3 text-left hover:bg-white/20 hover:border-none"
+                  className="
+                    w-full
+                    flex items-center justify-between
+                    px-4 py-3
+                    text-left
+                    bg-black/90
+                    hover:bg-black
+                    transition
+                    focus:outline-none focus:ring-2 focus:ring-royal-gold
+                  "
                 >
-                  <div className="flex items-center gap-3">
-                    <span className="text-lg font-semibold text-royal-gold">{topic}</span>
-                    <span className="text-xs text-neutral-400">{entries.length} articles</span>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="text-base sm:text-lg font-semibold text-royal-gold truncate">
+                      {topic}
+                    </span>
+                    <span className="text-[11px] sm:text-xs text-neutral-300 whitespace-nowrap">
+                      {entries.length} article{entries.length !== 1 ? "s" : ""}
+                    </span>
                   </div>
-                  <span className="text-royal-gold text-sm">{open[topic] ? "▲" : "▼"}</span>
+                  <span className="text-royal-gold text-xs sm:text-sm">
+                    {open[topic] ? "▲" : "▼"}
+                  </span>
                 </button>
 
                 {/* Articles */}
                 {open[topic] && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4 pt-0">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 p-3 sm:p-4">
                     {entries.map((article, idx) => {
                       const isFPLTips = article.topic === "FPL tips";
                       const url = article.parsedSource?.url || "";
                       const sourceName = article.parsedSource?.name || "";
                       const Favicon = getFavicon(url);
 
-                      const Card = (
-                        <div className="h-full rounded-xl border border-white/10 bg-black/60 p-4 shadow-sm hover:shadow-md transition">
+                      const CardInner = (
+                        <div
+                          className={`
+                            h-full
+                            rounded-xl
+                            border
+                            ${
+                              isFPLTips
+                                ? "border-royal-gold"
+                                : "border-royal-gold/50"
+                            }
+                            bg-black/80
+                            p-4
+                            shadow-sm
+                            transition
+                            hover:shadow-md hover:-translate-y-1
+                            flex flex-col
+                          `}
+                        >
+                          {/* Top row: source + time */}
                           <div className="flex items-center justify-between gap-3 mb-2">
                             <div className="flex items-center gap-2 min-w-0">
                               {Favicon ? (
-                                <img src={Favicon} alt="" className="h-4 w-4 object-contain" onError={(e)=> (e.currentTarget.style.display='none')} />
+                                <img
+                                  src={Favicon}
+                                  alt=""
+                                  className="h-4 w-4 object-contain flex-shrink-0"
+                                  onError={(e) =>
+                                    (e.currentTarget.style.display = "none")
+                                  }
+                                />
                               ) : null}
-                              <span className="text-[11px] text-neutral-400 truncate">{sourceName || (isFPLTips ? "FPL Tips" : "")}</span>
+                              <span className="text-[11px] text-neutral-300 truncate">
+                                {sourceName || (isFPLTips ? "FPL Tips" : "")}
+                              </span>
                             </div>
-                            <time className="text-[11px] text-neutral-400">{toRelative(article.date)}</time>
+                            <time className="text-[11px] text-neutral-400 flex-shrink-0">
+                              {toRelative(article.date)}
+                            </time>
                           </div>
-                          <p className="text-[17px] leading-5 text-neutral-100 whitespace-pre-line">
+
+                          {/* Content */}
+                          <p className="text-sm sm:text-[15px] leading-5 text-royal-beige whitespace-pre-line">
                             {article.content}
                           </p>
                         </div>
                       );
 
+                      // FPL tips stay in-app, others open in new tab
                       return isFPLTips ? (
-                        <div key={idx}>{Card}</div>
+                        <div key={idx}>{CardInner}</div>
                       ) : (
                         <a
                           key={idx}
@@ -199,7 +303,7 @@ export default function NewsBlog() {
                           rel="noopener noreferrer"
                           className="block text-inherit no-underline"
                         >
-                          {Card}
+                          {CardInner}
                         </a>
                       );
                     })}
@@ -209,7 +313,9 @@ export default function NewsBlog() {
             ))}
 
             {Object.keys(filtered).length === 0 && (
-              <div className="text-center text-neutral-400 py-10">No articles match your search.</div>
+              <div className="text-center text-neutral-300 py-10">
+                No articles match your search.
+              </div>
             )}
           </div>
         )}

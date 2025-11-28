@@ -73,7 +73,8 @@ export default function Team_Predictions() {
 
   // Touch swipe (mobile)
   const touchStartX = useRef(null);
-  const onTouchStart = (e) => (touchStartX.current = e.changedTouches[0].clientX);
+  const onTouchStart = (e) =>
+    (touchStartX.current = e.changedTouches[0].clientX);
   const onTouchEnd = (e) => {
     if (touchStartX.current == null) return;
     const dx = e.changedTouches[0].clientX - touchStartX.current;
@@ -86,10 +87,36 @@ export default function Team_Predictions() {
   const isAtStart = uniqueGWs.indexOf(selectedGW) === 0;
   const isAtEnd = uniqueGWs.indexOf(selectedGW) === uniqueGWs.length - 1;
 
-  const formatPct = (v) => {
+  const normalizeProb = (v) => {
     const num = Number(v);
     const normalized = num > 1 ? num / 100 : num; // handles 0-1 or 0-100
-    return `${(Math.max(0, Math.min(1, normalized)) * 100).toFixed(1)}%`;
+    return Math.max(0, Math.min(1, normalized));
+  };
+
+  const formatPct = (v) => {
+    const p = normalizeProb(v);
+    return `${(p * 100).toFixed(1)}%`;
+  };
+
+  // Highlight rules
+  const scoreHighlightClass = (g) => {
+    const val = Number(g);
+    if (!Number.isFinite(val)) return "";
+    if (val >= 1.8) return "text-emerald-300 font-semibold";
+    if (val <= 0.99) return "text-red-300";
+    return "text-royal-gold";
+  };
+
+  const csBadgeClass = (p) => {
+    const prob = normalizeProb(p);
+    if (!Number.isFinite(prob)) {
+      return "bg-neutral-800 text-neutral-300 border-neutral-700";
+    }
+    if (prob >= 0.35)
+      return "bg-emerald-900/80 text-emerald-200 border-emerald-500/60";
+    if (prob <= 0.25)
+      return "bg-red-900/80 text-red-200 border-red-500/60";
+    return "bg-yellow-900/70 text-yellow-100 border-yellow-400/60";
   };
 
   const crest = (team) => {
@@ -101,7 +128,7 @@ export default function Team_Predictions() {
         onError={(e) => {
           e.currentTarget.style.visibility = "hidden";
         }}
-        className="h-10 w-10 object-contain transition-transform duration-200 group-hover:scale-105"
+        className="h-9 w-9 sm:h-10 sm:w-10 object-contain transition-transform duration-200 group-hover:scale-105"
       />
     );
   };
@@ -112,21 +139,36 @@ export default function Team_Predictions() {
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
     >
-      <div className="mx-auto max-w-6xl px-4 py-6 sm:py-10">
+      <div className="mx-auto max-w-6xl px-3 sm:px-4 py-6 sm:py-10">
         {/* Header */}
-        <header className="mb-6 sm:mb-8 flex flex-col items-center gap-3">
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">Score Predictions</h1>
-          <p className="text-xs sm:text-sm text-neutral-400">Navigate between gameweeks to see predicted scores and clean-sheet odds.</p>
+        <header className="mb-6 sm:mb-8 flex flex-col items-center gap-3 text-center">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight">
+            Score Predictions
+          </h1>
+          <p className="text-xs sm:text-sm text-neutral-400 max-w-xl">
+            Swipe or use the arrows to move between gameweeks and see
+            predicted scores and clean-sheet odds.
+          </p>
 
           {/* Progress across GWs */}
           {uniqueGWs.length > 0 && selectedGW != null && (
             <div className="w-full max-w-md h-1.5 bg-neutral-800 rounded overflow-hidden">
               <div
                 className="h-full bg-royal-gold transition-[width] duration-300"
-                style={{ width: `${((uniqueGWs.indexOf(selectedGW) + 1) / uniqueGWs.length) * 100}%` }}
+                style={{
+                  width: `${
+                    ((uniqueGWs.indexOf(selectedGW) + 1) /
+                      uniqueGWs.length) *
+                    100
+                  }%`,
+                }}
                 aria-valuemin={0}
                 aria-valuemax={100}
-                aria-valuenow={Math.round(((uniqueGWs.indexOf(selectedGW) + 1) / uniqueGWs.length) * 100)}
+                aria-valuenow={Math.round(
+                  ((uniqueGWs.indexOf(selectedGW) + 1) /
+                    uniqueGWs.length) *
+                    100
+                )}
                 role="progressbar"
               />
             </div>
@@ -134,44 +176,47 @@ export default function Team_Predictions() {
         </header>
 
         {/* GW Navigation */}
-        <div className="flex items-center justify-center mb-6 gap-4">
+        <div className="flex items-center justify-center mb-6 gap-3 sm:gap-4">
           <button
             onClick={goPrev}
             disabled={isAtStart}
-            className={`inline-flex items-center justify-center rounded-xl hover:border-none px-3 py-2 border shadow-sm transition focus:outline-none focus:ring-2 focus:ring-royal-gold/60 ${
+            className={`inline-flex items-center justify-center rounded-xl px-3 py-2 border shadow-sm text-sm sm:text-base transition focus:outline-none focus:ring-2 focus:ring-royal-gold/60 ${
               isAtStart
                 ? "bg-neutral-800 text-neutral-500 border-neutral-700 cursor-not-allowed"
                 : "bg-royal-gold text-black border-yellow-400 hover:bg-yellow-300"
             }`}
             aria-label="Previous gameweek"
           >
-            <ChevronLeft size={22} />
+            <ChevronLeft size={20} className="sm:mr-0" />
           </button>
 
           <span className="text-lg sm:text-2xl font-semibold select-none tracking-wide">
-            Gameweek {selectedGW ?? "—"}
+            GW {selectedGW ?? "—"}
           </span>
 
           <button
             onClick={goNext}
             disabled={isAtEnd}
-            className={`inline-flex items-center justify-center rounded-xl hover:border-none px-3 py-2 border shadow-sm transition focus:outline-none focus:ring-2 focus:ring-royal-gold/60 ${
+            className={`inline-flex items-center justify-center rounded-xl px-3 py-2 border shadow-sm text-sm sm:text-base transition focus:outline-none focus:ring-2 focus:ring-royal-gold/60 ${
               isAtEnd
                 ? "bg-neutral-800 text-neutral-500 border-neutral-700 cursor-not-allowed"
                 : "bg-royal-gold text-black border-yellow-400 hover:bg-yellow-300"
             }`}
             aria-label="Next gameweek"
           >
-            <ChevronRight size={22} />
+            <ChevronRight size={20} className="sm:ml-0" />
           </button>
         </div>
 
         {/* Content */}
         {isLoading ? (
           // Skeletons
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="rounded-2xl border border-white/10 bg-white/5 p-4 animate-pulse">
+              <div
+                key={i}
+                className="rounded-2xl border border-white/10 bg-white/5 p-4 animate-pulse"
+              >
                 <div className="h-5 w-2/3 bg-neutral-700 rounded mb-4" />
                 <div className="flex items-center justify-between mb-3">
                   <div className="h-10 w-10 bg-neutral-700 rounded" />
@@ -189,59 +234,142 @@ export default function Team_Predictions() {
         ) : (
           <div
             key={selectedGW}
-            className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 transition-opacity duration-300 ${
+            className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 transition-opacity duration-300 ${
               mounted ? "opacity-100" : "opacity-0"
             }`}
           >
-            {filteredData.map((match, idx) => (
-              <div
-                key={`${match.home_team}-${match.away_team}-${idx}`}
-                style={{ transitionDelay: `${idx * 40}ms` }}
-                className={`group rounded-2xl border border-white/10 bg-white/5 p-4 shadow-sm backdrop-blur-sm transition-all duration-300 ease-out will-change-transform ${
-                  mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
-                }`}
-              >
-                {/* Header */}
-                {/* Header (aligned with row grid) */}
-<div className="grid grid-cols-[minmax(0,1fr)_64px_92px] items-center gap-3 mb-2">
-  <span className="text-xs uppercase tracking-wide text-neutral-400">Match</span>
-  <span className="text-xs uppercase tracking-wide text-neutral-400 text-right">Score</span>
-  <span className="text-xs uppercase tracking-wide text-neutral-400 text-right">CS odds</span>
-</div>
+            {filteredData.map((match, idx) => {
+              const homeGoals = Number(match.home_goals);
+              const awayGoals = Number(match.away_goals);
+              const homeCS = normalizeProb(match.Clean_Sheet_home);
+              const awayCS = normalizeProb(match.Clean_Sheet_away);
 
-{/* Home Team Row */}
-<div className="grid grid-cols-[minmax(0,1fr)_64px_92px] items-center gap-3 mb-2">
-  <div className="flex items-center gap-3 min-w-0">
-    {crest(match.home_team)}
-    <span className="text-base font-medium truncate">{match.home_team}</span>
-  </div>
-  <span className="text-xl font-semibold tabular-nums text-right">
-    {Number(match.home_goals).toFixed(1)}
-  </span>
-  <span className="text-xl font-semibold tabular-nums text-right">
-    {formatPct(Number(match.Clean_Sheet_home))}
-  </span>
-</div>
+              return (
+                <div
+                  key={`${match.home_team}-${match.away_team}-${idx}`}
+                  style={{ transitionDelay: `${idx * 40}ms` }}
+                  className={`group rounded-2xl border border-white/10 bg-white/5 p-4 shadow-sm backdrop-blur-sm transition-all duration-300 ease-out will-change-transform ${
+                    mounted
+                      ? "opacity-100 translate-y-0"
+                      : "opacity-0 translate-y-2"
+                  }`}
+                >
+                  {/* Header on sm+ only (for column labels) */}
+                  <div className="hidden sm:grid grid-cols-[minmax(0,1fr)_64px_96px] items-center gap-3 mb-2 text-[11px]">
+                    <span className="uppercase tracking-wide text-neutral-400">
+                      Match
+                    </span>
+                    <span className="uppercase tracking-wide text-neutral-400 text-right">
+                      Score
+                    </span>
+                    <span className="uppercase tracking-wide text-neutral-400 text-right">
+                      CS odds
+                    </span>
+                  </div>
 
-{/* Away Team Row */}
-<div className="grid grid-cols-[minmax(0,1fr)_64px_92px] items-center gap-3">
-  <div className="flex items-center gap-3 min-w-0">
-    {crest(match.away_team)}
-    <span className="text-base font-medium truncate">{match.away_team}</span>
-  </div>
-  <span className="text-xl font-semibold tabular-nums text-right">
-    {Number(match.away_goals).toFixed(1)}
-  </span>
-  <span className="text-xl font-semibold tabular-nums text-right">
-    {formatPct(Number(match.Clean_Sheet_away))}
-  </span>
-</div>
+                  {/* Home Team Row */}
+                  <div className="grid grid-cols-[minmax(0,1fr)_auto] sm:grid-cols-[minmax(0,1fr)_64px_96px] items-center gap-2 sm:gap-3 mb-2">
+                    <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                      {crest(match.home_team)}
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-sm sm:text-base font-medium truncate">
+                          {match.home_team}
+                        </span>
+                        <span className="text-[10px] text-neutral-400 sm:hidden">
+                          Score · CS odds
+                        </span>
+                      </div>
+                    </div>
 
-              </div>
-            ))}
+                    {/* Score */}
+                    <div className="flex items-center justify-end sm:justify-center gap-1">
+                      <span
+                        className={`text-base sm:text-xl font-semibold tabular-nums ${scoreHighlightClass(
+                          homeGoals
+                        )}`}
+                      >
+                        {homeGoals.toFixed(1)}
+                      </span>
+                    </div>
+
+                    {/* CS Odds badge (sm+) */}
+                    <div className="hidden sm:flex justify-end">
+                      <span
+                        className={`inline-flex items-center justify-center text-[11px] px-2 py-1 rounded-full border ${csBadgeClass(
+                          homeCS
+                        )}`}
+                      >
+                        {formatPct(homeCS)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* CS badge on mobile (separate line for breathing room) */}
+                  <div className="flex sm:hidden justify-end mb-1">
+                    <span
+                      className={`inline-flex items-center justify-center text-[11px] px-2 py-1 rounded-full border ${csBadgeClass(
+                        homeCS
+                      )}`}
+                    >
+                      CS: {formatPct(homeCS)}
+                    </span>
+                  </div>
+
+                  {/* Away Team Row */}
+                  <div className="grid grid-cols-[minmax(0,1fr)_auto] sm:grid-cols-[minmax(0,1fr)_64px_96px] items-center gap-2 sm:gap-3">
+                    <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                      {crest(match.away_team)}
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-sm sm:text-base font-medium truncate">
+                          {match.away_team}
+                        </span>
+                        <span className="text-[10px] text-neutral-400 sm:hidden">
+                          Score · CS odds
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Score */}
+                    <div className="flex items-center justify-end sm:justify-center gap-1">
+                      <span
+                        className={`text-base sm:text-xl font-semibold tabular-nums ${scoreHighlightClass(
+                          awayGoals
+                        )}`}
+                      >
+                        {awayGoals.toFixed(1)}
+                      </span>
+                    </div>
+
+                    {/* CS Odds badge (sm+) */}
+                    <div className="hidden sm:flex justify-end">
+                      <span
+                        className={`inline-flex items-center justify-center text-[11px] px-2 py-1 rounded-full border ${csBadgeClass(
+                          awayCS
+                        )}`}
+                      >
+                        {formatPct(awayCS)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* CS badge on mobile */}
+                  <div className="flex sm:hidden justify-end mt-1">
+                    <span
+                      className={`inline-flex items-center justify-center text-[11px] px-2 py-1 rounded-full border ${csBadgeClass(
+                        awayCS
+                      )}`}
+                    >
+                      CS: {formatPct(awayCS)}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
 
             {filteredData.length === 0 && (
-              <div className="col-span-full text-center text-neutral-400 py-10">No matches for this gameweek.</div>
+              <div className="col-span-full text-center text-neutral-400 py-10">
+                No matches for this gameweek.
+              </div>
             )}
           </div>
         )}

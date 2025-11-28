@@ -1,4 +1,5 @@
 
+from GenerateConfig import NEW_TEAMS_NAME
 
 def Generate_Understat_dataset(current_players,run_player_pos):
 
@@ -580,6 +581,20 @@ def Generate_Understat_dataset(current_players,run_player_pos):
           .sort_values(["player_team", "pos_group"])
           .reset_index(drop=True)
     )
+    
+    
+    teams_to_flatten = NEW_TEAMS_NAME
+
+    cols_to_avg = ["XGIndex", "XAIndex", "Rolling_XG_Share", "Rolling_XA_Share"]
+
+    # mask of rows that belong to those teams
+    mask = latest["player_team"].isin(teams_to_flatten)
+
+    # compute per-pos_group averages for these columns (aligned to index via transform)
+    pos_group_means = latest.groupby("pos_group")[cols_to_avg].transform("mean")
+
+    # overwrite only for the chosen teams, with the pos_group mean
+    latest.loc[mask, cols_to_avg] = pos_group_means.loc[mask, cols_to_avg]
 
     # 4) write to file
     latest.to_csv("Team_Positions_transformed_Newest.csv", index=False)
