@@ -432,8 +432,8 @@ def Player_adjustements(current_player_path):
     )
 
     # Cap overscore/overassist factors per player in [0.9, 1.15]
-    overscore_factor = df["Average_Overscore"].clip(0.9, 1.15)
-    overassist_factor = df["Average_OverAssist"].clip(0.9, 1.2)
+    overscore_factor = df["Average_Overscore"].clip(0.9, 1.1)
+    overassist_factor = df["Average_OverAssist"].clip(0.9, 1.15)
 
     df["Goal_share"] = df["Goal_share"] * overscore_factor
     df["Assist_share"] = df["Assist_share"] * overassist_factor

@@ -617,7 +617,7 @@ def optimize_my_team(
                         "status": "transferred_in",
                         "GW": gw,
                         "position": pos,
-                        "photo": f"https://resources.premierleague.com/premierleague/photos/players/110x140/p{player_row_code}.png",
+                        "photo": f"https://resources.premierleague.com/premierleague25/photos/players/500x500/{player_row_code}.png",
                         "Is_captain": False,
                         "web_name": web_name,
                     })
@@ -629,7 +629,7 @@ def optimize_my_team(
                         "status": "transferred_out",
                         "GW": gw,
                         "position": pos,
-                        "photo": f"https://resources.premierleague.com/premierleague/photos/players/110x140/p{player_row_code}.png",
+                        "photo": f"https://resources.premierleague.com/premierleague25/photos/players/500x500/{player_row_code}.png",
                         "Is_captain": False,
                         "web_name": web_name,
                     })
@@ -653,7 +653,7 @@ def optimize_my_team(
                     "status": status,
                     "GW": gw,
                     "position": pos,
-                    "photo": f"https://resources.premierleague.com/premierleague/photos/players/110x140/p{player_row_code}.png",
+                    "photo": f"https://resources.premierleague.com/premierleague25/photos/players/500x500/{player_row_code}.png",
                     "Is_captain": bool(is_capt),
                     "web_name": web_name,
                 })
