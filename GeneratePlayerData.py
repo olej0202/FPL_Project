@@ -385,7 +385,7 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
     Future_dataframe=pd.DataFrame()
     missing_player=[]
     for name in names:
-        player_risiko=0
+        player_risiko=0.2
         player_row = current_data[
             current_data["name"].str.lower() == name.lower()
         ]        

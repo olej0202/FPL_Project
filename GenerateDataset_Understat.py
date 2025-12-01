@@ -555,13 +555,13 @@ def Generate_Understat_dataset(current_players,run_player_pos):
     team_tot_xaindex = agg_enriched.groupby(["date", "player_team"])["XAIndex"].transform("sum")
 
         # Shares as fractions (0–1)
-    agg_enriched["Rolling_XG_Share"] = (
+    """agg_enriched["Rolling_XG_Share"] = (
         agg_enriched["XGIndex"] / team_tot_xgindex
     ).replace([np.inf, -np.inf], np.nan).fillna(0)
 
     agg_enriched["Rolling_XA_Share"] = (
         agg_enriched["XAIndex"] / team_tot_xaindex
-    ).replace([np.inf, -np.inf], np.nan).fillna(0)
+    ).replace([np.inf, -np.inf], np.nan).fillna(0)"""
 
 
     # 5) (Optional) save
