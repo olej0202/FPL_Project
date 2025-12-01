@@ -1176,10 +1176,10 @@ def main_Transform():
             player_df["rolling_bps"] = player_df['bps'].ewm(span=lookback, adjust=False).mean()
             player_df["rolling_GS"] = player_df['goals_scored'].clip(upper=2).ewm(span=lookback, adjust=False).mean()
             player_df["rolling_shots"] = player_df['shots'].ewm(span=lookback, adjust=False).mean()
-            mid_table["XG_min"]=(player_df['expected_goals']/player_df['minutes']).copy()*90
-            mid_table["XA_min"]=(player_df['expected_assists']/player_df['minutes']).copy()*90
-            mid_table["Threat_min"]=(player_df['Threat']/player_df['minutes']).copy()*90
-            mid_table["Creativity_min"]=(player_df['creativity']/player_df['minutes']).copy()*90
+            mid_table["XG_min"]=(player_df['expected_goals']/player_df['minutes'])*90
+            mid_table["XA_min"]=(player_df['expected_assists']/player_df['minutes'])*90
+            mid_table["Threat_min"]=(player_df['Threat']/player_df['minutes'])*90
+            mid_table["Creativity_min"]=(player_df['creativity']/player_df['minutes'])*90
             
             player_df["rolling_key_passes"] = player_df['key_passes'].ewm(span=lookback, adjust=False).mean()
             player_df["rolling_XG_historic"] = player_df['expected_goals'].rolling(window=30, min_periods=1).mean()
@@ -1219,7 +1219,8 @@ def main_Transform():
             player_df["rolling_ICT"] = adjust_measure(player_df, 'ICT')
             #player_df["rolling_Threat"] = player_df['Threat'].ewm(span=lookback, adjust=False).mean()
             player_df["rolling_Threat"]=adjust_measure(player_df, 'Threat')
-            player_df["Threat_Mean"] = player_df['Threat'].ewm(span=20, adjust=False).mean()
+            player_df["Threat_Mean"] = player_df['Threat'].ewm(span=20, adjust=False).mean()*0.5+player_df["rolling_Threat_historic"]*0.5
+            player_df["Creativity_Mean"]=player_df['creativity'].ewm(span=20, adjust=False).mean()*0.5+0.5*player_df["rolling_Creativity_historic"]
             player_df["Influence_Mean"] = player_df['influence'].rolling(window=15, min_periods=1).mean()
             threat_mean_feature=player_df["Threat_Mean"].values[-1]
             player_df["Adjusted_XG"] = np.where(

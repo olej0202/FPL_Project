@@ -1,76 +1,76 @@
 ,code,element_type,photo,team_code,team,opta_code,now_cost,selected_by_percent,expected_goals,web_name,news,defensive_contribution_per_90,opta_code,minutes,clearances_blocks_interceptions,recoveries,tackles,defensive_contribution,id,first_name,second_name,name,chance_of_playing_this_round
-0,154561,1,154561.jpg,3,1,p154561,59,31.8,0.00,Raya,,0.0,p154561,1080,9,92,0,0,1,David,Raya Martín,David_Raya Martin,
+0,154561,1,154561.jpg,3,1,p154561,59,32.3,0.00,Raya,,0.0,p154561,1170,9,99,0,0,1,David,Raya Martín,David_Raya Martin,
 1,109745,1,109745.jpg,3,1,p109745,42,0.4,0.00,Arrizabalaga,,0.0,p109745,0,0,0,0,0,2,Kepa,Arrizabalaga Revuelta,Kepa_Arrizabalaga,
 2,463748,1,463748.jpg,3,1,p463748,40,0.3,0.00,Hein,Has joined Werder Bremen on loan for the rest of the season.,0.0,p463748,0,0,0,0,0,3,Karl,Hein,Karl_Hein,0.0
-3,551221,1,551221.jpg,3,1,p551221,40,0.2,0.00,Setford,,0.0,p551221,0,0,0,0,0,4,Tommy,Setford,Tommy_Setford,
-4,226597,2,226597.jpg,3,1,p226597,64,25.2,0.82,Gabriel,Thigh injury - Unknown return date,9.09,p226597,990,88,15,12,100,5,Gabriel,dos Santos Magalhães,Gabriel_dos Santos Magalhães,0.0
-5,462424,2,462424.jpg,3,1,p462424,60,12.8,0.29,Saliba,,6.86,p462424,814,51,35,11,62,6,William,Saliba,William_Saliba,100.0
-6,466075,2,466075.jpg,3,1,p466075,58,14.5,2.31,Calafiori,,5.14,p466075,946,38,45,16,54,7,Riccardo,Calafiori,Riccardo_Calafiori,75.0
-7,445122,2,445122.jpg,3,1,p445122,63,30.5,2.58,J.Timber,,5.75,p445122,971,28,37,34,62,8,Jurriën,Timber,Jurriën_Timber,
+3,551221,1,551221.jpg,3,1,p551221,39,0.2,0.00,Setford,,0.0,p551221,0,0,0,0,0,4,Tommy,Setford,Tommy_Setford,
+4,226597,2,226597.jpg,3,1,p226597,64,21.2,0.82,Gabriel,Thigh injury - Unknown return date,9.09,p226597,990,88,15,12,100,5,Gabriel,dos Santos Magalhães,Gabriel_dos Santos Magalhães,0.0
+5,462424,2,462424.jpg,3,1,p462424,60,12.9,0.29,Saliba,Knock - 75% chance of playing,6.86,p462424,814,51,35,11,62,6,William,Saliba,William_Saliba,100.0
+6,466075,2,466075.jpg,3,1,p466075,58,14.7,2.31,Calafiori,,5.72,p466075,991,44,48,19,63,7,Riccardo,Calafiori,Riccardo_Calafiori,100.0
+7,445122,2,445122.jpg,3,1,p445122,64,32.6,2.88,J.Timber,,5.77,p445122,1061,31,41,37,68,8,Jurriën,Timber,Jurriën_Timber,
 8,440854,2,440854.jpg,3,1,p440854,54,0.1,0.00,Kiwior,has joined Porto on loan for the rest of the season.,0.0,p440854,0,0,0,0,0,9,Jakub,Kiwior,Jakub_Kiwior,0.0
-9,499169,2,499169.jpg,3,1,p499169,51,1.6,0.00,Lewis-Skelly,,5.17,p499169,87,4,7,1,5,10,Myles,Lewis-Skelly,Myles_Lewis-Skelly,
+9,499169,2,499169.jpg,3,1,p499169,51,1.6,0.00,Lewis-Skelly,,5.45,p499169,132,6,10,2,8,10,Myles,Lewis-Skelly,Myles_Lewis-Skelly,
 10,198869,2,198869.jpg,3,1,p198869,53,0.4,0.01,White,,10.29,p198869,70,6,4,2,8,11,Benjamin,White,Benjamin_White,100.0
 11,563324,2,563324.jpg,3,1,p563324,38,0.5,0.00,Clarke,,0.0,p563324,0,0,0,0,0,13,Brayden,Clarke,Brayden_Clarke,
 12,588793,2,588793.jpg,3,1,p588793,39,0.1,0.00,Kacurri,has joined Morecambe on loan for the rest of the season.,0.0,p588793,0,0,0,0,0,14,Maldini,Kacurri,Maldini_Kacurri,0.0
-13,499167,2,499167.jpg,3,1,p499167,39,0.2,0.00,Nichols,,0.0,p499167,0,0,0,0,0,15,Josh,Nichols,Josh_Nichols,
-14,223340,3,223340.jpg,3,1,p223340,101,17.6,2.52,Saka,,8.29,p223340,771,7,49,15,71,16,Bukayo,Saka,Bukayo_Saka,100.0
-15,184029,3,184029.jpg,3,1,p184029,78,1.3,0.14,Ødegaard,,8.51,p184029,201,6,10,3,19,17,Martin,Ødegaard,Martin_Ødegaard,50.0
-16,248857,3,248857.jpg,3,1,p248857,68,0.6,0.29,Madueke,,4.56,p248857,316,2,11,3,16,18,Noni,Madueke,Noni_Madueke,50.0
-17,444145,3,444145.jpg,3,1,p444145,68,0.8,0.75,Martinelli,,6.73,p444145,214,3,10,3,16,19,Gabriel,Martinelli Silva,Gabriel_Martinelli Silva,50.0
-18,116216,3,116216.jpg,3,1,p116216,69,1.1,2.14,Trossard,Knock - 75% chance of playing,4.76,p116216,719,6,26,6,38,20,Leandro,Trossard,Leandro_Trossard,100.0
-19,204480,3,204480.jpg,3,1,p204480,69,22.3,1.44,Rice,,9.89,p204480,983,35,52,21,108,21,Declan,Rice,Declan_Rice,100.0
-20,195384,3,195384.jpg,3,1,p195384,59,1.0,0.78,Merino,,9.54,p195384,500,11,30,12,53,22,Mikel,Merino Zazón,Mikel_Merino Zazón,
+13,499167,2,499167.jpg,3,1,p499167,38,0.2,0.00,Nichols,,0.0,p499167,0,0,0,0,0,15,Josh,Nichols,Josh_Nichols,
+14,223340,3,223340.jpg,3,1,p223340,101,17.8,2.71,Saka,,7.84,p223340,861,7,53,15,75,16,Bukayo,Saka,Bukayo_Saka,100.0
+15,184029,3,184029.jpg,3,1,p184029,78,1.4,0.14,Ødegaard,,8.08,p184029,234,6,12,3,21,17,Martin,Ødegaard,Martin_Ødegaard,100.0
+16,248857,3,248857.jpg,3,1,p248857,68,0.6,0.29,Madueke,,4.13,p248857,349,2,11,3,16,18,Noni,Madueke,Noni_Madueke,100.0
+17,444145,3,444145.jpg,3,1,p444145,68,0.8,0.86,Martinelli,,5.33,p444145,270,3,10,3,16,19,Gabriel,Martinelli Silva,Gabriel_Martinelli Silva,100.0
+18,116216,3,116216.jpg,3,1,p116216,69,1.0,2.14,Trossard,Knock - 75% chance of playing,4.76,p116216,719,6,26,6,38,20,Leandro,Trossard,Leandro_Trossard,75.0
+19,204480,3,204480.jpg,3,1,p204480,70,23.4,1.44,Rice,,10.07,p204480,1073,41,56,23,120,21,Declan,Rice,Declan_Rice,100.0
+20,195384,3,195384.jpg,3,1,p195384,59,1.0,1.43,Merino,,8.69,p195384,590,13,31,13,57,22,Mikel,Merino Zazón,Mikel_Merino Zazón,
 21,438098,3,438098.jpg,3,1,p438098,54,0.0,0.00,Fábio Vieira,has joined Hamburger on loan for the rest of the season.,0.0,p438098,0,0,0,0,0,23,Fábio,Ferreira Vieira,Fábio_Ferreira Vieira,0.0
 22,128295,3,128295.jpg,3,1,p128295,52,0.1,0.05,Nørgaard,,25.71,p128295,14,2,2,0,4,24,Christian,Nørgaard,Christian_Nørgaard,100.0
 23,499175,3,499175.jpg,3,1,p499175,51,0.1,0.23,Nwaneri,,7.09,p499175,165,1,10,2,13,25,Ethan,Nwaneri,Ethan_Nwaneri,
-24,481655,3,481655.jpg,3,1,p481655,54,2.8,0.59,Zubimendi,,8.59,p481655,1027,38,37,23,98,26,Martín,Zubimendi Ibáñez,Martín_Zubimendi Ibáñez,100.0
+24,481655,3,481655.jpg,3,1,p481655,53,2.6,0.59,Zubimendi,,8.48,p481655,1083,39,40,23,102,26,Martín,Zubimendi Ibáñez,Martín_Zubimendi Ibáñez,100.0
 25,588796,3,588796.jpg,3,1,p588796,45,0.1,0.00,Kabia,has joined Shrewsbury Town on loan for the rest of the season.,0.0,p588796,0,0,0,0,0,28,Ismeal,Kabia,Ismeal_Kabia,0.0
 26,437742,3,437742.jpg,3,1,p437742,45,0.1,0.00,Sambi,has joined Hamburger permanently.,0.0,p437742,0,0,0,0,0,29,Albert,Sambi Lokonga,Albert_Sambi Lokonga,0.0
 27,219847,4,219847.jpg,3,1,p219847,73,0.3,0.00,Havertz,Knee injury - 50% chance of playing,9.0,p219847,30,1,2,0,3,30,Kai,Havertz,Kai_Havertz,50.0
-28,205651,4,205651.jpg,3,1,p205651,64,0.0,0.00,G.Jesus,Knee injury - 50% chance of playing,0.0,p205651,0,0,0,0,0,31,Gabriel,Fernando de Jesus,Gabriel_Fernando de Jesus,50.0
-29,232413,3,232413.jpg,3,1,p232413,77,16.2,2.54,Eze,,5.58,p232413,790,9,31,9,49,266,Eberechi,Eze,Eberechi_Eze,
-30,500040,2,500040.jpg,3,1,p500040,54,0.2,0.00,Mosquera,,8.51,p500040,296,20,13,8,28,662,Cristhian,Mosquera,Cristhian_Mosquera,
-31,224117,4,224117.jpg,3,1,p224117,88,11.3,4.45,Gyökeres,Muscle injury - 50% chance of playing,3.26,p224117,801,7,20,2,29,666,Viktor,Gyökeres,Viktor_Gyökeres,50.0
-32,616077,3,616077.jpg,3,1,p616077,43,0.5,0.14,Dowman,,10.0,p616077,27,0,1,2,3,700,Max,Dowman,Max_Dowman,
+28,205651,4,205651.jpg,3,1,p205651,64,0.0,0.00,G.Jesus,,0.0,p205651,0,0,0,0,0,31,Gabriel,Fernando de Jesus,Gabriel_Fernando de Jesus,50.0
+29,232413,3,232413.jpg,3,1,p232413,78,19.0,2.54,Eze,,5.75,p232413,861,11,34,10,55,266,Eberechi,Eze,Eberechi_Eze,
+30,500040,2,500040.jpg,3,1,p500040,54,0.2,0.00,Mosquera,,7.69,p500040,386,23,14,10,33,662,Cristhian,Mosquera,Cristhian_Mosquera,
+31,224117,4,224117.jpg,3,1,p224117,88,10.7,4.45,Gyökeres,,3.19,p224117,819,7,20,2,29,666,Viktor,Gyökeres,Viktor_Gyökeres,50.0
+32,616077,3,616077.jpg,3,1,p616077,43,0.4,0.14,Dowman,,10.0,p616077,27,0,1,2,3,700,Max,Dowman,Max_Dowman,
 33,646243,3,646243.jpg,3,1,p646243,45,0.0,0.00,Harriman-Annous,,0.0,p646243,0,0,0,0,0,711,Andre,Harriman-Annous,Andre_Harriman-Annous,
-34,448104,2,448104.jpg,3,1,p448104,54,0.1,0.00,Hincapie,,4.78,p448104,113,5,5,1,6,725,Piero,Hincapié,Piero_Hincapié,100.0
-35,98980,1,98980.jpg,7,2,p98980,50,3.7,0.00,Martinez,,0.0,p98980,900,8,87,0,0,32,Emiliano,Martínez Romero,Emiliano_Martínez Romero,100.0
-36,72147,1,72147.jpg,7,2,p72147,43,0.5,0.00,M.Bizot,,0.0,p72147,180,4,19,0,0,33,Marco,Bizot,Marco_Bizot,
+34,448104,2,448104.jpg,3,1,p448104,54,0.1,0.00,Hincapie,,5.32,p448104,203,9,11,3,12,725,Piero,Hincapié,Piero_Hincapié,100.0
+35,98980,1,98980.jpg,7,2,p98980,50,3.4,0.00,Martinez,,0.0,p98980,990,9,91,0,0,32,Emiliano,Martínez Romero,Emiliano_Martínez Romero,100.0
+36,72147,1,72147.jpg,7,2,p72147,43,0.4,0.00,M.Bizot,,0.0,p72147,180,4,19,0,0,33,Marco,Bizot,Marco_Bizot,
 37,462492,1,462492.jpg,7,2,p462492,40,0.1,0.00,Gauci,Has joined Port Vale on loan for the rest of the season.,0.0,p462492,0,0,0,0,0,34,Joe,Gauci,Joe_Gauci,0.0
 38,462381,1,462381.jpg,7,2,p462381,40,0.0,0.00,Marschall,Has joined Stevenage permanently.,0.0,p462381,0,0,0,0,0,35,Filip,Marschall,Filip_Marschall,0.0
-39,199796,2,199796.jpg,7,2,p199796,46,6.6,0.31,Cash,,5.97,p199796,1056,49,27,21,70,36,Matty,Cash,Matty_Cash,75.0
-40,101188,2,101188.jpg,7,2,p101188,45,2.1,0.27,Digne,,4.59,p101188,862,29,29,15,44,37,Lucas,Digne,Lucas_Digne,100.0
-41,199798,2,199798.jpg,7,2,p199798,44,7.9,0.04,Konsa,,5.78,p199798,965,57,33,5,62,38,Ezri,Konsa Ngoyo,Ezri_Konsa Ngoyo,75.0
+39,199796,2,199796.jpg,7,2,p199796,47,6.5,0.34,Cash,,5.89,p199796,1146,52,29,23,75,36,Matty,Cash,Matty_Cash,100.0
+40,101188,2,101188.jpg,7,2,p101188,45,2.0,0.35,Digne,,4.54,p101188,952,33,34,15,48,37,Lucas,Digne,Lucas_Digne,100.0
+41,199798,2,199798.jpg,7,2,p199798,44,7.9,0.04,Konsa,,6.06,p199798,1055,64,36,7,71,38,Ezri,Konsa Ngoyo,Ezri_Konsa Ngoyo,100.0
 42,441302,2,441302.jpg,7,2,p441302,42,0.4,0.25,Maatsen,,9.25,p441302,214,15,14,7,22,39,Ian,Maatsen,Ian_Maatsen,
 43,149484,2,149484.jpg,7,2,p149484,44,0.7,0.33,Mings,Hamstring injury - Expected back 23 Nov,7.42,p149484,497,39,16,2,41,40,Tyrone,Mings,Tyrone_Mings,0.0
-44,244954,2,244954.jpg,7,2,p244954,43,0.5,0.10,Pau,,7.21,p244954,687,45,39,10,55,41,Pau,Torres,Pau_Torres,
-45,606798,2,606798.jpg,7,2,p606798,39,0.2,0.00,A.García,,0.0,p606798,0,0,0,0,0,42,Andrés,García,Andrés_García,25.0
-46,106468,2,106468.jpg,7,2,p106468,40,2.2,0.00,Alex Moreno,Has joined Girona permanently.,0.0,p106468,0,0,0,0,0,43,Álex,Moreno Lopera,Álex_Moreno Lopera,0.0
-47,515597,2,515597.jpg,7,2,p515597,40,0.6,0.00,Bogarde,,3.64,p515597,297,6,11,6,12,44,Lamare,Bogarde,Lamare_Bogarde,75.0
+44,244954,2,244954.jpg,7,2,p244954,43,0.5,0.22,Pau,,6.95,p244954,777,49,44,11,60,41,Pau,Torres,Pau_Torres,
+45,606798,2,606798.jpg,7,2,p606798,39,0.2,0.00,A.García,,0.0,p606798,0,0,0,0,0,42,Andrés,García,Andrés_García,100.0
+46,106468,2,106468.jpg,7,2,p106468,40,2.1,0.00,Alex Moreno,Has joined Girona permanently.,0.0,p106468,0,0,0,0,0,43,Álex,Moreno Lopera,Álex_Moreno Lopera,0.0
+47,515597,2,515597.jpg,7,2,p515597,40,0.6,0.00,Bogarde,,3.91,p515597,299,7,12,6,13,44,Lamare,Bogarde,Lamare_Bogarde,100.0
 48,514315,2,514315.jpg,7,2,p514315,39,0.3,0.00,Sousa,,0.0,p514315,0,0,0,0,0,45,Lino,da Cruz Sousa,Lino_da Cruz Sousa,
 49,587178,2,587178.jpg,7,2,p587178,40,0.1,0.00,Yasin,has joined Anderlecht on loan for the rest of the season.,0.0,p587178,0,0,0,0,0,46,Yasin,Özcan,Yasin_Özcan,0.0
-50,244850,3,244850.jpg,7,2,p244850,69,8.0,0.91,Rogers,,6.16,p244850,1066,16,45,12,73,47,Morgan,Rogers,Morgan_Rogers,100.0
-51,166989,3,166989.jpg,7,2,p166989,59,0.6,0.23,Tielemans,,7.55,p166989,417,6,20,9,35,48,Youri,Tielemans,Youri_Tielemans,100.0
+50,244850,3,244850.jpg,7,2,p244850,69,9.9,0.99,Rogers,,5.99,p244850,1156,16,48,13,77,47,Morgan,Rogers,Morgan_Rogers,100.0
+51,166989,3,166989.jpg,7,2,p166989,59,0.6,0.30,Tielemans,,8.43,p166989,491,11,22,13,46,48,Youri,Tielemans,Youri_Tielemans,100.0
 52,215711,3,215711.jpg,7,2,p215711,55,0.1,0.00,Bailey,Has joined AS Roma on loan for the rest of the season.,0.0,p215711,0,0,0,0,0,49,Leon,Bailey,Leon_Bailey,0.0
-53,195546,3,195546.jpg,7,2,p195546,53,0.7,1.08,Buendía,,10.5,p195546,480,12,27,17,56,50,Emiliano,Buendía Stati,Emiliano_Buendía Stati,100.0
+53,195546,3,195546.jpg,7,2,p195546,53,0.6,1.08,Buendía,,9.46,p195546,533,12,27,17,56,50,Emiliano,Buendía Stati,Emiliano_Buendía Stati,100.0
 54,469247,3,469247.jpg,7,2,p469247,55,0.0,0.00,Iling Jr,has joined West Bromwich Albion on loan for the rest of the season,0.0,p469247,0,0,0,0,0,51,Samuel,Iling-Junior,Samuel_Iling-Junior,0.0
-55,204646,3,204646.jpg,7,2,p204646,51,0.8,2.08,Malen,,3.1,p204646,377,1,8,4,13,53,Donyell,Malen,Donyell_Malen,
-56,122806,3,122806.jpg,7,2,p122806,54,0.6,0.99,McGinn,,7.07,p122806,904,17,38,16,71,54,John,McGinn,John_McGinn,
-57,88894,3,88894.jpg,7,2,p88894,48,0.1,0.43,Barkley,,13.24,p88894,102,2,10,3,15,55,Ross,Barkley,Ross_Barkley,100.0
+55,204646,3,204646.jpg,7,2,p204646,51,0.9,2.58,Malen,,2.59,p204646,451,1,8,4,13,53,Donyell,Malen,Donyell_Malen,
+56,122806,3,122806.jpg,7,2,p122806,54,0.6,1.01,McGinn,,7.88,p122806,994,20,49,18,87,54,John,McGinn,John_McGinn,
+57,88894,3,88894.jpg,7,2,p88894,48,0.1,0.43,Barkley,Knock - 75% chance of playing,11.84,p88894,114,2,10,3,15,55,Ross,Barkley,Ross_Barkley,100.0
 58,491287,3,491287.jpg,7,2,p491287,50,0.0,0.00,Barrenechea,Season-long loan to Benfica,0.0,p491287,0,0,0,0,0,56,Enzo,Barrenechea,Enzo_Barrenechea,0.0
 59,461421,3,461421.jpg,7,2,p461421,50,0.0,0.00,Dobbin,Has joined Preston North End on loan for the rest of the season.,0.0,p461421,0,0,0,0,0,57,Lewis,Dobbin,Lewis_Dobbin,0.0
-60,226944,3,226944.jpg,7,2,p226944,49,0.2,0.10,Kamara,,10.05,p226944,734,28,35,19,82,58,Boubacar,Kamara,Boubacar_Kamara,100.0
-61,449871,3,449871.jpg,7,2,p449871,48,0.7,0.26,Onana,,11.88,p449871,485,30,19,15,64,59,Amadou,Onana,Amadou_Onana,75.0
+60,226944,3,226944.jpg,7,2,p226944,49,0.2,0.19,Kamara,,9.43,p226944,821,28,36,22,86,58,Boubacar,Kamara,Boubacar_Kamara,100.0
+61,449871,3,449871.jpg,7,2,p449871,48,0.7,0.26,Onana,,12.42,p449871,500,33,20,16,69,59,Amadou,Onana,Amadou_Onana,100.0
 62,577731,3,577731.jpg,7,2,p577731,45,0.3,0.00,Broggio,,0.0,p577731,0,0,0,0,0,60,Ben,Broggio,Ben_Broggio,
 63,151589,3,151589.jpg,7,2,p151589,45,0.1,0.00,Dendoncker,Has joined Real Oviedo permanently.,0.0,p151589,0,0,0,0,0,61,Leander,Dendoncker,Leander_Dendoncker,0.0
 64,559962,3,559962.jpg,7,2,p559962,45,0.1,0.00,Jimoh-Aloba,,0.0,p559962,0,0,0,0,0,62,Jamaldeen,Jimoh-Aloba,Jamaldeen_Jimoh-Aloba,
 65,537403,3,537403.jpg,7,2,p537403,44,0.6,0.00,Young,,0.0,p537403,0,0,0,0,0,63,Kadan,Young,Kadan_Young,
-66,178301,4,178301.jpg,7,2,p178301,85,6.7,2.79,Watkins,,2.89,p178301,933,7,18,5,30,64,Ollie,Watkins,Ollie_Watkins,100.0
+66,178301,4,178301.jpg,7,2,p178301,85,6.7,2.79,Watkins,,3.07,p178301,969,7,20,6,33,64,Ollie,Watkins,Ollie_Watkins,100.0
 67,576756,4,576756.jpg,7,2,p576756,45,0.3,0.00,Redmond,has joined Huddersfield Town on loan for the rest of the season.,0.0,p576756,0,0,0,0,0,65,Zépiqueno,Redmond,Zépiqueno_Redmond,0.0
-68,444884,3,444884.jpg,7,2,p444884,54,0.2,0.19,Elliott,,4.64,p444884,97,2,3,0,5,389,Harvey,Elliott,Harvey_Elliott,100.0
-69,209243,3,209243.jpg,7,2,p209243,58,0.2,0.32,Sancho,,5.78,p209243,109,2,5,0,7,456,Jadon,Sancho,Jadon_Sancho,100.0
+68,444884,3,444884.jpg,7,2,p444884,53,0.2,0.19,Elliott,,4.64,p444884,97,2,3,0,5,389,Harvey,Elliott,Harvey_Elliott,100.0
+69,209243,3,209243.jpg,7,2,p209243,58,0.2,0.32,Sancho,,6.49,p209243,111,3,5,0,8,456,Jadon,Sancho,Jadon_Sancho,100.0
 70,485337,3,485337.jpg,7,2,p485337,62,0.0,0.38,Guessand,,9.64,p485337,420,6,24,15,45,677,Evann,Guessand,Evann_Guessand,
-71,481283,1,481283.jpg,7,2,p481283,40,0.5,0.00,Wright,,0.0,p481283,0,0,0,0,0,688,James,Wright,James_Wright,
+71,481283,1,481283.jpg,7,2,p481283,39,0.5,0.00,Wright,,0.0,p481283,0,0,0,0,0,688,James,Wright,James_Wright,
 72,569577,2,569577.jpg,7,2,p569577,40,0.1,0.00,Rowe,has joined Annecy on loan for the rest of the season.,0.0,p569577,0,0,0,0,0,701,Triston,Rowe,Triston_Rowe,0.0
 73,645618,3,645618.jpg,7,2,p645618,44,0.1,0.00,Burrowes,,5.62,p645618,16,0,1,0,1,702,Bradley,Burrowes,Bradley_Burrowes,
 74,564505,1,564505.jpg,7,2,p564505,40,0.2,0.00,Proctor,,0.0,p564505,0,0,0,0,0,703,Sam,Proctor,Sam_Proctor,
@@ -81,359 +81,359 @@
 79,489571,1,489571.jpg,90,3,p489571,40,0.2,0.00,Green,has joined FC Fredericia permanently.,0.0,p489571,0,0,0,0,0,184,Etienne,Green,Etienne_Green,0.0
 80,51943,1,51943.jpg,90,3,p51943,39,0.2,0.00,Hladký,,0.0,p51943,0,0,0,0,0,185,Václav,Hladký,Václav_Hladký,
 81,192290,2,192290.jpg,90,3,p192290,44,0.0,0.00,Roberts,Achilles injury - Unknown return date,0.0,p192290,0,0,0,0,0,186,Connor,Roberts,Connor_Roberts,0.0
-82,58621,2,58621.jpg,90,3,p58621,44,1.5,0.12,Walker,,7.5,p58621,1080,67,64,23,90,187,Kyle,Walker,Kyle_Walker,
-83,247245,2,247245.jpg,90,3,p247245,39,0.2,0.00,Delcroix,,0.0,p247245,0,0,0,0,0,188,Hannes,Delcroix,Hannes_Delcroix,
+82,58621,2,58621.jpg,90,3,p58621,44,1.5,0.12,Walker,,7.85,p58621,1170,75,68,27,102,187,Kyle,Walker,Kyle_Walker,
+83,247245,2,247245.jpg,90,3,p247245,38,0.2,0.00,Delcroix,,0.0,p247245,0,0,0,0,0,188,Hannes,Delcroix,Hannes_Delcroix,
 84,461567,2,461567.jpg,90,3,p461567,40,0.0,0.00,Dodgson,Has joined Stockport County on loan for the rest of the season.,0.0,p461567,0,0,0,0,0,189,Owen,Dodgson,Owen_Dodgson,0.0
 85,478969,2,478969.jpg,90,3,p478969,40,1.0,0.15,Ekdal,,10.13,p478969,533,52,14,8,60,190,Hjalmar,Ekdal,Hjalmar_Ekdal,
-86,477717,2,477717.jpg,90,3,p477717,39,11.7,0.19,Estève,,9.91,p477717,1072,106,32,12,118,191,Maxime,Estève,Maxime_Estève,
-87,494960,2,494960.jpg,90,3,p494960,40,1.0,0.17,Hartman,,6.92,p494960,1067,59,34,23,82,192,Quilindschy,Hartman,Quilindschy_Hartman,
-88,461188,2,461188.jpg,90,3,p461188,40,0.1,0.00,Humphreys,,0.0,p461188,2,0,0,0,0,193,Bashir,Humphreys,Bashir_Humphreys,100.0
+86,477717,2,477717.jpg,90,3,p477717,39,11.6,0.19,Estève,,9.99,p477717,1162,115,34,14,129,191,Maxime,Estève,Maxime_Estève,
+87,494960,2,494960.jpg,90,3,p494960,40,1.0,0.19,Hartman,,7.31,p494960,1157,66,40,28,94,192,Quilindschy,Hartman,Quilindschy_Hartman,
+88,461188,2,461188.jpg,90,3,p461188,39,0.1,0.00,Humphreys,,0.0,p461188,2,0,0,0,0,193,Bashir,Humphreys,Bashir_Humphreys,100.0
 89,241231,2,241231.jpg,90,3,p241231,40,0.1,0.00,Jordan,Hamstring injury - Unknown return date,0.0,p241231,0,0,0,0,0,194,Jordan,Beyer,Jordan_Beyer,0.0
 90,549329,2,549329.jpg,90,3,p549329,38,0.2,0.00,Lucas Pires,,0.0,p549329,9,0,0,0,0,195,Lucas,Pires Silva,Lucas_Pires Silva,
 91,450072,2,450072.jpg,90,3,p450072,40,0.0,0.00,Sambo,Has joined Sparta Rotterdam on loan for the rest of the season.,0.0,p450072,0,0,0,0,0,196,Shurandy,Sambo,Shurandy_Sambo,0.0
 92,519895,2,519895.jpg,90,3,p519895,39,0.1,0.03,Sonne,,1.76,p519895,102,1,3,1,2,197,Oliver,Sonne,Oliver_Sonne,
-93,180804,2,180804.jpg,90,3,p180804,39,1.8,0.00,Tuanzebe,,10.5,p180804,540,57,18,6,63,198,Axel,Tuanzebe,Axel_Tuanzebe,100.0
+93,180804,2,180804.jpg,90,3,p180804,39,1.8,0.00,Tuanzebe,,10.0,p180804,630,64,20,6,70,198,Axel,Tuanzebe,Axel_Tuanzebe,100.0
 94,208912,2,208912.jpg,90,3,p208912,39,0.2,0.00,Worrall,,28.42,p208912,19,5,1,1,6,199,Joe,Worrall,Joe_Worrall,
-95,444180,3,444180.jpg,90,3,p444180,56,4.5,2.43,Anthony,,7.71,p444180,957,17,49,16,82,200,Jaidon,Anthony,Jaidon_Anthony,100.0
+95,444180,3,444180.jpg,90,3,p444180,55,4.2,2.43,Anthony,,7.59,p444180,972,17,49,16,82,200,Jaidon,Anthony,Jaidon_Anthony,100.0
 96,183751,3,183751.jpg,90,3,p183751,54,0.0,0.00,Benson,has joined Swansea City on loan for the rest of the season.,0.0,p183751,0,0,0,0,0,201,Manuel,Benson Hedilazio,Manuel_Benson Hedilazio,0.0
-97,179458,3,179458.jpg,90,3,p179458,53,0.0,0.24,Bruun Larsen,,4.24,p179458,425,6,11,3,20,202,Jacob,Bruun Larsen,Jacob_Bruun Larsen,100.0
+97,179458,3,179458.jpg,90,3,p179458,53,0.0,0.24,Bruun Larsen,,4.3,p179458,440,6,12,3,21,202,Jacob,Bruun Larsen,Jacob_Bruun Larsen,100.0
 98,578614,3,578614.jpg,90,3,p578614,48,0.0,0.00,Boateng,,0.0,p578614,0,0,0,0,0,203,Enock,Agyei,Enock_Agyei,
 99,250735,3,250735.jpg,90,3,p250735,49,0.0,0.00,Churlinov,has joined Kocaelispor  permanently.,0.0,p250735,0,0,0,0,0,204,Darko,Churlinov,Darko_Churlinov,0.0
-100,172567,3,172567.jpg,90,3,p172567,50,2.4,0.65,Cullen,,10.48,p172567,1031,55,45,20,120,205,Josh,Cullen,Josh_Cullen,
+100,172567,3,172567.jpg,90,3,p172567,50,2.3,0.65,Cullen,,10.21,p172567,1111,56,49,21,126,205,Josh,Cullen,Josh_Cullen,
 101,174592,3,174592.jpg,90,3,p174592,47,0.1,0.10,Edwards,,0.0,p174592,22,0,0,0,0,206,Marcus,Edwards,Marcus_Edwards,
-102,465527,3,465527.jpg,90,3,p465527,48,0.1,0.17,Hannibal,,7.97,p465527,305,4,14,9,27,207,Hannibal,Mejbri,Hannibal_Mejbri,
+102,465527,3,465527.jpg,90,3,p465527,48,0.1,0.26,Hannibal,,7.42,p465527,364,4,16,10,30,207,Hannibal,Mejbri,Hannibal_Mejbri,
 103,487702,3,487702.jpg,90,3,p487702,50,0.0,0.00,Koleosho,Has joined Espanyol on loan for the rest of the season.,0.0,p487702,0,0,0,0,0,208,Luca,Koleosho,Luca_Koleosho,0.0
-104,167887,3,167887.jpg,90,3,p167887,49,0.0,0.16,Laurent,,8.15,p167887,563,32,15,4,51,209,Josh,Laurent,Josh_Laurent,
-105,469272,3,469272.jpg,90,3,p469272,49,0.0,0.45,Tchaouna,,5.65,p469272,510,10,14,8,32,210,Loum,Tchaouna,Loum_Tchaouna,
+104,167887,3,167887.jpg,90,3,p167887,49,0.0,0.16,Laurent,,8.1,p167887,578,32,15,5,52,209,Josh,Laurent,Josh_Laurent,
+105,469272,3,469272.jpg,90,3,p469272,49,0.0,0.45,Tchaouna,,5.86,p469272,584,10,16,12,38,210,Loum,Tchaouna,Loum_Tchaouna,
 106,447715,3,447715.jpg,90,3,p447715,44,1.9,0.00,A.Ramsey,has joined Leicester City on loan for the rest of the season.,0.0,p447715,0,0,0,0,0,211,Aaron,Ramsey,Aaron_Ramsey,0.0
 107,576323,3,576323.jpg,90,3,p576323,45,0.0,0.00,Adewumi,Has joined Cercle Brugge on loan for the rest of the season.,0.0,p576323,0,0,0,0,0,212,Oluwaseun,Adewumi,Oluwaseun_Adewumi,0.0
 108,551206,3,551206.jpg,90,3,p551206,45,0.0,0.00,Banel,,0.0,p551206,0,0,0,0,0,213,Jaydon,Banel,Jaydon_Banel,
 109,437748,3,437748.jpg,90,3,p437748,44,0.1,0.00,Trésor,,0.0,p437748,0,0,0,0,0,214,Mike,Trésor Ndayishimiye,Mike_Trésor Ndayishimiye,
-110,431639,4,431639.jpg,90,3,p431639,53,0.4,1.15,Flemming,,4.78,p431639,414,11,7,4,22,215,Zian,Flemming,Zian_Flemming,
+110,431639,4,431639.jpg,90,3,p431639,53,0.4,2.00,Flemming,,4.29,p431639,504,13,7,4,24,215,Zian,Flemming,Zian_Flemming,
 111,492831,4,492831.jpg,90,3,p492831,48,0.0,0.00,Amdouni,Knee injury - Unknown return date,0.0,p492831,0,0,0,0,0,216,Zeki,Amdouni,Zeki_Amdouni,0.0
-112,435973,4,435973.jpg,90,3,p435973,50,1.5,1.30,Foster,,4.83,p435973,596,11,16,5,32,217,Lyle,Foster,Lyle_Foster,100.0
-113,44699,4,44699.jpg,90,3,p44699,43,1.3,0.00,Barnes,,12.86,p44699,7,0,1,0,1,218,Ashley,Barnes,Ashley_Barnes,
+112,435973,4,435973.jpg,90,3,p435973,50,1.4,1.30,Foster,,5.24,p435973,670,13,19,7,39,217,Lyle,Foster,Lyle_Foster,100.0
+113,44699,4,44699.jpg,90,3,p44699,43,1.2,0.00,Barnes,,12.86,p44699,7,0,1,0,1,218,Ashley,Barnes,Ashley_Barnes,
 114,220598,4,220598.jpg,90,3,p220598,44,0.1,0.00,Obafemi,has joined VfL Bochum  on loan for the rest of the season.,0.0,p220598,0,0,0,0,0,219,Michael,Obafemi,Michael_Obafemi,0.0
-115,67089,1,67089.jpg,90,3,p67089,40,33.9,0.00,Dúbravka,,0.0,p67089,1080,21,97,0,0,470,Martin,Dúbravka,Martin_Dúbravka,100.0
-116,503714,3,503714.jpg,90,3,p503714,50,0.1,0.94,Ugochukwu,,7.1,p503714,659,16,18,18,52,676,Lesley,Ugochukwu,Lesley_Ugochukwu,100.0
-117,440323,4,440323.jpg,90,3,p440323,52,0.1,0.07,Broja,,4.84,p440323,93,3,0,2,5,680,Armando,Broja,Armando_Broja,75.0
-118,216055,3,216055.jpg,90,3,p216055,50,0.1,0.48,Florentino,,12.89,p216055,740,34,34,38,106,722,Florentino Ibrain,Morris Luís,Florentino_Ibrain Morris Luís,
+115,67089,1,67089.jpg,90,3,p67089,40,33.9,0.00,Dúbravka,,0.0,p67089,1170,22,110,0,0,470,Martin,Dúbravka,Martin_Dúbravka,100.0
+116,503714,3,503714.jpg,90,3,p503714,50,0.1,0.94,Ugochukwu,,7.31,p503714,689,18,19,19,56,676,Lesley,Ugochukwu,Lesley_Ugochukwu,100.0
+117,440323,4,440323.jpg,90,3,p440323,52,0.1,0.07,Broja,,4.41,p440323,102,3,0,2,5,680,Armando,Broja,Armando_Broja,100.0
+118,216055,3,216055.jpg,90,3,p216055,50,0.1,0.48,Florentino,,13.38,p216055,814,40,38,43,121,722,Florentino Ibrain,Morris Luís,Florentino_Ibrain Morris Luís,
 119,69752,1,69752.jpg,91,4,p69752,45,0.1,0.00,Neto,Has joined Botafogo permanently.,0.0,p69752,0,0,0,0,0,66,Norberto,Murara Neto,Norberto_Murara Neto,0.0
-120,457569,1,457569.jpg,91,4,p457569,45,5.8,0.00,Petrović,,0.0,p457569,1080,22,90,0,0,67,Đorđe,Petrović,Đorđe_Petrović,
+120,457569,1,457569.jpg,91,4,p457569,45,5.8,0.00,Petrović,,0.0,p457569,1170,23,98,0,0,67,Đorđe,Petrović,Đorđe_Petrović,
 121,444172,1,444172.jpg,91,4,p444172,40,1.0,0.00,Dennis,,0.0,p444172,0,0,0,0,0,68,Will,Dennis,Will_Dennis,
 122,568791,1,568791.jpg,91,4,p568791,40,0.2,0.00,McKenna,,0.0,p568791,0,0,0,0,0,69,Callan,McKenna,Callan_McKenna,
 123,495145,1,495145.jpg,91,4,p495145,40,0.1,0.00,Paulsen,Has joined Lechia Gdansk on loan for the rest of the season.,0.0,p495145,0,0,0,0,0,70,Alex,Paulsen,Alex_Paulsen,0.0
 124,477580,2,477580.jpg,91,4,p477580,50,0.0,0.00,Zabarnyi,Has joined Paris Saint-Germain permanently.,0.0,p477580,0,0,0,0,0,71,Illia,Zabarnyi,Illia_Zabarnyi,0.0
-125,221466,2,221466.jpg,91,4,p221466,50,26.3,0.18,Senesi,,12.31,p221466,1067,127,51,19,146,72,Marcos,Senesi Barón,Marcos_Senesi,
-126,54469,2,54469.jpg,91,4,p54469,44,0.2,0.00,Smith,,4.56,p54469,217,10,3,1,11,73,Adam,Smith,Adam_Smith,100.0
-127,494521,2,494521.jpg,91,4,p494521,45,2.5,0.16,Truffert,,6.93,p494521,1052,57,62,24,81,74,Adrien,Truffert,Adrien_Truffert,
+125,221466,2,221466.jpg,91,4,p221466,50,24.8,0.18,Senesi,Suspended until 06 Dec,12.45,p221466,1157,138,57,22,160,72,Marcos,Senesi Barón,Marcos_Senesi,
+126,54469,2,54469.jpg,91,4,p54469,44,0.2,0.00,Smith,,4.26,p54469,296,12,3,2,14,73,Adam,Smith,Adam_Smith,100.0
+127,494521,2,494521.jpg,91,4,p494521,45,2.4,0.20,Truffert,,6.94,p494521,1142,61,72,27,88,74,Adrien,Truffert,Adrien_Truffert,
 128,541462,2,541462.jpg,91,4,p541462,39,0.2,0.00,Akinmboni,Muscle injury - 25% chance of playing,0.0,p541462,0,0,0,0,0,75,Matai,Akinmboni,Matai_Akinmboni,25.0
 129,518906,2,518906.jpg,91,4,p518906,39,0.2,0.00,Bevan,,0.0,p518906,0,0,0,0,0,76,Owen,Bevan,Owen_Bevan,
 130,463981,2,463981.jpg,91,4,p463981,40,0.8,0.12,Hill,,7.91,p463981,273,20,9,4,24,77,James,Hill,James_Hill,
 131,436893,2,436893.jpg,91,4,p436893,39,0.7,0.00,J.Araujo,,0.0,p436893,0,0,0,0,0,78,Julián,Araujo Zúñiga,Julián_Araujo Zúñiga,100.0
 132,223911,2,223911.jpg,91,4,p223911,40,0.1,0.00,Mepham,has joined West Bromwich Albion permanently.,0.0,p223911,0,0,0,0,0,79,Chris,Mepham,Chris_Mepham,0.0
 133,575901,2,575901.jpg,91,4,p575901,40,0.2,0.00,Soler,,0.0,p575901,1,0,0,0,0,80,Julio,Soler Barreto,Julio_Soler Barreto,100.0
-134,222683,3,222683.jpg,91,4,p222683,70,0.8,0.45,Kluivert,Muscle injury - Unknown return date,5.97,p222683,392,5,16,5,26,81,Justin,Kluivert,Justin_Kluivert,0.0
-135,437730,3,437730.jpg,91,4,p437730,79,55.4,4.63,Semenyo,Ankle injury - 75% chance of playing,7.73,p437730,990,9,58,18,85,82,Antoine,Semenyo,Antoine_Semenyo,75.0
-136,201658,3,201658.jpg,91,4,p201658,55,2.0,2.47,Tavernier,,7.99,p201658,946,23,46,15,84,84,Marcus,Tavernier,Marcus_Tavernier,
-137,200785,3,200785.jpg,91,4,p200785,50,0.5,0.53,Adams,,11.42,p200785,1032,44,55,32,131,85,Tyler,Adams,Tyler_Adams,100.0
-138,111317,3,111317.jpg,91,4,p111317,50,0.2,1.38,Brooks,,7.39,p111317,609,9,30,11,50,86,David,Brooks,David_Brooks,100.0
-139,158499,3,158499.jpg,91,4,p158499,50,0.1,1.07,Christie,,10.96,p158499,271,10,16,7,33,87,Ryan,Christie,Ryan_Christie,100.0
-140,155408,3,155408.jpg,91,4,p155408,49,0.0,0.04,Cook,,15.44,p155408,169,9,14,6,29,88,Lewis,Cook,Lewis_Cook,100.0
+134,222683,3,222683.jpg,91,4,p222683,70,0.8,0.45,Kluivert,,5.69,p222683,411,5,16,5,26,81,Justin,Kluivert,Justin_Kluivert,50.0
+135,437730,3,437730.jpg,91,4,p437730,78,52.5,4.73,Semenyo,,7.5,p437730,1080,9,62,19,90,82,Antoine,Semenyo,Antoine_Semenyo,75.0
+136,201658,3,201658.jpg,91,4,p201658,55,2.1,2.67,Tavernier,,7.73,p201658,1036,24,49,16,89,84,Marcus,Tavernier,Marcus_Tavernier,
+137,200785,3,200785.jpg,91,4,p200785,50,0.5,0.56,Adams,,11.19,p200785,1102,45,58,34,137,85,Tyler,Adams,Tyler_Adams,100.0
+138,111317,3,111317.jpg,91,4,p111317,50,0.2,1.41,Brooks,Suspended until 06 Dec,7.31,p111317,628,9,30,12,51,86,David,Brooks,David_Brooks,100.0
+139,158499,3,158499.jpg,91,4,p158499,50,0.1,1.07,Christie,Knee injury - Expected back 26 Dec,10.96,p158499,271,10,16,7,33,87,Ryan,Christie,Ryan_Christie,0.0
+140,155408,3,155408.jpg,91,4,p155408,49,0.0,0.04,Cook,Suspended until 20 Dec,15.56,p155408,214,14,17,6,37,88,Lewis,Cook,Lewis_Cook,100.0
 141,168991,3,168991.jpg,91,4,p168991,49,0.0,0.00,Philip,Has joined Midtjylland permanently.,0.0,p168991,0,0,0,0,0,89,Philip,Billing,Philip_Billing,0.0
-142,503139,3,503139.jpg,91,4,p503139,50,0.3,0.59,Scott,,10.38,p503139,772,29,38,22,89,90,Alex,Scott,Alex_Scott,
+142,503139,3,503139.jpg,91,4,p503139,50,0.3,0.66,Scott,,10.24,p503139,817,31,40,22,93,90,Alex,Scott,Alex_Scott,
 143,224995,3,224995.jpg,91,4,p224995,50,0.0,0.00,Sinisterra,Has joined Cruzeiro on loan for the rest of the season.,0.0,p224995,0,0,0,0,0,91,Luis,Sinisterra Lucumí,Luis_Sinisterra Lucumí,0.0
 144,441240,3,441240.jpg,91,4,p441240,45,0.1,0.00,Faivre,has joined Al Taawoun permanently.,0.0,p441240,0,0,0,0,0,92,Romain,Faivre,Romain_Faivre,0.0
-145,424044,3,424044.jpg,91,4,p424044,45,0.4,0.00,H.Traorè,has joined Marseille on loan for the rest of the season.,22.5,p424044,16,1,2,1,4,93,Hamed,Traorè,Hamed_Traorè,0.0
+145,424044,3,424044.jpg,91,4,p424044,45,0.3,0.00,H.Traorè,has joined Marseille on loan for the rest of the season.,22.5,p424044,16,1,2,1,4,93,Hamed,Traorè,Hamed_Traorè,0.0
 146,550596,3,550596.jpg,91,4,p550596,45,0.0,0.00,Sadi,has joined Novi Pazar on loan for the rest of the season.,0.0,p550596,0,0,0,0,0,94,Dominic,Sadi,Dominic_Sadi,0.0
 147,530121,3,530121.jpg,91,4,p530121,44,0.1,0.00,Silcott-Duberry,has joined Olympiakos permanently.,0.0,p530121,0,0,0,0,0,95,Zain,Silcott-Duberry,Zain_Silcott-Duberry,0.0
 148,606775,3,606775.jpg,91,4,p606775,45,0.0,0.00,Winterburn,has joined Barnet on loan for the rest of the season.,0.0,p606775,6,0,0,0,0,96,Ben,Winterburn,Ben_Winterburn,0.0
-149,444102,4,444102.jpg,91,4,p444102,70,1.5,2.05,Evanilson,,3.88,p444102,811,8,25,2,35,97,Francisco Evanilson,de Lima Barbosa,Francisco_Evanilson de Lima Barbosa,100.0
-150,168636,4,168636.jpg,91,4,p168636,54,0.0,0.49,Enes Ünal,,8.18,p168636,11,0,1,0,1,98,Enes,Ünal,Enes_Ünal,100.0
+149,444102,4,444102.jpg,91,4,p444102,70,1.5,3.00,Evanilson,,3.94,p444102,890,9,28,2,39,97,Francisco Evanilson,de Lima Barbosa,Francisco_Evanilson de Lima Barbosa,100.0
+150,168636,4,168636.jpg,91,4,p168636,54,0.0,0.54,Enes Ünal,,4.29,p168636,21,0,1,0,1,98,Enes,Ünal,Enes_Ünal,100.0
 151,590760,4,590760.jpg,91,4,p590760,44,0.2,0.00,Adu-Adjei,has joined HNK Rijeka permanently.,0.0,p590760,0,0,0,0,0,99,Daniel,Adu-Adjei,Daniel_Adu-Adjei,0.0
-152,560262,4,560262.jpg,91,4,p560262,46,4.6,2.64,Kroupi.Jr,,6.96,p560262,336,6,16,4,26,100,Junior,Kroupi,Junior_Kroupi,
+152,560262,4,560262.jpg,91,4,p560262,46,4.4,2.64,Kroupi.Jr,,6.76,p560262,346,6,16,4,26,100,Junior,Kroupi,Junior_Kroupi,
 153,496208,3,496208.jpg,91,4,p496208,49,0.0,0.09,Gannon-Doak,Hamstring injury - Unknown return date,5.09,p496208,53,1,0,2,3,391,Ben,Gannon-Doak,Ben_Gannon-Doak,0.0
-154,242882,2,242882.jpg,91,4,p242882,45,0.4,0.00,Diakité,,8.59,p242882,765,62,33,11,73,685,Bafodé,Diakité,Bafodé_Diakité,100.0
+154,242882,2,242882.jpg,91,4,p242882,44,0.4,0.02,Diakité,,8.42,p242882,855,66,35,14,80,685,Bafodé,Diakité,Bafodé_Diakité,100.0
 155,606774,3,606774.jpg,91,4,p606774,44,0.1,0.00,Rees-Dottin,,0.0,p606774,0,0,0,0,0,687,Remy,Rees-Dottin,Remy_Rees-Dottin,
-156,489888,3,489888.jpg,91,4,p489888,54,0.0,0.58,Adli,,14.31,p489888,239,9,18,11,38,697,Amine,Adli,Amine_Adli,
+156,489888,3,489888.jpg,91,4,p489888,54,0.0,0.94,Adli,,13.4,p489888,309,9,22,15,46,697,Amine,Adli,Amine_Adli,
 157,551483,2,551483.jpg,91,4,p551483,45,0.0,0.08,A.Jimenez,,5.15,p551483,454,15,20,11,26,713,Álex,Jiménez Sánchez,Álex_Jiménez Sánchez,
 158,620487,2,620487.jpg,91,4,p620487,45,0.0,0.00,Milosavljević,,9.49,p620487,275,24,9,5,29,721,Veljko,Milosavljevic,Veljko_Milosavljevic,
-159,200641,3,200641.jpg,94,5,p200641,48,0.1,0.06,Nelson,,33.75,p200641,16,0,4,2,6,27,Reiss,Nelson,Reiss_Nelson,100.0
-160,533463,3,533463.jpg,94,5,p533463,60,0.8,2.63,O.Dango,,7.93,p533463,704,25,31,6,62,83,Dango,Ouattara,Dango_Ouattara,100.0
-161,200720,1,200720.jpg,94,5,p200720,45,7.8,0.00,Kelleher,,0.0,p200720,1080,9,100,1,0,101,Caoimhín,Kelleher,Caoimhín_Kelleher,100.0
+159,200641,3,200641.jpg,94,5,p200641,48,0.1,0.06,Nelson,Ineligible to face his parent club on 3/12. - Expected back 06 Dec,29.03,p200641,31,2,6,2,10,27,Reiss,Nelson,Reiss_Nelson,100.0
+160,533463,3,533463.jpg,94,5,p533463,60,0.9,3.40,O.Dango,,7.48,p533463,794,27,32,7,66,83,Dango,Ouattara,Dango_Ouattara,100.0
+161,200720,1,200720.jpg,94,5,p200720,45,7.7,0.00,Kelleher,,0.0,p200720,1170,10,109,1,0,101,Caoimhín,Kelleher,Caoimhín_Kelleher,100.0
 162,235448,1,235448.jpg,94,5,p235448,40,0.3,0.00,Balcombe,,0.0,p235448,0,0,0,0,0,102,Ellery,Balcombe,Ellery_Balcombe,
 163,503300,1,503300.jpg,94,5,p503300,40,0.1,0.00,Cox,,0.0,p503300,0,0,0,0,0,103,Matthew,Cox,Matthew_Cox,
 164,535017,1,535017.jpg,94,5,p535017,39,0.1,0.00,Eyestone,,0.0,p535017,0,0,0,0,0,104,Julian,Eyestone,Julian_Eyestone,
 165,507433,1,507433.jpg,94,5,p507433,39,0.7,0.00,Valdimarsson,,0.0,p507433,0,0,0,0,0,105,Hákon Rafn,Valdimarsson,Hákon_Rafn Valdimarsson,
-166,432830,2,432830.jpg,94,5,p432830,49,1.3,0.37,Collins,,9.5,p432830,1080,106,41,8,114,106,Nathan,Collins,Nathan_Collins,
-167,249231,2,249231.jpg,94,5,p249231,48,0.3,0.18,Lewis-Potter,,4.97,p249231,471,17,21,9,26,107,Keane,Lewis-Potter,Keane_Lewis-Potter,
+166,432830,2,432830.jpg,94,5,p432830,49,1.1,1.01,Collins,,10.46,p432830,1170,127,51,9,136,106,Nathan,Collins,Nathan_Collins,
+167,249231,2,249231.jpg,94,5,p249231,48,0.3,0.18,Lewis-Potter,,4.96,p249231,472,17,21,9,26,107,Keane,Lewis-Potter,Keane_Lewis-Potter,
 168,191866,2,191866.jpg,94,5,p191866,44,0.2,0.43,Ajer,,8.48,p191866,467,29,12,15,44,108,Kristoffer,Ajer,Kristoffer_Ajer,100.0
-169,194010,2,194010.jpg,94,5,p194010,43,0.1,0.13,Henry,,5.24,p194010,189,7,11,4,11,109,Rico,Henry,Rico_Henry,
-170,607464,2,607464.jpg,94,5,p607464,45,0.6,0.17,Kayode,,5.7,p607464,1042,45,53,21,66,110,Michael,Kayode,Michael_Kayode,
+169,194010,2,194010.jpg,94,5,p194010,43,0.1,0.13,Henry,,5.27,p194010,205,8,11,4,12,109,Rico,Henry,Rico_Henry,
+170,607464,2,607464.jpg,94,5,p607464,45,0.5,0.17,Kayode,,5.96,p607464,1132,52,56,23,75,110,Michael,Kayode,Michael_Kayode,
 171,231065,2,231065.jpg,94,5,p231065,43,0.1,0.00,Pinnock,,8.71,p231065,155,13,4,2,15,111,Ethan,Pinnock,Ethan_Pinnock,100.0
 172,226956,2,226956.jpg,94,5,p226956,45,0.0,0.00,Roerslev,Has joined Southampton permanently.,0.0,p226956,0,0,0,0,0,112,Mads,Roerslev Rasmussen,Mads_Roerslev Rasmussen,0.0
-173,444765,2,444765.jpg,94,5,p444765,45,0.9,1.75,Van den Berg,,9.0,p444765,1080,98,39,10,108,113,Sepp,van den Berg,Sepp_van den Berg,
+173,444765,2,444765.jpg,94,5,p444765,45,0.7,1.84,Van den Berg,,8.92,p444765,1170,106,42,10,116,113,Sepp,van den Berg,Sepp_van den Berg,
 174,622536,2,622536.jpg,94,5,p622536,39,0.2,0.00,Arthur,,0.0,p622536,0,0,0,0,0,114,Benjamin,Arthur,Benjamin_Arthur,100.0
 175,612534,2,612534.jpg,94,5,p612534,40,0.1,0.00,Fredrick,has joined Dender on loan for the rest of the season.,0.0,p612534,0,0,0,0,0,115,Benjamin,Fredrick,Benjamin_Fredrick,0.0
-176,472713,2,472713.jpg,94,5,p472713,40,0.3,0.14,Hickey,,5.13,p472713,263,9,14,6,15,116,Aaron,Hickey,Aaron_Hickey,100.0
+176,472713,2,472713.jpg,94,5,p472713,40,0.3,0.35,Hickey,,6.7,p472713,336,17,18,8,25,116,Aaron,Hickey,Aaron_Hickey,100.0
 177,570241,2,570241.jpg,94,5,p570241,39,0.1,0.00,Ji-soo,has joined Kaiserslautern on loan for the rest of the season.,0.0,p570241,0,0,0,0,0,117,Kim,Ji-soo,Kim_Ji-soo,0.0
 178,499717,2,499717.jpg,94,5,p499717,40,0.0,0.00,Meghoma,Has joined Rangers on loan for the rest of the season.,0.0,p499717,0,0,0,0,0,118,Jayden,Meghoma,Jayden_Meghoma,0.0
-179,513418,3,513418.jpg,94,5,p513418,70,1.7,3.10,Schade,,7.04,p513418,1010,17,43,19,79,120,Kevin,Schade,Kevin_Schade,100.0
-180,440089,3,440089.jpg,94,5,p440089,58,0.6,0.53,Damsgaard,,8.16,p440089,794,14,36,22,72,121,Mikkel,Damsgaard,Mikkel_Damsgaard,
+179,513418,3,513418.jpg,94,5,p513418,70,1.3,3.10,Schade,,7.14,p513418,1084,23,44,19,86,120,Kevin,Schade,Kevin_Schade,100.0
+180,440089,3,440089.jpg,94,5,p440089,58,0.6,0.70,Damsgaard,,8.55,p440089,884,16,45,23,84,121,Mikkel,Damsgaard,Mikkel_Damsgaard,
 181,543295,3,543295.jpg,94,5,p543295,52,0.0,0.00,Milambo,Knee injury - Expected back 01 Jun,8.0,p543295,45,0,2,2,4,122,Antoni,Milambo,Antoni_Milambo,0.0
-182,244858,3,244858.jpg,94,5,p244858,48,0.2,0.70,Carvalho,,7.2,p244858,100,0,5,3,8,123,Fábio,Freitas Gouveia Carvalho,Fábio_Freitas Gouveia Carvalho,
-183,56979,3,56979.jpg,94,5,p56979,50,0.4,0.07,Henderson,,7.93,p56979,919,30,42,9,81,124,Jordan,Henderson,Jordan_Henderson,
+182,244858,3,244858.jpg,94,5,p244858,48,0.2,0.70,Carvalho,Anterior cruciate ligament - Unknown return date,7.2,p244858,100,0,5,3,8,123,Fábio,Freitas Gouveia Carvalho,Fábio_Freitas Gouveia Carvalho,0.0
+183,56979,3,56979.jpg,94,5,p56979,50,0.4,0.07,Henderson,,8.38,p56979,1009,33,51,10,94,124,Jordan,Henderson,Jordan_Henderson,
 184,204580,3,204580.jpg,94,5,p204580,49,0.0,0.22,Janelt,,13.94,p204580,155,6,12,6,24,125,Vitaly,Janelt,Vitaly_Janelt,100.0
-185,207283,3,207283.jpg,94,5,p207283,49,0.1,0.55,Jensen,,11.25,p207283,224,9,11,8,28,126,Mathias,Jensen,Mathias_Jensen,
+185,207283,3,207283.jpg,94,5,p207283,49,0.1,0.55,Jensen,,9.94,p207283,308,9,16,9,34,126,Mathias,Jensen,Mathias_Jensen,
 186,626464,3,626464.jpg,94,5,p626464,49,0.0,0.00,Nunes,,0.0,p626464,0,0,0,0,0,127,Gustavo,Nunes Fernandes Gomes,Gustavo_Nunes Fernandes Gomes,100.0
-187,428580,3,428580.jpg,94,5,p428580,49,0.1,0.00,Onyeka,,10.23,p428580,88,3,5,2,10,128,Frank,Onyeka,Frank_Onyeka,
-188,508395,3,508395.jpg,94,5,p508395,50,0.1,0.34,Yarmoliuk,,10.64,p508395,947,22,65,25,112,129,Yehor,Yarmoliuk,Yehor_Yarmoliuk,100.0
+187,428580,3,428580.jpg,94,5,p428580,48,0.1,0.00,Onyeka,,10.23,p428580,88,3,5,2,10,128,Frank,Onyeka,Frank_Onyeka,
+188,508395,3,508395.jpg,94,5,p508395,50,0.1,0.34,Yarmoliuk,,10.68,p508395,952,22,66,25,113,129,Yehor,Yarmoliuk,Yehor_Yarmoliuk,100.0
 189,606689,3,606689.jpg,94,5,p606689,45,0.1,0.00,Donovan,,0.0,p606689,0,0,0,0,0,130,Romelle,Donovan,Romelle_Donovan,
-190,628204,3,628204.jpg,94,5,p628204,44,0.2,0.00,Konak,,0.0,p628204,0,0,0,0,0,131,Yunus Emre,Konak,Yunus_Emre Konak,
+190,628204,3,628204.jpg,94,5,p628204,43,0.2,0.00,Konak,,0.0,p628204,0,0,0,0,0,131,Yunus Emre,Konak,Yunus_Emre Konak,
 191,220695,3,220695.jpg,94,5,p220695,45,0.0,0.00,Maghoma,,0.0,p220695,0,0,0,0,0,132,Paris,Maghoma,Paris_Maghoma,100.0
 192,450539,3,450539.jpg,94,5,p450539,44,0.0,0.00,Peart-Harris,,0.0,p450539,0,0,0,0,0,133,Myles,Peart-Harris,Myles_Peart-Harris,
 193,591357,3,591357.jpg,94,5,p591357,45,0.0,0.00,Trevitt,Has joined Wigan on loan for the rest of the season,0.0,p591357,0,0,0,0,0,134,Ryan,Trevitt,Ryan_Trevitt,0.0
-194,502500,4,502500.jpg,94,5,p502500,65,17.9,7.56,Thiago,,5.88,p502500,1011,27,24,15,66,136,Igor Thiago,Nascimento Rodrigues,Igor_Thiago Nascimento Rodrigues,
+194,502500,4,502500.jpg,94,5,p502500,67,22.1,8.73,Thiago,,5.8,p502500,1101,31,25,15,71,136,Igor Thiago,Nascimento Rodrigues,Igor_Thiago Nascimento Rodrigues,
 195,533710,4,533710.jpg,94,5,p533710,44,0.4,0.00,Morgan,,0.0,p533710,0,0,0,0,0,137,Iwan,Morgan,Iwan_Morgan,
 196,183656,3,183656.jpg,94,5,p183656,50,0.0,0.00,Dasilva,Knee injury - Expected back 01 Jan,0.0,p183656,0,0,0,0,0,748,Josh,Dasilva,Josh_Dasilva,0.0
 197,49262,1,49262.jpg,36,6,p49262,43,0.3,0.00,Steele,,0.0,p49262,0,0,0,0,0,138,Jason,Steele,Jason_Steele,
-198,489639,1,489639.jpg,36,6,p489639,44,4.1,0.00,Verbruggen,,0.0,p489639,1080,6,107,0,0,139,Bart,Verbruggen,Bart_Verbruggen,
+198,489639,1,489639.jpg,36,6,p489639,44,4.2,0.00,Verbruggen,,0.0,p489639,1170,7,119,0,0,139,Bart,Verbruggen,Bart_Verbruggen,
 199,209288,1,209288.jpg,36,6,p209288,40,0.3,0.00,McGill,,0.0,p209288,0,0,0,0,0,140,Tom,McGill,Tom_McGill,
 200,472739,1,472739.jpg,36,6,p472739,40,0.0,0.00,Rushworth,Has joined Coventry City on loan for the rest of the season.,0.0,p472739,0,0,0,0,0,141,Carl,Rushworth,Carl_Rushworth,0.0
 201,240514,1,240514.jpg,36,6,p240514,40,0.0,0.00,Scherpen,Has joined Union SG permanently,0.0,p240514,0,0,0,0,0,142,Kjell,Scherpen,Kjell_Scherpen,0.0
 202,204120,2,204120.jpg,36,6,p204120,42,0.1,0.00,Boscagli,,16.0,p204120,45,6,3,2,8,143,Olivier,Boscagli,Olivier_Boscagli,
 203,550090,2,550090.jpg,36,6,p550090,43,0.1,0.00,Coppola,,21.18,p550090,17,4,1,0,4,144,Diego,Coppola,Diego_Coppola,
-204,465730,2,465730.jpg,36,6,p465730,43,1.7,0.74,De Cuyper,,4.54,p465730,456,14,26,9,23,145,Maxim,De Cuyper,Maxim_De Cuyper,100.0
-205,83299,2,83299.jpg,36,6,p83299,45,1.1,0.56,Dunk,,7.04,p83299,1035,69,49,12,81,146,Lewis,Dunk,Lewis_Dunk,
+204,465730,2,465730.jpg,36,6,p465730,43,1.7,1.14,De Cuyper,,4.34,p465730,539,17,28,9,26,145,Maxim,De Cuyper,Maxim_De Cuyper,100.0
+205,83299,2,83299.jpg,36,6,p83299,45,1.1,0.56,Dunk,,7.04,p83299,1125,76,55,12,88,146,Lewis,Dunk,Lewis_Dunk,
 206,204214,2,204214.jpg,36,6,p204214,45,0.0,0.00,Estupiñan,Has joined AC Milan permanently,0.0,p204214,0,0,0,0,0,147,Pervis,Estupiñán Tenorio,Pervis_Estupiñán Tenorio,0.0
-207,231416,2,231416.jpg,36,6,p231416,44,0.2,0.37,F.Kadıoğlu,,5.24,p231416,824,29,41,19,48,148,Ferdi,Kadıoğlu,Ferdi_Kadıoğlu,
+207,231416,2,231416.jpg,36,6,p231416,44,0.2,0.54,F.Kadıoğlu,,5.42,p231416,914,33,48,22,55,148,Ferdi,Kadıoğlu,Ferdi_Kadıoğlu,
 208,232792,2,232792.jpg,36,6,p232792,44,0.1,0.00,Lamptey,has joined Fiorentina permanently.,0.0,p232792,0,0,0,0,0,150,Tariq,Lamptey,Tariq_Lamptey,0.0
-209,469142,2,469142.jpg,36,6,p469142,44,1.5,0.69,Van Hecke,,8.92,p469142,1080,87,41,20,107,151,Jan Paul,van Hecke,Jan_Paul van Hecke,
-210,111478,2,111478.jpg,36,6,p111478,43,0.1,0.00,Veltman,,10.59,p111478,340,24,13,16,40,152,Joël,Veltman,Joël_Veltman,100.0
+209,469142,2,469142.jpg,36,6,p469142,44,1.5,0.69,Van Hecke,,8.54,p469142,1170,91,43,20,111,151,Jan Paul,van Hecke,Jan_Paul van Hecke,
+210,111478,2,111478.jpg,36,6,p111478,43,0.1,0.00,Veltman,,11.18,p111478,346,26,13,17,43,152,Joël,Veltman,Joël_Veltman,100.0
 211,110735,2,110735.jpg,36,6,p110735,44,0.0,0.00,Webster,Knee injury - Unknown return date,0.0,p110735,0,0,0,0,0,153,Adam,Webster,Adam_Webster,0.0
 212,439135,2,439135.jpg,36,6,p439135,40,0.0,0.00,Cashin,Has joined Birmingham on loan for the rest of the season.,0.0,p439135,0,0,0,0,0,154,Eiran,Cashin,Eiran_Cashin,0.0
 213,589100,2,589100.jpg,36,6,p589100,40,0.1,0.00,Slater,has joined Harrogate Town on loan until January.,0.0,p589100,0,0,0,0,0,155,Jacob,Slater,Jacob_Slater,0.0
 214,547720,2,547720.jpg,36,6,p547720,39,0.1,0.00,Tasker,,0.0,p547720,0,0,0,0,0,156,Charlie,Tasker,Charlie_Tasker,
-215,451340,3,451340.jpg,36,6,p451340,61,1.9,0.76,Mitoma,Ankle injury - 25% chance of playing,3.9,p451340,508,6,13,3,22,157,Mitoma,Kaoru,Mitoma_Kaoru,25.0
-216,463067,3,463067.jpg,36,6,p463067,57,0.4,0.48,Georginio,,5.64,p463067,766,13,25,10,48,158,Georginio,Rutter,Georginio_Rutter,100.0
+215,451340,3,451340.jpg,36,6,p451340,61,1.8,0.76,Mitoma,Ankle injury - 25% chance of playing,3.9,p451340,508,6,13,3,22,157,Mitoma,Kaoru,Mitoma_Kaoru,25.0
+216,463067,3,463067.jpg,36,6,p463067,57,0.4,0.89,Georginio,Knock - 75% chance of playing,5.92,p463067,821,15,28,11,54,158,Georginio,Rutter,Georginio_Rutter,100.0
 217,109345,3,109345.jpg,36,6,p109345,58,0.0,0.00,March,Knee injury - Expected back 13 Dec,0.0,p109345,0,0,0,0,0,159,Solly,March,Solly_March,0.0
-218,592031,3,592031.jpg,36,6,p592031,62,6.9,2.31,Minteh,,7.03,p592031,1037,14,44,23,81,160,Yankuba,Minteh,Yankuba_Minteh,
+218,592031,3,592031.jpg,36,6,p592031,62,8.2,2.32,Minteh,,7.07,p592031,1120,15,49,24,88,160,Yankuba,Minteh,Yankuba_Minteh,
 219,474120,3,474120.jpg,36,6,p474120,54,0.0,0.00,Enciso,has joined Strasbourg permanently.,0.0,p474120,0,0,0,0,0,161,Julio,Enciso Espínola,Julio_Enciso Espínola,0.0
-220,513433,3,513433.jpg,36,6,p513433,54,0.0,1.57,Gruda,,9.04,p513433,219,1,15,6,22,162,Brajan,Gruda,Brajan_Gruda,100.0
-221,532529,3,532529.jpg,36,6,p532529,51,0.0,0.05,Hinshelwood,,9.92,p532529,127,2,8,4,14,163,Jack,Hinshelwood,Jack_Hinshelwood,100.0
+220,513433,3,513433.jpg,36,6,p513433,54,0.0,1.57,Gruda,,9.6,p513433,225,1,17,6,24,162,Brajan,Gruda,Brajan_Gruda,100.0
+221,532529,3,532529.jpg,36,6,p532529,51,0.0,0.05,Hinshelwood,,10.06,p532529,161,4,9,5,18,163,Jack,Hinshelwood,Jack_Hinshelwood,100.0
 222,219249,3,219249.jpg,36,6,p219249,55,0.4,1.21,O'Riley,has joined Marseille on loan for the rest of the season.,4.58,p219249,177,3,2,4,9,164,Matt,O'Riley,Matt_O'Riley,0.0
 223,516211,3,516211.jpg,36,6,p516211,54,0.0,0.00,Sima,has joined Lens permanently.,0.0,p516211,0,0,0,0,0,165,Abdallah,Sima,Abdallah_Sima,0.0
-224,509416,3,509416.jpg,36,6,p509416,49,0.3,0.99,Ayari,,9.83,p509416,961,23,56,26,105,166,Yasin,Ayari,Yasin_Ayari,100.0
-225,535301,3,535301.jpg,36,6,p535301,47,2.0,0.16,Baleba,,10.32,p535301,689,25,42,12,79,167,Carlos,Baleba,Carlos_Baleba,
-226,514254,3,514254.jpg,36,6,p514254,49,0.3,1.90,Gomez,,9.64,p514254,607,13,26,26,65,169,Diego,Gómez Amarilla,Diego_Gómez Amarilla,100.0
+224,509416,3,509416.jpg,36,6,p509416,49,0.3,1.08,Ayari,,9.93,p509416,1051,24,63,29,116,166,Yasin,Ayari,Yasin_Ayari,100.0
+225,535301,3,535301.jpg,36,6,p535301,47,1.9,0.16,Baleba,,10.62,p535301,695,28,42,12,82,167,Carlos,Baleba,Carlos_Baleba,
+226,514254,3,514254.jpg,36,6,p514254,49,0.3,2.02,Gomez,,9.91,p514254,690,18,30,28,76,169,Diego,Gómez Amarilla,Diego_Gómez Amarilla,100.0
 227,15157,3,15157.jpg,36,6,p15157,49,0.1,0.79,Milner,Muscle injury - Expected back 13 Dec,9.14,p15157,187,6,10,3,19,170,James,Milner,James_Milner,0.0
 228,441192,3,441192.jpg,36,6,p441192,49,0.0,0.00,Sarmiento,has joined Cremonese on loan for the rest of the season.,0.0,p441192,0,0,0,0,0,171,Jeremy,Sarmiento Morante,Jeremy_Sarmiento Morante,0.0
 229,549074,3,549074.jpg,36,6,p549074,48,0.0,0.04,Watson,,6.75,p549074,40,0,2,1,3,172,Tom,Watson,Tom_Watson,100.0
-230,467779,3,467779.jpg,36,6,p467779,49,0.4,0.20,Wieffer,,13.46,p467779,729,32,44,33,109,173,Mats,Wieffer,Mats_Wieffer,100.0
+230,467779,3,467779.jpg,36,6,p467779,49,0.4,0.37,Wieffer,,14.73,p467779,819,49,48,37,134,173,Mats,Wieffer,Mats_Wieffer,100.0
 231,611695,3,611695.jpg,36,6,p611695,50,0.0,0.00,Yalcouye,Has joined Swansea City on loan for the rest of the season.,0.0,p611695,0,0,0,0,0,174,Malick,Yalcouyé,Malick_Yalcouyé,0.0
 232,567121,3,567121.jpg,36,6,p567121,45,0.1,0.00,Knight,,0.0,p567121,1,0,0,0,0,175,Joe,Knight,Joe_Knight,
 233,550141,3,550141.jpg,36,6,p550141,45,0.0,0.00,Mazilu,has joined Dinamo Bucharest permanently.,0.0,p550141,0,0,0,0,0,176,Adrian,Mazilu,Adrian_Mazilu,0.0
 234,513834,3,513834.jpg,36,6,p513834,45,0.0,0.00,Moran,Has joined Los Angeles FC on loan for the rest of the season.,0.0,p513834,0,0,0,0,0,177,Andrew,Moran,Andrew_Moran,0.0
-235,50175,4,50175.jpg,36,6,p50175,66,10.4,4.89,Welbeck,,3.72,p50175,799,10,16,7,33,178,Danny,Welbeck,Danny_Welbeck,
+235,50175,4,50175.jpg,36,6,p50175,66,10.9,4.96,Welbeck,,4.17,p50175,863,13,18,9,40,178,Danny,Welbeck,Danny_Welbeck,
 236,487117,4,487117.jpg,36,6,p487117,55,0.0,0.00,Ferguson,Has joined AS Roma on loan for the rest of the season,0.0,p487117,0,0,0,0,0,179,Evan,Ferguson,Evan_Ferguson,0.0
-237,608181,4,608181.jpg,36,6,p608181,53,0.1,0.35,Tzimas,,9.64,p608181,84,1,6,2,9,180,Stefanos,Tzimas,Stefanos_Tzimas,
+237,608181,4,608181.jpg,36,6,p608181,53,0.1,0.44,Tzimas,,10.73,p608181,109,2,9,2,13,180,Stefanos,Tzimas,Stefanos_Tzimas,
 238,647850,4,647850.jpg,36,6,p647850,48,0.3,0.27,Kostoulas,,21.72,p647850,29,0,6,1,7,181,Charalampos,Kostoulas,Charalampos_Kostoulas,
 239,556637,3,556637.jpg,36,6,p556637,45,0.0,0.00,Oriola,,0.0,p556637,1,0,0,0,0,744,Nehemiah,Oriola,Nehemiah_Oriola,
 240,536916,3,536916.jpg,8,7,p536916,47,0.1,0.00,Buonanotte,,6.0,p536916,45,0,2,1,3,168,Facundo,Buonanotte,Facundo_Buonanotte,100.0
-241,215059,1,215059.jpg,8,7,p215059,48,13.5,0.00,Sánchez,,0.0,p215059,994,7,101,0,0,220,Robert,Lynch Sánchez,Robert_Sánchez,
+241,215059,1,215059.jpg,8,7,p215059,48,13.5,0.00,Sánchez,,0.0,p215059,1084,9,112,0,0,220,Robert,Lynch Sánchez,Robert_Sánchez,
 242,508479,1,508479.jpg,8,7,p508479,43,0.2,0.00,Jörgensen,,0.0,p508479,84,2,5,0,0,221,Filip,Jörgensen,Filip_Jörgensen,
 243,549939,1,549939.jpg,8,7,p549939,40,0.0,0.00,Penders,Has joined RC Strasbourg on loan for the rest of the season.,0.0,p549939,0,0,0,0,0,222,Mike,Penders,Mike_Penders,0.0
 244,471798,1,471798.jpg,8,7,p471798,39,0.1,0.00,Slonina,,0.0,p471798,0,0,0,0,0,223,Gabriel,Słonina,Gabriel_Słonina,
-245,179268,2,179268.jpg,8,7,p179268,61,22.8,0.53,Cucurella,,6.57,p179268,986,46,46,26,72,224,Marc,Cucurella Saseta,Marc_Cucurella Saseta,
-246,225796,2,225796.jpg,8,7,p225796,56,8.1,0.48,James,,5.99,p225796,751,32,44,18,50,225,Reece,James,Reece_James,100.0
-247,180736,2,180736.jpg,8,7,p180736,51,8.4,0.80,Chalobah,,8.52,p180736,930,75,38,13,88,226,Trevoh,Chalobah,Trevoh_Chalobah,100.0
+245,179268,2,179268.jpg,8,7,p179268,61,23.2,0.53,Cucurella,,6.69,p179268,1076,53,46,27,80,224,Marc,Cucurella Saseta,Marc_Cucurella Saseta,
+246,225796,2,225796.jpg,8,7,p225796,56,8.0,0.50,James,,5.67,p225796,841,34,46,19,53,225,Reece,James,Reece_James,100.0
+247,180736,2,180736.jpg,8,7,p180736,51,8.9,0.87,Chalobah,,8.38,p180736,1020,81,42,14,95,226,Trevoh,Chalobah,Trevoh_Chalobah,100.0
 248,460028,2,460028.jpg,8,7,p460028,48,0.1,0.00,Colwill,Anterior cruciate ligament - Unknown return date,0.0,p460028,0,0,0,0,0,227,Levi,Samuels Colwill,Levi_Colwill,0.0
-249,482609,2,482609.jpg,8,7,p482609,49,1.6,0.82,Gusto,,4.72,p482609,572,17,36,13,30,228,Malo,Gusto,Malo_Gusto,100.0
+249,482609,2,482609.jpg,8,7,p482609,49,1.6,0.82,Gusto,,4.89,p482609,662,20,39,16,36,228,Malo,Gusto,Malo_Gusto,100.0
 250,242880,2,242880.jpg,8,7,p242880,44,0.0,0.00,B.Badiashile,,6.55,p242880,110,7,4,1,8,229,Benoît,Badiashile Mukinayi,Benoît_Badiashile Mukinayi,100.0
-251,444463,2,444463.jpg,8,7,p444463,44,0.2,0.13,Fofana,,7.33,p444463,307,21,12,4,25,230,Wesley,Fofana,Wesley_Fofana,100.0
+251,444463,2,444463.jpg,8,7,p444463,44,0.2,0.25,Fofana,,8.61,p444463,397,33,18,5,38,230,Wesley,Fofana,Wesley_Fofana,100.0
 252,574458,2,574458.jpg,8,7,p574458,45,0.0,0.00,M.Sarr,Has joined RC Strasbourg on loan for the rest of the season.,0.0,p574458,0,0,0,0,0,231,Mamadou,Sarr,Mamadou_Sarr,0.0
 253,109646,2,109646.jpg,8,7,p109646,42,0.4,0.05,Tosin,,9.64,p109646,467,38,14,12,50,232,Tosin,Adarabioyo,Tosin_Adarabioyo,100.0
-254,577016,2,577016.jpg,8,7,p577016,39,2.0,0.60,Acheampong,,6.21,p577016,348,22,16,2,24,233,Josh,Acheampong,Josh_Acheampong,100.0
+254,577016,2,577016.jpg,8,7,p577016,39,1.9,0.60,Acheampong,,6.21,p577016,348,22,16,2,24,233,Josh,Acheampong,Josh_Acheampong,100.0
 255,622758,2,622758.jpg,8,7,p622758,40,0.1,0.00,Anselmino,has joined Borussia Dortmund on loan for the rest of the season.,0.0,p622758,0,0,0,0,0,234,Aarón,Anselmino,Aarón_Anselmino,0.0
-256,244851,3,244851.jpg,8,7,p244851,103,8.8,0.80,Palmer,Toe Injury - Unknown return date,4.38,p244851,144,1,4,2,7,235,Cole,Palmer,Cole_Palmer,0.0
-257,247632,3,247632.jpg,8,7,p247632,71,6.9,2.45,Neto,,4.21,p247632,919,6,31,6,43,236,Pedro,Lomba Neto,Pedro_Lomba Neto,100.0
-258,448047,3,448047.jpg,8,7,p448047,67,13.3,5.37,Enzo,,6.68,p448047,970,12,43,17,72,237,Enzo,Fernández,Enzo_Fernández,100.0
-259,624773,3,624773.jpg,8,7,p624773,65,2.8,1.75,Estêvão,,8.01,p624773,337,5,17,8,30,238,Estêvão,Almeida de Oliveira Gonçalves,Estêvão_Almeida de Oliveira Gonçalves,
+256,244851,3,244851.jpg,8,7,p244851,103,9.2,0.80,Palmer,,4.38,p244851,144,1,4,2,7,235,Cole,Palmer,Cole_Palmer,100.0
+257,247632,3,247632.jpg,8,7,p247632,72,7.5,2.65,Neto,,4.37,p247632,1009,9,33,7,49,236,Pedro,Lomba Neto,Pedro_Lomba Neto,100.0
+258,448047,3,448047.jpg,8,7,p448047,67,13.7,5.48,Enzo,,6.79,p448047,1060,12,47,21,80,237,Enzo,Fernández,Enzo_Fernández,100.0
+259,624773,3,624773.jpg,8,7,p624773,65,3.1,1.86,Estêvão,,7.07,p624773,382,5,17,8,30,238,Estêvão,Almeida de Oliveira Gonçalves,Estêvão_Almeida de Oliveira Gonçalves,
 260,463936,3,463936.jpg,8,7,p463936,61,0.1,0.66,Gittens,,5.33,p463936,338,6,11,3,20,239,Jamie,Bynoe-Gittens,Jamie_Bynoe-Gittens,
 261,213198,3,213198.jpg,8,7,p213198,59,0.1,0.00,Nkunku,has joined AC Milan permanently.,0.0,p213198,0,0,0,0,0,240,Christopher,Nkunku,Christopher_Nkunku,0.0
-262,486672,3,486672.jpg,8,7,p486672,61,22.5,0.57,Caicedo,,12.86,p486672,945,44,57,34,135,241,Moisés,Caicedo Corozo,Moisés_Caicedo Corozo,100.0
+262,486672,3,486672.jpg,8,7,p486672,60,20.6,0.57,Caicedo,Suspended until 20 Dec,12.92,p486672,982,46,61,34,141,241,Moisés,Caicedo Corozo,Moisés_Caicedo Corozo,100.0
 263,550615,3,550615.jpg,8,7,p550615,49,0.1,0.32,George,,1.9,p550615,142,0,1,2,3,243,Tyrique,George,Tyrique_George,
 264,514356,3,514356.jpg,8,7,p514356,49,0.0,0.00,Lavia,Thigh injury - Unknown return date,9.43,p514356,105,5,4,2,11,244,Roméo,Lavia,Roméo_Lavia,0.0
 265,465920,3,465920.jpg,8,7,p465920,49,0.0,0.00,Mudryk,Suspended - unknown return date,0.0,p465920,0,0,0,0,0,245,Mykhailo,Mudryk,Mykhailo_Mudryk,0.0
 266,532605,3,532605.jpg,8,7,p532605,45,0.3,0.73,Andrey Santos,,11.36,p532605,317,13,16,11,40,246,Andrey,Nascimento dos Santos,Andrey_Nascimento dos Santos,100.0
-267,491007,3,491007.jpg,8,7,p491007,43,0.1,0.00,D.Essugo,Thigh injury - Expected back 04 Jan,0.0,p491007,0,0,0,0,0,247,Dário,Luís Essugo,Dário_Luís Essugo,0.0
+267,491007,3,491007.jpg,8,7,p491007,43,0.1,0.00,D.Essugo,Lack of match fitness - 50% chance of playing,0.0,p491007,0,0,0,0,0,247,Dário,Luís Essugo,Dário_Luís Essugo,50.0
 268,611134,3,611134.jpg,8,7,p611134,45,0.0,0.00,Paez,Has joined RC Strasbourg on loan for the rest of the season.,0.0,p611134,0,0,0,0,0,248,Kendry,Páez Andrade,Kendry_Páez Andrade,0.0
-269,475168,4,475168.jpg,8,7,p475168,75,45.9,4.04,João Pedro,,5.38,p475168,1004,17,34,9,60,249,João Pedro,Junqueira de Jesus,João_Pedro Junqueira de Jesus,
-270,463034,4,463034.jpg,8,7,p463034,62,1.0,0.39,Delap,,3.27,p463034,220,3,5,0,8,250,Liam,Delap,Liam_Delap,100.0
+269,475168,4,475168.jpg,8,7,p475168,74,43.2,4.19,João Pedro,,5.19,p475168,1058,17,35,9,61,249,João Pedro,Junqueira de Jesus,João_Pedro Junqueira de Jesus,
+270,463034,4,463034.jpg,8,7,p463034,62,1.0,0.42,Delap,,3.18,p463034,255,3,6,0,9,250,Liam,Delap,Liam_Delap,100.0
 271,517052,4,517052.jpg,8,7,p517052,65,0.1,0.00,N.Jackson,has joined Bayern Munich on loan for the rest of the season.,0.0,p517052,0,0,0,0,0,251,Nicolas,Jackson,Nicolas_Jackson,0.0
-272,499309,4,499309.jpg,8,7,p499309,42,7.1,1.19,Marc Guiu,,1.53,p499309,176,2,1,0,3,252,Marc,Guiu Paz,Marc_Guiu Paz,100.0
-273,493105,3,493105.jpg,8,7,p493105,64,1.0,0.86,Garnacho,,4.74,p493105,342,2,11,5,18,453,Alejandro,Garnacho Ferreyra,Alejandro_Garnacho,
+272,499309,4,499309.jpg,8,7,p499309,42,6.8,1.19,Marc Guiu,,1.53,p499309,176,2,1,0,3,252,Marc,Guiu Paz,Marc_Guiu Paz,100.0
+273,493105,3,493105.jpg,8,7,p493105,64,0.9,0.86,Garnacho,,4.42,p493105,387,2,12,5,19,453,Alejandro,Garnacho Ferreyra,Alejandro_Garnacho,
 274,551210,2,551210.jpg,8,7,p551210,47,0.2,0.00,Hato,,4.34,p551210,166,6,5,2,8,672,Jorrel,Hato,Jorrel_Hato,
 275,611912,3,611912.jpg,8,7,p611912,45,0.0,0.00,Emenalo,,0.0,p611912,0,0,0,0,0,743,Landon,Emenalo,Landon_Emenalo,
-276,172649,1,172649.jpg,31,8,p172649,50,8.0,0.00,Henderson,,0.0,p172649,1080,13,89,0,0,253,Dean,Henderson,Dean_Henderson,
+276,172649,1,172649.jpg,31,8,p172649,50,8.2,0.00,Henderson,,0.0,p172649,1170,17,101,0,0,253,Dean,Henderson,Dean_Henderson,
 277,121709,1,121709.jpg,31,8,p121709,40,0.3,0.00,Benitez,,0.0,p121709,0,0,0,0,0,254,Walter,Benítez,Walter_Benítez,100.0
 278,169593,1,169593.jpg,31,8,p169593,39,0.1,0.00,Matthews,,0.0,p169593,0,0,0,0,0,255,Remi,Matthews,Remi_Matthews,
-279,247348,2,247348.jpg,31,8,p247348,59,20.7,1.39,Muñoz,,7.25,p247348,1080,59,44,28,87,256,Daniel,Muñoz Mejía,Daniel_Muñoz,
-280,437499,2,437499.jpg,31,8,p437499,50,4.8,0.49,Lacroix,,10.25,p437499,1080,100,34,23,123,257,Maxence,Lacroix,Maxence_Lacroix,
-281,244723,2,244723.jpg,31,8,p244723,50,2.6,0.39,Mitchell,,7.83,p244723,1080,53,67,41,94,258,Tyrick,Mitchell,Tyrick_Mitchell,
-282,218364,2,218364.jpg,31,8,p218364,48,0.1,0.00,Sosa,Knock - 75% chance of playing,0.0,p218364,1,0,1,0,0,259,Borna,Sosa,Borna_Sosa,
-283,209036,2,209036.jpg,31,8,p209036,51,34.7,0.89,Guéhi,,8.27,p209036,990,68,38,23,91,260,Marc,Guéhi,Marc_Guéhi,100.0
-284,427623,2,427623.jpg,31,8,p427623,46,3.8,0.39,Richards,,10.41,p427623,1072,98,19,26,124,261,Chris,Richards,Chris_Richards,100.0
+279,247348,2,247348.jpg,31,8,p247348,60,22.8,1.39,Muñoz,,7.23,p247348,1170,64,49,30,94,256,Daniel,Muñoz Mejía,Daniel_Muñoz,
+280,437499,2,437499.jpg,31,8,p437499,51,5.4,0.57,Lacroix,,10.54,p437499,1170,112,37,25,137,257,Maxence,Lacroix,Maxence_Lacroix,
+281,244723,2,244723.jpg,31,8,p244723,50,2.6,0.39,Mitchell,,7.65,p244723,1164,58,68,41,99,258,Tyrick,Mitchell,Tyrick_Mitchell,
+282,218364,2,218364.jpg,31,8,p218364,48,0.1,0.00,Sosa,Knock - Expected back 03 Dec,0.0,p218364,1,0,1,0,0,259,Borna,Sosa,Borna_Sosa,0.0
+283,209036,2,209036.jpg,31,8,p209036,51,35.0,0.89,Guéhi,,8.0,p209036,1080,73,43,23,96,260,Marc,Guéhi,Marc_Guéhi,100.0
+284,427623,2,427623.jpg,31,8,p427623,46,3.9,0.43,Richards,,10.3,p427623,1162,105,20,28,133,261,Chris,Richards,Chris_Richards,100.0
 285,515621,2,515621.jpg,31,8,p515621,40,0.0,0.00,Chadi Riad,,0.0,p515621,0,0,0,0,0,262,Chadi,Riad Dnanou,Chadi_Riad Dnanou,100.0
-286,57328,2,57328.jpg,31,8,p57328,38,0.5,0.00,Clyne,,45.0,p57328,4,1,0,1,2,263,Nathaniel,Clyne,Nathaniel_Clyne,
+286,57328,2,57328.jpg,31,8,p57328,38,0.4,0.00,Clyne,,45.0,p57328,4,1,0,1,2,263,Nathaniel,Clyne,Nathaniel_Clyne,
 287,156074,2,156074.jpg,31,8,p156074,40,0.0,0.00,Holding,Has joined Colorado Rapids permanently.,0.0,p156074,0,0,0,0,0,264,Rob,Holding,Rob_Holding,0.0
 288,590012,2,590012.jpg,31,8,p590012,40,0.0,0.00,Kporha,Back injury - Unknown return date,0.0,p590012,0,0,0,0,0,265,Caleb,Kporha,Caleb_Kporha,0.0
-289,232185,3,232185.jpg,31,8,p232185,67,13.1,3.85,Sarr,,6.53,p232185,882,24,30,10,64,267,Ismaïla,Sarr,Ismaïla_Sarr,100.0
+289,232185,3,232185.jpg,31,8,p232185,67,12.1,3.85,Sarr,Ankle injury - 25% chance of playing,6.37,p232185,919,24,31,10,65,267,Ismaïla,Sarr,Ismaïla_Sarr,100.0
 290,438464,3,438464.jpg,31,8,p438464,49,0.0,0.00,Doucouré,Knee injury - Unknown return date,0.0,p438464,0,0,0,0,0,268,Cheick,Doucouré,Cheick_Doucouré,0.0
 291,606921,3,606921.jpg,31,8,p606921,47,0.1,0.00,Esse,,7.5,p606921,24,0,0,2,2,269,Romain,Esse,Romain_Esse,
-292,108413,3,108413.jpg,31,8,p108413,48,0.1,0.15,Hughes,,8.26,p108413,447,20,16,5,41,270,Will,Hughes,Will_Hughes,100.0
-293,209400,3,209400.jpg,31,8,p209400,50,0.2,0.72,Kamada,,9.56,p209400,838,13,46,30,89,271,Daichi,Kamada,Daichi_Kamada,100.0
-294,152551,3,152551.jpg,31,8,p152551,49,0.1,0.57,Lerma,,10.49,p152551,369,18,21,4,43,272,Jefferson,Lerma Solís,Jefferson_Lerma Solís,
-295,496221,3,496221.jpg,31,8,p496221,50,0.4,0.31,Wharton,,8.7,p496221,786,22,40,14,76,273,Adam,Wharton,Adam_Wharton,100.0
+292,108413,3,108413.jpg,31,8,p108413,47,0.1,0.15,Hughes,,8.04,p108413,459,20,16,5,41,270,Will,Hughes,Will_Hughes,75.0
+293,209400,3,209400.jpg,31,8,p209400,50,0.2,0.85,Kamada,,9.86,p209400,922,17,52,32,101,271,Daichi,Kamada,Daichi_Kamada,100.0
+294,152551,3,152551.jpg,31,8,p152551,49,0.1,0.57,Lerma,,10.35,p152551,374,18,21,4,43,272,Jefferson,Lerma Solís,Jefferson_Lerma Solís,
+295,496221,3,496221.jpg,31,8,p496221,50,0.4,0.44,Wharton,,9.28,p496221,863,25,47,17,89,273,Adam,Wharton,Adam_Wharton,100.0
 296,579075,3,579075.jpg,31,8,p579075,44,0.0,0.00,Agbinone,,0.0,p579075,0,0,0,0,0,274,Asher,Agbinone,Asher_Agbinone,
 297,466117,3,466117.jpg,31,8,p466117,44,0.0,0.00,Ahamada,,0.0,p466117,0,0,0,0,0,275,Naouirou,Ahamada,Naouirou_Ahamada,
-298,489706,3,489706.jpg,31,8,p489706,43,1.2,0.43,Devenny,,10.84,p489706,166,1,12,7,20,276,Justin,Devenny,Justin_Devenny,
+298,489706,3,489706.jpg,31,8,p489706,43,1.1,0.49,Devenny,,10.53,p489706,171,1,12,7,20,276,Justin,Devenny,Justin_Devenny,
 299,450535,3,450535.jpg,31,8,p450535,45,0.0,0.00,Ebiowei,Has joined Blackpool permanently.,0.0,p450535,0,0,0,0,0,277,Malcolm,Ebiowei,Malcolm_Ebiowei,0.0
 300,450542,3,450542.jpg,31,8,p450542,44,0.0,0.00,J.Rak-Sakyi,has joined Caykur Rizespor on loan for the rest of the season.,0.0,p450542,0,0,0,0,0,278,Jesurun,Rak-Sakyi,Jesurun_Rak-Sakyi,0.0
 301,536694,3,536694.jpg,31,8,p536694,45,0.0,0.00,M.França,Has joined CR Vasco da Gama on loan for the rest of the season.,0.0,p536694,0,0,0,0,0,279,Matheus,França de Oliveira,Matheus_França de Oliveira,0.0
 302,531989,3,531989.jpg,31,8,p531989,45,0.0,0.00,Ozoh,Has joined Derby County on loan for the rest of the season.,0.0,p531989,0,0,0,0,0,280,David,Ozoh,David_Ozoh,0.0
 303,530318,3,530318.jpg,31,8,p530318,45,0.0,0.00,Rodney,,0.0,p530318,0,0,0,0,0,281,Kaden,Rodney,Kaden_Rodney,
 304,574398,3,574398.jpg,31,8,p574398,45,0.0,0.00,Umeh,has joined Portsmouth permanently.,0.0,p574398,0,0,0,0,0,282,Franco,Umeh-Chibueze,Franco_Umeh-Chibueze,0.0
-305,231747,4,231747.jpg,31,8,p231747,81,29.9,8.54,Mateta,,4.77,p231747,1018,24,25,5,54,283,Jean-Philippe,Mateta,Jean-Philippe_Mateta,
-306,205533,4,205533.jpg,31,8,p205533,54,0.3,0.91,Nketiah,,9.2,p205533,137,5,7,2,14,284,Eddie,Nketiah,Eddie_Nketiah,100.0
+305,231747,4,231747.jpg,31,8,p231747,81,30.6,9.56,Mateta,,4.79,p231747,1108,28,26,5,59,283,Jean-Philippe,Mateta,Jean-Philippe_Mateta,
+306,205533,4,205533.jpg,31,8,p205533,54,0.4,1.11,Nketiah,,8.57,p205533,189,6,8,4,18,284,Eddie,Nketiah,Eddie_Nketiah,100.0
 307,199670,4,199670.jpg,31,8,p199670,50,0.2,0.00,Édouard,has joined RC Lens permanently.,45.0,p199670,2,0,0,1,1,285,Odsonne,Édouard,Odsonne_Édouard,0.0
 308,576980,4,576980.jpg,31,8,p576980,45,0.3,0.00,Marsh,,0.0,p576980,0,0,0,0,0,286,Zach,Marsh,Zach_Marsh,
-309,590014,3,590014.jpg,31,8,p590014,44,0.4,0.00,Cardines,,0.0,p590014,0,0,0,0,0,690,Rio,Cardines,Rio_Cardines,75.0
-310,488024,3,488024.jpg,31,8,p488024,58,0.2,1.51,Yeremy,,7.24,p488024,609,5,32,12,49,712,Yéremy,Pino Santos,Yéremy_Pino Santos,100.0
+309,590014,3,590014.jpg,31,8,p590014,44,0.4,0.00,Cardines,,0.0,p590014,0,0,0,0,0,690,Rio,Cardines,Rio_Cardines,100.0
+310,488024,3,488024.jpg,31,8,p488024,58,0.2,1.69,Yeremy,,7.22,p488024,686,6,36,13,55,712,Yéremy,Pino Santos,Yéremy_Pino Santos,100.0
 311,651426,2,651426.jpg,31,8,p651426,45,0.0,0.05,Canvot,,16.53,p651426,98,14,4,4,18,723,Jaydee,Canvot,Jaydee_Canvot,
-312,660392,4,660392.jpg,31,8,p660392,55,0.0,0.01,Uche,,22.5,p660392,8,0,2,0,2,732,Christantus,Uche,Christantus_Uche,
-313,215413,3,215413.jpg,11,9,p215413,49,2.9,0.91,Dewsbury-Hall,,6.94,p215413,972,20,38,17,75,242,Kiernan,Dewsbury-Hall,Kiernan_Dewsbury-Hall,100.0
-314,111234,1,111234.jpg,11,9,p111234,55,9.5,0.00,Pickford,,0.0,p111234,1080,21,97,1,0,287,Jordan,Pickford,Jordan_Pickford,
+312,660392,4,660392.jpg,31,8,p660392,55,0.0,0.01,Uche,,9.0,p660392,20,0,2,0,2,732,Christantus,Uche,Christantus_Uche,
+313,215413,3,215413.jpg,11,9,p215413,49,3.4,1.42,Dewsbury-Hall,,7.2,p215413,1062,21,44,20,85,242,Kiernan,Dewsbury-Hall,Kiernan_Dewsbury-Hall,100.0
+314,111234,1,111234.jpg,11,9,p111234,55,9.6,0.00,Pickford,,0.0,p111234,1170,23,102,1,0,287,Jordan,Pickford,Jordan_Pickford,
 315,229600,1,229600.jpg,11,9,p229600,44,0.1,0.00,Travers,,0.0,p229600,0,0,0,0,0,288,Mark,Travers,Mark_Travers,
 316,447325,1,447325.jpg,11,9,p447325,39,0.1,0.00,Tyrer,,0.0,p447325,0,0,0,0,0,289,Harry,Tyrer,Harry_Tyrer,
 317,480455,2,480455.jpg,11,9,p480455,53,0.2,0.00,Branthwaite,Hamstring injury - Unknown return date,0.0,p480455,0,0,0,0,0,290,Jarrad,Branthwaite,Jarrad_Branthwaite,0.0
-318,17761,2,17761.jpg,11,9,p17761,54,5.6,0.36,Tarkowski,,10.67,p17761,1080,113,30,15,128,291,James,Tarkowski,James_Tarkowski,
-319,224967,2,224967.jpg,11,9,p224967,49,0.4,0.05,Mykolenko,,7.27,p224967,805,58,30,7,65,292,Vitalii,Mykolenko,Vitalii_Mykolenko,100.0
-320,512462,2,512462.jpg,11,9,p512462,49,0.4,0.41,O'Brien,,6.65,p512462,948,53,32,17,70,293,Jake,O'Brien,Jake_O'Brien,
-321,59949,2,59949.jpg,11,9,p59949,43,0.1,0.00,Coleman,Hamstring injury - 75% chance of playing,0.0,p59949,11,0,1,0,0,294,Séamus,Coleman,Séamus_Coleman,
-322,106611,2,106611.jpg,11,9,p106611,45,1.7,1.07,Keane,,9.82,p106611,1054,104,32,11,115,295,Michael,Keane,Michael_Keane,100.0
+318,17761,2,17761.jpg,11,9,p17761,54,5.6,0.36,Tarkowski,,10.38,p17761,1170,118,33,17,135,291,James,Tarkowski,James_Tarkowski,
+319,224967,2,224967.jpg,11,9,p224967,49,0.4,0.05,Mykolenko,,7.64,p224967,895,66,33,10,76,292,Vitalii,Mykolenko,Vitalii_Mykolenko,100.0
+320,512462,2,512462.jpg,11,9,p512462,49,0.4,0.41,O'Brien,,6.5,p512462,1038,56,36,19,75,293,Jake,O'Brien,Jake_O'Brien,
+321,59949,2,59949.jpg,11,9,p59949,43,0.1,0.00,Coleman,Hamstring injury - 75% chance of playing,0.0,p59949,11,0,1,0,0,294,Séamus,Coleman,Séamus_Coleman,75.0
+322,106611,2,106611.jpg,11,9,p106611,46,2.3,1.11,Keane,,9.91,p106611,1144,114,38,12,126,295,Michael,Keane,Michael_Keane,100.0
 323,243571,2,243571.jpg,11,9,p243571,44,0.0,0.00,Patterson,Foot injury - Unknown return date,0.0,p243571,0,0,0,0,0,296,Nathan,Patterson,Nathan_Patterson,0.0
 324,496178,2,496178.jpg,11,9,p496178,39,0.2,0.00,Dixon,,0.0,p496178,0,0,0,0,0,297,Roman,Dixon,Roman_Dixon,
 325,474907,2,474907.jpg,11,9,p474907,39,0.1,0.00,Welch,,0.0,p474907,0,0,0,0,0,298,Reece,Welch,Reece_Welch,
-326,440993,3,440993.jpg,11,9,p440993,66,11.4,2.69,Ndiaye,,9.96,p440993,994,12,71,27,110,299,Iliman,Ndiaye,Iliman_Ndiaye,100.0
-327,433154,3,433154.jpg,11,9,p433154,55,0.1,0.24,McNeil,,6.67,p433154,54,2,1,1,4,300,Dwight,McNeil,Dwight_McNeil,
-328,502697,3,502697.jpg,11,9,p502697,52,0.1,0.16,Alcaraz,,9.59,p502697,244,1,19,6,26,301,Carlos,Alcaraz Durán,Carlos_Alcaraz Durán,
-329,80801,3,80801.jpg,11,9,p80801,54,0.1,1.07,Gana,Suspended until 13 Dec,9.46,p80801,961,24,55,22,101,302,Idrissa Gana,Gueye,Idrissa_Gueye,
-330,232928,3,232928.jpg,11,9,p232928,50,0.7,0.99,Garner,,10.67,p232928,1080,53,47,28,128,303,James,Garner,James_Garner,
-331,490094,3,490094.jpg,11,9,p490094,49,0.0,0.15,Iroegbunam,,10.92,p490094,346,15,17,10,42,304,Tim,Iroegbunam,Tim_Iroegbunam,
+326,440993,3,440993.jpg,11,9,p440993,66,11.2,2.71,Ndiaye,,9.98,p440993,1073,13,77,29,119,299,Iliman,Ndiaye,Iliman_Ndiaye,100.0
+327,433154,3,433154.jpg,11,9,p433154,55,0.1,0.24,McNeil,,7.03,p433154,64,2,2,1,5,300,Dwight,McNeil,Dwight_McNeil,
+328,502697,3,502697.jpg,11,9,p502697,52,0.1,0.25,Alcaraz,,8.41,p502697,289,2,19,6,27,301,Carlos,Alcaraz Durán,Carlos_Alcaraz Durán,
+329,80801,3,80801.jpg,11,9,p80801,54,0.1,1.07,Gana,Suspended until 13 Dec,9.46,p80801,961,24,55,22,101,302,Idrissa Gana,Gueye,Idrissa_Gueye,0.0
+330,232928,3,232928.jpg,11,9,p232928,50,0.7,1.01,Garner,,10.31,p232928,1170,53,51,30,134,303,James,Garner,James_Garner,
+331,490094,3,490094.jpg,11,9,p490094,49,0.0,0.15,Iroegbunam,,10.13,p490094,391,15,18,11,44,304,Tim,Iroegbunam,Tim_Iroegbunam,
 332,609873,3,609873.jpg,11,9,p609873,45,0.1,0.00,Armstrong,has joined Preston North End on loan for the rest of the season.,0.0,p609873,1,0,0,0,0,305,Harrison,Armstrong,Harrison_Armstrong,0.0
 333,547801,3,547801.jpg,11,9,p547801,44,0.1,0.00,Bates,,0.0,p547801,0,0,0,0,0,306,Callum,Bates,Callum_Bates,
 334,504296,3,504296.jpg,11,9,p504296,44,0.0,0.00,Ebere,,0.0,p504296,0,0,0,0,0,307,Coby,Ebere,Coby_Ebere,
 335,496279,3,496279.jpg,11,9,p496279,45,0.0,0.00,Heath,has joined Accrington on loan for the rest of the season.,0.0,p496279,0,0,0,0,0,308,Isaac,Heath,Isaac_Heath,0.0
 336,491557,3,491557.jpg,11,9,p491557,45,0.0,0.00,Metcalfe,Has joined Bradford City permanently.,0.0,p491557,0,0,0,0,0,309,Jenson,Metcalfe,Jenson_Metcalfe,0.0
-337,586309,4,586309.jpg,11,9,p586309,57,0.3,1.33,Barry,,3.33,p586309,460,11,6,0,17,310,Thierno,Barry,Thierno_Barry,
-338,486385,4,486385.jpg,11,9,p486385,51,2.9,3.86,Beto,,4.83,p486385,615,18,9,6,33,311,Norberto Bercique,Gomes Betuncal,Norberto_Bercique Gomes Betuncal,
+337,586309,4,586309.jpg,11,9,p586309,57,0.3,1.62,Barry,,2.97,p586309,546,11,7,0,18,310,Thierno,Barry,Thierno_Barry,
+338,486385,4,486385.jpg,11,9,p486385,51,2.8,3.86,Beto,,5.1,p486385,618,18,11,6,35,311,Norberto Bercique,Gomes Betuncal,Norberto_Bercique Gomes Betuncal,
 339,491012,4,491012.jpg,11,9,p491012,49,0.1,0.00,Y.Chermiti,has joined Rangers permanently.,0.0,p491012,0,0,0,0,0,312,Youssef,Ramalho Chermiti,Youssef_Ramalho Chermiti,0.0
 340,536241,4,536241.jpg,11,9,p536241,44,0.1,0.00,Sherif,has joined Rotherham United on loan for the rest of the season.,0.0,p536241,0,0,0,0,0,313,Martin,Sherif,Martin_Sherif,0.0
-341,114283,3,114283.jpg,11,9,p114283,67,14.4,1.07,Grealish,,8.18,p114283,913,19,51,13,83,419,Jack,Grealish,Jack_Grealish,100.0
+341,114283,3,114283.jpg,11,9,p114283,66,13.4,1.07,Grealish,,8.07,p114283,992,19,55,15,89,419,Jack,Grealish,Jack_Grealish,100.0
 342,138001,1,138001.jpg,11,9,p138001,39,1.4,0.00,King,,0.0,p138001,0,0,0,0,0,630,Tom,King,Tom_King,
 343,499300,2,499300.jpg,11,9,p499300,43,0.1,0.00,Aznou,,0.0,p499300,0,0,0,0,0,667,Adam,Aznou,Adam_Aznou,100.0
 344,461446,3,461446.jpg,11,9,p461446,45,0.1,0.00,Onyango,has joined Stockport County on loan for the rest of the season.,0.0,p461446,0,0,0,0,0,704,Tyler,Onyango,Tyler_Onyango,0.0
 345,491745,2,491745.jpg,11,9,p491745,39,0.2,0.00,Campbell,,0.0,p491745,0,0,0,0,0,705,Elijah,Campbell,Elijah_Campbell,
-346,496661,3,496661.jpg,11,9,p496661,54,0.0,0.00,Dibling,,10.16,p496661,62,0,5,2,7,707,Tyler,Dibling,Tyler_Dibling,
+346,496661,3,496661.jpg,11,9,p496661,53,0.0,0.00,Dibling,,12.5,p496661,72,2,5,3,10,707,Tyler,Dibling,Tyler_Dibling,
 347,513466,3,513466.jpg,11,9,p513466,50,0.0,0.26,Röhl,Hernia - Unknown return date,13.85,p513466,91,1,8,5,14,728,Merlin,Röhl,Merlin_Röhl,0.0
-348,80201,1,80201.jpg,54,10,p80201,50,1.5,0.00,Leno,,0.0,p80201,1080,13,106,1,0,314,Bernd,Leno,Bernd_Leno,
+348,80201,1,80201.jpg,54,10,p80201,50,1.5,0.00,Leno,,0.0,p80201,1170,16,113,1,0,314,Bernd,Leno,Bernd_Leno,
 349,428971,1,428971.jpg,54,10,p428971,40,0.0,0.00,Benda,Has joined Millwall on loan for the rest of the season.,0.0,p428971,0,0,0,0,0,315,Steven,Benda,Steven_Benda,0.0
 350,169528,2,169528.jpg,54,10,p169528,49,0.4,0.00,Robinson,Knee injury - Unknown return date,2.95,p169528,61,2,1,0,2,316,Antonee,Robinson,Antonee_Robinson,0.0
-351,174874,2,174874.jpg,54,10,p174874,45,2.9,0.54,Andersen,,11.19,p174874,941,101,40,16,117,317,Joachim,Andersen,Joachim_Andersen,100.0
-352,232892,2,232892.jpg,54,10,p232892,45,0.6,0.16,Bassey,,6.76,p232892,998,57,49,18,75,318,Calvin,Bassey,Calvin_Bassey,
-353,166477,2,166477.jpg,54,10,p166477,43,0.1,0.42,Castagne,,7.69,p166477,398,23,15,11,34,319,Timothy,Castagne,Timothy_Castagne,
+351,174874,2,174874.jpg,54,10,p174874,45,2.9,0.54,Andersen,,11.52,p174874,1031,115,43,17,132,317,Joachim,Andersen,Joachim_Andersen,100.0
+352,232892,2,232892.jpg,54,10,p232892,45,0.5,0.16,Bassey,,7.03,p232892,1088,63,49,22,85,318,Calvin,Bassey,Calvin_Bassey,
+353,166477,2,166477.jpg,54,10,p166477,43,0.1,0.42,Castagne,,7.63,p166477,401,23,15,11,34,319,Timothy,Castagne,Timothy_Castagne,
 354,219924,2,219924.jpg,54,10,p219924,43,0.1,0.00,Diop,,8.07,p219924,223,16,7,4,20,320,Issa,Diop,Issa_Diop,
 355,246301,2,246301.jpg,54,10,p246301,43,0.0,0.00,J.Cuenca,,10.71,p246301,168,18,6,2,20,321,Jorge,Cuenca Barreno,Jorge_Cuenca Barreno,
-356,167074,2,167074.jpg,54,10,p167074,45,0.2,0.17,Tete,,7.44,p167074,810,39,32,28,67,322,Kenny,Tete,Kenny_Tete,100.0
+356,167074,2,167074.jpg,54,10,p167074,45,0.2,0.23,Tete,,8.5,p167074,900,51,35,34,85,322,Kenny,Tete,Kenny_Tete,100.0
 357,591385,2,591385.jpg,54,10,p591385,39,0.1,0.00,Amissah,,0.0,p591385,0,0,0,0,0,323,Samuel,Amissah,Samuel_Amissah,
-358,153133,3,153133.jpg,54,10,p153133,64,1.3,0.62,Iwobi,,6.57,p153133,987,14,45,13,72,324,Alex,Iwobi,Alex_Iwobi,
-359,209289,3,209289.jpg,54,10,p209289,56,0.4,1.16,Smith Rowe,,4.46,p209289,242,3,8,1,12,325,Emile,Smith Rowe,Emile_Smith Rowe,100.0
-360,159533,3,159533.jpg,54,10,p159533,52,0.2,0.19,Adama,,4.83,p159533,242,1,11,1,13,326,Adama,Traoré Diarra,Adama_Traoré Diarra,
+358,153133,3,153133.jpg,54,10,p153133,64,1.2,0.62,Iwobi,,6.71,p153133,1073,16,49,15,80,324,Alex,Iwobi,Alex_Iwobi,
+359,209289,3,209289.jpg,54,10,p209289,56,0.4,1.25,Smith Rowe,,5.11,p209289,264,3,8,4,15,325,Emile,Smith Rowe,Emile_Smith Rowe,100.0
+360,159533,3,159533.jpg,54,10,p159533,52,0.1,0.19,Adama,,4.83,p159533,242,1,11,1,13,326,Adama,Traoré Diarra,Adama_Traoré Diarra,
 361,156689,3,156689.jpg,54,10,p156689,53,0.1,0.00,Andreas,has joined Palmeiras permanently.,0.0,p156689,0,0,0,0,0,327,Andreas,Hoelgebaum Pereira,Andreas_Hoelgebaum Pereira,0.0
-362,184349,3,184349.jpg,54,10,p184349,54,0.8,0.81,Sessegnon,,9.91,p184349,926,50,32,20,102,328,Ryan,Sessegnon,Ryan_Sessegnon,100.0
-363,153682,3,153682.jpg,54,10,p153682,52,0.4,1.50,Wilson,,6.43,p153682,742,16,25,12,53,329,Harry,Wilson,Harry_Wilson,100.0
-364,207189,3,207189.jpg,54,10,p207189,49,0.1,0.60,Berge,,7.9,p207189,1048,27,48,17,92,330,Sander,Berge,Sander_Berge,
-365,76357,3,76357.jpg,54,10,p76357,49,0.0,0.44,Cairney,,5.97,p76357,196,3,9,1,13,331,Tom,Cairney,Tom_Cairney,100.0
-366,212314,3,212314.jpg,54,10,p212314,50,0.1,1.35,Lukić,,8.51,p212314,677,23,24,17,64,332,Saša,Lukić,Saša_Lukić,0.0
+362,184349,3,184349.jpg,54,10,p184349,54,0.7,0.81,Sessegnon,,10.63,p184349,1016,59,37,24,120,328,Ryan,Sessegnon,Ryan_Sessegnon,100.0
+363,153682,3,153682.jpg,54,10,p153682,52,0.4,1.65,Wilson,,7.01,p153682,809,18,31,14,63,329,Harry,Wilson,Harry_Wilson,100.0
+364,207189,3,207189.jpg,54,10,p207189,49,0.1,0.60,Berge,,7.99,p207189,1138,31,52,18,101,330,Sander,Berge,Sander_Berge,
+365,76357,3,76357.jpg,54,10,p76357,48,0.0,0.44,Cairney,,5.97,p76357,196,3,9,1,13,331,Tom,Cairney,Tom_Cairney,100.0
+366,212314,3,212314.jpg,54,10,p212314,50,0.1,1.35,Lukić,,9.27,p212314,699,25,27,20,72,332,Saša,Lukić,Saša_Lukić,100.0
 367,573062,3,573062.jpg,54,10,p573062,45,0.0,0.00,Godo,has joined Strasbourg permanently.,0.0,p573062,0,0,0,0,0,333,Martial,Godo,Martial_Godo,0.0
 368,515024,3,515024.jpg,54,10,p515024,45,0.0,0.00,Harris,Has joined Oxford United on loan for the rest of the season.,0.0,p515024,0,0,0,0,0,334,Luke,Harris,Luke_Harris,0.0
-369,577725,3,577725.jpg,54,10,p577725,45,3.8,0.91,King,,6.36,p577725,722,8,27,16,51,335,Josh,King,Josh_King,
+369,577725,3,577725.jpg,54,10,p577725,45,3.7,0.91,King,,6.73,p577725,789,10,32,17,59,335,Josh,King,Josh_King,
 370,153366,3,153366.jpg,54,10,p153366,43,0.3,0.00,Reed,,90.0,p153366,1,0,1,0,1,336,Harrison,Reed,Harrison_Reed,
-371,102057,4,102057.jpg,54,10,p102057,62,0.9,2.41,Raúl,,5.18,p102057,539,8,15,8,31,337,Raúl,Jiménez Rodríguez,Raúl_Jiménez,100.0
+371,102057,4,102057.jpg,54,10,p102057,62,0.9,2.41,Raúl,,5.44,p102057,629,11,18,9,38,337,Raúl,Jiménez Rodríguez,Raúl_Jiménez,100.0
 372,244042,4,244042.jpg,54,10,p244042,54,0.9,0.94,Muniz,Hamstring injury - Expected back 01 Jan,4.91,p244042,348,9,7,3,19,338,Rodrigo,Muniz Carvalho,Rodrigo_Muniz Carvalho,0.0
-373,86873,1,86873.jpg,54,10,p86873,39,0.8,0.00,Lecomte,,0.0,p86873,0,0,0,0,0,664,Benjamin,Lecomte,Benjamin_Lecomte,
-374,218328,3,218328.jpg,54,10,p218328,53,0.0,0.60,Chukwueze,,4.37,p218328,103,0,4,1,5,727,Samuel,Chukwueze,Samuel_Chukwueze,100.0
-375,560552,3,560552.jpg,54,10,p560552,59,0.1,0.36,Kevin,,7.64,p560552,377,9,16,7,32,731,Kevin,Santos Lopes de Macedo,Kevin_Santos Lopes de Macedo,100.0
+373,86873,1,86873.jpg,54,10,p86873,39,0.7,0.00,Lecomte,,0.0,p86873,0,0,0,0,0,664,Benjamin,Lecomte,Benjamin_Lecomte,
+374,218328,3,218328.jpg,54,10,p218328,53,0.0,0.71,Chukwueze,,6.39,p218328,183,3,9,1,13,727,Samuel,Chukwueze,Samuel_Chukwueze,100.0
+375,560552,3,560552.jpg,54,10,p560552,58,0.1,0.40,Kevin,,8.16,p560552,386,10,17,8,35,731,Kevin,Santos Lopes de Macedo,Kevin_Santos Lopes de Macedo,100.0
 376,631786,4,631786.jpg,54,10,p631786,45,0.1,0.00,Kusi-Asare,,0.0,p631786,1,0,0,0,0,737,Jonah,Kusi-Asare,Jonah_Kusi-Asare,
-377,437495,1,437495.jpg,2,11,p437495,43,0.4,0.00,Meslier,,0.0,p437495,0,0,0,0,0,339,Illan,Meslier,Illan_Meslier,
+377,437495,1,437495.jpg,2,11,p437495,42,0.4,0.00,Meslier,,0.0,p437495,0,0,0,0,0,339,Illan,Meslier,Illan_Meslier,
 378,97846,1,97846.jpg,2,11,p97846,39,0.2,0.00,Cairns,,0.0,p97846,0,0,0,0,0,340,Alex,Cairns,Alex_Cairns,
 379,59735,1,59735.jpg,2,11,p59735,40,2.2,0.00,Darlow,,0.0,p59735,450,6,53,0,0,341,Karl,Darlow,Karl_Darlow,
-380,226182,2,226182.jpg,2,11,p226182,45,0.2,0.66,Bogle,,6.27,p226182,1048,44,52,29,73,342,Jayden,Bogle,Jayden_Bogle,100.0
-381,222694,2,222694.jpg,2,11,p222694,44,0.3,0.90,Struijk,,7.7,p222694,818,64,29,6,70,343,Pascal,Struijk,Pascal_Struijk,100.0
-382,434752,2,434752.jpg,2,11,p434752,39,0.2,0.00,Bijol,,7.93,p434752,261,20,12,3,23,344,Jaka,Bijol,Jaka_Bijol,100.0
-383,437738,2,437738.jpg,2,11,p437738,39,0.1,0.00,Bornauw,Knock - 75% chance of playing,0.0,p437738,0,0,0,0,0,345,Sebastiaan,Bornauw,Sebastiaan_Bornauw,100.0
+380,226182,2,226182.jpg,2,11,p226182,45,0.2,0.66,Bogle,,6.01,p226182,1138,46,58,30,76,342,Jayden,Bogle,Jayden_Bogle,100.0
+381,222694,2,222694.jpg,2,11,p222694,43,0.3,1.01,Struijk,,7.93,p222694,908,73,30,7,80,343,Pascal,Struijk,Pascal_Struijk,100.0
+382,434752,2,434752.jpg,2,11,p434752,39,0.2,0.12,Bijol,,7.94,p434752,306,22,14,5,27,344,Jaka,Bijol,Jaka_Bijol,100.0
+383,437738,2,437738.jpg,2,11,p437738,39,0.1,0.00,Bornauw,Knock - 75% chance of playing,0.0,p437738,0,0,0,0,0,345,Sebastiaan,Bornauw,Sebastiaan_Bornauw,75.0
 384,113564,2,113564.jpg,2,11,p113564,39,0.2,0.00,Byram,,0.0,p113564,7,0,0,0,0,346,Sam,Byram,Sam_Byram,
-385,243526,2,243526.jpg,2,11,p243526,40,4.3,0.37,Gudmundsson,,7.19,p243526,1001,55,42,25,80,347,Gabriel,Gudmundsson,Gabriel_Gudmundsson,100.0
-386,214225,2,214225.jpg,2,11,p214225,41,6.1,0.68,Rodon,,8.92,p214225,1080,95,38,12,107,348,Joe,Rodon,Joe_Rodon,100.0
+385,243526,2,243526.jpg,2,11,p243526,40,4.2,0.38,Gudmundsson,,7.31,p243526,1022,56,42,27,83,347,Gabriel,Gudmundsson,Gabriel_Gudmundsson,100.0
+386,214225,2,214225.jpg,2,11,p214225,41,6.1,0.68,Rodon,,8.92,p214225,1170,101,41,15,116,348,Joe,Rodon,Joe_Rodon,100.0
 387,492368,2,492368.jpg,2,11,p492368,40,0.1,0.00,Schmidt,has joined Werder Bremen on loan for the rest of the season.,0.0,p492368,0,0,0,0,0,349,Isaac,Schmidt,Isaac_Schmidt,0.0
-388,427637,3,427637.jpg,2,11,p427637,54,0.2,1.97,Aaronson,,8.68,p427637,788,12,41,23,76,350,Brenden,Aaronson,Brenden_Aaronson,
-389,492859,3,492859.jpg,2,11,p492859,52,0.1,0.18,Gnonto,,7.61,p492859,201,2,6,9,17,351,Wilfried,Gnonto,Wilfried_Gnonto,100.0
+388,427637,3,427637.jpg,2,11,p427637,54,0.2,1.97,Aaronson,,8.9,p427637,789,12,41,25,78,350,Brenden,Aaronson,Brenden_Aaronson,
+389,492859,3,492859.jpg,2,11,p492859,52,0.1,0.18,Gnonto,,8.41,p492859,246,2,9,12,23,351,Wilfried,Gnonto,Wilfried_Gnonto,100.0
 390,221399,3,221399.jpg,2,11,p221399,51,0.1,0.28,Harrison,,8.28,p221399,261,6,13,5,24,352,Jack,Harrison,Jack_Harrison,
-391,200617,3,200617.jpg,2,11,p200617,53,0.1,0.71,James,,4.46,p200617,303,1,12,2,15,353,Daniel,James,Daniel_James,100.0
-392,199598,3,199598.jpg,2,11,p199598,49,0.1,0.40,Ampadu,,12.21,p199598,877,39,52,28,119,354,Ethan,Ampadu,Ethan_Ampadu,100.0
+391,200617,3,200617.jpg,2,11,p200617,53,0.1,0.71,James,,4.66,p200617,348,2,12,4,18,353,Daniel,James,Daniel_James,100.0
+392,199598,3,199598.jpg,2,11,p199598,49,0.1,0.55,Ampadu,,11.54,p199598,967,40,56,28,124,354,Ethan,Ampadu,Ethan_Ampadu,100.0
 393,248937,3,248937.jpg,2,11,p248937,49,0.0,0.00,Greenwood,has joined Pogon Szczecin permanently.,0.0,p248937,0,0,0,0,0,355,Sam,Greenwood,Sam_Greenwood,0.0
-394,486520,3,486520.jpg,2,11,p486520,48,0.0,0.00,Gruev,,7.68,p486520,211,6,7,5,18,356,Ilia,Gruev,Ilia_Gruev,
+394,486520,3,486520.jpg,2,11,p486520,48,0.0,0.00,Gruev,,8.67,p486520,301,8,12,9,29,356,Ilia,Gruev,Ilia_Gruev,
 395,433952,3,433952.jpg,2,11,p433952,49,0.0,0.00,Ramazani,has joined Valencia on loan for the rest of the season.,0.0,p433952,0,0,0,0,0,357,Largie,Ramazani,Largie_Ramazani,0.0
-396,248056,3,248056.jpg,2,11,p248056,48,0.1,0.16,Tanaka,,10.05,p248056,367,12,24,5,41,358,Tanaka,Ao,Tanaka_Ao,100.0
+396,248056,3,248056.jpg,2,11,p248056,48,0.1,0.16,Tanaka,,10.63,p248056,457,15,29,10,54,358,Tanaka,Ao,Tanaka_Ao,100.0
 397,536119,3,536119.jpg,2,11,p536119,45,0.0,0.00,Crew,Has joined Doncaster Rovers on loan for the rest of the season.,0.0,p536119,0,0,0,0,0,359,Charlie,Crew,Charlie_Crew,0.0
 398,462635,3,462635.jpg,2,11,p462635,45,0.0,0.00,Gelhardt,Has joined Hull City on loan for the rest of the season.,0.0,p462635,0,0,0,0,0,360,Joe,Gelhardt,Joe_Gelhardt,0.0
 399,470294,3,470294.jpg,2,11,p470294,45,0.0,0.00,Gyabi,has joined Hull City permanently.,0.0,p470294,0,0,0,0,0,361,Darko,Gyabi,Darko_Gyabi,0.0
 400,235826,4,235826.jpg,2,11,p235826,50,0.4,0.53,Piroe,,3.83,p235826,188,1,7,0,8,362,Joël,Piroe,Joël_Piroe,100.0
 401,106617,4,106617.jpg,2,11,p106617,49,0.4,0.00,Bamford,has departed the club as a free agent.,0.0,p106617,0,0,0,0,0,363,Patrick,Bamford,Patrick_Bamford,0.0
 402,565297,4,565297.jpg,2,11,p565297,50,0.0,0.00,Mateo Joseph,Has joined RCD Mallorca on loan for the rest of the season.,0.0,p565297,0,0,0,0,0,364,Mateo,Joseph Fernández-Regatillo,Mateo_Joseph Fernández-Regatillo,0.0
-403,174594,4,174594.jpg,2,11,p174594,50,0.7,2.94,Nmecha,,4.74,p174594,342,9,7,2,18,365,Lukas,Nmecha,Lukas_Nmecha,100.0
-404,180135,3,180135.jpg,2,11,p180135,49,0.9,0.74,Longstaff,Calf injury - Expected back 28 Dec,9.65,p180135,877,23,36,35,94,493,Sean,Longstaff,Sean_Longstaff,
-405,466525,3,466525.jpg,2,11,p466525,48,1.8,1.10,Stach,Head injury - Expected back 03 Dec,8.45,p466525,820,27,35,15,77,660,Anton,Stach,Anton_Stach,
-406,201595,1,201595.jpg,2,11,p201595,45,0.2,0.00,Perri,,0.0,p201595,630,8,42,0,0,665,Lucas Estella,Perri,Lucas_Estella Perri,100.0
-407,177815,4,177815.jpg,2,11,p177815,55,0.8,2.09,Calvert-Lewin,,3.13,p177815,633,5,13,4,22,691,Dominic,Calvert-Lewin,Dominic_Calvert-Lewin,100.0
-408,435997,3,435997.jpg,2,11,p435997,55,0.2,1.36,Okafor,,7.58,p435997,594,10,28,12,50,698,Noah,Okafor,Noah_Okafor,100.0
-409,220627,2,220627.jpg,2,11,p220627,39,0.2,0.00,Justin,,11.69,p220627,77,9,7,1,10,706,James,Justin,James_Justin,
+403,174594,4,174594.jpg,2,11,p174594,50,0.7,3.95,Nmecha,,4.47,p174594,423,10,8,3,21,365,Lukas,Nmecha,Lukas_Nmecha,100.0
+404,180135,3,180135.jpg,2,11,p180135,49,0.7,0.74,Longstaff,Calf injury - Expected back 28 Dec,9.65,p180135,877,23,36,35,94,493,Sean,Longstaff,Sean_Longstaff,0.0
+405,466525,3,466525.jpg,2,11,p466525,48,1.5,1.10,Stach,Head injury - Expected back 03 Dec,8.45,p466525,820,27,35,15,77,660,Anton,Stach,Anton_Stach,0.0
+406,201595,1,201595.jpg,2,11,p201595,45,0.2,0.00,Perri,,0.0,p201595,720,9,50,0,0,665,Lucas Estella,Perri,Lucas_Estella Perri,100.0
+407,177815,4,177815.jpg,2,11,p177815,55,0.8,2.22,Calvert-Lewin,,3.19,p177815,678,6,14,4,24,691,Dominic,Calvert-Lewin,Dominic_Calvert-Lewin,100.0
+408,435997,3,435997.jpg,2,11,p435997,55,0.1,1.36,Okafor,,7.48,p435997,602,10,28,12,50,698,Noah,Okafor,Noah_Okafor,100.0
+409,220627,2,220627.jpg,2,11,p220627,39,0.2,0.00,Justin,,9.31,p220627,145,14,9,1,15,706,James,Justin,James_Justin,
 410,600882,4,600882.jpg,2,11,p600882,45,0.1,0.00,Gray,,0.0,p600882,0,0,0,0,0,741,Harry,Gray,Harry_Gray,100.0
-411,116535,1,116535.jpg,14,12,p116535,54,5.4,0.00,A.Becker,Illness - 75% chance of playing,0.0,p116535,630,12,62,0,0,366,Alisson,Becker,Alisson_Ramses Becker,75.0
-412,449027,1,449027.jpg,14,12,p449027,43,1.1,0.00,Mamardashvili,,0.0,p449027,450,7,43,0,0,367,Giorgi,Mamardashvili,Giorgi_Mamardashvili,
+411,116535,1,116535.jpg,14,12,p116535,54,5.4,0.00,A.Becker,,0.0,p116535,720,13,68,0,0,366,Alisson,Becker,Alisson_Ramses Becker,75.0
+412,449027,1,449027.jpg,14,12,p449027,43,1.0,0.00,Mamardashvili,,0.0,p449027,450,7,43,0,0,367,Giorgi,Mamardashvili,Giorgi_Mamardashvili,
 413,586268,1,586268.jpg,14,12,p586268,39,0.4,0.00,Pécsi,,0.0,p586268,0,0,0,0,0,368,Ármin,Pécsi,Ármin_Pécsi,
 414,155503,1,155503.jpg,14,12,p155503,39,0.2,0.00,Woodman,,0.0,p155503,0,0,0,0,0,369,Freddie,Woodman,Freddie_Woodman,
-415,216094,2,216094.jpg,14,12,p216094,57,4.8,0.09,Frimpong,Hamstring injury - Unknown return date,7.59,p216094,83,5,4,2,7,370,Jeremie,Frimpong,Jeremie_Frimpong,0.0
-416,544877,2,544877.jpg,14,12,p544877,57,3.2,0.89,Kerkez,,6.5,p544877,761,42,31,13,55,371,Milos,Kerkez,Milos_Kerkez,
-417,122798,2,122798.jpg,14,12,p122798,58,1.0,0.21,Robertson,,6.04,p122798,313,15,13,6,21,372,Andrew,Robertson,Andrew_Robertson,
-418,97032,2,97032.jpg,14,12,p97032,60,26.5,0.43,Virgil,,10.92,p97032,1080,123,26,8,131,373,Virgil,van Dijk,Virgil_van Dijk,
-419,204716,2,204716.jpg,14,12,p204716,54,3.0,0.74,Konaté,,8.94,p204716,976,79,30,18,97,374,Ibrahima,Konaté,Ibrahima_Konaté,100.0
+415,216094,2,216094.jpg,14,12,p216094,57,4.7,0.09,Frimpong,Hamstring injury - Unknown return date,7.59,p216094,83,5,4,2,7,370,Jeremie,Frimpong,Jeremie_Frimpong,0.0
+416,544877,2,544877.jpg,14,12,p544877,57,3.1,0.89,Kerkez,,6.39,p544877,845,45,34,15,60,371,Milos,Kerkez,Milos_Kerkez,
+417,122798,2,122798.jpg,14,12,p122798,58,1.0,0.21,Robertson,,6.23,p122798,318,16,13,6,22,372,Andrew,Robertson,Andrew_Robertson,
+418,97032,2,97032.jpg,14,12,p97032,60,26.1,0.47,Virgil,,10.62,p97032,1170,130,29,8,138,373,Virgil,van Dijk,Virgil_van Dijk,
+419,204716,2,204716.jpg,14,12,p204716,54,3.0,0.74,Konaté,,9.29,p204716,1066,91,34,19,110,374,Ibrahima,Konaté,Ibrahima_Konaté,100.0
 420,492777,2,492777.jpg,14,12,p492777,50,0.2,0.07,Bradley,Muscle injury - Expected back 20 Dec,5.44,p492777,529,22,21,10,32,375,Conor,Bradley,Conor_Bradley,0.0
-421,171287,2,171287.jpg,14,12,p171287,49,0.1,0.13,Gomez,,16.74,p171287,43,8,1,0,8,376,Joe,Gomez,Joe_Gomez,100.0
+421,171287,2,171287.jpg,14,12,p171287,49,0.2,0.13,Gomez,,9.47,p171287,133,14,4,0,14,376,Joe,Gomez,Joe_Gomez,100.0
 422,214285,2,214285.jpg,14,12,p214285,48,0.1,0.00,Tsimikas,has joined AS Roma on loan for the rest of the season.,0.0,p214285,0,0,0,0,0,377,Konstantinos,Tsimikas,Konstantinos_Tsimikas,0.0
 423,611926,2,611926.jpg,14,12,p611926,38,0.3,0.00,Nallo,,0.0,p611926,0,0,0,0,0,378,Amara,Nallo,Amara_Nallo,100.0
-424,219937,2,219937.jpg,14,12,p219937,38,0.3,0.00,R.Williams,,0.0,p219937,0,0,0,0,0,379,Rhys,Williams,Rhys_Williams,
+424,219937,2,219937.jpg,14,12,p219937,38,0.2,0.00,R.Williams,,0.0,p219937,0,0,0,0,0,379,Rhys,Williams,Rhys_Williams,
 425,489580,2,489580.jpg,14,12,p489580,38,0.3,0.00,Ramsay,,0.0,p489580,0,0,0,0,0,380,Calvin,Ramsay,Calvin_Ramsay,
-426,118748,3,118748.jpg,14,12,p118748,142,23.3,3.93,M.Salah,,3.35,p118748,1074,5,33,2,40,381,Mohamed,Salah,Mohamed_Salah,
-427,494595,3,494595.jpg,14,12,p494595,80,6.6,1.28,Wirtz,Muscle injury - 50% chance of playing,6.3,p494595,686,6,31,11,48,382,Florian,Wirtz,Florian_Wirtz,0.0
+426,118748,3,118748.jpg,14,12,p118748,141,21.7,3.93,M.Salah,,3.35,p118748,1074,5,33,2,40,381,Mohamed,Salah,Mohamed_Salah,
+427,494595,3,494595.jpg,14,12,p494595,80,6.4,1.34,Wirtz,,6.16,p494595,760,7,34,11,52,382,Florian,Wirtz,Florian_Wirtz,50.0
 428,244731,3,244731.jpg,14,12,p244731,80,0.0,0.00,Luis Díaz,Has joined Bayern Munch permanently.,0.0,p244731,0,0,0,0,0,383,Luis,Díaz Marulanda,Luis_Díaz,0.0
-429,243298,3,243298.jpg,14,12,p243298,75,13.1,3.49,Gakpo,,5.48,p243298,919,15,32,9,56,384,Cody,Gakpo,Cody_Gakpo,
+429,243298,3,243298.jpg,14,12,p243298,75,12.8,3.85,Gakpo,,5.35,p243298,1009,16,35,9,60,384,Cody,Gakpo,Cody_Gakpo,
 430,223541,3,223541.jpg,14,12,p223541,64,0.3,1.10,Chiesa,,8.42,p223541,139,4,1,8,13,385,Federico,Chiesa,Federico_Chiesa,100.0
-431,243016,3,243016.jpg,14,12,p243016,63,1.2,1.23,Mac Allister,,7.3,p243016,727,16,32,11,59,386,Alexis,Mac Allister,Alexis_Mac Allister,100.0
-432,424876,3,424876.jpg,14,12,p424876,66,5.8,1.40,Szoboszlai,,11.5,p424876,1080,43,72,23,138,387,Dominik,Szoboszlai,Dominik_Szoboszlai,
-433,206915,3,206915.jpg,14,12,p206915,54,0.1,0.36,C.Jones,,11.49,p206915,415,7,35,11,53,388,Curtis,Jones,Curtis_Jones,100.0
-434,441266,3,441266.jpg,14,12,p441266,56,5.0,0.56,Gravenberch,,8.37,p441266,871,28,35,18,81,390,Ryan,Gravenberch,Ryan_Gravenberch,100.0
+431,243016,3,243016.jpg,14,12,p243016,63,1.2,1.25,Mac Allister,,7.38,p243016,817,17,37,13,67,386,Alexis,Mac Allister,Alexis_Mac Allister,100.0
+432,424876,3,424876.jpg,14,12,p424876,66,5.8,1.40,Szoboszlai,,11.15,p424876,1170,43,77,25,145,387,Dominik,Szoboszlai,Dominik_Szoboszlai,
+433,206915,3,206915.jpg,14,12,p206915,54,0.1,0.36,C.Jones,,11.3,p206915,430,7,35,12,54,388,Curtis,Jones,Curtis_Jones,100.0
+434,441266,3,441266.jpg,14,12,p441266,56,4.7,0.56,Gravenberch,,8.34,p441266,961,31,40,18,89,390,Ryan,Gravenberch,Ryan_Gravenberch,100.0
 435,158983,3,158983.jpg,14,12,p158983,49,0.1,0.00,Endo,,15.0,p158983,36,3,0,3,6,392,Endo,Wataru,Endo_Wataru,100.0
 436,535928,3,535928.jpg,14,12,p535928,43,0.0,0.00,Bajcetic,Hamstring injury - Unknown return date,0.0,p535928,0,0,0,0,0,393,Stefan,Bajčetić Maquieira,Stefan_Bajčetić Maquieira,0.0
 437,491501,3,491501.jpg,14,12,p491501,44,0.0,0.00,McConnell,has joined Ajax on loan for the rest of the season.,0.0,p491501,0,0,0,0,0,394,James,McConnell,James_McConnell,0.0
@@ -441,316 +441,316 @@
 439,591386,3,591386.jpg,14,12,p591386,43,0.5,0.00,Nyoni,,0.0,p591386,0,0,0,0,0,396,Trey,Nyoni,Trey_Nyoni,
 440,447203,4,447203.jpg,14,12,p447203,65,0.1,0.00,Darwin,Has joined Al-Hilal permanently.,0.0,p447203,0,0,0,0,0,397,Darwin,Núñez Ribeiro,Darwin_Núñez Ribeiro,0.0
 441,500058,4,500058.jpg,14,12,p500058,43,0.1,0.00,Danns,Hamstring injury - Unknown return date,0.0,p500058,0,0,0,0,0,398,Jayden,Danns,Jayden_Danns,0.0
-442,219168,4,219168.jpg,14,12,p219168,104,4.6,1.13,Isak,,3.41,p219168,317,2,8,2,12,499,Alexander,Isak,Alexander_Isak,100.0
-443,510663,4,510663.jpg,14,12,p510663,85,14.8,2.33,Ekitiké,Back injury - 75% chance of playing,4.74,p510663,665,17,14,4,35,661,Hugo,Ekitiké,Hugo_Ekitiké,100.0
-444,611922,3,611922.jpg,14,12,p611922,44,0.5,0.37,Ngumoha,,6.43,p611922,42,0,2,1,3,686,Rio,Ngumoha,Rio_Ngumoha,
+442,219168,4,219168.jpg,14,12,p219168,104,4.7,1.86,Isak,,3.75,p219168,384,3,9,4,16,499,Alexander,Isak,Alexander_Isak,100.0
+443,510663,4,510663.jpg,14,12,p510663,85,13.1,2.37,Ekitiké,,4.85,p510663,687,18,14,5,37,661,Hugo,Ekitiké,Hugo_Ekitiké,75.0
+444,611922,3,611922.jpg,14,12,p611922,44,0.4,0.37,Ngumoha,,6.43,p611922,42,0,2,1,3,686,Rio,Ngumoha,Rio_Ngumoha,
 445,647681,2,647681.jpg,14,12,p647681,49,0.0,0.00,Leoni,Knee injury - Expected back 01 Sep,0.0,p647681,0,0,0,0,0,692,Giovanni,Leoni,Giovanni_Leoni,0.0
 446,596042,3,596042.jpg,14,12,p596042,45,0.0,0.00,Morrison,,0.0,p596042,0,0,0,0,0,746,Kieran,Morrison,Kieran_Morrison,
 447,432720,1,432720.jpg,43,13,p432720,46,1.1,0.00,Trafford,,0.0,p432720,270,6,33,2,0,182,James,Trafford,James_Trafford,
 448,121160,1,121160.jpg,43,13,p121160,53,0.9,0.00,Ederson M.,has joined Fenerbache permanently.,0.0,p121160,0,0,0,0,0,399,Ederson,Santana de Moraes,Ederson_Santana de Moraes,0.0
 449,88248,1,88248.jpg,43,13,p88248,48,0.2,0.00,Ortega Moreno,,0.0,p88248,0,0,0,0,0,400,Stefan,Ortega Moreno,Stefan_Ortega Moreno,
 450,122074,1,122074.jpg,43,13,p122074,40,0.1,0.00,Bettinelli,,0.0,p122074,0,0,0,0,0,401,Marcus,Bettinelli,Marcus_Bettinelli,100.0
-451,448514,2,448514.jpg,43,13,p448514,57,4.6,0.04,Aït-Nouri,,10.2,p448514,203,14,8,9,23,402,Rayan,Aït-Nouri,Rayan_Aït-Nouri,100.0
-452,477424,2,477424.jpg,43,13,p477424,58,5.5,0.17,Gvardiol,,6.31,p477424,699,40,22,9,49,403,Joško,Gvardiol,Joško_Gvardiol,100.0
+451,448514,2,448514.jpg,43,13,p448514,57,4.5,0.04,Aït-Nouri,,10.2,p448514,203,14,8,9,23,402,Rayan,Aït-Nouri,Rayan_Aït-Nouri,100.0
+452,477424,2,477424.jpg,43,13,p477424,58,5.8,0.94,Gvardiol,,6.05,p477424,789,43,28,10,53,403,Joško,Gvardiol,Joško_Gvardiol,100.0
 453,211975,2,211975.jpg,43,13,p211975,54,0.3,0.00,Akanji,has joined Inter Milan on loan for the rest of the season.,0.0,p211975,0,0,0,0,0,404,Manuel,Akanji,Manuel_Akanji,0.0
 454,126184,2,126184.jpg,43,13,p126184,53,0.6,0.28,Aké,,5.82,p126184,201,10,3,3,13,405,Nathan,Aké,Nathan_Aké,
 455,578153,2,578153.jpg,43,13,p578153,54,0.3,0.00,Khusanov,,8.72,p578153,227,15,9,7,22,406,Abdukodir,Khusanov,Abdukodir_Khusanov,100.0
-456,465351,2,465351.jpg,43,13,p465351,53,1.2,0.23,Matheus N.,,7.13,p465351,783,50,50,12,62,407,Matheus,Nunes,Matheus_Nunes,
-457,171314,2,171314.jpg,43,13,p171314,55,5.0,0.21,Rúben,,7.33,p171314,995,74,29,7,81,408,Rúben,dos Santos Gato Alves Dias,Rúben_Gato Alves Dias,
-458,97299,2,97299.jpg,43,13,p97299,54,0.7,0.00,Stones,,4.72,p97299,324,17,15,0,17,409,John,Stones,John_Stones,100.0
+456,465351,2,465351.jpg,43,13,p465351,53,1.3,0.23,Matheus N.,,6.8,p465351,873,54,57,12,66,407,Matheus,Nunes,Matheus_Nunes,
+457,171314,2,171314.jpg,43,13,p171314,56,5.3,0.24,Rúben,,6.8,p171314,1085,75,31,7,82,408,Rúben,dos Santos Gato Alves Dias,Rúben_Gato Alves Dias,
+458,97299,2,97299.jpg,43,13,p97299,54,0.7,0.00,Stones,,4.71,p97299,325,17,16,0,17,409,John,Stones,John_Stones,100.0
 459,477064,2,477064.jpg,43,13,p477064,48,1.5,0.02,Lewis,,6.28,p477064,172,9,4,3,12,410,Rico,Lewis,Rico_Lewis,100.0
-460,472769,2,472769.jpg,43,13,p472769,51,5.2,0.97,O’Reilly,,7.22,p472769,773,35,30,27,62,411,Nico,O'Reilly,Nico_O'Reilly,100.0
+460,472769,2,472769.jpg,43,13,p472769,51,6.5,1.86,O’Reilly,,7.3,p472769,863,43,33,27,70,411,Nico,O'Reilly,Nico_O'Reilly,100.0
 461,616222,2,616222.jpg,43,13,p616222,50,0.0,0.00,Vitor Reis,Has joined Girona on loan for the rest of the season.,0.0,p616222,0,0,0,0,0,412,Vitor,de Oliveira Nunes dos Reis,Vitor_de Oliveira Nunes dos Reis,0.0
-462,438234,3,438234.jpg,43,13,p438234,83,2.6,1.12,Marmoush,,7.46,p438234,181,4,8,3,15,413,Omar,Marmoush,Omar_Marmoush,100.0
-463,209244,3,209244.jpg,43,13,p209244,80,5.3,1.75,Foden,,7.0,p209244,797,10,40,12,62,414,Phil,Foden,Phil_Foden,100.0
+462,438234,3,438234.jpg,43,13,p438234,83,2.6,1.25,Marmoush,,7.42,p438234,182,4,8,3,15,413,Omar,Marmoush,Omar_Marmoush,100.0
+463,209244,3,209244.jpg,43,13,p209244,81,6.4,2.45,Foden,,6.49,p209244,887,11,41,12,64,414,Phil,Foden,Phil_Foden,100.0
 464,510281,3,510281.jpg,43,13,p510281,69,0.5,0.32,Savinho,,6.94,p510281,402,8,18,5,31,415,Sávio,Moreira de Oliveira,Sávio_'Savinho' Moreira de Oliveira,100.0
-465,165809,3,165809.jpg,43,13,p165809,63,0.5,0.16,Bernardo,,8.55,p165809,716,19,38,11,68,416,Bernardo,Mota Veiga de Carvalho e Silva,Bernardo_Veiga de Carvalho e Silva,
-466,466052,3,466052.jpg,43,13,p466052,64,3.6,0.85,Cherki,,6.54,p466052,289,2,12,7,21,417,Rayan,Cherki,Rayan_Cherki,100.0
-467,248875,3,248875.jpg,43,13,p248875,65,8.5,1.11,Doku,,5.59,p248875,692,5,30,8,43,418,Jérémy,Doku,Jérémy_Doku,
+465,165809,3,165809.jpg,43,13,p165809,63,0.5,0.23,Bernardo,,7.95,p165809,804,20,40,11,71,416,Bernardo,Mota Veiga de Carvalho e Silva,Bernardo_Veiga de Carvalho e Silva,
+466,466052,3,466052.jpg,43,13,p466052,64,3.9,0.85,Cherki,,6.81,p466052,304,3,13,7,23,417,Rayan,Cherki,Rayan_Cherki,100.0
+467,248875,3,248875.jpg,43,13,p248875,66,9.3,1.11,Doku,,5.64,p248875,782,5,34,10,49,418,Jérémy,Doku,Jérémy_Doku,
 468,59859,3,59859.jpg,43,13,p59859,63,0.1,0.00,Gündoğan,has joined Galatasaray permanently.,0.0,p59859,0,0,0,0,0,420,İlkay,Gündoğan,İlkay_Gündoğan,0.0
 469,220566,3,220566.jpg,43,13,p220566,63,0.4,0.14,Rodrigo,Muscle injury - Unknown return date,12.33,p220566,292,12,22,6,40,421,Rodrigo 'Rodri',Hernandez Cascante,Rodrigo_Hernandez,0.0
 470,91651,3,91651.jpg,43,13,p91651,59,0.0,0.00,Kovačić,Ankle injury - Unknown return date,0.0,p91651,4,0,0,0,0,422,Mateo,Kovačić,Mateo_Kovačić,0.0
-471,465694,3,465694.jpg,43,13,p465694,59,0.1,0.26,N.Gonzalez,,11.4,p465694,734,36,36,21,93,423,Nico,González Iglesias,Nico_González Iglesias,100.0
+471,465694,3,465694.jpg,43,13,p465694,59,0.1,0.41,N.Gonzalez,,11.58,p465694,824,40,44,22,106,423,Nico,González Iglesias,Nico_González Iglesias,100.0
 472,477555,3,477555.jpg,43,13,p477555,53,0.2,0.40,Bobb,,5.62,p477555,464,3,18,8,29,424,Oscar,Bobb,Oscar_Bobb,
 473,575204,3,575204.jpg,43,13,p575204,54,0.0,0.00,Echeverri,Has joined Bayer Leverkusen on loan for the rest of the season.,0.0,p575204,0,0,0,0,0,425,Claudio,Echeverri,Claudio_Echeverri,0.0
-474,433036,3,433036.jpg,43,13,p433036,54,16.7,1.47,Reijnders,,5.61,p433036,770,16,26,6,48,427,Tijjani,Reijnders,Tijjani_Reijnders,
+474,433036,3,433036.jpg,43,13,p433036,53,15.6,1.69,Reijnders,,5.65,p433036,844,18,28,7,53,427,Tijjani,Reijnders,Tijjani_Reijnders,
 475,566164,3,566164.jpg,43,13,p566164,50,0.0,0.00,Nypan,Has joined Middlesbrough on loan for the rest of the season.,0.0,p566164,0,0,0,0,0,428,Sverre,Nypan,Sverre_Nypan,0.0
 476,155405,3,155405.jpg,43,13,p155405,48,0.1,0.00,Phillips,,0.0,p155405,0,0,0,0,0,429,Kalvin,Phillips,Kalvin_Phillips,
-477,223094,4,223094.jpg,43,13,p223094,149,71.8,12.57,Haaland,,3.39,p223094,1034,21,15,3,39,430,Erling,Haaland,Erling_Haaland,100.0
-478,204936,1,204936.jpg,43,13,p204936,57,10.7,0.00,Donnarumma,,0.0,p204936,810,15,56,0,0,736,Gianluigi,Donnarumma,Gianluigi_Donnarumma,
+477,223094,4,223094.jpg,43,13,p223094,149,72.2,12.70,Haaland,,3.52,p223094,1124,25,15,4,44,430,Erling,Haaland,Erling_Haaland,100.0
+478,204936,1,204936.jpg,43,13,p204936,57,11.0,0.00,Donnarumma,,0.0,p204936,900,16,65,0,0,736,Gianluigi,Donnarumma,Gianluigi_Donnarumma,
 479,590039,3,590039.jpg,43,13,p590039,45,0.0,0.00,Mukasa,,0.0,p590039,0,0,0,0,0,739,Divine,Mukasa,Divine_Mukasa,
 480,566213,2,566213.jpg,43,13,p566213,40,0.0,0.00,Mfuni,,0.0,p566213,0,0,0,0,0,740,Stephen,Mfuni,Stephen_Mfuni,
 481,616288,3,616288.jpg,43,13,p616288,45,0.0,0.00,McAidoo,,0.0,p616288,0,0,0,0,0,742,Ryan,McAidoo,Ryan_McAidoo,
-482,446008,3,446008.jpg,1,14,p446008,86,36.0,3.32,Mbeumo,,4.22,p446008,1045,5,38,6,49,119,Bryan,Mbeumo,Bryan_Mbeumo,
+482,446008,3,446008.jpg,1,14,p446008,86,36.1,3.73,Mbeumo,,4.44,p446008,1135,5,45,6,56,119,Bryan,Mbeumo,Bryan_Mbeumo,
 483,451302,1,451302.jpg,1,14,p451302,48,0.3,0.00,Bayindir,,0.0,p451302,540,7,39,0,0,431,Altay,Bayındır,Altay_Bayındır,
 484,202641,1,202641.jpg,1,14,p202641,49,0.2,0.00,Onana,has joined Trabzonspor on loan for the rest of the season.,0.0,p202641,0,0,0,0,0,432,André,Onana,André_Onana,0.0
 485,588555,1,588555.jpg,1,14,p588555,40,0.0,0.00,Harrison,On loan to Shrewsbury Town,0.0,p588555,0,0,0,0,0,433,Elyh,Harrison,Elyh_Harrison,0.0
 486,21205,1,21205.jpg,1,14,p21205,39,0.3,0.00,Heaton,,0.0,p21205,0,0,0,0,0,434,Tom,Heaton,Tom_Heaton,
 487,461537,1,461537.jpg,1,14,p461537,39,0.1,0.00,Mee,,0.0,p461537,0,0,0,0,0,435,Dermot,Mee,Dermot_Mee,
-488,209365,2,209365.jpg,1,14,p209365,50,3.5,1.32,De Ligt,,8.42,p209365,1080,83,38,18,101,436,Matthijs,de Ligt,Matthijs_de Ligt,
-489,221820,2,221820.jpg,1,14,p221820,48,0.1,0.00,Martinez,,0.0,p221820,0,0,0,0,0,437,Lisandro,Martínez,Lisandro_Martínez,75.0
-490,230001,2,230001.jpg,1,14,p230001,49,0.2,0.00,Mazraoui,,7.35,p230001,245,10,18,10,20,438,Noussair,Mazraoui,Noussair_Mazraoui,100.0
+488,209365,2,209365.jpg,1,14,p209365,50,3.6,1.38,De Ligt,,8.23,p209365,1170,88,40,19,107,436,Matthijs,de Ligt,Matthijs_de Ligt,
+489,221820,2,221820.jpg,1,14,p221820,48,0.1,0.00,Martinez,,11.25,p221820,8,1,1,0,1,437,Lisandro,Martínez,Lisandro_Martínez,100.0
+490,230001,2,230001.jpg,1,14,p230001,49,0.2,0.00,Mazraoui,,8.65,p230001,281,16,19,11,27,438,Noussair,Mazraoui,Noussair_Mazraoui,100.0
 491,661712,2,661712.jpg,1,14,p661712,42,0.1,0.00,D.Leon,,0.0,p661712,0,0,0,0,0,439,Diego,León Blanco,Diego_León Blanco,
-492,216051,2,216051.jpg,1,14,p216051,44,1.0,0.09,Dalot,,6.35,p216051,624,29,25,15,44,440,Diogo,Dalot Teixeira,Diogo_Dalot Teixeira,100.0
-493,596777,2,596777.jpg,1,14,p596777,42,2.7,0.72,Dorgu,,6.63,p596777,679,27,26,23,50,441,Patrick,Dorgu,Patrick_Dorgu,
-494,95658,2,95658.jpg,1,14,p95658,44,0.7,0.32,Maguire,Hamstring injury - Unknown return date,6.07,p95658,341,22,13,1,23,442,Harry,Maguire,Harry_Maguire,0.0
-495,106760,2,106760.jpg,1,14,p106760,45,0.5,0.08,Shaw,,5.19,p106760,1023,34,39,25,59,443,Luke,Shaw,Luke_Shaw,
-496,550864,2,550864.jpg,1,14,p550864,44,1.6,0.29,Yoro,,7.05,p550864,728,45,29,12,57,444,Leny,Yoro,Leny_Yoro,
+492,216051,2,216051.jpg,1,14,p216051,44,0.9,0.16,Dalot,,6.18,p216051,714,33,31,16,49,440,Diogo,Dalot Teixeira,Diogo_Dalot Teixeira,100.0
+493,596777,2,596777.jpg,1,14,p596777,42,2.7,0.72,Dorgu,,6.62,p596777,680,27,26,23,50,441,Patrick,Dorgu,Patrick_Dorgu,
+494,95658,2,95658.jpg,1,14,p95658,44,0.6,0.32,Maguire,Hamstring injury - Unknown return date,6.07,p95658,341,22,13,1,23,442,Harry,Maguire,Harry_Maguire,0.0
+495,106760,2,106760.jpg,1,14,p106760,45,0.5,0.08,Shaw,,5.46,p106760,1104,41,42,26,67,443,Luke,Shaw,Luke_Shaw,
+496,550864,2,550864.jpg,1,14,p550864,43,1.6,0.29,Yoro,,7.26,p550864,781,49,31,14,63,444,Leny,Yoro,Leny_Yoro,
 497,577974,2,577974.jpg,1,14,p577974,40,0.1,0.00,Amass,has joined Sheffield Wednesday on loan for the rest of the season.,0.0,p577974,0,0,0,0,0,445,Harry,Amass,Harry_Amass,0.0
 498,547676,2,547676.jpg,1,14,p547676,38,0.1,0.00,Fredricson,,0.0,p547676,0,0,0,0,0,446,Tyler,Fredricson,Tyler_Fredricson,
 499,606745,2,606745.jpg,1,14,p606745,38,1.3,0.00,Heaven,,12.86,p606745,28,3,1,1,4,447,Ayden,Heaven,Ayden_Heaven,100.0
 500,222690,2,222690.jpg,1,14,p222690,38,0.4,0.00,Malacia,,0.0,p222690,0,0,0,0,0,448,Tyrell,Malacia,Tyrell_Malacia,
-501,141746,3,141746.jpg,1,14,p141746,89,16.5,4.96,B.Fernandes,,10.51,p141746,1070,31,74,20,125,449,Bruno,Borges Fernandes,Bruno_Borges Fernandes,
-502,430871,3,430871.jpg,1,14,p430871,79,4.4,1.60,Cunha,Head injury - 75% chance of playing,7.64,p430871,683,14,36,8,58,450,Matheus,Santos Carneiro da Cunha,Matheus_Santos Carneiro Da Cunha,100.0
+501,141746,3,141746.jpg,1,14,p141746,89,16.9,4.97,B.Fernandes,,10.55,p141746,1160,38,76,22,136,449,Bruno,Borges Fernandes,Bruno_Borges Fernandes,
+502,430871,3,430871.jpg,1,14,p430871,79,3.8,1.60,Cunha,Head injury - Expected back 04 Dec,7.64,p430871,683,14,36,8,58,450,Matheus,Santos Carneiro da Cunha,Matheus_Santos Carneiro Da Cunha,0.0
 503,176297,3,176297.jpg,1,14,p176297,70,0.0,0.00,Rashford,Has joined Barcelona on loan for the rest of the season,0.0,p176297,0,0,0,0,0,451,Marcus,Rashford,Marcus_Rashford,0.0
-504,493250,3,493250.jpg,1,14,p493250,63,1.9,2.21,Amad,,9.18,p493250,843,20,49,17,86,452,Amad,Diallo,Amad_Diallo,100.0
+504,493250,3,493250.jpg,1,14,p493250,63,1.9,2.24,Amad,,8.68,p493250,933,21,50,19,90,452,Amad,Diallo,Amad_Diallo,100.0
 505,467169,3,467169.jpg,1,14,p467169,59,0.1,0.00,Antony,has joined Real Betis permanently.,0.0,p467169,0,0,0,0,0,454,Antony,dos Santos,Antony_dos Santos,0.0
-506,184341,3,184341.jpg,1,14,p184341,59,0.3,0.63,Mount,,6.17,p184341,394,2,16,9,27,455,Mason,Mount,Mason_Mount,100.0
-507,61256,3,61256.jpg,1,14,p61256,55,1.4,1.35,Casemiro,,10.95,p61256,674,20,40,22,82,457,Carlos Henrique,Casimiro,Carlos_Henrique Casimiro,100.0
-508,516895,3,516895.jpg,1,14,p516895,47,0.4,0.07,Mainoo,,10.06,p516895,170,3,10,6,19,458,Kobbie,Mainoo,Kobbie_Mainoo,75.0
+506,184341,3,184341.jpg,1,14,p184341,59,0.3,0.72,Mount,,6.51,p184341,484,3,22,10,35,455,Mason,Mount,Mason_Mount,100.0
+507,61256,3,61256.jpg,1,14,p61256,55,1.4,2.00,Casemiro,,11.54,p61256,764,26,47,25,98,457,Carlos Henrique,Casimiro,Carlos_Henrique Casimiro,100.0
+508,516895,3,516895.jpg,1,14,p516895,47,0.4,0.07,Mainoo,,10.53,p516895,171,4,10,6,20,458,Kobbie,Mainoo,Kobbie_Mainoo,100.0
 509,232112,3,232112.jpg,1,14,p232112,47,0.1,0.05,Ugarte,,15.65,p232112,299,16,20,16,52,459,Manuel,Ugarte Ribeiro,Manuel_Ugarte Ribeiro,
 510,490881,3,490881.jpg,1,14,p490881,45,0.0,0.00,Collyer,Has joined West Bromwich Albion on loan for the rest of the season.,0.0,p490881,0,0,0,0,0,460,Toby,Collyer,Toby_Collyer,0.0
 511,556639,3,556639.jpg,1,14,p556639,44,0.0,0.00,Fitzgerald,,0.0,p556639,0,0,0,0,0,461,Jayce,Fitzgerald,Jayce_Fitzgerald,
 512,547037,3,547037.jpg,1,14,p547037,43,0.1,0.00,J.Fletcher,,0.0,p547037,0,0,0,0,0,462,Jack,Fletcher,Jack_Fletcher,
-513,618873,3,618873.jpg,1,14,p618873,44,0.1,0.00,Kone,,0.0,p618873,0,0,0,0,0,463,Sékou,Koné,Sékou_Koné,
+513,618873,3,618873.jpg,1,14,p618873,43,0.1,0.00,Kone,,0.0,p618873,0,0,0,0,0,463,Sékou,Koné,Sékou_Koné,
 514,559684,3,559684.jpg,1,14,p559684,45,0.0,0.00,Moorhouse,has joined Leyton Orient on loan for the rest of the season.,0.0,p559684,0,0,0,0,0,464,Jack,Moorhouse,Jack_Moorhouse,0.0
 515,497894,4,497894.jpg,1,14,p497894,63,0.3,0.00,Højlund,has joined Napoli on loan for the rest of the season.,0.0,p497894,0,0,0,0,0,465,Rasmus,Højlund,Rasmus_Højlund,0.0
-516,458249,4,458249.jpg,1,14,p458249,58,0.4,1.14,Zirkzee,,5.76,p458249,172,4,5,2,11,466,Joshua,Zirkzee,Joshua_Zirkzee,100.0
+516,458249,4,458249.jpg,1,14,p458249,58,0.4,1.17,Zirkzee,,6.18,p458249,262,6,8,4,18,466,Joshua,Zirkzee,Joshua_Zirkzee,100.0
 517,596047,4,596047.jpg,1,14,p596047,43,1.4,0.00,Obi,,0.0,p596047,0,0,0,0,0,467,Chido,Obi,Chido_Obi,
 518,575034,4,575034.jpg,1,14,p575034,45,0.1,0.00,Wheatley,has joined Northampton Town on loan for the rest of the season.,0.0,p575034,0,0,0,0,0,468,Ethan,Wheatley,Ethan_Wheatley,0.0
-519,485711,4,485711.jpg,1,14,p485711,72,3.6,1.97,Šeško,Knee injury - Expected back 15 Dec,3.94,p485711,616,11,13,3,27,681,Benjamin,Sesko,Benjamin_Sesko,0.0
-520,465247,1,465247.jpg,1,14,p465247,50,1.5,0.00,Lammens,,0.0,p465247,540,5,49,1,0,733,Senne,Lammens,Senne_Lammens,
+519,485711,4,485711.jpg,1,14,p485711,72,3.4,1.97,Šeško,Knee injury - Expected back 15 Dec,3.94,p485711,616,11,13,3,27,681,Benjamin,Sesko,Benjamin_Sesko,0.0
+520,465247,1,465247.jpg,1,14,p465247,50,1.6,0.00,Lammens,,0.0,p465247,630,6,54,1,0,733,Senne,Lammens,Senne_Lammens,
 521,576628,3,576628.jpg,1,14,p576628,45,0.0,0.00,Lacey,,0.0,p576628,0,0,0,0,0,755,Shea,Lacey,Shea_Lacey,
-522,232653,3,232653.jpg,4,15,p232653,53,0.2,0.03,J.Ramsey,,9.95,p232653,190,2,14,5,21,52,Jacob,Ramsey,Jacob_Ramsey,100.0
+522,232653,3,232653.jpg,4,15,p232653,53,0.2,0.25,J.Ramsey,,9.47,p232653,209,3,14,5,22,52,Jacob,Ramsey,Jacob_Ramsey,100.0
 523,216646,4,216646.jpg,4,15,p216646,73,0.5,0.00,Wissa,Knee injury - Unknown return date,0.0,p216646,0,0,0,0,0,135,Yoane,Wissa,Yoane_Wissa,0.0
-524,98747,1,98747.jpg,4,15,p98747,52,11.0,0.00,Pope,,0.0,p98747,1066,22,113,1,0,469,Nick,Pope,Nick_Pope,
+524,98747,1,98747.jpg,4,15,p98747,52,10.7,0.00,Pope,Groin Injury - 75% chance of playing,0.0,p98747,1066,22,113,1,0,469,Nick,Pope,Nick_Pope,
 525,81441,1,81441.jpg,4,15,p81441,39,0.1,0.00,Gillespie,,0.0,p81441,0,0,0,0,0,471,Mark,Gillespie,Mark_Gillespie,
 526,111452,1,111452.jpg,4,15,p111452,40,0.0,0.00,Odysseas,Has joined Sevilla on loan for the rest of the season.,0.0,p111452,0,0,0,0,0,472,Odysseas,Vlachodimos,Odysseas_Vlachodimos,0.0
-527,487838,2,487838.jpg,4,15,p487838,52,0.8,0.04,Hall,,8.51,p487838,222,12,13,9,21,473,Lewis,Hall,Lewis_Hall,100.0
-528,119471,2,119471.jpg,4,15,p119471,53,1.7,0.10,Schär,,10.68,p119471,514,54,19,7,61,474,Fabian,Schär,Fabian_Schär,100.0
-529,220237,2,220237.jpg,4,15,p220237,49,0.6,0.13,Botman,,9.07,p220237,655,61,36,5,66,475,Sven,Botman,Sven_Botman,
-530,78916,2,78916.jpg,4,15,p78916,51,7.4,0.05,Burn,,8.06,p78916,972,72,37,15,87,476,Dan,Burn,Dan_Burn,0.0
-531,441191,2,441191.jpg,4,15,p441191,49,2.7,0.00,Livramento,,3.8,p441191,616,18,34,8,26,477,Tino,Livramento,Tino_Livramento,75.0
-532,77794,2,77794.jpg,4,15,p77794,50,2.3,0.00,Trippier,,3.99,p77794,699,22,36,9,31,478,Kieran,Trippier,Kieran_Trippier,100.0
-533,111773,2,111773.jpg,4,15,p111773,43,0.0,0.00,Krafth,,2.0,p111773,45,1,0,0,1,479,Emil,Krafth,Emil_Krafth,
+527,487838,2,487838.jpg,4,15,p487838,52,0.8,0.08,Hall,,7.23,p487838,311,14,15,11,25,473,Lewis,Hall,Lewis_Hall,100.0
+528,119471,2,119471.jpg,4,15,p119471,53,1.7,0.10,Schär,,10.66,p119471,515,54,19,7,61,474,Fabian,Schär,Fabian_Schär,100.0
+529,220237,2,220237.jpg,4,15,p220237,49,0.5,0.13,Botman,Back injury - 75% chance of playing,9.07,p220237,655,61,36,5,66,475,Sven,Botman,Sven_Botman,75.0
+530,78916,2,78916.jpg,4,15,p78916,51,7.4,0.12,Burn,,8.14,p78916,1062,80,39,16,96,476,Dan,Burn,Dan_Burn,100.0
+531,441191,2,441191.jpg,4,15,p441191,49,2.8,0.09,Livramento,,4.46,p441191,706,23,38,12,35,477,Tino,Livramento,Tino_Livramento,100.0
+532,77794,2,77794.jpg,4,15,p77794,50,2.0,0.00,Trippier,Hamstring injury - Expected back 26 Dec,3.99,p77794,699,22,36,9,31,478,Kieran,Trippier,Kieran_Trippier,0.0
+533,111773,2,111773.jpg,4,15,p111773,43,0.0,0.00,Krafth,Knee injury - 25% chance of playing,2.0,p111773,45,1,0,0,1,479,Emil,Krafth,Emil_Krafth,25.0
 534,101148,2,101148.jpg,4,15,p101148,43,0.1,0.04,Lascelles,,23.68,p101148,19,5,0,0,5,480,Jamaal,Lascelles,Jamaal_Lascelles,
-535,545477,2,545477.jpg,4,15,p545477,39,0.6,0.00,A.Murphy,,0.0,p545477,0,0,0,0,0,481,Alex,Murphy,Alex_Murphy,
+535,545477,2,545477.jpg,4,15,p545477,38,0.6,0.00,A.Murphy,,0.0,p545477,0,0,0,0,0,481,Alex,Murphy,Alex_Murphy,
 536,441024,2,441024.jpg,4,15,p441024,39,0.1,0.00,Ashby,,0.0,p441024,0,0,0,0,0,482,Harrison,Ashby,Harrison_Ashby,100.0
 537,578512,2,578512.jpg,4,15,p578512,38,0.3,0.00,Pivas,,0.0,p578512,0,0,0,0,0,483,Miodrag,Pivaš,Miodrag_Pivaš,
 538,169359,2,169359.jpg,4,15,p169359,40,0.2,0.00,Targett,has joined Middlesbrough on loan for the rest of the season.,0.0,p169359,0,0,0,0,0,484,Matt,Targett,Matt_Targett,0.0
-539,232826,3,232826.jpg,4,15,p232826,73,1.5,1.34,Gordon,Lack of match fitness - 75% chance of playing,4.49,p232826,461,1,17,5,23,485,Anthony,Gordon,Anthony_Gordon,75.0
-540,449434,3,449434.jpg,4,15,p449434,66,3.2,0.78,Elanga,,3.25,p449434,416,4,9,2,15,486,Anthony,Elanga,Anthony_Elanga,
-541,201666,3,201666.jpg,4,15,p201666,63,1.0,2.51,Barnes,,3.78,p201666,548,5,15,3,23,487,Harvey,Barnes,Harvey_Barnes,
-542,208706,3,208706.jpg,4,15,p208706,66,4.0,1.99,Bruno G.,,8.86,p208706,985,16,57,24,97,488,Bruno,Guimarães Rodriguez Moura,Bruno_Guimarães Rodriguez Moura,
+539,232826,3,232826.jpg,4,15,p232826,72,1.5,1.34,Gordon,,4.48,p232826,462,1,17,5,23,485,Anthony,Gordon,Anthony_Gordon,100.0
+540,449434,3,449434.jpg,4,15,p449434,66,3.2,0.85,Elanga,,3.52,p449434,486,4,10,5,19,486,Anthony,Elanga,Anthony_Elanga,
+541,201666,3,201666.jpg,4,15,p201666,64,1.7,2.78,Barnes,,4.08,p201666,618,8,17,3,28,487,Harvey,Barnes,Harvey_Barnes,
+542,208706,3,208706.jpg,4,15,p208706,66,4.7,1.99,Bruno G.,,9.3,p208706,1074,22,63,26,111,488,Bruno,Guimarães Rodriguez Moura,Bruno_Guimarães Rodriguez Moura,
 543,114243,3,114243.jpg,4,15,p114243,61,1.1,2.17,J.Murphy,,3.43,p114243,656,7,14,4,25,489,Jacob,Murphy,Jacob_Murphy,
-544,180974,3,180974.jpg,4,15,p180974,59,0.3,0.65,Joelinton,,9.99,p180974,739,30,36,16,82,490,Joelinton Cássio,Apolinário de Lira,Joelinton_Cássio Apolinário de Lira,100.0
-545,432422,3,432422.jpg,4,15,p432422,54,1.2,0.45,Tonali,,8.63,p432422,959,26,51,15,92,491,Sandro,Tonali,Sandro_Tonali,100.0
+544,180974,3,180974.jpg,4,15,p180974,59,0.3,0.68,Joelinton,,9.77,p180974,829,31,42,17,90,490,Joelinton Cássio,Apolinário de Lira,Joelinton_Cássio Apolinário de Lira,100.0
+545,432422,3,432422.jpg,4,15,p432422,54,1.2,0.45,Tonali,,8.72,p432422,960,26,52,15,93,491,Sandro,Tonali,Sandro_Tonali,100.0
 546,640108,3,640108.jpg,4,15,p640108,49,0.0,0.00,Antoñito C.,has joined KVC Westerlo on loan for the rest of the season.,0.0,p640108,0,0,0,0,0,492,Antoñito,Cordero Campillo,Antoñito_Cordero Campillo,0.0
-547,200089,3,200089.jpg,4,15,p200089,50,0.1,0.09,Willock,,11.25,p200089,104,3,6,4,13,494,Joe,Willock,Joe_Willock,100.0
+547,200089,3,200089.jpg,4,15,p200089,50,0.1,0.09,Willock,,10.98,p200089,123,3,8,4,15,494,Joe,Willock,Joe_Willock,100.0
 548,153127,3,153127.jpg,4,15,p153127,45,0.0,0.00,Hayden,Has departed the club as a free agent.,0.0,p153127,0,0,0,0,0,495,Isaac,Hayden,Isaac_Hayden,0.0
 549,564510,3,564510.jpg,4,15,p564510,44,0.0,0.00,Kuol,has joined Sparta Prague permanently.,0.0,p564510,0,0,0,0,0,496,Garang,Kuol,Garang_Kuol,0.0
-550,547719,3,547719.jpg,4,15,p547719,44,1.9,0.03,L.Miley,,8.57,p547719,273,7,16,3,26,497,Lewis,Miley,Lewis_Miley,100.0
+550,547719,3,547719.jpg,4,15,p547719,44,1.9,0.16,L.Miley,,9.42,p547719,363,9,24,5,38,497,Lewis,Miley,Lewis_Miley,100.0
 551,461484,3,461484.jpg,4,15,p461484,45,0.0,0.00,White,Has joined Leyton Orient on loan for the rest of the season.,0.0,p461484,0,0,0,0,0,498,Joe,White,Joe_White,0.0
-552,538207,4,538207.jpg,4,15,p538207,55,0.2,0.64,Osula,Ankle injury - Unknown return date,3.38,p538207,213,1,6,1,8,500,William,Osula,William_Osula,0.0
+552,538207,4,538207.jpg,4,15,p538207,54,0.2,0.64,Osula,Ankle injury - Unknown return date,3.38,p538207,213,1,6,1,8,500,William,Osula,William_Osula,0.0
 553,599303,4,599303.jpg,4,15,p599303,44,0.2,0.00,Neave,,0.0,p599303,0,0,0,0,0,501,Sean,Neave,Sean_Neave,
-554,225321,1,225321.jpg,4,15,p225321,48,0.6,0.00,Ramsdale,,0.0,p225321,13,0,0,0,0,674,Aaron,Ramsdale,Aaron_Ramsdale,
-555,465642,2,465642.jpg,4,15,p465642,49,0.5,0.78,Thiaw,,9.47,p465642,722,66,37,10,76,684,Malick,Thiaw,Malick_Thiaw,
+554,225321,1,225321.jpg,4,15,p225321,48,0.6,0.00,Ramsdale,,0.0,p225321,103,0,5,0,0,674,Aaron,Ramsdale,Aaron_Ramsdale,
+555,465642,2,465642.jpg,4,15,p465642,49,0.9,1.17,Thiaw,,9.09,p465642,812,71,41,11,82,684,Malick,Thiaw,Malick_Thiaw,
 556,623110,3,623110.jpg,4,15,p623110,44,0.2,0.00,Seung soo,,0.0,p623110,0,0,0,0,0,689,Seung-Soo,Park,Seung-Soo_Park,
-557,470313,4,470313.jpg,4,15,p470313,74,19.2,3.64,Woltemade,,4.26,p470313,697,9,17,7,33,714,Nick,Woltemade,Nick_Woltemade,
+557,470313,4,470313.jpg,4,15,p470313,74,19.5,4.23,Woltemade,,4.24,p470313,786,11,19,7,37,714,Nick,Woltemade,Nick_Woltemade,
 558,19236,1,19236.jpg,4,15,p19236,40,0.0,0.00,Ruddy,,0.0,p19236,0,0,0,0,0,753,John,Ruddy,John_Ruddy,
 559,206325,2,206325.jpg,17,16,p206325,49,0.2,0.04,Zinchenko,Muscle injury - Unknown return date,7.47,p206325,253,11,12,10,21,12,Oleksandr,Zinchenko,Oleksandr_Zinchenko,0.0
-560,432714,3,432714.jpg,17,16,p432714,51,0.1,0.02,McAtee,,6.43,p432714,126,1,6,2,9,426,James,McAtee,James_McAtee,
-561,85633,1,85633.jpg,17,16,p85633,47,7.6,0.00,Sels,,0.0,p85633,1080,12,80,0,0,502,Matz,Sels,Matz_Sels,
+560,432714,3,432714.jpg,17,16,p432714,51,0.1,0.02,McAtee,,6.18,p432714,131,1,6,2,9,426,James,McAtee,James_McAtee,
+561,85633,1,85633.jpg,17,16,p85633,47,7.6,0.00,Sels,,0.0,p85633,1170,12,87,1,0,502,Matz,Sels,Matz_Sels,
 562,475123,1,475123.jpg,17,16,p475123,40,0.1,0.00,C.Miguel,Has joined Palmeiras permanently.,0.0,p475123,0,0,0,0,0,503,Carlos Miguel,dos Santos Pereira,Carlos_Miguel dos Santos Pereira,0.0
 563,224068,1,224068.jpg,17,16,p224068,40,0.1,0.00,Turner,Has joined Lyon permanently.,0.0,p224068,0,0,0,0,0,504,Matt,Turner,Matt_Turner,0.0
-564,227444,2,227444.jpg,17,16,p227444,52,3.7,0.56,Milenković,,7.5,p227444,1080,86,34,4,90,505,Nikola,Milenković,Nikola_Milenković,
-565,575476,2,575476.jpg,17,16,p575476,53,2.3,0.25,Murillo,,9.62,p575476,739,66,40,13,79,506,Murillo,Costa dos Santos,Murillo_Costa dos Santos,100.0
-566,159506,2,159506.jpg,17,16,p159506,47,2.3,0.04,Aina,Hamstring injury - Expected back 13 Dec,7.33,p159506,270,16,20,6,22,507,Ola,Aina,Ola_Aina,0.0
-567,215136,2,215136.jpg,17,16,p215136,47,3.3,0.88,N.Williams,,7.0,p215136,1080,40,51,44,84,508,Neco,Williams,Neco_Williams,
+564,227444,2,227444.jpg,17,16,p227444,52,3.8,0.59,Milenković,,7.31,p227444,1170,91,39,4,95,505,Nikola,Milenković,Nikola_Milenković,
+565,575476,2,575476.jpg,17,16,p575476,53,2.2,0.25,Murillo,Knock - 75% chance of playing,9.62,p575476,739,66,40,13,79,506,Murillo,Costa dos Santos,Murillo_Costa dos Santos,75.0
+566,159506,2,159506.jpg,17,16,p159506,47,2.2,0.04,Aina,Hamstring injury - Expected back 13 Dec,7.33,p159506,270,16,20,6,22,507,Ola,Aina,Ola_Aina,0.0
+567,215136,2,215136.jpg,17,16,p215136,47,3.4,0.88,N.Williams,,7.08,p215136,1170,43,57,49,92,508,Neco,Williams,Neco_Williams,
 568,451432,2,451432.jpg,17,16,p451432,45,0.0,0.00,David Carmo,has joined Real Oviedo on loan for the rest of the season.,0.0,p451432,0,0,0,0,0,509,David,Mota Veiga Teixeira do Carmo,David_Mota Veiga Teixeira do Carmo,0.0
 569,575458,2,575458.jpg,17,16,p575458,43,0.1,0.00,Jair Cunha,,11.0,p575458,90,9,1,2,11,510,Jair,Paula da Cunha Filho,Jair_Paula da Cunha Filho,
-570,485047,2,485047.jpg,17,16,p485047,43,0.1,0.03,Morato,,8.42,p485047,438,31,22,10,41,511,Felipe,Rodrigues da Silva,Felipe_Rodrigues da Silva,
+570,485047,2,485047.jpg,17,16,p485047,43,0.1,0.03,Morato,,9.2,p485047,528,38,26,16,54,511,Felipe,Rodrigues da Silva,Felipe_Rodrigues da Silva,
 571,204822,2,204822.jpg,17,16,p204822,45,0.0,0.00,O.Richards,has joined Rio Ave on loan for the rest of the season.,0.0,p204822,0,0,0,0,0,512,Omar,Richards,Omar_Richards,0.0
 572,549067,2,549067.jpg,17,16,p549067,39,0.2,0.00,Abbott,,0.0,p549067,0,0,0,0,0,513,Zach,Abbott,Zach_Abbott,
 573,90585,2,90585.jpg,17,16,p90585,39,0.4,0.00,Boly,,0.0,p90585,0,0,0,0,0,514,Willy,Boly,Willy_Boly,
-574,222531,3,222531.jpg,17,16,p222531,73,3.9,2.74,Gibbs-White,Knock - 75% chance of playing,5.06,p222531,996,18,36,2,56,515,Morgan,Gibbs-White,Morgan_Gibbs-White,
-575,209046,3,209046.jpg,17,16,p209046,57,0.6,0.60,Hudson-Odoi,,3.94,p209046,571,6,15,4,25,516,Callum,Hudson-Odoi,Callum_Hudson-Odoi,75.0
-576,215379,3,215379.jpg,17,16,p215379,53,3.2,1.69,Anderson,,13.08,p215379,1080,26,98,33,157,517,Elliot,Anderson,Elliot_Anderson,
+574,222531,3,222531.jpg,17,16,p222531,73,3.8,3.02,Gibbs-White,Knock - 75% chance of playing,4.83,p222531,1080,19,37,2,58,515,Morgan,Gibbs-White,Morgan_Gibbs-White,75.0
+575,209046,3,209046.jpg,17,16,p209046,57,0.6,0.61,Hudson-Odoi,,4.68,p209046,616,9,18,5,32,516,Callum,Hudson-Odoi,Callum_Hudson-Odoi,100.0
+576,215379,3,215379.jpg,17,16,p215379,53,3.8,1.71,Anderson,,13.46,p215379,1170,29,111,35,175,517,Elliot,Anderson,Elliot_Anderson,
 577,510500,3,510500.jpg,17,16,p510500,54,0.0,0.00,Jota,has joined Besiktas on loan for the rest of the season.,24.55,p510500,11,1,0,2,3,518,João Pedro,Ferreira da Silva,João_Pedro Ferreira da Silva,0.0
-578,250199,3,250199.jpg,17,16,p250199,50,0.0,0.02,Dominguez,,7.94,p250199,170,4,5,6,15,519,Nicolás,Domínguez,Nicolás_Domínguez,100.0
+578,250199,3,250199.jpg,17,16,p250199,50,0.0,0.05,Dominguez,,8.37,p250199,215,6,7,7,20,519,Nicolás,Domínguez,Nicolás_Domínguez,100.0
 579,243345,3,243345.jpg,17,16,p243345,50,0.0,0.00,O'Brien,Has joined Wrexham permanently.,0.0,p243345,0,0,0,0,0,520,Lewis,O'Brien,Lewis_O'Brien,0.0
-580,210462,3,210462.jpg,17,16,p210462,49,0.1,0.63,Sangaré,,9.92,p210462,590,24,23,18,65,521,Ibrahim,Sangaré,Ibrahim_Sangaré,
-581,204968,3,204968.jpg,17,16,p204968,47,0.1,0.07,Yates,,9.59,p204968,244,13,10,3,26,522,Ryan,Yates,Ryan_Yates,
+580,210462,3,210462.jpg,17,16,p210462,49,0.1,0.65,Sangaré,,10.86,p210462,663,29,29,22,80,521,Ibrahim,Sangaré,Ibrahim_Sangaré,
+581,204968,3,204968.jpg,17,16,p204968,47,0.1,0.07,Yates,,9.0,p204968,260,13,10,3,26,522,Ryan,Yates,Ryan_Yates,
 582,569014,3,569014.jpg,17,16,p569014,45,0.1,0.00,Da Silva Moreira,has joined Rio Ave on loan for the rest of the season.,0.0,p569014,0,0,0,0,0,523,Eric,da Silva Moreira,Eric_da Silva Moreira,0.0
 583,495161,3,495161.jpg,17,16,p495161,45,0.0,0.00,Stamenic,Has joined Swansea City permanently.,0.0,p495161,0,0,0,0,0,524,Marko,Stamenić,Marko_Stamenić,0.0
-584,60689,4,60689.jpg,17,16,p60689,72,5.6,2.81,Wood,Knee injury - Unknown return date,2.34,p60689,538,6,7,1,14,525,Chris,Wood,Chris_Wood,0.0
-585,482973,4,482973.jpg,17,16,p482973,58,0.7,1.93,Igor Jesus,,5.26,p482973,411,9,8,7,24,526,Igor Jesus,Maciel da Cruz,Igor_Jesus Maciel da Cruz,
+584,60689,4,60689.jpg,17,16,p60689,72,5.4,2.81,Wood,Knee injury - Unknown return date,2.34,p60689,538,6,7,1,14,525,Chris,Wood,Chris_Wood,0.0
+585,482973,4,482973.jpg,17,16,p482973,58,0.8,2.12,Igor Jesus,,5.2,p482973,485,10,11,7,28,526,Igor Jesus,Maciel da Cruz,Igor_Jesus Maciel da Cruz,
 586,210156,4,210156.jpg,17,16,p210156,52,0.3,0.19,Awoniyi,Knock - Unknown return date,6.09,p210156,133,2,6,1,9,527,Taiwo,Awoniyi,Taiwo_Awoniyi,0.0
-587,456512,3,456512.jpg,17,16,p456512,56,1.1,0.47,Ndoye,,7.39,p456512,840,16,39,14,69,669,Dan,Ndoye,Dan_Ndoye,
-588,107265,1,107265.jpg,17,16,p107265,40,1.4,0.00,Gunn,Knee injury - Unknown return date,0.0,p107265,0,0,0,0,0,675,Angus,Gunn,Angus_Gunn,0.0
-589,503301,3,503301.jpg,17,16,p503301,54,0.0,0.89,Hutchinson,,8.03,p503301,157,0,12,2,14,693,Omari,Hutchinson,Omari_Hutchinson,
-590,465680,4,465680.jpg,17,16,p465680,60,0.1,0.35,Kalimuendo,,4.09,p465680,66,1,2,0,3,696,Arnaud,Kalimuendo,Arnaud_Kalimuendo,
+587,456512,3,456512.jpg,17,16,p456512,56,1.1,0.53,Ndoye,,7.32,p456512,885,17,41,14,72,669,Dan,Ndoye,Dan_Ndoye,
+588,107265,1,107265.jpg,17,16,p107265,40,1.3,0.00,Gunn,Knee injury - Unknown return date,0.0,p107265,0,0,0,0,0,675,Angus,Gunn,Angus_Gunn,0.0
+589,503301,3,503301.jpg,17,16,p503301,54,0.0,0.92,Hutchinson,,8.02,p503301,202,0,15,3,18,693,Omari,Hutchinson,Omari_Hutchinson,
+590,465680,4,465680.jpg,17,16,p465680,60,0.1,0.35,Kalimuendo,,5.56,p465680,81,1,3,1,5,696,Arnaud,Kalimuendo,Arnaud_Kalimuendo,
 591,230046,3,230046.jpg,17,16,p230046,50,0.0,0.02,Douglas Luiz,Hamstring injury - Unknown return date,7.78,p230046,185,3,9,4,16,699,Douglas Luiz,Soares de Paulo,Douglas_Luiz Soares de Paulo,0.0
 592,221389,1,221389.jpg,17,16,p221389,40,0.3,0.00,John,,0.0,p221389,0,0,0,0,0,715,John Victor,Maciel Furtado,John_Victor Maciel Furtado,
-593,500151,2,500151.jpg,17,16,p500151,45,0.1,1.22,Savona,,6.42,p500151,519,23,16,14,37,716,Nicolò,Savona,Nicolò_Savona,
+593,500151,2,500151.jpg,17,16,p500151,45,0.2,1.26,Savona,,5.91,p500151,609,26,18,14,40,716,Nicolò,Savona,Nicolò_Savona,
 594,560441,2,560441.jpg,17,16,p560441,45,0.0,0.00,Cuiabano,has joined Botafogo on loan for the rest of the season.,0.0,p560441,0,0,0,0,0,729,Luis Eduardo,Soares da Silva,Luis_Eduardo Soares da Silva,0.0
 595,476887,3,476887.jpg,17,16,p476887,59,0.0,0.13,Bakwa,Knock - Unknown return date,6.8,p476887,172,2,11,0,13,734,Dilane,Bakwa,Dilane_Bakwa,0.0
 596,232571,1,232571.jpg,56,17,p232571,43,0.2,0.00,Patterson,,0.0,p232571,0,0,0,0,0,528,Anthony,Patterson,Anthony_Patterson,
 597,74854,1,74854.jpg,56,17,p74854,39,0.4,0.00,Moore,,0.0,p74854,0,0,0,0,0,529,Simon,Moore,Simon_Moore,
 598,490000,1,490000.jpg,56,17,p490000,39,0.1,0.00,Nna Noukeu,,0.0,p490000,0,0,0,0,0,530,Blondy,Nna Noukeu,Blondy_Nna Noukeu,
-599,223827,2,223827.jpg,56,17,p223827,46,3.2,0.97,Ballard,,11.43,p223827,669,76,18,9,85,531,Daniel,Ballard,Daniel_Ballard,100.0
-600,487676,2,487676.jpg,56,17,p487676,45,0.4,0.48,Hume,,5.82,p487676,1067,48,30,21,69,532,Trai,Hume,Trai_Hume,
+599,223827,2,223827.jpg,56,17,p223827,46,3.2,1.04,Ballard,,11.26,p223827,759,85,21,10,95,531,Daniel,Ballard,Daniel_Ballard,100.0
+600,487676,2,487676.jpg,56,17,p487676,45,0.4,0.48,Hume,,6.25,p487676,1094,52,31,24,76,532,Trai,Hume,Trai_Hume,
 601,220684,2,220684.jpg,56,17,p220684,40,0.0,0.00,Alese,Shoulder injury - Unknown return date,0.0,p220684,0,0,0,0,0,533,Aji,Alese,Aji_Alese,0.0
 602,232820,2,232820.jpg,56,17,p232820,39,0.4,0.00,Anderson,,0.0,p232820,0,0,0,0,0,534,Joe,Anderson,Joe_Anderson,
 603,461195,2,461195.jpg,56,17,p461195,40,0.0,0.00,Cirkin,Lack of match fitness - Expected back 03 Dec,0.0,p461195,0,0,0,0,0,535,Dennis,Cirkin,Dennis_Cirkin,0.0
 604,477547,2,477547.jpg,56,17,p477547,40,0.0,0.00,Hjelde,Lack of match fitness - Expected back 03 Dec,0.0,p477547,0,0,0,0,0,536,Leo Fuhr,Hjelde,Leo_Fuhr Hjelde,0.0
 605,492066,2,492066.jpg,56,17,p492066,40,0.1,0.00,Huggins,has joined Wycombe Wanderers on loan for the rest of the season.,0.0,p492066,0,0,0,0,0,537,Niall,Huggins,Niall_Huggins,0.0
-606,514613,2,514613.jpg,56,17,p514613,39,0.3,0.00,Johnson,,0.0,p514613,0,0,0,0,0,538,Zak,Johnson,Zak_Johnson,
+606,514613,2,514613.jpg,56,17,p514613,39,0.2,0.00,Johnson,,0.0,p514613,0,0,0,0,0,538,Zak,Johnson,Zak_Johnson,
 607,167512,2,167512.jpg,56,17,p167512,40,0.1,0.00,O'Nien,,0.0,p167512,0,0,0,0,0,539,Luke,O'Nien,Luke_O'Nien,100.0
 608,465702,2,465702.jpg,56,17,p465702,39,0.4,0.00,Pembele,,0.0,p465702,0,0,0,0,0,540,Timothée,Pembélé,Timothée_Pembélé,
-609,434399,2,434399.jpg,56,17,p434399,40,4.2,0.07,Reinildo,,7.54,p434399,752,45,27,18,63,541,Reinildo,Mandava,Reinildo_Mandava,100.0
+609,434399,2,434399.jpg,56,17,p434399,40,4.2,0.10,Reinildo,,7.27,p434399,842,48,35,20,68,541,Reinildo,Mandava,Reinildo_Mandava,100.0
 610,519634,2,519634.jpg,56,17,p519634,40,0.1,0.00,Seelt,has joined Wolfsburg on loan for the rest of the season.,8.12,p519634,133,8,6,4,12,542,Jenson,Seelt,Jenson_Seelt,0.0
 611,535818,3,535818.jpg,56,17,p535818,50,0.5,0.14,Adingra,,5.13,p535818,298,5,8,4,17,543,Simon,Adingra,Simon_Adingra,
 612,547027,3,547027.jpg,56,17,p547027,53,0.0,0.50,Diarra,Groin Injury - Expected back 03 Dec,3.91,p547027,345,6,8,1,15,544,Habib,Diarra,Habib_Diarra,0.0
 613,124165,3,124165.jpg,56,17,p124165,54,0.0,0.03,Roberts,has joined Birmingham City on loan for the rest of the season.,3.33,p124165,27,0,1,0,1,545,Patrick,Roberts,Patrick_Roberts,0.0
 614,626844,3,626844.jpg,56,17,p626844,49,0.0,0.00,Aleksić,has joined Cracovia on loan for the rest of the season.,0.0,p626844,0,0,0,0,0,546,Milan,Aleksić,Milan_Aleksić,0.0
-615,484420,3,484420.jpg,56,17,p484420,49,0.4,1.02,E.Le Fée,,10.26,p484420,781,24,41,24,89,547,Enzo,Le Fée,Enzo_Le Fée,100.0
-616,461199,3,461199.jpg,56,17,p461199,49,0.0,0.00,Mundle,Lack of match fitness - 75% chance of playing,0.0,p461199,0,0,0,0,0,548,Romaine,Mundle,Romaine_Mundle,0.0
+615,484420,3,484420.jpg,56,17,p484420,49,0.4,1.83,E.Le Fée,,10.18,p484420,866,26,47,25,98,547,Enzo,Le Fée,Enzo_Le Fée,100.0
+616,461199,3,461199.jpg,56,17,p461199,49,0.0,0.00,Mundle,,13.33,p461199,27,2,2,0,4,548,Romaine,Mundle,Romaine_Mundle,75.0
 617,223336,3,223336.jpg,56,17,p223336,48,0.0,0.00,Neil,,90.0,p223336,2,2,0,0,2,549,Dan,Neil,Dan_Neil,
 618,215460,3,215460.jpg,56,17,p215460,48,0.0,0.00,Poveda,,0.0,p215460,0,0,0,0,0,550,Ian,Poveda-Ocampo,Ian_Poveda-Ocampo,
 619,554197,3,554197.jpg,56,17,p554197,48,0.0,0.12,Rigg,,5.81,p554197,186,2,6,4,12,551,Chris,Rigg,Chris_Rigg,
-620,577669,3,577669.jpg,56,17,p577669,50,0.1,0.12,Sadiki,,7.88,p577669,1073,40,37,17,94,552,Noah,Sadiki,Noah_Sadiki,100.0
-621,549912,3,549912.jpg,56,17,p549912,50,0.2,1.02,Talbi,,5.14,p549912,613,8,22,5,35,553,Chemsdine,Talbi,Chemsdine_Talbi,
+620,577669,3,577669.jpg,56,17,p577669,50,0.1,0.12,Sadiki,,7.51,p577669,1163,41,39,17,97,552,Noah,Sadiki,Noah_Sadiki,100.0
+621,549912,3,549912.jpg,56,17,p549912,50,0.2,1.16,Talbi,,4.93,p549912,675,8,24,5,37,553,Chemsdine,Talbi,Chemsdine_Talbi,
 622,477851,3,477851.jpg,56,17,p477851,43,0.5,0.00,Ba,,0.0,p477851,0,0,0,0,0,554,Abdoullah,Ba,Abdoullah_Ba,
 623,171422,3,171422.jpg,56,17,p171422,45,0.0,0.00,Browne,has joined Middlesbrough on loan for the rest of the season.,0.0,p171422,0,0,0,0,0,555,Alan,Browne,Alan_Browne,0.0
 624,458297,3,458297.jpg,56,17,p458297,45,0.0,0.00,Ekwah,Has joined AS Saint-Etienne permanently.,0.0,p458297,0,0,0,0,0,556,Pierre,Ekwah Elimby,Pierre_Ekwah Elimby,0.0
 625,547410,3,547410.jpg,56,17,p547410,44,0.1,0.00,H.Jones,,0.0,p547410,0,0,0,0,0,557,Harrison,Jones,Harrison_Jones,
 626,493837,3,493837.jpg,56,17,p493837,44,0.2,0.00,Matete,,0.0,p493837,0,0,0,0,0,558,Jay,Matete,Jay_Matete,
 627,500696,3,500696.jpg,56,17,p500696,44,0.0,0.00,Triantis,has joined Minnesota United permanently.,0.0,p500696,0,0,0,0,0,559,Nectarios,Triantis,Nectarios_Triantis,0.0
-628,437505,4,437505.jpg,56,17,p437505,56,3.4,2.57,Isidor,,2.82,p437505,733,9,9,5,23,560,Wilson,Isidor,Wilson_Isidor,
+628,437505,4,437505.jpg,56,17,p437505,56,3.2,2.60,Isidor,,2.72,p437505,795,10,9,5,24,560,Wilson,Isidor,Wilson_Isidor,
 629,564406,4,564406.jpg,56,17,p564406,53,0.6,0.47,Mayenda,,2.41,p564406,261,2,4,1,7,561,Eliezer,Mayenda Dossou,Eliezer_Mayenda Dossou,
 630,611975,4,611975.jpg,56,17,p611975,43,0.4,0.00,Abdullahi,,0.0,p611975,0,0,0,0,0,562,Ahmed,Abdullahi,Ahmed_Abdullahi,
 631,551153,4,551153.jpg,56,17,p551153,44,0.1,0.00,Luís Hemir,has joined Moreirense on loan for the rest of the season.,0.0,p551153,0,0,0,0,0,563,Luís Hemir,Silva Semedo,Luís_Hemir Silva Semedo,0.0
 632,440955,4,440955.jpg,56,17,p440955,44,0.1,0.00,Rusyn,has joined Arka on loan for the rest of the season.,0.0,p440955,0,0,0,0,0,564,Nazarii,Rusyn,Nazarii_Rusyn,0.0
-633,84450,3,84450.jpg,56,17,p84450,52,6.6,0.37,Xhaka,,11.83,p84450,1080,63,55,24,142,668,Granit,Xhaka,Granit_Xhaka,
-634,498016,1,498016.jpg,56,17,p498016,47,7.9,0.00,Roefs,,0.0,p498016,1080,11,120,0,0,670,Robin,Roefs,Robin_Roefs,
+633,84450,3,84450.jpg,56,17,p84450,52,6.7,0.37,Xhaka,,11.38,p84450,1170,64,60,24,148,668,Granit,Xhaka,Granit_Xhaka,
+634,498016,1,498016.jpg,56,17,p498016,47,8.0,0.00,Roefs,,0.0,p498016,1170,12,128,0,0,670,Robin,Roefs,Robin_Roefs,
 635,105717,2,105717.jpg,56,17,p105717,39,0.7,0.07,Masuaku,,7.2,p105717,125,6,3,4,10,678,Arthur,Masuaku,Arthur_Masuaku,100.0
-636,201895,2,201895.jpg,56,17,p201895,41,4.6,0.58,Alderete,,9.72,p201895,667,60,24,12,72,683,Omar,Alderete,Omar_Alderete,100.0
-637,200834,2,200834.jpg,56,17,p200834,42,6.3,0.56,Mukiele,,10.5,p200834,900,77,34,28,105,694,Nordi,Mukiele,Nordi_Mukiele,
-638,247955,2,247955.jpg,56,17,p247955,45,0.0,0.33,Geertruida,,6.53,p247955,427,20,23,11,31,724,Lutsharel,Geertruida,Lutsharel_Geertruida,
-639,441264,4,441264.jpg,56,17,p441264,55,0.1,0.11,Brobbey,,10.23,p441264,132,5,7,3,15,730,Brian,Brobbey,Brian_Brobbey,
-640,110504,3,110504.jpg,56,17,p110504,55,0.1,0.41,Traoré,,5.77,p110504,421,8,11,8,27,735,Bertrand,Traoré,Bertrand_Traoré,
-641,184254,1,184254.jpg,6,18,p184254,50,9.1,0.00,Vicario,,0.0,p184254,1080,13,101,0,0,565,Guglielmo,Vicario,Guglielmo_Vicario,
+636,201895,2,201895.jpg,56,17,p201895,41,4.5,0.58,Alderete,,9.63,p201895,757,68,26,13,81,683,Omar,Alderete,Omar_Alderete,100.0
+637,200834,2,200834.jpg,56,17,p200834,42,6.2,0.56,Mukiele,,10.36,p200834,990,82,42,32,114,694,Nordi,Mukiele,Nordi_Mukiele,
+638,247955,2,247955.jpg,56,17,p247955,45,0.0,0.33,Geertruida,,6.68,p247955,431,21,23,11,32,724,Lutsharel,Geertruida,Lutsharel_Geertruida,
+639,441264,4,441264.jpg,56,17,p441264,55,0.2,0.24,Brobbey,,9.62,p441264,159,5,9,3,17,730,Brian,Brobbey,Brian_Brobbey,
+640,110504,3,110504.jpg,56,17,p110504,55,0.1,0.48,Traoré,,6.52,p110504,483,8,17,10,35,735,Bertrand,Traoré,Bertrand_Traoré,
+641,184254,1,184254.jpg,6,18,p184254,50,8.9,0.00,Vicario,,0.0,p184254,1170,16,107,0,0,565,Guglielmo,Vicario,Guglielmo_Vicario,
 642,214572,1,214572.jpg,6,18,p214572,39,0.3,0.00,Austin,,0.0,p214572,0,0,0,0,0,566,Brandon,Austin,Brandon_Austin,
 643,485055,1,485055.jpg,6,18,p485055,39,1.9,0.00,Kinsky,,0.0,p485055,0,0,0,0,0,567,Antonín,Kinský,Antonín_Kinský,
-644,441164,2,441164.jpg,6,18,p441164,54,16.6,0.11,Pedro Porro,,6.38,p441164,875,46,41,16,62,568,Pedro,Porro Sauceda,Pedro_Porro,
-645,221632,2,221632.jpg,6,18,p221632,50,3.8,0.41,Romero,Suspended until 02 Dec,8.39,p221632,837,54,35,24,78,569,Cristian,Romero,Cristian_Romero,100.0
-646,135720,2,135720.jpg,6,18,p135720,43,0.1,0.00,Danso,,12.52,p135720,302,38,12,4,42,570,Kevin,Danso,Kevin_Danso,
-647,115556,2,115556.jpg,6,18,p115556,43,0.1,0.00,Davies,,0.0,p115556,0,0,0,0,0,571,Ben,Davies,Ben_Davies,50.0
-648,493125,2,493125.jpg,6,18,p493125,45,0.0,0.00,Dragusin,Lack of match fitness - 50% chance of playing,0.0,p493125,0,0,0,0,0,572,Radu,Drăgușin,Radu_Drăgușin,75.0
-649,232859,2,232859.jpg,6,18,p232859,45,1.5,0.18,Spence,,4.74,p232859,835,29,32,15,44,573,Djed,Spence,Djed_Spence,
-650,487053,2,487053.jpg,6,18,p487053,44,0.4,0.02,Udogie,,4.59,p487053,431,12,31,10,22,574,Destiny,Udogie,Destiny_Udogie,100.0
-651,491279,2,491279.jpg,6,18,p491279,48,33.6,1.86,Van de Ven,,5.98,p491279,1069,58,44,13,71,575,Micky,van de Ven,Micky_van de Ven,
+644,441164,2,441164.jpg,6,18,p441164,54,16.1,0.17,Pedro Porro,,6.44,p441164,965,50,47,19,69,568,Pedro,Porro Sauceda,Pedro_Porro,
+645,221632,2,221632.jpg,6,18,p221632,50,3.5,0.41,Romero,,8.39,p221632,837,54,35,24,78,569,Cristian,Romero,Cristian_Romero,0.0
+646,135720,2,135720.jpg,6,18,p135720,43,0.1,0.00,Danso,,11.94,p135720,392,45,18,7,52,570,Kevin,Danso,Kevin_Danso,
+647,115556,2,115556.jpg,6,18,p115556,43,0.1,0.00,Davies,,0.0,p115556,0,0,0,0,0,571,Ben,Davies,Ben_Davies,100.0
+648,493125,2,493125.jpg,6,18,p493125,45,0.0,0.00,Dragusin,Lack of match fitness - 50% chance of playing,0.0,p493125,0,0,0,0,0,572,Radu,Drăgușin,Radu_Drăgușin,50.0
+649,232859,2,232859.jpg,6,18,p232859,44,1.4,0.18,Spence,,4.74,p232859,835,29,32,15,44,573,Djed,Spence,Djed_Spence,
+650,487053,2,487053.jpg,6,18,p487053,44,0.4,0.10,Udogie,,4.72,p487053,515,16,33,11,27,574,Destiny,Udogie,Destiny_Udogie,100.0
+651,491279,2,491279.jpg,6,18,p491279,48,33.1,1.91,Van de Ven,,6.06,p491279,1159,63,48,15,78,575,Micky,van de Ven,Micky_van de Ven,
 652,548308,2,548308.jpg,6,18,p548308,40,0.0,0.00,Phillips,Has joined Stoke City on loan for the rest of the season.,0.0,p548308,0,0,0,0,0,576,Ashley,Phillips,Ashley_Phillips,0.0
 653,553299,2,553299.jpg,6,18,p553299,40,0.1,0.00,Takai,Lack of match fitness - 50% chance of playing,0.0,p553299,0,0,0,0,0,577,Takai,Kōta,Takai_Kōta,50.0
 654,610799,2,610799.jpg,6,18,p610799,39,0.4,0.00,Vuskovic,has joined Hamburger SV on loan for the rest of the season.,0.0,p610799,0,0,0,0,0,578,Luka,Vušković,Luka_Vušković,0.0
 655,85971,3,85971.jpg,6,18,p85971,85,0.1,0.00,Son,Has joined Los Angeles FC permanently.,0.0,p85971,0,0,0,0,0,579,Son,Heung-min,Son_Heung-min,0.0
 656,242898,3,242898.jpg,6,18,p242898,66,2.8,0.96,Johnson,,6.76,p242898,479,15,10,11,36,580,Brennan,Johnson,Brennan_Johnson,
 657,172780,3,172780.jpg,6,18,p172780,68,0.1,0.00,Maddison,Anterior cruciate ligament - Unknown return date,0.0,p172780,0,0,0,0,0,581,James,Maddison,James_Maddison,0.0
-658,460842,3,460842.jpg,6,18,p460842,65,17.0,1.48,Kudus,,7.28,p460842,952,4,52,21,77,582,Mohammed,Kudus,Mohammed_Kudus,75.0
+658,460842,3,460842.jpg,6,18,p460842,65,16.6,1.50,Kudus,,7.26,p460842,1042,4,59,21,84,582,Mohammed,Kudus,Mohammed_Kudus,100.0
 659,445044,3,445044.jpg,6,18,p445044,64,0.0,0.00,Kulusevski,Knee injury - Unknown return date,0.0,p445044,0,0,0,0,0,583,Dejan,Kulusevski,Dejan_Kulusevski,0.0
-660,511499,3,511499.jpg,6,18,p511499,63,0.1,0.47,Tel,,6.59,p511499,246,2,11,5,18,584,Mathys,Tel,Mathys_Tel,
-661,202993,3,202993.jpg,6,18,p202993,53,0.3,0.34,Bentancur,,11.88,p202993,720,30,48,17,95,585,Rodrigo,Bentancur,Rodrigo_Bentancur,
-662,570526,3,570526.jpg,6,18,p570526,54,0.2,0.59,Bergvall,,8.8,p570526,409,10,17,13,40,586,Lucas,Bergvall,Lucas_Bergvall,100.0
+660,511499,3,511499.jpg,6,18,p511499,63,0.1,0.47,Tel,,6.45,p511499,251,2,11,5,18,584,Mathys,Tel,Mathys_Tel,
+661,202993,3,202993.jpg,6,18,p202993,53,0.3,0.34,Bentancur,,11.64,p202993,750,30,50,17,97,585,Rodrigo,Bentancur,Rodrigo_Bentancur,
+662,570526,3,570526.jpg,6,18,p570526,54,0.2,0.63,Bergvall,,8.91,p570526,485,11,22,15,48,586,Lucas,Bergvall,Lucas_Bergvall,100.0
 663,227127,3,227127.jpg,6,18,p227127,52,0.0,0.00,Bissouma,Ankle injury - Unknown return date,0.0,p227127,0,0,0,0,0,587,Yves,Bissouma,Yves_Bissouma,0.0
-664,550839,3,550839.jpg,6,18,p550839,53,0.0,0.70,Odobert,,5.92,p550839,441,7,18,4,29,588,Wilson,Odobert,Wilson_Odobert,100.0
+664,550839,3,550839.jpg,6,18,p550839,53,0.0,0.79,Odobert,,5.73,p550839,471,7,19,4,30,588,Wilson,Odobert,Wilson_Odobert,100.0
 665,235674,3,235674.jpg,6,18,p235674,54,0.0,0.00,Solomon,has joined Villarreal CF on loan for the rest of the season.,0.0,p235674,0,0,0,0,0,589,Manor,Solomon,Manor_Solomon,0.0
 666,436234,3,436234.jpg,6,18,p436234,49,0.0,0.00,Bryan,has joined Girona permanently.,0.0,p436234,0,0,0,0,0,590,Bryan,Gil Salvatierra,Bryan_Gil Salvatierra,0.0
-667,547701,3,547701.jpg,6,18,p547701,48,0.1,0.00,Gray,,10.14,p547701,71,2,5,1,8,591,Archie,Gray,Archie_Gray,50.0
+667,547701,3,547701.jpg,6,18,p547701,48,0.1,0.02,Gray,,11.08,p547701,130,5,10,1,16,591,Archie,Gray,Archie_Gray,100.0
 668,499721,3,499721.jpg,6,18,p499721,50,0.0,0.00,Moore,Has joined Rangers on loan for the rest of the season.,0.0,p499721,0,0,0,0,0,592,Mikey,Moore,Mikey_Moore,0.0
-669,482442,3,482442.jpg,6,18,p482442,48,1.5,0.74,P.M.Sarr,,10.3,p482442,594,25,33,10,68,593,Pape Matar,Sarr,Pape_Matar Sarr,100.0
+669,482442,3,482442.jpg,6,18,p482442,48,1.4,0.74,P.M.Sarr,,10.38,p482442,607,26,34,10,70,593,Pape Matar,Sarr,Pape_Matar Sarr,100.0
 670,623095,3,623095.jpg,6,18,p623095,45,0.0,0.00,Min-hyeok,Has joined Portsmouth on loan for the rest of the season.,0.0,p623095,0,0,0,0,0,594,Yang,Min-hyeok,Yang_Min-hyeok,0.0
-671,499726,3,499726.jpg,6,18,p499726,44,0.2,0.00,Olusesi,,0.0,p499726,0,0,0,0,0,595,Callum,Olusesi,Callum_Olusesi,
+671,499726,3,499726.jpg,6,18,p499726,43,0.2,0.00,Olusesi,,0.0,p499726,0,0,0,0,0,595,Callum,Olusesi,Callum_Olusesi,
 672,154566,4,154566.jpg,6,18,p154566,72,0.9,0.20,Solanke,Ankle injury - Unknown return date,8.71,p154566,31,2,0,1,3,596,Dominic,Solanke-Mitchell,Dominic_Solanke-Mitchell,0.0
-673,212319,4,212319.jpg,6,18,p212319,64,7.6,2.29,Richarlison,,6.24,p212319,721,23,20,7,50,597,Richarlison,de Andrade,Richarlison_de Andrade,
+673,212319,4,212319.jpg,6,18,p212319,64,7.7,2.29,Richarlison,,6.35,p212319,780,24,23,8,55,597,Richarlison,de Andrade,Richarlison_de Andrade,
 674,552427,4,552427.jpg,6,18,p552427,45,0.0,0.00,Lankshear,Has joined Oxford United on loan for the rest of the season.,0.0,p552427,0,0,0,0,0,598,Will,Lankshear,Will_Lankshear,0.0
-675,490145,4,490145.jpg,6,18,p490145,43,0.7,0.00,Scarlett,,0.0,p490145,0,0,0,0,0,599,Dane,Scarlett,Dane_Scarlett,
-676,154296,3,154296.jpg,6,18,p154296,55,1.8,0.66,J.Palhinha,,11.92,p154296,951,32,37,57,126,673,João Maria,Lobo Alves Palhares Costa Palhinha Gonçalves,João_Maria Lobo Alves Palhares Costa Palhinha Gonçalves,
-677,493362,3,493362.jpg,6,18,p493362,66,1.2,0.37,Xavi,,8.77,p493362,575,9,34,13,56,717,Xavi,Simons,Xavi_Simons,
-678,247693,4,247693.jpg,6,18,p247693,69,0.3,0.13,Kolo Muani,,5.92,p247693,213,2,8,4,14,726,Randal,Kolo Muani,Randal_Kolo Muani,100.0
+675,490145,4,490145.jpg,6,18,p490145,43,0.6,0.00,Scarlett,,0.0,p490145,0,0,0,0,0,599,Dane,Scarlett,Dane_Scarlett,
+676,154296,3,154296.jpg,6,18,p154296,55,1.9,0.66,J.Palhinha,,11.76,p154296,1010,36,38,58,132,673,João Maria,Lobo Alves Palhares Costa Palhinha Gonçalves,João_Maria Lobo Alves Palhares Costa Palhinha Gonçalves,
+677,493362,3,493362.jpg,6,18,p493362,66,1.2,0.47,Xavi,,8.33,p493362,605,9,34,13,56,717,Xavi,Simons,Xavi_Simons,
+678,247693,4,247693.jpg,6,18,p247693,69,0.4,0.53,Kolo Muani,,5.35,p247693,303,3,10,5,18,726,Randal,Kolo Muani,Randal_Kolo Muani,100.0
 679,640419,2,640419.jpg,6,18,p640419,40,0.0,0.00,Byfield,,0.0,p640419,0,0,0,0,0,745,Jun'ai,Byfield,Jun'ai_Byfield,
 680,499716,2,499716.jpg,6,18,p499716,40,0.0,0.00,Rowswell,,0.0,p499716,0,0,0,0,0,750,James,Rowswell,James_Rowswell,
 681,590035,3,590035.jpg,6,18,p590035,45,0.0,0.00,Akhamrich,,0.0,p590035,0,0,0,0,0,751,Yusuf,Akhamrich,Yusuf_Akhamrich,
 682,223434,2,223434.jpg,21,19,p223434,45,0.1,0.00,Igor,,11.36,p223434,103,13,3,0,13,149,Igor Julio,dos Santos de Paulo,Igor_Julio dos Santos de Paulo,100.0
-683,84182,1,84182.jpg,21,19,p84182,43,2.1,0.00,Areola,,0.0,p84182,720,12,65,0,0,600,Alphonse,Areola,Alphonse_Areola,
+683,84182,1,84182.jpg,21,19,p84182,43,2.1,0.00,Areola,,0.0,p84182,810,14,72,0,0,600,Alphonse,Areola,Alphonse_Areola,
 684,82143,1,82143.jpg,21,19,p82143,40,0.3,0.00,Foderingham,has joined Aris Limassol permanently.,0.0,p82143,0,0,0,0,0,601,Wes,Foderingham,Wes_Foderingham,0.0
 685,483364,1,483364.jpg,21,19,p483364,39,0.2,0.00,Hegyi,,0.0,p483364,0,0,0,0,0,602,Krisztián,Hegyi,Krisztián_Hegyi,
-686,613804,2,613804.jpg,21,19,p613804,43,2.8,0.22,Diouf,,6.96,p613804,1035,64,47,16,80,603,El Hadji Malick,Diouf,El_Hadji Malick Diouf,
+686,613804,2,613804.jpg,21,19,p613804,42,2.7,0.22,Diouf,,6.88,p613804,1125,70,51,16,86,603,El Hadji Malick,Diouf,El_Hadji Malick Diouf,
 687,109533,2,109533.jpg,21,19,p109533,44,0.1,0.00,Emerson,has joined Marseille permanently.,0.0,p109533,0,0,0,0,0,604,Emerson,Palmieri dos Santos,Emerson_Palmieri dos Santos,0.0
 688,214048,2,214048.jpg,21,19,p214048,43,0.2,0.53,Kilman,,9.08,p214048,1080,97,33,12,109,605,Maximilian,Kilman,Maximilian_Kilman,
-689,233963,2,233963.jpg,21,19,p233963,44,0.0,0.42,Mavropanos,Muscle injury - 50% chance of playing,10.73,p233963,495,57,20,2,59,606,Konstantinos,Mavropanos,Konstantinos_Mavropanos,50.0
+689,233963,2,233963.jpg,21,19,p233963,44,0.0,0.42,Mavropanos,,10.62,p233963,585,63,23,6,69,606,Konstantinos,Mavropanos,Konstantinos_Mavropanos,50.0
 690,210494,2,210494.jpg,21,19,p210494,44,0.0,0.10,N.Aguerd,has joined Marseille permanently.,7.5,p210494,180,14,8,1,15,607,Nayef,Aguerd,Nayef_Aguerd,0.0
-691,536109,2,536109.jpg,21,19,p536109,44,0.0,0.00,Scarles,Shoulder injury - Expected back 27 Dec,6.52,p536109,69,4,1,1,5,608,Ollie,Scarles,Ollie_Scarles,0.0
-692,462116,2,462116.jpg,21,19,p462116,43,0.1,0.00,Todibo,,8.75,p462116,576,42,25,14,56,609,Jean-Clair,Todibo,Jean-Clair_Todibo,
-693,214590,2,214590.jpg,21,19,p214590,42,5.5,0.00,Wan-Bissaka,,7.74,p214590,651,48,19,8,56,610,Aaron,Wan-Bissaka,Aaron_Wan-Bissaka,100.0
+691,536109,2,536109.jpg,21,19,p536109,43,0.0,0.00,Scarles,Shoulder injury - Expected back 27 Dec,6.52,p536109,69,4,1,1,5,608,Ollie,Scarles,Ollie_Scarles,0.0
+692,462116,2,462116.jpg,21,19,p462116,43,0.1,0.00,Todibo,,8.24,p462116,666,47,33,14,61,609,Jean-Clair,Todibo,Jean-Clair_Todibo,
+693,214590,2,214590.jpg,21,19,p214590,42,5.4,0.00,Wan-Bissaka,,7.53,p214590,741,53,22,9,62,610,Aaron,Wan-Bissaka,Aaron_Wan-Bissaka,100.0
 694,518438,2,518438.jpg,21,19,p518438,40,0.1,0.00,Casey,Has joined Swansea City on loan for the rest of the season.,0.0,p518438,0,0,0,0,0,611,Kaelan,Casey,Kaelan_Casey,0.0
-695,224024,3,224024.jpg,21,19,p224024,59,1.9,1.87,L.Paquetá,,9.48,p224024,959,21,53,27,101,612,Lucas,Tolentino Coelho de Lima,Lucas_Tolentino Coelho de Lima,0.0
-696,215439,3,215439.jpg,21,19,p215439,57,0.3,2.28,Souček,,10.17,p215439,460,32,14,6,52,613,Tomáš,Souček,Tomáš_Souček,100.0
+695,224024,3,224024.jpg,21,19,p224024,59,1.8,1.88,L.Paquetá,Suspended until 07 Dec,9.41,p224024,1042,22,60,27,109,612,Lucas,Tolentino Coelho de Lima,Lucas_Tolentino Coelho de Lima,100.0
+696,215439,3,215439.jpg,21,19,p215439,57,0.3,2.28,Souček,,10.13,p215439,462,32,14,6,52,613,Tomáš,Souček,Tomáš_Souček,100.0
 697,101178,3,101178.jpg,21,19,p101178,56,0.2,0.13,Ward-Prowse,,4.78,p101178,414,9,9,4,22,614,James,Ward-Prowse,James_Ward-Prowse,
-698,450070,3,450070.jpg,21,19,p450070,55,0.1,0.84,Summerville,,8.31,p450070,639,19,30,10,59,615,Crysencio,Summerville,Crysencio_Summerville,100.0
+698,450070,3,450070.jpg,21,19,p450070,55,0.1,0.84,Summerville,Knock - 75% chance of playing,8.31,p450070,639,19,30,10,59,615,Crysencio,Summerville,Crysencio_Summerville,75.0
 699,213999,3,213999.jpg,21,19,p213999,49,0.1,0.00,Álvarez,Has joined Fenerbahçe on loan for the rest of the season.,0.0,p213999,0,0,0,0,0,616,Edson,Álvarez Velázquez,Edson_Álvarez Velázquez,0.0
 700,149519,3,149519.jpg,21,19,p149519,49,0.0,0.00,Cornet,has joined Genoa on loan for the rest of the season.,0.0,p149519,0,0,0,0,0,617,Maxwel,Cornet,Maxwel_Cornet,0.0
 701,197024,3,197024.jpg,21,19,p197024,48,0.0,0.03,G.Rodriguez,,5.06,p197024,89,1,4,0,5,618,Guido,Rodríguez,Guido_Rodríguez,
-702,577114,3,577114.jpg,21,19,p577114,49,0.0,0.07,L.Guilherme,,8.18,p577114,99,2,7,0,9,619,Luis Guilherme,Lira dos Santos,Luis_Guilherme Lira dos Santos,100.0
-703,490885,3,490885.jpg,21,19,p490885,45,0.0,0.00,Earthy,,0.0,p490885,0,0,0,0,0,620,George,Earthy,George_Earthy,50.0
+702,577114,3,577114.jpg,21,19,p577114,49,0.0,0.07,L.Guilherme,,8.18,p577114,121,2,8,1,11,619,Luis Guilherme,Lira dos Santos,Luis_Guilherme Lira dos Santos,100.0
+703,490885,3,490885.jpg,21,19,p490885,45,0.0,0.00,Earthy,,0.0,p490885,0,0,0,0,0,620,George,Earthy,George_Earthy,100.0
 704,229384,3,229384.jpg,21,19,p229384,44,0.3,0.00,Irving,,12.68,p229384,149,2,13,6,21,621,Andy,Irving,Andy_Irving,
 705,518442,3,518442.jpg,21,19,p518442,44,0.1,0.00,Orford,has joined Stevenage on loan for the rest of the season.,0.0,p518442,0,0,0,0,0,622,Lewis,Orford,Lewis_Orford,0.0
-706,490142,3,490142.jpg,21,19,p490142,44,0.7,0.00,Potts,,10.89,p490142,372,18,15,12,45,623,Freddie,Potts,Freddie_Potts,75.0
-707,178186,4,178186.jpg,21,19,p178186,76,6.5,1.56,Bowen,,6.5,p178186,1080,21,47,10,78,624,Jarrod,Bowen,Jarrod_Bowen,
-708,91889,4,91889.jpg,21,19,p91889,56,0.7,0.86,Füllkrug,,4.33,p91889,395,7,10,2,19,625,Niclas,Füllkrug,Niclas_Füllkrug,50.0
-709,565431,4,565431.jpg,21,19,p565431,44,0.6,0.13,Marshall,,4.66,p565431,58,2,1,0,3,626,Callum,Marshall,Callum_Marshall,
+706,490142,3,490142.jpg,21,19,p490142,44,0.7,0.00,Potts,,10.0,p490142,459,20,18,13,51,623,Freddie,Potts,Freddie_Potts,100.0
+707,178186,4,178186.jpg,21,19,p178186,76,6.1,1.68,Bowen,,6.38,p178186,1170,21,50,12,83,624,Jarrod,Bowen,Jarrod_Bowen,
+708,91889,4,91889.jpg,21,19,p91889,56,0.7,0.93,Füllkrug,,4.2,p91889,407,7,10,2,19,625,Niclas,Füllkrug,Niclas_Füllkrug,100.0
+709,565431,4,565431.jpg,21,19,p565431,43,0.6,0.13,Marshall,,4.66,p565431,58,2,1,0,3,626,Callum,Marshall,Callum_Marshall,
 710,158534,2,158534.jpg,21,19,p158534,43,0.3,1.10,Walker-Peters,,5.47,p158534,510,21,23,10,31,659,Kyle,Walker-Peters,Kyle_Walker-Peters,
-711,75115,4,75115.jpg,21,19,p75115,58,0.6,2.62,Wilson,,3.25,p75115,416,4,11,0,15,671,Callum,Wilson,Callum_Wilson,
+711,75115,4,75115.jpg,21,19,p75115,58,0.8,2.70,Wilson,,2.92,p75115,493,5,11,0,16,671,Callum,Wilson,Callum_Wilson,
 712,467189,1,467189.jpg,21,19,p467189,43,0.2,0.00,Hermansen,,0.0,p467189,360,7,27,0,0,679,Mads,Hermansen,Mads_Hermansen,
-713,551226,3,551226.jpg,21,19,p551226,55,0.1,0.49,M.Fernandes,,9.31,p551226,715,21,31,22,74,708,Mateus Gonçalo,Espanha Fernandes,Mateus_Gonçalo Espanha Fernandes,
-714,564940,3,564940.jpg,21,19,p564940,50,0.0,0.00,S.Magassa,,10.95,p564940,189,6,9,8,23,718,Soungoutou,Magassa,Soungoutou_Magassa,
+713,551226,3,551226.jpg,21,19,p551226,55,0.1,0.51,M.Fernandes,,8.94,p551226,805,22,34,24,80,708,Mateus Gonçalo,Espanha Fernandes,Mateus_Gonçalo Espanha Fernandes,
+714,564940,3,564940.jpg,21,19,p564940,50,0.0,0.00,S.Magassa,,10.2,p564940,256,7,12,10,29,718,Soungoutou,Magassa,Soungoutou_Magassa,
 715,37096,1,37096.jpg,21,19,p37096,45,0.0,0.00,Fabianski,Back injury - 25% chance of playing,0.0,p37096,0,0,0,0,0,738,Lukasz,Fabianski,Lukasz_Fabianski,25.0
 716,602903,2,602903.jpg,21,19,p602903,40,0.0,0.00,Mayers,,0.0,p602903,0,0,0,0,0,747,Ezra,Mayers,Ezra_Mayers,
 717,643473,2,643473.jpg,21,19,p643473,40,0.0,0.00,Golambeckis,,0.0,p643473,0,0,0,0,0,752,Airidas,Golambeckis,Airidas_Golambeckis,
-718,101982,1,101982.jpg,39,20,p101982,45,0.1,0.00,Johnstone,,0.0,p101982,720,13,77,1,0,627,Sam,Johnstone,Sam_Johnstone,
+718,101982,1,101982.jpg,39,20,p101982,45,0.1,0.00,Johnstone,,0.0,p101982,810,13,82,1,0,627,Sam,Johnstone,Sam_Johnstone,
 719,149065,1,149065.jpg,39,20,p149065,43,1.1,0.00,José Sá,,0.0,p149065,360,3,37,0,0,628,José,Malheiro de Sá,José_Malheiro de Sá,
 720,79602,1,79602.jpg,39,20,p79602,40,0.6,0.00,Bentley,Ankle injury - Expected back 08 Dec,0.0,p79602,0,0,0,0,0,629,Daniel,Bentley,Daniel_Bentley,0.0
-721,516939,2,516939.jpg,39,20,p516939,43,0.2,0.38,Agbadou,,10.8,p516939,650,58,39,20,78,631,Emmanuel,Agbadou,Emmanuel_Agbadou,100.0
-722,87835,2,87835.jpg,39,20,p87835,44,0.1,0.07,Doherty,Knee injury - Expected back 30 Nov,8.04,p87835,291,18,11,8,26,632,Matt,Doherty,Matt_Doherty,0.0
-723,490721,2,490721.jpg,39,20,p490721,44,0.1,0.20,H.Bueno,,6.91,p490721,794,36,39,25,61,633,Hugo,Bueno López,Hugo_Bueno López,100.0
-724,501837,2,501837.jpg,39,20,p501837,43,0.1,0.05,Mosquera,,5.93,p501837,182,8,12,4,12,634,Yerson,Mosquera Valdelamar,Yerson_Mosquera Valdelamar,
+721,516939,2,516939.jpg,39,20,p516939,43,0.2,0.40,Agbadou,,10.46,p516939,740,64,41,22,86,631,Emmanuel,Agbadou,Emmanuel_Agbadou,100.0
+722,87835,2,87835.jpg,39,20,p87835,44,0.1,0.07,Doherty,Knee injury - 50% chance of playing,8.04,p87835,291,18,11,8,26,632,Matt,Doherty,Matt_Doherty,50.0
+723,490721,2,490721.jpg,39,20,p490721,44,0.1,0.20,H.Bueno,,6.91,p490721,807,37,40,25,62,633,Hugo,Bueno López,Hugo_Bueno López,100.0
+724,501837,2,501837.jpg,39,20,p501837,43,0.1,0.10,Mosquera,,5.23,p501837,258,10,14,5,15,634,Yerson,Mosquera Valdelamar,Yerson_Mosquera Valdelamar,
 725,483081,2,483081.jpg,39,20,p483081,44,0.1,0.95,R.Gomes,Groin Injury - Expected back 17 Jan,4.89,p483081,331,11,14,7,18,635,Rodrigo,Martins Gomes,Rodrigo_Martins Gomes,0.0
 726,231480,2,231480.jpg,39,20,p231480,44,0.1,0.80,S.Bueno,,9.35,p231480,664,46,17,23,69,636,Santiago,Ignacio Bueno,Santiago_Ignacio Bueno,
-727,510362,2,510362.jpg,39,20,p510362,43,0.1,0.04,Toti,,6.59,p510362,615,36,30,9,45,637,Toti,Gomes,Toti_Gomes,100.0
+727,510362,2,510362.jpg,39,20,p510362,43,0.1,0.04,Toti,,7.28,p510362,705,45,31,12,57,637,Toti,Gomes,Toti_Gomes,100.0
 728,441271,2,441271.jpg,39,20,p441271,39,0.9,0.02,Hoever,,7.23,p441271,249,15,6,5,20,638,Ki-Jana,Hoever,Ki-Jana_Hoever,100.0
 729,560248,2,560248.jpg,39,20,p560248,40,0.0,0.00,Meupiyou,On loan to FC Alverca,0.0,p560248,0,0,0,0,0,639,Bastien,Meupiyou Menadjou,Bastien_Meupiyou Menadjou,0.0
 730,641221,2,641221.jpg,39,20,p641221,40,0.4,0.00,Pedro Lima,has joined Porto on loan for the rest of the season.,0.0,p641221,0,0,0,0,0,640,Pedro,Cardoso de Lima,Pedro_Cardoso de Lima,0.0
-731,517179,2,517179.jpg,39,20,p517179,39,1.4,0.00,Pond,,0.0,p517179,0,0,0,0,0,641,Alfie,Pond,Alfie_Pond,
+731,517179,2,517179.jpg,39,20,p517179,39,1.3,0.00,Pond,,0.0,p517179,0,0,0,0,0,641,Alfie,Pond,Alfie_Pond,
 732,184754,3,184754.jpg,39,20,p184754,57,0.1,0.76,Hee Chan,,4.15,p184754,390,8,5,5,18,642,Hwang,Hee-chan,Hwang_Hee-chan,100.0
-733,509291,3,509291.jpg,39,20,p509291,53,0.1,0.04,André,,13.28,p509291,793,30,64,23,117,643,André,Trindade da Costa Neto,André_Trindade da Costa Neto,100.0
-734,231057,3,231057.jpg,39,20,p231057,52,0.0,0.41,Bellegarde,,7.41,p231057,498,15,15,11,41,644,Jean-Ricner,Bellegarde,Jean-Ricner_Bellegarde,100.0
+733,509291,3,509291.jpg,39,20,p509291,53,0.1,0.04,André,,13.76,p509291,883,35,72,28,135,643,André,Trindade da Costa Neto,André_Trindade da Costa Neto,100.0
+734,231057,3,231057.jpg,39,20,p231057,52,0.0,0.44,Bellegarde,,7.16,p231057,566,15,16,14,45,644,Jean-Ricner,Bellegarde,Jean-Ricner_Bellegarde,100.0
 735,643135,3,643135.jpg,39,20,p643135,52,0.0,0.14,Fer López,,3.1,p643135,116,0,3,1,4,645,Fer,López González,Fer_López González,
-736,448089,3,448089.jpg,39,20,p448089,53,0.1,0.46,Gomes,,11.77,p448089,925,34,56,31,121,646,João Victor,Gomes da Silva,João_Victor Gomes da Silva,
+736,448089,3,448089.jpg,39,20,p448089,53,0.1,0.63,Gomes,,11.97,p448089,1015,36,65,34,135,646,João Victor,Gomes da Silva,João_Victor Gomes da Silva,
 737,181284,3,181284.jpg,39,20,p181284,55,0.0,0.00,Guedes,Has joined Real Sociedad permanently.,0.0,p181284,0,0,0,0,0,647,Gonçalo Manuel,Ganchinho Guedes,Gonçalo_Manuel Ganchinho Guedes,0.0
 738,433312,3,433312.jpg,39,20,p433312,54,0.1,1.55,Munetsi,,8.2,p433312,867,39,19,21,79,648,Marshall,Munetsi,Marshall_Munetsi,
 739,476502,3,476502.jpg,39,20,p476502,50,0.0,0.00,B.Traore,Has joined FC Metz on loan for the rest of the season.,0.0,p476502,0,0,0,0,0,649,Boubacar,Traoré,Boubacar_Traoré,0.0
-740,497606,3,497606.jpg,39,20,p497606,43,0.3,0.00,Chirewa,,0.0,p497606,0,0,0,0,0,650,Tawanda,Chirewa,Tawanda_Chirewa,
+740,497606,3,497606.jpg,39,20,p497606,43,0.3,0.00,Chirewa,,8.57,p497606,21,0,1,1,2,650,Tawanda,Chirewa,Tawanda_Chirewa,
 741,596054,3,596054.jpg,39,20,p596054,43,0.4,0.00,Edozie,,0.0,p596054,0,0,0,0,0,651,Tom,Edozie,Tom_Edozie,
 742,593001,3,593001.jpg,39,20,p593001,44,1.3,0.00,Gonzalez,,0.0,p593001,0,0,0,0,0,652,Enso,González Medina,Enso_González Medina,
 743,240299,3,240299.jpg,39,20,p240299,45,0.0,0.00,Hodge,Signed by CD Tondela,0.0,p240299,0,0,0,0,0,653,Joe,Hodge,Joe_Hodge,0.0
-744,247412,4,247412.jpg,39,20,p247412,63,1.1,1.62,Strand Larsen,,3.05,p247412,797,16,10,1,27,654,Jørgen,Strand Larsen,Jørgen_Strand Larsen,100.0
+744,247412,4,247412.jpg,39,20,p247412,63,1.1,1.73,Strand Larsen,,2.94,p247412,887,17,11,1,29,654,Jørgen,Strand Larsen,Jørgen_Strand Larsen,100.0
 745,449988,4,449988.jpg,39,20,p449988,49,0.2,0.00,Fábio Silva,has joined Borussia Dortmund permanently.,0.0,p449988,0,0,0,0,0,655,Fábio,Soares Silva,Fábio_Soares Silva,0.0
 746,429414,4,429414.jpg,39,20,p429414,49,0.1,0.00,Kalajdžić,has joined LASK on loan for the rest of the season.,12.86,p429414,14,1,1,0,2,656,Saša,Kalajdžić,Saša_Kalajdžić,0.0
 747,589507,4,589507.jpg,39,20,p589507,44,0.0,0.00,Chiwome,Knee injury - Unknown return date,0.0,p589507,0,0,0,0,0,657,Leon,Chiwome,Leon_Chiwome,0.0
 748,531363,4,531363.jpg,39,20,p531363,43,1.8,0.00,Fraser,,0.0,p531363,0,0,0,0,0,658,Nathan,Fraser,Nathan_Fraser,
-749,230376,3,230376.jpg,39,20,p230376,51,0.2,1.99,J.Arias,,10.12,p230376,560,12,27,24,63,663,Jhon,Arias,Jhon_Arias,
-750,497949,2,497949.jpg,39,20,p497949,43,0.1,0.05,Møller Wolfe,,4.58,p497949,236,9,7,3,12,682,David,Møller Wolfe,David_Møller Wolfe,
-751,523705,2,523705.jpg,39,20,p523705,45,0.0,0.26,Tchatchoua,,6.97,p523705,607,35,27,12,47,695,Jackson,Tchatchoua,Jackson_Tchatchoua,
-752,431248,2,431248.jpg,39,20,p431248,45,0.1,1.56,Krejčí,,7.37,p431248,794,55,25,10,65,709,Ladislav,Krejcí,Ladislav_Krejcí,
-753,488213,4,488213.jpg,39,20,p488213,55,0.1,0.42,Tolu,,7.58,p488213,273,13,7,3,23,720,Tolu,Arokodare,Tolu_Arokodare,
-754,647671,4,647671.jpg,39,20,p647671,45,0.0,0.00,Mané,,0.0,p647671,20,0,0,0,0,749,Mateus,Mané,Mateus_Mané,
+749,230376,3,230376.jpg,39,20,p230376,50,0.2,2.08,J.Arias,,9.88,p230376,647,14,32,25,71,663,Jhon,Arias,Jhon_Arias,
+750,497949,2,497949.jpg,39,20,p497949,43,0.1,0.05,Møller Wolfe,,4.04,p497949,312,11,9,3,14,682,David,Møller Wolfe,David_Møller Wolfe,
+751,523705,2,523705.jpg,39,20,p523705,45,0.0,0.26,Tchatchoua,,6.59,p523705,697,39,30,12,51,695,Jackson,Tchatchoua,Jackson_Tchatchoua,
+752,431248,2,431248.jpg,39,20,p431248,45,0.1,1.56,Krejčí,Knock - 75% chance of playing,7.37,p431248,794,55,25,10,65,709,Ladislav,Krejcí,Ladislav_Krejcí,
+753,488213,4,488213.jpg,39,20,p488213,55,0.0,0.42,Tolu,,7.85,p488213,275,14,7,3,24,720,Tolu,Arokodare,Tolu_Arokodare,
+754,647671,4,647671.jpg,39,20,p647671,45,0.0,0.03,Mané,,0.0,p647671,33,0,0,0,0,749,Mateus,Mané,Mateus_Mané,

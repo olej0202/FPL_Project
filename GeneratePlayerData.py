@@ -257,7 +257,8 @@ def add_team_share_per90(
     # Metrics to process
     metrics = [
         "Rolling_adjusted_XG","rolling_Threat","Rolling_adjusted_XA",
-        "Rolling_creativity","Rolling_adjusted_BPS","rolling_XG","rolling_XA","Share_of_XG","Share_of_XA", "rolling_Adjusted_XG_historic","rolling_Adjusted_XA_historic","Threat_Mean"
+        "Rolling_creativity","Rolling_adjusted_BPS","rolling_XG","rolling_XA","Share_of_XG","Share_of_XA", "rolling_Adjusted_XG_historic","rolling_Adjusted_XA_historic"
+        ,"Threat_Mean","Creativity_Mean"
     ]
     for m in metrics:
         if m not in df.columns:
@@ -384,7 +385,7 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
     Future_dataframe=pd.DataFrame()
     missing_player=[]
     for name in names:
-        player_risiko=0.25
+        player_risiko=0
         player_row = current_data[
             current_data["name"].str.lower() == name.lower()
         ]        
