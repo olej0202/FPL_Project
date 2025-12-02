@@ -380,7 +380,7 @@ export default function PlayerAdjustmentsPage() {
       assists * assistFactor +
       cs * csFactor * minutesAdj +
       bps * minutesAdj +
-      cbi * 1.5 * minutesAdj;
+      cbi * 1.7 * minutesAdj;
 
     const avgMinutes = avgMin;
     const cbiPredictions = cbi * minutesAdj;

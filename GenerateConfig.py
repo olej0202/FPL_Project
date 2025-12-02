@@ -52,7 +52,7 @@ Manual_min=[
         {"name": "Bukayo_Saka", "type": "const",   "GW": "any", "value": 90},
         {"name": "Hugo_Ekitiké", "type": "const",   "GW": "any", "value": 70},
         {"name": "Karl_Darlow", "type": "const",   "GW": "any", "value": 60},
-        {"name": "Giorgi_Mamardashvili", "type": "const",   "GW": "any", "value": 60},
+        {"name": "Alisson_Ramses Becker", "type": "const",   "GW": "any", "value": 90},
         {"name": "Tijjani_Reijnders", "type": "const",   "GW": "any", "value": 75},
         {"name": "Callum_Wilson", "type": "const",   "GW": "any", "value": 75},
         {"name": "Nico_O'Reilly", "type": "adjust_from",   "GW": "13", "value": 75},
@@ -61,6 +61,7 @@ Manual_min=[
         {"name": "Mohammed_Kudus", "type": "adjust_from",   "GW": "16", "value": 0},
         {"name": "Bryan_Mbeumo", "type": "adjust_from",   "GW": "16", "value": 0},
         {"name": "Antoine_Semenyo", "type": "adjust_from",   "GW": "16", "value": 0},
+        {"name": "Amad_Diallo", "type": "adjust_from",   "GW": "16", "value": 0},
 
     ]
         
