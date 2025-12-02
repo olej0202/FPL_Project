@@ -524,6 +524,13 @@ def Generate_team_data():
                 aggfunc='sum'                   # Summing the 'expected_goals' for each group
             ).reset_index()
             
+            Played_against_df["defensive_contribution"] = Played_against_df.get("defensive_contribution", 0)
+            Defconagainst = Played_against_df.pivot_table(
+                index='kickoff_time',           # Rows will be based on 'kickoff_time'
+                values='defensive_contribution',        # The values to aggregate will be 'expected_goals'
+                aggfunc='sum'                   # Summing the 'expected_goals' for each group
+            ).reset_index()
+            
             New_team_df=pd.DataFrame()
             New_team_df["name"]=[team_name]*len(XGs)
             New_team_df["code"]=[code]*len(XGs)
@@ -539,6 +546,8 @@ def Generate_team_data():
             New_team_df["Result"]=wons
             New_team_df["Threat"]=Threat.values
             New_team_df["Threat_against"]=Threatagainst['threat'].values
+            New_team_df["Defcon_against"]=Defconagainst['defensive_contribution'].values
+            New_team_df["Defcon_against"]=New_team_df['Defcon_against'].clip(lower=0, upper=100)
             New_team_df["Plain_XG"]=XG.values
             New_team_df["Plain_XGC"]=XGC.values
             New_team_df["Plain_GS"]=GS.values
@@ -595,6 +604,7 @@ def Generate_team_data():
         
         new_team['Rolling_Threat']=new_team['Threat'].ewm(span=20, adjust=False).mean()
         new_team['Rolling_Threat_Against']=new_team['Threat_against'].ewm(span=20, adjust=False).mean()
+        new_team['Rolling_Defcon_against']=new_team['Defcon_against'].where(new_team['Defcon_against'] > 0).rolling(30, min_periods=1).mean()
         
         new_team['XG_slope']=new_team['XG_avg'].rolling(window=6, min_periods=1).apply(rolling_slope, raw=True)
         new_team['XGC_slope']=new_team['XGC_avg'].rolling(window=6, min_periods=1).apply(rolling_slope, raw=True)

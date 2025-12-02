@@ -56,6 +56,7 @@ def next_opp(team, n_future, fixtures,kmeans,team_code,current_teams):
     played_XG=[]
     GW=[]
     opp_code=[]
+    defcons=[]
     kl=0
     for k in range(len(filtered_fix)):
         
@@ -98,9 +99,10 @@ def next_opp(team, n_future, fixtures,kmeans,team_code,current_teams):
         XGC_DEF.append(next_opp_newest_row["XG_DEF"])
         XGC_FWD.append(next_opp_newest_row["XG_FORWARD"])
         XGC_MID.append(next_opp_newest_row["XG_MID"])
+        defcons.append(next_opp_newest_row["Rolling_Defcon_against"])
         kl+=1
 
-    return clusters,home,n_matches,XGH,XGCH,XGA,XGCA,XGC_DEF,XGC_FWD,XGC_MID,own_XG,GW,played_XGC,played_XG,opp_code
+    return clusters,home,n_matches,XGH,XGCH,XGA,XGCA,XGC_DEF,XGC_FWD,XGC_MID,own_XG,GW,played_XGC,played_XG,opp_code,defcons
 
 import pandas as pd
 from datetime import datetime
@@ -514,7 +516,7 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
             
 
                 
-        clusters,home,n_matches,XGH,XGCH,XGA,XGCA,XGC_DEF,XGC_FWD,XGC_MID,own_XG,GW,played_XGC,played_XG,opp_code=next_opp(team_id, time_list, fixture_data,kmeans,team_code,current_teams)
+        clusters,home,n_matches,XGH,XGCH,XGA,XGCA,XGC_DEF,XGC_FWD,XGC_MID,own_XG,GW,played_XGC,played_XG,opp_code,defcons=next_opp(team_id, time_list, fixture_data,kmeans,team_code,current_teams)
         
         
         #if endre stats for nye spillere på et lag
@@ -577,6 +579,7 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
                 player_row["Average_Overscore"]=overscore
                 player_row["Average_OverAssist"]=overassist
                 player_row["average_minutes"] = minutes[i]
+                player_row["Opp_defcon"] = defcons[i]
                 
         
                 

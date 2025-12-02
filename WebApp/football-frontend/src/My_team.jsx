@@ -829,7 +829,7 @@ function PlayerRow({
   const fallback =
     "https://d2kq0urxkarztv.cloudfront.net/51812cad594df29a1a0003f0/661303/upload-643ff5d9-840e-4bbb-b099-07c26ef505c9.png?w=578";
   return (
-    <div className="flex justify-center gap-2 px-3 overflow-x-auto text-center w-full">
+    <div className="flex justify-center gap-2 px-1 overflow-x-auto text-center w-full">
       {players.map((p) => (
         <div key={p.Name} className="relative">
           {p.Is_captain && (
@@ -845,8 +845,8 @@ function PlayerRow({
             }}
             className={`${
               isBench
-                ? "w-[45px] h-[60px] sm:w-[56px] sm:h-[76px]"
-                : "w-[55px] h-[80px] sm:w-[62px] sm:h-[86px]"
+                ? "w-[50px] h-[60px] sm:w-[56px] sm:h-[76px]"
+                : "w-[55px] h-[70px] sm:w-[62px] sm:h-[86px]"
             } object-contain drop-shadow`}
             onClick={() =>
               navigate("/Player_Analytics/Individual", {

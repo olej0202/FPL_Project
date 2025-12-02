@@ -402,7 +402,7 @@ def Player_adjustements(current_player_path):
         "Rolling_creativity_share", "rolling_Adjusted_XA_historic_share",
         "rolling_Adjusted_XG_historic_share", "Rolling_adjusted_BPS",
         "CBI", "Average_Overscore", "Average_OverAssist","defcon_avg_hit_rate", "Share_of_XG_share", "Share_of_XA_share","Threat_Mean_share"
-        ,"rolling_XG_share","Creativity_Mean_share"
+        ,"rolling_XG_share","Creativity_Mean_share","Opp_defcon"
     ]
 
     # Goal & assist shares (blend model vs Understat, weighted by risk)
@@ -442,14 +442,15 @@ def Player_adjustements(current_player_path):
     divisor = np.where(df["position"] == "DEF", 10, 12)
 
     cbi_scaled = np.minimum(1, df["CBI"] / divisor) 
+    cbi_opp=1+(df["Opp_defcon"]-75)/75
 
     df["CBI_Percent"] = (
         df["defcon_avg_hit_rate"] * 0.4
         + 0.6 * cbi_scaled
-    )
+    )*cbi_opp
 
     bps_scaled = np.maximum(4, df["Rolling_adjusted_BPS"]) 
-    df["BPS"]=bps_scaled*0.04
+    df["BPS"]=bps_scaled*0.0377
     # Final columns (including the new ones)
     final_cols =["name","position", "GW", "Team","average_minutes","Goal_share", "Assist_share", "Pen_data","CBI_Percent","BPS"]
     df = df[final_cols]

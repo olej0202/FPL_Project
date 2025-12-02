@@ -382,8 +382,8 @@ def Generate_Understat_dataset(current_players,run_player_pos):
     team_tot_xg = agg_df.groupby(["date","player_team"])["npxG_sum"].transform("sum")
     team_tot_xa = agg_df.groupby(["date","player_team"])["xA"].transform("sum")
 
-    agg_df["npxG_share"] = (agg_df["npxG"] / team_tot_xg).replace([np.inf, -np.inf], np.nan).fillna(0)
-    agg_df["xA_share"] = (agg_df["xA"] / team_tot_xa).replace([np.inf, -np.inf], np.nan).fillna(0)
+    agg_df["npxG_share"] = (agg_df["npxG"] / team_tot_xg).replace([np.inf, -np.inf], np.nan).fillna(0).clip(upper=0.5)
+    agg_df["xA_share"] = (agg_df["xA"] / team_tot_xa).replace([np.inf, -np.inf], np.nan).fillna(0).clip(upper=0.5)
 
     print(agg_df)
 
@@ -442,7 +442,7 @@ def Generate_Understat_dataset(current_players,run_player_pos):
     )
 
     agg_enriched["Team_code"]=agg_enriched["Team_code"].astype("int")
-    agg_enriched["xA2"]=agg_enriched["xA"]*0.7+agg_enriched["assists"]*0.3
+    agg_enriched["xA2"]=agg_enriched["xA"]*1+agg_enriched["assists"]*0
     agg_enriched["Adjusted_XG"]=agg_enriched["npxG"]/(agg_enriched["opp_Rolling_Threat_Against"]*0.5+agg_enriched["opp_XGC_avg"]*0.5)
 
     agg_enriched["Adjusted_XA"]=agg_enriched["xA2"]/(agg_enriched["opp_Rolling_Threat_Against"]*0.5+agg_enriched["opp_XGC_avg"]*0.5)
@@ -555,13 +555,13 @@ def Generate_Understat_dataset(current_players,run_player_pos):
     team_tot_xaindex = agg_enriched.groupby(["date", "player_team"])["XAIndex"].transform("sum")
 
         # Shares as fractions (0–1)
-    """agg_enriched["Rolling_XG_Share"] = (
+    agg_enriched["Rolling_XG_Share2"] = (
         agg_enriched["XGIndex"] / team_tot_xgindex
     ).replace([np.inf, -np.inf], np.nan).fillna(0)
 
-    agg_enriched["Rolling_XA_Share"] = (
+    agg_enriched["Rolling_XA_Share2"] = (
         agg_enriched["XAIndex"] / team_tot_xaindex
-    ).replace([np.inf, -np.inf], np.nan).fillna(0)"""
+    ).replace([np.inf, -np.inf], np.nan).fillna(0)
 
 
     # 5) (Optional) save
@@ -585,7 +585,7 @@ def Generate_Understat_dataset(current_players,run_player_pos):
     
     teams_to_flatten = NEW_TEAMS_NAME
 
-    cols_to_avg = ["XGIndex", "XAIndex", "Rolling_XG_Share", "Rolling_XA_Share"]
+    cols_to_avg = ["XGIndex", "XAIndex", "Rolling_XG_Share", "Rolling_XA_Share", "Rolling_XG_Share2", "Rolling_XA_Share2"]
 
     # mask of rows that belong to those teams
     mask = latest["player_team"].isin(teams_to_flatten)
