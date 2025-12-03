@@ -32,6 +32,7 @@ class OptimizeRequest(BaseModel):
     wildcard_round: int = 40
     freehit_round: int = 40
     n_hits: int = 0
+    risk=str='med'
 
     # which engine to use
     model_type: Literal["ai", "statistical"] = "ai"
@@ -169,7 +170,8 @@ def post_my_team_optimize(req: OptimizeRequest):
             GW_list=["0", "5", "6", "7", "8", "9"],
             n_hits=req.n_hits,
             current_player_path="Raw_Data_25/current_players.csv",
-            players_override=players_df,  # <-- NEW ARG (you implement inside)
+            players_override=players_df,
+            risk_factor=req.risk
         )
 
     except ValueError:
@@ -185,6 +187,7 @@ def get_my_team_optimize(
     wildcard_round: Optional[int]           = Query(40, title="Wildcard round"),
     freehit_round: Optional[int]           = Query(40, title="freehit round"),
     n_hits:Optional[int]                   = Query(0, title="n_hits"),
+    risk:Optional[str]                   = Query("med", title="risk"),
 ):
     """
     Optimize a team given:
@@ -206,7 +209,8 @@ def get_my_team_optimize(
             Last_GW=4,
             GW_list=["0","5","6","7","8","9"],
             n_hits=n_hits,
-            current_player_path="Raw_Data_25/current_players.csv"
+            current_player_path="Raw_Data_25/current_players.csv",
+            risk_factor=risk
         )
     except ValueError as e:
         # e.g. if team_id not found or invalid params

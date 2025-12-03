@@ -137,6 +137,7 @@ def optimize_my_team(
     current_player_path: str = "Raw_Data_25/current_players.csv",
     # long format override: columns [player, GW, Points]
     players_override: Optional[pd.DataFrame] = None,
+    risk_factor: str = "med",   # <--- NEW
 ) -> pd.DataFrame:
 
     if banned_list is None:
@@ -262,9 +263,45 @@ def optimize_my_team(
     positions = data["position"].tolist()
     costs = data["value"].tolist()
     teams = data["team_code"].tolist()
-    selected = data["selected"].tolist()
+    selected = pd.to_numeric(data["selected"], errors="coerce").fillna(0.0).to_numpy()
+    point_std = pd.to_numeric(data["Point_STD"], errors="coerce").fillna(0.0).to_numpy()
 
-    predicted_points = data[GW_list].values
+    # make sure we have a plain numpy array for points
+    predicted_points = data[GW_list].to_numpy(dtype=float)
+
+    # ---------- Risk factor adjustment ----------
+    # raw risk: higher std + lower ownership = riskier
+    risk_raw = ((1 - 2 * selected) ** 2) * (1 + point_std)
+
+
+    # clamp negatives so we don't reward ultra-template players as "negative risk"
+    risk_raw = np.maximum(risk_raw, 0.0)
+
+    # normalise risk to [0, 1] to make scaling stable
+    if risk_raw.max() > 0:
+        risk_norm = risk_raw 
+    else:
+        risk_norm = risk_raw  # all zero
+
+    risk_factor_clean = (risk_factor or "med").strip().lower()
+
+    if risk_factor_clean == "low":
+        # risk-averse: DOWN-weight risky players
+        mult = np.clip(1/(risk_norm), 0.6, 2.0)
+    elif risk_factor_clean == "high":
+        # risk-seeking: UP-weight risky players
+        mult = np.clip(risk_norm, 0.6, 2.0)
+    else:
+        # "med": no risk adjustment
+        mult = np.ones_like(risk_norm)
+
+    # convert to 2D for broadcasting: (num_players, 1)
+    mult_2d = mult[:, np.newaxis]
+
+    # Apply risk multiplier per player across all GWs
+    predicted_points = predicted_points * mult_2d
+# -------------------------------------------
+
 
     optimize_range = len(GW_list)  # Number of gameweeks to optimize
     gameweeks = range(optimize_range)
