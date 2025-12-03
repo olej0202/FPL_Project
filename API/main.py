@@ -32,7 +32,7 @@ class OptimizeRequest(BaseModel):
     wildcard_round: int = 40
     freehit_round: int = 40
     n_hits: int = 0
-    risk=str='med'
+    risk:str='med'
 
     # which engine to use
     model_type: Literal["ai", "statistical"] = "ai"
