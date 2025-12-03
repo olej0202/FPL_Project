@@ -34,6 +34,8 @@ export default function MyTeamOptimize() {
     bannedPlayersData,
     n_hits,
     setn_hits,
+    risk,
+    setRisk,
   } = useMyteamData();
 
   const { Playerdata, dataVersion } = useAdjustmentData();
@@ -494,6 +496,81 @@ export default function MyTeamOptimize() {
                 )}
               </p>
             </div>
+                        {/* Risk preference */}
+            <div className="flex flex-col gap-1 lg:col-span-2">
+              <label
+                className="text-xs uppercase tracking-wide"
+                style={{ color: "#e5e7eb" }}
+              >
+                Risk preference
+              </label>
+              <div className="flex items-center gap-2 h-10">
+                {/* Low risk */}
+                <button
+                  type="button"
+                  onClick={() => setRisk("low")}
+                  className="flex-1 inline-flex items-center justify-center px-3 py-1.5 rounded-md text-xs sm:text-sm border transition"
+                  style={{
+                    border:
+                      risk === "low"
+                        ? `1px solid ${PALETTE.gold}`
+                        : "1px solid rgba(248, 250, 252, 0.18)",
+                    background:
+                      risk === "low"
+                        ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)`
+                        : "rgba(0,0,0,0.75)",
+                    color: risk === "low" ? "#000000" : "#e5e7eb",
+                  }}
+                >
+                  Low risk
+                </button>
+
+                {/* Independent / medium */}
+                <button
+                  type="button"
+                  onClick={() => setRisk("med")}
+                  className="flex-1 inline-flex items-center justify-center px-3 py-1.5 rounded-md text-xs sm:text-sm border transition"
+                  style={{
+                    border:
+                      risk === "med"
+                        ? `1px solid ${PALETTE.gold}`
+                        : "1px solid rgba(248, 250, 252, 0.18)",
+                    background:
+                      risk === "med"
+                        ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)`
+                        : "rgba(0,0,0,0.75)",
+                    color: risk === "med" ? "#000000" : "#e5e7eb",
+                  }}
+                >
+                  Independent
+                </button>
+
+                {/* High risk */}
+                <button
+                  type="button"
+                  onClick={() => setRisk("high")}
+                  className="flex-1 inline-flex items-center justify-center px-3 py-1.5 rounded-md text-xs sm:text-sm border transition"
+                  style={{
+                    border:
+                      risk === "high"
+                        ? `1px solid ${PALETTE.gold}`
+                        : "1px solid rgba(248, 250, 252, 0.18)",
+                    background:
+                      risk === "high"
+                        ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)`
+                        : "rgba(0,0,0,0.75)",
+                    color: risk === "high" ? "#000000" : "#e5e7eb",
+                  }}
+                >
+                  High risk
+                </button>
+              </div>
+              <p className="text-[11px] mt-0.5" style={{ color: "#9ca3af" }}>
+                Low risk favors safer, more stable players. High risk leans into
+                volatile, lower-owned picks. Independent leaves projections unchanged.
+              </p>
+            </div>
+
           </div>
         </section>
 
