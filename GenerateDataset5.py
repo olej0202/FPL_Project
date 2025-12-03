@@ -1188,7 +1188,7 @@ def main_Transform():
             player_df["rolling_shots"] = player_df['shots'].ewm(span=lookback, adjust=False).mean()
             mid_table["XG_min"]=(player_df['expected_goals']/player_df['minutes'])*90
             mid_table["XA_min"]=(player_df['expected_assists']/player_df['minutes'])*90
-            mid_table["Threat_min"]=(player_df['Threat']/player_df['minutes'])*90
+            mid_table["Threat_min"]=(player_df['Threat']/player_df['minutes']+0.01)*90
             mid_table["Creativity_min"]=(player_df['creativity']/player_df['minutes'])*90
             
             player_df["rolling_key_passes"] = player_df['key_passes'].ewm(span=lookback, adjust=False).mean()

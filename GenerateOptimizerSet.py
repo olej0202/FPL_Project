@@ -15,7 +15,7 @@ def GenerateOptimizeSet(Current_data_path):
     data_df=pd.read_csv(Current_data_path).iloc[:,1:]
     result = (
         data_df
-          .groupby("name")[["now_cost","team_code","news","selected_by_percent","web_name","defensive_contribution_per_90"]]
+          .groupby("name")[["now_cost","team_code","news","selected_by_percent","web_name","defensive_contribution_per_90","id"]]
           .first()                   # take the first row in each group
           .reset_index()             # turn the group key back into a column
     )
@@ -28,7 +28,7 @@ def GenerateOptimizeSet(Current_data_path):
     })
     prediction_data=pd.read_csv("Model_Predictions.csv").iloc[:,1:]
     
-    merge_cols = ['Name2', 'value', 'team_code', 'news', 'selected',"web_name","DefCon"]
+    merge_cols = ['Name2', 'value', 'team_code', 'news', 'selected',"web_name","DefCon","id"]
     result = result[merge_cols]
 
     merged_df = prediction_data.merge(result, how='left', left_on='name', right_on='Name2')
@@ -118,7 +118,7 @@ def GenerateOptimizeSet(Current_data_path):
     optimized_player_set["Points_prediction"] = optimized_player_set["Points_prediction"] * optimized_player_set["minutes_multiplier"]
     
 
-    constant_cols = ["name", "position","value", 'team_code','selected','web_name','DefCon','Point_STD','offset','0']
+    constant_cols = ["name", "position","value", 'team_code','selected','web_name','DefCon','Point_STD','offset','id','0']
     
 
     pivoted_df = optimized_player_set.pivot_table(

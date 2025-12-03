@@ -136,45 +136,50 @@ def Generate_Team_threats():
     # sort by time within each group
     team_df = team_df.sort_values(["opponent", "pos_group", "date"])
 
-    # EWM per team × pos_group (span=20)
+    # EWM per opponent × pos_group (span=15)
     span = 15
     ewm_cols = [f"{c}_ewm" for c in metrics]
     team_df[ewm_cols] = (
         team_df
-          .groupby(["opponent", "pos_group"])[metrics]
-          .transform(lambda s: s.ewm(span=span, adjust=False).mean())
+        .groupby(["opponent", "pos_group"])[metrics]
+        .transform(lambda s: s.ewm(span=span, adjust=False).mean())
     )
 
-    # --- examples of how to use the result ---
-
-    # 1) get Crystal Palace rows (with EWM columns)
-    cp = team_df.loc[team_df["opponent"] == "Aston Villa"]
-
-    # 2) latest EWM per team × pos_group (i.e., last date per group)
+    # Latest EWM per opponent × pos_group
     latest_ewm = (
         team_df
-          .sort_values("date")
-          .groupby(["opponent", "pos_group"], as_index=False)
-          .tail(1)[["opponent", "pos_group"] + ewm_cols]
+        .sort_values("date")
+        .groupby(["opponent", "pos_group"], as_index=False)
+        .tail(1)[["opponent", "pos_group"] + ewm_cols]
     )
-    team_totals = latest_ewm.groupby("opponent")["shots_ewm"].transform("sum")
-    latest_ewm["shots_share_pct"] = (latest_ewm["shots_ewm"] / team_totals)
+
+    # Share of team shots for each pos_group
+    team_totals_shots = latest_ewm.groupby("opponent")["shots_ewm"].transform("sum")
+    latest_ewm["shots_share_pct"] = latest_ewm["shots_ewm"] / team_totals_shots
     latest_ewm["shots_share_pct"] = latest_ewm["shots_share_pct"].fillna(0.0)
 
+    # Share of team key passes for each pos_group
     team_totals_pass = latest_ewm.groupby("opponent")["key_passes_ewm"].transform("sum")
-    latest_ewm["pass_share_pct"] = (latest_ewm["key_passes_ewm"] / team_totals)
+    latest_ewm["pass_share_pct"] = latest_ewm["key_passes_ewm"] / team_totals_pass
     latest_ewm["pass_share_pct"] = latest_ewm["pass_share_pct"].fillna(0.0)
-    latest_ewm["Goal_Treat"]=latest_ewm["npxG_share_ewm"]*0.6+0.4*latest_ewm["shots_share_pct"]
-    latest_ewm["Assist_Treat"]=latest_ewm["xA_share_ewm"]*0.6+0.4*latest_ewm["pass_share_pct"]
-    latest_ewm["Treat"]=latest_ewm["Goal_Treat"]*0.6+0.4*latest_ewm["Assist_Treat"]
 
-    latest_ewm=latest_ewm[["opponent","pos_group","Treat"]]
+    # Threat metrics (rename Treat → Threat if that’s what you intend)
+    latest_ewm["Goal_Threat"] = latest_ewm["npxG_share_ewm"] * 0.6 + 0.4 * latest_ewm["shots_share_pct"]
+    latest_ewm["Assist_Threat"] = latest_ewm["xA_share_ewm"] * 0.6 + 0.4 * latest_ewm["pass_share_pct"]
+    latest_ewm["Threat"] = latest_ewm["Goal_Threat"] * 0.6 + 0.4 * latest_ewm["Assist_Threat"]
+
+    # Keep only relevant columns
+    latest_ewm = latest_ewm[["opponent", "pos_group", "Threat"]]
+
+    # Filter out GK / SUB
     pg = latest_ewm["pos_group"].str.upper().str.strip()
     latest_ewm = latest_ewm.loc[
         ~pg.isin(["SUB", "GK", "GKP"]),
-        ["opponent", "pos_group", "Treat"]
+        ["opponent", "pos_group", "Threat"]
     ]
-    latest_ewm.to_csv("Team_threat.csv")
+
+    latest_ewm.to_csv("Team_threat.csv", index=False)
+
 def Generate_Player_Historical():
     data=pd.read_csv("testML4.csv").iloc[:,1:]
     relevant_players=pd.read_csv("Player_Prediction_set.csv")
