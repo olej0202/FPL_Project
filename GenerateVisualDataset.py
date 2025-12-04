@@ -415,26 +415,30 @@ def Player_adjustements(current_player_path):
     # alternatively: df["average_minutes"].rdiv(75).clip(lower=1)
 
     df["Goal_share"] = (
-        (
-            df["Rolling_adjusted_XG_share"] * 0.25
-            + df["rolling_Threat_share"] * 0.25
-            + df["Threat_Mean_share"] * 0.25
-            +df["rolling_XG_share"]*0.25
-        )
+            df["Rolling_adjusted_XG_share"] * 0.2
+            + df["rolling_Threat_share"] * 0.2
+            +df["rolling_XG_share"]*0.2
+            )* risk_adj_minutes_factor+ df["Goal_Index"] * 0.2+df["rolling_Goal_min"]*0.2
+    
+    df["Goal_share"] = (df["Goal_share"]
+            
         * (1 - df["player_risiko"])
-        * risk_adj_minutes_factor
         + df["player_risiko"] * df["Understat_POSXG_Share"]
     )
-
+    
     df["Assist_share"] = (
-        (df["Rolling_adjusted_XA_share"] * 0.25
-         + df["Rolling_creativity_share"] * 0.25
-         + df["rolling_Adjusted_XA_historic_share"] * 0.25
-         +df["Creativity_Mean_share"]*0.25)
+            df["Rolling_adjusted_XA_share"] * 0.2
+            + df["Rolling_creativity_share"] * 0.2
+            +df["rolling_Adjusted_XA_historic_share"]*0.2
+            )* risk_adj_minutes_factor+ df["Assist_Index"] * 0.2+df["rolling_Assist_min"]*0.2
+    
+    df["Assist_share"] = (df["Assist_share"]
+            
         * (1 - df["player_risiko"])
-        * risk_adj_minutes_factor
         + df["player_risiko"] * df["Understat_POSXA_Share"]
     )
+
+
 
     # Cap overscore/overassist factors per player in [0.9, 1.15]
     overscore_factor = df["Average_Overscore"].clip(0.9, 1.1)

@@ -72,7 +72,7 @@ export default function MyTeamOptimize() {
   useEffect(() => {
     sethas_changed(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [teamId, bbRound, wildRound, bannedList, freehitROund, n_hits, modelType]);
+  }, [teamId, bbRound, wildRound, bannedList, freehitROund, n_hits, modelType,risk]);
 
   useEffect(() => {
     if (loading) {
@@ -542,7 +542,7 @@ export default function MyTeamOptimize() {
                     color: risk === "med" ? "#000000" : "#e5e7eb",
                   }}
                 >
-                  Independent
+                  Neutral
                 </button>
 
                 {/* High risk */}
@@ -566,8 +566,8 @@ export default function MyTeamOptimize() {
                 </button>
               </div>
               <p className="text-[11px] mt-0.5" style={{ color: "#9ca3af" }}>
-                Low risk favors safer, more stable players. High risk leans into
-                volatile, lower-owned picks. Independent leaves projections unchanged.
+                Low risk favors higher-owned, more stable players. High risk leans into
+                volatile, lower-owned picks. Neutral is optimal.
               </p>
             </div>
 

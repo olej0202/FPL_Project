@@ -287,7 +287,7 @@ def optimize_my_team(
 
     if risk_factor_clean == "low":
         # risk-averse: DOWN-weight risky players
-        mult = np.clip(1/(risk_norm), 0.6, 2.0)
+        mult = np.clip(1/(risk_norm), 0.45, 2.0)
     elif risk_factor_clean == "high":
         # risk-seeking: UP-weight risky players
         mult = np.clip(risk_norm, 0.6, 2.0)
@@ -380,6 +380,25 @@ def optimize_my_team(
         model += lpSum(x[i, t] for i in gk_indices) == 2
         model += lpSum(x[i, t] for i in mid_indices) == 5
         model += lpSum(x[i, t] for i in fwd_indices) == 3
+    #--Playing const
+    for t in gameweeks:
+    # Exactly 11 players
+        model += lpSum(y[i, t] for i in range(num_players)) == 11
+
+        # Position-wise FPL rules on the *starting XI*
+        model += lpSum(y[i, t] for i in gk_indices) == 1
+        model += lpSum(y[i, t] for i in def_indices) >= 3
+        model += lpSum(y[i, t] for i in def_indices) <= 5
+        model += lpSum(y[i, t] for i in mid_indices) >= 2
+        model += lpSum(y[i, t] for i in mid_indices) <= 5
+        model += lpSum(y[i, t] for i in fwd_indices) >= 1
+        model += lpSum(y[i, t] for i in fwd_indices) <= 3
+
+        # Link y ↔ x & bench
+        for i in range(num_players):
+            model += y[i, t] <= x[i, t]
+            model += y[i, t] <= 1 - bench[i, t]
+            model += y[i, t] >= x[i, t] - bench[i, t]
 
     # No immediate back-to-back transfers
     for t in range(1, optimize_range - 1):

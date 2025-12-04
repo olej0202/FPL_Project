@@ -11,6 +11,7 @@ import numpy as np
 from fastapi import HTTPException
 from fastapi.responses import PlainTextResponse
 from Generate_Optimize_Myteam2 import optimize_my_team
+from Generate_Fetch_Myteam import build_team_dataframe
 from typing import List, Optional, Literal
 from pydantic import BaseModel
 
@@ -218,6 +219,20 @@ def get_my_team_optimize(
 
     return df.to_dict(orient="records")
 
+
+@app.get("/Get_My_Team")
+def get_my_team_optimize(
+    team_id: int
+):
+    try:
+        df = build_team_dataframe(
+            team_id
+        )
+    except ValueError as e:
+        # e.g. if team_id not found or invalid params
+        raise HTTPException(status_code=400, detail=str("Team not found"))
+
+    return df.to_dict(orient="records")
 
 
 @app.get("/Player_rankings")
