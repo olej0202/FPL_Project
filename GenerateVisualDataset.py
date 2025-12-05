@@ -211,6 +211,11 @@ def Generate_Player_Rankings(current_teams):
     # 5) Drop the no-longer-needed code columns
     df = df.drop(columns=["code", "opponent_code"])
     df=df[["name", "GW","opponent_name","rolling_ICT","was_home","CBI","Player_code"]]
+    df["photo"] = (
+        "https://resources.premierleague.com/premierleague25/photos/players/500x500/"
+        + df["Player_code"].astype(str)
+        + ".png"
+        )
     df = df.rename(columns={"name": "name2","GW": "GW2"})
 
 
