@@ -116,6 +116,11 @@ export default function MyTeamOverview() {
   const [gwSquads, setGwSquads] = useState({});
   // Per-GW starter indices
   const [gwStarters, setGwStarters] = useState({});
+  // Transfer & money tracking
+  const [bankMoney, setBankMoney] = useState(null); // in millions
+  const [freeTransfersByGw, setFreeTransfersByGw] = useState({});
+  const [transferLog, setTransferLog] = useState([]); // {id, gw, squadIndex, fromName, toName, sellingPrice, incomingPrice, suggestion, createdAt}
+
   // Drag / tap state
   const [dragInfo, setDragInfo] = useState(null); // desktop drag
   const [selectedBenchIndex, setSelectedBenchIndex] = useState(null); // mobile tap
@@ -127,6 +132,43 @@ export default function MyTeamOverview() {
   // Keep localTeamId in sync with context teamId
   useEffect(() => {
     if (teamId) setLocalTeamId(teamId);
+  }, [teamId]);
+
+  // ---------- HYDRATE STATE FROM LOCALSTORAGE ----------
+  useEffect(() => {
+    if (!teamId) return;
+    if (typeof window === "undefined") return;
+
+    try {
+      const raw = localStorage.getItem(`myteam_planner_state_${teamId}`);
+      if (!raw) return;
+
+      const parsed = JSON.parse(raw);
+
+      if (parsed.gwSquads && typeof parsed.gwSquads === "object") {
+        setGwSquads(parsed.gwSquads);
+      }
+      if (parsed.gwStarters && typeof parsed.gwStarters === "object") {
+        setGwStarters(parsed.gwStarters);
+      }
+      if (parsed.currentGW != null) {
+        setCurrentGW(parsed.currentGW);
+      }
+      if (typeof parsed.bankMoney === "number") {
+        setBankMoney(parsed.bankMoney);
+      }
+      if (
+        parsed.freeTransfersByGw &&
+        typeof parsed.freeTransfersByGw === "object"
+      ) {
+        setFreeTransfersByGw(parsed.freeTransfersByGw);
+      }
+      if (Array.isArray(parsed.transferLog)) {
+        setTransferLog(parsed.transferLog);
+      }
+    } catch (err) {
+      console.error("Failed to load planner state:", err);
+    }
   }, [teamId]);
 
   // ---------- FETCH PLAYERS DATA ----------
@@ -231,6 +273,47 @@ export default function MyTeamOverview() {
     }));
   }, [teamData]);
 
+  // ---------- BASIC TEAM INFO ----------
+  const teamInfo = teamData?.[0] || {};
+  const baseMoneyInBank = teamInfo.money_in_bank_m ?? 0;
+  const baseFreeTransfers = (teamInfo.saved_transfers ?? 0) + 1;
+
+  const effectiveBankMoney =
+    bankMoney != null ? bankMoney : baseMoneyInBank;
+
+  // Make sure free transfers for current GW exist following the rule:
+  // FTs(gw0) = baseFreeTransfers
+  // FTs(gw)  = max(1, FTs(prevGw) + 1)
+  useEffect(() => {
+    if (!teamData || currentGW == null || !availableGWs.length) return;
+
+    setFreeTransfersByGw((prev) => {
+      if (prev[currentGW] != null) return prev;
+
+      const sorted = availableGWs;
+      const idx = sorted.indexOf(currentGW);
+      let val;
+
+      if (idx <= 0) {
+        val = baseFreeTransfers;
+      } else {
+        const prevGw = sorted[idx - 1];
+        const prevVal = prev[prevGw] ?? baseFreeTransfers;
+        val = Math.max(1, prevVal + 1);
+      }
+
+      return {
+        ...prev,
+        [currentGW]: val,
+      };
+    });
+  }, [teamData, availableGWs, currentGW, baseFreeTransfers]);
+
+  const currentFreeTransfers =
+    currentGW != null
+      ? freeTransfersByGw[currentGW] ?? baseFreeTransfers
+      : baseFreeTransfers;
+
   // ---------- MERGE SQUAD WITH PREDICTIONS (per GW) ----------
   const playersWithPredictions = useMemo(() => {
     if (
@@ -255,9 +338,16 @@ export default function MyTeamOverview() {
         selectedPct = Number(prediction.selected) * 100;
       }
 
+      const photo =
+        prediction?.photo ??
+        prediction?.photo_url ??
+        player.photo ??
+        null;
+
       return {
         ...player,
         squadIndex,
+        photo, // merged photo from prediction or player
         points_prediction: prediction?.Points_prediction
           ? Number(prediction.Points_prediction)
           : 0,
@@ -325,11 +415,6 @@ export default function MyTeamOverview() {
   const currentGwPoints =
     currentGW != null ? gwPointsMap[currentGW] || 0 : null;
 
-  // ---------- BASIC TEAM INFO ----------
-  const teamInfo = teamData?.[0] || {};
-  const moneyInBank = teamInfo.money_in_bank_m || 0;
-  const savedTransfers = teamInfo.saved_transfers+1 || 0;
-
   // ---------- SWAP: BENCH -> FIELD (same team players) ----------
   const handleBenchToFieldSwap = (gw, benchIndex, starterIndex) => {
     const squad = getSquadForGw(gw);
@@ -371,61 +456,203 @@ export default function MyTeamOverview() {
     }));
   };
 
+  // ---------- HELPER: RECOMPUTE STATE FROM TRANSFER LOG ----------
+  const recomputeFromTransfers = (transfers) => {
+    if (
+      !teamData ||
+      !Array.isArray(teamData) ||
+      !availableGWs.length
+    ) {
+      return {
+        squads: { ...gwSquads },
+        bank: bankMoney ?? baseMoneyInBank,
+        freeTransfers: { ...freeTransfersByGw },
+      };
+    }
+
+    const sortedTransfers = [...transfers].sort(
+      (a, b) => a.gw - b.gw || a.createdAt - b.createdAt
+    );
+
+    // Start squads from original teamData for all GWs
+    const squads = {};
+    availableGWs.forEach((gw) => {
+      squads[gw] = teamData.map((p) => ({ ...p }));
+    });
+
+    // Apply transfers to squads + bank
+    let bank = baseMoneyInBank;
+
+    sortedTransfers.forEach((t) => {
+      bank += t.sellingPrice - t.incomingPrice;
+
+      availableGWs.forEach((gw) => {
+        if (gw < t.gw) return;
+        const base = squads[gw];
+        if (!base || !base[t.squadIndex]) return;
+
+        const template = base[t.squadIndex];
+
+        const incomingPrice = t.incomingPrice;
+        const newRow = {
+          ...template,
+          name: t.suggestion.name,
+          web_name: t.suggestion.web_name,
+          position: template.position,
+          photo:
+            t.suggestion.photo ??
+            t.suggestion.photo_url ??
+            template.photo ??
+            null,
+          now_cost:
+            template.now_cost != null
+              ? template.now_cost
+              : Math.round(incomingPrice * 10),
+          selected_pct:
+            t.suggestion.selected_pct != null
+              ? t.suggestion.selected_pct
+              : template.selected_pct,
+          team_code:
+            t.suggestion.team_code != null
+              ? t.suggestion.team_code
+              : template.team_code,
+          selling_price_m: incomingPrice,
+        };
+
+        base[t.squadIndex] = newRow;
+      });
+    });
+
+    // Free transfers per GW following rule and subtracting transfers
+    const freeTransfers = {};
+    availableGWs.forEach((gw, idx) => {
+      const prevGw = idx > 0 ? availableGWs[idx - 1] : null;
+      const baseFT =
+        idx === 0
+          ? baseFreeTransfers
+          : Math.max(
+              1,
+              (freeTransfers[prevGw] ?? baseFreeTransfers) + 1
+            );
+
+      const transfersInGw = sortedTransfers.filter((t) => t.gw === gw)
+        .length;
+
+      freeTransfers[gw] = Math.max(0, baseFT - transfersInGw);
+    });
+
+    return { squads, bank, freeTransfers };
+  };
+
   // ---------- REPLACE WITH SUGGESTED PLAYER (PlayersData) ----------
   const handleReplaceWithSuggested = (suggestion) => {
     if (!profilePlayer || currentGW == null || !teamData) return;
+    if (!availableGWs.length) return;
 
     const squadIndex = profilePlayer.squadIndex;
     if (squadIndex == null) return;
 
-    setGwSquads((prev) => {
-      const next = { ...prev };
+    // Determine outgoing player row from current GW snapshot
+    const currentBase = getSquadForGw(currentGW);
+    const template =
+      (currentBase && currentBase[squadIndex]) ||
+      (teamData && teamData[squadIndex]) ||
+      profilePlayer;
 
-      availableGWs.forEach((gw) => {
-        if (gw < currentGW) return;
+    const sellingPrice =
+      template.selling_price_m != null
+        ? Number(template.selling_price_m)
+        : template.now_cost != null
+        ? Number(template.now_cost) / 10
+        : 0;
 
-        const base =
-          prev[gw] && prev[gw].length
-            ? prev[gw]
-            : teamData.map((p) => ({ ...p }));
-        if (!base.length) return;
+    const incomingPrice =
+      suggestion.price != null
+        ? Number(suggestion.price)
+        : suggestion.value != null
+        ? Number(suggestion.value)
+        : template.now_cost != null
+        ? Number(template.now_cost) / 10
+        : 0;
 
-        const template =
-          base[squadIndex] ||
-          (teamData && teamData[squadIndex]) ||
-          profilePlayer;
+    const newTransfer = {
+      id:
+        Date.now().toString(36) +
+        "-" +
+        Math.random().toString(36).slice(2),
+      gw: currentGW,
+      squadIndex,
+      fromName: template.web_name || template.name,
+      toName: suggestion.web_name || suggestion.name,
+      sellingPrice,
+      incomingPrice,
+      suggestion: {
+        name: suggestion.name,
+        web_name: suggestion.web_name,
+        team_code: suggestion.team_code,
+        price: suggestion.price,
+        value: suggestion.value,
+        selected_pct: suggestion.selected_pct,
+        photo: suggestion.photo,
+        photo_url: suggestion.photo_url,
+      },
+      createdAt: Date.now(),
+    };
 
-        const newPlayerRow = {
-          ...template,
-          name: suggestion.name,
-          web_name: suggestion.web_name,
-          position: profilePlayer.position,
-          photo: "", // no image, per requirement
-          now_cost:
-            template.now_cost != null
-              ? template.now_cost
-              : Math.round((suggestion.price || 0) * 10),
-          selected_pct:
-            suggestion.selected_pct != null
-              ? suggestion.selected_pct
-              : template.selected_pct,
-          team_code:
-            suggestion.team_code != null
-              ? suggestion.team_code
-              : template.team_code,
-        };
+    const updatedTransfers = [...transferLog, newTransfer];
+    const { squads, bank, freeTransfers } =
+      recomputeFromTransfers(updatedTransfers);
 
-        const updated = base.map((p, idx) =>
-          idx === squadIndex ? newPlayerRow : p
-        );
-        next[gw] = updated;
-      });
-
-      return next;
-    });
-
+    setTransferLog(updatedTransfers);
+    setGwSquads(squads);
+    setBankMoney(bank);
+    setFreeTransfersByGw(freeTransfers);
     setProfilePlayer(null);
   };
+
+  // ---------- UNDO TRANSFER ----------
+  const handleUndoTransfer = (id) => {
+    const updatedTransfers = transferLog.filter((t) => t.id !== id);
+    const { squads, bank, freeTransfers } =
+      recomputeFromTransfers(updatedTransfers);
+
+    setTransferLog(updatedTransfers);
+    setGwSquads(squads);
+    setBankMoney(bank);
+    setFreeTransfersByGw(freeTransfers);
+  };
+
+  // ---------- PERSIST STATE TO LOCALSTORAGE ----------
+  useEffect(() => {
+    if (!teamId) return;
+    if (typeof window === "undefined") return;
+
+    const payload = {
+      gwSquads,
+      gwStarters,
+      currentGW,
+      bankMoney,
+      freeTransfersByGw,
+      transferLog,
+    };
+
+    try {
+      localStorage.setItem(
+        `myteam_planner_state_${teamId}`,
+        JSON.stringify(payload)
+      );
+    } catch (err) {
+      console.error("Failed to save planner state:", err);
+    }
+  }, [
+    teamId,
+    gwSquads,
+    gwStarters,
+    currentGW,
+    bankMoney,
+    freeTransfersByGw,
+    transferLog,
+  ]);
 
   // ---------- NAV + TEAM ID ----------
   const handleSetTeamId = () => {
@@ -440,9 +667,22 @@ export default function MyTeamOverview() {
     setCurrentGW(null);
     setSelectedBenchIndex(null);
     setProfilePlayer(null);
+    setBankMoney(null);
+    setFreeTransfersByGw({});
+    setTransferLog([]);
 
     if (localTeamId !== teamId) {
-      // new team id → effect will trigger fetch
+      // new team id → clear any cached planner state for that team
+      if (typeof window !== "undefined") {
+        try {
+          localStorage.removeItem(
+            `myteam_planner_state_${localTeamId}`
+          );
+        } catch (err) {
+          console.error("Failed to clear planner state:", err);
+        }
+      }
+      // effect will trigger fetch
       setTeamId(localTeamId);
     } else {
       // same team id → manual refetch without touching teamId
@@ -559,7 +799,7 @@ export default function MyTeamOverview() {
       const gwNum = Number(p.GW);
       if (!horizonGwSet.has(gwNum)) return;
 
-      const price = Number(p.value) || 0; // price for slider
+      const price = Number(p.value ?? p.price) || 0; // price for slider, assume millions
       const pts = Number(p.Points_prediction) || 0;
       const opp = p.opponent_name || "N/A";
       const selPct =
@@ -575,6 +815,8 @@ export default function MyTeamOverview() {
           totalPoints: 0,
           opponent: opp,
           selected_pct: selPct,
+          // bring the photo from PlayersData
+          photo: p.photo ?? p.photo_url ?? null,
         };
       }
 
@@ -582,6 +824,9 @@ export default function MyTeamOverview() {
       map[p.name].price = price;
       map[p.name].opponent = opp;
       if (selPct != null) map[p.name].selected_pct = selPct;
+      if (p.photo || p.photo_url) {
+        map[p.name].photo = p.photo ?? p.photo_url;
+      }
     });
 
     const aggregated = Object.values(map);
@@ -728,7 +973,8 @@ export default function MyTeamOverview() {
   }
 
   // ---------- SPLIT STARTERS / BENCH FOR CURRENT GW ----------
-  const startersIdx = currentGW != null ? getStarterIndicesForGw(currentGW) : [];
+  const startersIdx =
+    currentGW != null ? getStarterIndicesForGw(currentGW) : [];
   const startersIdxSet = new Set(startersIdx);
 
   const starters = playersWithPredictions.filter((p) =>
@@ -750,6 +996,10 @@ export default function MyTeamOverview() {
   const fwdStarters = starters
     .filter((p) => p.position === "FWD")
     .sort((a, b) => a.squadIndex - b.squadIndex);
+
+  const sortedTransferLog = [...transferLog].sort(
+    (a, b) => a.gw - b.gw || a.createdAt - b.createdAt
+  );
 
   // ---------- MAIN LAYOUT ----------
   return (
@@ -833,16 +1083,24 @@ export default function MyTeamOverview() {
                 <div className="text-[11px] uppercase tracking-wide text-gray-300 mb-1">
                   Money in Bank
                 </div>
-                <div className="text-xl sm:text-2xl font-bold text-emerald-400">
-                  £{moneyInBank.toFixed(1)}m
+                <div
+                  className="text-xl sm:text-2xl font-bold"
+                  style={{
+                    color:
+                      effectiveBankMoney < 0
+                        ? "#f87171" // red
+                        : "#34d399", // green
+                  }}
+                >
+                  £{effectiveBankMoney.toFixed(1)}m
                 </div>
               </div>
               <div className="rounded-lg p-3 sm:p-4 bg-black/40 border border-blue-500/40">
                 <div className="text-[11px] uppercase tracking-wide text-gray-300 mb-1">
-                  Free Transfers
+                  Free Transfers (GW {currentGW ?? "-"})
                 </div>
                 <div className="text-xl sm:text-2xl font-bold text-blue-400">
-                  {savedTransfers}
+                  {currentFreeTransfers}
                 </div>
               </div>
               <div className="rounded-lg p-3 sm:p-4 bg-black/40 border border-purple-500/40 col-span-2 sm:col-span-1">
@@ -978,7 +1236,7 @@ export default function MyTeamOverview() {
           </div>
         </section>
 
-        {/* GW Navigation + Pitch + Bench */}
+        {/* GW Navigation + Pitch + Bench + Transfers */}
         <section
           className="rounded-2xl p-4 sm:p-5 mb-10"
           style={{
@@ -995,8 +1253,8 @@ export default function MyTeamOverview() {
                 Squad for GW {currentGW ?? "-"}
               </h2>
               <p className="text-xs mt-1" style={{ color: "#d1c3a9" }}>
-                Tap a
-                bench player, then tap a player on the pitch to swap. Click the{" "}
+                Tap a bench player, then tap a player on the pitch to swap.
+                Click the{" "}
                 <span className="inline-flex items-center gap-1">
                   <Info size={12} /> icon
                 </span>{" "}
@@ -1224,7 +1482,7 @@ export default function MyTeamOverview() {
                               {player.web_name}
                             </span>
                             <span className="text-[11px] text-gray-300 whitespace-nowrap">
-                               {player.opponent}
+                              {player.opponent}
                             </span>
                           </div>
                           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-gray-400 mt-0.5">
@@ -1251,12 +1509,58 @@ export default function MyTeamOverview() {
                     );
                   })}
                   <p className="text-[11px] text-gray-300 mt-1">
-                    Tap and then tap
-                    a player on the pitch to swap. 
+                    Tap and then tap a player on the pitch to swap.
                   </p>
                 </div>
               )}
             </div>
+          </div>
+
+          {/* Transfer tracker under pitch */}
+          <div className="mt-6">
+            <h3 className="text-sm font-semibold mb-2 flex items-center justify-between">
+              Planned Transfers
+              <span className="text-[10px] text-gray-300">
+                (click ✕ to undo)
+              </span>
+            </h3>
+            {sortedTransferLog.length === 0 ? (
+              <div className="text-xs text-gray-300">
+                No planned transfers yet.
+              </div>
+            ) : (
+              <div className="space-y-1 text-xs">
+                {sortedTransferLog.map((t) => (
+                  <div
+                    key={t.id}
+                    className="flex items-center justify-between rounded-md border border-white/15 bg-black/70 px-2 py-1.5"
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2">
+                      <span className="font-semibold text-amber-200">
+                        GW {t.gw}
+                      </span>
+                      <span className="text-gray-100">
+                        {t.fromName}{" "}
+                        <span className="text-gray-400">→</span>{" "}
+                        {t.toName}
+                      </span>
+                      <span className="text-[10px] text-gray-400">
+                        Bank Δ:{" "}
+                        {(t.sellingPrice - t.incomingPrice).toFixed(1)}m
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleUndoTransfer(t.id)}
+                      className="ml-2 p-1 rounded-full hover:bg-black/80"
+                      aria-label="Undo transfer"
+                    >
+                      <X size={12} className="text-red-500" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </section>
       </div>
@@ -1284,9 +1588,20 @@ export default function MyTeamOverview() {
             </button>
 
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center text-sm font-semibold">
-                {profilePlayer.web_name?.slice(0, 2).toUpperCase()}
-              </div>
+              {profilePlayer.photo ? (
+                <img
+                  src={profilePlayer.photo}
+                  alt={profilePlayer.web_name}
+                  className="w-12 h-12 rounded-full object-cover bg-gray-800"
+                  onError={(e) => {
+                    e.currentTarget.src = "";
+                  }}
+                />
+              ) : (
+                <div className="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center text-sm font-semibold">
+                  {profilePlayer.web_name?.slice(0, 2).toUpperCase()}
+                </div>
+              )}
               <div>
                 <div className="text-sm uppercase tracking-wide text-gray-400">
                   {profilePlayer.position}
@@ -1391,12 +1706,28 @@ export default function MyTeamOverview() {
                         className="px-3 py-2 flex items-center justify-between gap-2 cursor-pointer hover:bg-white/5"
                         onClick={() => handleReplaceWithSuggested(p)}
                       >
-                        <div className="min-w-0">
-                          <div className="font-semibold truncate max-w-[140px]">
-                            {p.web_name}
-                          </div>
-                          <div className="text-[10px] text-gray-400">
-                             £{p.price.toFixed(1)}m
+                        <div className="flex items-center gap-2 min-w-0">
+                          {p.photo ? (
+                            <img
+                              src={p.photo}
+                              alt={p.web_name}
+                              className="w-8 h-8 rounded-full object-cover bg-gray-700 flex-shrink-0"
+                              onError={(e) => {
+                                e.currentTarget.src = "";
+                              }}
+                            />
+                          ) : (
+                            <div className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center text-[10px] text-gray-400 flex-shrink-0">
+                              {p.web_name?.slice(0, 2).toUpperCase()}
+                            </div>
+                          )}
+                          <div className="min-w-0">
+                            <div className="font-semibold truncate max-w-[140px]">
+                              {p.web_name}
+                            </div>
+                            <div className="text-[10px] text-gray-400">
+                              £{p.price.toFixed(1)}m • {oppShort}
+                            </div>
                           </div>
                         </div>
                         <div className="text-right">
@@ -1517,7 +1848,7 @@ function PitchRow({
 
             <div className="mt-0.5 flex flex-col items-center gap-0.5">
               <div className="px-1.5 py-0.5 rounded-full bg-gray-800/85 text-[9px] text-gray-100">
-                 {oppShort}
+                {oppShort}
               </div>
               <div className="px-1.5 py-0.5 rounded-full bg-gray-900/90 text-[9px] font-bold text-amber-300">
                 {player.points_prediction.toFixed(1)} pts
