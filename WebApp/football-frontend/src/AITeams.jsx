@@ -13,7 +13,7 @@ export default function AITeams() {
     }, [location, navigate]);
 
   return (
- <div className="min-h-screen bg-black text-white px-4 py-6 space-y-6">
+ <div className="min-h-screen bg-black text-white px-2 py-6 space-y-6">
 
   {/* Tabs */}
   <div className="flex justify-center gap-4 mb-6">
@@ -21,7 +21,19 @@ export default function AITeams() {
   to="My_Team"
   end
   className={({ isActive }) =>
-    `px-4 py-2 font-semibold ${
+    `px-1 py-0 font-semibold ${
+      isActive
+        ? "border-b-2 border-royal-gold text-royal-gold hover:text-royal-gold"
+        : "text-white hover:text-royal-gold"
+    }`
+  }
+>
+  Optimize
+</NavLink>
+<NavLink
+  to="Team_Overview"
+  className={({ isActive }) =>
+    `px-1 py-0 font-semibold ${
       isActive
         ? "border-b-2 border-royal-gold text-royal-gold hover:text-royal-gold"
         : "text-white hover:text-royal-gold"
@@ -34,7 +46,7 @@ export default function AITeams() {
 <NavLink
   to="Wildcard_Team"
   className={({ isActive }) =>
-    `px-4 py-2 font-semibold ${
+    `px-1 py-0 font-semibold ${
       isActive
         ? "border-b-2 border-royal-gold text-royal-gold hover:text-royal-gold"
         : "text-white hover:text-royal-gold"
@@ -47,7 +59,7 @@ export default function AITeams() {
 <NavLink
   to="FreeHitTeam"
   className={({ isActive }) =>
-    `px-4 py-2 font-semibold ${
+    `px-1 py-0 font-semibold ${
       isActive
         ? "border-b-2 border-royal-gold text-royal-gold hover:text-royal-gold"
         : "text-white hover:text-royal-gold"

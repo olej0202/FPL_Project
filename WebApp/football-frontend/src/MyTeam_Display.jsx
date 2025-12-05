@@ -1,90 +1,461 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { useMyteamData } from './Contexts/MyTeamContext';
-import { useStatsData } from './Contexts/StatsContext';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react';
+// src/pages/MyTeamOverview.jsx
+import React, { useState, useEffect, useMemo } from "react";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
+import {
+  ChevronLeft,
+  ChevronRight,
+  ChevronDown,
+  ChevronUp,
+  Info,
+  X,
+} from "lucide-react";
+import { useMyteamData } from "./Contexts/MyTeamContext";
+import { useStatsData } from "./Contexts/StatsContext";
+import pitch from "./assets/pitch_lineup.png";
+
+const PALETTE = {
+  red: "#5A0000",
+  gold: "#B8860B",
+  black: "#000000",
+  beige: "#f7ead6",
+};
+
+// Compute default 11 starters given a squad and predictions
+// respecting: exactly 1 GKP, at least 3 DEF, 2 MID, 1 FWD
+function computeDefaultStartersIndices(squad, gw, playersData) {
+  if (!Array.isArray(squad) || squad.length === 0) return [];
+
+  const metadata = squad.map((player, idx) => {
+    const prediction = playersData.find(
+      (p) => p.name === player.name && Number(p.GW) === Number(gw)
+    );
+    const pts = prediction?.Points_prediction
+      ? Number(prediction.Points_prediction)
+      : 0;
+    return { idx, pos: player.position, pts };
+  });
+
+  const byPos = { GKP: [], DEF: [], MID: [], FWD: [] };
+  metadata.forEach((m) => {
+    if (byPos[m.pos]) byPos[m.pos].push(m);
+  });
+  Object.values(byPos).forEach((arr) => arr.sort((a, b) => b.pts - a.pts));
+
+  const chosen = new Set();
+  const maxStarters = Math.min(11, squad.length);
+
+  const pickFrom = (arr, n) => {
+    for (let i = 0; i < arr.length && chosen.size < maxStarters && n > 0; i++) {
+      if (!chosen.has(arr[i].idx)) {
+        chosen.add(arr[i].idx);
+        n--;
+      }
+    }
+  };
+
+  // Minimum formation
+  pickFrom(byPos.GKP, 1);
+  pickFrom(byPos.DEF, 3);
+  pickFrom(byPos.MID, 2);
+  pickFrom(byPos.FWD, 1);
+
+  // Count positions currently chosen
+  let gkp = 0,
+    def = 0,
+    mid = 0,
+    fwd = 0;
+
+  chosen.forEach((idx) => {
+    const pos = metadata.find((m) => m.idx === idx)?.pos;
+    if (pos === "GKP") gkp++;
+    else if (pos === "DEF") def++;
+    else if (pos === "MID") mid++;
+    else if (pos === "FWD") fwd++;
+  });
+
+  // Fill remaining by highest predicted points, but never >1 GKP
+  const remaining = metadata
+    .filter((m) => !chosen.has(m.idx))
+    .sort((a, b) => b.pts - a.pts);
+
+  for (const m of remaining) {
+    if (chosen.size >= maxStarters) break;
+    if (m.pos === "GKP" && gkp >= 1) continue; // only 1 GKP allowed
+    chosen.add(m.idx);
+    if (m.pos === "GKP") gkp++;
+    else if (m.pos === "DEF") def++;
+    else if (m.pos === "MID") mid++;
+    else if (m.pos === "FWD") fwd++;
+  }
+
+  return Array.from(chosen);
+}
 
 export default function MyTeamOverview() {
-  const { teamId, setTeamId, teamData, fetchMyTeam, teamLoading } = useMyteamData();
-  const { PlayersData } = useStatsData();
-  
-  const [localTeamId, setLocalTeamId] = useState(teamId || '');
-  const [showChart, setShowChart] = useState(false);
+  const { teamId, setTeamId, teamData, fetchMyTeam, teamLoading } =
+    useMyteamData();
+  const { fetchIfNeeded, PlayersData } = useStatsData();
+
+  const [localTeamId, setLocalTeamId] = useState(teamId || "");
+  const [showRankChart, setShowRankChart] = useState(false);
+  const [showPredChart, setShowPredChart] = useState(false);
   const [currentGW, setCurrentGW] = useState(null);
 
-  // Fetch team data when component mounts or teamId changes
+  const [playersData, setPlayersData] = useState([]);
+  const [playersLoading, setPlayersLoading] = useState(true);
+
+  // Per-GW 15-man squads
+  const [gwSquads, setGwSquads] = useState({});
+  // Per-GW starter indices
+  const [gwStarters, setGwStarters] = useState({});
+  // Drag / tap state
+  const [dragInfo, setDragInfo] = useState(null); // desktop drag
+  const [selectedBenchIndex, setSelectedBenchIndex] = useState(null); // mobile tap
+
+  // Player profile overlay
+  const [profilePlayer, setProfilePlayer] = useState(null);
+  const [replacementMaxValue, setReplacementMaxValue] = useState(null); // price threshold
+
+  // Keep localTeamId in sync with context teamId
+  useEffect(() => {
+    if (teamId) setLocalTeamId(teamId);
+  }, [teamId]);
+
+  // ---------- FETCH PLAYERS DATA ----------
+  useEffect(() => {
+    const loadPlayers = async () => {
+      setPlayersLoading(true);
+      await fetchIfNeeded();
+
+      if (PlayersData.current && PlayersData.current.length > 0) {
+        setPlayersData(PlayersData.current);
+      } else {
+        setPlayersData([]);
+      }
+      setPlayersLoading(false);
+    };
+    loadPlayers();
+  }, [fetchIfNeeded, PlayersData]);
+
+  // ---------- FETCH TEAM DATA WHEN teamId CHANGES (NO LOOP) ----------
   useEffect(() => {
     if (teamId && !teamData) {
       fetchMyTeam();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [teamId]);
 
-  // Get available GWs and set initial GW
+  // ---------- AVAILABLE GWs & CURRENT GW ----------
   const availableGWs = useMemo(() => {
-    if (!PlayersData || !Array.isArray(PlayersData) || PlayersData.length === 0) return [];
-    const gws = [...new Set(PlayersData.map(p => p.GW))].sort((a, b) => a - b);
+    if (!playersData || playersData.length === 0) return [];
+    const gws = [
+      ...new Set(
+        playersData
+          .map((p) => Number(p.GW))
+          .filter((gw) => Number.isFinite(gw))
+      ),
+    ].sort((a, b) => a - b);
     return gws;
-  }, [PlayersData]);
+  }, [playersData]);
+
+  const minAvailableGW =
+    availableGWs.length > 0 ? availableGWs[0] : null;
+  const maxAvailableGW =
+    availableGWs.length > 0
+      ? availableGWs[availableGWs.length - 1]
+      : null;
 
   useEffect(() => {
     if (availableGWs.length > 0 && currentGW === null) {
       setCurrentGW(availableGWs[0]);
     }
-  }, [availableGWs]);
+  }, [availableGWs, currentGW]);
 
-  // Prepare chart data from rank_progress
-  const chartData = useMemo(() => {
+  // Ensure base squad for current GW
+  useEffect(() => {
+    if (!teamData || !Array.isArray(teamData)) return;
+    if (currentGW == null) return;
+
+    setGwSquads((prev) => {
+      if (prev[currentGW]) return prev;
+      return {
+        ...prev,
+        [currentGW]: teamData.map((p) => ({ ...p })),
+      };
+    });
+  }, [currentGW, teamData]);
+
+  const getSquadForGw = (gw) => {
+    if (gwSquads[gw]) return gwSquads[gw];
+    if (teamData) return teamData;
+    return [];
+  };
+
+  const getStarterIndicesForGw = (gw) => {
+    const squad = getSquadForGw(gw);
+    if (!squad.length) return [];
+    if (!playersData.length) {
+      return squad.slice(0, 11).map((_, idx) => idx);
+    }
+    const stored = gwStarters[gw];
+    if (stored && stored.length) return stored;
+    return computeDefaultStartersIndices(squad, gw, playersData);
+  };
+
+  // ---------- CURRENT SQUAD ----------
+  const currentSquad = useMemo(() => {
+    if (currentGW == null || !teamData) return [];
+    return getSquadForGw(currentGW);
+  }, [currentGW, gwSquads, teamData]);
+
+  // To avoid suggested players already in squad
+  const currentSquadNames = useMemo(
+    () => new Set(currentSquad.map((p) => p.name)),
+    [currentSquad]
+  );
+
+  // ---------- RANK PROGRESS CHART ----------
+  const rankChartData = useMemo(() => {
     if (!teamData || !teamData[0]?.rank_progress) return [];
     return teamData[0].rank_progress.map((rank, index) => ({
       gw: index + 1,
-      rank: rank
+      rank,
     }));
   }, [teamData]);
 
-  // Get team info from first row
+  // ---------- MERGE SQUAD WITH PREDICTIONS (per GW) ----------
+  const playersWithPredictions = useMemo(() => {
+    if (
+      !currentSquad ||
+      currentSquad.length === 0 ||
+      !playersData ||
+      playersData.length === 0 ||
+      currentGW === null
+    ) {
+      return [];
+    }
+
+    return currentSquad.map((player, squadIndex) => {
+      const prediction = playersData.find(
+        (p) =>
+          p.name === player.name &&
+          Number(p.GW) === Number(currentGW)
+      );
+
+      let selectedPct = player.selected_pct;
+      if (selectedPct == null && prediction?.selected != null) {
+        selectedPct = Number(prediction.selected) * 100;
+      }
+
+      return {
+        ...player,
+        squadIndex,
+        points_prediction: prediction?.Points_prediction
+          ? Number(prediction.Points_prediction)
+          : 0,
+        opponent: prediction?.opponent_name || "N/A",
+        selected_pct: selectedPct,
+        model_value:
+          prediction?.value != null ? Number(prediction.value) : null,
+      };
+    });
+  }, [currentSquad, playersData, currentGW]);
+
+  // ---------- PREDICTED POINTS (XI only, per GW) ----------
+  const gwPointsMap = useMemo(() => {
+    if (!teamData || !playersData || playersData.length === 0) return {};
+
+    const map = {};
+    availableGWs.forEach((gw) => {
+      const squadForGw = getSquadForGw(gw);
+      if (!squadForGw.length) {
+        map[gw] = 0;
+        return;
+      }
+      const startersIdx = getStarterIndicesForGw(gw);
+      let sum = 0;
+
+      startersIdx.forEach((idx) => {
+        const player = squadForGw[idx];
+        if (!player) return;
+        const prediction = playersData.find(
+          (p) =>
+            p.name === player.name &&
+            Number(p.GW) === Number(gw)
+        );
+        if (prediction?.Points_prediction) {
+          sum += Number(prediction.Points_prediction);
+        }
+      });
+
+      map[gw] = sum;
+    });
+
+    return map;
+  }, [availableGWs, gwSquads, teamData, playersData, gwStarters]);
+
+  const totalPredictedPoints = useMemo(
+    () =>
+      Object.values(gwPointsMap).reduce(
+        (acc, val) => acc + (val || 0),
+        0
+      ),
+    [gwPointsMap]
+  );
+
+  const predictedChartData = useMemo(() => {
+    if (!availableGWs.length) return [];
+    const futureGWs = availableGWs.filter(
+      (gw) => currentGW == null || gw >= currentGW
+    );
+    return futureGWs.map((gw) => ({
+      gw,
+      points: gwPointsMap[gw] || 0,
+    }));
+  }, [availableGWs, gwPointsMap, currentGW]);
+
+  const currentGwPoints =
+    currentGW != null ? gwPointsMap[currentGW] || 0 : null;
+
+  // ---------- BASIC TEAM INFO ----------
   const teamInfo = teamData?.[0] || {};
   const moneyInBank = teamInfo.money_in_bank_m || 0;
-  const savedTransfers = teamInfo.saved_transfers || 0;
+  const savedTransfers = teamInfo.saved_transfers+1 || 0;
 
-  // Position order for sorting
-  const positionOrder = { 'GKP': 1, 'DEF': 2, 'MID': 3, 'FWD': 4 };
+  // ---------- SWAP: BENCH -> FIELD (same team players) ----------
+  const handleBenchToFieldSwap = (gw, benchIndex, starterIndex) => {
+    const squad = getSquadForGw(gw);
+    if (!squad.length) return;
 
-  // Merge team data with player predictions for current GW
-  const playersWithPredictions = useMemo(() => {
-    if (!teamData || !Array.isArray(teamData) || !PlayersData || !Array.isArray(PlayersData) || currentGW === null) return [];
-    
-    return teamData
-      .map(player => {
-        const prediction = PlayersData.find(
-          p => p.name === player.player_name && p.GW === currentGW
-        );
-        
-        return {
-          ...player,
-          points_prediction: prediction?.Points_prediction || 0,
-          opponent: prediction?.opponent_name || 'N/A'
-        };
-      })
-      .sort((a, b) => {
-        const posA = positionOrder[a.position] || 999;
-        const posB = positionOrder[b.position] || 999;
-        return posA - posB;
-      });
-  }, [teamData, PlayersData, currentGW]);
+    const currentStarterIndices = getStarterIndicesForGw(gw);
+    const starterSet = new Set(currentStarterIndices);
 
-  const handleSetTeamId = () => {
-    if (!localTeamId) {
-      alert('Please enter a Team ID');
+    if (!starterSet.has(starterIndex) || starterSet.has(benchIndex)) {
       return;
     }
-    setTeamId(localTeamId);
-    fetchMyTeam();
+
+    const newSet = new Set(starterSet);
+    newSet.delete(starterIndex);
+    newSet.add(benchIndex);
+
+    // Check formation constraints: exactly 1 GKP, min 3 DEF, 2 MID, 1 FWD
+    let gkp = 0,
+      def = 0,
+      mid = 0,
+      fwd = 0;
+
+    newSet.forEach((idx) => {
+      const pos = squad[idx]?.position;
+      if (pos === "GKP") gkp++;
+      else if (pos === "DEF") def++;
+      else if (pos === "MID") mid++;
+      else if (pos === "FWD") fwd++;
+    });
+
+    if (gkp !== 1 || def < 3 || mid < 2 || fwd < 1) {
+      // violates formation → ignore swap
+      return;
+    }
+
+    setGwStarters((prev) => ({
+      ...prev,
+      [gw]: Array.from(newSet),
+    }));
+  };
+
+  // ---------- REPLACE WITH SUGGESTED PLAYER (PlayersData) ----------
+  const handleReplaceWithSuggested = (suggestion) => {
+    if (!profilePlayer || currentGW == null || !teamData) return;
+
+    const squadIndex = profilePlayer.squadIndex;
+    if (squadIndex == null) return;
+
+    setGwSquads((prev) => {
+      const next = { ...prev };
+
+      availableGWs.forEach((gw) => {
+        if (gw < currentGW) return;
+
+        const base =
+          prev[gw] && prev[gw].length
+            ? prev[gw]
+            : teamData.map((p) => ({ ...p }));
+        if (!base.length) return;
+
+        const template =
+          base[squadIndex] ||
+          (teamData && teamData[squadIndex]) ||
+          profilePlayer;
+
+        const newPlayerRow = {
+          ...template,
+          name: suggestion.name,
+          web_name: suggestion.web_name,
+          position: profilePlayer.position,
+          photo: "", // no image, per requirement
+          now_cost:
+            template.now_cost != null
+              ? template.now_cost
+              : Math.round((suggestion.price || 0) * 10),
+          selected_pct:
+            suggestion.selected_pct != null
+              ? suggestion.selected_pct
+              : template.selected_pct,
+          team_code:
+            suggestion.team_code != null
+              ? suggestion.team_code
+              : template.team_code,
+        };
+
+        const updated = base.map((p, idx) =>
+          idx === squadIndex ? newPlayerRow : p
+        );
+        next[gw] = updated;
+      });
+
+      return next;
+    });
+
+    setProfilePlayer(null);
+  };
+
+  // ---------- NAV + TEAM ID ----------
+  const handleSetTeamId = () => {
+    if (!localTeamId) {
+      alert("Please enter a Team ID");
+      return;
+    }
+
+    // reset local GW state when switching / reloading team
+    setGwSquads({});
+    setGwStarters({});
+    setCurrentGW(null);
+    setSelectedBenchIndex(null);
+    setProfilePlayer(null);
+
+    if (localTeamId !== teamId) {
+      // new team id → effect will trigger fetch
+      setTeamId(localTeamId);
+    } else {
+      // same team id → manual refetch without touching teamId
+      fetchMyTeam();
+    }
   };
 
   const handlePrevGW = () => {
     const currentIndex = availableGWs.indexOf(currentGW);
     if (currentIndex > 0) {
       setCurrentGW(availableGWs[currentIndex - 1]);
+      setSelectedBenchIndex(null);
+      setProfilePlayer(null);
     }
   };
 
@@ -92,25 +463,223 @@ export default function MyTeamOverview() {
     const currentIndex = availableGWs.indexOf(currentGW);
     if (currentIndex < availableGWs.length - 1) {
       setCurrentGW(availableGWs[currentIndex + 1]);
+      setSelectedBenchIndex(null);
+      setProfilePlayer(null);
     }
   };
 
-  // If no teamId set, show input
+  // ---------- PROFILE META: total predicted points from currentGW → maxGW ----------
+  const profileMeta = useMemo(() => {
+    if (
+      !profilePlayer ||
+      !playersData.length ||
+      currentGW == null ||
+      maxAvailableGW == null
+    )
+      return null;
+
+    const selFromPlayer = profilePlayer.selected_pct;
+    let selFromData = null;
+
+    const gwSet = new Set(
+      availableGWs.filter((gw) => gw >= currentGW && gw <= maxAvailableGW)
+    );
+
+    let totalPred = 0;
+    playersData.forEach((p) => {
+      if (p.name !== profilePlayer.name) return;
+      const gwNum = Number(p.GW);
+      if (!gwSet.has(gwNum)) return;
+
+      const pts = Number(p.Points_prediction) || 0;
+      totalPred += pts;
+
+      if (selFromData == null && p.selected != null) {
+        selFromData = Number(p.selected) * 100;
+      }
+    });
+
+    const selPct =
+      selFromPlayer != null
+        ? selFromPlayer
+        : selFromData != null
+        ? selFromData
+        : null;
+
+    const nowCost =
+      profilePlayer.now_cost != null
+        ? Number(profilePlayer.now_cost) / 10
+        : null;
+
+    return {
+      selPct,
+      nowCost,
+      totalPred,
+    };
+  }, [
+    profilePlayer,
+    playersData,
+    availableGWs,
+    currentGW,
+    maxAvailableGW,
+  ]);
+
+  // ---------- REPLACEMENTS: dedup, exclude current squad, price filter, horizon current→max ----------
+  const replacementsMeta = useMemo(() => {
+    if (
+      !profilePlayer ||
+      !playersData.length ||
+      currentGW == null ||
+      maxAvailableGW == null
+    ) {
+      return { minVal: 0, maxVal: 0, threshold: 0, list: [] };
+    }
+
+    const horizonGwSet = new Set(
+      availableGWs.filter((gw) => gw >= currentGW && gw <= maxAvailableGW)
+    );
+
+    const samePosRows = playersData.filter(
+      (p) => p.position === profilePlayer.position
+    );
+    if (!samePosRows.length) {
+      return { minVal: 0, maxVal: 0, threshold: 0, list: [] };
+    }
+
+    const map = {};
+    samePosRows.forEach((p) => {
+      // Exclude players already in squad (except the current profiled one)
+      if (
+        currentSquadNames.has(p.name) &&
+        p.name !== profilePlayer.name
+      ) {
+        return;
+      }
+
+      const gwNum = Number(p.GW);
+      if (!horizonGwSet.has(gwNum)) return;
+
+      const price = Number(p.value) || 0; // price for slider
+      const pts = Number(p.Points_prediction) || 0;
+      const opp = p.opponent_name || "N/A";
+      const selPct =
+        p.selected != null ? Number(p.selected) * 100 : null;
+
+      if (!map[p.name]) {
+        map[p.name] = {
+          id: p.id,
+          name: p.name,
+          web_name: p.web_name,
+          team_code: p.team_code,
+          price,
+          totalPoints: 0,
+          opponent: opp,
+          selected_pct: selPct,
+        };
+      }
+
+      map[p.name].totalPoints += pts;
+      map[p.name].price = price;
+      map[p.name].opponent = opp;
+      if (selPct != null) map[p.name].selected_pct = selPct;
+    });
+
+    const aggregated = Object.values(map);
+    if (!aggregated.length) {
+      return { minVal: 0, maxVal: 0, threshold: 0, list: [] };
+    }
+
+    const prices = aggregated.map((a) => a.price || 0);
+    const minVal = Math.floor(Math.min(...prices));
+    const maxVal = Math.ceil(Math.max(...prices));
+    const threshold =
+      replacementMaxValue != null ? replacementMaxValue : maxVal;
+
+    const list = aggregated
+      .filter((a) => a.price <= threshold)
+      .sort((a, b) => b.totalPoints - a.totalPoints)
+      .slice(0, 15);
+
+    return { minVal, maxVal, threshold, list };
+  }, [
+    profilePlayer,
+    playersData,
+    availableGWs,
+    currentGW,
+    maxAvailableGW,
+    currentSquadNames,
+    replacementMaxValue,
+  ]);
+
+  // Initialize slider when profilePlayer changes
+  useEffect(() => {
+    if (
+      !profilePlayer ||
+      !playersData.length ||
+      replacementsMeta.maxVal <= replacementsMeta.minVal
+    ) {
+      setReplacementMaxValue(null);
+      return;
+    }
+    setReplacementMaxValue(replacementsMeta.maxVal);
+  }, [
+    profilePlayer,
+    playersData,
+    replacementsMeta.maxVal,
+    replacementsMeta.minVal,
+  ]);
+
+  const handleOpenProfile = (player) => {
+    setProfilePlayer(player);
+  };
+
+  const handleCloseProfile = () => {
+    setProfilePlayer(null);
+  };
+
+  // ---------- EARLY RETURNS ----------
   if (!teamId) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 p-8">
-        <div className="max-w-md mx-auto bg-white rounded-lg shadow-lg p-8">
-          <h1 className="text-2xl font-bold text-gray-800 mb-6">Enter Your Team ID</h1>
+      <div
+        className="min-h-screen flex items-center justify-center px-4"
+        style={{
+          background: `radial-gradient(circle at top, ${PALETTE.red} 0, ${PALETTE.black} 45%, #000000 100%)`,
+          color: PALETTE.beige,
+          fontFamily:
+            "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+        }}
+      >
+        <div
+          className="w-full max-w-md rounded-2xl p-5 shadow-2xl"
+          style={{
+            border: `1px solid ${PALETTE.gold}`,
+            background:
+              "linear-gradient(145deg, rgba(0,0,0,0.96), rgba(0,0,0,0.9))",
+          }}
+        >
+          <h1 className="text-xl sm:text-2xl font-bold mb-3 text-center">
+            Enter Your Team ID
+          </h1>
           <input
-            type="text"
+            type="number"
             value={localTeamId}
             onChange={(e) => setLocalTeamId(e.target.value)}
             placeholder="Team ID"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="w-full h-10 px-3 rounded-md text-sm mb-3"
+            style={{
+              border: "1px solid rgba(248, 250, 252, 0.18)",
+              backgroundColor: "rgba(0,0,0,0.75)",
+              color: PALETTE.beige,
+            }}
           />
           <button
             onClick={handleSetTeamId}
-            className="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition"
+            className="w-full h-10 rounded-full font-semibold text-sm transition"
+            style={{
+              border: `1px solid ${PALETTE.gold}`,
+              background: `linear-gradient(135deg, ${PALETTE.gold}, #facc15)`,
+              color: "#000000",
+            }}
           >
             Load Team
           </button>
@@ -119,123 +688,844 @@ export default function MyTeamOverview() {
     );
   }
 
-  if (teamLoading) {
+  if (teamLoading || playersLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center">
-        <div className="text-xl text-gray-600">Loading team data...</div>
+      <div
+        className="min-h-screen flex items-center justify-center p-6"
+        style={{
+          background: `radial-gradient(circle at top, ${PALETTE.red}, ${PALETTE.black})`,
+          color: PALETTE.beige,
+          fontFamily:
+            "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+        }}
+      >
+        <div
+          className="w-full max-w-md rounded-2xl p-5 shadow-2xl text-center text-sm"
+          style={{
+            border: `1px solid ${PALETTE.gold}`,
+            background:
+              "linear-gradient(145deg, rgba(0,0,0,0.96), rgba(0,0,0,0.9))",
+          }}
+        >
+          Loading team and player predictions…
+        </div>
       </div>
     );
   }
 
   if (!teamData) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center">
-        <div className="text-xl text-gray-600">No team data available</div>
+      <div
+        className="min-h-screen flex items-center justify-center p-6"
+        style={{
+          background: `radial-gradient(circle at top, ${PALETTE.red}, ${PALETTE.black})`,
+          color: PALETTE.beige,
+        }}
+      >
+        <div className="text-xl text-center">No team data available</div>
       </div>
     );
   }
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 p-8">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <h1 className="text-3xl font-bold text-gray-800 mb-8">My Team Overview</h1>
+  // ---------- SPLIT STARTERS / BENCH FOR CURRENT GW ----------
+  const startersIdx = currentGW != null ? getStarterIndicesForGw(currentGW) : [];
+  const startersIdxSet = new Set(startersIdx);
 
-        {/* Overview Section */}
-        <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">Team Stats</h2>
-          <div className="grid grid-cols-2 gap-6">
-            <div className="bg-green-50 rounded-lg p-4">
-              <div className="text-sm text-gray-600 mb-1">Money in Bank</div>
-              <div className="text-2xl font-bold text-green-600">£{moneyInBank.toFixed(1)}m</div>
+  const starters = playersWithPredictions.filter((p) =>
+    startersIdxSet.has(p.squadIndex)
+  );
+  const bench = playersWithPredictions.filter(
+    (p) => !startersIdxSet.has(p.squadIndex)
+  );
+
+  const gkStarters = starters
+    .filter((p) => p.position === "GKP")
+    .sort((a, b) => a.squadIndex - b.squadIndex);
+  const defStarters = starters
+    .filter((p) => p.position === "DEF")
+    .sort((a, b) => a.squadIndex - b.squadIndex);
+  const midStarters = starters
+    .filter((p) => p.position === "MID")
+    .sort((a, b) => a.squadIndex - b.squadIndex);
+  const fwdStarters = starters
+    .filter((p) => p.position === "FWD")
+    .sort((a, b) => a.squadIndex - b.squadIndex);
+
+  // ---------- MAIN LAYOUT ----------
+  return (
+    <div
+      className="min-h-screen"
+      style={{
+        background: `radial-gradient(circle at top, ${PALETTE.red} 0, ${PALETTE.black} 45%, #000000 100%)`,
+        color: PALETTE.beige,
+        fontFamily:
+          "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      }}
+    >
+      <div className="mx-auto max-w-6xl px-4 py-6 sm:py-10">
+        {/* Header */}
+        <header className="mb-6 sm:mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+              My Team Planner
+            </h1>
+            <p
+              className="text-xs sm:text-sm mt-1"
+              style={{ color: "#d1c3a9" }}
+            >
+              See your XI on the pitch, drag or tap bench players to swap, and
+              inspect profiles with optimal replacements.
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <label
+                className="text-[11px] uppercase tracking-wide"
+                style={{ color: "#e5e7eb" }}
+              >
+                Team ID
+              </label>
+              <input
+                type="number"
+                value={localTeamId}
+                onChange={(e) => setLocalTeamId(e.target.value)}
+                className="flex-1 sm:flex-none h-9 px-3 rounded-md text-xs"
+                style={{
+                  border: "1px solid rgba(248, 250, 252, 0.18)",
+                  backgroundColor: "rgba(0,0,0,0.75)",
+                  color: PALETTE.beige,
+                  minWidth: "120px",
+                }}
+              />
             </div>
-            <div className="bg-blue-50 rounded-lg p-4">
-              <div className="text-sm text-gray-600 mb-1">Saved Transfers</div>
-              <div className="text-2xl font-bold text-blue-600">{savedTransfers}</div>
+            <button
+              onClick={handleSetTeamId}
+              className="inline-flex items-center justify-center px-3 h-9 rounded-full text-xs font-semibold"
+              style={{
+                border: `1px solid ${PALETTE.gold}`,
+                background:
+                  "linear-gradient(135deg, rgba(184,134,11,0.9), #facc15)",
+                color: "#000000",
+              }}
+            >
+              Load Team
+            </button>
+          </div>
+        </header>
+
+        {/* Top stats + charts */}
+        <section className="mb-8 grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+          {/* Team Stats */}
+          <div
+            className="rounded-2xl p-4 sm:p-5"
+            style={{
+              border: `1px solid ${PALETTE.gold}`,
+              background:
+                "linear-gradient(145deg, rgba(0,0,0,0.96), rgba(90,0,0,0.9))",
+              boxShadow: "0 18px 40px rgba(0,0,0,0.9)",
+            }}
+          >
+            <h2 className="text-lg sm:text-xl font-semibold mb-4">
+              Team Stats
+            </h2>
+            <div className="grid grid-cols-2 gap-3 sm:gap-4">
+              <div className="rounded-lg p-3 sm:p-4 bg-black/40 border border-emerald-500/40">
+                <div className="text-[11px] uppercase tracking-wide text-gray-300 mb-1">
+                  Money in Bank
+                </div>
+                <div className="text-xl sm:text-2xl font-bold text-emerald-400">
+                  £{moneyInBank.toFixed(1)}m
+                </div>
+              </div>
+              <div className="rounded-lg p-3 sm:p-4 bg-black/40 border border-blue-500/40">
+                <div className="text-[11px] uppercase tracking-wide text-gray-300 mb-1">
+                  Free Transfers
+                </div>
+                <div className="text-xl sm:text-2xl font-bold text-blue-400">
+                  {savedTransfers}
+                </div>
+              </div>
+              <div className="rounded-lg p-3 sm:p-4 bg-black/40 border border-purple-500/40 col-span-2 sm:col-span-1">
+                <div className="text-[11px] uppercase tracking-wide text-gray-300 mb-1">
+                  Total Predicted Points
+                </div>
+                <div className="text-xl sm:text-2xl font-bold text-purple-300">
+                  {totalPredictedPoints.toFixed(1)}
+                </div>
+              </div>
+              <div className="rounded-lg p-3 sm:p-4 bg-black/40 border border-amber-500/40">
+                <div className="text-[11px] uppercase tracking-wide text-gray-300 mb-1">
+                  GW Predicted Points
+                </div>
+                <div className="text-xl sm:text-2xl font-bold text-amber-300">
+                  {currentGwPoints != null
+                    ? currentGwPoints.toFixed(1)
+                    : "-"}
+                </div>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Season History Chart */}
-        <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-          <button
-            onClick={() => setShowChart(!showChart)}
-            className="flex items-center justify-between w-full text-left"
-          >
-            <h2 className="text-xl font-semibold text-gray-800">Season History</h2>
-            {showChart ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
-          </button>
-          
-          {showChart && chartData.length > 0 && (
-            <div className="mt-6" style={{ height: '300px' }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="gw" label={{ value: 'Gameweek', position: 'insideBottom', offset: -5 }} />
-                  <YAxis reversed label={{ value: 'Rank', angle: -90, position: 'insideLeft' }} />
-                  <Tooltip />
-                  <Line type="monotone" dataKey="rank" stroke="#8b5cf6" strokeWidth={2} dot={{ r: 3 }} />
-                </LineChart>
-              </ResponsiveContainer>
+          {/* Charts */}
+          <div className="flex flex-col gap-4">
+            {/* Rank history */}
+            <div
+              className="rounded-2xl p-4 sm:p-5"
+              style={{
+                border: `1px solid ${PALETTE.gold}`,
+                background:
+                  "linear-gradient(145deg, rgba(0,0,0,0.96), rgba(0,0,0,0.9))",
+              }}
+            >
+              <button
+                onClick={() => setShowRankChart(!showRankChart)}
+                className="flex items-center justify-between w-full text-left rounded-md px-2 py-1"
+                style={{
+                  background: "rgba(15,23,42,0.9)",
+                  color: "#e5e7eb",
+                  border: "1px solid rgba(148,163,184,0.4)",
+                }}
+              >
+                <h2 className="text-sm sm:text-base font-semibold">
+                  Season Rank History
+                </h2>
+                {showRankChart ? (
+                  <ChevronUp size={20} />
+                ) : (
+                  <ChevronDown size={20} />
+                )}
+              </button>
+
+              {showRankChart && rankChartData.length > 0 && (
+                <div className="mt-4" style={{ height: "220px" }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={rankChartData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="gw" />
+                      <YAxis reversed />
+                      <Tooltip />
+                      <Line
+                        type="monotone"
+                        dataKey="rank"
+                        stroke="#8b5cf6"
+                        strokeWidth={2}
+                        dot={{ r: 3 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+              {showRankChart && rankChartData.length === 0 && (
+                <div className="mt-3 text-xs text-gray-400">
+                  No rank history available yet.
+                </div>
+              )}
             </div>
-          )}
-        </div>
 
-        {/* GW Navigation */}
-        <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-gray-800">Squad for GW {currentGW}</h2>
-            <div className="flex items-center gap-4">
+            {/* Predicted points by GW */}
+            <div
+              className="rounded-2xl p-4 sm:p-5"
+              style={{
+                border: `1px solid ${PALETTE.gold}`,
+                background:
+                  "linear-gradient(145deg, rgba(0,0,0,0.96), rgba(0,0,0,0.9))",
+              }}
+            >
+              <button
+                onClick={() => setShowPredChart(!showPredChart)}
+                className="flex items-center justify-between w-full text-left rounded-md px-2 py-1"
+                style={{
+                  background: "rgba(15,23,42,0.9)",
+                  color: "#e5e7eb",
+                  border: "1px solid rgba(148,163,184,0.4)",
+                }}
+              >
+                <h2 className="text-sm sm:text-base font-semibold">
+                  Predicted Points by GW
+                </h2>
+                {showPredChart ? (
+                  <ChevronUp size={20} />
+                ) : (
+                  <ChevronDown size={20} />
+                )}
+              </button>
+
+              {showPredChart && predictedChartData.length > 0 && (
+                <div className="mt-4" style={{ height: "220px" }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={predictedChartData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="gw" />
+                      <YAxis domain={[40, "auto"]} />
+                      <Tooltip />
+                      <Line
+                        type="monotone"
+                        dataKey="points"
+                        stroke="#10b981"
+                        strokeWidth={2}
+                        dot={{ r: 3 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+              {showPredChart && predictedChartData.length === 0 && (
+                <div className="mt-3 text-xs text-gray-400">
+                  No prediction data available yet.
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* GW Navigation + Pitch + Bench */}
+        <section
+          className="rounded-2xl p-4 sm:p-5 mb-10"
+          style={{
+            border: `1px solid ${PALETTE.gold}`,
+            background:
+              "linear-gradient(145deg, rgba(0,0,0,0.96), rgba(90,0,0,0.9))",
+            boxShadow: "0 18px 40px rgba(0,0,0,0.9)",
+          }}
+        >
+          {/* GW nav */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-5">
+            <div>
+              <h2 className="text-lg sm:text-xl font-semibold">
+                Squad for GW {currentGW ?? "-"}
+              </h2>
+              <p className="text-xs mt-1" style={{ color: "#d1c3a9" }}>
+                Tap a
+                bench player, then tap a player on the pitch to swap. Click the{" "}
+                <span className="inline-flex items-center gap-1">
+                  <Info size={12} /> icon
+                </span>{" "}
+                for profile & best replacements (you can swap directly from
+                there).
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
               <button
                 onClick={handlePrevGW}
-                disabled={availableGWs.indexOf(currentGW) === 0}
-                className="p-2 rounded-lg bg-purple-100 text-purple-600 hover:bg-purple-200 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                disabled={
+                  currentGW === null || availableGWs.indexOf(currentGW) === 0
+                }
+                className="p-2 rounded-full text-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                style={{
+                  border: `1px solid ${PALETTE.gold}`,
+                  backgroundColor: "rgba(0,0,0,0.8)",
+                  color: PALETTE.gold,
+                }}
               >
-                <ChevronLeft size={20} />
+                <ChevronLeft size={18} />
               </button>
-              <span className="text-sm font-medium text-gray-600">
-                GW {currentGW}
+              <span className="text-xs sm:text-sm font-medium text-gray-200">
+                {currentGW ? `Gameweek ${currentGW}` : "No GW selected"}
               </span>
               <button
                 onClick={handleNextGW}
-                disabled={availableGWs.indexOf(currentGW) === availableGWs.length - 1}
-                className="p-2 rounded-lg bg-purple-100 text-purple-600 hover:bg-purple-200 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                disabled={
+                  currentGW === null ||
+                  availableGWs.indexOf(currentGW) ===
+                    availableGWs.length - 1
+                }
+                className="p-2 rounded-full text-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                style={{
+                  border: `1px solid ${PALETTE.gold}`,
+                  backgroundColor: "rgba(0,0,0,0.8)",
+                  color: PALETTE.gold,
+                }}
               >
-                <ChevronRight size={20} />
+                <ChevronRight size={18} />
               </button>
             </div>
           </div>
 
-          {/* Players List */}
-          <div className="space-y-3">
-            {playersWithPredictions.map((player, idx) => (
+          {/* Pitch + Bench */}
+          <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 items-stretch">
+            {/* Pitch */}
+            <div className="flex-1 flex items-center justify-center">
               <div
-                key={idx}
-                className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition"
+                className="w-full max-w-[430px] mx-auto aspect-[9/15] sm:aspect-[2/3.1] bg-no-repeat bg-cover bg-center border border-white/40 rounded-xl px-2 py-2"
+                style={{ backgroundImage: `url(${pitch})` }}
               >
-                <img
-                  src={player.photo}
-                  alt={player.web_name}
-                  className="w-16 h-16 rounded-full object-cover bg-gray-200"
-                  onError={(e) => { e.target.src = 'https://via.placeholder.com/64'; }}
-                />
-                <div className="flex-1">
-                  <div className="font-semibold text-gray-800">{player.web_name}</div>
-                  <div className="text-sm text-gray-600">{player.team} • {player.position}</div>
-                </div>
-                <div className="text-right">
-                  <div className="text-sm text-gray-600">Selected by</div>
-                  <div className="font-semibold text-gray-800">{player.selected_by_precent}%</div>
-                </div>
-                <div className="text-right">
-                  <div className="text-sm text-gray-600">vs {player.opponent}</div>
-                  <div className="font-bold text-purple-600 text-lg">{player.points_prediction.toFixed(1)} pts</div>
+                <div className="flex flex-col h-full pt-1 pb-2 gap-1 justify-start">
+                  <PitchRow
+                    players={gkStarters}
+                    label="GKP"
+                    dragInfo={dragInfo}
+                    onDrop={(benchIdx, starterIdx) =>
+                      handleBenchToFieldSwap(currentGW, benchIdx, starterIdx)
+                    }
+                    onClickSwap={(starterIdx) => {
+                      if (
+                        selectedBenchIndex != null &&
+                        currentGW != null
+                      ) {
+                        handleBenchToFieldSwap(
+                          currentGW,
+                          selectedBenchIndex,
+                          starterIdx
+                        );
+                        setSelectedBenchIndex(null);
+                      }
+                    }}
+                    openProfile={handleOpenProfile}
+                  />
+                  <PitchRow
+                    players={defStarters}
+                    label="DEF"
+                    dragInfo={dragInfo}
+                    onDrop={(benchIdx, starterIdx) =>
+                      handleBenchToFieldSwap(currentGW, benchIdx, starterIdx)
+                    }
+                    onClickSwap={(starterIdx) => {
+                      if (
+                        selectedBenchIndex != null &&
+                        currentGW != null
+                      ) {
+                        handleBenchToFieldSwap(
+                          currentGW,
+                          selectedBenchIndex,
+                          starterIdx
+                        );
+                        setSelectedBenchIndex(null);
+                      }
+                    }}
+                    openProfile={handleOpenProfile}
+                  />
+                  <PitchRow
+                    players={midStarters}
+                    label="MID"
+                    dragInfo={dragInfo}
+                    onDrop={(benchIdx, starterIdx) =>
+                      handleBenchToFieldSwap(currentGW, benchIdx, starterIdx)
+                    }
+                    onClickSwap={(starterIdx) => {
+                      if (
+                        selectedBenchIndex != null &&
+                        currentGW != null
+                      ) {
+                        handleBenchToFieldSwap(
+                          currentGW,
+                          selectedBenchIndex,
+                          starterIdx
+                        );
+                        setSelectedBenchIndex(null);
+                      }
+                    }}
+                    openProfile={handleOpenProfile}
+                  />
+                  <PitchRow
+                    players={fwdStarters}
+                    label="FWD"
+                    dragInfo={dragInfo}
+                    onDrop={(benchIdx, starterIdx) =>
+                      handleBenchToFieldSwap(currentGW, benchIdx, starterIdx)
+                    }
+                    onClickSwap={(starterIdx) => {
+                      if (
+                        selectedBenchIndex != null &&
+                        currentGW != null
+                      ) {
+                        handleBenchToFieldSwap(
+                          currentGW,
+                          selectedBenchIndex,
+                          starterIdx
+                        );
+                        setSelectedBenchIndex(null);
+                      }
+                    }}
+                    openProfile={handleOpenProfile}
+                  />
                 </div>
               </div>
-            ))}
+            </div>
+
+            {/* Bench */}
+            <div className="w-full lg:w-[260px]">
+              <h3 className="text-sm font-semibold mb-2">Bench</h3>
+              {bench.length === 0 ? (
+                <div className="text-xs text-gray-300">
+                  No bench players for this GW.
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {bench.map((player) => {
+                    const hasPhoto = !!player.photo;
+                    const selectedText =
+                      player.selected_pct != null
+                        ? `${player.selected_pct.toFixed(1)}%`
+                        : "–";
+
+                    const costRaw =
+                      player.now_cost != null
+                        ? Number(player.now_cost)
+                        : null;
+                    const costDisplay =
+                      costRaw != null && Number.isFinite(costRaw)
+                        ? (costRaw / 10).toFixed(1)
+                        : null;
+
+                    const isSelected =
+                      selectedBenchIndex === player.squadIndex;
+
+                    return (
+                      <div
+                        key={player.name + player.squadIndex}
+                        className={`relative flex items-center gap-3 p-2.5 rounded-lg border ${
+                          isSelected
+                            ? "border-amber-400 bg-black/80"
+                            : "border-white/15 bg-black/60"
+                        }`}
+                        draggable
+                        onDragStart={() =>
+                          setDragInfo({
+                            type: "bench",
+                            squadIndex: player.squadIndex,
+                          })
+                        }
+                        onDragEnd={() => setDragInfo(null)}
+                        onClick={() =>
+                          setSelectedBenchIndex((prev) =>
+                            prev === player.squadIndex
+                              ? null
+                              : player.squadIndex
+                          )
+                        }
+                      >
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenProfile(player);
+                          }}
+                          className="absolute top-1 right-1 p-1 rounded-full bg-black/70 hover:bg-black/90"
+                        >
+                          <Info size={12} className="text-amber-300" />
+                        </button>
+
+                        {hasPhoto ? (
+                          <img
+                            src={player.photo}
+                            alt={player.web_name}
+                            className="w-10 h-10 rounded-full object-cover bg-gray-700 flex-shrink-0"
+                            onError={(e) => {
+                              e.currentTarget.src = "";
+                            }}
+                          />
+                        ) : (
+                          <div className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-[10px] text-gray-500 flex-shrink-0" />
+                        )}
+
+                        <div className="flex-1 min-w-0 pr-5">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="font-semibold text-xs truncate">
+                              {player.web_name}
+                            </span>
+                            <span className="text-[11px] text-gray-300 whitespace-nowrap">
+                               {player.opponent}
+                            </span>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-gray-400 mt-0.5">
+                            <span>
+                              {(player.team || player.team_code || "")} •{" "}
+                              {player.position}
+                            </span>
+                            <span>Sel {selectedText}</span>
+                            {costDisplay && (
+                              <span>£{costDisplay}m</span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="text-right">
+                          <div className="text-[10px] text-gray-400">
+                            Pred
+                          </div>
+                          <div className="text-sm font-bold text-purple-300">
+                            {player.points_prediction.toFixed(1)}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  <p className="text-[11px] text-gray-300 mt-1">
+                    Tap and then tap
+                    a player on the pitch to swap. 
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+      </div>
+
+      {/* PLAYER PROFILE OVERLAY */}
+      {profilePlayer && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center px-4">
+          <div
+            className="absolute inset-0 bg-black/60"
+            onClick={handleCloseProfile}
+          />
+          <div
+            className="relative w-full max-w-md rounded-2xl p-4 sm:p-5 shadow-2xl"
+            style={{
+              border: `1px solid ${PALETTE.gold}`,
+              background:
+                "linear-gradient(145deg, rgba(0,0,0,0.96), rgba(0,0,0,0.92))",
+            }}
+          >
+            <button
+              className="absolute top-2 right-2 p-1 rounded-full bg-black/70 hover:bg-black/90"
+              onClick={handleCloseProfile}
+            >
+              <X size={14} className="text-gray-200" />
+            </button>
+
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center text-sm font-semibold">
+                {profilePlayer.web_name?.slice(0, 2).toUpperCase()}
+              </div>
+              <div>
+                <div className="text-sm uppercase tracking-wide text-gray-400">
+                  {profilePlayer.position}
+                </div>
+                <div className="text-lg font-bold">
+                  {profilePlayer.web_name}
+                </div>
+                <div className="text-xs text-gray-400">
+                  {profilePlayer.team || profilePlayer.team_code || ""} • GW{" "}
+                  {currentGW}
+                </div>
+              </div>
+            </div>
+
+            {/* Player stats */}
+            <div className="grid grid-cols-3 gap-2 text-xs mb-3">
+              <div className="rounded-lg bg-black/70 border border-white/10 p-2">
+                <div className="text-[10px] uppercase tracking-wide text-gray-400">
+                  Selected
+                </div>
+                <div className="text-sm font-semibold">
+                  {profileMeta?.selPct != null
+                    ? `${profileMeta.selPct.toFixed(1)}%`
+                    : "–"}
+                </div>
+              </div>
+              <div className="rounded-lg bg-black/70 border border-white/10 p-2">
+                <div className="text-[10px] uppercase tracking-wide text-gray-400">
+                  Team Price
+                </div>
+                <div className="text-sm font-semibold">
+                  {profileMeta?.nowCost != null
+                    ? `£${profileMeta.nowCost.toFixed(1)}m`
+                    : "–"}
+                </div>
+              </div>
+              <div className="rounded-lg bg-black/70 border border-white/10 p-2">
+                <div className="text-[10px] uppercase tracking-wide text-gray-400">
+                  Total Pred Pts
+                </div>
+                <div className="text-sm font-semibold">
+                  {profileMeta
+                    ? profileMeta.totalPred.toFixed(1)
+                    : "–"}
+                </div>
+                <div className="text-[9px] text-gray-500">
+                  GW {currentGW ?? "-"}–{maxAvailableGW ?? "-"}
+                </div>
+              </div>
+            </div>
+
+            {/* Slider + replacements */}
+            <div className="mb-2">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[11px] uppercase tracking-wide text-gray-300">
+                  Best replacements (same position)
+                </span>
+                {replacementsMeta.maxVal > replacementsMeta.minVal && (
+                  <span className="text-[11px] text-gray-300">
+                    Max £{(replacementMaxValue || 0).toFixed(1)}m
+                  </span>
+                )}
+              </div>
+
+              {replacementsMeta.maxVal > replacementsMeta.minVal ? (
+                <input
+                  type="range"
+                  min={replacementsMeta.minVal}
+                  max={replacementsMeta.maxVal}
+                  step="0.1"
+                  value={replacementMaxValue ?? replacementsMeta.maxVal}
+                  onChange={(e) =>
+                    setReplacementMaxValue(Number(e.target.value))
+                  }
+                  className="w-full"
+                />
+              ) : (
+                <div className="text-[11px] text-gray-400 mb-1">
+                  No price data for this position.
+                </div>
+              )}
+            </div>
+
+            <div
+              className="mt-2 max-h-60 overflow-y-auto rounded-lg border border-white/10 bg-black/60"
+              style={{ scrollbarWidth: "thin" }}
+            >
+              {replacementsMeta.list.length === 0 ? (
+                <div className="p-3 text-xs text-gray-400">
+                  No replacement suggestions found within the selected value
+                  range.
+                </div>
+              ) : (
+                <ul className="divide-y divide-white/5 text-xs">
+                  {replacementsMeta.list.map((p) => {
+                    const oppShort = p.opponent
+                      ? String(p.opponent).slice(0, 3).toUpperCase()
+                      : "N/A";
+                    return (
+                      <li
+                        key={p.id + p.name}
+                        className="px-3 py-2 flex items-center justify-between gap-2 cursor-pointer hover:bg-white/5"
+                        onClick={() => handleReplaceWithSuggested(p)}
+                      >
+                        <div className="min-w-0">
+                          <div className="font-semibold truncate max-w-[140px]">
+                            {p.web_name}
+                          </div>
+                          <div className="text-[10px] text-gray-400">
+                             £{p.price.toFixed(1)}m
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-[10px] text-gray-400">
+                            Total Pts
+                          </div>
+                          <div className="text-sm font-bold text-amber-300">
+                            {p.totalPoints.toFixed(1)}
+                          </div>
+                          <div className="text-[10px] text-gray-400">
+                            Sel{" "}
+                            {p.selected_pct != null
+                              ? `${p.selected_pct.toFixed(1)}%`
+                              : "–"}
+                          </div>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      )}
+    </div>
+  );
+}
+
+// ---------- Pitch row (GKP / DEF / MID / FWD) ----------
+function PitchRow({
+  players,
+  label,
+  dragInfo,
+  onDrop,
+  onClickSwap,
+  openProfile,
+}) {
+  return (
+    <div className="flex justify-center gap-2 sm:gap-3 px-1">
+      {players.map((player) => {
+        const hasPhoto = !!player.photo;
+        const selectedText =
+          player.selected_pct != null
+            ? `${player.selected_pct.toFixed(1)}%`
+            : "–";
+
+        const costRaw =
+          player.now_cost != null ? Number(player.now_cost) : null;
+        const costDisplay =
+          costRaw != null && Number.isFinite(costRaw)
+            ? (costRaw / 10).toFixed(1)
+            : null;
+
+        const oppShort = player.opponent
+          ? String(player.opponent).slice(0, 3).toUpperCase()
+          : "N/A";
+
+        return (
+          <div
+            key={player.name + player.squadIndex}
+            className="relative group flex flex-col items-center text-center text-[10px] sm:text-xs w-[68px] sm:w-[80px]"
+            onClick={() => {
+              if (onClickSwap) onClickSwap(player.squadIndex);
+            }}
+            onDragOver={(e) => {
+              if (dragInfo && dragInfo.type === "bench") {
+                e.preventDefault();
+              }
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+              if (!dragInfo || dragInfo.type !== "bench") return;
+              onDrop(dragInfo.squadIndex, player.squadIndex);
+            }}
+          >
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                openProfile && openProfile(player);
+              }}
+              className="absolute -top-1 right-0 p-1 rounded-full bg-black/70 hover:bg-black/90"
+            >
+              <Info size={11} className="text-amber-300" />
+            </button>
+
+            {/* Hover tooltip (desktop) */}
+            <div className="absolute -top-1 left-1/2 -translate-x-1/2 -translate-y-full z-20 hidden group-hover:flex flex-col items-center px-2 py-1 rounded-md bg-black/80 border border-white/20 shadow-lg">
+              <div className="text-[9px] text-gray-200">
+                {label} • Sel {selectedText}
+              </div>
+              {costDisplay && (
+                <div className="text-[9px] text-gray-200">
+                  £{costDisplay}m
+                </div>
+              )}
+            </div>
+
+            {/* Avatar */}
+            {hasPhoto ? (
+              <img
+                src={player.photo}
+                alt={player.web_name}
+                className="w-12 h-12 sm:w-14 sm:h-14 rounded-full object-cover bg-gray-700 shadow"
+                onError={(e) => {
+                  e.currentTarget.src = "";
+                }}
+              />
+            ) : (
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gray-800 shadow" />
+            )}
+
+            {/* Main visible info */}
+            <div className="mt-1 font-semibold truncate max-w-[80px]">
+              {player.web_name}
+            </div>
+
+            <div className="mt-0.5 flex flex-col items-center gap-0.5">
+              <div className="px-1.5 py-0.5 rounded-full bg-gray-800/85 text-[9px] text-gray-100">
+                 {oppShort}
+              </div>
+              <div className="px-1.5 py-0.5 rounded-full bg-gray-900/90 text-[9px] font-bold text-amber-300">
+                {player.points_prediction.toFixed(1)} pts
+              </div>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
