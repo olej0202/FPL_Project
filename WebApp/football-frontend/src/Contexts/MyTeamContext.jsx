@@ -12,11 +12,37 @@ export function MyTeamDataContextProvider({ children }) {
   const [freehitROund, setfreehitROund] = useState("");
   const [bannedList, setBannedList] = useState([]);
   const [data, setData] = useState(null);
+  const [teamData, setTeamData] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [teamLoading, setTeamLoading] = useState(false);
   const [has_changed, sethas_changed] = useState(false);
   const [bannedPlayersData, setBannedPlayersData] = useState([]);
   const [n_hits, setn_hits] = useState("");
   const [risk, setRisk] = useState("med");
+
+  /**
+   * Fetch current team data from Get_My_Team endpoint
+   */
+  const fetchMyTeam = async () => {
+    if (!teamId) {
+      alert("Team ID is required");
+      return;
+    }
+
+    setTeamLoading(true);
+    try {
+      const url = `https://fpl-project-t5e9.onrender.com/Get_My_Team?team_id=${teamId}`;
+      const resp = await fetch(url);
+      if (!resp.ok) throw new Error(await resp.text());
+      const json = await resp.json();
+      setTeamData(json);
+    } catch (err) {
+      console.error(err);
+      alert("Error fetching team data: " + err.message);
+    } finally {
+      setTeamLoading(false);
+    }
+  };
 
   /**
    * fetchTeam can now optionally take:
@@ -25,78 +51,77 @@ export function MyTeamDataContextProvider({ children }) {
    *
    * Example: fetchTeam({ useStatisticalModel: true, playersData })
    */
-const fetchTeam = async (options = {}) => {
-  const { useStatisticalModel = false, playersData = null } = options;
+  const fetchTeam = async (options = {}) => {
+    const { useStatisticalModel = false, playersData = null } = options;
 
-  if (!teamId) return alert("Team ID is required");
-  setLoading(true);
+    if (!teamId) return alert("Team ID is required");
+    setLoading(true);
 
-  try {
-    // --------- AI model (unchanged): GET query params ---------
-    if (!useStatisticalModel) {
-      const params = new URLSearchParams({ team_id: teamId });
+    try {
+      // --------- AI model (unchanged): GET query params ---------
+      if (!useStatisticalModel) {
+        const params = new URLSearchParams({ team_id: teamId });
 
-      if (bbRound) params.append("bb_round", bbRound);
-      if (wildRound) params.append("wildcard_round", wildRound);
-      if (freehitROund) params.append("freehit_round", freehitROund);
-      bannedList.forEach((id) => params.append("banned_list", id));
-      if (n_hits) params.append("n_hits", n_hits);
-      if (risk) params.append("risk", risk);
+        if (bbRound) params.append("bb_round", bbRound);
+        if (wildRound) params.append("wildcard_round", wildRound);
+        if (freehitROund) params.append("freehit_round", freehitROund);
+        bannedList.forEach((id) => params.append("banned_list", id));
+        if (n_hits) params.append("n_hits", n_hits);
+        if (risk) params.append("risk", risk);
 
-      const url = `https://fpl-project-t5e9.onrender.com/My_Team_Optimize?${params.toString()}`;
-      const resp = await fetch(url);
+        const url = `https://fpl-project-t5e9.onrender.com/My_Team_Optimize?${params.toString()}`;
+        const resp = await fetch(url);
+        if (!resp.ok) throw new Error(await resp.text());
+        const json = await resp.json();
+        setData(json);
+        return;
+      }
+
+      // --------- Statistical model: POST JSON body ---------
+      if (!Array.isArray(playersData) || playersData.length === 0) {
+        alert("No player data available for statistical model.");
+        return;
+      }
+
+      const slimPlayers = playersData.map((p) => ({
+        // must match PlayerInput exactly
+        name: p.name,
+        web_name: p.web_name,
+        Team: p.Team,
+        GW: p.GW,
+        position: p.position,
+        value: p.value,
+        Points: p.calc_points, // from PlayerAdjustmentsPage
+      }));
+
+      const body = {
+        team_id: Number(teamId),
+        banned_list: bannedList,
+        bb_round: bbRound ? Number(bbRound) : 40,
+        wildcard_round: wildRound ? Number(wildRound) : 40,
+        freehit_round: freehitROund ? Number(freehitROund) : 40,
+        n_hits: n_hits ? Number(n_hits) : 0,
+        model_type: "statistical",
+        players: slimPlayers,
+        risk: risk,
+      };
+
+      const resp = await fetch("https://fpl-project-t5e9.onrender.com/My_Team_Optimize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
       if (!resp.ok) throw new Error(await resp.text());
       const json = await resp.json();
       setData(json);
-      return;
+    } catch (err) {
+      console.error(err);
+      alert("Error: " + err.message);
+    } finally {
+      setLoading(false);
     }
-
-    // --------- Statistical model: POST JSON body ---------
-    if (!Array.isArray(playersData) || playersData.length === 0) {
-      alert("No player data available for statistical model.");
-      return;
-    }
-
-    const slimPlayers = playersData.map((p) => ({
-      // must match PlayerInput exactly
-      name: p.name,
-      web_name: p.web_name,
-      Team: p.Team,
-      GW: p.GW,
-      position: p.position,
-      value: p.value,
-      Points: p.calc_points, // from PlayerAdjustmentsPage
-    }));
-
-    const body = {
-      team_id: Number(teamId),
-      banned_list: bannedList,
-      bb_round: bbRound ? Number(bbRound) : 40,
-      wildcard_round: wildRound ? Number(wildRound) : 40,
-      freehit_round: freehitROund ? Number(freehitROund) : 40,
-      n_hits: n_hits ? Number(n_hits) : 0,
-      model_type: "statistical",
-      players: slimPlayers,
-      risk: risk,
-    };
-
-    const resp = await fetch("https://fpl-project-t5e9.onrender.com/My_Team_Optimize", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-
-    if (!resp.ok) throw new Error(await resp.text());
-    const json = await resp.json();
-    setData(json);
-  } catch (err) {
-    console.error(err);
-    alert("Error: " + err.message);
-  } finally {
-    setLoading(false);
-  }
-};
-
+  };
 
   const toggleBan = (id) => {
     const sid = id.toString();
@@ -138,8 +163,11 @@ const fetchTeam = async (options = {}) => {
         setfreehitROund,
         bannedList,
         data,
+        teamData,
         loading,
+        teamLoading,
         fetchTeam,
+        fetchMyTeam,
         toggleBan,
         removeBan,
         has_changed,

@@ -319,4 +319,10 @@ def enrich(df):
     df.merge(enrich_df, left_on="player_id", right_on="id", how="left")
       .drop(columns=["id"])
         )
+    merged_df["photo"] = (
+        "https://resources.premierleague.com/premierleague25/photos/players/500x500/"
+        + merged_df["code"].astype(str)
+        + ".png"
+        )
+    merged_df["news"]=merged_df["news"].fillna("NoNews")
     return merged_df

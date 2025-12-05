@@ -29,6 +29,7 @@ import PlayerAdjustmentsPage from "./Adjustment_Analytics_Player";
 
 import AITeams from "./AITeams";
 import AITeamNav from "./components/team_navigation"; // still unused but kept if you need it later
+import MyTeamOverview from "./MyTeam_Display"
 
 import logo from "./assets/FPL_analytics_logo.png";
 import "./index.css";
@@ -195,6 +196,7 @@ export default function App() {
 
           <Route path="/" element={<AITeams />}>
             <Route path="FreeHitTeam" element={<FreeHitTeam />} />
+            <Route path="Team_Overview" element={<MyTeamOverview />} />
             <Route path="Wildcard_Team" element={<WildcardTeam />} />
             <Route path="My_Team" element={<MyTeam />} />
           </Route>
