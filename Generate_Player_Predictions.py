@@ -765,17 +765,17 @@ def Generate_point_predictions():
 
         for i in range(len(player_data)):
             try:
-                goals.append(((xgb_goals_player["pred"].values[i]*0.1
+                goals.append(((xgb_goals_player["pred"].values[i]*0.15
                          +stat_goals_player["pred"].values[i]*0.7
-                         +DNN_goals_player["pred"].values[i]*0.2
+                         +DNN_goals_player["pred"].values[i]*0.15
                          +CLUSTER_goals_player["pred"].values[i]*0.0))*overscore)
             except:
                 goals.append(0)
 
             try:
 
-                assist.append(((xgb_assist_player["pred"].values[i]*0
-                                    +stat_assist_player["pred"].values[i]*0.8
+                assist.append(((xgb_assist_player["pred"].values[i]*0.1
+                                    +stat_assist_player["pred"].values[i]*0.7
                                     +DNN_assist_player["pred"].values[i]*0.1
                                     +historic_Assist*0.1
                                     +CLUSTER_assist_player["pred"].values[i]*0.0))*overassist)
@@ -846,7 +846,7 @@ def Generate_point_predictions():
             summary_dataset["Points_prediction"]=(1+summary_dataset["Goal_pred"]*6.3
                                                   +summary_dataset["Assist_pred"]*3.5
                                                   +summary_dataset["Bonus_pred"]
-                                                  +summary_dataset["GC_pred"]*5)*0.8+0.2*summary_dataset["Fantasy_pred"]+(np.minimum(1, summary_dataset["CBI_pred"] / 10) * 0.6+0.4*cbi_hit_rate)*0.8*2
+                                                  +summary_dataset["GC_pred"]*5)*0.8+0.2*summary_dataset["Fantasy_pred"]+(np.minimum(1, summary_dataset["CBI_pred"] / 10) * 0.6+0.4*cbi_hit_rate)*0.9*2
         
         
         full_df=pd.concat([full_df, summary_dataset], axis=0, ignore_index=True)

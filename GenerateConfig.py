@@ -29,7 +29,7 @@ Manual_team_offensive_adjustments = {17:1.1,1:1.1,36:0.9,11:1.1,94:0.9,31:1.1 }
     
     
     
-Manual_team_defensive_adjustments = {94:1.1,31:1.1,1:0.9}
+Manual_team_defensive_adjustments = {94:1.1,31:1.1}
 
 
 Manual_NewPlayer_Adjustments={
@@ -62,7 +62,11 @@ Manual_min=[
         {"name": "Bryan_Mbeumo", "type": "adjust_from",   "GW": "16", "value": 0},
         {"name": "Antoine_Semenyo", "type": "adjust_from",   "GW": "16", "value": 0},
         {"name": "Amad_Diallo", "type": "adjust_from",   "GW": "16", "value": 0},
-
+        {"name": "Iliman_Ndiaye", "type": "adjust_from",   "GW": "16", "value": 0},
+        {"name": "Dango_Ouattara", "type": "adjust_from",   "GW": "16", "value": 0},
+        {"name": "Alex_Iwobi", "type": "adjust_from",   "GW": "16", "value": 0},
+        {"name": "Cole_Palmer", "type": "adjust_from",   "GW": "16", "value": 80},
+        {"name": "Anthony_Gordon", "type": "adjust_from",   "GW": "15", "value": 80},
     ]
         
 

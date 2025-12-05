@@ -390,7 +390,11 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
         player_risiko=0.25
         player_row = current_data[
             current_data["name"].str.lower() == name.lower()
-        ]        
+        ] 
+        rel_player_player=relevant_players[
+            relevant_players["name"]==name
+        ]  
+        player_code=rel_player_player["code"].values[0] 
         player_row2=current_players[current_players["name"]==name]
         player_pen_takers=pen_takers[pen_takers["name"]==name]
         history_player=history_data[history_data["name"]==name]
@@ -556,6 +560,7 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
         player_row["player_risiko"]=player_risiko
         player_row["Goal_Index"]=player_row["Understat_POSXG"]*0.5+0.5*player_row["Rolling_adjusted_XG"]
         player_row["Assist_Index"]=player_row["Understat_POSXA"]*0.5+0.5*player_row["Rolling_adjusted_XA"]
+        player_row["Player_code"]=player_code
         
         
         if(len(clusters)<2):
