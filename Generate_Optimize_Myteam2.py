@@ -460,7 +460,7 @@ def optimize_my_team(
         if t == wildcard_round_rel:
             model += saved_transfers[t] == 0
         else:
-            if abs_gw_num.get(t) == 16:
+            if abs_gw_num.get(t) == 15:
                 model += saved_transfers[t] == 5
             else:
                 if t == week_to_remove_transfer:

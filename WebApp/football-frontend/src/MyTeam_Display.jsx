@@ -117,7 +117,7 @@ export default function MyTeamOverview() {
   // Per-GW starter indices
   const [gwStarters, setGwStarters] = useState({});
   // Transfer & money tracking
-  const [bankMoney, setBankMoney] = useState(null); // in millions
+  const [bankByGw, setBankByGw] = useState({}); // NEW: bank per GW (millions)
   const [freeTransfersByGw, setFreeTransfersByGw] = useState({});
   const [transferLog, setTransferLog] = useState([]); // {id, gw, squadIndex, fromName, toName, sellingPrice, incomingPrice, suggestion, createdAt}
 
@@ -128,6 +128,7 @@ export default function MyTeamOverview() {
   // Player profile overlay
   const [profilePlayer, setProfilePlayer] = useState(null);
   const [replacementMaxValue, setReplacementMaxValue] = useState(null); // price threshold
+  const [replacementSearch, setReplacementSearch] = useState(""); // search in replacement list
 
   // Keep localTeamId in sync with context teamId
   useEffect(() => {
@@ -154,8 +155,8 @@ export default function MyTeamOverview() {
       if (parsed.currentGW != null) {
         setCurrentGW(parsed.currentGW);
       }
-      if (typeof parsed.bankMoney === "number") {
-        setBankMoney(parsed.bankMoney);
+      if (parsed.bankByGw && typeof parsed.bankByGw === "object") {
+        setBankByGw(parsed.bankByGw);
       }
       if (
         parsed.freeTransfersByGw &&
@@ -279,7 +280,9 @@ export default function MyTeamOverview() {
   const baseFreeTransfers = (teamInfo.saved_transfers ?? 0) + 1;
 
   const effectiveBankMoney =
-    bankMoney != null ? bankMoney : baseMoneyInBank;
+    currentGW != null && bankByGw[currentGW] != null
+      ? bankByGw[currentGW]
+      : baseMoneyInBank;
 
   // Make sure free transfers for current GW exist following the rule:
   // FTs(gw0) = baseFreeTransfers
@@ -347,7 +350,7 @@ export default function MyTeamOverview() {
       return {
         ...player,
         squadIndex,
-        photo, // merged photo from prediction or player
+        photo,
         points_prediction: prediction?.Points_prediction
           ? Number(prediction.Points_prediction)
           : 0,
@@ -446,7 +449,6 @@ export default function MyTeamOverview() {
     });
 
     if (gkp !== 1 || def < 3 || mid < 2 || fwd < 1) {
-      // violates formation → ignore swap
       return;
     }
 
@@ -465,7 +467,7 @@ export default function MyTeamOverview() {
     ) {
       return {
         squads: { ...gwSquads },
-        bank: bankMoney ?? baseMoneyInBank,
+        bankByGw: { ...bankByGw },
         freeTransfers: { ...freeTransfersByGw },
       };
     }
@@ -480,12 +482,8 @@ export default function MyTeamOverview() {
       squads[gw] = teamData.map((p) => ({ ...p }));
     });
 
-    // Apply transfers to squads + bank
-    let bank = baseMoneyInBank;
-
+    // Apply transfers to squads + derive free transfers
     sortedTransfers.forEach((t) => {
-      bank += t.sellingPrice - t.incomingPrice;
-
       availableGWs.forEach((gw) => {
         if (gw < t.gw) return;
         const base = squads[gw];
@@ -541,7 +539,18 @@ export default function MyTeamOverview() {
       freeTransfers[gw] = Math.max(0, baseFT - transfersInGw);
     });
 
-    return { squads, bank, freeTransfers };
+    // Bank per GW: baseMoneyInBank + sum of deltas up to that GW
+    const bankByGwNew = {};
+    let runningBank = baseMoneyInBank;
+    availableGWs.forEach((gw) => {
+      const transfersInGw = sortedTransfers.filter((t) => t.gw === gw);
+      transfersInGw.forEach((t) => {
+        runningBank += t.sellingPrice - t.incomingPrice;
+      });
+      bankByGwNew[gw] = runningBank;
+    });
+
+    return { squads, bankByGw: bankByGwNew, freeTransfers };
   };
 
   // ---------- REPLACE WITH SUGGESTED PLAYER (PlayersData) ----------
@@ -600,12 +609,12 @@ export default function MyTeamOverview() {
     };
 
     const updatedTransfers = [...transferLog, newTransfer];
-    const { squads, bank, freeTransfers } =
+    const { squads, bankByGw: newBankByGw, freeTransfers } =
       recomputeFromTransfers(updatedTransfers);
 
     setTransferLog(updatedTransfers);
     setGwSquads(squads);
-    setBankMoney(bank);
+    setBankByGw(newBankByGw);
     setFreeTransfersByGw(freeTransfers);
     setProfilePlayer(null);
   };
@@ -613,12 +622,12 @@ export default function MyTeamOverview() {
   // ---------- UNDO TRANSFER ----------
   const handleUndoTransfer = (id) => {
     const updatedTransfers = transferLog.filter((t) => t.id !== id);
-    const { squads, bank, freeTransfers } =
+    const { squads, bankByGw: newBankByGw, freeTransfers } =
       recomputeFromTransfers(updatedTransfers);
 
     setTransferLog(updatedTransfers);
     setGwSquads(squads);
-    setBankMoney(bank);
+    setBankByGw(newBankByGw);
     setFreeTransfersByGw(freeTransfers);
   };
 
@@ -631,7 +640,7 @@ export default function MyTeamOverview() {
       gwSquads,
       gwStarters,
       currentGW,
-      bankMoney,
+      bankByGw,
       freeTransfersByGw,
       transferLog,
     };
@@ -649,7 +658,7 @@ export default function MyTeamOverview() {
     gwSquads,
     gwStarters,
     currentGW,
-    bankMoney,
+    bankByGw,
     freeTransfersByGw,
     transferLog,
   ]);
@@ -667,9 +676,11 @@ export default function MyTeamOverview() {
     setCurrentGW(null);
     setSelectedBenchIndex(null);
     setProfilePlayer(null);
-    setBankMoney(null);
+    setBankByGw({});
     setFreeTransfersByGw({});
     setTransferLog([]);
+    setReplacementSearch("");
+    setReplacementMaxValue(null);
 
     if (localTeamId !== teamId) {
       // new team id → clear any cached planner state for that team
@@ -799,7 +810,7 @@ export default function MyTeamOverview() {
       const gwNum = Number(p.GW);
       if (!horizonGwSet.has(gwNum)) return;
 
-      const price = Number(p.value ?? p.price) || 0; // price for slider, assume millions
+      const price = Number(p.value ?? p.price) || 0; // price in millions
       const pts = Number(p.Points_prediction) || 0;
       const opp = p.opponent_name || "N/A";
       const selPct =
@@ -815,7 +826,6 @@ export default function MyTeamOverview() {
           totalPoints: 0,
           opponent: opp,
           selected_pct: selPct,
-          // bring the photo from PlayersData
           photo: p.photo ?? p.photo_url ?? null,
         };
       }
@@ -842,8 +852,7 @@ export default function MyTeamOverview() {
 
     const list = aggregated
       .filter((a) => a.price <= threshold)
-      .sort((a, b) => b.totalPoints - a.totalPoints)
-      .slice(0, 15);
+      .sort((a, b) => b.totalPoints - a.totalPoints);
 
     return { minVal, maxVal, threshold, list };
   }, [
@@ -856,7 +865,7 @@ export default function MyTeamOverview() {
     replacementMaxValue,
   ]);
 
-  // Initialize slider when profilePlayer changes
+  // Initialize slider + reset search when profilePlayer changes
   useEffect(() => {
     if (
       !profilePlayer ||
@@ -864,15 +873,36 @@ export default function MyTeamOverview() {
       replacementsMeta.maxVal <= replacementsMeta.minVal
     ) {
       setReplacementMaxValue(null);
+      setReplacementSearch("");
       return;
     }
     setReplacementMaxValue(replacementsMeta.maxVal);
+    setReplacementSearch("");
   }, [
     profilePlayer,
     playersData,
     replacementsMeta.maxVal,
     replacementsMeta.minVal,
   ]);
+
+  // Derived: list actually shown in UI (search + slice)
+  const displayReplacements = useMemo(() => {
+    const base = replacementsMeta.list || [];
+    if (!base.length) return [];
+
+    const term = replacementSearch.trim().toLowerCase();
+    let filtered = base;
+
+    if (term) {
+      filtered = base.filter((p) => {
+        const w = (p.web_name || "").toLowerCase();
+        const n = (p.name || "").toLowerCase();
+        return w.includes(term) || n.includes(term);
+      });
+    }
+
+    return filtered.slice(0, term ? 50 : 15);
+  }, [replacementsMeta.list, replacementSearch]);
 
   const handleOpenProfile = (player) => {
     setProfilePlayer(player);
@@ -1088,8 +1118,8 @@ export default function MyTeamOverview() {
                   style={{
                     color:
                       effectiveBankMoney < 0
-                        ? "#f87171" // red
-                        : "#34d399", // green
+                        ? "#f87171"
+                        : "#34d399",
                   }}
                 >
                   £{effectiveBankMoney.toFixed(1)}m
@@ -1555,7 +1585,7 @@ export default function MyTeamOverview() {
                       className="ml-2 p-1 rounded-full hover:bg-black/80"
                       aria-label="Undo transfer"
                     >
-                      <X size={12} className="text-red-500" />
+                      <X size={12} className="text-gray-300" />
                     </button>
                   </div>
                 ))}
@@ -1653,7 +1683,7 @@ export default function MyTeamOverview() {
               </div>
             </div>
 
-            {/* Slider + replacements */}
+            {/* Slider + search + replacements */}
             <div className="mb-2">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-[11px] uppercase tracking-wide text-gray-300">
@@ -1667,17 +1697,26 @@ export default function MyTeamOverview() {
               </div>
 
               {replacementsMeta.maxVal > replacementsMeta.minVal ? (
-                <input
-                  type="range"
-                  min={replacementsMeta.minVal}
-                  max={replacementsMeta.maxVal}
-                  step="0.1"
-                  value={replacementMaxValue ?? replacementsMeta.maxVal}
-                  onChange={(e) =>
-                    setReplacementMaxValue(Number(e.target.value))
-                  }
-                  className="w-full"
-                />
+                <>
+                  <input
+                    type="range"
+                    min={replacementsMeta.minVal}
+                    max={replacementsMeta.maxVal}
+                    step="0.1"
+                    value={replacementMaxValue ?? replacementsMeta.maxVal}
+                    onChange={(e) =>
+                      setReplacementMaxValue(Number(e.target.value))
+                    }
+                    className="w-full mb-2"
+                  />
+                  <input
+                    type="text"
+                    value={replacementSearch}
+                    onChange={(e) => setReplacementSearch(e.target.value)}
+                    placeholder="Search name (e.g. Haaland, Salah...)"
+                    className="w-full text-xs px-2 py-1 rounded-md bg-black/60 border border-white/10 text-gray-100 placeholder:text-gray-500"
+                  />
+                </>
               ) : (
                 <div className="text-[11px] text-gray-400 mb-1">
                   No price data for this position.
@@ -1689,14 +1728,14 @@ export default function MyTeamOverview() {
               className="mt-2 max-h-60 overflow-y-auto rounded-lg border border-white/10 bg-black/60"
               style={{ scrollbarWidth: "thin" }}
             >
-              {replacementsMeta.list.length === 0 ? (
+              {displayReplacements.length === 0 ? (
                 <div className="p-3 text-xs text-gray-400">
                   No replacement suggestions found within the selected value
-                  range.
+                  range or search.
                 </div>
               ) : (
                 <ul className="divide-y divide-white/5 text-xs">
-                  {replacementsMeta.list.map((p) => {
+                  {displayReplacements.map((p) => {
                     const oppShort = p.opponent
                       ? String(p.opponent).slice(0, 3).toUpperCase()
                       : "N/A";
