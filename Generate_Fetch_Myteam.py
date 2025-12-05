@@ -255,7 +255,7 @@ def build_team_dataframe(entry_id: int) -> pd.DataFrame:
     )
     this_ft = ft_info[event_id]
     free_start = this_ft["free_end"]          # FTs at start of this GW
-    saved_transfers = min(max(free_start, 0),5)
+    saved_transfers = min(max(free_start, 0),5)-1
 
     # Transfer history to reconstruct purchase prices
     transfers = get_entry_transfers(entry_id)
