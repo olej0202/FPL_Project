@@ -144,26 +144,30 @@ export default function Team_Analytics_Individual() {
     () => defData.filter((d) => d.name === teamFilter),
     [defData, teamFilter]
   );
-
   // Threat list (vs selected team) → aggregate per role and display on mirrored pitch
-  const threatRows = useMemo(() => {
-    const src = Array.isArray(TeamThreatData?.current)
-      ? TeamThreatData.current
-      : Array.isArray(TeamThreatData)
-      ? TeamThreatData
-      : [];
-    return src
-      .filter((r) => (r?.opponent ?? r?.Opponent) === teamFilter)
-      .map((r) => ({
-        pos_group:
-          r?.pos_group ?? r?.position_group ?? r?.PosGroup ?? "Unknown",
-        threat: Number(
-          r?.Threat ?? r?.Treat ?? r?.threat ?? r?.treat ?? NaN
-        ),
-      }))
-      .filter((r) => Number.isFinite(r.threat))
-      .sort((a, b) => b.threat - a.threat);
-  }, [TeamThreatData, teamFilter]);
+
+const threatRows = useMemo(() => {
+  const src = Array.isArray(TeamThreatData?.current)
+    ? TeamThreatData.current
+    : Array.isArray(TeamThreatData)
+    ? TeamThreatData
+    : [];
+
+  const filtered = src.filter(
+    (r) => (r?.opponent ?? r?.Opponent) === teamFilter
+  );
+
+
+  return filtered
+    .map((r) => ({
+      pos_group:
+        r?.pos_group ?? r?.position_group ?? r?.PosGroup ?? "Unknown",
+      threat: Number(r?.Threat ?? r?.threat ?? NaN),
+    }))
+    .filter((r) => Number.isFinite(r.threat))
+    .sort((a, b) => b.threat - a.threat);
+}, [TeamThreatData, teamFilter]);
+
 
   // Latest lineup — appearance % over last 5 matches
   const lineupLatestStats = useMemo(() => {
@@ -335,22 +339,25 @@ export default function Team_Analytics_Individual() {
 
   const mirrorBase = ({ x, y }) => ({ x: 100 - x, y: 100 - y });
 
-  const threatsOnPitch = useMemo(() => {
-    if (!Array.isArray(threatRows) || threatRows.length === 0) return [];
-    const byRole = threatRows.reduce((acc, r) => {
-      const role = normalizeRole(r.pos_group);
-      const val = Number(r.threat) || 0;
-      acc[role] = (acc[role] ?? 0) + val;
-      return acc;
-    }, {});
-    const out = Object.entries(byRole).map(([role, threat]) => {
-      const base = BASE[role] || BASE.CM;
-      const { x, y } = mirrorBase(base);
-      return { role, threat, x, y };
-    });
-    out.sort((a, b) => b.threat - a.threat || a.role.localeCompare(b.role));
-    return out;
-  }, [threatRows]);
+const threatsOnPitch = useMemo(() => {
+  if (!Array.isArray(threatRows) || threatRows.length === 0) return [];
+  const byRole = threatRows.reduce((acc, r) => {
+    const role = normalizeRole(r.pos_group);
+    const threat = Number(r.threat) || 0;
+    acc[role] = (acc[role] ?? 0) + threat;   // ✅ use 'threat' here
+    return acc;
+  }, {});
+
+  const out = Object.entries(byRole).map(([role, threat]) => {
+    const base = BASE[role] || BASE.CM;
+    const { x, y } = mirrorBase(base);
+    return { role, threat, x, y };
+  });
+
+  out.sort((a, b) => b.threat - a.threat || a.role.localeCompare(b.role));
+  return out;
+}, [threatRows]);
+
 
   const [minT, maxT] = useMemo(() => {
     if (!threatsOnPitch.length) return [0, 1];

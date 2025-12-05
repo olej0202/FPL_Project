@@ -97,7 +97,12 @@ def load_and_transform(endpoint):
         raise ValueError(f"Unknown endpoint: {endpoint}")
         
     # Load the CSV
-    df = pd.read_csv(csv_path).iloc[:,1:]
+    if endpoint == "Team_Threat":
+        df = pd.read_csv(csv_path)
+
+    
+    else:
+        df = pd.read_csv(csv_path).iloc[:,1:]
     
     
     return df
