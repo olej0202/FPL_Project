@@ -57,7 +57,7 @@ def compute_free_transfers(
     history_current,
     chips_by_event,
     max_ft: int = 5,
-    afcon_topup_event: int | None = 16,
+    afcon_topup_event: int | None = 15,
 ):
     """
     Reconstruct free transfers per GW using the 2025/26 rules.
@@ -251,7 +251,7 @@ def build_team_dataframe(entry_id: int) -> pd.DataFrame:
         history_current,
         chips_by_event,
         max_ft=5,
-        afcon_topup_event=16,   # special for this season
+        afcon_topup_event=15,   # special for this season
     )
     this_ft = ft_info[event_id]
     free_start = this_ft["free_end"]          # FTs at start of this GW

@@ -1186,12 +1186,12 @@ def main_Transform():
             player_df["rolling_bps"] = player_df['bps'].ewm(span=lookback, adjust=False).mean()
             player_df["rolling_GS"] = player_df['goals_scored'].clip(upper=2).ewm(span=lookback, adjust=False).mean()
             player_df["rolling_shots"] = player_df['shots'].ewm(span=lookback, adjust=False).mean()
-            player_df["XG_min"]=(player_df['expected_goals']/player_df['minutes'])*90
-            player_df["XA_min"]=(player_df['expected_assists']/player_df['minutes'])*90
-            player_df["Threat_min"]=(player_df['Threat']/player_df['minutes']+0.01)*90
-            player_df["Creativity_min"]=(player_df['creativity']/player_df['minutes'])*90
-            player_df["Goal_min"]=(player_df['goals_scored']/player_df['minutes'])*90
-            player_df["Assist_min"]=(player_df['assists']/player_df['minutes'])*90
+            player_df["XG_min"]=(player_df['expected_goals']/player_df["minutes"].clip(lower=20))*90
+            player_df["XA_min"]=(player_df['expected_assists']/player_df["minutes"].clip(lower=20))*90
+            player_df["Threat_min"]=(player_df['Threat']/player_df["minutes"].clip(lower=20))*90
+            player_df["Creativity_min"]=(player_df['creativity']/player_df["minutes"].clip(lower=20))*90
+            player_df["Goal_min"]=(player_df['goals_scored']/player_df["minutes"].clip(lower=20))*90
+            player_df["Assist_min"]=(player_df['assists']/player_df["minutes"].clip(lower=20))*90
             player_df["rolling_Goal_min"] = player_df['Goal_min'].rolling(window=20, min_periods=1).mean()
             player_df["rolling_Assist_min"] = player_df['Assist_min'].rolling(window=20, min_periods=1).mean()
             
