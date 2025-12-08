@@ -480,8 +480,8 @@ def Player_adjustements(current_player_path):
         ],
         [
             6,  # FWD
-            5.5,  # MID
-            6.3,  # DEF
+            5.7,  # MID
+            6.4,  # DEF
         ],
         default=0,
     )
@@ -494,9 +494,9 @@ def Player_adjustements(current_player_path):
             df["position"] == "DEF",
         ],
         [
-            3.5,   # FWD
-            4,   # MID
-            3.5,   # DEF
+            3.4,   # FWD
+            3.4,   # MID
+            3.4,   # DEF
         ],
         default=0,
     )

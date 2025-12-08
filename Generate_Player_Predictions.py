@@ -94,7 +94,7 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
             defensive_factor=(team_CS)
             fordelings_faktor=df["player_risiko"].values[0]
             if(pred_variable=="GOALS"):
-               base = df.loc[h, ['rolling_Adjusted_XG_historic_share','Rolling_adjusted_XG_share','rolling_Threat_share','rolling_XG_share','Rolling_adjusted_XG','rolling_Goal_min']].to_numpy(dtype=float)      # 1D array length 4
+               base = df.loc[h, ['rolling_Adjusted_XG_historic_share','Rolling_adjusted_XG_share','rolling_Threat_share','rolling_XG_share','Rolling_adjusted_XG','Threat_Mean_share']].to_numpy(dtype=float)      # 1D array length 4
                row = np.hstack([base, team_xg]).reshape(1, -1)  
                pred=xgb_model.predict(row)[0]*0.5+0.5*rf_model.predict(row)[0]
                stat_pred=df['Rolling_adjusted_XG_share'].values[h]*0.333+df['rolling_Threat_share'].values[h]*0.333+df['Threat_Mean_share'].values[h]*0.333
@@ -109,7 +109,7 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
                
                player_model.append(pred*team_xg)
             if(pred_variable=="Assist"):
-               base = df.loc[h, ['rolling_Adjusted_XA_historic_share','Rolling_adjusted_XA_share','Rolling_creativity_share','rolling_XA_share','Rolling_adjusted_XA','rolling_Assist_min']].to_numpy(dtype=float)      # 1D array length 4
+               base = df.loc[h, ['rolling_Adjusted_XA_historic_share','Rolling_adjusted_XA_share','Rolling_creativity_share','rolling_XA_share','Rolling_adjusted_XA','Creativity_Mean_share']].to_numpy(dtype=float)      # 1D array length 4
                row = np.hstack([base, team_xg]).reshape(1, -1)  
                pred=xgb_model_XA.predict(row)[0]*0.5+0.5*rf_model_XA.predict(row)[0]
                #own_data_xa_pred=((df['Rolling_adjusted_XA'].values[h]*0.7+df['rolling_Adjusted_XA_historic'].values[h]*0.3)*df["opposition_xgc"].values[h]+df['Share_of_XA'].values[h]*team_xg)*(0.5)
@@ -828,12 +828,12 @@ def Generate_point_predictions():
             summary_dataset.to_csv("debug2.csv")
             New_dataset.to_csv("debug1.csv")
         if(position=="FWD"):
-            summary_dataset["Points_prediction"]=(2+summary_dataset["Goal_pred"]*6
-                                                  +summary_dataset["Assist_pred"]*4
+            summary_dataset["Points_prediction"]=(2+summary_dataset["Goal_pred"]*5.3
+                                                  +summary_dataset["Assist_pred"]*3.5
                                                   +summary_dataset["Bonus_pred"])*0.9+0.1*summary_dataset["Fantasy_pred"]+(summary_dataset["CBI_pred"]/12)*0.0*2
         elif(position=="MID"):
             summary_dataset["Points_prediction"]=(2+summary_dataset["Goal_pred"]*5.5
-                                                  +summary_dataset["Assist_pred"]*4
+                                                  +summary_dataset["Assist_pred"]*3.5
                                                   +summary_dataset["Bonus_pred"]
                                                   +summary_dataset["GC_pred"]*0.8)*0.9+0.1*summary_dataset["Fantasy_pred"]+(np.minimum(1, summary_dataset["CBI_pred"] / 12) * 0.6+0.4*cbi_hit_rate)*0.8*2
             

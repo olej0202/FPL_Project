@@ -117,6 +117,8 @@ def compute_free_transfers(
         if chip_name is not None:
             # Chip week: banked FTs frozen
             free_end = free_start
+        elif afcon_topup_event is not None and event_id == afcon_topup_event:
+            free_end = max_ft
         else:
             free_used = min(event_transfers, free_start)
             free_end = free_start - free_used

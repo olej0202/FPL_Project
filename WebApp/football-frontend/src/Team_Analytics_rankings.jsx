@@ -44,34 +44,35 @@ export default function TeamAnalyticsList() {
     fetchIfNeeded();
   }, [fetchIfNeeded]);
 
-  useEffect(() => {
-    if (!TeamData?.current || TeamData.current.length === 0) return;
+useEffect(() => {
+  // Only run after loading has finished
+  if (loading) return;
+  if (!TeamData?.current || TeamData.current.length === 0) return;
 
-    let data = TeamData.current
-      .map((team) => {
-        let value;
-        if (selectedMetric === "XGH-XGA") {
-          value = parseFloat(team.XGH || 0) - parseFloat(team.XGA || 0);
-        } else if (selectedMetric === "XGCH-XGCA") {
-          // note: same sign logic you had
-          value = -1 * (parseFloat(team.XGCH || 0) - parseFloat(team.XGCA || 0));
-        } else {
-          value = parseFloat(team[selectedMetric] || 0);
-        }
-        const name = team.name || team.Team || "";
-        return {
-          name,
-          value: Number.isFinite(value) ? Number(value.toFixed(2)) : 0,
-        };
-      })
-      .filter((d) => d.name && !Number.isNaN(d.value));
+  let data = TeamData.current
+    .map((team) => {
+      let value;
+      if (selectedMetric === "XGH-XGA") {
+        value = parseFloat(team.XGH || 0) - parseFloat(team.XGA || 0);
+      } else if (selectedMetric === "XGCH-XGCA") {
+        value = -1 * (parseFloat(team.XGCH || 0) - parseFloat(team.XGCA || 0));
+      } else {
+        value = parseFloat(team[selectedMetric] || 0);
+      }
+      const name = team.name || team.Team || "";
+      return {
+        name,
+        value: Number.isFinite(value) ? Number(value.toFixed(2)) : 0,
+      };
+    })
+    .filter((d) => d.name && !Number.isNaN(d.value));
 
-    const sortFn = ASCENDING_METRICS.includes(selectedMetric)
-      ? (a, b) => a.value - b.value
-      : (a, b) => b.value - a.value;
+  const sortFn = ASCENDING_METRICS.includes(selectedMetric)
+    ? (a, b) => a.value - b.value
+    : (a, b) => b.value - a.value;
 
-    setRankingData(data.sort(sortFn));
-  }, [TeamData, selectedMetric]);
+  setRankingData(data.sort(sortFn));
+}, [loading, TeamData, selectedMetric]);
 
   const { minValue, maxValue } = useMemo(() => {
     if (!rankingData.length) return { minValue: 0, maxValue: 1 };

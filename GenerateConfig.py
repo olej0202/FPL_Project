@@ -29,7 +29,7 @@ Manual_team_offensive_adjustments = {17:1.1,1:1.1,36:0.9,11:1.1,94:0.9 }
     
     
     
-Manual_team_defensive_adjustments = {94:1.1,31:1.1}
+Manual_team_defensive_adjustments = {94:1.1,31:1.1,4:1.1}
 
 
 Manual_NewPlayer_Adjustments={
