@@ -271,7 +271,7 @@ def optimize_my_team(
 
     # ---------- Risk factor adjustment ----------
     # raw risk: higher std + lower ownership = riskier
-    risk_raw = ((1 - 2 * selected) ** 2) * (1 + point_std)
+    risk_raw = ((1 - selected) ** 2) * (1 + point_std)
 
 
     # clamp negatives so we don't reward ultra-template players as "negative risk"
@@ -287,10 +287,10 @@ def optimize_my_team(
 
     if risk_factor_clean == "low":
         # risk-averse: DOWN-weight risky players
-        mult = np.clip(1/(risk_norm), 0.45, 2.0)
+        mult = np.clip(1/(risk_norm), 0.45, 1.5)
     elif risk_factor_clean == "high":
         # risk-seeking: UP-weight risky players
-        mult = np.clip(risk_norm, 0.6, 2.0)
+        mult = np.clip(risk_norm, 0.9, 2.0)
     else:
         # "med": no risk adjustment
         mult = np.ones_like(risk_norm)

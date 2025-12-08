@@ -1477,12 +1477,20 @@ def adjust_measure(df, measure_name):
     #player_df[measure_name] = player_df[measure_name].clip(lower=0.0, upper=1.5)
     n_matches=len(player_df)
     new_expected_goals=[]
+    if(measure_name=="expected_goals"):
+        min_val=0.83
+    elif(measure_name=="threat"):
+        min_val=83
+    elif(measure_name=="creativity"):
+        min_val=70
+    elif(measure_name=="expected_assists"):
+        min_val=0.70
+    else:
+        min_val=std
     if(n_matches>10):
         current_expected_goals_start_value=player_df[measure_name].mean()*0.8
-        min_val=std
     else:
         current_expected_goals_start_value=player_df[measure_name].mean()*0.8
-        min_val=std
     current_expected_goals=current_expected_goals_start_value
     smoothing_f=0.06
     
@@ -1501,7 +1509,7 @@ def adjust_measure(df, measure_name):
                 in_row=0
                 in_row_fac=1
             if(in_row>2):
-                in_row_fac=1.5
+                in_row_fac=1.2
 
             new_expected_goals.append(min(clipper_val,current_expected_goals+in_row_fac*offset*smoothing_f*min(min_val,max(-min_val,player_df[measure_name].values[i]-pred_scored))))
             current_expected_goals=new_expected_goals[-1]
