@@ -387,7 +387,7 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
     Future_dataframe=pd.DataFrame()
     missing_player=[]
     for name in names:
-        player_risiko=0.25
+        player_risiko=0.3
         player_row = current_data[
             current_data["name"].str.lower() == name.lower()
         ] 
@@ -539,11 +539,11 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
         print(team_code)
         print(name)
         if len(history_player)<=6:
-            player_risiko=0.7
+            player_risiko=0.8
             overscore=1
             overassist=1
-        if len(history_player)<=10:
-            player_risiko=0.5
+        if len(history_player)<=15:
+            player_risiko=0.6
             overscore=1
             overassist=1
         if(name in Manual_Player_Risk):
@@ -558,8 +558,8 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
         player_row["Team_Pen_Data"]=player_team_pen_data
         player_row["Pen_Number"]=pen_number
         player_row["player_risiko"]=player_risiko
-        player_row["Goal_Index"]=player_row["Understat_POSXG"]*0.5+0.5*player_row["Rolling_adjusted_XG"]
-        player_row["Assist_Index"]=player_row["Understat_POSXA"]*0.5+0.5*player_row["Rolling_adjusted_XA"]
+        player_row["Goal_Index"]=player_row["Understat_POSXG"]*player_risiko+(1-player_risiko)*player_row["Rolling_adjusted_XG"]
+        player_row["Assist_Index"]=player_row["Understat_POSXA"]*player_risiko+(1-player_risiko)*player_row["Rolling_adjusted_XA"]
         player_row["Player_code"]=player_code
         
         

@@ -1326,8 +1326,8 @@ def main_Transform():
             player_df['Cluster_XG']=cluster_df['Cluster_XG'].values
             player_df['Cluster_XA']=cluster_df['Cluster_XA'].values
             
-            player_df["rolling_Adjusted_XG_historic"] = player_df['Adjusted_XG'].rolling(window=30, min_periods=1).mean()
-            player_df["rolling_Adjusted_XA_historic"] = player_df['Adjusted_XA'].rolling(window=30, min_periods=1).mean()
+            player_df["rolling_Adjusted_XG_historic"] = player_df['Adjusted_XG'].rolling(window=25, min_periods=1).mean()
+            player_df["rolling_Adjusted_XA_historic"] = player_df['Adjusted_XA'].rolling(window=25, min_periods=1).mean()
             player_df["Share_of_XG"]=player_df['expected_goals'].rolling(window=20, min_periods=1).sum()/player_df["Team_XG"].rolling(window=20, min_periods=1).sum()
             player_df["Share_of_XA"]=player_df['expected_assists'].rolling(window=20, min_periods=1).sum()/player_df["Team_XA"].rolling(window=20, min_periods=1).sum()
             player_df['defcon_adjusted'] = np.where(player_df['position'].eq('DEF'),player_df['defcon'].clip(upper=14),player_df['defcon'].clip(upper=16))

@@ -345,10 +345,10 @@ function recomputeMetrics(rows) {
     const ownXGC = Number(r.own_XGC_avg ?? 0);
     const oppXG = Number(r.opponent_XG_avg ?? 0);
     const oppXGC = Number(r.opponent_XGC_avg ?? 0);
-    const ownAttE = Number(r.own_H_Att_E ?? 0);
-    const oppDefE = Number(r.opponent_H_def_E ?? 0);
-    const ownDEFE = Number(r.own_H_def_E ?? 0);
-    const oppATTE = Number(r.opponent_H_Att_E ?? 0);
+    const ownAttE = Number(r.own_H_Att_E ?? 0)*0.5;
+    const oppDefE = Number(r.opponent_H_def_E ?? 0)*0.5;
+    const ownDEFE = Number(r.own_H_def_E ?? 0)*0.5;
+    const oppATTE = Number(r.opponent_H_Att_E ?? 0)*0.5;
 
     // Baseline: keep the very first strengths as base_* (if not already set)
     const base_own_XG_avg =

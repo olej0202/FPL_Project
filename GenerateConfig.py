@@ -50,13 +50,13 @@ Manual_Player_Risk={
 
 Manual_min=[
         {"name": "Bukayo_Saka", "type": "const",   "GW": "any", "value": 90},
-        {"name": "Hugo_Ekitiké", "type": "const",   "GW": "any", "value": 70},
-        {"name": "Karl_Darlow", "type": "const",   "GW": "any", "value": 60},
+        {"name": "Hugo_Ekitiké", "type": "const",   "GW": "any", "value": 80},
+        {"name": "Karl_Darlow", "type": "const",   "GW": "any", "value": 0},
         {"name": "Alisson_Ramses Becker", "type": "const",   "GW": "any", "value": 90},
         {"name": "Tijjani_Reijnders", "type": "const",   "GW": "any", "value": 75},
         {"name": "Callum_Wilson", "type": "const",   "GW": "any", "value": 75},
         {"name": "Nico_O'Reilly", "type": "const",   "GW": "any", "value": 75},
-        {"name": "Mohamed_Salah", "type": "adjust_from",   "GW": "16", "value": 0},
+        {"name": "Mohamed_Salah", "type": "const",   "GW": "any", "value": 0},
         {"name": "Ismaïla_Sarr", "type": "adjust_from",   "GW": "16", "value": 0},
         {"name": "Mohammed_Kudus", "type": "adjust_from",   "GW": "16", "value": 0},
         {"name": "Bryan_Mbeumo", "type": "adjust_from",   "GW": "16", "value": 0},
@@ -66,6 +66,7 @@ Manual_min=[
         {"name": "Alex_Iwobi", "type": "adjust_from",   "GW": "16", "value": 0},
         {"name": "Cole_Palmer", "type": "adjust_from",   "GW": "16", "value": 80},
         {"name": "Anthony_Gordon", "type": "adjust_from",   "GW": "15", "value": 80},
+        {"name": "Cody_Gakpo", "type": "const",   "GW": "any", "value": 0},
     ]
         
 

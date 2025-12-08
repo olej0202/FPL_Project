@@ -370,17 +370,17 @@ export default function PlayerAdjustmentsPage() {
     const xg = teamRow ? Number(teamRow.XG) || 0 : 0;
     const cs = teamRow ? Number(teamRow.CS) || 0 : 0;
 
-    const minutesAdj = avgMin ? Math.min(1, avgMin / 80) : 0;
+    const minutesAdj = avgMin ? Math.min(1, avgMin / 75) : 0;
 
-    const goalScored = (goalShare * xg * 1.1 + penData*0.7) * minutesAdj;
-    const assists = assistShare * xg * 1.1 * minutesAdj;
+    const goalScored = (goalShare * xg  + penData*0.4) * minutesAdj;
+    const assists = assistShare * xg  * minutesAdj;
     const points =
       defaultPoints * minutesAdj +
       goalScored * goalFactor +
       assists * assistFactor +
       cs * csFactor * minutesAdj +
       bps * minutesAdj +
-      cbi * 1.7 * minutesAdj;
+      cbi * 1.5 * minutesAdj;
 
     const avgMinutes = avgMin;
     const cbiPredictions = cbi * minutesAdj;
