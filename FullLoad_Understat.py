@@ -52,6 +52,7 @@ def FullLoad(season):
         for c in script.contents:
             split_data = c.split('=')
             data = split_data[0].strip()
+            print(c)
             if data == 'var teamsData':
                 content = re.findall(r'JSON\.parse\(\'(.*)\'\)',split_data[1])
                 decoded_content = codecs.escape_decode(content[0], "hex")[0].decode('utf-8')
@@ -60,6 +61,7 @@ def FullLoad(season):
                 content = re.findall(r'JSON\.parse\(\'(.*)\'\)',split_data[1])
                 decoded_content = codecs.escape_decode(content[0], "hex")[0].decode('utf-8')
                 playerData = json.loads(decoded_content)
+    print(playerData)            
                 
     df=pd.DataFrame(playerData)[["id", "player_name","team_title"]]
     Unique_ids=df["id"].unique()
