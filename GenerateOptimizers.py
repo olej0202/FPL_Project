@@ -114,7 +114,7 @@ def wildcard_optimize_team(sel_thresh, budget, columns, file_path="Model_Optimiz
             model += transfer_out[i, t] >= x[i, t - 1] - x[i, t]
             model += transfer_out[i, t] <= x[i, t - 1]
         model += lpSum(transfer_in[i, t] for i in range(num_players)) <= 1 + saved_transfers[t - 1]
-        if gw_numbers[t] == 17:
+        if gw_numbers[t] == 49:
             # Bump right after GW16: hard set the bank at GW17 to 5
             model += saved_transfers[t] == 5
         else:
