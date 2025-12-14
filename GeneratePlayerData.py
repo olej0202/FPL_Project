@@ -147,7 +147,8 @@ def team_data(
             "XG","XGC","was_home","opponent","Clean_Sheet","Result",
             "Threat","Threat_against","XG_DEF","XG_MID","XG_FORWARD",
             "XGA","XGCA","XGH","XGCH","XG_avg","XGC_avg",
-            "Rolling_Threat","Rolling_Threat_Against","XG_slope","XGC_slope","Elo_Rating","Rolling_XG","Rolling_XGC"
+            "Rolling_Threat","Rolling_Threat_Against","XG_slope","XGC_slope","Elo_Rating","Rolling_XG","Rolling_XGC",
+            
         ]
     
     if missing_codes:
@@ -260,7 +261,8 @@ def add_team_share_per90(
     metrics = [
         "Rolling_adjusted_XG","rolling_Threat","Rolling_adjusted_XA",
         "Rolling_creativity","Rolling_adjusted_BPS","rolling_XG","rolling_XA","Share_of_XG","Share_of_XA", "rolling_Adjusted_XG_historic","rolling_Adjusted_XA_historic"
-        ,"Threat_Mean","Creativity_Mean","rolling_Goal_min","rolling_Assist_min"
+        ,"Threat_Mean","Creativity_Mean","rolling_Goal_min","rolling_Assist_min","Rolling_adjusted_XG_per90","Rolling_adjusted_XA_per90"
+        ,"Rolling_adjusted_Threat_per90","Rolling_adjusted_creativity_per90"
     ]
     for m in metrics:
         if m not in df.columns:
