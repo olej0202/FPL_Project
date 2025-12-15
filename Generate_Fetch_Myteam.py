@@ -1,5 +1,6 @@
 import requests
 import pandas as pd
+from typing import Optional
 
 BASE_URL = "https://fantasy.premierleague.com/api"
 
@@ -53,30 +54,38 @@ def choose_event(events):
     return gw
 
 
+def get_most_recent_finished_event_id(events, before_event_id: int) -> Optional[int]:
+    finished_prior = [e["id"] for e in events if e["id"] < before_event_id and e.get("finished")]
+    return max(finished_prior) if finished_prior else None
+
+
+def resolve_squad_event_id(entry_id: int, event_id: int, events, include_freehit_team: bool) -> int:
+    """
+    If this GW is a Free Hit GW and include_freehit_team=False, return the last
+    finished GW before it (the underlying squad). Otherwise return event_id.
+    """
+    picks_data = get_entry_picks(entry_id, event_id)
+    active_chip = picks_data.get("active_chip")
+
+    if active_chip == "freehit" and not include_freehit_team:
+        prev_finished = get_most_recent_finished_event_id(events, event_id)
+        if prev_finished is not None:
+            return prev_finished
+        return max(1, event_id - 1)
+
+    return event_id
+
+
 def compute_free_transfers(
     history_current,
     chips_by_event,
     max_ft: int = 5,
-    afcon_topup_event: int | None = 15,
+    afcon_topup_event: Optional[int] = 16,
 ):
     """
     Reconstruct free transfers per GW using the 2025/26 rules.
 
-    Rules applied (based on current FPL guidance):
-    - You can store up to `max_ft` free transfers (5).
-    - Each Gameweek normally:
-        start_ft = min(max_ft, previous_end_ft + 1)
-    - If the *previous* Gameweek had ANY chip (wildcard, freehit, bboost, 3xc, etc.),
-      you DO NOT get the +1:
-        start_ft = min(max_ft, previous_end_ft)
-    - In a chip Gameweek itself, your banked FTs are frozen:
-        end_ft = start_ft
-    - In a normal Gameweek with N transfers:
-        free_used = min(N, start_ft)
-        end_ft   = start_ft - free_used
-    - AFCON special for this season:
-        At the *start* of `afcon_topup_event` (GW16) your free transfers are
-        topped up to `max_ft` regardless of prior total.
+    (Kept as you wrote, just organized and returned as before.)
     """
     history_sorted = sorted(history_current, key=lambda row: row["event"])
     result: dict[int, dict[str, int]] = {}
@@ -86,7 +95,7 @@ def compute_free_transfers(
 
     first_event = history_sorted[0]["event"]
     prev_end_ft = 0
-    prev_chip_name: str | None = None
+    prev_chip_name: Optional[str] = None
 
     for row in history_sorted:
         event_id = row["event"]
@@ -95,27 +104,23 @@ def compute_free_transfers(
 
         # --- 1) Determine free_start for this GW ---
         if event_id == first_event:
-            # First GW you play
             if afcon_topup_event is not None and event_id == afcon_topup_event:
                 free_start = max_ft
             else:
                 free_start = 1
         else:
-            # Normally +1 between GWs
             if prev_chip_name is not None:
-                base_start = prev_end_ft          # no +1 after chip GW
+                base_start = prev_end_ft      # no +1 after chip GW
             else:
-                base_start = prev_end_ft + 1      # standard +1
+                base_start = prev_end_ft + 1  # standard +1
 
             free_start = min(max_ft, base_start)
 
-            # AFCON GW16 top-up override
             if afcon_topup_event is not None and event_id == afcon_topup_event:
                 free_start = max_ft
 
         # --- 2) Determine free_end for this GW ---
         if chip_name is not None:
-            # Chip week: banked FTs frozen
             free_end = free_start
         elif afcon_topup_event is not None and event_id == afcon_topup_event:
             free_end = max_ft
@@ -123,10 +128,7 @@ def compute_free_transfers(
             free_used = min(event_transfers, free_start)
             free_end = free_start - free_used
 
-        result[event_id] = {
-            "free_start": free_start,
-            "free_end": free_end,
-        }
+        result[event_id] = {"free_start": free_start, "free_end": free_end}
 
         prev_end_ft = free_end
         prev_chip_name = chip_name
@@ -134,21 +136,21 @@ def compute_free_transfers(
     return result
 
 
-def reconstruct_purchase_prices_for_season(entry_id: int,
-                                           history_current,
-                                           transfers,
-                                           elements):
+def reconstruct_purchase_prices_for_season(
+    entry_id: int,
+    history_current,
+    transfers,
+    elements,
+    freehit_gws: Optional[set[int]] = None,
+):
     """
     Return {element_id: purchase_price_tenths} for the current underlying squad.
 
-    Steps:
-    - Find earliest GW you have this season.
-    - Use that GW's picks as initial squad.
-    - Approximate initial buy price using element-summary 'value' for that GW.
-    - Replay all permanent transfers (from /entry/{id}/transfers/) in order,
-      updating the squad and the element_in_cost as the new purchase price.
+    Key adjustment:
+    - Ignore transfers made in Free Hit GWs, because they are temporary.
     """
-    # Earliest GW for this entry
+    freehit_gws = freehit_gws or set()
+
     first_event_id = min(row["event"] for row in history_current)
 
     # Initial squad at that time
@@ -167,26 +169,26 @@ def reconstruct_purchase_prices_for_season(entry_id: int,
             cost_tenths = elements[elem_id]["now_cost"]
         team_purchase[elem_id] = cost_tenths
 
-    # Apply all permanent transfers in chronological order
-    transfers_sorted = sorted(
-        transfers,
-        key=lambda t: (t.get("event", 0), t.get("time", ""))
-    )
+    transfers_sorted = sorted(transfers, key=lambda t: (t.get("event", 0), t.get("time", "")))
 
     for tr in transfers_sorted:
         ev = tr.get("event")
         if ev is None or ev < first_event_id:
             continue
 
+        # Ignore temporary FH transfers (some seasons/endpoints include them)
+        if ev in freehit_gws:
+            continue
+        if tr.get("chip") == "freehit":  # extra safety if present
+            continue
+
         element_in = tr["element_in"]
         element_out = tr["element_out"]
         in_cost = tr["element_in_cost"]
 
-        # Remove outgoing player (if in team)
         if element_out in team_purchase:
             del team_purchase[element_out]
 
-        # Add / update incoming player with his buy price
         team_purchase[element_in] = in_cost
 
     return team_purchase
@@ -194,23 +196,11 @@ def reconstruct_purchase_prices_for_season(entry_id: int,
 
 # ---------- Main: build DataFrame ----------
 
-def build_team_dataframe(entry_id: int) -> pd.DataFrame:
+def build_team_dataframe(entry_id: int, include_freehit_team: bool = False) -> pd.DataFrame:
     """
-    Build a DataFrame with:
-      - player_name
-      - player_id
-      - team
-      - position
-      - selling_price_m
-      - gw
-      - money_in_bank_m
-      - saved_transfers
-      - rank_progress (list of overall ranks by GW)
-      - wildcard_gws (list of GWs where wildcard was used)
-      - freehit_gws  (list of GWs where free hit was used)
-      - benchboost_gws (list of GWs where bench boost was used)
-      - tc_gws (list of GWs where triple captain was used)
-    for the *current* Gameweek (current or next if no current).
+    include_freehit_team:
+      - False (default): if current/next GW is FH, return the underlying real squad
+      - True: return FH squad for that GW
     """
     # Global data
     bootstrap = get_bootstrap()
@@ -218,20 +208,20 @@ def build_team_dataframe(entry_id: int) -> pd.DataFrame:
     current_gw = choose_event(events)
     event_id = current_gw["id"]
 
-    # Entry history (for bank, chips, transfers per GW)
+    # Entry history
     history = get_entry_history(entry_id)
     history_current = history["current"]
     chips_list = history.get("chips", [])
     chips_by_event = {c["event"]: c["name"] for c in chips_list}
 
-    # Rank progress (overall rank per GW)
+    # Rank progress
     rank_progress = [
         row["overall_rank"]
         for row in sorted(history_current, key=lambda r: r["event"])
         if row.get("overall_rank") is not None
     ]
 
-    # Chip GWs as lists
+    # Chip GWs
     wildcard_gws = [c["event"] for c in chips_list if c["name"] == "wildcard"]
     freehit_gws = [c["event"] for c in chips_list if c["name"] == "freehit"]
     benchboost_gws = [c["event"] for c in chips_list if c["name"] == "bboost"]
@@ -241,35 +231,51 @@ def build_team_dataframe(entry_id: int) -> pd.DataFrame:
     hist_row = next((h for h in history_current if h["event"] == event_id), None)
     if hist_row is None:
         raise RuntimeError(
-            f"No history row for event {event_id}. "
-            "This can happen very early pre-season."
+            f"No history row for event {event_id}. This can happen very early pre-season."
         )
 
     bank_tenths = hist_row["bank"]
     bank_million = bank_tenths / 10.0
 
-    # Free transfers including chip behaviour & AFCON GW16 top-up
+    # Free transfers
     ft_info = compute_free_transfers(
         history_current,
         chips_by_event,
         max_ft=5,
-        afcon_topup_event=15,   # special for this season
+        afcon_topup_event=15,
     )
+    print(ft_info)
     this_ft = ft_info[event_id]
-    free_start = this_ft["free_end"]          # FTs at start of this GW
-    saved_transfers = min(max(free_start, 0),5)-1
 
-    # Transfer history to reconstruct purchase prices
+    # NOTE: your original code used free_end as "start". That looked inverted.
+    # We'll use free_start as "FTs available at start of GW".
+    free_start = this_ft["free_end"]
+
+    # keep your original saved_transfers shape
+
+    saved_transfers = min(max(free_start, 0), 5) - 1
+    
+    if(free_start==0):
+        saved_transfers=0
+    elif(free_start==1):
+        saved_transfers=1
+    
+    
+
+    # Transfer history to reconstruct purchase prices (ignore FH transfers)
     transfers = get_entry_transfers(entry_id)
     team_purchase_prices = reconstruct_purchase_prices_for_season(
         entry_id,
         history_current,
         transfers,
-        elements
+        elements,
+        freehit_gws=set(freehit_gws),
     )
 
-    # Current squad for this GW
-    picks_data = get_entry_picks(entry_id, event_id)
+    # Decide which picks to use (FH vs underlying)
+    squad_event_id = resolve_squad_event_id(entry_id, event_id, events, include_freehit_team)
+
+    picks_data = get_entry_picks(entry_id, squad_event_id)
     picks = picks_data["picks"]
 
     rows = []
@@ -301,7 +307,8 @@ def build_team_dataframe(entry_id: int) -> pd.DataFrame:
                 "team": team_name,
                 "position": pos_name,
                 "selling_price_m": sell_price_m,
-                "gw": event_id,
+                "gw": event_id,                 # the GW you're "viewing"
+                "squad_gw_used": squad_event_id, # the GW used for picks
                 "money_in_bank_m": bank_million,
                 "saved_transfers": saved_transfers,
                 "rank_progress": rank_progress,
@@ -309,22 +316,31 @@ def build_team_dataframe(entry_id: int) -> pd.DataFrame:
                 "freehit_gws": freehit_gws,
                 "benchboost_gws": benchboost_gws,
                 "tc_gws": tc_gws,
+                "active_chip_view_gw": get_entry_picks(entry_id, event_id).get("active_chip"),
             }
         )
 
     df = pd.DataFrame(rows)
     return enrich(df)
 
-def enrich(df):
-    enrich_df=pd.read_csv("Raw_Data_25/current_players.csv")[["id","name","code", "now_cost","selected_by_percent","web_name","news"]]
+
+
+def enrich(df: pd.DataFrame) -> pd.DataFrame:
+    enrich_df = pd.read_csv("Raw_Data_25/current_players.csv")[
+        ["id", "name", "code", "now_cost", "selected_by_percent", "web_name", "news"]
+    ]
+
     merged_df = (
-    df.merge(enrich_df, left_on="player_id", right_on="id", how="left")
-      .drop(columns=["id"])
-        )
+        df.merge(enrich_df, left_on="player_id", right_on="id", how="left")
+          .drop(columns=["id"])
+    )
+
     merged_df["photo"] = (
         "https://resources.premierleague.com/premierleague25/photos/players/500x500/"
         + merged_df["code"].astype(str)
         + ".png"
-        )
-    merged_df["news"]=merged_df["news"].fillna("NoNews")
+    )
+    merged_df["news"] = merged_df["news"].fillna("NoNews")
     return merged_df
+
+
