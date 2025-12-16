@@ -23,15 +23,15 @@
 21,Aston Villa,Youri Tielemans,AMC,4,5,80.0
 22,Bournemouth,Adam Smith,DR,3,5,60.0
 23,Bournemouth,Adrien Truffert,DL,5,5,100.0
-24,Bournemouth,Alejandro Jiménez,RW,2,5,40.0
-25,Bournemouth,Alex Scott,DM,5,5,100.0
-26,Bournemouth,Antoine Semenyo,LW,4,5,80.0
-27,Bournemouth,Bafode Diakite,CB,4,5,80.0
-28,Bournemouth,Djordje Petrovic,GK,5,5,100.0
-29,Bournemouth,Evanilson,FW,4,5,80.0
-30,Bournemouth,Justin Kluivert,AMC,3,5,60.0
-31,Bournemouth,Marcos Senesi,CB,4,5,80.0
-32,Bournemouth,Marcus Tavernier,DM,4,5,80.0
+24,Bournemouth,Alejandro Jiménez,RW,3,5,60.0
+25,Bournemouth,Antoine Semenyo,LW,4,5,80.0
+26,Bournemouth,Bafode Diakite,CB,5,5,100.0
+27,Bournemouth,Djordje Petrovic,GK,5,5,100.0
+28,Bournemouth,Evanilson,FW,4,5,80.0
+29,Bournemouth,Justin Kluivert,AMC,3,5,60.0
+30,Bournemouth,Marcos Senesi,CB,4,5,80.0
+31,Bournemouth,Marcus Tavernier,DM,4,5,80.0
+32,Bournemouth,Tyler Adams,DM,4,5,80.0
 33,Brentford,Aaron Hickey,DL,2,5,40.0
 34,Brentford,Caoimhin Kelleher,GK,5,5,100.0
 35,Brentford,Dango Ouattara,RW,5,5,100.0
@@ -176,15 +176,15 @@
 174,Man City,Rúben Dias,CB,5,5,100.0
 175,Man City,Tijjani Reijnders,MC,3,5,60.0
 176,Man Utd,Amad Diallo Traore,DR,5,5,100.0
-177,Man Utd,Ayden Heaven,CB,2,5,40.0
+177,Man Utd,Ayden Heaven,CB,3,5,60.0
 178,Man Utd,Bruno Fernandes,MC,5,5,100.0
 179,Man Utd,Bryan Mbeumo,AMC,5,5,100.0
 180,Man Utd,Casemiro,MC,5,5,100.0
-181,Man Utd,Diogo Dalot,DL,3,5,60.0
-182,Man Utd,Luke Shaw,CB,5,5,100.0
-183,Man Utd,Mason Mount,AMC,2,5,40.0
-184,Man Utd,Matheus Cunha,FW,3,5,60.0
-185,Man Utd,Noussair Mazraoui,CB,4,5,80.0
+181,Man Utd,Diogo Dalot,DL,4,5,80.0
+182,Man Utd,Leny Yoro,CB,3,5,60.0
+183,Man Utd,Luke Shaw,CB,5,5,100.0
+184,Man Utd,Mason Mount,AMC,3,5,60.0
+185,Man Utd,Matheus Cunha,FW,3,5,60.0
 186,Man Utd,Senne Lammens,GK,5,5,100.0
 187,Newcastle,Aaron Ramsdale,GK,4,5,80.0
 188,Newcastle,Anthony Elanga,RW,3,5,60.0
