@@ -25,7 +25,7 @@ Spurs,6
 ,Ipswich,40"""
 
 
-Manual_team_offensive_adjustments = {17:1.1,36:0.9,11:1.1,94:0.9,4:0.9}
+Manual_team_offensive_adjustments = {17:1.1,36:0.9,94:0.9,4:0.9,2:0.9}
     
     
     
@@ -38,35 +38,43 @@ Manual_NewPlayer_Adjustments={
     }
 
 Manual_Player_Adjustments={
-        "Mohamed_Salah":["Florian_Wirtz"]
+        "Mohamed_Salah":["Florian_Wirtz"],
+        "Igor_Thiago Nascimento Rodrigues":["Liam_Delap"],
         
      }
 
 
 Manual_Player_Risk={
-        "Alexander_Isak":0.7,
+        "Alexander_Isak":0.6,
         "Yoane_Wissa":0.8,        
 }
 
 Manual_min=[
         {"name": "Bukayo_Saka", "type": "const",   "GW": "any", "value": 90},
-        {"name": "Hugo_Ekitiké", "type": "const",   "GW": "any", "value": 80},
+        {"name": "Hugo_Ekitiké", "type": "const",   "GW": "any", "value": 90},
         {"name": "Karl_Darlow", "type": "const",   "GW": "any", "value": 0},
         {"name": "Alisson_Ramses Becker", "type": "const",   "GW": "any", "value": 90},
         {"name": "Tijjani_Reijnders", "type": "const",   "GW": "any", "value": 75},
         {"name": "Callum_Wilson", "type": "const",   "GW": "any", "value": 75},
         {"name": "Nico_O'Reilly", "type": "const",   "GW": "any", "value": 75},
-        {"name": "Mohamed_Salah", "type": "const",   "GW": "any", "value": 0},
-        {"name": "Ismaïla_Sarr", "type": "const",   "GW": "any", "value": 0},
-        {"name": "Mohammed_Kudus", "type": "const",   "GW": "any", "value": 0},
-        {"name": "Bryan_Mbeumo", "type": "const",   "GW": "any", "value": 0},
-        {"name": "Amad_Diallo", "type": "const",   "GW": "any", "value": 0},
-        {"name": "Iliman_Ndiaye", "type": "const",   "GW": "any", "value": 0},
-        {"name": "Dango_Ouattara", "type": "const",   "GW": "any", "value": 0},
-        {"name": "Alex_Iwobi", "type": "const",   "GW": "any", "value": 0},
-        {"name": "Cole_Palmer", "type": "const",   "GW": "any", "value": 80},
+        {"name": "Gabriel_dos Santos Magalhães", "type": "adjust_from",   "GW": "20", "value": 90},
+        {"name": "Bruno_Borges Fernandes", "type": "linear_from",   "GW": "20", "value": 90},
+        
+        #Afcon
+        {"name": "Mohamed_Salah", "type": "adjust_from",   "GW": "22", "value": 90},
+        {"name": "Ismaïla_Sarr", "type": "adjust_from",   "GW": "22", "value": 90},
+        {"name": "Mohammed_Kudus", "type": "adjust_from",   "GW": "22", "value": 90},
+        {"name": "Bryan_Mbeumo", "type": "adjust_from",   "GW": "22", "value": 90},
+        {"name": "Amad_Diallo", "type": "adjust_from",   "GW": "22", "value": 90},
+        {"name": "Iliman_Ndiaye", "type": "adjust_from",   "GW": "22", "value": 90},
+        {"name": "Dango_Ouattara", "type": "adjust_from",   "GW": "22", "value": 90},
+        {"name": "Alex_Iwobi", "type": "adjust_from",   "GW": "22", "value": 90},
+        
+        {"name": "Cole_Palmer", "type": "const",   "GW": "any", "value": 90},
         {"name": "Anthony_Gordon", "type": "const",   "GW": "any", "value": 90},
         {"name": "Cody_Gakpo", "type": "const",   "GW": "any", "value": 0},
+        {"name": "Viktor_Gyökeres", "type": "const",   "GW": "any", "value": 80},
+
     ]
         
 

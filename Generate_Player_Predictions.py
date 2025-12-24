@@ -747,10 +747,10 @@ def Generate_point_predictions():
         stat_cbi_player= stat_cbi[stat_cbi["Name"]==player].sort_values(by=["GW", "opp_stat"])
 
         overscore=max(0.9,player_data["Average_Overscore"].values[0])
-        overscore=min(1.1,overscore)
+        overscore=min(1.15,overscore)
 
         overassist=max(0.9,player_data["Average_OverAssist"].values[0])
-        overassist=min(1.15,overassist)
+        overassist=min(1.2,overassist)
         
         historic_xg=player_data["rolling_XG_historic"].values[0]
         historic_Assist=player_data["rolling_Assist_historic"].values[-1]
@@ -768,8 +768,8 @@ def Generate_point_predictions():
         for i in range(len(player_data)):
             try:
                 goals.append(((xgb_goals_player["pred"].values[i]*0.15
-                         +stat_goals_player["pred"].values[i]*0.7
-                         +DNN_goals_player["pred"].values[i]*0.15
+                         +stat_goals_player["pred"].values[i]*0.75
+                         +DNN_goals_player["pred"].values[i]*0.1
                          +CLUSTER_goals_player["pred"].values[i]*0.0))*overscore)
             except:
                 goals.append(0)
@@ -832,12 +832,12 @@ def Generate_point_predictions():
         if(position=="FWD"):
             summary_dataset["Points_prediction"]=(2+summary_dataset["Goal_pred"]*5.3
                                                   +summary_dataset["Assist_pred"]*3.5
-                                                  +summary_dataset["Bonus_pred"])*0.9+0.1*summary_dataset["Fantasy_pred"]+(summary_dataset["CBI_pred"]/12)*0.0*2
+                                                  +summary_dataset["Bonus_pred"])*0.8+0.2*summary_dataset["Fantasy_pred"]+(summary_dataset["CBI_pred"]/12)*0.0*2
         elif(position=="MID"):
             summary_dataset["Points_prediction"]=(2+summary_dataset["Goal_pred"]*5.5
                                                   +summary_dataset["Assist_pred"]*3.5
                                                   +summary_dataset["Bonus_pred"]
-                                                  +summary_dataset["GC_pred"]*0.8)*0.9+0.1*summary_dataset["Fantasy_pred"]+(np.minimum(1, summary_dataset["CBI_pred"] / 12) * 0.6+0.4*cbi_hit_rate)*0.8*2
+                                                  +summary_dataset["GC_pred"]*0.8)*0.8+0.2*summary_dataset["Fantasy_pred"]+(np.minimum(1, summary_dataset["CBI_pred"] / 12) * 0.6+0.4*cbi_hit_rate)*0.8*2
             
         elif(position=="GKP"):
             summary_dataset["Points_prediction"]=(2
