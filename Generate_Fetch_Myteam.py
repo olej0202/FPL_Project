@@ -71,7 +71,7 @@ def resolve_squad_event_id(entry_id: int, event_id: int, events, include_freehit
         prev_finished = get_most_recent_finished_event_id(events, event_id)
         if prev_finished is not None:
             return prev_finished
-        return max(1, event_id - 1)
+        return max(1, event_id )
 
     return event_id
 
