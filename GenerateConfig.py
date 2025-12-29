@@ -54,7 +54,7 @@ Manual_min=[
         {"name": "Hugo_Ekitiké", "type": "const",   "GW": "any", "value": 90},
         {"name": "Karl_Darlow", "type": "const",   "GW": "any", "value": 0},
         {"name": "Alisson_Ramses Becker", "type": "const",   "GW": "any", "value": 90},
-        {"name": "Tijjani_Reijnders", "type": "const",   "GW": "any", "value": 75},
+        {"name": "Tijjani_Reijnders", "type": "const",   "GW": "any", "value": 80},
         {"name": "Callum_Wilson", "type": "const",   "GW": "any", "value": 75},
         {"name": "Nico_O'Reilly", "type": "const",   "GW": "any", "value": 75},
         {"name": "Gabriel_dos Santos Magalhães", "type": "adjust_from",   "GW": "20", "value": 90},
@@ -63,7 +63,6 @@ Manual_min=[
         #Afcon
         {"name": "Mohamed_Salah", "type": "adjust_from",   "GW": "22", "value": 90},
         {"name": "Ismaïla_Sarr", "type": "adjust_from",   "GW": "22", "value": 90},
-        {"name": "Mohammed_Kudus", "type": "adjust_from",   "GW": "22", "value": 90},
         {"name": "Bryan_Mbeumo", "type": "adjust_from",   "GW": "22", "value": 90},
         {"name": "Amad_Diallo", "type": "adjust_from",   "GW": "22", "value": 90},
         {"name": "Iliman_Ndiaye", "type": "adjust_from",   "GW": "22", "value": 90},
@@ -72,7 +71,6 @@ Manual_min=[
         
         {"name": "Cole_Palmer", "type": "const",   "GW": "any", "value": 90},
         {"name": "Anthony_Gordon", "type": "const",   "GW": "any", "value": 90},
-        {"name": "Cody_Gakpo", "type": "const",   "GW": "any", "value": 0},
         {"name": "Viktor_Gyökeres", "type": "const",   "GW": "any", "value": 80},
 
     ]
