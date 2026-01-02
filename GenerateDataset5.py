@@ -489,11 +489,11 @@ def Generate_team_data():
                 if(XGC1==0):
                     XGCS.append(GC.values[k])
                 else:
-                    XGCS.append((GC.values[k]*0.3+XGC1*0.7))
+                    XGCS.append((GC.values[k]*0.2+XGC1*0.8))
                 if(XG1==0):
                     XGs.append(GS.values[k])
                 else:
-                    XGs.append((GS.values[k]*0.3+XG1*0.7))
+                    XGs.append((GS.values[k]*0.2+XG1*0.8))
                     
                 if(XG1==0):
                     XG2s.append(GS.values[k])
@@ -1544,7 +1544,7 @@ def adjust_measure(df, measure_name):
     else:
         current_expected_goals_start_value=player_df[measure_name].mean()*0.8
     current_expected_goals=current_expected_goals_start_value
-    smoothing_f=0.08
+    smoothing_f=0.1
     
     count=0
     in_row=0

@@ -25,7 +25,7 @@ Spurs,6
 ,Ipswich,40"""
 
 
-Manual_team_offensive_adjustments = {17:1.1,36:0.9,94:0.9,4:0.9,2:0.9}
+Manual_team_offensive_adjustments = {17:1.1,94:0.9,4:0.9}
     
     
     
@@ -33,8 +33,7 @@ Manual_team_defensive_adjustments = {94:1.1,31:1.1,4:1.1,39:1.05}
 
 
 Manual_NewPlayer_Adjustments={
-        "Benjamin_Sesko":["Kai_Havertz","Rasmus_Højlund","Marcus_Rashford"], 
-        "Hugo_Ekitiké":["Kai_Havertz","Alexander_Isak" ],
+
     }
 
 Manual_Player_Adjustments={
@@ -54,10 +53,8 @@ Manual_min=[
         {"name": "Hugo_Ekitiké", "type": "const",   "GW": "any", "value": 90},
         {"name": "Karl_Darlow", "type": "const",   "GW": "any", "value": 0},
         {"name": "Alisson_Ramses Becker", "type": "const",   "GW": "any", "value": 90},
-        {"name": "Tijjani_Reijnders", "type": "const",   "GW": "any", "value": 80},
         {"name": "Callum_Wilson", "type": "const",   "GW": "any", "value": 75},
-        {"name": "Nico_O'Reilly", "type": "const",   "GW": "any", "value": 75},
-        {"name": "Gabriel_dos Santos Magalhães", "type": "adjust_from",   "GW": "20", "value": 90},
+        {"name": "Gabriel_dos Santos Magalhães", "type": "const",   "GW": "any", "value": 90},
         {"name": "Bruno_Borges Fernandes", "type": "linear_from",   "GW": "20", "value": 90},
         
         #Afcon
@@ -77,8 +74,8 @@ Manual_min=[
         
 
 
-NEW_TEAMS=[56]
-NEW_TEAMS_NAME=["Sunderland"]
+NEW_TEAMS=[]
+NEW_TEAMS_NAME=[]
 
 
 min_id=46805
