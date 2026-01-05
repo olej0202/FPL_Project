@@ -1544,7 +1544,7 @@ def adjust_measure(df, measure_name):
     else:
         current_expected_goals_start_value=player_df[measure_name].mean()*0.8
     current_expected_goals=current_expected_goals_start_value
-    smoothing_f=0.1
+    smoothing_f=0.07
     
     count=0
     in_row=0
