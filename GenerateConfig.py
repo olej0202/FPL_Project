@@ -29,7 +29,7 @@ Manual_team_offensive_adjustments = {17:1.1,94:0.9,4:0.9}
     
     
     
-Manual_team_defensive_adjustments = {94:1.1,31:1.1,4:1.1,39:1.05}
+Manual_team_defensive_adjustments = {94:1.1,31:1.1,4:1.1,39:1.05,56:1.15}
 
 
 Manual_NewPlayer_Adjustments={
@@ -55,8 +55,8 @@ Manual_min=[
         {"name": "Alisson_Ramses Becker", "type": "const",   "GW": "any", "value": 90},
         {"name": "Callum_Wilson", "type": "const",   "GW": "any", "value": 75},
         {"name": "Gabriel_dos Santos Magalhães", "type": "const",   "GW": "any", "value": 90},
-        {"name": "Bruno_Borges Fernandes", "type": "linear_from",   "GW": "20", "value": 90},
-        
+        {"name": "Bruno_Borges Fernandes", "type": "const",   "GW": "any", "value": 90},
+        {"name": "Antoine_Semenyo", "type": "const",   "GW": "any", "value": 65},
         #Afcon
         {"name": "Mohamed_Salah", "type": "adjust_from",   "GW": "22", "value": 90},
         {"name": "Ismaïla_Sarr", "type": "adjust_from",   "GW": "22", "value": 90},

@@ -455,11 +455,11 @@ def Player_adjustements(current_player_path):
     cbi_opp=1+(df["Opp_defcon"]-75)/75
 
     df["CBI_Percent"] = (
-        df["defcon_avg_hit_rate"] * 0.4
-        + 0.6 * cbi_scaled
+        df["defcon_avg_hit_rate"] * 0.2
+        + 0.8 * cbi_scaled
     )*cbi_opp
 
-    bps_scaled = np.maximum(4, df["Rolling_adjusted_BPS"]) 
+    bps_scaled = np.maximum(4, df["Rolling_adjusted_BPS"]*0.4+df["Rolling_adjusted_BPS_2"]*0.6) 
     df["BPS"]=bps_scaled*0.0377
     # Final columns (including the new ones)
     final_cols =["name","position", "GW", "Team","average_minutes","Goal_share", "Assist_share", "Pen_data","CBI_Percent","BPS"]
