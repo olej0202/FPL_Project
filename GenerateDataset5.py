@@ -1348,6 +1348,7 @@ def main_Transform():
 
             player_df["Rolling_adjusted_BPS"]=player_df['Adjusted_BPS'].rolling(window=15, min_periods=1).mean()
             player_df["rolling_bps_historic"] = player_df['Adjusted_BPS'].rolling(window=30, min_periods=1).mean()
+            player_df["Rolling_adjusted_BPS_2"]=(player_df['Adjusted_BPS'].rolling(window=30, min_periods=1).sum()/player_df["minutes"].clip(lower=10).rolling(window=30, min_periods=1).sum()) * 90    
             #player_df["Rolling_adjusted_BPS"]=adjust_measure(player_df, 'bps')
             player_df["Adjusted_Fantasy"] = np.where(
                     player_df["was_home"] == 1,  # Condition: if was_home is 1
@@ -1386,6 +1387,17 @@ def main_Transform():
             player_df['defcon_hit_rate'] = ((player_df['position'].eq('DEF') & player_df['defcon'].gt(9)) |(~player_df['position'].eq('DEF') & player_df['defcon'].gt(11))).astype(int)
             player_df['defcon_avg'] = player_df['defcon_adjusted'].where(player_df['defcon'] > 0).rolling(30, min_periods=1).mean()
             player_df['defcon_avg_hit_rate'] = player_df['defcon_hit_rate'].where(player_df['defcon'] > 0).rolling(30, min_periods=1).mean()
+            
+            mask = player_df["defcon"].gt(0)
+
+            # avg defcon over the rows where defcon > 0
+            defcon_mean = player_df["defcon_adjusted"].where(mask).rolling(20, min_periods=1).sum()
+
+            minutes_mean = player_df["minutes"].where(mask).clip(lower=10).rolling(20, min_periods=1).sum()
+
+            # minutes-adjusted avg_defcon per 90
+            player_df["defcon_avg"] = (defcon_mean / minutes_mean) * 90
+            
             player_df['TP_std_20'] = (player_df['Adjusted_Fantasy'].rolling(window=20, min_periods=1).std())
 
 
