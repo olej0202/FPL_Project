@@ -4,9 +4,391 @@ import pandas as pd
 
 # Try to import Prophet; fall back gracefully if unavailable
 
+# minutes_bucket_xgb_with_gt0_column_no_change.py
+# Keeps bucket predictions EXACTLY as before (trained + predicted on minutes>0 pipeline),
+# and adds prob_gt0 from a separate model trained on full data including zeros.
+
+import os
+import warnings
+from typing import Tuple, List, Dict
+
+
+from xgboost import XGBClassifier
+from sklearn.metrics import roc_auc_score, mean_squared_error
+
+warnings.filterwarnings("ignore", category=UserWarning)
+
+
+def _mse_prob(model: XGBClassifier, X_test: pd.DataFrame, y_test: pd.Series) -> float:
+    p = model.predict_proba(X_test)[:, 1]
+    return mean_squared_error(y_test, p)
+
+
+def _safe_auc(model: XGBClassifier, X_test: pd.DataFrame, y_test: pd.Series) -> float:
+    if y_test.nunique() < 2:
+        return float("nan")
+    p = model.predict_proba(X_test)[:, 1]
+    return roc_auc_score(y_test, p)
+
+
+def _feature_importance_df(
+    model: XGBClassifier,
+    feature_names: List[str],
+    importance_type: str = "gain",
+) -> pd.DataFrame:
+    booster = model.get_booster()
+    score = booster.get_score(importance_type=importance_type)
+    if not score:
+        return pd.DataFrame(columns=["feature", "importance"])
+
+    rows = []
+    for k, v in score.items():
+        if k.startswith("f"):
+            idx = int(k[1:])
+            fname = feature_names[idx] if idx < len(feature_names) else k
+        else:
+            fname = k
+        rows.append((fname, float(v)))
+
+    return (
+        pd.DataFrame(rows, columns=["feature", "importance"])
+        .sort_values("importance", ascending=False)
+        .reset_index(drop=True)
+    )
+
+
+# -----------------------------
+# Two readers (KEY FIX)
+# -----------------------------
+def _read_and_clean_all(history_path: str) -> pd.DataFrame:
+    """Read and clean, KEEP zero-minute rows."""
+    df = pd.read_csv(history_path)
+
+    required = ["name", "kickoff_time", "minutes", "total_points", "ict_index", "value", "selected"]
+    missing = [c for c in required if c not in df.columns]
+    if missing:
+        raise ValueError(f"{history_path} missing required columns: {missing}")
+
+    df["kickoff_time"] = pd.to_datetime(df["kickoff_time"], errors="coerce")
+    if pd.api.types.is_datetime64_any_dtype(df["kickoff_time"]):
+        try:
+            df["kickoff_time"] = df["kickoff_time"].dt.tz_localize(None)
+        except Exception:
+            pass
+
+    for c in ["minutes", "total_points", "ict_index", "value", "selected"]:
+        df[c] = pd.to_numeric(df[c], errors="coerce").fillna(0)
+
+    if "Full_Name" not in df.columns:
+        df["Full_Name"] = df["name"]
+
+    return df.sort_values(["name", "kickoff_time"]).reset_index(drop=True)
+
+
+def _read_and_clean_pos(history_path: str) -> pd.DataFrame:
+    """Read and clean, then FILTER minutes>0 (this matches your original bucket logic)."""
+    df = _read_and_clean_all(history_path)
+    df = df[df["minutes"] > 0].copy()
+    return df.sort_values(["name", "kickoff_time"]).reset_index(drop=True)
+
+
+def _add_rolling_features(
+    df: pd.DataFrame,
+    windows: Tuple[int, ...] = (3, 5, 10),
+    roll_cols: Tuple[str, ...] = ("minutes", "ict_index"),
+    id_col: str = "name",
+) -> pd.DataFrame:
+    df = df.sort_values([id_col, "kickoff_time"]).copy()
+
+    for col in roll_cols:
+        for w in windows:
+            feat = f"{col}_roll{w}"
+            df[feat] = (
+                df.groupby(id_col)[col]
+                .shift(1)
+                .rolling(window=w, min_periods=1)
+                .median()
+                .reset_index(level=0, drop=True)
+            )
+
+    df["Median_min"] = (
+        df.groupby(id_col)["minutes"]
+        .shift(1)
+        .rolling(window=4, min_periods=1)
+        .mean()
+        .reset_index(level=0, drop=True)
+    )
+
+    df["Median_min_8"] = (
+        df.groupby(id_col)["minutes"]
+        .shift(1)
+        .rolling(window=8, min_periods=1)
+        .mean()
+        .reset_index(level=0, drop=True)
+    )
+
+    lookback = 15
+
+    df["pct_ge80_l20"] = (
+        df.groupby(id_col)["minutes"]
+        .shift(1)
+        .ge(74)
+        .rolling(window=lookback, min_periods=1)
+        .mean()
+        .reset_index(level=0, drop=True)
+    )
+
+    df["pct_ge80_5"] = (
+        df.groupby(id_col)["minutes"]
+        .shift(1)
+        .ge(74)
+        .rolling(window=5, min_periods=1)
+        .mean()
+        .reset_index(level=0, drop=True)
+    )
+
+    df["pct_ge60_5"] = (
+        df.groupby(id_col)["minutes"]
+        .shift(1)
+        .ge(60)
+        .rolling(window=5, min_periods=1)
+        .mean()
+        .reset_index(level=0, drop=True)
+    )
+
+    df["pct_ge60_l20"] = (
+        df.groupby(id_col)["minutes"]
+        .shift(1)
+        .ge(60)
+        .rolling(window=lookback, min_periods=1)
+        .mean()
+        .reset_index(level=0, drop=True)
+    )
+
+    df["pct_ge30_l20"] = (
+        df.groupby(id_col)["minutes"]
+        .shift(1)
+        .ge(30)
+        .rolling(window=lookback, min_periods=1)
+        .mean()
+        .reset_index(level=0, drop=True)
+    )
+
+    short_w, long_w = 3, 8
+    df["minutes_momentum_3v8"] = (
+        df.groupby(id_col)["minutes"].shift(1).rolling(short_w, min_periods=1).median().reset_index(level=0, drop=True)
+        -
+        df.groupby(id_col)["minutes"].shift(1).rolling(long_w, min_periods=1).median().reset_index(level=0, drop=True)
+    )
+
+    return df
+
+
+def _make_bucket_targets(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.copy()
+    df["target_80"] = (df["minutes"] >= 75).astype(int)
+    df["target_60"] = (df["minutes"] >= 60).astype(int)
+    df["target_30"] = (df["minutes"] >= 30).astype(int)
+    return df
+
+
+def _make_gt0_target(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.copy()
+    df["target_gt0"] = (df["minutes"] > 0).astype(int)
+    return df
+
+
+def _feature_list(
+    windows: Tuple[int, ...] = (3, 5, 10),
+    roll_cols: Tuple[str, ...] = ("minutes", "ict_index"),
+) -> List[str]:
+    base = [f"{c}_roll{w}" for c in roll_cols for w in windows] + ["Median_min", "Median_min_8", "value", "selected"]
+    new_rates = ["pct_ge80_l20", "pct_ge60_l20", "pct_ge30_l20", "pct_ge80_5", "pct_ge60_5", "minutes_momentum_3v8"]
+    return base + new_rates
+
+
+def _time_split_masks(df: pd.DataFrame, time_col: str = "kickoff_time", quantile: float = 0.80):
+    split_point = df[time_col].quantile(quantile)
+    train_mask = (df[time_col] <= split_point).to_numpy()
+    test_mask = (df[time_col] > split_point).to_numpy()
+    return train_mask, test_mask
+
+
+def _train_xgb_binary(X_train: pd.DataFrame, y_train: pd.Series) -> XGBClassifier:
+    model = XGBClassifier(
+        n_estimators=200,
+        max_depth=4,
+        learning_rate=0.05,
+        reg_lambda=1.0,
+        objective="binary:logistic",
+        eval_metric="logloss",
+        n_jobs=-1,
+        random_state=42,
+    )
+    model.fit(X_train, y_train)
+    return model
+
+
+def _latest_per_player(df: pd.DataFrame, id_col: str = "name", time_col: str = "kickoff_time") -> pd.DataFrame:
+    return (
+        df.sort_values(time_col)
+        .groupby(id_col, as_index=False)
+        .tail(1)
+        .reset_index(drop=True)
+    )
+
+
+def train_minutes_bucket_models(
+    history_path: str = "Fantasy_Merged.csv",
+    current_players_path: str = "Raw_Data_25/current_players.csv",
+    out_predictions_path: str = "minutes_bucket_predictions.csv",
+    split_quantile: float = 0.80,
+    windows: Tuple[int, ...] = (3, 5, 10),
+) -> Dict[str, object]:
+    FEATURES = _feature_list(windows=windows)
+
+    # =========================================================
+    # (A) BUCKET MODELS PIPELINE (UNCHANGED): minutes>0 BEFORE FE
+    # =========================================================
+    df_pos = _read_and_clean_pos(history_path)          # <-- same as your original filtering
+    df_pos = _add_rolling_features(df_pos, windows=windows)
+    df_pos = _make_bucket_targets(df_pos)
+
+    df_pos_model = df_pos.dropna(subset=FEATURES + ["target_80", "target_60", "target_30"]).copy()
+
+    train_mask_pos, test_mask_pos = _time_split_masks(df_pos_model, quantile=split_quantile)
+
+    X_pos = df_pos_model[FEATURES]
+    X_train_pos, X_test_pos = X_pos.loc[train_mask_pos], X_pos.loc[test_mask_pos]
+
+    bucket_models: Dict[str, XGBClassifier] = {}
+    bucket_aucs: Dict[str, float] = {}
+    bucket_mses: Dict[str, float] = {}
+
+    for key, target_col in [("80", "target_80"), ("60", "target_60"), ("30", "target_30")]:
+        y = df_pos_model[target_col]
+        y_train, y_test = y.loc[train_mask_pos], y.loc[test_mask_pos]
+
+        m = _train_xgb_binary(X_train_pos, y_train)
+        bucket_models[key] = m
+        bucket_aucs[key] = _safe_auc(m, X_test_pos, y_test)
+        bucket_mses[key] = _mse_prob(m, X_test_pos, y_test)
+
+    # Bucket predictions (latest rows from the SAME bucket df -> identical behavior)
+    latest_pos = _latest_per_player(df_pos_model)
+    X_latest_pos = latest_pos[FEATURES]
+
+    latest_pos["prob_80"] = bucket_models["80"].predict_proba(X_latest_pos)[:, 1]
+    latest_pos["prob_60"] = bucket_models["60"].predict_proba(X_latest_pos)[:, 1]
+    latest_pos["prob_30"] = bucket_models["30"].predict_proba(X_latest_pos)[:, 1]
+
+    preds = latest_pos[["name", "Full_Name", "prob_80", "prob_60", "prob_30"]].copy()
+
+    preds["Predicted_minutes"] = (
+        preds["prob_30"] * 30
+        + preds["prob_60"] * 40
+        + preds["prob_80"] * 30
+    ).clip(upper=90)
+
+    # =========================================================
+    # (B) NEW GT0 MODEL PIPELINE: FULL DATA INCLUDING ZEROS
+    # =========================================================
+    df_all = _read_and_clean_all(history_path)          # <-- includes 0-min rows
+    df_all = _add_rolling_features(df_all, windows=windows)
+    df_all = _make_gt0_target(df_all)
+
+    df_all_model = df_all.dropna(subset=FEATURES + ["target_gt0"]).copy()
+
+    train_mask_all, test_mask_all = _time_split_masks(df_all_model, quantile=split_quantile)
+
+    X_all = df_all_model[FEATURES]
+    y_all = df_all_model["target_gt0"]
+
+    X_train_all, X_test_all = X_all.loc[train_mask_all], X_all.loc[test_mask_all]
+    y_train_all, y_test_all = y_all.loc[train_mask_all], y_all.loc[test_mask_all]
+
+    model_gt0 = _train_xgb_binary(X_train_all, y_train_all)
+    auc_gt0 = _safe_auc(model_gt0, X_test_all, y_test_all)
+    mse_gt0 = _mse_prob(model_gt0, X_test_all, y_test_all)
+
+    # Predict prob_gt0 on latest rows from FULL dataset
+    latest_all = _latest_per_player(df_all_model)
+    X_latest_all = latest_all[FEATURES]
+    latest_all["prob_gt0"] = model_gt0.predict_proba(X_latest_all)[:, 1]
+
+    # Merge prob_gt0 into preds WITHOUT changing bucket probs
+    preds = preds.merge(
+        latest_all[["name", "prob_gt0"]],
+        on="name",
+        how="left",
+    )
+
+    # Optional filter to current players (same as your original)
+    if current_players_path and os.path.exists(current_players_path):
+        cur = pd.read_csv(current_players_path)
+
+        candidate_cols = [c for c in ["name", "web_name", "Full_Name", "full_name"] if c in cur.columns]
+        if not candidate_cols:
+            raise ValueError("current_players file must contain a name column")
+
+        name_col = candidate_cols[0]
+
+        # --- Build lookup with name + code ---
+        keep_cols = [name_col]
+        if "code" in cur.columns:
+            keep_cols.append("code")
+
+        cur_lookup = cur[keep_cols].copy()
+        cur_lookup["name"] = cur_lookup[name_col].astype(str).str.strip()
+
+        if "code" not in cur_lookup.columns:
+            cur_lookup["code"] = np.nan  # safety
+
+        cur_lookup = cur_lookup[["name", "code"]].drop_duplicates()
+
+        # Normalize preds names
+        preds["name"] = preds["name"].astype(str).str.strip()
+
+        # LEFT JOIN: keep all current players, bring code along
+        preds = cur_lookup.merge(preds, on="name", how="left")
+
+        # Fill missing prediction columns with 0
+        pred_cols = [c for c in preds.columns if c.startswith("prob_") or c in ["Predicted_minutes", "Final_pred"]]
+        preds[pred_cols] = preds[pred_cols].fillna(0.0)
+
+    
+
+    preds = preds.sort_values("prob_80", ascending=False).reset_index(drop=True)
+    preds["Final_pred"] = np.where(
+        preds["prob_gt0"] < 0.4,
+        preds["Predicted_minutes"] * preds["prob_gt0"],
+        preds["Predicted_minutes"],
+    )
+    preds.to_csv(out_predictions_path, index=False)
+
+    # -------------------------
+    # Evaluation prints
+    # -------------------------
+
+
+    return {
+        "bucket_models": bucket_models,
+        "model_gt0": model_gt0,
+        "bucket_aucs": bucket_aucs,
+        "bucket_mses": bucket_mses,
+        "auc_gt0": auc_gt0,
+        "mse_gt0": mse_gt0,
+        "predictions": preds,
+        "features": FEATURES,
+    }
+
+
+
+
 
 
 def GetXmins(current_players, n_future, scenarios=None, position_slots=None):
+    train_minutes_bucket_models()
     try:
         from prophet import Prophet
         _HAVE_PROPHET = True
@@ -139,6 +521,7 @@ def GetXmins(current_players, n_future, scenarios=None, position_slots=None):
 
     # -------- Build predictions --------
     out_rows = []
+    minutes_calc=pd.read_csv("minutes_bucket_predictions.csv")
     for _, r in df_current.iterrows():
         code = r["code"]
         name = r.get("name", code)
@@ -149,9 +532,12 @@ def GetXmins(current_players, n_future, scenarios=None, position_slots=None):
 
         # History for modeling (non-zero)
         pdf = hist.loc[hist[code_col] == code, ["kickoff_time", "minutes"]].copy()
-
+        player_mins = minutes_calc.loc[minutes_calc["code"] == code, ["Final_pred","name"]].copy()
+        pred_mins=player_mins["Final_pred"].values[0]
+        print(player_mins)
         base_est, mult, ispercent = baseline_minutes_from(pdf, news, chance)
         prophet_vec, prophet_reason = prophet_minutes_from(pdf, periods=len(future_gws), min_points=3)
+        
 
         last5_avg = last5_avg_including_zeros(code)
 
@@ -161,9 +547,8 @@ def GetXmins(current_players, n_future, scenarios=None, position_slots=None):
             m_final = (m_base) if np.isfinite(m_prophet) else m_base
             minutes_prophet = 0 if not np.isfinite(m_prophet) else round(m_prophet, 2)
             multiplier = min(1.0, round(mult + (j * 0.1 * ispercent), 2))
-            final_minutes = ((m_final + minutes_prophet) / 2) * multiplier
-            if (final_minutes - last5_avg) >= 40:
-                final_minutes = (final_minutes + last5_avg) / 2
+            final_minutes = ((pred_mins*0.7 + minutes_prophet*0.3)) * multiplier
+
             if is_suspended and j == 0:
                 final_minutes = 0.0
             out_rows.append({
