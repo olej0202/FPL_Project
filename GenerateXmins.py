@@ -360,7 +360,7 @@ def train_minutes_bucket_models(
 
     preds = preds.sort_values("prob_80", ascending=False).reset_index(drop=True)
     preds["Final_pred"] = np.where(
-        preds["prob_gt0"] < 0.4,
+        preds["prob_gt0"] < 0.51,
         preds["Predicted_minutes"] * preds["prob_gt0"],
         preds["Predicted_minutes"],
     )

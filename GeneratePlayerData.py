@@ -227,7 +227,7 @@ def add_team_share_per90(
     team_col: str = "Team",
     name_col: str = "name",
     gw_col: str = "GW",
-    per: int = 65,
+    per: int = 75,
     share_suffix: str = "_share",
     add_percent: bool = False,
     percent_suffix: str = "_share_pct",
