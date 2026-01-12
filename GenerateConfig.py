@@ -45,7 +45,8 @@ Manual_Player_Adjustments={
 
 Manual_Player_Risk={
         "Alexander_Isak":0.6,
-        "Yoane_Wissa":0.8,        
+        "Yoane_Wissa":0.8,
+        "Antoine_Semenyo":0.8        
 }
 
 Manual_min=[
@@ -54,16 +55,16 @@ Manual_min=[
         {"name": "Alisson_Ramses Becker", "type": "const",   "GW": "any", "value": 90},
         {"name": "Gabriel_dos Santos Magalhães", "type": "const",   "GW": "any", "value": 90},
         {"name": "Bruno_Borges Fernandes", "type": "const",   "GW": "any", "value": 90},
+        {"name": "Rayan_Aït-Nouri", "type": "const",   "GW": "any", "value": 1},
         {"name": "Antoine_Semenyo", "type": "const",   "GW": "any", "value": 65},
         #Afcon
-        {"name": "Mohamed_Salah", "type": "adjust_from",   "GW": "22", "value": 90},
-        {"name": "Ismaïla_Sarr", "type": "adjust_from",   "GW": "22", "value": 90},
-        {"name": "Bryan_Mbeumo", "type": "adjust_from",   "GW": "22", "value": 90},
-        {"name": "Amad_Diallo", "type": "adjust_from",   "GW": "22", "value": 90},
-        {"name": "Iliman_Ndiaye", "type": "adjust_from",   "GW": "22", "value": 90},
+        {"name": "Mohamed_Salah", "type": "adjust_from",   "GW": "23", "value": 90},
+        {"name": "Ismaïla_Sarr", "type": "adjust_from",   "GW": "23", "value": 90},
+        {"name": "Bryan_Mbeumo", "type": "adjust_from",   "GW": "23", "value": 90},
+        {"name": "Amad_Diallo", "type": "adjust_from",   "GW": "23", "value": 90},
+        {"name": "Iliman_Ndiaye", "type": "adjust_from",   "GW": "23", "value": 90},
         {"name": "Dango_Ouattara", "type": "adjust_from",   "GW": "22", "value": 90},
-        {"name": "Alex_Iwobi", "type": "adjust_from",   "GW": "22", "value": 90},
-        {"name": "Rayan_Aït-Nouri", "type": "const",   "GW": "any", "value": 55},
+        {"name": "Alex_Iwobi", "type": "adjust_from",   "GW": "23", "value": 90},
         
         {"name": "Cole_Palmer", "type": "const",   "GW": "any", "value": 90},
         {"name": "Anthony_Gordon", "type": "const",   "GW": "any", "value": 90},
