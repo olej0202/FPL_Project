@@ -26,6 +26,7 @@ import PlayerMeasureAveragesChart_Player from "./Season_Analytics_Players";
 import AdjustmentAnalytics from "./Adjustment_Analytics";
 import TeamAdjustmentsPage from "./Adjustment_Analytics_Team";
 import PlayerAdjustmentsPage from "./Adjustment_Analytics_Player";
+import FixturesPage from "./Adjustement_Analytics_Fixtures";
 
 import AITeams from "./AITeams";
 import AITeamNav from "./components/team_navigation"; // still unused but kept if you need it later
@@ -220,6 +221,8 @@ export default function App() {
             <Route index element={<Navigate to="Adjustment_Player" replace />} />
             <Route path="Adjustment_Teams" element={<TeamAdjustmentsPage />} />
             <Route path="Adjustment_Player" element={<PlayerAdjustmentsPage />} />
+            <Route path="Adjustment_Fixture" element={<FixturesPage />} />
+
           </Route>
 
           <Route

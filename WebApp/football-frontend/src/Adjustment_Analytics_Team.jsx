@@ -4,7 +4,7 @@ import React, {
   useState,
   useRef,
 } from "react";
-import { useAdjustmentData } from "./Contexts/AdjustmentsContext";
+import { useAdjustmentData, fixtureIdFromRow } from "./Contexts/AdjustmentsContext";
 import {
   ScatterChart,
   Scatter,
@@ -27,7 +27,7 @@ const PALETTE = {
 const normalizeName = (s) => String(s ?? "").trim().toLowerCase();
 
 function TeamAdjustmentsPage() {
-  const { fetchIfNeeded, loading, Teamdata, updateTeamData,dataVersion, forceRefetch} = useAdjustmentData();
+  const { fetchIfNeeded, loading, Teamdata, updateTeamData,dataVersion, forceRefetch,Fixtures,fixturesVersion,} = useAdjustmentData();
   const [data, setData] = useState([]);
   const [resetting, setResetting] = useState(false);
 
@@ -108,39 +108,129 @@ function TeamAdjustmentsPage() {
 
   // Table data: gws, teams, rowMap, totals per team
   const tableData = useMemo(() => {
-    const gws = Array.from(new Set(data.map((r) => r.GW))).sort(
-      (a, b) => Number(a) - Number(b)
-    );
-    const teams = Array.from(
-      new Set(data.map((r) => r.team_name))
-    ).sort();
+    const fixtures = Fixtures?.current || [];
 
-    const key = (team, gw) => `${team}__${gw}`;
-    const rowMap = new Map();
-    for (const r of data) {
-      rowMap.set(key(r.team_name, r.GW), r);
+    // fixtureId -> options[]
+    const optionsById = new Map();
+    for (const fx of fixtures) {
+      optionsById.set(
+        fx.id,
+        (fx.options || []).map((o) => ({
+          gw: Number(o.gw),
+          p: Number(o.p),
+        }))
+      );
     }
 
+    const teams = Array.from(new Set(data.map((r) => r.team_name))).sort();
+
+    // Collect all GWs that appear in any option (fallback to row.GW if no fixture exists)
+    const gwSet = new Set();
+    for (const r of data) {
+      const id = fixtureIdFromRow({
+        ...r,
+        Opponent_team: r.Opponent_team, // ensure correct field used
+      });
+
+      const opts = optionsById.get(id);
+      if (opts && opts.length) {
+        for (const o of opts) {
+          if (Number.isFinite(o.gw)) gwSet.add(o.gw);
+        }
+      } else {
+        const gw = Number(r.GW);
+        if (Number.isFinite(gw)) gwSet.add(gw);
+      }
+    }
+    const gws = Array.from(gwSet).sort((a, b) => a - b);
+
+    const key = (team, gw) => `${team}__${gw}`;
+
+    // cellMap: for each team+gw store expectedXG/expectedCS and opponent breakdown
+    const cellMap = new Map();
+
+    const formatHAV = (Home) => {
+      if (Home === true || Home === "Home" || Home === "H") return "H";
+      if (Home === false || Home === "Away" || Home === "A") return "A";
+      return "-";
+    };
+
+    const addToCell = (team, gw, { expectedXG, expectedCS, opp, hav, p }) => {
+      const k = key(team, gw);
+      const cur =
+        cellMap.get(k) || {
+          expectedXG: 0,
+          expectedCS: 0,
+          probMass: 0,
+          opps: [], // { opp, hav, p }
+        };
+
+      cur.expectedXG += expectedXG;
+      cur.expectedCS += expectedCS;
+      cur.probMass += p;
+
+      const i = cur.opps.findIndex((x) => x.opp === opp && x.hav === hav);
+      if (i === -1) cur.opps.push({ opp, hav, p });
+      else cur.opps[i] = { ...cur.opps[i], p: cur.opps[i].p + p };
+
+      cellMap.set(k, cur);
+    };
+
+    for (const r of data) {
+      const xg = Number.isFinite(r.XG) ? r.XG : 0;
+      const cs = Number.isFinite(r.CS) ? r.CS : 0;
+
+      const oppName = r.Opponent_team || r.opponent_team || "TBD";
+      const hav = formatHAV(r.Home);
+
+      const id = fixtureIdFromRow({
+        ...r,
+        Opponent_team: r.Opponent_team,
+      });
+
+      const dist =
+        optionsById.get(id)?.length
+          ? optionsById.get(id)
+          : [{ gw: Number(r.GW), p: 1 }];
+
+      for (const o of dist) {
+        const gw = Number(o.gw);
+        const p = Number(o.p);
+        if (!Number.isFinite(gw) || !Number.isFinite(p) || p <= 0) continue;
+
+        addToCell(r.team_name, gw, {
+          expectedXG: p * xg,
+          expectedCS: p * cs,
+          opp: oppName,
+          hav,
+          p,
+        });
+      }
+    }
+
+    // totals
     const totalsByTeam = {};
     for (const team of teams) {
       let totalXG = 0;
-      let csSum = 0;
-      let count = 0;
+      let sumExpectedCS = 0;
+      let gwCount = 0;
+
       for (const gw of gws) {
-        const row = rowMap.get(key(team, gw));
-        if (!row) continue;
-        const xg = Number.isFinite(row.XG) ? row.XG : 0;
-        const cs = Number.isFinite(row.CS) ? row.CS : 0;
-        totalXG += xg;
-        csSum += cs;
-        count += 1;
+        const c = cellMap.get(key(team, gw));
+        if (!c) continue;
+        totalXG += c.expectedXG;
+        sumExpectedCS += c.expectedCS;
+        gwCount += 1;
       }
-      const avgCS = count > 0 ? csSum / count : 0;
-      totalsByTeam[team] = { totalXG, avgCS };
+
+      totalsByTeam[team] = {
+        totalXG,
+        avgCS: gwCount ? sumExpectedCS / gwCount : 0,
+      };
     }
 
-    return { gws, teams, rowMap, totalsByTeam };
-  }, [data]);
+    return { gws, teams, cellMap, totalsByTeam };
+  }, [data, Fixtures, fixturesVersion]);
 
   // When user drags a team in the scatter
   const handleTeamDrag = (teamName, newXg, newXgc) => {
@@ -823,7 +913,7 @@ function DraggableDot({
 /* ========== Fixture table (unchanged except logo use) ========== */
 
 function FixturesTable({ tableData }) {
-  const { gws, teams, rowMap, totalsByTeam } = tableData;
+  const { gws, teams, cellMap, totalsByTeam } = tableData;
 
   const [sortConfig, setSortConfig] = useState({
     key: "default", // 'default' | 'totalXG' | 'totalCS' | 'gwXG'
@@ -848,8 +938,8 @@ function FixturesTable({ tableData }) {
       if (sortConfig.key === "totalCS") return totals.avgCS;
 
       if (sortConfig.key === "gwXG" && sortConfig.gw != null) {
-        const row = rowMap.get(key(team, sortConfig.gw));
-        return row && Number.isFinite(row.XG) ? row.XG : 0;
+        const cell = cellMap.get(key(team, sortConfig.gw));
+        return cell ? cell.expectedXG : 0;
       }
 
       return 0;
@@ -866,7 +956,7 @@ function FixturesTable({ tableData }) {
     });
 
     return arr;
-  }, [teams, totalsByTeam, sortConfig, rowMap]);
+  }, [teams, totalsByTeam, sortConfig, cellMap]);
 
   const toggleSort = (newKey, gw = null) => {
     setSortConfig((prev) => {
@@ -1116,94 +1206,85 @@ function FixturesTable({ tableData }) {
                 </td>
 
                 {gws.map((gw) => {
-                  const row = rowMap.get(key(team, gw));
-                  if (!row) {
-                    return (
-                      <td
-                        key={gw}
-                        style={{
-                          borderBottom: "1px solid #222222",
-                          padding: "6px 10px",
-                          textAlign: "center",
-                          color: "#6b7280",
-                        }}
-                      >
-                        –
-                      </td>
-                    );
-                  }
+  const cell = cellMap.get(key(team, gw));
+  if (!cell) {
+    return (
+      <td
+        key={gw}
+        style={{
+          borderBottom: "1px solid #222222",
+          padding: "6px 10px",
+          textAlign: "center",
+          color: "#6b7280",
+        }}
+      >
+        –
+      </td>
+    );
+  }
 
-                  const xgVal = Number.isFinite(row.XG) ? row.XG : 0;
-                  const csVal = Number.isFinite(row.CS) ? row.CS : 0;
-                  const oppName = row.opponent_team || "";
-                  const hav = formatHAV(row.Home);
+  const xgVal = cell.expectedXG; // p-weighted
+  const csVal = cell.expectedCS; // p-weighted
 
-                  // Simple heat coloring based on XG (dark theme)
-                  let bg = "#1f2933";
-                  if (xgVal > 1.7) bg = "rgba(22,163,74,0.45)"; // green-ish
-                  else if (xgVal < 1.1) bg = "rgba(220,38,38,0.45)"; // red-ish
-                  else bg = "rgba(202,138,4,0.45)"; // golden
+  // Build opponent summary from probability mix
+  const oppSummary = (cell.opps || [])
+    .slice()
+    .sort((a, b) => b.p - a.p)
+    .slice(0, 3)
+    .map((e) => `${e.opp} (${Math.round(e.p * 100)}%) ${e.hav}`)
+    .join(" • ");
 
-                  return (
-                    <td
-                      key={gw}
-                      style={{
-                        borderBottom: "1px solid #222222",
-                        padding: "6px 10px",
-                        textAlign: "center",
-                        minWidth: 120,
-                      }}
-                    >
-                      <div
-                        style={{
-                          borderRadius: 8,
-                          padding: "4px 6px",
-                          background: bg,
-                          display: "flex",
-                          flexDirection: "column",
-                          gap: 2,
-                        }}
-                      >
-                        <span
-                          style={{
-                            fontSize: 12,
-                            fontWeight: 600,
-                            whiteSpace: "nowrap",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                          }}
-                          title={oppName}
-                        >
-                          {oppName || "TBD"}
-                        </span>
-                        <span
-                          style={{
-                            fontSize: 11,
-                            color: "#e5e7eb",
-                          }}
-                        >
-                          ({hav})
-                        </span>
-                        <span
-                          style={{
-                            fontSize: 11,
-                            color: PALETTE.beige,
-                          }}
-                        >
-                          Goals {formatXG(xgVal)}
-                        </span>
-                        <span
-                          style={{
-                            fontSize: 11,
-                            color: PALETTE.beige,
-                          }}
-                        >
-                          CS Odds: {formatCS(csVal)}
-                        </span>
-                      </div>
-                    </td>
-                  );
-                })}
+  // Simple heat coloring based on expected XG
+  let bg = "#1f2933";
+  if (xgVal > 1.7) bg = "rgba(22,163,74,0.45)";
+  else if (xgVal < 1.1) bg = "rgba(220,38,38,0.45)";
+  else bg = "rgba(202,138,4,0.45)";
+
+  return (
+    <td
+      key={gw}
+      style={{
+        borderBottom: "1px solid #222222",
+        padding: "6px 10px",
+        textAlign: "center",
+        minWidth: 120,
+      }}
+    >
+      <div
+        style={{
+          borderRadius: 8,
+          padding: "4px 6px",
+          background: bg,
+          display: "flex",
+          flexDirection: "column",
+          gap: 2,
+        }}
+      >
+        <span
+          style={{
+            fontSize: 12,
+            fontWeight: 600,
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+          }}
+          title={oppSummary}
+        >
+          {oppSummary || "—"}
+        </span>
+
+        <span style={{ fontSize: 11, color: PALETTE.beige }}>
+          Goals: {formatXG(xgVal)}
+        </span>
+
+        <span style={{ fontSize: 11, color: PALETTE.beige }}>
+          CS Odds: {formatCS(csVal)}
+        </span>
+      </div>
+    </td>
+  );
+})}
+
 
                 {/* Total column */}
                 <td

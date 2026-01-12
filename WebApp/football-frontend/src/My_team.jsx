@@ -236,7 +236,15 @@ export default function MyTeamOptimize() {
     if (!hasStatisticalData) return null;
     const arr = Playerdata?.current;
     if (!Array.isArray(arr) || arr.length === 0) return null;
-    return arr;
+    return arr.map((p) => ({
+  ...p,
+
+  // make absolutely sure the optimizer gets the correct number
+  calc_points: Number.isFinite(Number(p.calc_points)) ? Number(p.calc_points) : 0,
+
+  // IMPORTANT: if your backend optimizer uses "Points" instead of "calc_points"
+  Points: Number.isFinite(Number(p.calc_points)) ? Number(p.calc_points) : 0,
+}));
   };
 
   const handleOptimizeClick = () => {

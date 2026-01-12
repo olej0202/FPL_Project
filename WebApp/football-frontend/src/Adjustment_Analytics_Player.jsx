@@ -1,5 +1,8 @@
-import React, { useEffect, useMemo, useState, useRef } from "react";
-import { useAdjustmentData } from "./Contexts/AdjustmentsContext";
+import React, { useEffect, useMemo, useState, useRef, useCallback } from "react";
+import {
+  useAdjustmentData,
+  fixtureIdFromRow,
+} from "./Contexts/AdjustmentsContext";
 
 const PALETTE = {
   red: "#5A0000",
@@ -69,6 +72,7 @@ function SearchableMultiSelect({
       >
         {label}
       </label>
+
       <div
         onClick={() => setIsOpen((p) => !p)}
         style={{
@@ -89,6 +93,7 @@ function SearchableMultiSelect({
         <span>{selectedLabel}</span>
         <span style={{ opacity: 0.9 }}>▾</span>
       </div>
+
       {isOpen && (
         <div
           style={{
@@ -120,6 +125,7 @@ function SearchableMultiSelect({
                 fontSize: "0.8rem",
               }}
             />
+
             <div
               style={{
                 marginTop: "0.35rem",
@@ -144,6 +150,7 @@ function SearchableMultiSelect({
               >
                 Select all
               </button>
+
               <button
                 type="button"
                 onClick={handleClearAll}
@@ -161,6 +168,7 @@ function SearchableMultiSelect({
               </button>
             </div>
           </div>
+
           <div
             style={{
               padding: "0.25rem 0.35rem 0.4rem",
@@ -168,12 +176,7 @@ function SearchableMultiSelect({
             }}
           >
             {filteredOptions.length === 0 ? (
-              <div
-                style={{
-                  padding: "0.3rem 0.4rem",
-                  color: "#9ca3af",
-                }}
-              >
+              <div style={{ padding: "0.3rem 0.4rem", color: "#9ca3af" }}>
                 No matches
               </div>
             ) : (
@@ -201,10 +204,7 @@ function SearchableMultiSelect({
                       type="checkbox"
                       checked={checked}
                       onChange={() => toggleValue(value)}
-                      style={{
-                        margin: 0,
-                        accentColor: PALETTE.gold,
-                      }}
+                      style={{ margin: 0, accentColor: PALETTE.gold }}
                     />
                     <span>{opt.label}</span>
                   </label>
@@ -218,9 +218,6 @@ function SearchableMultiSelect({
   );
 }
 
-/**
- * Page using AdjustmentDataProvider
- */
 export default function PlayerAdjustmentsPage() {
   const {
     fetchIfNeeded,
@@ -228,22 +225,20 @@ export default function PlayerAdjustmentsPage() {
     Teamdata,
     Playerdata,
     dataVersion,
-    teamVersion, 
+    teamVersion,
     changes,
     updateChanges,
     changesVersion,
     updatePlayerData,
+    Fixtures,
+    fixturesVersion,
   } = useAdjustmentData();
 
   const [playersState, setPlayersState] = useState(null); // saved copy
   const [teamsState, setTeamsState] = useState(null);
-  const [hasHydratedFromContext, setHasHydratedFromContext] =
-    useState(false);
-  const [hasInitialContextSync, setHasInitialContextSync] = useState(false);
+  const [hasHydratedFromContext, setHasHydratedFromContext] = useState(false);
 
-
-  const [selectedMeasure, setSelectedMeasure] =
-    useState("Points"); // default: Predicted Points
+  const [selectedMeasure, setSelectedMeasure] = useState("Points");
 
   const [selectedPlayerNames, setSelectedPlayerNames] = useState([]);
   const [selectedTeamCodes, setSelectedTeamCodes] = useState([]);
@@ -286,34 +281,27 @@ export default function PlayerAdjustmentsPage() {
   const MIN_MINUTES = 0;
   const MAX_MINUTES = 90;
 
-  const getPlayerKey = (p) =>
-    p.name || `${p.web_name || "unknown"}_${p.Team || "NA"}`;
+  const getPlayerKey = (p) => p.name || `${p.web_name || "unknown"}_${p.Team || "NA"}`;
 
   useEffect(() => {
     fetchIfNeeded();
   }, [fetchIfNeeded]);
 
-  // 🔁 Hydrate from context ONCE per load/reset (prevents constant overwrites)
+  // Hydrate from context ONCE per load/reset (prevents constant overwrites)
   useEffect(() => {
     if (hasHydratedFromContext) return;
 
-    if (Teamdata?.current) {
-      setTeamsState([...Teamdata.current]);
-    }
-    if (Playerdata?.current) {
-      setPlayersState([...Playerdata.current]);
-    }
+    if (Teamdata?.current) setTeamsState([...Teamdata.current]);
+    if (Playerdata?.current) setPlayersState([...Playerdata.current]);
 
-    if (Teamdata?.current || Playerdata?.current) {
-      setHasHydratedFromContext(true);
-    }
+    if (Teamdata?.current || Playerdata?.current) setHasHydratedFromContext(true);
   }, [Teamdata, Playerdata, dataVersion, hasHydratedFromContext]);
 
+  // If team data changes (e.g., team strength dragging), refresh teamsState
   useEffect(() => {
-  if (!Teamdata?.current) return;
-  // don’t touch playersState (we don't want to blow away pending share changes)
-  setTeamsState([...Teamdata.current]);
-}, [teamVersion, Teamdata]);
+    if (!Teamdata?.current) return;
+    setTeamsState([...Teamdata.current]);
+  }, [teamVersion, Teamdata]);
 
   const isDataReady =
     hasHydratedFromContext &&
@@ -321,23 +309,73 @@ export default function PlayerAdjustmentsPage() {
     Array.isArray(teamsState) &&
     !loading;
 
-  // Build team lookups
+  /**
+   * Build EXPECTED team lookup (team_code + GW) by aggregating fixture-weighted rows.
+   * If a team has multiple fixtures in a GW, we sum their contributions.
+   * If a team has no fixture in a GW, lookup misses -> treated as 0 by computeMeasures.
+   */
   const { teamLookup, teamNamesByCode } = useMemo(() => {
-    const lookup = new Map();
     const names = new Map();
+    const lookup = new Map(); // key: `${team_code}_${gw}` -> { XG, CS }
 
-    if (teamsState) {
-      teamsState.forEach((t) => {
-        const code = String(t.team_code);
-        const key = `${code}_${t.GW}`;
-        lookup.set(key, t);
-        if (!names.has(code)) {
-          names.set(code, t.team_name);
-        }
-      });
+    const teamsRows = teamsState || [];
+    const fixtures = Fixtures?.current || [];
+
+    // Build optionsByFixtureId
+    const optionsById = new Map();
+    for (const fx of fixtures) {
+      optionsById.set(
+        fx.id,
+        (fx.options || []).map((o) => ({
+          gw: Number(o.gw),
+          p: Number(o.p), // 0..1
+        }))
+      );
     }
+
+    const add = (team_code, gw, xg, cs) => {
+      const key = `${String(team_code)}_${Number(gw)}`;
+      const prev = lookup.get(key);
+      if (!prev) {
+        lookup.set(key, { team_code, GW: Number(gw), XG: xg, CS: cs });
+      } else {
+        lookup.set(key, {
+          ...prev,
+          XG: (Number(prev.XG) || 0) + xg,
+          CS: (Number(prev.CS) || 0) + cs,
+        });
+      }
+    };
+
+    for (const r of teamsRows) {
+      const code = r.team_code;
+      const gw0 = Number(r.GW);
+
+      if (!names.has(String(code)) && r.team_name) {
+        names.set(String(code), r.team_name);
+      }
+
+      const rowXG = Number(r.XG) || 0;
+      const rowCS = Number(r.CS) || 0;
+
+      const id = fixtureIdFromRow({
+        ...r,
+        Opponent_team: r.Opponent_team,
+      });
+
+      const dist =
+        optionsById.get(id)?.length ? optionsById.get(id) : [{ gw: gw0, p: 1 }];
+
+      for (const o of dist) {
+        const gw = Number(o.gw);
+        const p = Number(o.p);
+        if (!Number.isFinite(gw) || !Number.isFinite(p) || p <= 0) continue;
+        add(code, gw, p * rowXG, p * rowCS);
+      }
+    }
+
     return { teamLookup: lookup, teamNamesByCode: names };
-  }, [teamsState]);
+  }, [teamsState, Fixtures, fixturesVersion]);
 
   const allGWs = useMemo(() => {
     if (!playersState) return [];
@@ -353,117 +391,118 @@ export default function PlayerAdjustmentsPage() {
     return Array.from(set);
   }, [playersState]);
 
-  function computeMeasures(playerRow, teamRow) {
-    const avgMinRaw = Number(playerRow.average_minutes) || 0;
-    const avgMin = Math.max(MIN_MINUTES, Math.min(MAX_MINUTES, avgMinRaw));
+  const computeMeasures = useCallback(
+    (playerRow, teamRow) => {
+      if (!teamRow) {
+        return {
+          Goal_Scored: 0,
+          Assists: 0,
+          Points: 0,
+          Avg_Minutes: 0,
+          CBI_Predictions: 0,
+        };
+      }
 
-    const goalShare = Number(playerRow.Goal_share) || 0;
-    const assistShare = Number(playerRow.Assist_share) || 0;
-    const penData = Number(playerRow.Pen_data) || 0;
-    const cbi = Number(playerRow.CBI_Percent) || 0;
-    const bps = Number(playerRow.BPS) || 0;
-    const goalFactor = Number(playerRow.Goal_factor) || 0;
-    const assistFactor = Number(playerRow.Assist_factor) || 0;
-    const csFactor = Number(playerRow.CS_factor) || 0;
-    const defaultPoints = Number(playerRow.default_points) || 0;
+      const avgMinRaw = Number(playerRow.average_minutes) || 0;
+      const avgMin = Math.max(MIN_MINUTES, Math.min(MAX_MINUTES, avgMinRaw));
 
-    const xg = teamRow ? Number(teamRow.XG) || 0 : 0;
-    const cs = teamRow ? Number(teamRow.CS) || 0 : 0;
+      const goalShare = Number(playerRow.Goal_share) || 0;
+      const assistShare = Number(playerRow.Assist_share) || 0;
+      const penData = Number(playerRow.Pen_data) || 0;
+      const cbi = Number(playerRow.CBI_Percent) || 0;
+      const bps = Number(playerRow.BPS) || 0;
+      const goalFactor = Number(playerRow.Goal_factor) || 0;
+      const assistFactor = Number(playerRow.Assist_factor) || 0;
+      const csFactor = Number(playerRow.CS_factor) || 0;
+      const defaultPoints = Number(playerRow.default_points) || 0;
 
-    const minutesAdj = avgMin ? Math.min(1, avgMin / 75) : 0;
+      const xg = Number(teamRow.XG) || 0;
+      const cs = Number(teamRow.CS) || 0;
 
-    const goalScored = (goalShare * xg  + penData*0.4) * minutesAdj;
-    const assists = assistShare * xg  * minutesAdj;
-    const points =
-      defaultPoints * minutesAdj +
-      goalScored * goalFactor +
-      assists * assistFactor +
-      cs * csFactor * minutesAdj +
-      bps * minutesAdj +
-      cbi * 1.5 * minutesAdj;
+      const minutesAdj = avgMin ? Math.min(1, avgMin / 75) : 0;
 
-    const avgMinutes = avgMin;
-    const cbiPredictions = cbi * minutesAdj;
+      const goalScored = (goalShare * xg + penData * 0.4) * minutesAdj;
+      const assists = assistShare * xg * minutesAdj;
 
-    return {
-      Goal_Scored: goalScored,
-      Assists: assists,
-      Points: points,
-      Avg_Minutes: avgMinutes,
-      CBI_Predictions: cbiPredictions,
-    };
-  }
-useEffect(() => {
-  if (!isDataReady) return;
-  if (!playersState || !teamsState) return;
-  if (hasInitialContextSync) return;
+      const points =
+        defaultPoints * minutesAdj +
+        goalScored * goalFactor +
+        assists * assistFactor +
+        cs * csFactor * minutesAdj +
+        bps * minutesAdj +
+        cbi * 1.5 * minutesAdj;
 
-  // Wait 1 animation frame so React finishes painting the table
-  requestAnimationFrame(() => {
-    // Build local team lookup
-    const localTeamLookup = new Map();
-    teamsState.forEach((t) => {
-      const code = String(t.team_code);
-      const key = `${code}_${t.GW}`;
-      localTeamLookup.set(key, t);
-    });
+      return {
+        Goal_Scored: goalScored,
+        Assists: assists,
+        Points: points,
+        Avg_Minutes: avgMin,
+        CBI_Predictions: cbi * minutesAdj,
+      };
+    },
+    [MIN_MINUTES, MAX_MINUTES]
+  );
 
-    // Recalculate points BEFORE loading into context
-    const updated = playersState.map((row) => {
-      const teamCode = String(row.Team);
-      const key = `${teamCode}_${row.GW}`;
-      const teamRow = localTeamLookup.get(key);
-      const measures = computeMeasures(row, teamRow);
-      return { ...row, calc_points: measures.Points };
-    });
-
-    updatePlayerData(() => updated);
-    setHasInitialContextSync(true);
-  });
-}, [isDataReady, playersState, teamsState, computeMeasures, updatePlayerData, hasInitialContextSync]);
-  // 🔁 Sync into context only when saved data changes
+  /**
+   * ✅ SINGLE source of truth recalculation:
+   * Recompute calc_* using fixture-weighted teamLookup and push to context.
+   * Includes a "did anything change?" guard to avoid loops.
+   */
   useEffect(() => {
-    if (!playersState || !teamsState) return;
+    if (!isDataReady) return;
+    if (!playersState) return;
 
     const timeoutId = setTimeout(() => {
-      const teamLookupLocal = new Map();
-      teamsState.forEach((t) => {
-        const code = String(t.team_code);
-        const key = `${code}_${t.GW}`;
-        teamLookupLocal.set(key, t);
-      });
-
       const updated = playersState.map((row) => {
-        const teamCode = String(row.Team);
-        const key = `${teamCode}_${row.GW}`;
-        const teamRow = teamLookupLocal.get(key);
+        const key = `${String(row.Team)}_${Number(row.GW)}`;
+        const teamRow = teamLookup.get(key); // ✅ fixture-weighted
         const measures = computeMeasures(row, teamRow);
-        return { ...row, calc_points: measures.Points };
+
+        return {
+          ...row,
+          calc_points: measures.Points,
+          calc_goals: measures.Goal_Scored,
+          calc_assists: measures.Assists,
+          calc_minutes: measures.Avg_Minutes,
+          calc_cbi: measures.CBI_Predictions,
+        };
       });
 
+      // Guard: if nothing changed, don't write (prevents effect loops)
+      let changed = false;
+      for (let i = 0; i < updated.length; i++) {
+        const a = updated[i];
+        const b = playersState[i];
+        if (!b) {
+          changed = true;
+          break;
+        }
+        if (
+          a.calc_points !== b.calc_points ||
+          a.calc_goals !== b.calc_goals ||
+          a.calc_assists !== b.calc_assists ||
+          a.calc_minutes !== b.calc_minutes ||
+          a.calc_cbi !== b.calc_cbi
+        ) {
+          changed = true;
+          break;
+        }
+      }
+
+      if (!changed) return;
+
+      // write to context
       updatePlayerData(() => updated);
+
+      // keep local state aligned with what you pushed
+      setPlayersState(updated);
     }, 150);
 
     return () => clearTimeout(timeoutId);
-  }, [playersState, teamsState, updatePlayerData]);
-
-  /**
- * Sync the recalculated playersState back into context *once*
- * AFTER:
- *   - Data has hydrated
- *   - computeMeasures has run
- *   - The table has rendered at least once
- */
-
-
+  }, [isDataReady, playersState, teamLookup, computeMeasures, updatePlayerData]);
 
   // Pivot + table data (uses saved playersState)
-  const {
-    playerTableRows,
-    globalMinValue,
-    globalMaxValue,
-    allTeamOptions,
-  } = useMemo(() => {
+  const { playerTableRows, globalMinValue, globalMaxValue, allTeamOptions } = useMemo(() => {
     if (!playersState || !teamsState) {
       return {
         playerTableRows: [],
@@ -514,13 +553,13 @@ useEffect(() => {
           gwValues[gw] = null;
           return;
         }
+
         const teamRow = teamLookup.get(`${entry.teamCode}_${gw}`);
         const measures = computeMeasures(playerRow, teamRow);
         const v = measures[selectedMeasure];
         gwValues[gw] = v;
-        if (typeof v === "number" && !Number.isNaN(v)) {
-          totalMeasure += v;
-        }
+
+        if (typeof v === "number" && !Number.isNaN(v)) totalMeasure += v;
       });
 
       const value = entry.value;
@@ -529,19 +568,16 @@ useEffect(() => {
         maxValue = Math.max(maxValue, value);
       }
 
-      tableRows.push({
-        ...entry,
-        gwValues,
-        totalMeasure,
-      });
+      tableRows.push({ ...entry, gwValues, totalMeasure });
     });
 
     if (minValue === Infinity) minValue = 0;
     if (maxValue === -Infinity) maxValue = 150;
 
-    const teamOptions = Array.from(teamNamesByCode.entries()).map(
-      ([code, name]) => ({ code, name })
-    );
+    const teamOptions = Array.from(teamNamesByCode.entries()).map(([code, name]) => ({
+      code,
+      name,
+    }));
 
     return {
       playerTableRows: tableRows,
@@ -549,22 +585,11 @@ useEffect(() => {
       globalMaxValue: maxValue,
       allTeamOptions: teamOptions,
     };
-  }, [
-    playersState,
-    teamsState,
-    allGWs,
-    selectedMeasure,
-    teamLookup,
-    teamNamesByCode,
-  ]);
+  }, [playersState, teamsState, allGWs, selectedMeasure, teamLookup, teamNamesByCode, computeMeasures]);
 
   // Init value slider
   useEffect(() => {
-    if (
-      globalMinValue != null &&
-      globalMaxValue != null &&
-      valueThreshold === null
-    ) {
+    if (globalMinValue != null && globalMaxValue != null && valueThreshold === null) {
       setValueThreshold(globalMaxValue);
     }
   }, [globalMinValue, globalMaxValue, valueThreshold]);
@@ -578,27 +603,14 @@ useEffect(() => {
       const stored = window.localStorage.getItem(FILTERS_STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
-        if (parsed.selectedMeasure) {
-          setSelectedMeasure(parsed.selectedMeasure);
-        }
-        if (Array.isArray(parsed.selectedPlayerNames)) {
-          setSelectedPlayerNames(parsed.selectedPlayerNames);
-        }
-        if (Array.isArray(parsed.selectedTeamCodes)) {
-          setSelectedTeamCodes(parsed.selectedTeamCodes);
-        }
-        if (Array.isArray(parsed.selectedPositions)) {
-          setSelectedPositions(parsed.selectedPositions);
-        }
-        if (
-          typeof parsed.valueThreshold === "number" &&
-          !Number.isNaN(parsed.valueThreshold)
-        ) {
+        if (parsed.selectedMeasure) setSelectedMeasure(parsed.selectedMeasure);
+        if (Array.isArray(parsed.selectedPlayerNames)) setSelectedPlayerNames(parsed.selectedPlayerNames);
+        if (Array.isArray(parsed.selectedTeamCodes)) setSelectedTeamCodes(parsed.selectedTeamCodes);
+        if (Array.isArray(parsed.selectedPositions)) setSelectedPositions(parsed.selectedPositions);
+        if (typeof parsed.valueThreshold === "number" && !Number.isNaN(parsed.valueThreshold)) {
           setValueThreshold(parsed.valueThreshold);
         }
-        if (parsed.sortConfig) {
-          setSortConfig(parsed.sortConfig);
-        }
+        if (parsed.sortConfig) setSortConfig(parsed.sortConfig);
       }
     } catch {
       // ignore
@@ -651,8 +663,7 @@ useEffect(() => {
       rows = rows.filter((r) => set.has(r.position));
     }
 
-    const threshold =
-      valueThreshold != null ? valueThreshold : globalMaxValue;
+    const threshold = valueThreshold != null ? valueThreshold : globalMaxValue;
     if (threshold != null && !Number.isNaN(threshold)) {
       rows = rows.filter((r) => r.value <= threshold);
     }
@@ -661,28 +672,22 @@ useEffect(() => {
       const gwKey = sortConfig.gw;
       const dir = sortConfig.direction;
       rows = [...rows].sort((a, b) => {
-        const va =
-          typeof a.gwValues[gwKey] === "number" ? a.gwValues[gwKey] : -Infinity;
-        const vb =
-          typeof b.gwValues[gwKey] === "number" ? b.gwValues[gwKey] : -Infinity;
+        const va = typeof a.gwValues[gwKey] === "number" ? a.gwValues[gwKey] : -Infinity;
+        const vb = typeof b.gwValues[gwKey] === "number" ? b.gwValues[gwKey] : -Infinity;
         if (Number.isNaN(va) && Number.isNaN(vb)) return 0;
         if (Number.isNaN(va)) return 1;
         if (Number.isNaN(vb)) return -1;
-        if (dir === "asc") return va - vb;
-        return vb - va;
+        return dir === "asc" ? va - vb : vb - va;
       });
     } else if (sortConfig.type === "total") {
       const dir = sortConfig.direction;
       rows = [...rows].sort((a, b) => {
-        const va =
-          typeof a.totalMeasure === "number" ? a.totalMeasure : -Infinity;
-        const vb =
-          typeof b.totalMeasure === "number" ? b.totalMeasure : -Infinity;
+        const va = typeof a.totalMeasure === "number" ? a.totalMeasure : -Infinity;
+        const vb = typeof b.totalMeasure === "number" ? b.totalMeasure : -Infinity;
         if (Number.isNaN(va) && Number.isNaN(vb)) return 0;
         if (Number.isNaN(va)) return 1;
         if (Number.isNaN(vb)) return -1;
-        if (dir === "asc") return va - vb;
-        return vb - va;
+        return dir === "asc" ? va - vb : vb - va;
       });
     }
 
@@ -700,11 +705,7 @@ useEffect(() => {
   const handleSortByGW = (gw) => {
     setSortConfig((prev) => {
       if (prev.type === "gw" && prev.gw === gw) {
-        return {
-          type: "gw",
-          gw,
-          direction: prev.direction === "asc" ? "desc" : "asc",
-        };
+        return { type: "gw", gw, direction: prev.direction === "asc" ? "desc" : "asc" };
       }
       return { type: "gw", gw, direction: "desc" };
     });
@@ -713,11 +714,7 @@ useEffect(() => {
   const handleSortByTotal = () => {
     setSortConfig((prev) => {
       if (prev.type === "total") {
-        return {
-          type: "total",
-          gw: null,
-          direction: prev.direction === "asc" ? "desc" : "asc",
-        };
+        return { type: "total", gw: null, direction: prev.direction === "asc" ? "desc" : "asc" };
       }
       return { type: "total", gw: null, direction: "desc" };
     });
@@ -731,7 +728,7 @@ useEffect(() => {
     setPlayersState(null);
     setSortConfig({ type: null, gw: null, direction: "desc" });
     updateChanges([]);
-    setHasHydratedFromContext(false); // allow fresh hydrate
+    setHasHydratedFromContext(false);
 
     await fetchIfNeeded();
   };
@@ -753,11 +750,9 @@ useEffect(() => {
     setModalBaselineRows([]);
   };
 
-  // Derived: first row from modal baseline
-  const activePlayerFirstRow =
-    modalBaselineRows.length > 0 ? modalBaselineRows[0] : null;
+  const activePlayerFirstRow = modalBaselineRows.length > 0 ? modalBaselineRows[0] : null;
 
-  // Snapshot baseline rows when modal opens (once per open)
+  // Snapshot baseline rows when modal opens
   useEffect(() => {
     if (!isModalOpen || !activePlayerKey || !playersState) {
       setModalBaselineRows([]);
@@ -794,29 +789,20 @@ useEffect(() => {
     }
   }, [isModalOpen, activePlayerKey, playersState]);
 
-  // Minutes chart data (local)
   const chartDataMinutes = useMemo(() => {
-    if (!modalBaselineRows || modalBaselineRows.length === 0) {
-      return [];
-    }
+    if (!modalBaselineRows || modalBaselineRows.length === 0) return [];
     return modalBaselineRows.map((row) => {
       const original = Math.max(
         MIN_MINUTES,
         Math.min(MAX_MINUTES, Number(row.average_minutes) || 0)
       );
       const minutes = minutesDraft[row.GW] ?? original;
-      return {
-        GW: row.GW,
-        minutes,
-      };
+      return { GW: row.GW, minutes };
     });
   }, [modalBaselineRows, minutesDraft]);
 
-  // Points chart data (local predicted)
   const chartDataPoints = useMemo(() => {
-    if (!modalBaselineRows || modalBaselineRows.length === 0) {
-      return [];
-    }
+    if (!modalBaselineRows || modalBaselineRows.length === 0) return [];
 
     return modalBaselineRows.map((row) => {
       const teamCode = String(row.Team);
@@ -826,24 +812,15 @@ useEffect(() => {
 
       const effectiveRow = {
         ...row,
-        average_minutes:
-          overrideMinutes != null ? overrideMinutes : row.average_minutes,
-        Goal_share:
-          pendingGoalShare != null ? pendingGoalShare : row.Goal_share,
-        Assist_share:
-          pendingAssistShare != null ? pendingAssistShare : row.Assist_share,
+        average_minutes: overrideMinutes != null ? overrideMinutes : row.average_minutes,
+        Goal_share: pendingGoalShare != null ? pendingGoalShare : row.Goal_share,
+        Assist_share: pendingAssistShare != null ? pendingAssistShare : row.Assist_share,
       };
 
       const measures = computeMeasures(effectiveRow, teamRow);
       return { GW: row.GW, points: measures.Points };
     });
-  }, [
-    modalBaselineRows,
-    teamLookup,
-    minutesDraft,
-    pendingGoalShare,
-    pendingAssistShare,
-  ]);
+  }, [modalBaselineRows, teamLookup, minutesDraft, pendingGoalShare, pendingAssistShare, computeMeasures]);
 
   const logAdjustment = (entry) => {
     updateChanges((prev) => [
@@ -870,19 +847,15 @@ useEffect(() => {
       const type = a.type || "Unknown";
       const key = `${playerKey}__${type}__${a.gw ?? "all"}`;
       const prev = map.get(key);
-      if (!prev) {
-        map.set(key, a);
-      } else {
+      if (!prev) map.set(key, a);
+      else {
         const prevTime = new Date(prev.timestamp).getTime();
         const currTime = new Date(a.timestamp).getTime();
-        if (currTime > prevTime) {
-          map.set(key, a);
-        }
+        if (currTime > prevTime) map.set(key, a);
       }
     });
     return Array.from(map.values()).sort(
-      (a, b) =>
-        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
     );
   }, [adjustments]);
 
@@ -904,31 +877,16 @@ useEffect(() => {
         MIN_MINUTES,
         Math.min(MAX_MINUTES, Number(row.average_minutes) || 0)
       );
-      if (
-        minutesDraft[gw] != null &&
-        Number(minutesDraft[gw]) !== Number(oldMin)
-      ) {
+      if (minutesDraft[gw] != null && Number(minutesDraft[gw]) !== Number(oldMin)) {
         return true;
       }
     }
 
     return false;
-  }, [
-    activePlayerFirstRow,
-    modalBaselineRows,
-    pendingGoalShare,
-    pendingAssistShare,
-    minutesDraft,
-  ]);
+  }, [activePlayerFirstRow, modalBaselineRows, pendingGoalShare, pendingAssistShare, minutesDraft]);
 
   const handleSavePlayerChanges = () => {
-    if (
-      !activePlayerKey ||
-      !playersState ||
-      !activePlayerFirstRow ||
-      !hasPlayerChanges
-    )
-      return;
+    if (!activePlayerKey || !playersState || !activePlayerFirstRow || !hasPlayerChanges) return;
 
     const baselineRows = modalBaselineRows;
 
@@ -992,9 +950,7 @@ useEffect(() => {
         const updated = { ...p };
         updated.Goal_share = newGoal;
         updated.Assist_share = newAssist;
-        if (minutesDraft[gw] != null) {
-          updated.average_minutes = minutesDraft[gw];
-        }
+        if (minutesDraft[gw] != null) updated.average_minutes = minutesDraft[gw];
         return updated;
       });
     });
@@ -1017,15 +973,11 @@ useEffect(() => {
 
     const y = clientY - svgRect.top;
     const clampedY = Math.max(padding, Math.min(height - padding, y));
-    const ratio =
-      (height - padding - clampedY) / (height - 2 * padding || 1);
+    const ratio = (height - padding - clampedY) / (height - 2 * padding || 1);
     const minutes = MIN_MINUTES + ratio * (MAX_MINUTES - MIN_MINUTES);
     const rounded = Math.round(minutes);
 
-    setMinutesDraft((prev) => ({
-      ...prev,
-      [dragGWRef.current]: rounded,
-    }));
+    setMinutesDraft((prev) => ({ ...prev, [dragGWRef.current]: rounded }));
   };
 
   const handleCircleMouseDown = (gw, e) => {
@@ -1037,9 +989,7 @@ useEffect(() => {
   const handleCircleTouchStart = (gw, e) => {
     setDraggingGW(gw);
     dragGWRef.current = gw;
-    if (e.touches && e.touches[0]) {
-      updateMinutesFromClientY(e.touches[0].clientY);
-    }
+    if (e.touches && e.touches[0]) updateMinutesFromClientY(e.touches[0].clientY);
   };
 
   const handleSvgMouseMove = (e) => {
@@ -1068,38 +1018,23 @@ useEffect(() => {
   const playerDisplayByKey = useMemo(() => {
     const m = new Map();
     playerTableRows.forEach((r) => {
-      if (!m.has(r.nameKey)) {
-        m.set(r.nameKey, r.displayName || r.web_name || r.nameKey);
-      }
+      if (!m.has(r.nameKey)) m.set(r.nameKey, r.displayName || r.web_name || r.nameKey);
     });
     return m;
   }, [playerTableRows]);
 
   const playerOptions = useMemo(
-    () =>
-      Array.from(playerDisplayByKey.entries()).map(([key, label]) => ({
-        value: key,
-        label,
-      })),
+    () => Array.from(playerDisplayByKey.entries()).map(([key, label]) => ({ value: key, label })),
     [playerDisplayByKey]
   );
 
   const teamOptions = useMemo(
-    () =>
-      allTeamOptions.map((t) => ({
-        value: String(t.code),
-        label: t.name,
-      })),
+    () => allTeamOptions.map((t) => ({ value: String(t.code), label: t.name })),
     [allTeamOptions]
   );
 
-  const handleSelectAllPositions = () => {
-    setSelectedPositions(allPositions);
-  };
-
-  const handleClearPositions = () => {
-    setSelectedPositions([]);
-  };
+  const handleSelectAllPositions = () => setSelectedPositions(allPositions);
+  const handleClearPositions = () => setSelectedPositions([]);
 
   if (!isDataReady) {
     return (
@@ -1123,8 +1058,7 @@ useEffect(() => {
         minHeight: "100vh",
         background: `radial-gradient(circle at top, ${PALETTE.red} 0, ${PALETTE.black} 45%, #000000 100%)`,
         color: PALETTE.beige,
-        fontFamily:
-          "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+        fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
       }}
     >
       {/* Header */}
@@ -1138,26 +1072,15 @@ useEffect(() => {
         }}
       >
         <div>
-          <h1
-            style={{
-              margin: 0,
-              fontSize: "1.5rem",
-              fontWeight: 700,
-            }}
-          >
+          <h1 style={{ margin: 0, fontSize: "1.5rem", fontWeight: 700 }}>
             Player Adjustment Tool
           </h1>
-          <p
-            style={{
-              margin: "0.25rem 0 0",
-              fontSize: "0.85rem",
-              color: "#d1c3a9",
-            }}
-          >
-            Integrated with team predictions. Click a player and adjust
-            minutes, Goal and Assist shares
+          <p style={{ margin: "0.25rem 0 0", fontSize: "0.85rem", color: "#d1c3a9" }}>
+            Integrated with team predictions. Click a player and adjust minutes, Goal and Assist
+            shares
           </p>
         </div>
+
         <button
           type="button"
           onClick={handleResetData}
@@ -1165,8 +1088,7 @@ useEffect(() => {
             padding: "0.45rem 0.9rem",
             borderRadius: "999px",
             border: `1px solid ${PALETTE.gold}`,
-            background:
-              "linear-gradient(135deg, rgba(0,0,0,0.9), rgba(90,0,0,0.95))",
+            background: "linear-gradient(135deg, rgba(0,0,0,0.9), rgba(90,0,0,0.95))",
             color: PALETTE.beige,
             fontSize: "0.85rem",
             fontWeight: 500,
@@ -1196,19 +1118,11 @@ useEffect(() => {
           style={{
             padding: "0.75rem",
             borderRadius: "0.75rem",
-            background:
-              "linear-gradient(145deg, rgba(0,0,0,0.95), rgba(90,0,0,0.9))",
+            background: "linear-gradient(145deg, rgba(0,0,0,0.95), rgba(90,0,0,0.9))",
             border: `1px solid ${PALETTE.gold}`,
           }}
         >
-          <label
-            style={{
-              display: "block",
-              fontWeight: 600,
-              marginBottom: "0.25rem",
-              fontSize: "0.85rem",
-            }}
-          >
+          <label style={{ display: "block", fontWeight: 600, marginBottom: "0.25rem", fontSize: "0.85rem" }}>
             Measure
           </label>
           <select
@@ -1224,15 +1138,11 @@ useEffect(() => {
               fontSize: "0.9rem",
             }}
           >
-            <option value="Points">{MEASURE_LABELS["Points"]}</option>
-            <option value="Goal_Scored">{MEASURE_LABELS["Goal_Scored"]}</option>
-            <option value="Assists">{MEASURE_LABELS["Assists"]}</option>
-            <option value="Avg_Minutes">
-              {MEASURE_LABELS["Avg_Minutes"]}
-            </option>
-            <option value="CBI_Predictions">
-              {MEASURE_LABELS["CBI_Predictions"]}
-            </option>
+            <option value="Points">{MEASURE_LABELS.Points}</option>
+            <option value="Goal_Scored">{MEASURE_LABELS.Goal_Scored}</option>
+            <option value="Assists">{MEASURE_LABELS.Assists}</option>
+            <option value="Avg_Minutes">{MEASURE_LABELS.Avg_Minutes}</option>
+            <option value="CBI_Predictions">{MEASURE_LABELS.CBI_Predictions}</option>
           </select>
         </div>
 
@@ -1241,8 +1151,7 @@ useEffect(() => {
           style={{
             padding: "0.75rem",
             borderRadius: "0.75rem",
-            background:
-              "linear-gradient(145deg, rgba(0,0,0,0.95), rgba(90,0,0,0.9))",
+            background: "linear-gradient(145deg, rgba(0,0,0,0.95), rgba(90,0,0,0.9))",
             border: `1px solid ${PALETTE.gold}`,
           }}
         >
@@ -1260,8 +1169,7 @@ useEffect(() => {
           style={{
             padding: "0.75rem",
             borderRadius: "0.75rem",
-            background:
-              "linear-gradient(145deg, rgba(0,0,0,0.95), rgba(90,0,0,0.9))",
+            background: "linear-gradient(145deg, rgba(0,0,0,0.95), rgba(90,0,0,0.9))",
             border: `1px solid ${PALETTE.gold}`,
           }}
         >
@@ -1279,30 +1187,15 @@ useEffect(() => {
           style={{
             padding: "0.75rem",
             borderRadius: "0.75rem",
-            background:
-              "linear-gradient(145deg, rgba(0,0,0,0.95), rgba(90,0,0,0.9))",
+            background: "linear-gradient(145deg, rgba(0,0,0,0.95), rgba(90,0,0,0.9))",
             border: `1px solid ${PALETTE.gold}`,
           }}
         >
-          <label
-            style={{
-              display: "block",
-              fontWeight: 600,
-              marginBottom: "0.25rem",
-              fontSize: "0.85rem",
-            }}
-          >
+          <label style={{ display: "block", fontWeight: 600, marginBottom: "0.25rem", fontSize: "0.85rem" }}>
             Position
           </label>
-          <div
-            style={{
-              display: "flex",
-              gap: "0.4rem",
-              marginTop: "0.25rem",
-              marginBottom: "0.4rem",
-              flexWrap: "wrap",
-            }}
-          >
+
+          <div style={{ display: "flex", gap: "0.4rem", marginTop: "0.25rem", marginBottom: "0.4rem", flexWrap: "wrap" }}>
             <button
               type="button"
               onClick={handleSelectAllPositions}
@@ -1334,14 +1227,8 @@ useEffect(() => {
               Clear
             </button>
           </div>
-          <div
-            style={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: "0.4rem",
-              marginTop: "0.25rem",
-            }}
-          >
+
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem", marginTop: "0.25rem" }}>
             {allPositions.map((pos) => {
               const active = selectedPositions.includes(pos);
               return (
@@ -1350,18 +1237,14 @@ useEffect(() => {
                   type="button"
                   onClick={() => {
                     setSelectedPositions((prev) =>
-                      prev.includes(pos)
-                        ? prev.filter((p) => p !== pos)
-                        : [...prev, pos]
+                      prev.includes(pos) ? prev.filter((p) => p !== pos) : [...prev, pos]
                     );
                   }}
                   style={{
                     padding: "0.25rem 0.6rem",
                     borderRadius: "999px",
                     border: `1px solid ${PALETTE.gold}`,
-                    backgroundColor: active
-                      ? PALETTE.gold
-                      : "rgba(0,0,0,0.9)",
+                    backgroundColor: active ? PALETTE.gold : "rgba(0,0,0,0.9)",
                     color: active ? PALETTE.black : PALETTE.beige,
                     fontSize: "0.8rem",
                     cursor: "pointer",
@@ -1379,44 +1262,27 @@ useEffect(() => {
           style={{
             padding: "0.75rem",
             borderRadius: "0.75rem",
-            background:
-              "linear-gradient(145deg, rgba(0,0,0,0.95), rgba(90,0,0,0.9))",
+            background: "linear-gradient(145deg, rgba(0,0,0,0.95), rgba(90,0,0,0.9))",
             border: `1px solid ${PALETTE.gold}`,
           }}
         >
-          <label
-            style={{
-              display: "block",
-              fontWeight: 600,
-              marginBottom: "0.25rem",
-              fontSize: "0.85rem",
-            }}
-          >
+          <label style={{ display: "block", fontWeight: 600, marginBottom: "0.25rem", fontSize: "0.85rem" }}>
             Max value filter
           </label>
+
           <input
             type="range"
             min={globalMinValue}
             max={globalMaxValue || globalMinValue + 1}
             step={(globalMaxValue - globalMinValue) / 100 || 1}
-            value={
-              valueThreshold != null ? valueThreshold : globalMaxValue
-            }
+            value={valueThreshold != null ? valueThreshold : globalMaxValue}
             onChange={(e) => setValueThreshold(Number(e.target.value))}
             style={{ width: "100%" }}
           />
-          <div
-            style={{
-              fontSize: "0.8rem",
-              marginTop: "0.25rem",
-              color: "#d1c3a9",
-            }}
-          >
-            {valueThreshold != null
-              ? valueThreshold.toFixed(1)
-              : globalMaxValue.toFixed(1)}{" "}
-            (range {globalMinValue.toFixed(1)} –{" "}
-            {globalMaxValue.toFixed(1)})
+
+          <div style={{ fontSize: "0.8rem", marginTop: "0.25rem", color: "#d1c3a9" }}>
+            {(valueThreshold != null ? valueThreshold : globalMaxValue).toFixed(1)} (range{" "}
+            {globalMinValue.toFixed(1)} – {globalMaxValue.toFixed(1)})
           </div>
         </div>
       </div>
@@ -1427,8 +1293,7 @@ useEffect(() => {
           style={{
             borderRadius: "0.75rem",
             border: `1px solid ${PALETTE.gold}`,
-            background:
-              "linear-gradient(145deg, rgba(0,0,0,0.96), rgba(0,0,0,0.9))",
+            background: "linear-gradient(145deg, rgba(0,0,0,0.96), rgba(0,0,0,0.9))",
             boxShadow: "0 14px 30px rgba(0,0,0,0.9)",
           }}
         >
@@ -1446,49 +1311,18 @@ useEffect(() => {
           >
             <span>
               Changes made{" "}
-              <span
-                style={{
-                  marginLeft: "0.3rem",
-                  fontWeight: 400,
-                  fontSize: "0.8rem",
-                  color: "#e5e7eb",
-                }}
-              >
+              <span style={{ marginLeft: "0.3rem", fontWeight: 400, fontSize: "0.8rem", color: "#e5e7eb" }}>
                 ({displayAdjustments.length})
               </span>
             </span>
-            <span
-              style={{
-                fontSize: "1rem",
-                opacity: 0.9,
-              }}
-            >
-              ▾
-            </span>
+            <span style={{ fontSize: "1rem", opacity: 0.9 }}>▾</span>
           </summary>
-          <div
-            style={{
-              padding: "0.6rem 0.9rem 0.8rem",
-              fontSize: "0.8rem",
-              maxHeight: 260,
-              overflowY: "auto",
-            }}
-          >
+
+          <div style={{ padding: "0.6rem 0.9rem 0.8rem", fontSize: "0.8rem", maxHeight: 260, overflowY: "auto" }}>
             {displayAdjustments.length === 0 ? (
-              <div style={{ color: "#9ca3af" }}>
-                No manual adjustments yet.
-              </div>
+              <div style={{ color: "#9ca3af" }}>No manual adjustments yet.</div>
             ) : (
-              <ul
-                style={{
-                  listStyle: "none",
-                  padding: 0,
-                  margin: 0,
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "0.35rem",
-                }}
-              >
+              <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "0.35rem" }}>
                 {displayAdjustments.map((a) => (
                   <li
                     key={a.id}
@@ -1499,28 +1333,18 @@ useEffect(() => {
                       border: "1px solid #1f2937",
                     }}
                   >
-                    <div
-                      style={{
-                        fontWeight: 600,
-                        marginBottom: "0.1rem",
-                      }}
-                    >
+                    <div style={{ fontWeight: 600, marginBottom: "0.1rem" }}>
                       {a.playerName} ({a.webName})
                     </div>
+
                     <div>
                       <span style={{ color: "#e5e7eb" }}>
-                        {a.type === "Goal_share"
-                          ? "Goal share"
-                          : a.type === "Assist_share"
-                          ? "Assist share"
-                          : "Minutes"}
+                        {a.type === "Goal_share" ? "Goal share" : a.type === "Assist_share" ? "Assist share" : "Minutes"}
                         {a.gw != null ? ` · GW ${a.gw}` : ""}:{" "}
                       </span>
                       <span>
                         {formatAdjustmentValue(a, "oldValue")} →{" "}
-                        <span style={{ color: PALETTE.gold }}>
-                          {formatAdjustmentValue(a, "newValue")}
-                        </span>
+                        <span style={{ color: PALETTE.gold }}>{formatAdjustmentValue(a, "newValue")}</span>
                       </span>
                     </div>
                   </li>
@@ -1531,25 +1355,17 @@ useEffect(() => {
         </details>
       </div>
 
-      {/* Data table (saved state only) */}
+      {/* Data table */}
       <div
         style={{
           overflowX: "auto",
           borderRadius: "0.75rem",
           border: `1px solid ${PALETTE.gold}`,
-          background:
-            "linear-gradient(155deg, rgba(0,0,0,0.98), rgba(0,0,0,0.9))",
+          background: "linear-gradient(155deg, rgba(0,0,0,0.98), rgba(0,0,0,0.9))",
           boxShadow: "0 18px 40px rgba(0,0,0,0.95)",
         }}
       >
-        <table
-          style={{
-            borderCollapse: "collapse",
-            width: "100%",
-            minWidth: "750px",
-            fontSize: "0.85rem",
-          }}
-        >
+        <table style={{ borderCollapse: "collapse", width: "100%", minWidth: "750px", fontSize: "0.85rem" }}>
           <thead>
             <tr>
               <th
@@ -1566,48 +1382,19 @@ useEffect(() => {
               >
                 Name
               </th>
-              <th
-                style={{
-                  borderBottom: `1px solid ${PALETTE.gold}`,
-                  padding: "0.5rem",
-                  backgroundColor: "#111111",
-                  textAlign: "left",
-                  fontWeight: 600,
-                }}
-              >
+              <th style={{ borderBottom: `1px solid ${PALETTE.gold}`, padding: "0.5rem", backgroundColor: "#111111", textAlign: "left", fontWeight: 600 }}>
                 Position
               </th>
-              <th
-                style={{
-                  borderBottom: `1px solid ${PALETTE.gold}`,
-                  padding: "0.5rem",
-                  backgroundColor: "#111111",
-                  textAlign: "left",
-                  fontWeight: 600,
-                }}
-              >
+              <th style={{ borderBottom: `1px solid ${PALETTE.gold}`, padding: "0.5rem", backgroundColor: "#111111", textAlign: "left", fontWeight: 600 }}>
                 Team
               </th>
-              <th
-                style={{
-                  borderBottom: `1px solid ${PALETTE.gold}`,
-                  padding: "0.5rem",
-                  backgroundColor: "#111111",
-                  textAlign: "right",
-                  fontWeight: 600,
-                }}
-              >
+              <th style={{ borderBottom: `1px solid ${PALETTE.gold}`, padding: "0.5rem", backgroundColor: "#111111", textAlign: "right", fontWeight: 600 }}>
                 Value
               </th>
+
               {allGWs.map((gw) => {
-                const isSorted =
-                  sortConfig.type === "gw" && sortConfig.gw === gw;
-                const arrow =
-                  isSorted && sortConfig.direction === "asc"
-                    ? "▲"
-                    : isSorted
-                    ? "▼"
-                    : "";
+                const isSorted = sortConfig.type === "gw" && sortConfig.gw === gw;
+                const arrow = isSorted && sortConfig.direction === "asc" ? "▲" : isSorted ? "▼" : "";
                 return (
                   <th
                     key={gw}
@@ -1627,6 +1414,7 @@ useEffect(() => {
                   </th>
                 );
               })}
+
               <th
                 onClick={handleSortByTotal}
                 style={{
@@ -1637,18 +1425,14 @@ useEffect(() => {
                   fontWeight: 600,
                   cursor: "pointer",
                   whiteSpace: "nowrap",
-                  color:
-                    sortConfig.type === "total"
-                      ? PALETTE.gold
-                      : PALETTE.beige,
+                  color: sortConfig.type === "total" ? PALETTE.gold : PALETTE.beige,
                 }}
               >
-                Total{" "}
-                {sortConfig.type === "total" &&
-                  (sortConfig.direction === "asc" ? "▲" : "▼")}
+                Total {sortConfig.type === "total" && (sortConfig.direction === "asc" ? "▲" : "▼")}
               </th>
             </tr>
           </thead>
+
           <tbody>
             {filteredPlayerRows.map((row, idx) => (
               <tr
@@ -1656,8 +1440,7 @@ useEffect(() => {
                 onClick={() => openPlayerModal(row.nameKey)}
                 style={{
                   cursor: "pointer",
-                  backgroundColor:
-                    idx % 2 === 0 ? "#080808" : "#151515",
+                  backgroundColor: idx % 2 === 0 ? "#080808" : "#151515",
                 }}
               >
                 <td
@@ -1666,82 +1449,36 @@ useEffect(() => {
                     padding: "0.5rem",
                     position: "sticky",
                     left: 0,
-                    backgroundColor:
-                      idx % 2 === 0 ? "#080808" : "#151515",
+                    backgroundColor: idx % 2 === 0 ? "#080808" : "#151515",
                     zIndex: 1,
                     fontWeight: 600,
                   }}
                 >
                   {row.displayName}
                 </td>
-                <td
-                  style={{
-                    borderBottom: "1px solid #222222",
-                    padding: "0.5rem",
-                  }}
-                >
-                  {row.position}
+
+                <td style={{ borderBottom: "1px solid #222222", padding: "0.5rem" }}>{row.position}</td>
+                <td style={{ borderBottom: "1px solid #222222", padding: "0.5rem" }}>{row.teamName}</td>
+
+                <td style={{ borderBottom: "1px solid #222222", padding: "0.5rem", textAlign: "right" }}>
+                  {row.value != null && !Number.isNaN(row.value) ? row.value.toFixed(1) : "-"}
                 </td>
-                <td
-                  style={{
-                    borderBottom: "1px solid #222222",
-                    padding: "0.5rem",
-                  }}
-                >
-                  {row.teamName}
-                </td>
-                <td
-                  style={{
-                    borderBottom: "1px solid #222222",
-                    padding: "0.5rem",
-                    textAlign: "right",
-                  }}
-                >
-                  {row.value != null && !Number.isNaN(row.value)
-                    ? row.value.toFixed(1)
-                    : "-"}
-                </td>
+
                 {allGWs.map((gw) => (
-                  <td
-                    key={gw}
-                    style={{
-                      borderBottom: "1px solid #222222",
-                      padding: "0.5rem",
-                      textAlign: "right",
-                    }}
-                  >
-                    {row.gwValues[gw] != null &&
-                    !Number.isNaN(row.gwValues[gw])
-                      ? row.gwValues[gw].toFixed(2)
-                      : "-"}
+                  <td key={gw} style={{ borderBottom: "1px solid #222222", padding: "0.5rem", textAlign: "right" }}>
+                    {row.gwValues[gw] != null && !Number.isNaN(row.gwValues[gw]) ? row.gwValues[gw].toFixed(2) : "0.00"}
                   </td>
                 ))}
-                <td
-                  style={{
-                    borderBottom: "1px solid #222222",
-                    padding: "0.5rem",
-                    textAlign: "right",
-                    fontWeight: 600,
-                    color: PALETTE.gold,
-                  }}
-                >
-                  {row.totalMeasure != null &&
-                  !Number.isNaN(row.totalMeasure)
-                    ? row.totalMeasure.toFixed(2)
-                    : "-"}
+
+                <td style={{ borderBottom: "1px solid #222222", padding: "0.5rem", textAlign: "right", fontWeight: 600, color: PALETTE.gold }}>
+                  {row.totalMeasure != null && !Number.isNaN(row.totalMeasure) ? row.totalMeasure.toFixed(2) : "0.00"}
                 </td>
               </tr>
             ))}
+
             {filteredPlayerRows.length === 0 && (
               <tr>
-                <td
-                  colSpan={4 + allGWs.length}
-                  style={{
-                    padding: "1rem",
-                    textAlign: "center",
-                    color: "#d1c3a9",
-                  }}
-                >
+                <td colSpan={5 + allGWs.length} style={{ padding: "1rem", textAlign: "center", color: "#d1c3a9" }}>
                   No players match current filters.
                 </td>
               </tr>
@@ -1782,32 +1519,12 @@ useEffect(() => {
               boxShadow: "0 22px 50px rgba(0,0,0,0.95)",
             }}
           >
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: "0.75rem",
-              }}
-            >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
               <div>
-                <h2
-                  style={{
-                    margin: 0,
-                    fontSize: "1.1rem",
-                    fontWeight: 600,
-                  }}
-                >
-                  {activePlayerFirstRow.name} (
-                  {activePlayerFirstRow.web_name})
+                <h2 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 600 }}>
+                  {activePlayerFirstRow.name} ({activePlayerFirstRow.web_name})
                 </h2>
-                <div
-                  style={{
-                    fontSize: "0.8rem",
-                    color: "#d1c3a9",
-                    marginTop: "0.1rem",
-                  }}
-                >
+                <div style={{ fontSize: "0.8rem", color: "#d1c3a9", marginTop: "0.1rem" }}>
                   {activePlayerFirstRow.position}
                 </div>
               </div>
@@ -1827,31 +1544,9 @@ useEffect(() => {
             </div>
 
             {/* Shares sliders */}
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns:
-                  "repeat(auto-fit, minmax(0, 1fr))",
-                gap: "1rem",
-                marginBottom: "1rem",
-              }}
-            >
-              <div
-                style={{
-                  padding: "0.6rem 0.75rem",
-                  borderRadius: "0.75rem",
-                  backgroundColor: "rgba(0,0,0,0.9)",
-                  border: `1px solid ${PALETTE.gold}`,
-                }}
-              >
-                <label
-                  style={{
-                    display: "block",
-                    fontWeight: 600,
-                    marginBottom: "0.25rem",
-                    fontSize: "0.85rem",
-                  }}
-                >
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(0, 1fr))", gap: "1rem", marginBottom: "1rem" }}>
+              <div style={{ padding: "0.6rem 0.75rem", borderRadius: "0.75rem", backgroundColor: "rgba(0,0,0,0.9)", border: `1px solid ${PALETTE.gold}` }}>
+                <label style={{ display: "block", fontWeight: 600, marginBottom: "0.25rem", fontSize: "0.85rem" }}>
                   Goal Share
                 </label>
                 <input
@@ -1860,40 +1555,16 @@ useEffect(() => {
                   max={1}
                   step={0.01}
                   value={pendingGoalShare ?? 0}
-                  onChange={(e) =>
-                    setPendingGoalShare(Number(e.target.value))
-                  }
-                  style={{
-                    width: "100%",
-                    touchAction: "pan-y",
-                  }}
+                  onChange={(e) => setPendingGoalShare(Number(e.target.value))}
+                  style={{ width: "100%", touchAction: "pan-y" }}
                 />
-                <div
-                  style={{
-                    fontSize: "0.8rem",
-                    marginTop: "0.25rem",
-                    color: "#d1c3a9",
-                  }}
-                >
+                <div style={{ fontSize: "0.8rem", marginTop: "0.25rem", color: "#d1c3a9" }}>
                   {(pendingGoalShare ?? 0).toFixed(2)}
                 </div>
               </div>
-              <div
-                style={{
-                  padding: "0.6rem 0.75rem",
-                  borderRadius: "0.75rem",
-                  backgroundColor: "rgba(0,0,0,0.9)",
-                  border: `1px solid ${PALETTE.gold}`,
-                }}
-              >
-                <label
-                  style={{
-                    display: "block",
-                    fontWeight: 600,
-                    marginBottom: "0.25rem",
-                    fontSize: "0.85rem",
-                  }}
-                >
+
+              <div style={{ padding: "0.6rem 0.75rem", borderRadius: "0.75rem", backgroundColor: "rgba(0,0,0,0.9)", border: `1px solid ${PALETTE.gold}` }}>
+                <label style={{ display: "block", fontWeight: 600, marginBottom: "0.25rem", fontSize: "0.85rem" }}>
                   Assist Share
                 </label>
                 <input
@@ -1902,34 +1573,17 @@ useEffect(() => {
                   max={1}
                   step={0.01}
                   value={pendingAssistShare ?? 0}
-                  onChange={(e) =>
-                    setPendingAssistShare(Number(e.target.value))
-                  }
-                  style={{
-                    width: "100%",
-                    touchAction: "pan-y",
-                  }}
+                  onChange={(e) => setPendingAssistShare(Number(e.target.value))}
+                  style={{ width: "100%", touchAction: "pan-y" }}
                 />
-                <div
-                  style={{
-                    fontSize: "0.8rem",
-                    marginTop: "0.25rem",
-                    color: "#d1c3a9",
-                  }}
-                >
+                <div style={{ fontSize: "0.8rem", marginTop: "0.25rem", color: "#d1c3a9" }}>
                   {(pendingAssistShare ?? 0).toFixed(2)}
                 </div>
               </div>
             </div>
 
             {/* Save button */}
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "flex-end",
-                marginBottom: "0.75rem",
-              }}
-            >
+            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "0.75rem" }}>
               <button
                 type="button"
                 onClick={handleSaveAndClose}
@@ -1938,8 +1592,7 @@ useEffect(() => {
                   padding: "0.4rem 0.9rem",
                   borderRadius: "999px",
                   border: `1px solid ${PALETTE.gold}`,
-                  background:
-                    "linear-gradient(135deg, rgba(0,0,0,0.9), rgba(90,0,0,0.95))",
+                  background: "linear-gradient(135deg, rgba(0,0,0,0.9), rgba(90,0,0,0.95))",
                   color: PALETTE.beige,
                   fontSize: "0.85rem",
                   fontWeight: 500,
@@ -1954,19 +1607,12 @@ useEffect(() => {
 
             {/* Minutes chart */}
             <div style={{ marginBottom: "1rem" }}>
-              <h3
-                style={{
-                  marginTop: 0,
-                  marginBottom: "0.4rem",
-                  fontSize: "0.95rem",
-                }}
-              >
+              <h3 style={{ marginTop: 0, marginBottom: "0.4rem", fontSize: "0.95rem" }}>
                 Predicted minutes per GW (drag dots to adjust)
               </h3>
+
               {chartDataMinutes.length === 0 ? (
-                <div style={{ fontSize: "0.85rem" }}>
-                  No minute data for this player.
-                </div>
+                <div style={{ fontSize: "0.85rem" }}>No minute data for this player.</div>
               ) : (
                 <svg
                   ref={svgRefMinutes}
@@ -1981,82 +1627,40 @@ useEffect(() => {
                 >
                   {(() => {
                     const padding = 20;
-                    const width = svgRefMinutes.current
-                      ? svgRefMinutes.current.getBoundingClientRect()
-                          .width
-                      : 600;
+                    const width = svgRefMinutes.current ? svgRefMinutes.current.getBoundingClientRect().width : 600;
                     const height = 280;
 
                     const n = chartDataMinutes.length;
                     const points = chartDataMinutes.map((d, i) => {
                       const x =
                         padding +
-                        (n === 1
-                          ? (width - 2 * padding) / 2
-                          : (i / (n - 1)) *
-                            (width - 2 * padding));
-                      const ratio =
-                        (d.minutes - MIN_MINUTES) /
-                        (MAX_MINUTES - MIN_MINUTES || 1);
-                      const y =
-                        height -
-                        padding -
-                        ratio * (height - 2 * padding);
+                        (n === 1 ? (width - 2 * padding) / 2 : (i / (n - 1)) * (width - 2 * padding));
+                      const ratio = (d.minutes - MIN_MINUTES) / (MAX_MINUTES - MIN_MINUTES || 1);
+                      const y = height - padding - ratio * (height - 2 * padding);
                       return { x, y, gw: d.GW, minutes: d.minutes };
                     });
 
-                    const polyPoints = points
-                      .map((p) => `${p.x},${p.y}`)
-                      .join(" ");
+                    const polyPoints = points.map((p) => `${p.x},${p.y}`).join(" ");
 
                     return (
                       <>
-                        <text
-                          x={padding}
-                          y={12}
-                          fontSize="10"
-                          fill="#d1c3a9"
-                        >
+                        <text x={padding} y={12} fontSize="10" fill="#d1c3a9">
                           Minutes
                         </text>
-                        <text
-                          x={width - padding}
-                          y={height - 5}
-                          textAnchor="end"
-                          fontSize="10"
-                          fill="#d1c3a9"
-                        >
+                        <text x={width - padding} y={height - 5} textAnchor="end" fontSize="10" fill="#d1c3a9">
                           GW
                         </text>
 
                         {points.map((p, idx) => (
                           <g key={`tick-min-${p.gw}-${idx}`}>
-                            <line
-                              x1={p.x}
-                              y1={height - padding}
-                              x2={p.x}
-                              y2={height - padding + 4}
-                              stroke="#555555"
-                              strokeWidth="1"
-                            />
-                            <text
-                              x={p.x}
-                              y={height - 5}
-                              fontSize="9"
-                              textAnchor="middle"
-                              fill="#d1c3a9"
-                            >
+                            <line x1={p.x} y1={height - padding} x2={p.x} y2={height - padding + 4} stroke="#555555" strokeWidth="1" />
+                            <text x={p.x} y={height - 5} fontSize="9" textAnchor="middle" fill="#d1c3a9">
                               {p.gw}
                             </text>
                           </g>
                         ))}
 
-                        <polyline
-                          points={polyPoints}
-                          fill="none"
-                          stroke={PALETTE.gold}
-                          strokeWidth="2"
-                        />
+                        <polyline points={polyPoints} fill="none" stroke={PALETTE.gold} strokeWidth="2" />
 
                         {points.map((p) => (
                           <g key={`pt-min-${p.gw}`}>
@@ -2064,28 +1668,14 @@ useEffect(() => {
                               cx={p.x}
                               cy={p.y}
                               r={12}
-                              fill={
-                                draggingGW === p.gw
-                                  ? PALETTE.red
-                                  : PALETTE.gold
-                              }
+                              fill={draggingGW === p.gw ? PALETTE.red : PALETTE.gold}
                               stroke={PALETTE.black}
                               strokeWidth="2"
                               style={{ cursor: "ns-resize" }}
-                              onMouseDown={(e) =>
-                                handleCircleMouseDown(p.gw, e)
-                              }
-                              onTouchStart={(e) =>
-                                handleCircleTouchStart(p.gw, e)
-                              }
+                              onMouseDown={(e) => handleCircleMouseDown(p.gw, e)}
+                              onTouchStart={(e) => handleCircleTouchStart(p.gw, e)}
                             />
-                            <text
-                              x={p.x}
-                              y={p.y - 12}
-                              fontSize="9"
-                              textAnchor="middle"
-                              fill={PALETTE.beige}
-                            >
+                            <text x={p.x} y={p.y - 12} fontSize="9" textAnchor="middle" fill={PALETTE.beige}>
                               {Number(p.minutes).toFixed(0)}
                             </text>
                           </g>
@@ -2099,19 +1689,12 @@ useEffect(() => {
 
             {/* Points chart */}
             <div>
-              <h3
-                style={{
-                  marginTop: 0,
-                  marginBottom: "0.4rem",
-                  fontSize: "0.95rem",
-                }}
-              >
+              <h3 style={{ marginTop: 0, marginBottom: "0.4rem", fontSize: "0.95rem" }}>
                 Calculated Points
               </h3>
+
               {chartDataPoints.length === 0 ? (
-                <div style={{ fontSize: "0.85rem" }}>
-                  No point data for this player.
-                </div>
+                <div style={{ fontSize: "0.85rem" }}>No point data for this player.</div>
               ) : (
                 <svg
                   ref={svgRefPoints}
@@ -2125,10 +1708,7 @@ useEffect(() => {
                 >
                   {(() => {
                     const padding = 20;
-                    const width = svgRefPoints.current
-                      ? svgRefPoints.current.getBoundingClientRect()
-                          .width
-                      : 600;
+                    const width = svgRefPoints.current ? svgRefPoints.current.getBoundingClientRect().width : 600;
                     const height = 250;
 
                     const n = chartDataPoints.length;
@@ -2140,88 +1720,38 @@ useEffect(() => {
                     const points = chartDataPoints.map((d, i) => {
                       const x =
                         padding +
-                        (n === 1
-                          ? (width - 2 * padding) / 2
-                          : (i / (n - 1)) *
-                            (width - 2 * padding));
+                        (n === 1 ? (width - 2 * padding) / 2 : (i / (n - 1)) * (width - 2 * padding));
                       const ratio = (d.points - minP) / range;
-                      const y =
-                        height -
-                        padding -
-                        ratio * (height - 2 * padding);
+                      const y = height - padding - ratio * (height - 2 * padding);
                       return { x, y, gw: d.GW, points: d.points };
                     });
 
-                    const polyPoints = points
-                      .map((p) => `${p.x},${p.y}`)
-                      .join(" ");
+                    const polyPoints = points.map((p) => `${p.x},${p.y}`).join(" ");
 
                     return (
                       <>
-                        <text
-                          x={padding}
-                          y={12}
-                          fontSize="10"
-                          fill="#d1c3a9"
-                        >
+                        <text x={padding} y={12} fontSize="10" fill="#d1c3a9">
                           Points
                         </text>
-                        <text
-                          x={width - padding}
-                          y={height - 5}
-                          textAnchor="end"
-                          fontSize="10"
-                          fill="#d1c3a9"
-                        >
+                        <text x={width - padding} y={height - 5} textAnchor="end" fontSize="10" fill="#d1c3a9">
                           GW
                         </text>
 
                         {points.map((p, idx) => (
                           <g key={`tick-pts-${p.gw}-${idx}`}>
-                            <line
-                              x1={p.x}
-                              y1={height - padding}
-                              x2={p.x}
-                              y2={height - padding + 4}
-                              stroke="#555555"
-                              strokeWidth="1"
-                            />
-                            <text
-                              x={p.x}
-                              y={height - 5}
-                              fontSize="9"
-                              textAnchor="middle"
-                              fill="#d1c3a9"
-                            >
+                            <line x1={p.x} y1={height - padding} x2={p.x} y2={height - padding + 4} stroke="#555555" strokeWidth="1" />
+                            <text x={p.x} y={height - 5} fontSize="9" textAnchor="middle" fill="#d1c3a9">
                               {p.gw}
                             </text>
                           </g>
                         ))}
 
-                        <polyline
-                          points={polyPoints}
-                          fill="none"
-                          stroke={PALETTE.gold}
-                          strokeWidth="2"
-                        />
+                        <polyline points={polyPoints} fill="none" stroke={PALETTE.gold} strokeWidth="2" />
 
                         {points.map((p) => (
                           <g key={`pt-pts-${p.gw}`}>
-                            <circle
-                              cx={p.x}
-                              cy={p.y}
-                              r={6}
-                              fill={PALETTE.gold}
-                              stroke={PALETTE.black}
-                              strokeWidth="2"
-                            />
-                            <text
-                              x={p.x}
-                              y={p.y - 10}
-                              fontSize="9"
-                              textAnchor="middle"
-                              fill={PALETTE.beige}
-                            >
+                            <circle cx={p.x} cy={p.y} r={6} fill={PALETTE.gold} stroke={PALETTE.black} strokeWidth="2" />
+                            <text x={p.x} y={p.y - 10} fontSize="9" textAnchor="middle" fill={PALETTE.beige}>
                               {Number(p.points).toFixed(2)}
                             </text>
                           </g>

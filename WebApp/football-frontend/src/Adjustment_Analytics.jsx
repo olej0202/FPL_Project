@@ -35,6 +35,19 @@ export default function AdjustmentAnalytics() {
           <Users size={18} />
           Teams
         </NavLink>
+        <NavLink
+          to="Adjustment_Fixture"
+          className={({ isActive }) =>
+            `flex items-center gap-2 px-4 py-1 font-semibold ${
+              isActive
+                ? "border-b-2 border-royal-gold text-royal-gold hover:text-royal-gold"
+                : "text-white hover:text-royal-gold"
+            }`
+          }
+        >
+          <Users size={18} />
+          Fixtures
+        </NavLink>
       </div>
 
       {/* Nested content */}

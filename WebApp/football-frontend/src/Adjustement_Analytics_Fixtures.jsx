@@ -1,0 +1,446 @@
+// src/Pages/FixturesPage.jsx
+import React, { useEffect, useMemo, useState } from "react";
+import { useAdjustmentData } from "./Contexts/AdjustmentsContext";
+
+import teamLogos from "./utils/team_logos";
+
+
+const PALETTE = {
+  red: "#5A0000",
+  gold: "#B8860B",
+  black: "#000000",
+  beige: "#f7ead6",
+};
+
+const toNum = (v, fallback = 0) => {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : fallback;
+};
+
+const deepCloneOptions = (opts) => (opts || []).map((o) => ({ gw: o.gw, p: o.p }));
+
+// "current GW" = option with highest p (ties: first)
+const currentGwOfFixture = (fx) => {
+  const opts = (fx.options || []).map((o) => ({ gw: toNum(o.gw, 1), p: toNum(o.p, 0) }));
+  if (!opts.length) return null;
+  return opts.reduce((best, o) => (o.p > best.p ? o : best), opts[0]).gw;
+};
+
+function logosForTeams(homeTeam, awayTeam) {
+  return {
+    home: teamLogos?.[homeTeam] || null,
+    away: teamLogos?.[awayTeam] || null,
+  };
+}
+
+const pctSteps = Array.from({ length: 11 }, (_, i) => i * 10); // 0..100
+
+export default function FixturesPage() {
+  const { fetchIfNeeded, loading, Fixtures, fixturesVersion, updateFixture } =
+    useAdjustmentData();
+
+  useEffect(() => {
+    fetchIfNeeded();
+  }, [fetchIfNeeded]);
+
+  const fixtures = useMemo(
+    () => Fixtures.current || [],
+    [Fixtures, fixturesVersion]
+  );
+
+  const availableGWs = useMemo(() => {
+    const set = new Set();
+    for (const fx of fixtures) {
+      const gw = currentGwOfFixture(fx);
+      if (Number.isFinite(gw)) set.add(gw);
+    }
+    return Array.from(set).sort((a, b) => a - b);
+  }, [fixtures]);
+
+  const [selectedGW, setSelectedGW] = useState(null);
+
+  // Local drafts keyed by fixtureId
+  const [drafts, setDrafts] = useState({});
+
+  useEffect(() => {
+    if (selectedGW != null) return;
+    if (availableGWs.length) setSelectedGW(availableGWs[0]);
+  }, [availableGWs, selectedGW]);
+
+  const fixturesForGW = useMemo(() => {
+    if (selectedGW == null) return [];
+    return fixtures
+      .filter((fx) => currentGwOfFixture(fx) === selectedGW)
+      .sort((a, b) => (a.homeTeam || "").localeCompare(b.homeTeam || ""));
+  }, [fixtures, selectedGW]);
+
+  // ensure drafts exist for visible fixtures
+  useEffect(() => {
+    if (!fixturesForGW.length) return;
+    setDrafts((prev) => {
+      const next = { ...prev };
+      for (const fx of fixturesForGW) {
+        if (!next[fx.id]) {
+          next[fx.id] = { options: deepCloneOptions(fx.options), dirty: false };
+        }
+      }
+      return next;
+    });
+  }, [fixturesForGW]);
+
+  const gwIndex = selectedGW != null ? availableGWs.indexOf(selectedGW) : -1;
+
+  if (loading && fixtures.length === 0) {
+    return <div style={pageStyle}>Loading fixtures…</div>;
+  }
+  if (!loading && fixtures.length === 0) {
+    return <div style={pageStyle}>No fixtures found.</div>;
+  }
+
+  const setDraftOption = (fixtureId, idx, patch) => {
+    setDrafts((prev) => {
+      const cur = prev[fixtureId] || { options: [], dirty: false };
+      const options = [...(cur.options || [])];
+      options[idx] = { ...options[idx], ...patch };
+      options.sort((a, b) => toNum(a.gw, 1) - toNum(b.gw, 1));
+      return { ...prev, [fixtureId]: { options, dirty: true } };
+    });
+  };
+
+  const addDraftOption = (fixtureId) => {
+    setDrafts((prev) => {
+      const cur = prev[fixtureId] || { options: [], dirty: false };
+      const options = [...(cur.options || [])];
+
+      // Default new option: selected GW, 0%
+      options.push({ gw: selectedGW ?? 1, p: 0 });
+
+      options.sort((a, b) => toNum(a.gw, 1) - toNum(b.gw, 1));
+      return { ...prev, [fixtureId]: { options, dirty: true } };
+    });
+  };
+
+  const removeDraftOption = (fixtureId, idx) => {
+    setDrafts((prev) => {
+      const cur = prev[fixtureId] || { options: [], dirty: false };
+      const options = [...(cur.options || [])];
+      options.splice(idx, 1);
+      if (options.length === 0) options.push({ gw: selectedGW ?? 1, p: 1 });
+      return { ...prev, [fixtureId]: { options, dirty: true } };
+    });
+  };
+
+  const revertDraft = (fixtureId, fxOptions) => {
+    setDrafts((prev) => ({
+      ...prev,
+      [fixtureId]: { options: deepCloneOptions(fxOptions), dirty: false },
+    }));
+  };
+
+  const commitDraft = (fixtureId) => {
+    const draft = drafts[fixtureId];
+    if (!draft) return;
+
+    // convert p from percent integers to 0..1
+    const committedOptions = (draft.options || []).map((o) => ({
+      gw: toNum(o.gw, selectedGW ?? 1),
+      p: toNum(o.p, 0),
+    }));
+
+    // If your draft stores p as percent (0..100), convert:
+    // We'll treat p in draft as percent integer.
+    const options01 = committedOptions.map((o) => ({ ...o, p: o.p / 100 }));
+
+    updateFixture(fixtureId, (old) => ({
+      ...old,
+      options: options01,
+    }));
+
+    setDrafts((prev) => ({
+      ...prev,
+      [fixtureId]: { options: committedOptions, dirty: false },
+    }));
+  };
+
+  // Build GW dropdown values: min = selectedGW, max = 38
+  const gwChoices = useMemo(() => {
+    const min = selectedGW ?? 1;
+    const arr = [];
+    for (let g = min; g <= 38; g += 1) arr.push(g);
+    return arr;
+  }, [selectedGW]);
+
+  return (
+    <div style={pageStyle}>
+      <header style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 14 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+          <div>
+            <h1 style={{ margin: 0, fontSize: 22 }}>Fixtures</h1>
+            <p style={{ margin: 0, color: "#d1c3a9", fontSize: 13, maxWidth: 760 }}>
+              Edit fixture scheduling uncertainty. Changes are local until you press <b>Update</b>.
+            </p>
+          </div>
+
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <button
+              disabled={gwIndex <= 0}
+              onClick={() => setSelectedGW(availableGWs[gwIndex - 1])}
+              style={btnStyle(false, gwIndex <= 0)}
+            >
+              ← Prev GW
+            </button>
+
+            <select
+              value={selectedGW ?? ""}
+              onChange={(e) => setSelectedGW(toNum(e.target.value))}
+              style={selectStyle}
+            >
+              {availableGWs.map((gw) => (
+                <option key={gw} value={gw}>
+                  GW {gw}
+                </option>
+              ))}
+            </select>
+
+            <button
+              disabled={gwIndex === -1 || gwIndex >= availableGWs.length - 1}
+              onClick={() => setSelectedGW(availableGWs[gwIndex + 1])}
+              style={btnStyle(false, gwIndex === -1 || gwIndex >= availableGWs.length - 1)}
+            >
+              Next GW →
+            </button>
+          </div>
+        </div>
+
+        <div style={{ marginTop: 6, color: "#d1c3a9", fontSize: 12 }}>
+          Showing <b>{fixturesForGW.length}</b> fixtures in <b>GW {selectedGW ?? "-"}</b>.
+        </div>
+      </header>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12 }}>
+        {fixturesForGW.map((fx) => {
+          // IMPORTANT: drafts store p as % (0..100) for UI
+          const savedAsPct = (fx.options || []).map((o) => ({
+            gw: toNum(o.gw, selectedGW ?? 1),
+            p: Math.round(toNum(o.p, 0) * 100), // saved is 0..1
+          }));
+
+          const draft = drafts[fx.id] || { options: savedAsPct, dirty: false };
+
+          const { home, away } = logosForTeams(fx.homeTeam, fx.awayTeam);
+
+          return (
+            <div key={fx.id} style={cardStyle}>
+              <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 260 }}>
+                  <TeamBadge name={fx.homeTeam} logo={home} />
+                  <span style={{ color: PALETTE.gold, fontWeight: 800 }}>vs</span>
+                  <TeamBadge name={fx.awayTeam} logo={away} />
+                </div>
+
+                <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                  <button onClick={() => addDraftOption(fx.id)} style={btnStyle(false)}>
+                    + Add option
+                  </button>
+
+                  <div style={{ width: 10 }} />
+
+                  <button
+                    onClick={() => revertDraft(fx.id, savedAsPct)}
+                    disabled={!draft.dirty}
+                    style={btnStyle(false, !draft.dirty)}
+                  >
+                    Revert
+                  </button>
+                  <button
+                    onClick={() => commitDraft(fx.id)}
+                    disabled={!draft.dirty}
+                    style={btnStyle(true, !draft.dirty)}
+                  >
+                    Update
+                  </button>
+                </div>
+              </div>
+
+              <div style={{ marginTop: 10, overflowX: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, color: PALETTE.beige }}>
+                  <thead>
+                    <tr>
+                      <th style={thStyle}>GW</th>
+                      <th style={thStyle}>Probability</th>
+                      <th style={thStyle}></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(draft.options || []).map((opt, idx) => (
+                      <tr key={idx}>
+                        <td style={tdStyle}>
+                          <select
+                            value={toNum(opt.gw, selectedGW ?? 1)}
+                            onChange={(e) =>
+                              setDraftOption(fx.id, idx, { gw: toNum(e.target.value, selectedGW ?? 1) })
+                            }
+                            style={smallSelectStyle}
+                          >
+                            {gwChoices.map((gw) => (
+                              <option key={gw} value={gw}>
+                                GW {gw}
+                              </option>
+                            ))}
+                          </select>
+                        </td>
+
+                        <td style={tdStyle}>
+                          <select
+                            value={toNum(opt.p, 0)}
+                            onChange={(e) => setDraftOption(fx.id, idx, { p: toNum(e.target.value, 0) })}
+                            style={smallSelectStyle}
+                          >
+                            {pctSteps.map((p) => (
+                              <option key={p} value={p}>
+                                {p}%
+                              </option>
+                            ))}
+                          </select>
+                        </td>
+
+                        <td style={{ ...tdStyle, textAlign: "right" }}>
+                          <button onClick={() => removeDraftOption(fx.id, idx)} style={removeBtnStyle}>
+                            Remove
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+
+                <div style={{ marginTop: 8, color: "#d1c3a9", fontSize: 12 }}>
+                  Probabilities are in 10% steps. Click <b>Update</b> to apply.
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function TeamBadge({ name, logo }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+      {logo ? (
+        <img
+          src={logo}
+          alt={`${name} logo`}
+          style={{
+            height: 26,
+            width: 26,
+            borderRadius: 999,
+            objectFit: "contain",
+            backgroundColor: "#000",
+            border: `1px solid ${PALETTE.gold}`,
+          }}
+        />
+      ) : (
+        <div
+          style={{
+            height: 26,
+            width: 26,
+            borderRadius: 999,
+            background: "#27272a",
+            border: `1px solid ${PALETTE.gold}`,
+          }}
+        />
+      )}
+      <span
+        style={{
+          fontWeight: 800,
+          fontSize: 13,
+          whiteSpace: "nowrap",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          maxWidth: 160,
+        }}
+        title={name}
+      >
+        {name}
+      </span>
+    </div>
+  );
+}
+
+const pageStyle = {
+  padding: "1.5rem",
+  minHeight: "100vh",
+  background: `radial-gradient(circle at top, ${PALETTE.red} 0, ${PALETTE.black} 45%, #000000 100%)`,
+  color: PALETTE.beige,
+  fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+};
+
+const cardStyle = {
+  border: `1px solid ${PALETTE.gold}`,
+  borderRadius: 12,
+  background: "linear-gradient(155deg, rgba(0,0,0,0.98), rgba(0,0,0,0.9))",
+  boxShadow: "0 18px 40px rgba(0,0,0,0.85)",
+  padding: 12,
+  overflow: "hidden",
+};
+
+const thStyle = {
+  textAlign: "left",
+  padding: "8px 8px",
+  borderBottom: `1px solid ${PALETTE.gold}`,
+  fontSize: 12,
+  color: PALETTE.gold,
+  whiteSpace: "nowrap",
+};
+
+const tdStyle = {
+  padding: "8px 8px",
+  borderBottom: "1px solid #222",
+  whiteSpace: "nowrap",
+};
+
+const selectStyle = {
+  padding: "8px 10px",
+  borderRadius: 999,
+  border: `1px solid ${PALETTE.gold}`,
+  background: "#0b0b0b",
+  color: PALETTE.beige,
+  outline: "none",
+  fontSize: 13,
+};
+
+const smallSelectStyle = {
+  padding: "6px 10px",
+  borderRadius: 10,
+  border: `1px solid ${PALETTE.gold}`,
+  background: "#0b0b0b",
+  color: PALETTE.beige,
+  outline: "none",
+  fontSize: 13,
+  minWidth: 140,
+};
+
+const btnStyle = (active, disabled = false) => ({
+  padding: "8px 10px",
+  borderRadius: 999,
+  border: active ? `1px solid ${PALETTE.gold}` : "1px solid #4b5563",
+  background: active ? "rgba(184,134,11,0.2)" : "rgba(0,0,0,0.9)",
+  cursor: disabled ? "not-allowed" : "pointer",
+  opacity: disabled ? 0.5 : 1,
+  fontSize: 12,
+  fontWeight: active ? 800 : 600,
+  color: PALETTE.beige,
+});
+
+const removeBtnStyle = {
+  padding: "6px 10px",
+  borderRadius: 999,
+  border: "1px solid #4b5563",
+  background: "rgba(0,0,0,0.9)",
+  color: PALETTE.beige,
+  cursor: "pointer",
+  fontSize: 12,
+};
