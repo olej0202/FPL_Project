@@ -437,9 +437,21 @@ def optimize_my_team(
             money_in_bank_var[t] <= budget_amount  # could be == if you want exact
 
     # --- Max 3 players per team ---
-    for t in gameweeks:
-        for team, indices in team_to_indices.items():
+    # --- Max 3 players per team (allow >3 only at t=0 if that's how the squad currently is) ---
+
+# count how many you currently have from each team in the fixed initial squad
+    initial_team_count = {team: 0 for team in teams_set}
+    for i in initial_squad:
+        initial_team_count[teams[i]] += 1
+    
+    for team, indices in team_to_indices.items():
+        # at t=0, allow up to the current count (e.g. 4) so the model is feasible
+        model += lpSum(x[i, 0] for i in indices) <= max(3, initial_team_count[team])
+    
+        # from t=1 onwards, enforce the normal FPL rule
+        for t in gameweeks[1:]:
             model += lpSum(x[i, t] for i in indices) <= 3
+
 
     # --- Transfer Constraints ---
     for t in gameweeks[1:]:

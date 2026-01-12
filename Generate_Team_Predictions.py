@@ -225,12 +225,13 @@ def GenerateTeamPredictions1(fixture_path, current_team_path,horizon):
     #fixture_data=fixture_data[(fixture_data['event']>33)].iloc[0:,:]
 
     min_event=fixture_data["event"].min()
+    """
     horizon=horizon 
     min_event_list=[]
     for i in range(horizon):
         min_event_list.append(min_event+i)
 
-    fixture_data = fixture_data[fixture_data["event"].isin(min_event_list)]
+    fixture_data = fixture_data[fixture_data["event"].isin(min_event_list)]"""
 
 
     df_merged = fixture_data.merge(team_code_data, left_on='team_a', right_on='id', how='left')  # Left join to keep all rows from df2
@@ -722,12 +723,13 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     #fixture_data=fixture_data[(fixture_data['event']>33)].iloc[0:,:]
 
     min_event=fixture_data["event"].min()
+    """
     horizon=horizon 
     min_event_list=[]
     for i in range(horizon):
         min_event_list.append(min_event+i)
 
-    fixture_data = fixture_data[fixture_data["event"].isin(min_event_list)]
+    fixture_data = fixture_data[fixture_data["event"].isin(min_event_list)]"""
 
 
     df_merged = fixture_data.merge(team_code_data, left_on='team_a', right_on='id', how='left')  # Left join to keep all rows from df2

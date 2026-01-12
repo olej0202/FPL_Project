@@ -776,7 +776,7 @@ def GetXmins(current_players, n_future, scenarios=None, position_slots=None):
     # (optional) expose how much was added per row
     out["comp_minutes_added"] = out.apply(lambda r: additions.get((r["GW"], r["name"]), 0.0), axis=1)
     out["Final_minutes_Adjusted"] = (
-        out["minutes_scenario"].astype(float) + out["comp_minutes_added"].fillna(0).astype(float)
+        out["minutes_scenario"].astype(float) + 0*out["comp_minutes_added"].fillna(0).astype(float)
     ).clip(upper=90.0)
     
    
