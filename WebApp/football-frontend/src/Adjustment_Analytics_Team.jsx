@@ -400,6 +400,8 @@ function recomputeMetrics(rows) {
 
 /* ========== Scatter plot with draggable logo dots + arrows ========== */
 
+/* ========== Scatter plot with draggable logo dots + arrows (seamless) ========== */
+
 function TeamScatterPlot({ teamPoints, onTeamDrag }) {
   // Fixed domain
   const minX = 0.6;
@@ -418,12 +420,12 @@ function TeamScatterPlot({ teamPoints, onTeamDrag }) {
         padding: "8px 4px 8px 0",
         border: `1px solid ${PALETTE.gold}`,
         boxShadow: "0 18px 40px rgba(0,0,0,0.9)",
+        // helps touch dragging feel better
+        touchAction: "none",
       }}
     >
       <ResponsiveContainer>
-        <ScatterChart
-          margin={{ top: 10, right: 20, bottom: 30, left: 30 }}
-        >
+        <ScatterChart margin={{ top: 10, right: 20, bottom: 30, left: 30 }}>
           <CartesianGrid stroke="#333" strokeDasharray="3 3" />
           <XAxis
             type="number"
@@ -474,9 +476,7 @@ function TeamScatterPlot({ teamPoints, onTeamDrag }) {
                     boxShadow: "0 10px 25px rgba(0,0,0,0.9)",
                   }}
                 >
-                  <div style={{ fontWeight: 600 }}>
-                    {p.team_name}
-                  </div>
+                  <div style={{ fontWeight: 600 }}>{p.team_name}</div>
                   <div>Offensive: {p.own_XG_avg.toFixed(2)}</div>
                   <div>Defensive: {p.own_XGC_avg.toFixed(2)}</div>
                 </div>
@@ -498,122 +498,292 @@ function TeamScatterPlot({ teamPoints, onTeamDrag }) {
     </div>
   );
 }
+
 function DraggableDot({
   cx = 0,
   cy = 0,
   payload,
-  onTeamDrag,
+  xAxis,
+  yAxis,
   bounds,
+  onTeamDrag,
 }) {
-  const [pos, setPos] = useState({ x: cx, y: cy });
   const nodeRef = useRef(null);
 
-  // keep Draggable in sync when Recharts repositions the point
-  useEffect(() => {
-    setPos({ x: cx, y: cy });
-  }, [cx, cy]);
+  // Seamless drag state
+  const [dragging, setDragging] = useState(false);
+  const [dragPx, setDragPx] = useState(null); // current pixel x within chart coords
+  const [dragPy, setDragPy] = useState(null); // current pixel y within chart coords
+  const pointerIdRef = useRef(null);
 
-  const handleStop = (e, d) => {
-    if (!payload || !nodeRef.current) return;
-
-    const dx = d.x - cx;
-    const dy = d.y - cy;
-
-    // Find the surrounding <svg> to get real pixel size
-    const svg = nodeRef.current.closest("svg");
-    const rect = svg?.getBoundingClientRect();
-
-    // Fallback values if something weird happens
-    const plotWidth = rect?.width || 600;
-    const plotHeight = rect?.height || 400;
-
-    const spanX = bounds.maxX - bounds.minX || 1;
-    const spanY = bounds.maxY - bounds.minY || 1;
-
-    // Dampen a bit for smoother “feel”
-    const damping = 0.9;
-
-    const deltaDataX = damping * (dx / plotWidth) * spanX;
-    const deltaDataY = -damping * (dy / plotHeight) * spanY; // invert Y
-
-    let newXg = payload.own_XG_avg + deltaDataX;
-    let newXgc = payload.own_XGC_avg + deltaDataY;
-
-    // Clamp to chart domain
-    newXg = Math.max(bounds.minX, Math.min(bounds.maxX, newXg));
-    newXgc = Math.max(bounds.minY, Math.min(bounds.maxY, newXgc));
-
-    onTeamDrag(payload.team_name, newXg, newXgc);
-  };
-
-  // Arrow from baseline (orig) to current (payload values) in *local* space
-  const arrowLine = (() => {
-    const origX = payload?.orig_XG_avg;
-    const origY = payload?.orig_XGC_avg;
-    if (origX == null || origY == null) return null;
-
-    const svg = nodeRef.current?.closest("svg");
-    const rect = svg?.getBoundingClientRect();
-    const plotWidth = rect?.width || 600;
-    const plotHeight = rect?.height || 400;
-
-    const spanX = bounds.maxX - bounds.minX || 1;
-    const spanY = bounds.maxY - bounds.minY || 1;
-
-    // Current data pos
-    const currX = payload.own_XG_avg;
-    const currY = payload.own_XGC_avg;
-
-    const origNormX = (origX - bounds.minX) / spanX;
-    const origNormY = (bounds.maxY - origY) / spanY;
-    const currNormX = (currX - bounds.minX) / spanX;
-    const currNormY = (bounds.maxY - currY) / spanY;
-
-    const origScreenX = origNormX * plotWidth;
-    const origScreenY = origNormY * plotHeight;
-    const currScreenX = currNormX * plotWidth;
-    const currScreenY = currNormY * plotHeight;
-
-    const dx = currScreenX - origScreenX;
-    const dy = currScreenY - origScreenY;
-
-    // In local <g>, current dot is (0,0)
-    const x1 = -dx;
-    const y1 = -dy;
-    const x2 = 0;
-    const y2 = 0;
-
-    return { x1, y1, x2, y2 };
-  })();
+  // Snap step in data units (tweak to taste)
+  const SNAP_X = 0.05;
+  const SNAP_Y = 0.05;
 
   const logoUrl = payload?.logo;
   const size = 26;
 
+  // Helpers ----------------------------------------------------------
+
+  const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+  const snap = (v, step) => (step > 0 ? Math.round(v / step) * step : v);
+
+  // chart pixel ranges from the real Recharts scales
+  const xRange = xAxis?.scale?.range?.() ?? [0, 0];
+  const yRange = yAxis?.scale?.range?.() ?? [0, 0]; // often [innerHeight, 0]
+
+  const xMinPx = Math.min(xRange[0], xRange[1]);
+  const xMaxPx = Math.max(xRange[0], xRange[1]);
+  const yMinPx = Math.min(yRange[0], yRange[1]);
+  const yMaxPx = Math.max(yRange[0], yRange[1]);
+
+  const svgPointFromClient = (clientX, clientY) => {
+    const svg = nodeRef.current?.ownerSVGElement;
+    if (!svg) return null;
+
+    const pt = svg.createSVGPoint();
+    pt.x = clientX;
+    pt.y = clientY;
+
+    const ctm = svg.getScreenCTM();
+    if (!ctm) return null;
+
+    const local = pt.matrixTransform(ctm.inverse());
+    return { x: local.x, y: local.y };
+  };
+
+  const pixelToData = (px, py) => {
+    const xScale = xAxis?.scale;
+    const yScale = yAxis?.scale;
+    if (!xScale?.invert || !yScale?.invert) return null;
+
+    // clamp within plot area, then invert
+    const clampedPx = clamp(px, xMinPx, xMaxPx);
+    const clampedPy = clamp(py, yMinPx, yMaxPx);
+
+    let xVal = xScale.invert(clampedPx);
+    let yVal = yScale.invert(clampedPy);
+
+    // clamp to domain (your fixed bounds)
+    xVal = clamp(xVal, bounds.minX, bounds.maxX);
+    yVal = clamp(yVal, bounds.minY, bounds.maxY);
+
+    // snap to grid-ish increments
+    xVal = snap(xVal, SNAP_X);
+    yVal = snap(yVal, SNAP_Y);
+
+    // clamp again after snapping
+    xVal = clamp(xVal, bounds.minX, bounds.maxX);
+    yVal = clamp(yVal, bounds.minY, bounds.maxY);
+
+    return { xVal, yVal };
+  };
+
+  const dataToPixel = (xVal, yVal) => {
+    const xScale = xAxis?.scale;
+    const yScale = yAxis?.scale;
+    if (!xScale || !yScale) return null;
+    return { px: xScale(xVal), py: yScale(yVal) };
+  };
+
+  // Baseline → current arrow (baseline in data space, current can be drag position)
+  const arrowLine = useMemo(() => {
+    const origX = payload?.orig_XG_avg;
+    const origY = payload?.orig_XGC_avg;
+    if (origX == null || origY == null) return null;
+
+    const currX = payload?.own_XG_avg;
+    const currY = payload?.own_XGC_avg;
+
+    const currPixel =
+      dragging && dragPx != null && dragPy != null
+        ? { px: dragPx, py: dragPy }
+        : dataToPixel(currX, currY);
+
+    const origPixel = dataToPixel(origX, origY);
+
+    if (!currPixel || !origPixel) return null;
+
+    // In local <g>, the dot center is at (0,0), so line starts at (orig - curr)
+    const dx = origPixel.px - currPixel.px;
+    const dy = origPixel.py - currPixel.py;
+
+    return { x1: dx, y1: dy, x2: 0, y2: 0 };
+  }, [payload, xAxis, yAxis, dragging, dragPx, dragPy]);
+
+  // Live snapped values + snapped pixel (for crosshair + label)
+  const live = useMemo(() => {
+    if (!dragging || dragPx == null || dragPy == null) return null;
+
+    const d = pixelToData(dragPx, dragPy);
+    if (!d) return null;
+
+    const snappedPix = dataToPixel(d.xVal, d.yVal);
+    if (!snappedPix) return null;
+
+    return {
+      xVal: d.xVal,
+      yVal: d.yVal,
+      px: snappedPix.px,
+      py: snappedPix.py,
+    };
+  }, [dragging, dragPx, dragPy, xAxis, yAxis]);
+
+  // Pointer handlers -------------------------------------------------
+
+  const onPointerDown = (e) => {
+    if (!payload) return;
+
+    // capture pointer (works for mouse + touch)
+    pointerIdRef.current = e.pointerId;
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+
+    setDragging(true);
+
+    const p = svgPointFromClient(e.clientX, e.clientY);
+    if (!p) return;
+
+    setDragPx(clamp(p.x, xMinPx, xMaxPx));
+    setDragPy(clamp(p.y, yMinPx, yMaxPx));
+  };
+
+  const onPointerMove = (e) => {
+    if (!dragging) return;
+    if (pointerIdRef.current != null && e.pointerId !== pointerIdRef.current) {
+      return;
+    }
+
+    const p = svgPointFromClient(e.clientX, e.clientY);
+    if (!p) return;
+
+    setDragPx(clamp(p.x, xMinPx, xMaxPx));
+    setDragPy(clamp(p.y, yMinPx, yMaxPx));
+  };
+
+  const finishDrag = () => {
+    if (!dragging) return;
+
+    // commit on drop
+    if (dragPx != null && dragPy != null) {
+      const d = pixelToData(dragPx, dragPy);
+      if (d) onTeamDrag(payload.team_name, d.xVal, d.yVal);
+    }
+
+    setDragging(false);
+    setDragPx(null);
+    setDragPy(null);
+    pointerIdRef.current = null;
+  };
+
+  const onPointerUp = (e) => {
+    if (pointerIdRef.current != null && e.pointerId !== pointerIdRef.current) {
+      return;
+    }
+    finishDrag();
+  };
+
+  const onPointerCancel = (e) => {
+    if (pointerIdRef.current != null && e.pointerId !== pointerIdRef.current) {
+      return;
+    }
+    finishDrag();
+  };
+
+  // Render position: if dragging, show the icon under the pointer (snapped)
+  const renderCx = dragging && live ? live.px : cx;
+  const renderCy = dragging && live ? live.py : cy;
+
+  // Crosshair extents (full plot area)
+  const crosshair = dragging && live
+    ? {
+        x: live.px,
+        y: live.py,
+        x1: xMinPx,
+        x2: xMaxPx,
+        y1: yMinPx,
+        y2: yMaxPx,
+      }
+    : null;
+
+  // -----------------------------------------------------------------
+
   return (
-    <Draggable
-      nodeRef={nodeRef}
-      position={pos}
-      onDrag={(_, d) => setPos({ x: d.x, y: d.y })}
-      onStop={handleStop}
-    >
-      <g ref={nodeRef} style={{ cursor: "pointer" }}>
-        {arrowLine && (
+    <g transform={`translate(${renderCx}, ${renderCy})`} ref={nodeRef}>
+      {/* Crosshair + live value badge while dragging */}
+      {crosshair && (
+        <g style={{ pointerEvents: "none" }}>
           <line
-            x1={arrowLine.x1}
-            y1={arrowLine.y1}
-            x2={arrowLine.x2}
-            y2={arrowLine.y2}
-            stroke="#888"
+            x1={crosshair.x1 - crosshair.x}
+            y1={0}
+            x2={crosshair.x2 - crosshair.x}
+            y2={0}
+            stroke="#666"
+            strokeDasharray="4 4"
             strokeWidth={1}
-            strokeDasharray="3 3"
           />
-        )}
+          <line
+            x1={0}
+            y1={crosshair.y1 - crosshair.y}
+            x2={0}
+            y2={crosshair.y2 - crosshair.y}
+            stroke="#666"
+            strokeDasharray="4 4"
+            strokeWidth={1}
+          />
+
+          {/* snapped point marker */}
+          <circle r={3.5} fill={PALETTE.gold} />
+
+          {/* value badge */}
+          <g transform="translate(14,-14)">
+            <rect
+              x={0}
+              y={-18}
+              rx={6}
+              ry={6}
+              width={150}
+              height={34}
+              fill="#111"
+              stroke={PALETTE.gold}
+              strokeWidth={1}
+              opacity={0.95}
+            />
+            <text x={8} y={-4} fontSize={11} fill={PALETTE.beige}>
+              Off: {live.xVal.toFixed(2)}  |  Def: {live.yVal.toFixed(2)}
+            </text>
+          </g>
+        </g>
+      )}
+
+      {/* Arrow baseline -> current (updates during drag) */}
+      {arrowLine && (
+        <line
+          x1={arrowLine.x1}
+          y1={arrowLine.y1}
+          x2={arrowLine.x2}
+          y2={arrowLine.y2}
+          stroke="#888"
+          strokeWidth={1}
+          strokeDasharray="3 3"
+          style={{ pointerEvents: "none" }}
+        />
+      )}
+
+      {/* Draggable hit target */}
+      <g
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerCancel}
+        style={{ cursor: dragging ? "grabbing" : "grab", touchAction: "none" }}
+      >
         <circle
           r={size / 2 + 2}
           fill={PALETTE.black}
           stroke={PALETTE.gold}
           strokeWidth={2}
         />
+
         {logoUrl ? (
           <image
             href={logoUrl}
@@ -635,6 +805,7 @@ function DraggableDot({
             {payload?.team_name?.slice(0, 3) ?? ""}
           </text>
         )}
+
         <title>
           {payload
             ? `${payload.team_name}: Off ${payload.own_XG_avg.toFixed(
@@ -643,9 +814,10 @@ function DraggableDot({
             : ""}
         </title>
       </g>
-    </Draggable>
+    </g>
   );
 }
+
 
 
 /* ========== Fixture table (unchanged except logo use) ========== */

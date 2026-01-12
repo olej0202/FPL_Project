@@ -286,8 +286,8 @@ def train_minutes_bucket_models(
 
     preds["Predicted_minutes"] = (
         preds["prob_30"] * 30
-        + preds["prob_60"] * 40
-        + preds["prob_80"] * 30
+        + preds["prob_60"] * 30
+        + preds["prob_80"] * 40
     ).clip(upper=90)
 
     # =========================================================
