@@ -4,7 +4,6 @@ import { useAdjustmentData } from "./Contexts/AdjustmentsContext";
 
 import teamLogos from "./utils/team_logos";
 
-
 const PALETTE = {
   red: "#5A0000",
   gold: "#B8860B",
@@ -17,11 +16,12 @@ const toNum = (v, fallback = 0) => {
   return Number.isFinite(n) ? n : fallback;
 };
 
-const deepCloneOptions = (opts) => (opts || []).map((o) => ({ gw: o.gw, p: o.p }));
-
 // "current GW" = option with highest p (ties: first)
 const currentGwOfFixture = (fx) => {
-  const opts = (fx.options || []).map((o) => ({ gw: toNum(o.gw, 1), p: toNum(o.p, 0) }));
+  const opts = (fx.options || []).map((o) => ({
+    gw: toNum(o.gw, 1),
+    p: toNum(o.p, 0),
+  }));
   if (!opts.length) return null;
   return opts.reduce((best, o) => (o.p > best.p ? o : best), opts[0]).gw;
 };
@@ -34,6 +34,18 @@ function logosForTeams(homeTeam, awayTeam) {
 }
 
 const pctSteps = Array.from({ length: 11 }, (_, i) => i * 10); // 0..100
+
+// Convert stored options (p in 0..1) to UI draft options (p in 0..100).
+// If no options exist, default to 100% at fallbackGw.
+const optionsToPct = (fxOptions, fallbackGw) => {
+  const arr = (fxOptions || []).map((o) => ({
+    gw: toNum(o.gw, fallbackGw),
+    p: Math.round(toNum(o.p, 0) * 100),
+  }));
+  if (arr.length === 0) return [{ gw: toNum(fallbackGw, 1), p: 100 }];
+  arr.sort((a, b) => toNum(a.gw, 1) - toNum(b.gw, 1));
+  return arr;
+};
 
 export default function FixturesPage() {
   const { fetchIfNeeded, loading, Fixtures, fixturesVersion, updateFixture } =
@@ -48,6 +60,27 @@ export default function FixturesPage() {
     [Fixtures, fixturesVersion]
   );
 
+  // Minimal GW across the whole horizon (based on any option.gw if present,
+  // otherwise falls back to the fixture's "current" GW).
+  const minHorizonGW = useMemo(() => {
+    let min = Infinity;
+
+    for (const fx of fixtures) {
+      const opts = fx.options || [];
+      if (opts.length) {
+        for (const o of opts) {
+          const g = toNum(o.gw, null);
+          if (Number.isFinite(g)) min = Math.min(min, g);
+        }
+      } else {
+        const g = currentGwOfFixture(fx);
+        if (Number.isFinite(g)) min = Math.min(min, g);
+      }
+    }
+
+    return min === Infinity ? 1 : min;
+  }, [fixtures]);
+
   const availableGWs = useMemo(() => {
     const set = new Set();
     for (const fx of fixtures) {
@@ -59,7 +92,8 @@ export default function FixturesPage() {
 
   const [selectedGW, setSelectedGW] = useState(null);
 
-  // Local drafts keyed by fixtureId
+  // Local drafts keyed by fixtureId: { [id]: { options: [{gw,p}], dirty } }
+  // Draft options store p as percent 0..100 (NOT 0..1).
   const [drafts, setDrafts] = useState({});
 
   useEffect(() => {
@@ -74,19 +108,23 @@ export default function FixturesPage() {
       .sort((a, b) => (a.homeTeam || "").localeCompare(b.homeTeam || ""));
   }, [fixtures, selectedGW]);
 
-  // ensure drafts exist for visible fixtures
+  // Ensure drafts exist for visible fixtures (draft p is always 0..100)
   useEffect(() => {
     if (!fixturesForGW.length) return;
+
     setDrafts((prev) => {
       const next = { ...prev };
       for (const fx of fixturesForGW) {
         if (!next[fx.id]) {
-          next[fx.id] = { options: deepCloneOptions(fx.options), dirty: false };
+          next[fx.id] = {
+            options: optionsToPct(fx.options, selectedGW ?? 1),
+            dirty: false,
+          };
         }
       }
       return next;
     });
-  }, [fixturesForGW]);
+  }, [fixturesForGW, selectedGW]);
 
   const gwIndex = selectedGW != null ? availableGWs.indexOf(selectedGW) : -1;
 
@@ -112,7 +150,7 @@ export default function FixturesPage() {
       const cur = prev[fixtureId] || { options: [], dirty: false };
       const options = [...(cur.options || [])];
 
-      // Default new option: selected GW, 0%
+      // Default new option: selected GW, 0% (user can distribute probability)
       options.push({ gw: selectedGW ?? 1, p: 0 });
 
       options.sort((a, b) => toNum(a.gw, 1) - toNum(b.gw, 1));
@@ -125,15 +163,25 @@ export default function FixturesPage() {
       const cur = prev[fixtureId] || { options: [], dirty: false };
       const options = [...(cur.options || [])];
       options.splice(idx, 1);
-      if (options.length === 0) options.push({ gw: selectedGW ?? 1, p: 1 });
+
+      // If we removed the last option, default back to 100% on selected GW
+      if (options.length === 0) options.push({ gw: selectedGW ?? 1, p: 100 });
+
+      options.sort((a, b) => toNum(a.gw, 1) - toNum(b.gw, 1));
       return { ...prev, [fixtureId]: { options, dirty: true } };
     });
   };
 
-  const revertDraft = (fixtureId, fxOptions) => {
+  const revertDraft = (fixtureId, fxOptionsAsPct) => {
     setDrafts((prev) => ({
       ...prev,
-      [fixtureId]: { options: deepCloneOptions(fxOptions), dirty: false },
+      [fixtureId]: {
+        options: (fxOptionsAsPct || []).map((o) => ({
+          gw: toNum(o.gw, selectedGW ?? 1),
+          p: toNum(o.p, 0),
+        })),
+        dirty: false,
+      },
     }));
   };
 
@@ -141,15 +189,16 @@ export default function FixturesPage() {
     const draft = drafts[fixtureId];
     if (!draft) return;
 
-    // convert p from percent integers to 0..1
-    const committedOptions = (draft.options || []).map((o) => ({
+    // Draft stores p as percent 0..100; persist as 0..1
+    const committedOptionsPct = (draft.options || []).map((o) => ({
       gw: toNum(o.gw, selectedGW ?? 1),
       p: toNum(o.p, 0),
     }));
 
-    // If your draft stores p as percent (0..100), convert:
-    // We'll treat p in draft as percent integer.
-    const options01 = committedOptions.map((o) => ({ ...o, p: o.p / 100 }));
+    const options01 = committedOptionsPct.map((o) => ({
+      ...o,
+      p: o.p / 100,
+    }));
 
     updateFixture(fixtureId, (old) => ({
       ...old,
@@ -158,26 +207,49 @@ export default function FixturesPage() {
 
     setDrafts((prev) => ({
       ...prev,
-      [fixtureId]: { options: committedOptions, dirty: false },
+      [fixtureId]: { options: committedOptionsPct, dirty: false },
     }));
   };
 
-  // Build GW dropdown values: min = selectedGW, max = 38
+  // GW dropdown inside each fixture option:
+  // allow picking earlier GWs, but NOT earlier than the minimal GW across the horizon.
   const gwChoices = useMemo(() => {
-    const min = selectedGW ?? 1;
+    const min = toNum(minHorizonGW, 1);
     const arr = [];
     for (let g = min; g <= 38; g += 1) arr.push(g);
     return arr;
-  }, [selectedGW]);
+  }, [minHorizonGW]);
 
   return (
     <div style={pageStyle}>
-      <header style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 14 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+      <header
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 8,
+          marginBottom: 14,
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            gap: 12,
+            flexWrap: "wrap",
+          }}
+        >
           <div>
             <h1 style={{ margin: 0, fontSize: 22 }}>Fixtures</h1>
-            <p style={{ margin: 0, color: "#d1c3a9", fontSize: 13, maxWidth: 760 }}>
-              Edit fixture scheduling uncertainty. Changes are local until you press <b>Update</b>.
+            <p
+              style={{
+                margin: 0,
+                color: "#d1c3a9",
+                fontSize: 13,
+                maxWidth: 760,
+              }}
+            >
+              Edit fixture scheduling uncertainty. Changes are local until you
+              press <b>Update</b>.
             </p>
           </div>
 
@@ -205,7 +277,10 @@ export default function FixturesPage() {
             <button
               disabled={gwIndex === -1 || gwIndex >= availableGWs.length - 1}
               onClick={() => setSelectedGW(availableGWs[gwIndex + 1])}
-              style={btnStyle(false, gwIndex === -1 || gwIndex >= availableGWs.length - 1)}
+              style={btnStyle(
+                false,
+                gwIndex === -1 || gwIndex >= availableGWs.length - 1
+              )}
             >
               Next GW →
             </button>
@@ -213,17 +288,16 @@ export default function FixturesPage() {
         </div>
 
         <div style={{ marginTop: 6, color: "#d1c3a9", fontSize: 12 }}>
-          Showing <b>{fixturesForGW.length}</b> fixtures in <b>GW {selectedGW ?? "-"}</b>.
+          Showing <b>{fixturesForGW.length}</b> fixtures in{" "}
+          <b>GW {selectedGW ?? "-"}</b>. (Earliest GW allowed in options:{" "}
+          <b>GW {minHorizonGW}</b>)
         </div>
       </header>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12 }}>
         {fixturesForGW.map((fx) => {
-          // IMPORTANT: drafts store p as % (0..100) for UI
-          const savedAsPct = (fx.options || []).map((o) => ({
-            gw: toNum(o.gw, selectedGW ?? 1),
-            p: Math.round(toNum(o.p, 0) * 100), // saved is 0..1
-          }));
+          // Saved options as percent for UI (and default to 100% if missing)
+          const savedAsPct = optionsToPct(fx.options, selectedGW ?? 1);
 
           const draft = drafts[fx.id] || { options: savedAsPct, dirty: false };
 
@@ -231,15 +305,41 @@ export default function FixturesPage() {
 
           return (
             <div key={fx.id} style={cardStyle}>
-              <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 260 }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  gap: 12,
+                  flexWrap: "wrap",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    minWidth: 260,
+                  }}
+                >
                   <TeamBadge name={fx.homeTeam} logo={home} />
-                  <span style={{ color: PALETTE.gold, fontWeight: 800 }}>vs</span>
+                  <span style={{ color: PALETTE.gold, fontWeight: 800 }}>
+                    vs
+                  </span>
                   <TeamBadge name={fx.awayTeam} logo={away} />
                 </div>
 
-                <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-                  <button onClick={() => addDraftOption(fx.id)} style={btnStyle(false)}>
+                <div
+                  style={{
+                    display: "flex",
+                    gap: 8,
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <button
+                    onClick={() => addDraftOption(fx.id)}
+                    style={btnStyle(false)}
+                  >
                     + Add option
                   </button>
 
@@ -263,7 +363,14 @@ export default function FixturesPage() {
               </div>
 
               <div style={{ marginTop: 10, overflowX: "auto" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, color: PALETTE.beige }}>
+                <table
+                  style={{
+                    width: "100%",
+                    borderCollapse: "collapse",
+                    fontSize: 13,
+                    color: PALETTE.beige,
+                  }}
+                >
                   <thead>
                     <tr>
                       <th style={thStyle}>GW</th>
@@ -273,12 +380,14 @@ export default function FixturesPage() {
                   </thead>
                   <tbody>
                     {(draft.options || []).map((opt, idx) => (
-                      <tr key={idx}>
+                      <tr key={`${fx.id}_${idx}`}>
                         <td style={tdStyle}>
                           <select
                             value={toNum(opt.gw, selectedGW ?? 1)}
                             onChange={(e) =>
-                              setDraftOption(fx.id, idx, { gw: toNum(e.target.value, selectedGW ?? 1) })
+                              setDraftOption(fx.id, idx, {
+                                gw: toNum(e.target.value, selectedGW ?? 1),
+                              })
                             }
                             style={smallSelectStyle}
                           >
@@ -293,7 +402,11 @@ export default function FixturesPage() {
                         <td style={tdStyle}>
                           <select
                             value={toNum(opt.p, 0)}
-                            onChange={(e) => setDraftOption(fx.id, idx, { p: toNum(e.target.value, 0) })}
+                            onChange={(e) =>
+                              setDraftOption(fx.id, idx, {
+                                p: toNum(e.target.value, 0),
+                              })
+                            }
                             style={smallSelectStyle}
                           >
                             {pctSteps.map((p) => (
@@ -305,7 +418,10 @@ export default function FixturesPage() {
                         </td>
 
                         <td style={{ ...tdStyle, textAlign: "right" }}>
-                          <button onClick={() => removeDraftOption(fx.id, idx)} style={removeBtnStyle}>
+                          <button
+                            onClick={() => removeDraftOption(fx.id, idx)}
+                            style={removeBtnStyle}
+                          >
                             Remove
                           </button>
                         </td>
@@ -375,7 +491,8 @@ const pageStyle = {
   minHeight: "100vh",
   background: `radial-gradient(circle at top, ${PALETTE.red} 0, ${PALETTE.black} 45%, #000000 100%)`,
   color: PALETTE.beige,
-  fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+  fontFamily:
+    "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
 };
 
 const cardStyle = {

@@ -419,9 +419,9 @@ export default function PlayerAdjustmentsPage() {
       const xg = Number(teamRow.XG) || 0;
       const cs = Number(teamRow.CS) || 0;
 
-      const minutesAdj = avgMin ? Math.min(1, avgMin / 75) : 0;
+      const minutesAdj = avgMin ? Math.min(1, avgMin / 80) : 0;
 
-      const goalScored = (goalShare * xg + penData * 0.4) * minutesAdj;
+      const goalScored = (goalShare * xg + penData * 0.8) * minutesAdj;
       const assists = assistShare * xg * minutesAdj;
 
       const points =
