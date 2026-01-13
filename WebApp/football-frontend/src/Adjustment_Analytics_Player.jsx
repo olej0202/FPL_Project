@@ -333,19 +333,22 @@ export default function PlayerAdjustmentsPage() {
       );
     }
 
-    const add = (team_code, gw, xg, cs) => {
-      const key = `${String(team_code)}_${Number(gw)}`;
-      const prev = lookup.get(key);
-      if (!prev) {
-        lookup.set(key, { team_code, GW: Number(gw), XG: xg, CS: cs });
-      } else {
-        lookup.set(key, {
-          ...prev,
-          XG: (Number(prev.XG) || 0) + xg,
-          CS: (Number(prev.CS) || 0) + cs,
-        });
-      }
-    };
+  const add = (team_code, gw, xg, cs, matches) => {
+    const key = `${String(team_code)}_${Number(gw)}`;
+    const prev = lookup.get(key);
+
+    const prevXG = prev ? Number(prev.XG) || 0 : 0;
+    const prevCS = prev ? Number(prev.CS) || 0 : 0;
+    const prevM = prev ? Number(prev.Matches) || 0 : 0;
+
+    lookup.set(key, {
+      team_code,
+      GW: Number(gw),
+      XG: prevXG + (Number(xg) || 0),
+      CS: prevCS + (Number(cs) || 0),
+      Matches: prevM + (Number(matches) || 0), // ✅ expected matches count
+    });
+  };
 
     for (const r of teamsRows) {
       const code = r.team_code;
@@ -370,7 +373,7 @@ export default function PlayerAdjustmentsPage() {
         const gw = Number(o.gw);
         const p = Number(o.p);
         if (!Number.isFinite(gw) || !Number.isFinite(p) || p <= 0) continue;
-        add(code, gw, p * rowXG, p * rowCS);
+        add(code, gw, p * rowXG, p * rowCS, p);
       }
     }
 
@@ -391,57 +394,75 @@ export default function PlayerAdjustmentsPage() {
     return Array.from(set);
   }, [playersState]);
 
-  const computeMeasures = useCallback(
-    (playerRow, teamRow) => {
-      if (!teamRow) {
-        return {
-          Goal_Scored: 0,
-          Assists: 0,
-          Points: 0,
-          Avg_Minutes: 0,
-          CBI_Predictions: 0,
-        };
-      }
-
-      const avgMinRaw = Number(playerRow.average_minutes) || 0;
-      const avgMin = Math.max(MIN_MINUTES, Math.min(MAX_MINUTES, avgMinRaw));
-
-      const goalShare = Number(playerRow.Goal_share) || 0;
-      const assistShare = Number(playerRow.Assist_share) || 0;
-      const penData = Number(playerRow.Pen_data) || 0;
-      const cbi = Number(playerRow.CBI_Percent) || 0;
-      const bps = Number(playerRow.BPS) || 0;
-      const goalFactor = Number(playerRow.Goal_factor) || 0;
-      const assistFactor = Number(playerRow.Assist_factor) || 0;
-      const csFactor = Number(playerRow.CS_factor) || 0;
-      const defaultPoints = Number(playerRow.default_points) || 0;
-
-      const xg = Number(teamRow.XG) || 0;
-      const cs = Number(teamRow.CS) || 0;
-
-      const minutesAdj = avgMin ? Math.min(1, avgMin / 80) : 0;
-
-      const goalScored = (goalShare * xg + penData * 0.8) * minutesAdj;
-      const assists = assistShare * xg * minutesAdj;
-
-      const points =
-        defaultPoints * minutesAdj +
-        goalScored * goalFactor +
-        assists * assistFactor +
-        cs * csFactor * minutesAdj +
-        bps * minutesAdj +
-        cbi * 1.5 * minutesAdj;
-
+const computeMeasures = useCallback(
+  (playerRow, teamRow) => {
+    if (!teamRow) {
       return {
-        Goal_Scored: goalScored,
-        Assists: assists,
-        Points: points,
-        Avg_Minutes: avgMin,
-        CBI_Predictions: cbi * minutesAdj,
+        Goal_Scored: 0,
+        Assists: 0,
+        Points: 0,
+        Avg_Minutes: 0,
+        CBI_Predictions: 0,
       };
-    },
-    [MIN_MINUTES, MAX_MINUTES]
-  );
+    }
+
+    // ✅ expected matches in this GW for this team (can be 0..2..)
+    const matchCount = Math.max(0, Number(teamRow.Matches) || 0);
+
+    const avgMinRaw = Number(playerRow.average_minutes) || 0;
+    const avgMin = Math.max(MIN_MINUTES, Math.min(MAX_MINUTES, avgMinRaw));
+
+    const goalShare = Number(playerRow.Goal_share) || 0;
+    const assistShare = Number(playerRow.Assist_share) || 0;
+
+    // These are per match inputs in most models:
+    const penData = Number(playerRow.Pen_data) || 0;
+    const cbi = Number(playerRow.CBI_Percent) || 0;
+    const bps = Number(playerRow.BPS) || 0;
+    const defaultPoints = Number(playerRow.default_points) || 0;
+
+    const goalFactor = Number(playerRow.Goal_factor) || 0;
+    const assistFactor = Number(playerRow.Assist_factor) || 0;
+    const csFactor = Number(playerRow.CS_factor) || 0;
+
+    // These already reflect multiple fixtures because we summed them in teamLookup
+    const xg = Number(teamRow.XG) || 0;
+    const cs = Number(teamRow.CS) || 0;
+
+    // per-match minutes adjustment
+    const minutesAdj = avgMin ? Math.min(1, avgMin / 80) : 0;
+
+    // ✅ Goals/assists scale naturally with xg (which is already summed across fixtures)
+    // ✅ Pen component is per match -> multiply by matchCount
+    const goalScored = (goalShare * xg + (penData * 0.8) * matchCount) * minutesAdj;
+    const assists = (assistShare * xg) * minutesAdj;
+
+    // ✅ Per-match components must scale by expected matches
+    const basePoints =
+      (defaultPoints + bps + cbi * 1.5) * minutesAdj * matchCount;
+
+    // cs is already expected CS across fixtures (0..matchCount), so no extra matchCount needed
+    const points =
+      basePoints +
+      goalScored * goalFactor +
+      assists * assistFactor +
+      cs * csFactor * minutesAdj;
+
+    return {
+      Goal_Scored: goalScored,
+      Assists: assists,
+      Points: points,
+
+      // ✅ Minutes should be total minutes in the GW
+      Avg_Minutes: avgMin * matchCount,
+
+      // ✅ CBI predictions are per match too
+      CBI_Predictions: cbi * minutesAdj * matchCount,
+    };
+  },
+  [MIN_MINUTES, MAX_MINUTES]
+);
+
 
   /**
    * ✅ SINGLE source of truth recalculation:

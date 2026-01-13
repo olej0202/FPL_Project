@@ -271,7 +271,7 @@ def optimize_my_team(
 
     # ---------- Risk factor adjustment ----------
     # raw risk: higher std + lower ownership = riskier
-    risk_raw = ((1 - selected) ** 2) * (1 + point_std)
+    risk_raw = ((1 - selected) ** 2)/0.7
 
 
     # clamp negatives so we don't reward ultra-template players as "negative risk"
@@ -287,10 +287,10 @@ def optimize_my_team(
 
     if risk_factor_clean == "low":
         # risk-averse: DOWN-weight risky players
-        mult = np.clip(1/(risk_norm), 0.45, 1.5)
+        mult = np.clip(1/(risk_norm), 0.85, 1.2)
     elif risk_factor_clean == "high":
         # risk-seeking: UP-weight risky players
-        mult = np.clip(risk_norm, 0.9, 2.0)
+        mult = np.clip(risk_norm, 0.85, 1.2)
     else:
         # "med": no risk adjustment
         mult = np.ones_like(risk_norm)
@@ -443,11 +443,11 @@ def optimize_my_team(
     initial_team_count = {team: 0 for team in teams_set}
     for i in initial_squad:
         initial_team_count[teams[i]] += 1
-    
+
     for team, indices in team_to_indices.items():
         # at t=0, allow up to the current count (e.g. 4) so the model is feasible
         model += lpSum(x[i, 0] for i in indices) <= max(3, initial_team_count[team])
-    
+
         # from t=1 onwards, enforce the normal FPL rule
         for t in gameweeks[1:]:
             model += lpSum(x[i, t] for i in indices) <= 3
