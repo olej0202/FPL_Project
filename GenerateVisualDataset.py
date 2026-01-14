@@ -556,6 +556,39 @@ def Player_adjustements(current_player_path):
     merged_df = df_filtered.merge(result, how='left', left_on='name', right_on='Name2')
 
     merged_df.drop(columns=['Name2'], inplace=True)
+    # --- Ensure exactly 1 row per (name, Team) per GW in the GW range ---
+
+    merged_df["GW"] = pd.to_numeric(merged_df["GW"], errors="coerce").astype("Int64")
+
+    merged_df = merged_df.drop_duplicates(subset=["name", "Team", "GW"], keep="first")
+
+    gw_range = list(range(int(min_gw), int(max_gw) + 1))
+
+    merged_df = merged_df.sort_values(["name", "Team", "GW"])
+
+    idx = pd.MultiIndex.from_product(
+        [merged_df[["name", "Team"]].drop_duplicates().itertuples(index=False, name=None),
+         gw_range],
+        names=["player_team", "GW"]
+    )
+
+    tmp = merged_df.copy()
+    tmp["player_team"] = list(zip(tmp["name"], tmp["Team"]))
+    tmp = tmp.set_index(["player_team", "GW"]).sort_index()
+
+    tmp = tmp.reindex(idx)
+
+    tmp = tmp.reset_index()
+    tmp[["name", "Team"]] = pd.DataFrame(tmp["player_team"].tolist(), index=tmp.index)
+    tmp = tmp.drop(columns=["player_team"])
+    
+    # 4) Fill missing rows: prefer previous GW, otherwise next GW
+    # (ffill handles "previous"; bfill handles leading gaps)
+    tmp = tmp.sort_values(["name", "Team", "GW"])
+    tmp = tmp.groupby(["name", "Team"], as_index=False, group_keys=False).apply(lambda g: g.ffill().bfill())
+    
+    merged_df = tmp
+
     # MERGE med verdi og navn og selected
     merged_df.to_csv("Player_Adjusted_data.csv")
 
