@@ -77,7 +77,13 @@ Manual_min=[
 
 NEW_TEAMS=[]
 NEW_TEAMS_NAME=[]
+fixtures_config = {
+        "2562204": [
+            {"gw": 26, "probability": 0.5},
+            {"gw": 31, "probability": 0.5},
+        ]
 
+    }
 
 min_id=46805
 

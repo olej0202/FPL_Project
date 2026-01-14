@@ -3,7 +3,7 @@ import joblib
 import numpy as np
 from datetime import datetime
 
-from GenerateConfig import Manual_Player_Risk,Manual_team_offensive_adjustments, Manual_team_defensive_adjustments,Manual_NewPlayer_Adjustments,Manual_Player_Adjustments,NEW_TEAMS
+from GenerateConfig import Manual_Player_Risk,Manual_team_offensive_adjustments, Manual_team_defensive_adjustments,Manual_NewPlayer_Adjustments,Manual_Player_Adjustments,NEW_TEAMS,fixtures_config
 
 def Xmins(current_players):
     xmins=pd.read_csv("GenerateXmins.csv").iloc[:,1:]
@@ -36,6 +36,8 @@ def next_opp(team, n_future, fixtures,kmeans,team_code,current_teams):
     filtered_fix["event"].astype(int).isin([int(x) for x in n_future])
 ]
     print(filtered_fix)
+    fix_ids=filtered_fix["code"].values
+    fix_percent=filtered_fix["probability"].values
     teams_dataset=pd.read_csv("Team_data_newest3.csv")
 
     GW_now=filtered_fix["event"].values[0]
@@ -102,7 +104,7 @@ def next_opp(team, n_future, fixtures,kmeans,team_code,current_teams):
         defcons.append(next_opp_newest_row["Rolling_Defcon_against"])
         kl+=1
 
-    return clusters,home,n_matches,XGH,XGCH,XGA,XGCA,XGC_DEF,XGC_FWD,XGC_MID,own_XG,GW,played_XGC,played_XG,opp_code,defcons
+    return clusters,home,n_matches,XGH,XGCH,XGA,XGCA,XGC_DEF,XGC_FWD,XGC_MID,own_XG,GW,played_XGC,played_XG,opp_code,defcons,fix_ids,fix_percent
 
 import pandas as pd
 from datetime import datetime
@@ -332,6 +334,79 @@ def add_team_share_per90(
     out.to_csv("Player_Prediction_set.csv", index=False)
     return out
 
+def Fixture_Config(fixture_path):
+    import re
+    # --- 1) Config (the "first" format you asked for) ---
+    
+
+    # --- 2) Load CSV ---
+    path = fixture_path
+    df = pd.read_csv(path)
+
+    # --- 3) Find the fixture-id column automatically (so it works even if name differs) ---
+    possible_id_cols = ["code"]
+    fixture_col = next((c for c in possible_id_cols if c in df.columns), None)
+    if fixture_col is None:
+        raise ValueError(
+            f"Could not find a fixture id column. Tried {possible_id_cols}. "
+            f"Available columns: {list(df.columns)}"
+        )
+
+    # Ensure consistent type for matching (strings)
+    df[fixture_col] = df[fixture_col].astype(str)
+
+    # --- 4) Ensure probability column exists; default 1 for all rows ---
+    PROB_COL = "probability"
+    if PROB_COL not in df.columns:
+        df[PROB_COL] = 1.0
+    else:
+        df[PROB_COL] = df[PROB_COL].fillna(1.0)
+
+    # --- 5) Expand affected fixtures into multiple rows (one per GW) ---
+    expanded_rows = []
+    affected_ids = set(fixtures_config.keys())
+
+    # Split df into affected and unaffected
+    affected_mask = df[fixture_col].isin(affected_ids)
+    df_unaffected = df.loc[~affected_mask].copy()
+    df_unaffected[PROB_COL] = 1.0  # explicitly set to 1 for unaffected
+
+    df_affected = df.loc[affected_mask].copy()
+
+    def gw_to_event(gw_str: str):
+        """
+        Convert 'GW22' / 'GW 22' -> 22 (int).
+        If no digits found, returns original string.
+        """
+        m = re.search(r"(\d+)", str(gw_str))
+        return int(m.group(1)) if m else gw_str
+
+    # For each affected fixture row in the CSV, create new rows per config GW
+    for _, row in df_affected.iterrows():
+        fix_id = row[fixture_col]
+        options = fixtures_config.get(fix_id, [])
+
+        for opt in options:
+            new_row = row.copy()
+            new_row["event"] = gw_to_event(opt["gw"])   # set event to the GW number
+            new_row[PROB_COL] = float(opt["probability"])
+            expanded_rows.append(new_row)
+
+    # Build final df: unaffected + expanded
+    df_final = pd.concat([df_unaffected, pd.DataFrame(expanded_rows)], ignore_index=True)
+
+    # --- 6) (Optional but recommended) sanity-check: probabilities per fixture sum to ~1 for affected fixtures ---
+    # You can comment this out if you don’t want it.
+    prob_sums = df_final[df_final[fixture_col].isin(affected_ids)].groupby(fixture_col)[PROB_COL].sum()
+    bad = prob_sums[(prob_sums - 1.0).abs() > 1e-6]
+    if len(bad) > 0:
+        raise ValueError(f"Probabilities do not sum to 1 for: {bad.to_dict()}")
+    df_final = df_final.sort_values(by="code", ascending=True)
+    # --- 7) Save result ---
+    out_path = r"Fantasy_season_Fixtures_EXPANDED.csv"
+    df_final.to_csv(out_path, index=False)
+
+
 
 
 
@@ -339,8 +414,9 @@ def add_team_share_per90(
     
 def GeneratePlayerData(time_list, fixture_path,current_player_path, current_teams_path):
     Xmins(current_player_path)
+    Fixture_Config(fixture_path)
     current_data=pd.read_csv("Player_future.csv").iloc[:,1:]
-    fixture_data=pd.read_csv(fixture_path).iloc[:,1:]
+    fixture_data=pd.read_csv("Fantasy_season_Fixtures_EXPANDED.csv").iloc[:,1:]
     current_players=pd.read_csv(current_player_path).iloc[:,1:]
     current_teams=pd.read_csv(current_teams_path)
     season_data=pd.read_csv("Unwanted_players.csv").iloc[:,1:]
@@ -382,7 +458,9 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
 
     xmins=pd.read_csv("GenerateXmins2.csv")
     xmins["name"] = xmins["name"].apply(lambda n: name_map.get(n, n))
+    xmins["GW"] = xmins["GW"].astype(int)
     cbi_data["name"] = cbi_data["name"].apply(lambda n: name_map.get(n, n))
+    
     current_players["name"] = current_players["name"].apply(lambda n: name_map.get(n, n))
 
     names=relevant_players["name"].unique()
@@ -405,6 +483,11 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
         else:
             pen_number=player_pen_takers["Is_taker"].values[0]
         playerMins=xmins[xmins["name"]==name]
+        mins_lookup = (
+            playerMins[["name", "GW", "Final_minutes_Adjusted"]]
+            .rename(columns={"Final_minutes_Adjusted": "average_minutes"})
+            .set_index(["name", "GW"])
+            )
         playerCBI=cbi_data[cbi_data["name"]==name]
         minutes=playerMins["Final_minutes_Adjusted"].values
         print(name)
@@ -522,7 +605,7 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
             
 
                 
-        clusters,home,n_matches,XGH,XGCH,XGA,XGCA,XGC_DEF,XGC_FWD,XGC_MID,own_XG,GW,played_XGC,played_XG,opp_code,defcons=next_opp(team_id, time_list, fixture_data,kmeans,team_code,current_teams)
+        clusters,home,n_matches,XGH,XGCH,XGA,XGCA,XGC_DEF,XGC_FWD,XGC_MID,own_XG,GW,played_XGC,played_XG,opp_code,defcons,fix_ids,fix_percent=next_opp(team_id, time_list, fixture_data,kmeans,team_code,current_teams)
         
         
         #if endre stats for nye spillere på et lag
@@ -567,7 +650,9 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
         
         if(len(clusters)<2):
             break
+        
         for i in range(len(clusters)):
+                gw_i = int(GW[i])
                 player_row["Cluster"] = clusters[i]
                 player_row["XGH"] = XGH[i]
                 player_row["XGCH"] = XGCH[i]
@@ -585,8 +670,10 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
                 player_row["Team"]=team_code
                 player_row["Average_Overscore"]=overscore
                 player_row["Average_OverAssist"]=overassist
-                player_row["average_minutes"] = minutes[i]
+                player_row["average_minutes"] = float(mins_lookup.loc[(name, gw_i), "average_minutes"]) if (name, gw_i) in mins_lookup.index else 1.0
                 player_row["Opp_defcon"] = defcons[i]
+                player_row["fix_id"] = fix_ids[i]
+                player_row["fix_percentage"] = fix_percent[i]
                 
         
                 

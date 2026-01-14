@@ -77,16 +77,22 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
             player_model=[]
             player_preds.append(players[i])
             GW=df["GW"].values[h]
+            fix_id=df["fix_id"].values[h]
+            fix_precent=df["fix_percentage"].values[h]
             player_preds.append(GW)
             player_model.append(players[i])
             player_model.append(GW)
-            team_stats=team_data[(team_data["team_code"]==team) & (team_data["GW"]==GW)].copy()
+            team_stats=team_data[(team_data["team_code"]==team) & (team_data["fixture_code"]==fix_id)].copy()
 
             if(len(team_stats)<1):
-                continue
-            team_xg=team_stats["XG"].values[0]*1.1
+                team_xg=0
+                team_CS=0
+                other_metric=0
+                
+            team_xg=team_stats["XG"].values[0]*1
             team_xgc=team_stats["XGC"].values[0]
-            team_CS=team_stats["CS"].values[0]
+            team_CS=team_stats["CS"].values[0]*1
+            other_metric=1
 
             xggc=df["opposition_xgc"].values[h]
 
@@ -130,13 +136,13 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
             
             if(pred_variable=="bps"):
                real_variable="bonus" 
-               player_preds.append(max(df['Rolling_adjusted_BPS'].values[h]*0.4+df['Rolling_adjusted_BPS_2'].values[h]*0.6,5)*0.04)
+               player_preds.append(max(df['Rolling_adjusted_BPS'].values[h]*0.4+df['Rolling_adjusted_BPS_2'].values[h]*0.6,5)*0.04*other_metric)
                
             if(pred_variable=="CBI"):
                real_variable="cbi" 
                #player_preds.append((min(12,df['CBI'].values[h])**2)/12)
                opp_defcon_fac=1+(df['Opp_defcon'].values[h]-75)/75
-               player_preds.append(df['CBI'].values[h]*opp_defcon_fac)
+               player_preds.append(df['CBI'].values[h]*opp_defcon_fac*other_metric)
         
             if(pred_variable=="Fantasy"):
                real_variable="total_points"
@@ -684,9 +690,60 @@ def CLUSTER_preds(pred_variable):
     out_df.to_csv(out_path, index=False)
 
 
+import pandas as pd
 
-    
-def Generate_point_predictions():
+def normalize_player_gws(
+    df: pd.DataFrame,
+    gws,
+    summed_metrics,
+    first_metrics=None,
+    key_cols=("name", "GW"),
+):
+
+    df = df.copy()
+
+    # --- Normalize GW type ---
+    df["GW"] = pd.to_numeric(df["GW"], errors="coerce").astype("Int64")
+    gws = list(map(int, list(gws)))
+
+    # --- Decide which columns are "first" ---
+    if first_metrics is None:
+        first_metrics = [c for c in df.columns if c not in set(key_cols) | set(summed_metrics)]
+
+    # --- 1) Collapse to 1 row per (name, GW) with mixed aggregation ---
+    agg = {c: "sum" for c in summed_metrics}
+    agg.update({c: "first" for c in first_metrics})
+
+    collapsed = (
+        df.groupby(list(key_cols), as_index=False, dropna=False)
+          .agg(agg)
+    )
+
+    # --- 2) Ensure 1 row per (name, GW) for every GW in gws ---
+    names = collapsed["name"].unique()
+    full_index = pd.MultiIndex.from_product([names, gws], names=["name", "GW"])
+
+    expanded = (
+        collapsed.set_index(["name", "GW"])
+                 .reindex(full_index)
+                 .reset_index()
+    )
+
+    # For rows we added (missing), summed metrics should be 0
+    for c in summed_metrics:
+        expanded[c] = expanded[c].fillna(0)
+
+    # For "first" columns (e.g., position), fill from the player's existing values
+    # This assumes these columns are constant per player across GWs (typical for position, ids, etc.)
+    for c in first_metrics:
+        expanded[c] = expanded.groupby("name")[c].ffill().bfill()
+
+    return expanded
+
+
+
+
+def Generate_point_predictions(GW_list):
     players=pd.read_csv("Player_prediction_set.csv").iloc[:,1:]
     unique_players=players["name"].unique()
     xgb_goals = Get_rows("XGB", "GOALS").sort_values(by=["GW", "opp_stat"])
@@ -808,7 +865,7 @@ def Generate_point_predictions():
             except:
                 fantasy.append(0)
 
-        columns_to_include=["name","position", "GW","Rolling_adjusted_BPS", "Rolling_adjusted_XG", "Rolling_adjusted_XA","played_XGC","average_minutes"]
+        columns_to_include=["name","position", "GW","Rolling_adjusted_BPS", "Rolling_adjusted_XG", "Rolling_adjusted_XA","played_XGC","average_minutes","fix_percentage"]
             
         New_dataset=player_data[columns_to_include]
         New_dataset["Goal_pred"]=goals
@@ -852,7 +909,15 @@ def Generate_point_predictions():
         
         
         full_df=pd.concat([full_df, summary_dataset], axis=0, ignore_index=True)
-    full_df.to_csv("Model_Predictions.csv")
+        
+
+    summed_metrics = ["Goal_pred", "Assist_pred", "Bonus_pred", "GC_pred", "Fantasy_pred", "CBI_pred", "Points_prediction"]  # <- put your "sum" columns here
+    full_df["fix_percentage"] = pd.to_numeric(full_df["fix_percentage"], errors="coerce").fillna(1.0)
+
+    full_df[summed_metrics] = full_df[summed_metrics].mul(full_df["fix_percentage"], axis=0)
+    
+    df_out = normalize_player_gws(full_df, GW_list, summed_metrics)
+    df_out.to_csv("Model_Predictions.csv")
 
 def Get_rows(model, metric):
     string=model+"_"+metric+".csv"

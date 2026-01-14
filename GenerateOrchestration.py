@@ -53,10 +53,10 @@ def Data_Transformation(n_points_in_future, current_fixture_path,current_player_
     GeneratePlayerData(time_list, current_fixture_path,current_player_path,current_team_path)
 
     
-def Data_Predictions(current_fixture_path,current_team_path, n_points_in_future):
+def Data_Predictions(current_fixture_path,current_team_path, n_points_in_future,time_list):
     GenerateTeamPredictions( current_fixture_path,current_team_path, n_points_in_future)
     Make_Predictions()
-    Generate_point_predictions()
+    Generate_point_predictions(time_list)
     
    
 def Data_Generation(ownership,budget,GW_list_wildcard,GW_list_freehit,current_player_path,current_team_path,current_season_path ):
@@ -110,14 +110,14 @@ def Main_Orchestration():
     
     
     #EXTARCT DATA
-    Data_Extraction(season,is_new_season,has_been_error)
+    #Data_Extraction(season,is_new_season,has_been_error)
     
     
     #Transform data
     Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos)
     
     #Predict data
-    Data_Predictions(current_fixture_path,current_team_path, n_points_in_future)
+    Data_Predictions(current_fixture_path,current_team_path, n_points_in_future,time_list)
     
     Data_Generation(ownership,budget,GW_list_wildcard,GW_list_freehit,current_player_path,current_team_path,current_season_path )
     

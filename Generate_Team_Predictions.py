@@ -214,7 +214,9 @@ def GenerateTeamPredictions1(fixture_path, current_team_path,horizon):
     recall = recall_score(y_CS_test, y_pred_CS_binary, pos_label=1)
     print(f"Recall (actual clean sheets captured): {recall:.3f}")
 
-    fixture_data=pd.read_csv(fixture_path)[["event","team_a","team_h","finished"]]
+    fixture_data = (
+        pd.read_csv(fixture_path)[["code","event","team_a","team_h","finished"]].rename(columns={"code": "fixture_code"})
+        )
     team_code_data=pd.read_csv(current_team_path)[["name","code","id"]]
 
     team_data=pd.read_csv("Team_data_newest3.csv")[["code","XGA","XGCA","XGH","XGCH","XG_slope","XGC_slope","XG_avg","XGC_avg","Rolling_Threat","Rolling_Threat_Against","roll10_xpts","roll10_deep"]]
@@ -236,7 +238,7 @@ def GenerateTeamPredictions1(fixture_path, current_team_path,horizon):
 
     df_merged = fixture_data.merge(team_code_data, left_on='team_a', right_on='id', how='left')  # Left join to keep all rows from df2
     df_merged = df_merged.merge(team_code_data, left_on='team_h', right_on='id', how='left')  # Left join to keep all rows from df2
-    predict_data=df_merged[["event"]]
+    predict_data=df_merged[["fixture_code", "event"]].copy()
     predict_data["team_a"]=df_merged["code_x"].values
     predict_data["team_h"]=df_merged["code_y"].values
     predict_data["team_a_name"]=df_merged["name_x"].values
@@ -375,6 +377,7 @@ def GenerateTeamPredictions1(fixture_path, current_team_path,horizon):
 
     result_df=pd.DataFrame()
     result_df["GW"]=df_merged["event"]
+    result_df["fixture_code"] = df_merged["fixture_code"]
     result_df["pred"]=df_merged["event"]-min_event+1
     result_df["home_team"]=df_merged["team_h_name"]
     result_df["away_team"]=df_merged["team_a_name"]
@@ -389,7 +392,7 @@ def GenerateTeamPredictions1(fixture_path, current_team_path,horizon):
     result_df["test_opp_XGC"]=css2
     result_df.to_csv("Team_prediction_visual1.csv")
 
-    home_df=result_df[["GW", "pred"]]
+    home_df=result_df[["fixture_code", "GW", "pred"]].copy()
     home_df["team_name"]=result_df["home_team"]
     home_df["team_code"]=result_df["home_code"]
     home_df["XG"]=result_df["home_goals"]
@@ -400,7 +403,7 @@ def GenerateTeamPredictions1(fixture_path, current_team_path,horizon):
     home_df["Opponent_team"]=result_df["away_team"]
     home_df["Home"]='H'
 
-    away_df=result_df[["GW", "pred"]]
+    away_df=result_df[["fixture_code", "GW", "pred"]].copy()
     away_df["team_name"]=result_df["away_team"]
     away_df["team_code"]=result_df["away_code"]
     away_df["XG"]=result_df["away_goals"]
