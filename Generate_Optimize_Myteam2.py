@@ -362,7 +362,7 @@ def optimize_my_team(
         for i in range(num_players)
         for t in gameweeks
     ) + lpSum(
-        0.15 * saved_transfers[t] for t in gameweeks
+        0.2 * saved_transfers[t] for t in gameweeks
     )
 
     if bench_points_gw in gameweeks:

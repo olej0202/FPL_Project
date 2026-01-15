@@ -142,7 +142,7 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
                real_variable="cbi" 
                #player_preds.append((min(12,df['CBI'].values[h])**2)/12)
                opp_defcon_fac=1+(df['Opp_defcon'].values[h]-75)/75
-               player_preds.append(df['CBI'].values[h]*opp_defcon_fac*other_metric)
+               player_preds.append(df['CBI'].values[h]**2*opp_defcon_fac*other_metric)
         
             if(pred_variable=="Fantasy"):
                real_variable="total_points"
@@ -889,12 +889,12 @@ def Generate_point_predictions(GW_list):
         if(position=="FWD"):
             summary_dataset["Points_prediction"]=(2+summary_dataset["Goal_pred"]*5.3
                                                   +summary_dataset["Assist_pred"]*3.5
-                                                  +summary_dataset["Bonus_pred"])*0.85+0.15*summary_dataset["Fantasy_pred"]+(summary_dataset["CBI_pred"]/12)*0.0*2
+                                                  +summary_dataset["Bonus_pred"])*0.9+0.1*summary_dataset["Fantasy_pred"]+(summary_dataset["CBI_pred"]/12)*0.0*2
         elif(position=="MID"):
             summary_dataset["Points_prediction"]=(2+summary_dataset["Goal_pred"]*5.5
                                                   +summary_dataset["Assist_pred"]*3.5
                                                   +summary_dataset["Bonus_pred"]
-                                                  +summary_dataset["GC_pred"]*0.8)*0.85+0.15*summary_dataset["Fantasy_pred"]+(np.minimum(1, summary_dataset["CBI_pred"] / 12) * 0.8+0.2*cbi_hit_rate)*0.8*2
+                                                  +summary_dataset["GC_pred"]*0.8)*0.9+0.1*summary_dataset["Fantasy_pred"]+(np.minimum(1, summary_dataset["CBI_pred"] / 144) * 0.8+0.2*cbi_hit_rate)*0.8*2
             
         elif(position=="GKP"):
             summary_dataset["Points_prediction"]=(2
@@ -905,7 +905,7 @@ def Generate_point_predictions(GW_list):
             summary_dataset["Points_prediction"]=(1+summary_dataset["Goal_pred"]*6.3
                                                   +summary_dataset["Assist_pred"]*3.5
                                                   +summary_dataset["Bonus_pred"]
-                                                  +summary_dataset["GC_pred"]*5)*0.85+0.15*summary_dataset["Fantasy_pred"]+(np.minimum(1, summary_dataset["CBI_pred"] / 10) * 0.8+0.2*cbi_hit_rate)*0.9*2
+                                                  +summary_dataset["GC_pred"]*5)*0.9+0.1*summary_dataset["Fantasy_pred"]+(np.minimum(1, summary_dataset["CBI_pred"] / 100) * 0.8+0.2*cbi_hit_rate)*0.9*2
         
         
         full_df=pd.concat([full_df, summary_dataset], axis=0, ignore_index=True)
