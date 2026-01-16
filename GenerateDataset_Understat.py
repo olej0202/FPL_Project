@@ -384,6 +384,17 @@ def Generate_Understat_dataset(current_players,run_player_pos):
 
     agg_df["npxG_share"] = (agg_df["npxG"] / team_tot_xg).replace([np.inf, -np.inf], np.nan).fillna(0).clip(upper=0.5)
     agg_df["xA_share"] = (agg_df["xA"] / team_tot_xa).replace([np.inf, -np.inf], np.nan).fillna(0).clip(upper=0.5)
+    
+    team_tot_shots = agg_df.groupby(["date","player_team"])["shots"].transform("sum")
+    team_tot_kp    = agg_df.groupby(["date","player_team"])["key_passes"].transform("sum")
+
+    agg_df["shots_share"] = (
+        agg_df["shots"] / team_tot_shots
+    ).replace([np.inf, -np.inf], np.nan).fillna(0).clip(upper=5)
+
+    agg_df["key_passes_share"] = (
+        agg_df["key_passes"] / team_tot_kp
+    ).replace([np.inf, -np.inf], np.nan).fillna(0).clip(upper=3)
 
     print(agg_df)
 
@@ -468,6 +479,16 @@ def Generate_Understat_dataset(current_players,run_player_pos):
         agg_enriched.groupby(["player_team", "pos_group"])["xA_share"]
           .transform(lambda s: s.rolling(window=15, min_periods=1).mean())
     )
+    agg_enriched["Rolling_Shots_Share"] = (
+        agg_enriched.groupby(["player_team", "pos_group"])["shots_share"]
+          .transform(lambda s: s.rolling(window=15, min_periods=1).mean())
+    )
+
+    agg_enriched["Rolling_KeyPasses_Share"] = (
+        agg_enriched.groupby(["player_team", "pos_group"])["key_passes_share"]
+          .transform(lambda s: s.rolling(window=15, min_periods=1).mean())
+    )
+
 
     def adjust_measure_safe(g: pd.DataFrame, measure_name: str,
                             w_threat: float = 0.5, w_xgc: float = 0.5,
@@ -585,7 +606,8 @@ def Generate_Understat_dataset(current_players,run_player_pos):
     
     teams_to_flatten = NEW_TEAMS_NAME
 
-    cols_to_avg = ["XGIndex", "XAIndex", "Rolling_XG_Share", "Rolling_XA_Share", "Rolling_XG_Share2", "Rolling_XA_Share2"]
+    cols_to_avg = ["XGIndex", "XAIndex", "Rolling_XG_Share", "Rolling_XA_Share", "Rolling_XG_Share2", "Rolling_XA_Share2","Rolling_Shots_Share","Rolling_KeyPasses_Share"]
+
 
     # mask of rows that belong to those teams
     mask = latest["player_team"].isin(teams_to_flatten)

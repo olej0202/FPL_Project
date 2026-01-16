@@ -104,17 +104,17 @@ def Main_Orchestration():
     GW_list_wildcard=time_list
     GW_list_freehit=[time_list[0]]
     
-    run_player_pos=1
+    run_player_pos=0
     
     print(time_list)
     
     
     #EXTARCT DATA
-    Data_Extraction(season,is_new_season,has_been_error)
+    #Data_Extraction(season,is_new_season,has_been_error)
     
     
     #Transform data
-    Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos)
+    #Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos)
     
     #Predict data
     Data_Predictions(current_fixture_path,current_team_path, n_points_in_future,time_list)

@@ -449,34 +449,69 @@ function recomputeMetrics(rows) {
     // XG formula (home/away adjustments)
     let xg;
     if (r.Home === "H") {
-      xg =-0.17+
-        (ownXG + ownAttE) * 0.37 +
-        0.37 * (oppXGC - oppDefE) +
-         0.275* ((ownXG + ownAttE)) * ((oppXGC - oppDefE));
+      const A = ownXG + ownAttE;
+      const B = oppXGC - oppDefE;
+
+      xg =Math.exp(0.5*(-2.66+1.24*A+1.34*B-0.14*A*B));
     } else {
-      xg =-0.17+
-        (ownXG - ownAttE) * 0.37 +
-        0.37 * (oppXGC + oppDefE) +
-         0.275* ((ownXG - ownAttE)) * ((oppXGC + oppDefE));
+      const A = ownXG - ownAttE;
+      const B = oppXGC + oppDefE;
+
+      xg =Math.exp(0.5*(-2.66+1.24*A+1.34*B-0.14*A*B));
+
     }
 
     // CS formula: 0.4 / (0.6 * own_XGC_avg + 0.4 * opponent_XG_avg)
-    const denom = 0.5 * ownXGC + 0.5 * oppXG;
 
     let csProb;
-    if (r.Home === "H") {
-      csProb =0.65+
-        (ownXGC + ownDEFE) * -0.16 +
-        -0.15 * (oppXG - oppATTE) +
-         0.01* ((ownXGC + ownDEFE)) * ((oppXG - oppATTE));
-    } else {
-      csProb =0.58+
-        (ownXGC - ownDEFE) * -0.08 +
-        -0.13 * (oppXG + oppATTE) +
-         0.01* ((ownXGC - ownDEFE)) * ((oppXG + oppATTE));
-    }
+    let mu;
 
-    csProb = Math.max(0, Math.min(1, csProb)); // clamp [0,1]
+
+if (r.Home === "H") {
+  const A = ownXGC + ownDEFE;
+  const B = oppXG - oppATTE;
+  const alpha = 0.00000009;
+
+
+  const eta =
+    -1.3052097488 +
+    0.6577300426 * A +
+    0.6056006874 * B +
+    (-0.0603581036) * A*B;
+
+  const mu = Math.exp(eta);
+
+
+  if (alpha < 1e-6) {
+    csProb = Math.exp(-mu);              // Poisson limit (recommended here)
+  } else {
+    csProb = Math.pow(1 / (1 + alpha * mu), 1 / alpha);
+  }
+
+
+} else {
+  const A = ownXGC - ownDEFE;
+  const B = oppXG + oppATTE;
+  const alpha = 0.00000009;
+
+
+  const eta =
+    -1.3052097488 +
+    0.6577300426 * A +
+    0.6056006874 * B +
+    (-0.0603581036) * A*B;
+
+  const mu = Math.exp(eta);
+
+
+  if (alpha < 1e-6) {
+    csProb = Math.exp(-mu);              // Poisson limit (recommended here)
+  } else {
+    csProb = Math.pow(1 / (1 + alpha * mu), 1 / alpha);
+  }
+}
+
+
 
     return {
       ...r,

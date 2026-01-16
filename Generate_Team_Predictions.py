@@ -828,11 +828,24 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     new_input_XG["def_fac"]=new_input_XG["Opposition_XGC"]*0.7+0.3*new_input_XG["Opposition_XGC_avg"]
     
          
-    xg_stat_h=-0.17+(new_input_XG["off_fac"]*new_input_XG["def_fac"])*0.275+(new_input_XG["off_fac"]*0.37+0.37*new_input_XG["def_fac"])
+    eta = (
+    -2.66
+    + 1.24 * new_input_XG["off_fac"]
+    + 1.34 * new_input_XG["def_fac"]
+    - 0.14 * new_input_XG["off_fac"] * new_input_XG["def_fac"]
+    )
+
+    xg_stat_h = np.exp(0.5 * eta)
     
     new_input_XG2["off_fac"]=new_input_XG2["Own_XG"]*0.7+0.3*new_input_XG2["Own_XG_avg"]
     new_input_XG2["def_fac"]=new_input_XG2["Opposition_XGC"]*0.7+0.3*new_input_XG2["Opposition_XGC_avg"]
-    xg_stat_a=-0.17+(new_input_XG2["off_fac"]*new_input_XG2["def_fac"])*0.275+(new_input_XG2["off_fac"]*0.37+0.37*new_input_XG2["def_fac"])
+    eta2 = (-2.66
+        + 1.24 * new_input_XG2["off_fac"]
+        + 1.34 * new_input_XG2["def_fac"]
+        - 0.14 * new_input_XG2["off_fac"] * new_input_XG2["def_fac"]
+        )
+
+    xg_stat_a = np.exp(0.5 * eta2)
     
     xg2 = proba2 @ weights    
 
@@ -858,7 +871,14 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     
     
          
-    css_stat_home=0.4/(new_input_XGC["Own_XGC"]*0.6+0.4*new_input_XGC["Opposition_XG"])
+    css_stat_home = np.exp(
+        -np.exp(
+            -1.3052097488
+            + 0.6577300426 * new_input_XGC["Own_XGC"]
+            + 0.6056006874 * new_input_XGC["Opposition_XG"]
+            - 0.0603581036 * new_input_XGC["Own_XGC"] * new_input_XGC["Opposition_XG"]
+        )
+    )
 
     
 
@@ -879,7 +899,14 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     new_input_XGC2['Opposition_RollingXG']=df_merged["Rolling_XG_y"]
     new_input_XGC2['Own_RollingXGC']=df_merged["Rolling_XGC_x"]
     
-    css_stat_away=0.4/(new_input_XGC2["Own_XGC"]*0.6+0.4*new_input_XGC2["Opposition_XG"])
+    css_stat_away = np.exp(
+        -np.exp(
+            -1.3052097488
+            + 0.6577300426 * new_input_XGC2["Own_XGC"]
+            + 0.6056006874 * new_input_XGC2["Opposition_XG"]
+            - 0.0603581036 * new_input_XGC2["Own_XGC"] * new_input_XGC2["Opposition_XG"]
+        )
+    )
 
 
     new_input_XGC = new_input_XGC[features].astype(float)
@@ -935,10 +962,10 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     result_df["away_team"]=df_merged["team_a_name"]
     result_df["home_code"]=df_merged["team_h"]
     result_df["away_code"]=df_merged["team_a"]
-    result_df["home_goals"]=(xg*0.7+0.3*xg_stat_h)
-    result_df["away_goals"]=(xg2*0.7+0.3*xg_stat_a)
-    result_df["Clean_Sheet_home"]=css_test*0.7+0.3*css_stat_home
-    result_df["Clean_Sheet_away"]=css_test2*0.7+0.3*css_stat_away
+    result_df["home_goals"]=(xg*0.3+0.7*xg_stat_h)
+    result_df["away_goals"]=(xg2*0.3+0.7*xg_stat_a)
+    result_df["Clean_Sheet_home"]=css_test*0.2+0.8*css_stat_home
+    result_df["Clean_Sheet_away"]=css_test2*0.2+0.8*css_stat_away
     result_df["test_XG"]=xg_stat_h
     result_df["test_cluster"]=xg_stat_a
     result_df["test_opp_XGC"]=xg2
@@ -982,8 +1009,8 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
     team_pred1=pd.read_csv("Team_prediction1.csv")
     team_pred2=pd.read_csv("Team_prediction2.csv")
     
-    team_pred1[["XG","XGC"]]=team_pred1[["XG","XGC"]]*0.5+team_pred2[["XG","XGC"]]*0.5
-    team_pred1[["CS"]]=team_pred1[["CS"]]*0.5+team_pred2[["CS"]]*0.5
+    team_pred1[["XG","XGC"]]=team_pred1[["XG","XGC"]]*0.3+team_pred2[["XG","XGC"]]*0.7
+    team_pred1[["CS"]]=team_pred1[["CS"]]*0.4+team_pred2[["CS"]]*0.6
 
     
     team_pred1.to_csv("Team_prediction.csv")
@@ -999,3 +1026,323 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
 
 if __name__ == "__main__":
     pass
+
+
+"""
+    Fits statsmodels.discrete.NegativeBinomial to estimate beta and alpha.
+    Returns (model, beta_series, alpha_float).
+
+    IMPORTANT:
+    - For true NB2, y should be a nonnegative integer count.
+    - If y is continuous (e.g. XG), this is pragmatic but not statistically pure.
+    model = sm.NegativeBinomial(y, X).fit(disp=False)
+    params = model.params.copy()
+
+    # Alpha extraction robustly
+    if "alpha" in params.index:
+        alpha = float(params["alpha"])
+        beta = params.drop("alpha")
+        return model, beta, alpha
+
+    # Otherwise alpha might be logged under some name
+    alpha_candidates = [c for c in params.index if "alpha" in c.lower()]
+    if not alpha_candidates:
+        raise RuntimeError(f"Could not find alpha-like parameter in {list(params.index)}")
+
+    alpha_name = alpha_candidates[0]
+    alpha_raw = float(params[alpha_name])
+    # If the name suggests log/ln, exponentiate
+    if "ln" in alpha_name.lower() or "log" in alpha_name.lower():
+        alpha = float(np.exp(alpha_raw))
+    else:
+        alpha = alpha_raw
+
+    beta = params.drop(alpha_name)
+    return model, beta, alpha
+
+
+# -------------------------
+# Predict mu and CS probability
+# -------------------------
+def predict_mu(beta: pd.Series, X: pd.DataFrame) -> np.ndarray:
+    # mu = exp(X beta)
+    eta = X.values @ beta.values
+    return np.exp(eta)
+
+
+def cs_prob_poisson(mu_concede: np.ndarray) -> np.ndarray:
+    # Poisson P(Y=0) = exp(-mu)
+    return np.exp(-mu_concede)
+
+
+def cs_prob_nb2(mu_concede: np.ndarray, alpha: float) -> np.ndarray:
+    # NB2 P(Y=0) = (1 / (1 + alpha*mu))^(1/alpha)
+    # Numerically stable even when alpha is small-ish, but if alpha ~ 0 use Poisson.
+    if alpha < 1e-8:
+        return cs_prob_poisson(mu_concede)
+    return (1.0 / (1.0 + alpha * mu_concede)) ** (1.0 / alpha)
+
+
+# -------------------------
+# Print explicit deployable formulas
+# -------------------------
+def print_formula_concede(beta: pd.Series, alpha: float, use_nb2: bool = True):
+    b0 = float(beta.get("const", np.nan))
+    b1 = float(beta.get("Own_XGC", np.nan))
+    b2 = float(beta.get("Opposition_XG", np.nan))
+    b3 = float(beta.get("Interaction", np.nan))
+
+    print("\n" + "=" * 100)
+    print("FORMULA A: PREDICTED GOALS CONCEDED (mu_concede) + CLEAN SHEET PROBABILITY/Odds")
+    print("=" * 100)
+
+    print("\n1) Interaction:")
+    print("   interaction = Own_XGC * Opposition_XG")
+
+    print("\n2) Linear predictor (eta_concede):")
+    print(f"   eta_concede = {b0:.10f} + ({b1:.10f})*Own_XGC + ({b2:.10f})*Opposition_XG + ({b3:.10f})*interaction")
+
+    print("\n3) Predicted mean goals conceded:")
+    print("   mu_concede = exp(eta_concede)")
+
+    print("\n4) Clean sheet probability:")
+    if use_nb2:
+        print(f"   alpha = {alpha:.10f}")
+        print("   P(CS=1) = (1 / (1 + alpha*mu_concede))^(1/alpha)")
+        if alpha < 1e-8:
+            print("   NOTE: alpha ~ 0 => NB2 ~ Poisson => P(CS=1) ~ exp(-mu_concede)")
+    else:
+        print("   P(CS=1) = exp(-mu_concede)")
+
+    print("\n5) Clean sheet odds:")
+    print("   odds = P(CS=1) / (1 - P(CS=1))")
+    print("   decimal_odds = 1 / P(CS=1)")
+
+    print("=" * 100 + "\n")
+
+
+def print_formula_for(beta: pd.Series, alpha: float):
+    g0 = float(beta.get("const", np.nan))
+    g1 = float(beta.get("Own_XG", np.nan))
+    g2 = float(beta.get("Opposition_XGC", np.nan))
+    g3 = float(beta.get("Interaction_for", np.nan))
+
+    print("\n" + "=" * 100)
+    print("FORMULA B: PREDICTED GOALS FOR / XG (mu_for)")
+    print("=" * 100)
+
+    print("\n1) Interaction:")
+    print("   interaction_for = Own_XG * Opposition_XGC")
+
+    print("\n2) Linear predictor (eta_for):")
+    print(f"   eta_for = {g0:.10f} + ({g1:.10f})*Own_XG + ({g2:.10f})*Opposition_XGC + ({g3:.10f})*interaction_for")
+
+    print("\n3) Predicted mean goals for / XG:")
+    print("   mu_for = exp(eta_for)")
+
+    print("\n(If you fit NB2 here too, alpha is printed for completeness.)")
+    print(f"   alpha_for = {alpha:.10f}")
+
+    print("=" * 100 + "\n")
+
+
+# -------------------------
+# Main pipeline (your data prep + fitting + prediction)
+# -------------------------
+def GenerateTeamPredictions1(
+    csv_path: str = "Team_data_transformed2.csv",
+    months_test: int = 2,
+    # Provide real count columns if you have them, otherwise fall back to XGC/XG:
+    goals_conceded_col: str = "Goals_Conceded",
+    goals_scored_col: str = "Goals_Scored",
+    allow_xg_proxy_if_missing: bool = True,
+    clamp_low: float = 0.1,
+    clamp_high: float = 0.99,
+):
+    # ---- Load
+    team_df = pd.read_csv(csv_path).iloc[:, 1:].copy()
+
+    # ---- Fill slopes
+    team_df["XG_slope"] = team_df["XG_slope"].fillna(team_df["XG_slope"].median())
+    team_df["XGC_slope"] = team_df["XGC_slope"].fillna(team_df["XGC_slope"].median())
+
+    # ---- KMeans clusters
+    cluster_data = team_df[["XG_avg", "XGC_avg"]].values
+    kmeans = KMeans(n_clusters=4, random_state=31)
+    kmeans.fit(cluster_data)
+    team_df["Cluster"] = kmeans.predict(cluster_data)
+
+    # ---- Opponent table
+    opponent_df = team_df[[
+        "code", "XGA", "XGCA", "XGH", "XGCH", "kickoff_time",
+        "XG_slope", "XGC_slope", "XG_avg", "XGC_avg", "Cluster",
+        "Rolling_Threat", "Rolling_Threat_Against",
+        "roll10_xpts", "roll10_deep", "roll10_deep_allowed"
+    ]].copy()
+
+    pred_df = pd.merge(
+        team_df, opponent_df,
+        left_on=["opponent", "kickoff_time"],
+        right_on=["code", "kickoff_time"],
+        how="left",
+        suffixes=("_team", "_opp")
+    )
+
+    # ---- Your per-team rolling cluster features
+    new_pred_df = pd.DataFrame()
+    latest_df = pd.DataFrame()
+
+    for team_code in pred_df["code_team"].unique():
+        code_df = pred_df[pred_df["code_team"] == team_code].copy()
+        code_df = code_df.sort_values(by="kickoff_time")
+        code_df["kickoff_time"] = pd.to_datetime(code_df["kickoff_time"])
+
+        code_df["Cluster_XG"] = code_df.groupby("Cluster_opp")["XG"].transform(
+            lambda x: x.shift(1).rolling(window=6, min_periods=1).mean()
+        )
+        code_df["Cluster_XGC"] = code_df.groupby("Cluster_opp")["XGC"].transform(
+            lambda x: x.shift(1).rolling(window=6, min_periods=1).mean()
+        )
+        code_df["Cluster_CS"] = code_df.groupby("Cluster_opp")["Clean_Sheet"].transform(
+            lambda x: x.shift(1).rolling(window=6, min_periods=1).mean()
+        )
+
+        code_df["Cluster_XG"] = code_df["Cluster_XG"].fillna(code_df["Cluster_XG"].mean())
+        code_df["Cluster_XGC"] = code_df["Cluster_XGC"].fillna(code_df["Cluster_XGC"].mean())
+        code_df["Cluster_CS"] = code_df["Cluster_CS"].fillna(code_df["Cluster_CS"].mean())
+
+        latest_rows = code_df.loc[
+            code_df.groupby("Cluster_opp")["kickoff_time"].idxmax(),
+            ["code_team", "Cluster_opp", "Cluster_XG", "Cluster_XGC", "Cluster_CS"]
+        ]
+        latest_df = pd.concat([latest_df, latest_rows], ignore_index=True)
+        new_pred_df = pd.concat([new_pred_df, code_df], ignore_index=True)
+
+    latest_df.to_csv("Team_cluster_data.csv", index=False)
+    pred_df = new_pred_df.copy()
+
+    # ---- Base model dataframe (extend here if you have score columns!)
+    Model_pred = pred_df[["name", "kickoff_time", "was_home", "XG", "XGC", "Clean_Sheet"]].copy()
+    Model_pred["kickoff_time"] = pd.to_datetime(Model_pred["kickoff_time"])
+
+    Model_pred["Own_XG"] = np.where(Model_pred["was_home"] == 1, pred_df["XGH_team"], pred_df["XGA_team"])
+    Model_pred["Own_XGC"] = np.where(Model_pred["was_home"] == 1, pred_df["XGCH_team"], pred_df["XGCA_team"])
+    Model_pred["Opposition_XG"] = np.where(Model_pred["was_home"] == 1, pred_df["XGA_opp"], pred_df["XGH_opp"])
+    Model_pred["Opposition_XGC"] = np.where(Model_pred["was_home"] == 1, pred_df["XGCA_opp"], pred_df["XGCH_opp"])
+
+    # ---- Count targets (preferred) else proxy
+    # Goals Conceded
+    if goals_conceded_col in pred_df.columns:
+        Model_pred[goals_conceded_col] = pred_df[goals_conceded_col].values
+        y_concede_col = goals_conceded_col
+    else:
+        if not allow_xg_proxy_if_missing:
+            raise ValueError(f"Missing '{goals_conceded_col}' and allow_xg_proxy_if_missing=False.")
+        y_concede_col = "XGC"  # fallback proxy
+        Model_pred[y_concede_col] = Model_pred["XGC"].astype(float)
+
+    # Goals Scored
+    if goals_scored_col in pred_df.columns:
+        Model_pred[goals_scored_col] = pred_df[goals_scored_col].values
+        y_for_col = goals_scored_col
+    else:
+        if not allow_xg_proxy_if_missing:
+            raise ValueError(f"Missing '{goals_scored_col}' and allow_xg_proxy_if_missing=False.")
+        y_for_col = "XG"  # fallback proxy
+        Model_pred[y_for_col] = Model_pred["XG"].astype(float)
+
+    # ---- Train/test split (last N months test)
+    train_df, test_df = safe_month_split(Model_pred, "kickoff_time", months_test=months_test)
+    train_df = train_df[train_df["kickoff_time"] > "2022-12-31"].copy()
+
+    # ---- Fit model A (concede)
+    Xc_train = build_features_concede(train_df)
+    yc_train = train_df[y_concede_col].copy()
+
+    # If it's meant to be count, enforce nonneg int
+    if y_concede_col != "XGC":
+        yc_train = yc_train.astype(int).clip(lower=0)
+
+    nb_concede_model, beta_concede, alpha_concede = fit_nb2_discrete(yc_train, Xc_train)
+
+    # ---- Fit model B (for / XG)
+    Xf_train = build_features_for(train_df)
+    yf_train = train_df[y_for_col].copy()
+
+    if y_for_col not in ["XG"]:
+        yf_train = yf_train.astype(int).clip(lower=0)
+
+    nb_for_model, beta_for, alpha_for = fit_nb2_discrete(yf_train, Xf_train)
+
+    # ---- Print explicit formulas with fitted parameters
+    print_formula_concede(beta_concede, alpha_concede, use_nb2=True)
+    print_formula_for(beta_for, alpha_for)
+
+    # ---- Predict on test (concede)
+    Xc_test = build_features_concede(test_df)
+    mu_concede = predict_mu(beta_concede, Xc_test)
+
+    # Clean sheet probability
+    p_cs = cs_prob_nb2(mu_concede, alpha_concede)
+
+    # ---- Predict on test (for / XG)
+    Xf_test = build_features_for(test_df)
+    mu_for = predict_mu(beta_for, Xf_test)
+
+    # ---- Assemble outputs
+    out = test_df.copy()
+    out["Pred_Goals_Conceded_mu"] = mu_concede
+    out["Pred_XG_mu"] = mu_for  # "goals for mean" if trained on goals; "xG mean" if trained on XG proxy
+    out["CS_prob_raw"] = p_cs
+
+    # Clamp predictions only (not labels)
+    out["CS_prob"] = out["CS_prob_raw"].clip(clamp_low, clamp_high)
+
+    out["CS_odds"] = out["CS_prob"] / (1.0 - out["CS_prob"])
+    out["CS_decimal_odds"] = 1.0 / out["CS_prob"]
+
+    # ---- Preview
+    show_cols = [
+        "name", "kickoff_time", "was_home",
+        "Own_XG", "Own_XGC", "Opposition_XG", "Opposition_XGC",
+        "Pred_XG_mu", "Pred_Goals_Conceded_mu",
+        "CS_prob", "CS_decimal_odds"
+    ]
+    show_cols = [c for c in show_cols if c in out.columns]
+    print(out[show_cols].head(30))
+
+    return {
+        "nb_concede_model": nb_concede_model,
+        "beta_concede": beta_concede,
+        "alpha_concede": alpha_concede,
+        "nb_for_model": nb_for_model,
+        "beta_for": beta_for,
+        "alpha_for": alpha_for,
+        "train_df": train_df,
+        "test_df_predictions": out,
+        "y_concede_col_used": y_concede_col,
+        "y_for_col_used": y_for_col,
+    }
+
+
+# -------------------------
+# Run
+# -------------------------
+if __name__ == "__main__":
+    results = GenerateTeamPredictions1(
+        csv_path="Team_data_transformed2.csv",
+        months_test=2,
+        goals_conceded_col="Goals_Conceded",  # <-- CHANGE to your real column if present
+        goals_scored_col="Goals_Scored",      # <-- CHANGE to your real column if present
+        allow_xg_proxy_if_missing=True,       # fallback to XGC/XG if goals columns aren't present
+        clamp_low=0.1,
+        clamp_high=0.99,
+    )
+
+    # If you want to access fitted coefficients directly:
+    print("\nConcede betas:\n", results["beta_concede"])
+    print("Concede alpha:", results["alpha_concede"])
+
+    print("\nFor/XG betas:\n", results["beta_for"])
+    print("For/XG alpha:", results["alpha_for"])
+"""

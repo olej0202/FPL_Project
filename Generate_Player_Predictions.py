@@ -142,7 +142,7 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
                real_variable="cbi" 
                #player_preds.append((min(12,df['CBI'].values[h])**2)/12)
                opp_defcon_fac=1+(df['Opp_defcon'].values[h]-75)/75
-               player_preds.append(df['CBI'].values[h]**2*opp_defcon_fac*other_metric)
+               player_preds.append(df['CBI'].values[h]*opp_defcon_fac*other_metric)
         
             if(pred_variable=="Fantasy"):
                real_variable="total_points"
@@ -178,7 +178,8 @@ def XGB_Make_dataset(position,position2):
                    ,"Rolling_adjusted_XG2","Rolling_adjusted_XGC2","Rolling_adjusted_XA2","rolling_GS_historic","rolling_XG_historic","goals_scored","expected_goals"
                   ,"assists","rolling_Assist_historic","rolling_Assist","rolling_XA_historic","expected_assists","rolling_GC_historic","rolling_XGC_historic","clean_sheets",
                    "expected_goals_conceded", "rolling_bps","rolling_bps_historic","rolling_bonus_historic","rolling_bonus","bonus","rolling_key_passes","rolling_shots","Own_Attacking_form","Rolling_BPS_per_90"
-                  ,"XG_Mean_difference","XA_Mean_difference","Shot_Mean_difference","Adjusted_XG_Mean_difference","Threat_Mean_difference","rolling_Threat2","XG_Mean","Rolling_creativity2","rolling_Adjusted_XG_historic","rolling_Adjusted_XA_historic"]]
+                  ,"XG_Mean_difference","XA_Mean_difference","Shot_Mean_difference","Adjusted_XG_Mean_difference","Threat_Mean_difference","rolling_Threat2","XG_Mean","Rolling_creativity2","rolling_Adjusted_XG_historic","rolling_Adjusted_XA_historic"
+                  ,"Rolling_adjusted_XG_per90","Rolling_adjusted_Threat_per90"]]
     
     
     names= df['name'].unique()
@@ -232,10 +233,10 @@ def XGB_Make_dataset(position,position2):
     if(position=='GOALS'):
         trainingdf=trainingdf[trainingdf['position'].isin(["FWD", "DEF", "MID"])]
         trainingdf=trainingdf[["expected_goals","opposition_xgc","Rolling_adjusted_XG_form","rolling_shots",
-                               "Team","name","time","minutes","season","rolling_Threat2","position","rolling_XG_historic","Rolling_adjusted_XG2","rolling_Adjusted_XG_historic"]]
+                               "Team","name","time","minutes","season","rolling_Threat2","position","rolling_XG_historic","Rolling_adjusted_XG2","rolling_Adjusted_XG_historic","Rolling_adjusted_XG_per90","Rolling_adjusted_Threat_per90"]]
         
         test_columns=["expected_goals","played_XGC","Rolling_adjusted_XG_form","rolling_shots",
-                               "Team","name","time","average_minutes","season","rolling_Threat","position","rolling_XG_historic","Rolling_adjusted_XG","rolling_Adjusted_XG_historic"]
+                               "Team","name","time","average_minutes","season","rolling_Threat","position","rolling_XG_historic","Rolling_adjusted_XG","rolling_Adjusted_XG_historic","Rolling_adjusted_XG_per90","Rolling_adjusted_Threat_per90"]
         target_value="expected_goals"
         
     elif(position=='Assist2'):
@@ -894,7 +895,7 @@ def Generate_point_predictions(GW_list):
             summary_dataset["Points_prediction"]=(2+summary_dataset["Goal_pred"]*5.5
                                                   +summary_dataset["Assist_pred"]*3.5
                                                   +summary_dataset["Bonus_pred"]
-                                                  +summary_dataset["GC_pred"]*0.8)*0.9+0.1*summary_dataset["Fantasy_pred"]+(np.minimum(1, summary_dataset["CBI_pred"] / 144) * 0.8+0.2*cbi_hit_rate)*0.8*2
+                                                  +summary_dataset["GC_pred"]*0.8)*0.9+0.1*summary_dataset["Fantasy_pred"]+(np.minimum(1, summary_dataset["CBI_pred"] / 12) * 0.7+0.3*cbi_hit_rate)*0.8*2
             
         elif(position=="GKP"):
             summary_dataset["Points_prediction"]=(2
@@ -905,7 +906,7 @@ def Generate_point_predictions(GW_list):
             summary_dataset["Points_prediction"]=(1+summary_dataset["Goal_pred"]*6.3
                                                   +summary_dataset["Assist_pred"]*3.5
                                                   +summary_dataset["Bonus_pred"]
-                                                  +summary_dataset["GC_pred"]*5)*0.9+0.1*summary_dataset["Fantasy_pred"]+(np.minimum(1, summary_dataset["CBI_pred"] / 100) * 0.8+0.2*cbi_hit_rate)*0.9*2
+                                                  +summary_dataset["GC_pred"]*5)*0.9+0.1*summary_dataset["Fantasy_pred"]+(np.minimum(1, summary_dataset["CBI_pred"] / 10) * 0.7+0.3*cbi_hit_rate)*0.9*2
         
         
         full_df=pd.concat([full_df, summary_dataset], axis=0, ignore_index=True)

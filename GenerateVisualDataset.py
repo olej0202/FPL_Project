@@ -457,8 +457,8 @@ def Player_adjustements(current_player_path):
     cbi_opp=1+(df["Opp_defcon"]-75)/75
 
     df["CBI_Percent"] = (
-        df["defcon_avg_hit_rate"] * 0.2
-        + 0.8 * cbi_scaled
+        df["defcon_avg_hit_rate"] * 0.3
+        + 0.7 * cbi_scaled
     )*cbi_opp
 
     bps_scaled = np.maximum(4, df["Rolling_adjusted_BPS"]*0.4+df["Rolling_adjusted_BPS_2"]*0.6) 
@@ -581,12 +581,12 @@ def Player_adjustements(current_player_path):
     tmp = tmp.reset_index()
     tmp[["name", "Team"]] = pd.DataFrame(tmp["player_team"].tolist(), index=tmp.index)
     tmp = tmp.drop(columns=["player_team"])
-    
+
     # 4) Fill missing rows: prefer previous GW, otherwise next GW
     # (ffill handles "previous"; bfill handles leading gaps)
     tmp = tmp.sort_values(["name", "Team", "GW"])
     tmp = tmp.groupby(["name", "Team"], as_index=False, group_keys=False).apply(lambda g: g.ffill().bfill())
-    
+
     merged_df = tmp
 
     # MERGE med verdi og navn og selected
