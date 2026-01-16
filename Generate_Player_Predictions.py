@@ -108,7 +108,7 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
 
                #own_data_xg_pred=((df['Rolling_adjusted_XG'].values[h]*0.7+df['rolling_Adjusted_XG_historic'].values[h]*0.3)*df["opposition_xgc"].values[h]+df['Share_of_XG'].values[h]*team_xg)*(0.5)
                own_data_xg_pred=(pred*team_xg)*1+0.0*((df['Rolling_adjusted_XG'].values[h]*0.7+df['rolling_Adjusted_XG_historic'].values[h]*0.3)*df["opposition_xgc"].values[h])
-               team_data_xg_pred=(df['Understat_POSXG'].values[h]*df["opposition_xgc"].values[h]*0.3+0.7*df['Understat_POSXG_Share'].values[h]*team_xg)
+               team_data_xg_pred=(df['Understat_POSXG'].values[h]*df["opposition_xgc"].values[h]*0+1*df['Understat_POSXG_Share'].values[h]*team_xg)
         
                player_preds.append(own_data_xg_pred*(1-fordelings_faktor)+fordelings_faktor*team_data_xg_pred+df['Team_Pen_Data'].values[h]*df['Pen_Number'].values[h]*0.8)
                real_variable="expected_goals" 
@@ -122,7 +122,7 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
                pred=pred*0.7+0.3*stat_pred
                #own_data_xa_pred=((df['Rolling_adjusted_XA'].values[h]*0.7+df['rolling_Adjusted_XA_historic'].values[h]*0.3)*df["opposition_xgc"].values[h]+df['Share_of_XA'].values[h]*team_xg)*(0.5)
                own_data_xa_pred=(pred*team_xg)*0.8+0.2*((df['Rolling_adjusted_XA'].values[h]*0.7+df['rolling_Adjusted_XA_historic'].values[h]*0.3)*df["opposition_xgc"].values[h])
-               team_data_xa_pred=(df['Understat_POSXA'].values[h]*df["opposition_xgc"].values[h]*0.3+0.7*df['Understat_POSXA_Share'].values[h]*team_xg)
+               team_data_xa_pred=(df['Understat_POSXA'].values[h]*df["opposition_xgc"].values[h]*0+1*df['Understat_POSXA_Share'].values[h]*team_xg)
                player_preds.append(own_data_xa_pred*(1-fordelings_faktor)+fordelings_faktor*team_data_xa_pred) 
                       
                

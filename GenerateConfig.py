@@ -57,7 +57,7 @@ Manual_min=[
         {"name": "Bruno_Borges Fernandes", "type": "const",   "GW": "any", "value": 90},
         {"name": "Rayan_Aït-Nouri", "type": "const",   "GW": "any", "value": 1},
         {"name": "Antoine_Semenyo", "type": "const",   "GW": "any", "value": 60},
-        {"name": "Rayan_Cherki", "type": "const",   "GW": "any", "value": 70},
+        {"name": "Rayan_Cherki", "type": "const",   "GW": "any", "value": 65},
         #Afcon
         {"name": "Mohamed_Salah", "type": "adjust_from",   "GW": "24", "value": 90},
         {"name": "Ismaïla_Sarr", "type": "adjust_from",   "GW": "24", "value": 90},
