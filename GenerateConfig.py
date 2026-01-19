@@ -39,6 +39,7 @@ Manual_NewPlayer_Adjustments={
 Manual_Player_Adjustments={
         "Mohamed_Salah":["Florian_Wirtz"],
         "Igor_Thiago Nascimento Rodrigues":["Liam_Delap"],
+        "Rayan_Cherki":["Tijjani_Reijnders"],
         
      }
 
@@ -59,16 +60,16 @@ Manual_min=[
         {"name": "Antoine_Semenyo", "type": "const",   "GW": "any", "value": 60},
         {"name": "Rayan_Cherki", "type": "const",   "GW": "any", "value": 65},
         #Afcon
-        {"name": "Mohamed_Salah", "type": "adjust_from",   "GW": "24", "value": 90},
-        {"name": "Ismaïla_Sarr", "type": "adjust_from",   "GW": "24", "value": 90},
-        {"name": "Bryan_Mbeumo", "type": "adjust_from",   "GW": "23", "value": 90},
-        {"name": "Amad_Diallo", "type": "adjust_from",   "GW": "23", "value": 90},
-        {"name": "Iliman_Ndiaye", "type": "adjust_from",   "GW": "24", "value": 90},
-        {"name": "Dango_Ouattara", "type": "adjust_from",   "GW": "22", "value": 90},
-        {"name": "Alex_Iwobi", "type": "adjust_from",   "GW": "24", "value": 90},
+        {"name": "Mohamed_Salah", "type": "adjust_from",   "GW": "23", "value": 90},
+        {"name": "Ismaïla_Sarr", "type": "adjust_from",   "GW": "23", "value": 90},
+        {"name": "Bryan_Mbeumo", "type": "const",   "GW": "any", "value": 90},
+        {"name": "Amad_Diallo", "type": "const",   "GW": "any", "value": 90},
+        {"name": "Iliman_Ndiaye", "type": "adjust_from",   "GW": "23", "value": 90},
+        {"name": "Dango_Ouattara", "type": "adjust_from",   "GW": "23", "value": 90},
+        {"name": "Alex_Iwobi", "type": "adjust_from",   "GW": "23", "value": 90},
         
         {"name": "Cole_Palmer", "type": "const",   "GW": "any", "value": 90},
-        {"name": "Anthony_Gordon", "type": "const",   "GW": "any", "value": 90},
+        {"name": "Anthony_Gordon", "type": "const",   "GW": "any", "value": 75},
         {"name": "Viktor_Gyökeres", "type": "const",   "GW": "any", "value": 80},
 
     ]

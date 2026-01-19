@@ -126,18 +126,18 @@ def Generate_Lineups():
 
 def Generate_Team_threats():
     df = pd.read_csv("Team_AggTest.csv")
-    team_df = df[["opponent", "pos_group", "date", "shots", "npxG_share", "xA_share", "key_passes"]].copy()
+    team_df = df[["opponent", "pos_group", "date", "shots_share", "npxG_share", "xA_share", "key_passes_share"]].copy()
 
     # ensure proper dtypes
     team_df["date"] = pd.to_datetime(team_df["date"], errors="coerce")
-    metrics = ["shots", "npxG_share", "xA_share", "key_passes"]
+    metrics = ["shots_share", "npxG_share", "xA_share", "key_passes_share"]
     team_df[metrics] = team_df[metrics].apply(pd.to_numeric, errors="coerce")
 
     # sort by time within each group
     team_df = team_df.sort_values(["opponent", "pos_group", "date"])
 
     # EWM per opponent × pos_group (span=15)
-    span = 15
+    span = 20
     ewm_cols = [f"{c}_ewm" for c in metrics]
     team_df[ewm_cols] = (
         team_df
@@ -153,23 +153,14 @@ def Generate_Team_threats():
         .tail(1)[["opponent", "pos_group"] + ewm_cols]
     )
 
-    # Share of team shots for each pos_group
-    team_totals_shots = latest_ewm.groupby("opponent")["shots_ewm"].transform("sum")
-    latest_ewm["shots_share_pct"] = latest_ewm["shots_ewm"] / team_totals_shots
-    latest_ewm["shots_share_pct"] = latest_ewm["shots_share_pct"].fillna(0.0)
-
-    # Share of team key passes for each pos_group
-    team_totals_pass = latest_ewm.groupby("opponent")["key_passes_ewm"].transform("sum")
-    latest_ewm["pass_share_pct"] = latest_ewm["key_passes_ewm"] / team_totals_pass
-    latest_ewm["pass_share_pct"] = latest_ewm["pass_share_pct"].fillna(0.0)
 
     # Threat metrics (rename Treat → Threat if that’s what you intend)
-    latest_ewm["Goal_Threat"] = latest_ewm["npxG_share_ewm"] * 0.6 + 0.4 * latest_ewm["shots_share_pct"]
-    latest_ewm["Assist_Threat"] = latest_ewm["xA_share_ewm"] * 0.6 + 0.4 * latest_ewm["pass_share_pct"]
+    latest_ewm["Goal_Threat"] = latest_ewm["npxG_share_ewm"] * 0.6 + 0.4 * latest_ewm["shots_share_ewm"]
+    latest_ewm["Assist_Threat"] = latest_ewm["xA_share_ewm"] * 0.6 + 0.4 * latest_ewm["key_passes_share_ewm"]
     latest_ewm["Threat"] = latest_ewm["Goal_Threat"] * 0.6 + 0.4 * latest_ewm["Assist_Threat"]
 
     # Keep only relevant columns
-    latest_ewm = latest_ewm[["opponent", "pos_group", "Threat"]]
+
 
     # Filter out GK / SUB
     pg = latest_ewm["pos_group"].str.upper().str.strip()

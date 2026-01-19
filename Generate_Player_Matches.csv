@@ -468,7 +468,7 @@
 466,Giovanni_Leoni,Leoni,Unknown for understat,,no-match,,SUB,1
 467,Kieran_Morrison,Morrison,Unknown for understat,,no-match,,SUB,1
 468,Wellity_Lucky,Lucky,Unknown for understat,,no-match,,SUB,1
-469,Antoine_Semenyo,Semenyo,Antoine Semenyo,100.0,name-strict,Antoine Semenyo,LW,1
+469,Antoine_Semenyo,Semenyo,Antoine Semenyo,100.0,name-strict,Antoine Semenyo,RW,1
 470,James_Trafford,Trafford,James Trafford,100.0,name-strict,James Trafford,GK,1
 471,Ederson_Santana de Moraes,Ederson M.,Ederson,90.0,name-relaxed,Ederson,GK,1
 472,Stefan_Ortega Moreno,Ortega Moreno,Stefan Ortega Moreno,100.0,name-strict,Stefan Ortega Moreno,GK,1
@@ -529,7 +529,7 @@
 527,Bruno_Borges Fernandes,B.Fernandes,Bruno Fernandes,95.0,name-strict,Bruno Fernandes,MC,1
 528,Matheus_Santos Carneiro Da Cunha,Cunha,Matheus Cunha,90.0,web_name-relaxed,Matheus Cunha,AMC,1
 529,Marcus_Rashford,Rashford,Marcus Rashford,100.0,name-strict,Marcus Rashford,FW,1
-530,Amad_Diallo,Amad,Amadou Diallo,91.66666666666666,name-relaxed,Amadou Diallo,SUB,1
+530,Amad_Diallo,Amad,Amadou Diallo,91.66666666666666,name-relaxed,Amadou Diallo,AMC,1
 531,Antony_dos Santos,Antony,Antony,90.0,name-relaxed,Antony,RW,1
 532,Mason_Mount,Mount,Mason Mount,100.0,name-strict,Mason Mount,AMC,1
 533,Carlos_Henrique Casimiro,Casemiro,Casemiro,100.0,web_name-strict,Casemiro,DM,1
@@ -795,4 +795,5 @@
 793,Temple_Ojinnaka,Ojinnaka,Unknown for understat,,no-match,,SUB,1
 794,Ethan_Sutherland,Sutherland,Unknown for understat,,no-match,,SUB,1
 795,Conor_Gallagher,Sutherland,Unknown for understat,,no-match,,MC,1
-
+796,Danny_Imray,Sutherland,Unknown for understat,,no-match,,SUB,1
+797,Kaye_Furo,Sutherland,Unknown for understat,,no-match,,SUB,1
