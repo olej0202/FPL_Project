@@ -426,7 +426,7 @@ const computeMeasures = useCallback(
     const csFactor = Number(playerRow.CS_factor) || 0;
 
     // These already reflect multiple fixtures because we summed them in teamLookup
-    const xg = Number(teamRow.XG) || 0;
+    const xg = Number(teamRow.XG*0.9) || 0;
     const cs = Number(teamRow.CS) || 0;
 
     // per-match minutes adjustment
@@ -439,7 +439,7 @@ const computeMeasures = useCallback(
 
     // ✅ Per-match components must scale by expected matches
     const basePoints =
-      (defaultPoints + bps + cbi * 1.5) * minutesAdj * matchCount;
+      (defaultPoints + bps*0.8 + cbi * 1.5) * minutesAdj * matchCount;
 
     // cs is already expected CS across fixtures (0..matchCount), so no extra matchCount needed
     const points =

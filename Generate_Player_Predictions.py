@@ -232,10 +232,10 @@ def XGB_Make_dataset(position,position2):
 
     if(position=='GOALS'):
         trainingdf=trainingdf[trainingdf['position'].isin(["FWD", "DEF", "MID"])]
-        trainingdf=trainingdf[["expected_goals","opposition_xgc","Rolling_adjusted_XG_form","rolling_shots",
+        trainingdf=trainingdf[["expected_goals","opposition_xgc","Own_Attacking_form","rolling_shots",
                                "Team","name","time","minutes","season","rolling_Threat2","position","rolling_XG_historic","Rolling_adjusted_XG2","rolling_Adjusted_XG_historic","Rolling_adjusted_XG_per90","Rolling_adjusted_Threat_per90"]]
         
-        test_columns=["expected_goals","played_XGC","Rolling_adjusted_XG_form","rolling_shots",
+        test_columns=["expected_goals","played_XGC","Own_Attacking_form","rolling_shots",
                                "Team","name","time","average_minutes","season","rolling_Threat","position","rolling_XG_historic","Rolling_adjusted_XG","rolling_Adjusted_XG_historic","Rolling_adjusted_XG_per90","Rolling_adjusted_Threat_per90"]
         target_value="expected_goals"
         
@@ -325,6 +325,20 @@ def XGB_Train(rounds, eta,max_depth,gamma,min_c,dtrain,target_value,train,Y_trai
         xgb_model = xgb.train(params, dtrain, num_rounds)
         return xgb_model
 
+def XGB_Train_Quantile(rounds, eta, max_depth, gamma, min_c, dtrain, alpha):
+    params = {
+        "objective": "reg:quantileerror",
+        "quantile_alpha": alpha,     # 0.25 or 0.75
+        "eval_metric": "quantile",
+        "tree_method": "hist",
+        "grow_policy": "lossguide",
+        "max_depth": max_depth,
+        "eta": eta,
+        "lambda": 2,
+        "gamma": gamma,
+        "min_child_weight": min_c,
+    }
+    return xgb.train(params, dtrain, rounds)
 
 def XGB_Make_Pred(trainingdf,target_value,position2,column_list,predlength,position,test_columns):
     X_train=pd.DataFrame()
@@ -398,6 +412,8 @@ def XGB_Make_Pred(trainingdf,target_value,position2,column_list,predlength,posit
     preds_list=test['name'].unique()
     train.to_csv("Debugg2.csv")
     model=XGB_Train(60,0.1,5,0.1,6,dtrain,target_value,train,Y_train )
+    model25= XGB_Train_Quantile(60, 0.1, 5, 0.1, 6, dtrain, 0.25)
+    model75  = XGB_Train_Quantile(60, 0.1, 5, 0.1, 6, dtrain, 0.75)
     model2=SVR(kernel='rbf', C=0.5, epsilon=0.1,gamma=0.1)
     #model2=xgb.XGBRegressor(objective='reg:squarederror', n_estimators=100, learning_rate=0.01, max_depth=5,min_child_weight=6)
 
@@ -439,14 +455,18 @@ def XGB_Make_Pred(trainingdf,target_value,position2,column_list,predlength,posit
                 row_pred.append(y_pred[0][0]*0+y_pred[0][1]*1+y_pred[0][2]*2+y_pred[0][3]*3)
             else:
                 row_pred.append(y_pred[0])
+            y25 = float(model25.predict(dtest)[0])
+            y75 = float(model75.predict(dtest)[0])
             row_pred.append(filtered_df["position"].values[0])
             row_pred.append(gw)
             row_pred.append(row["opposition_xgc"].values[0])
+            row_pred.append(y25)
+            row_pred.append(y75)
 
 
             total.append(row_pred)
 
-    column_list = ["Name", "pred", "position", "GW","opp_stat" ]
+    column_list = ["Name", "pred", "position", "GW","opp_stat","25","75" ]
 
     data_f=pd.DataFrame(total, columns=column_list)
     data_f.to_csv(f"XGB_{position}.csv", index=False)
