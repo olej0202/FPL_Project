@@ -601,7 +601,129 @@ def Player_shots(Understat_data: str):
     Player_shot_df.to_csv("Bronze/Understat_Playershots.csv", index=False)
     return Player_shot_df
 
+def Player_assists(Understat_data: str):
+    assist_df2 = pd.read_csv("Bronze/Understat_shots.csv")
+    understat_df = pd.read_csv(Understat_data)
 
+    # ---- Parse dates ----
+    assist_df2["date"] = pd.to_datetime(assist_df2["date"], errors="coerce")
+    understat_df["date"] = pd.to_datetime(understat_df["date"], errors="coerce")
+
+    assist_df2["match_date"] = assist_df2["date"].dt.normalize()
+    understat_df["match_date"] = understat_df["date"].dt.normalize()
+
+    # Ensure assist player code nullable int
+    assist_df2["Assist_player_code"] = pd.to_numeric(
+        assist_df2["Assist_player_code"], errors="coerce"
+    ).astype("Int64")
+
+    # Ensure consistent player name column
+    if "Assist Player name" in assist_df2.columns and "Assist_Player_name" not in assist_df2.columns:
+        assist_df2 = assist_df2.rename(columns={"Assist Player name": "Assist_Player_name"})
+
+    # ---- Aggregate per player per match_date ----
+    Player_ass_df = (
+        assist_df2
+        .groupby(["Assist_player_code", "Assist_Player_name", "match_date"], dropna=False)
+        .agg(
+            opponent_team=("opponent_team", "min"),
+            own_team=("own_team", "min"),
+            xg_created=("XG_created", "sum"),
+        )
+        .reset_index()
+        .rename(columns={"match_date": "date"})
+    )
+
+    # Map (Assist_player_code, date) -> Understat player_id
+    player_id_map = (
+        assist_df2
+        .groupby(["Assist_player_code", "match_date"], dropna=False)["Assist_Player_id"]
+        .agg(lambda s: s.mode().iloc[0] if not s.mode().empty else s.iloc[0])
+        .reset_index()
+        .rename(columns={"match_date": "date", "Assist_Player_id": "understat_player_id"})
+    )
+
+    Player_ass_df = Player_ass_df.merge(
+        player_id_map,
+        on=["Assist_player_code", "date"],
+        how="left"
+    )
+
+    # Pull minutes/time/position
+    wanted = ["player_id", "match_date", "time", "position", "xA"]
+    understat_keep = [c for c in wanted if c in understat_df.columns]
+    understat_small = understat_df[understat_keep].copy()
+
+    if "player_id" in understat_small.columns and "match_date" in understat_small.columns:
+        understat_small = understat_small.drop_duplicates(["player_id", "match_date"])
+
+    Player_ass_df = Player_ass_df.merge(
+        understat_small,
+        left_on=["understat_player_id", "date"],
+        right_on=["player_id", "match_date"],
+        how="left"
+    )
+
+    # Cleanup merge keys
+    drop_cols = [c for c in ["player_id", "match_date"] if c in Player_ass_df.columns]
+    if drop_cols:
+        Player_ass_df = Player_ass_df.drop(columns=drop_cols)
+
+    # Remove null assist codes
+    Player_ass_df = Player_ass_df[Player_ass_df["Assist_player_code"].notna()].copy()
+
+    # ---- Feature engineering (per player, ordered) ----
+    Player_ass_df = Player_ass_df.sort_values(["Assist_player_code", "date"]).reset_index(drop=True)
+    g = Player_ass_df.groupby("Assist_player_code", group_keys=False)
+
+    # Minutes safe (clip lower 10)
+    Player_ass_df["time_safe"] = (
+        pd.to_numeric(Player_ass_df["time"], errors="coerce")
+        .replace(0, np.nan)
+        .clip(lower=10)
+    )
+
+    # Clip xg_created upper 1.1
+    Player_ass_df["xg_created_clip"] = (
+        pd.to_numeric(Player_ass_df["xg_created"], errors="coerce")
+        .clip(upper=1.1)
+    )
+
+    W = 30
+    SPAN = 30
+
+    # Rolling rate = sum(x)/sum(mins) over last 25
+    Player_ass_df["xg_created_sum_rm25"] = g["xg_created_clip"].apply(
+        lambda s: s.rolling(W, min_periods=1).sum()
+    )
+    Player_ass_df["time_sum_rm25"] = g["time_safe"].apply(
+        lambda s: s.rolling(W, min_periods=1).sum()
+    )
+    Player_ass_df["xg_created_rm25"] = (Player_ass_df["xg_created_sum_rm25"] / Player_ass_df["time_sum_rm25"]) * 90
+
+    # EWM rate = ewma(x)/ewma(mins)
+    # (optionally use min_periods=10 to reduce early volatility)
+    Player_ass_df["xg_created_mean_ewm25"] = g["xg_created_clip"].apply(
+        lambda s: s.ewm(span=SPAN, adjust=False, min_periods=1).mean()
+    )
+    Player_ass_df["time_mean_ewm25"] = g["time_safe"].apply(
+        lambda s: s.rolling(W, min_periods=1).mean()
+    )
+    Player_ass_df["xg_created_ewm25"] = (Player_ass_df["xg_created_mean_ewm25"] / Player_ass_df["time_mean_ewm25"]) * 90
+
+    # ---- Drop noisy helper columns ----
+    helper_cols = [
+        "time_safe",
+        "xg_created_clip",
+        "xg_created_sum_rm25",
+        "time_sum_rm25",
+        "xg_created_mean_ewm25",
+        "time_mean_ewm25",
+    ]
+    Player_ass_df = Player_ass_df.drop(columns=[c for c in helper_cols if c in Player_ass_df.columns])
+
+    Player_ass_df.to_csv("Bronze/Understat_PlayerAssist.csv", index=False)
+    return Player_ass_df
 
 
 def Generate_Shots_data(Understat_data,shots_path,player_path,team_path):
@@ -647,6 +769,7 @@ def Generate_Shots_data(Understat_data,shots_path,player_path,team_path):
     shots_df2.to_csv("Bronze/Understat_shots.csv", index=False)
     match_best.to_csv("Bronze/Understat_Player_match_table_best.csv", index=False)
     Player_shots (Understat_data)
+    Player_assists(Understat_data)
 
 
 
