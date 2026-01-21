@@ -47,7 +47,8 @@ Manual_Player_Adjustments={
 Manual_Player_Risk={
         "Alexander_Isak":0.6,
         "Yoane_Wissa":0.8,
-        "Antoine_Semenyo":0.8        
+        "Antoine_Semenyo":0.8,     
+        "Marc_Guéhi":0.8        
 }
 
 Manual_min=[

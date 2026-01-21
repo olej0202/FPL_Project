@@ -264,7 +264,7 @@ def add_team_share_per90(
         "Rolling_adjusted_XG","rolling_Threat","Rolling_adjusted_XA",
         "Rolling_creativity","Rolling_adjusted_BPS","rolling_XG","rolling_XA","Share_of_XG","Share_of_XA", "rolling_Adjusted_XG_historic","rolling_Adjusted_XA_historic"
         ,"Threat_Mean","Creativity_Mean","rolling_Goal_min","rolling_Assist_min","Rolling_adjusted_XG_per90","Rolling_adjusted_XA_per90"
-        ,"Rolling_adjusted_Threat_per90","Rolling_adjusted_creativity_per90"
+        ,"Rolling_adjusted_Threat_per90","Rolling_adjusted_creativity_per90","Big_Chances"
     ]
     for m in metrics:
         if m not in df.columns:
@@ -425,6 +425,7 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
     understat_team=pd.read_csv("Team_Positions_transformed_Newest.csv")
     team_pen_data=pd.read_csv("Team_Penalties.csv")
     pen_takers=pd.read_csv("GeneratePenTakers.csv")
+    player_shots=pd.read_csv("Bronze/Understat_Playershots.csv")
     kmeans = joblib.load('kmeans_Groundmodel.pkl')
     history_data=pd.read_csv("testML4.csv").iloc[:,1:]
     relevant_players = current_players.copy()
@@ -475,6 +476,31 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
             relevant_players["name"]==name
         ]  
         player_code=rel_player_player["code"].values[0] 
+        #Shot_data
+        shot_data = player_shots[player_shots["Shot_player_code"] == player_code].copy()
+
+        if shot_data.empty:
+            big_chances = 0.3
+            goal_conv = 1
+        else:
+            newest_row = shot_data.sort_values("date").tail(1).iloc[0]
+
+            bc_rm20 = newest_row.get("big_chance_rate_rm20", np.nan)
+            bc_ewm  = newest_row.get("big_chance_rate_ewm", np.nan)
+
+            if pd.isna(bc_rm20) and pd.isna(bc_ewm):
+                big_chances = 0.3
+            elif pd.isna(bc_rm20):
+                big_chances = bc_ewm
+            elif pd.isna(bc_ewm):
+                big_chances = bc_rm20
+            else:
+                big_chances = 0.5 * bc_rm20 + 0.5 * bc_ewm
+
+            goal_conv = 1+newest_row.get("Shot_conversion_sum_rm20", 1)
+            if pd.isna(goal_conv):
+                goal_conv = 1
+
         player_row2=current_players[current_players["name"]==name]
         player_pen_takers=pen_takers[pen_takers["name"]==name]
         history_player=history_data[history_data["name"]==name]
@@ -610,7 +636,7 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
         
         #if endre stats for nye spillere på et lag
         exclude_columns=["kickoff_time", "season", "position","Team","name","gamepos","CBI"]
-        overscore=player_row["Average_Overscore"].values[0]
+        overscore=goal_conv
         overassist=player_row["Average_OverAssist"].values[0]
 
         columns_to_average = [col for col in player_row.columns if col not in exclude_columns]
@@ -674,6 +700,7 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
                 player_row["Opp_defcon"] = defcons[i]
                 player_row["fix_id"] = fix_ids[i]
                 player_row["fix_percentage"] = fix_percent[i]
+                player_row["Big_Chances"] = big_chances
                 
         
                 

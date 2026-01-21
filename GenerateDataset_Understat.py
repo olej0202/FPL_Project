@@ -120,7 +120,6 @@ def Generate_Understat_dataset(current_players,run_player_pos):
         # Compute last-10 position mode per Understat player and attach
         pos_table = _last10_pos_mode_excl_sub(df_understat, player_col="player_name",
                                               pos_col="pos_group", date_col="date", window=10)
-        print(pos_table)
 
         fpl_view = match_table.merge(
             pos_table, left_on="understat_player_name", right_on="player_name", how="left"
@@ -396,7 +395,6 @@ def Generate_Understat_dataset(current_players,run_player_pos):
         agg_df["key_passes"] / team_tot_kp
     ).replace([np.inf, -np.inf], np.nan).fillna(0).clip(upper=3)
 
-    print(agg_df)
 
     positions = (agg_df["pos_group"]
                  .dropna()
