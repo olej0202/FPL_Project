@@ -40,18 +40,18 @@ class DeepNN(nn.Module):
 
 
 def Data_Extraction(season,is_new_season,has_been_error):
-    main_Extract(season, is_new_season, has_been_error)
+    #main_Extract(season, is_new_season, has_been_error)
     current_players(season)
     current_teams(season)
-    main_Extract_Understat(season)
+    #main_Extract_Understat(season)
 
 
 def Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos,Understat_path,Understat_shots_path):
     #main_Transform()
-    #Generate_Understat_dataset(current_player_path,run_player_pos)
-    #Generate_Shots_data(Understat_path,Understat_shots_path,current_player_path,current_team_path)
-    #team_data(current_team_path)
-    #GetXmins(current_player_path, time_list, scenarios=Manual_min)
+    Generate_Understat_dataset(current_player_path,run_player_pos)
+    Generate_Shots_data(Understat_path,Understat_shots_path,current_player_path,current_team_path)
+    team_data(current_team_path)
+    GetXmins(current_player_path, time_list, scenarios=Manual_min)
     GeneratePlayerData(time_list, current_fixture_path,current_player_path,current_team_path)
 
     
@@ -121,9 +121,9 @@ def Main_Orchestration():
     Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos,Understat_path,Understat_shots_path)
     
     #Predict data
-    #Data_Predictions(current_fixture_path,current_team_path, n_points_in_future,time_list)
+    Data_Predictions(current_fixture_path,current_team_path, n_points_in_future,time_list)
     
-    #Data_Generation(ownership,budget,GW_list_wildcard,GW_list_freehit,current_player_path,current_team_path,current_season_path )
+    Data_Generation(ownership,budget,GW_list_wildcard,GW_list_freehit,current_player_path,current_team_path,current_season_path )
     
     #Specials(ownership,budget,GW_list_wildcard,current_player_path )
     
