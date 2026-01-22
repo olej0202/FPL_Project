@@ -264,7 +264,7 @@ def add_team_share_per90(
         "Rolling_adjusted_XG","rolling_Threat","Rolling_adjusted_XA",
         "Rolling_creativity","Rolling_adjusted_BPS","rolling_XG","rolling_XA","Share_of_XG","Share_of_XA", "rolling_Adjusted_XG_historic","rolling_Adjusted_XA_historic"
         ,"Threat_Mean","Creativity_Mean","rolling_Goal_min","rolling_Assist_min","Rolling_adjusted_XG_per90","Rolling_adjusted_XA_per90"
-        ,"Rolling_adjusted_Threat_per90","Rolling_adjusted_creativity_per90","Big_Chances"
+        ,"Rolling_adjusted_Threat_per90","Rolling_adjusted_creativity_per90","Big_Chances","Big_Chances_Created"
     ]
     for m in metrics:
         if m not in df.columns:
@@ -426,6 +426,7 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
     team_pen_data=pd.read_csv("Team_Penalties.csv")
     pen_takers=pd.read_csv("GeneratePenTakers.csv")
     player_shots=pd.read_csv("Bronze/Understat_Playershots.csv")
+    player_assists=pd.read_csv("Bronze/Understat_PlayerAssist.csv")
     kmeans = joblib.load('kmeans_Groundmodel.pkl')
     history_data=pd.read_csv("testML4.csv").iloc[:,1:]
     relevant_players = current_players.copy()
@@ -478,9 +479,22 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
         player_code=rel_player_player["code"].values[0] 
         #Shot_data
         shot_data = player_shots[player_shots["Shot_player_code"] == player_code].copy()
+        assist_data=player_assists[player_assists["Assist_player_code"] == player_code].copy()
+        
+        if assist_data.empty:
+            big_chances_created = 0.1
+        else:
+            newest_row_ass = assist_data.sort_values("date").tail(1).iloc[0]
+
+            bcc_rm = newest_row_ass.get("bc_created_rm25", np.nan)
+
+            if pd.isna(bcc_rm):
+                big_chances_created = 0.1
+            else:
+                big_chances_created=bcc_rm
 
         if shot_data.empty:
-            big_chances = 0.3
+            big_chances = 0.1
             goal_conv = 1
         else:
             newest_row = shot_data.sort_values("date").tail(1).iloc[0]
@@ -489,7 +503,7 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
             bc_ewm  = newest_row.get("big_chance_rate_ewm", np.nan)
 
             if pd.isna(bc_rm20) and pd.isna(bc_ewm):
-                big_chances = 0.3
+                big_chances = 0.1
             elif pd.isna(bc_rm20):
                 big_chances = bc_ewm
             elif pd.isna(bc_ewm):
@@ -701,6 +715,7 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
                 player_row["fix_id"] = fix_ids[i]
                 player_row["fix_percentage"] = fix_percent[i]
                 player_row["Big_Chances"] = big_chances
+                player_row["Big_Chances_Created"] = big_chances_created
                 
         
                 

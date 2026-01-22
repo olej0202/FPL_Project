@@ -402,16 +402,6 @@ def apply_forced_to_match_best(
     return out
 
 
-
-import pandas as pd
-import numpy as np
-
-import pandas as pd
-import numpy as np
-
-import pandas as pd
-import numpy as np
-
 def Player_shots(Understat_data: str):
     shots_df2 = pd.read_csv("Bronze/Understat_shots.csv")
     understat_df = pd.read_csv(Understat_data)
@@ -514,7 +504,7 @@ def Player_shots(Understat_data: str):
     Player_shot_df["time_safe"] = (
         pd.to_numeric(Player_shot_df["time"], errors="coerce")
         .replace(0, np.nan)
-        .clip(lower=10)
+        .clip(lower=20)
     )
 
     g = Player_shot_df.groupby("Shot_player_code", group_keys=False)
@@ -539,10 +529,10 @@ def Player_shots(Understat_data: str):
 
     
     Player_shot_df["Shot_conversion_sum_ewm"] = g["Shot_conversion_sum_clip"].apply(
-        lambda s: s.ewm(span=20, adjust=False, min_periods=1).mean()
+        lambda s: s.ewm(span=25, adjust=False, min_periods=1).mean()
     )
     Player_shot_df["Shot_conversion_sum_rm20"] = g["Shot_conversion_sum_clip"].apply(
-        lambda s: s.rolling(20, min_periods=1).mean()
+        lambda s: s.rolling(25, min_periods=1).mean()
     )
 
     # ============================================================
@@ -601,6 +591,8 @@ def Player_shots(Understat_data: str):
     Player_shot_df.to_csv("Bronze/Understat_Playershots.csv", index=False)
     return Player_shot_df
 
+
+
 def Player_assists(Understat_data: str):
     assist_df2 = pd.read_csv("Bronze/Understat_shots.csv")
     understat_df = pd.read_csv(Understat_data)
@@ -629,6 +621,7 @@ def Player_assists(Understat_data: str):
             opponent_team=("opponent_team", "min"),
             own_team=("own_team", "min"),
             xg_created=("XG_created", "sum"),
+            big_chance_created=("big_chance", "sum"),
         )
         .reset_index()
         .rename(columns={"match_date": "date"})
@@ -680,13 +673,17 @@ def Player_assists(Understat_data: str):
     Player_ass_df["time_safe"] = (
         pd.to_numeric(Player_ass_df["time"], errors="coerce")
         .replace(0, np.nan)
-        .clip(lower=10)
+        .clip(lower=20)
     )
 
     # Clip xg_created upper 1.1
     Player_ass_df["xg_created_clip"] = (
         pd.to_numeric(Player_ass_df["xg_created"], errors="coerce")
-        .clip(upper=1.1)
+        .clip(upper=0.8)
+    )
+    Player_ass_df["bc_created_clip"] = (
+        pd.to_numeric(Player_ass_df["big_chance_created"], errors="coerce")
+        .clip(upper=2.8)
     )
 
     W = 30
@@ -696,10 +693,14 @@ def Player_assists(Understat_data: str):
     Player_ass_df["xg_created_sum_rm25"] = g["xg_created_clip"].apply(
         lambda s: s.rolling(W, min_periods=1).sum()
     )
+    Player_ass_df["bc_created_sum_rm25"] = g["bc_created_clip"].apply(
+        lambda s: s.rolling(W, min_periods=1).sum()
+    )
     Player_ass_df["time_sum_rm25"] = g["time_safe"].apply(
         lambda s: s.rolling(W, min_periods=1).sum()
     )
     Player_ass_df["xg_created_rm25"] = (Player_ass_df["xg_created_sum_rm25"] / Player_ass_df["time_sum_rm25"]) * 90
+    Player_ass_df["bc_created_rm25"] = (Player_ass_df["bc_created_sum_rm25"] / Player_ass_df["time_sum_rm25"]) * 90
 
     # EWM rate = ewma(x)/ewma(mins)
     # (optionally use min_periods=10 to reduce early volatility)
@@ -719,12 +720,13 @@ def Player_assists(Understat_data: str):
         "time_sum_rm25",
         "xg_created_mean_ewm25",
         "time_mean_ewm25",
+        "bc_created_sum_rm25",
+        "bc_created_clip"
     ]
     Player_ass_df = Player_ass_df.drop(columns=[c for c in helper_cols if c in Player_ass_df.columns])
 
     Player_ass_df.to_csv("Bronze/Understat_PlayerAssist.csv", index=False)
     return Player_ass_df
-
 
 def Generate_Shots_data(Understat_data,shots_path,player_path,team_path):
     mapping = {
