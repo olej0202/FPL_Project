@@ -487,14 +487,14 @@ export default function MyTeamOptimize() {
                 </button>
               </div>
               <p className="text-[11px] mt-0.5" style={{ color: "#9ca3af" }}>
-                Statistical model uses your player-adjusted predicted points.
+                Make your own statistical model and use it in the solver
                 <button
                   type="button"
                   onClick={() => navigate("/Adjustment_Analysis")}
-                  className="ml-2 inline-flex items-center gap-1 underline decoration-dotted"
+                  className="ml-2 inline-flex items-center gap-1 underline decoration-dotted mt-2"
                   style={{ color: PALETTE.gold }}
                 >
-                  Open Player Adjustments
+                  Open Your Statistical Model
                 </button>
                 {!hasStatisticalData && (
                   <span style={{ color: "#fbbf24" }}>

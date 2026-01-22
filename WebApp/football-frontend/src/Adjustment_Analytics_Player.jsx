@@ -1097,7 +1097,7 @@ const computeMeasures = useCallback(
             Player Adjustment Tool
           </h1>
           <p style={{ margin: "0.25rem 0 0", fontSize: "0.85rem", color: "#d1c3a9" }}>
-            Integrated with team predictions. Click a player and adjust minutes, Goal and Assist
+            Click a player and adjust minutes, Goal and Assist shares
             shares
           </p>
         </div>

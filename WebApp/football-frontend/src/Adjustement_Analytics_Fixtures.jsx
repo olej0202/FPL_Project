@@ -248,8 +248,8 @@ export default function FixturesPage() {
                 maxWidth: 760,
               }}
             >
-              Edit fixture scheduling uncertainty. Changes are local until you
-              press <b>Update</b>.
+              Edit fixture scheduling uncertainty. Changes are only saved after
+              pressing <b>Update</b>.
             </p>
           </div>
 
