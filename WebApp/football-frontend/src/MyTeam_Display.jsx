@@ -1,5 +1,5 @@
 // src/pages/MyTeamOverview.jsx
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
   LineChart,
   Line,
@@ -16,6 +16,9 @@ import {
   ChevronUp,
   Info,
   X,
+  ArrowLeftRight,
+  MousePointerClick,
+  Hand,
 } from "lucide-react";
 import { useMyteamData } from "./Contexts/MyTeamContext";
 import { useStatsData } from "./Contexts/StatsContext";
@@ -116,10 +119,11 @@ export default function MyTeamOverview() {
   const [gwSquads, setGwSquads] = useState({});
   // Per-GW starter indices
   const [gwStarters, setGwStarters] = useState({});
+
   // Transfer & money tracking
-  const [bankByGw, setBankByGw] = useState({}); // NEW: bank per GW (millions)
+  const [bankByGw, setBankByGw] = useState({});
   const [freeTransfersByGw, setFreeTransfersByGw] = useState({});
-  const [transferLog, setTransferLog] = useState([]); // {id, gw, squadIndex, fromName, toName, sellingPrice, incomingPrice, suggestion, createdAt}
+  const [transferLog, setTransferLog] = useState([]);
 
   // Drag / tap state
   const [dragInfo, setDragInfo] = useState(null); // desktop drag
@@ -127,8 +131,11 @@ export default function MyTeamOverview() {
 
   // Player profile overlay
   const [profilePlayer, setProfilePlayer] = useState(null);
-  const [replacementMaxValue, setReplacementMaxValue] = useState(null); // price threshold
-  const [replacementSearch, setReplacementSearch] = useState(""); // search in replacement list
+  const [replacementMaxValue, setReplacementMaxValue] = useState(null);
+  const [replacementSearch, setReplacementSearch] = useState("");
+
+  // NEW: smoother comparison UX inside overlay
+  const [compareCandidate, setCompareCandidate] = useState(null);
 
   // Keep localTeamId in sync with context teamId
   useEffect(() => {
@@ -209,12 +216,9 @@ export default function MyTeamOverview() {
     return gws;
   }, [playersData]);
 
-  const minAvailableGW =
-    availableGWs.length > 0 ? availableGWs[0] : null;
+  const minAvailableGW = availableGWs.length > 0 ? availableGWs[0] : null;
   const maxAvailableGW =
-    availableGWs.length > 0
-      ? availableGWs[availableGWs.length - 1]
-      : null;
+    availableGWs.length > 0 ? availableGWs[availableGWs.length - 1] : null;
 
   useEffect(() => {
     if (availableGWs.length > 0 && currentGW === null) {
@@ -331,9 +335,7 @@ export default function MyTeamOverview() {
 
     return currentSquad.map((player, squadIndex) => {
       const prediction = playersData.find(
-        (p) =>
-          p.name === player.name &&
-          Number(p.GW) === Number(currentGW)
+        (p) => p.name === player.name && Number(p.GW) === Number(currentGW)
       );
 
       let selectedPct = player.selected_pct;
@@ -342,10 +344,7 @@ export default function MyTeamOverview() {
       }
 
       const photo =
-        prediction?.photo ??
-        prediction?.photo_url ??
-        player.photo ??
-        null;
+        prediction?.photo ?? prediction?.photo_url ?? player.photo ?? null;
 
       return {
         ...player,
@@ -356,8 +355,7 @@ export default function MyTeamOverview() {
           : 0,
         opponent: prediction?.opponent_name || "N/A",
         selected_pct: selectedPct,
-        model_value:
-          prediction?.value != null ? Number(prediction.value) : null,
+        model_value: prediction?.value != null ? Number(prediction.value) : null,
       };
     });
   }, [currentSquad, playersData, currentGW]);
@@ -380,9 +378,7 @@ export default function MyTeamOverview() {
         const player = squadForGw[idx];
         if (!player) return;
         const prediction = playersData.find(
-          (p) =>
-            p.name === player.name &&
-            Number(p.GW) === Number(gw)
+          (p) => p.name === player.name && Number(p.GW) === Number(gw)
         );
         if (prediction?.Points_prediction) {
           sum += Number(prediction.Points_prediction);
@@ -393,78 +389,73 @@ export default function MyTeamOverview() {
     });
 
     return map;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [availableGWs, gwSquads, teamData, playersData, gwStarters]);
 
   const totalPredictedPoints = useMemo(
-    () =>
-      Object.values(gwPointsMap).reduce(
-        (acc, val) => acc + (val || 0),
-        0
-      ),
+    () => Object.values(gwPointsMap).reduce((acc, val) => acc + (val || 0), 0),
     [gwPointsMap]
   );
 
   const predictedChartData = useMemo(() => {
     if (!availableGWs.length) return [];
-    const futureGWs = availableGWs.filter(
-      (gw) => currentGW == null || gw >= currentGW
-    );
+    const futureGWs = availableGWs.filter((gw) => currentGW == null || gw >= currentGW);
     return futureGWs.map((gw) => ({
       gw,
       points: gwPointsMap[gw] || 0,
     }));
   }, [availableGWs, gwPointsMap, currentGW]);
 
-  const currentGwPoints =
-    currentGW != null ? gwPointsMap[currentGW] || 0 : null;
+  const currentGwPoints = currentGW != null ? gwPointsMap[currentGW] || 0 : null;
 
   // ---------- SWAP: BENCH -> FIELD (same team players) ----------
-  const handleBenchToFieldSwap = (gw, benchIndex, starterIndex) => {
-    const squad = getSquadForGw(gw);
-    if (!squad.length) return;
+  const handleBenchToFieldSwap = useCallback(
+    (gw, benchIndex, starterIndex) => {
+      const squad = getSquadForGw(gw);
+      if (!squad.length) return;
 
-    const currentStarterIndices = getStarterIndicesForGw(gw);
-    const starterSet = new Set(currentStarterIndices);
+      const currentStarterIndices = getStarterIndicesForGw(gw);
+      const starterSet = new Set(currentStarterIndices);
 
-    if (!starterSet.has(starterIndex) || starterSet.has(benchIndex)) {
-      return;
-    }
+      if (!starterSet.has(starterIndex) || starterSet.has(benchIndex)) {
+        return;
+      }
 
-    const newSet = new Set(starterSet);
-    newSet.delete(starterIndex);
-    newSet.add(benchIndex);
+      const newSet = new Set(starterSet);
+      newSet.delete(starterIndex);
+      newSet.add(benchIndex);
 
-    // Check formation constraints: exactly 1 GKP, min 3 DEF, 2 MID, 1 FWD
-    let gkp = 0,
-      def = 0,
-      mid = 0,
-      fwd = 0;
+      // Check formation constraints: exactly 1 GKP, min 3 DEF, 2 MID, 1 FWD
+      let gkp = 0,
+        def = 0,
+        mid = 0,
+        fwd = 0;
 
-    newSet.forEach((idx) => {
-      const pos = squad[idx]?.position;
-      if (pos === "GKP") gkp++;
-      else if (pos === "DEF") def++;
-      else if (pos === "MID") mid++;
-      else if (pos === "FWD") fwd++;
-    });
+      newSet.forEach((idx) => {
+        const pos = squad[idx]?.position;
+        if (pos === "GKP") gkp++;
+        else if (pos === "DEF") def++;
+        else if (pos === "MID") mid++;
+        else if (pos === "FWD") fwd++;
+      });
 
-    if (gkp !== 1 || def < 3 || mid < 2 || fwd < 1) {
-      return;
-    }
+      if (gkp !== 1 || def < 3 || mid < 2 || fwd < 1) {
+        return;
+      }
 
-    setGwStarters((prev) => ({
-      ...prev,
-      [gw]: Array.from(newSet),
-    }));
-  };
+      setGwStarters((prev) => ({
+        ...prev,
+        [gw]: Array.from(newSet),
+      }));
+    },
+    // We intentionally depend on stable accessors; these are safe to include broadly.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [gwSquads, gwStarters, teamData, playersData]
+  );
 
   // ---------- HELPER: RECOMPUTE STATE FROM TRANSFER LOG ----------
   const recomputeFromTransfers = (transfers) => {
-    if (
-      !teamData ||
-      !Array.isArray(teamData) ||
-      !availableGWs.length
-    ) {
+    if (!teamData || !Array.isArray(teamData) || !availableGWs.length) {
       return {
         squads: { ...gwSquads },
         bankByGw: { ...bankByGw },
@@ -528,13 +519,9 @@ export default function MyTeamOverview() {
       const baseFT =
         idx === 0
           ? baseFreeTransfers
-          : Math.max(
-              1,
-              (freeTransfers[prevGw] ?? baseFreeTransfers) + 1
-            );
+          : Math.max(1, (freeTransfers[prevGw] ?? baseFreeTransfers) + 1);
 
-      const transfersInGw = sortedTransfers.filter((t) => t.gw === gw)
-        .length;
+      const transfersInGw = sortedTransfers.filter((t) => t.gw === gw).length;
 
       freeTransfers[gw] = Math.max(0, baseFT - transfersInGw);
     });
@@ -585,10 +572,7 @@ export default function MyTeamOverview() {
         : 0;
 
     const newTransfer = {
-      id:
-        Date.now().toString(36) +
-        "-" +
-        Math.random().toString(36).slice(2),
+      id: Date.now().toString(36) + "-" + Math.random().toString(36).slice(2),
       gw: currentGW,
       squadIndex,
       fromName: template.web_name || template.name,
@@ -617,6 +601,7 @@ export default function MyTeamOverview() {
     setBankByGw(newBankByGw);
     setFreeTransfersByGw(freeTransfers);
     setProfilePlayer(null);
+    setCompareCandidate(null);
   };
 
   // ---------- UNDO TRANSFER ----------
@@ -676,6 +661,7 @@ export default function MyTeamOverview() {
     setCurrentGW(null);
     setSelectedBenchIndex(null);
     setProfilePlayer(null);
+    setCompareCandidate(null);
     setBankByGw({});
     setFreeTransfersByGw({});
     setTransferLog([]);
@@ -686,9 +672,7 @@ export default function MyTeamOverview() {
       // new team id → clear any cached planner state for that team
       if (typeof window !== "undefined") {
         try {
-          localStorage.removeItem(
-            `myteam_planner_state_${localTeamId}`
-          );
+          localStorage.removeItem(`myteam_planner_state_${localTeamId}`);
         } catch (err) {
           console.error("Failed to clear planner state:", err);
         }
@@ -707,6 +691,7 @@ export default function MyTeamOverview() {
       setCurrentGW(availableGWs[currentIndex - 1]);
       setSelectedBenchIndex(null);
       setProfilePlayer(null);
+      setCompareCandidate(null);
     }
   };
 
@@ -716,17 +701,13 @@ export default function MyTeamOverview() {
       setCurrentGW(availableGWs[currentIndex + 1]);
       setSelectedBenchIndex(null);
       setProfilePlayer(null);
+      setCompareCandidate(null);
     }
   };
 
   // ---------- PROFILE META: total predicted points from currentGW → maxGW ----------
   const profileMeta = useMemo(() => {
-    if (
-      !profilePlayer ||
-      !playersData.length ||
-      currentGW == null ||
-      maxAvailableGW == null
-    )
+    if (!profilePlayer || !playersData.length || currentGW == null || maxAvailableGW == null)
       return null;
 
     const selFromPlayer = profilePlayer.selected_pct;
@@ -758,31 +739,14 @@ export default function MyTeamOverview() {
         : null;
 
     const nowCost =
-      profilePlayer.now_cost != null
-        ? Number(profilePlayer.now_cost) / 10
-        : null;
+      profilePlayer.now_cost != null ? Number(profilePlayer.now_cost) / 10 : null;
 
-    return {
-      selPct,
-      nowCost,
-      totalPred,
-    };
-  }, [
-    profilePlayer,
-    playersData,
-    availableGWs,
-    currentGW,
-    maxAvailableGW,
-  ]);
+    return { selPct, nowCost, totalPred };
+  }, [profilePlayer, playersData, availableGWs, currentGW, maxAvailableGW]);
 
-  // ---------- REPLACEMENTS: dedup, exclude current squad, price filter, horizon current→max ----------
+  // ---------- REPLACEMENTS ----------
   const replacementsMeta = useMemo(() => {
-    if (
-      !profilePlayer ||
-      !playersData.length ||
-      currentGW == null ||
-      maxAvailableGW == null
-    ) {
+    if (!profilePlayer || !playersData.length || currentGW == null || maxAvailableGW == null) {
       return { minVal: 0, maxVal: 0, threshold: 0, list: [] };
     }
 
@@ -790,31 +754,22 @@ export default function MyTeamOverview() {
       availableGWs.filter((gw) => gw >= currentGW && gw <= maxAvailableGW)
     );
 
-    const samePosRows = playersData.filter(
-      (p) => p.position === profilePlayer.position
-    );
+    const samePosRows = playersData.filter((p) => p.position === profilePlayer.position);
     if (!samePosRows.length) {
       return { minVal: 0, maxVal: 0, threshold: 0, list: [] };
     }
 
     const map = {};
     samePosRows.forEach((p) => {
-      // Exclude players already in squad (except the current profiled one)
-      if (
-        currentSquadNames.has(p.name) &&
-        p.name !== profilePlayer.name
-      ) {
-        return;
-      }
+      if (currentSquadNames.has(p.name) && p.name !== profilePlayer.name) return;
 
       const gwNum = Number(p.GW);
       if (!horizonGwSet.has(gwNum)) return;
 
-      const price = Number(p.value ?? p.price) || 0; // price in millions
+      const price = Number(p.value ?? p.price) || 0;
       const pts = Number(p.Points_prediction) || 0;
       const opp = p.opponent_name || "N/A";
-      const selPct =
-        p.selected != null ? Number(p.selected) * 100 : null;
+      const selPct = p.selected != null ? Number(p.selected) * 100 : null;
 
       if (!map[p.name]) {
         map[p.name] = {
@@ -834,21 +789,16 @@ export default function MyTeamOverview() {
       map[p.name].price = price;
       map[p.name].opponent = opp;
       if (selPct != null) map[p.name].selected_pct = selPct;
-      if (p.photo || p.photo_url) {
-        map[p.name].photo = p.photo ?? p.photo_url;
-      }
+      if (p.photo || p.photo_url) map[p.name].photo = p.photo ?? p.photo_url;
     });
 
     const aggregated = Object.values(map);
-    if (!aggregated.length) {
-      return { minVal: 0, maxVal: 0, threshold: 0, list: [] };
-    }
+    if (!aggregated.length) return { minVal: 0, maxVal: 0, threshold: 0, list: [] };
 
     const prices = aggregated.map((a) => a.price || 0);
     const minVal = Math.floor(Math.min(...prices));
     const maxVal = Math.ceil(Math.max(...prices));
-    const threshold =
-      replacementMaxValue != null ? replacementMaxValue : maxVal;
+    const threshold = replacementMaxValue != null ? replacementMaxValue : maxVal;
 
     const list = aggregated
       .filter((a) => a.price <= threshold)
@@ -865,7 +815,7 @@ export default function MyTeamOverview() {
     replacementMaxValue,
   ]);
 
-  // Initialize slider + reset search when profilePlayer changes
+  // Initialize slider + reset search + compare when profilePlayer changes
   useEffect(() => {
     if (
       !profilePlayer ||
@@ -874,18 +824,15 @@ export default function MyTeamOverview() {
     ) {
       setReplacementMaxValue(null);
       setReplacementSearch("");
+      setCompareCandidate(null);
       return;
     }
     setReplacementMaxValue(replacementsMeta.maxVal);
     setReplacementSearch("");
-  }, [
-    profilePlayer,
-    playersData,
-    replacementsMeta.maxVal,
-    replacementsMeta.minVal,
-  ]);
+    setCompareCandidate(null);
+  }, [profilePlayer, playersData, replacementsMeta.maxVal, replacementsMeta.minVal]);
 
-  // Derived: list actually shown in UI (search + slice)
+  // Derived: list actually shown in UI
   const displayReplacements = useMemo(() => {
     const base = replacementsMeta.list || [];
     if (!base.length) return [];
@@ -906,11 +853,37 @@ export default function MyTeamOverview() {
 
   const handleOpenProfile = (player) => {
     setProfilePlayer(player);
+    setCompareCandidate(null);
   };
 
   const handleCloseProfile = () => {
     setProfilePlayer(null);
+    setCompareCandidate(null);
   };
+
+  // ✅ NEW: Swap-mode hooks MUST be before early returns
+  const selectedBenchPlayer = useMemo(() => {
+    if (selectedBenchIndex == null) return null;
+    return (
+      playersWithPredictions.find((p) => p.squadIndex === selectedBenchIndex) ||
+      null
+    );
+  }, [selectedBenchIndex, playersWithPredictions]);
+
+  const swapHintText = useMemo(() => {
+    if (dragInfo && dragInfo.type === "bench")
+      return "Dragging bench player… drop on a starter to swap";
+    if (selectedBenchPlayer)
+      return `Swap mode: tap a starter to swap with ${selectedBenchPlayer.web_name}`;
+    return null;
+  }, [dragInfo, selectedBenchPlayer]);
+
+  const swapModeActive = !!swapHintText;
+
+  const clearSwapMode = useCallback(() => {
+    setSelectedBenchIndex(null);
+    setDragInfo(null);
+  }, []);
 
   // ---------- EARLY RETURNS ----------
   if (!teamId) {
@@ -1003,16 +976,13 @@ export default function MyTeamOverview() {
   }
 
   // ---------- SPLIT STARTERS / BENCH FOR CURRENT GW ----------
-  const startersIdx =
-    currentGW != null ? getStarterIndicesForGw(currentGW) : [];
+  const startersIdx = currentGW != null ? getStarterIndicesForGw(currentGW) : [];
   const startersIdxSet = new Set(startersIdx);
 
   const starters = playersWithPredictions.filter((p) =>
     startersIdxSet.has(p.squadIndex)
   );
-  const bench = playersWithPredictions.filter(
-    (p) => !startersIdxSet.has(p.squadIndex)
-  );
+  const bench = playersWithPredictions.filter((p) => !startersIdxSet.has(p.squadIndex));
 
   const gkStarters = starters
     .filter((p) => p.position === "GKP")
@@ -1049,12 +1019,9 @@ export default function MyTeamOverview() {
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
               My Team Planner
             </h1>
-            <p
-              className="text-xs sm:text-sm mt-1"
-              style={{ color: "#d1c3a9" }}
-            >
-              See your XI on the pitch, drag or tap bench players to swap, and
-              inspect profiles with optimal replacements.
+            <p className="text-xs sm:text-sm mt-1" style={{ color: "#d1c3a9" }}>
+              Swap bench ↔ starters (drag on desktop, tap-tap on mobile). Open
+              player profiles for replacements and quick compare.
             </p>
           </div>
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
@@ -1117,9 +1084,7 @@ export default function MyTeamOverview() {
                   className="text-xl sm:text-2xl font-bold"
                   style={{
                     color:
-                      effectiveBankMoney < 0
-                        ? "#f87171"
-                        : "#34d399",
+                      effectiveBankMoney < 0 ? "#f87171" : "#34d399",
                   }}
                 >
                   £{effectiveBankMoney.toFixed(1)}m
@@ -1146,9 +1111,7 @@ export default function MyTeamOverview() {
                   GW Predicted Points
                 </div>
                 <div className="text-xl sm:text-2xl font-bold text-amber-300">
-                  {currentGwPoints != null
-                    ? currentGwPoints.toFixed(1)
-                    : "-"}
+                  {currentGwPoints != null ? currentGwPoints.toFixed(1) : "-"}
                 </div>
               </div>
             </div>
@@ -1277,27 +1240,48 @@ export default function MyTeamOverview() {
           }}
         >
           {/* GW nav */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-5">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
             <div>
               <h2 className="text-lg sm:text-xl font-semibold">
                 Squad for GW {currentGW ?? "-"}
               </h2>
-              <p className="text-xs mt-1" style={{ color: "#d1c3a9" }}>
-                Tap a bench player, then tap a player on the pitch to swap.
-                Click the{" "}
+
+              {/* NEW: inline “how to swap” cards */}
+              <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div className="rounded-lg border border-white/10 bg-black/55 p-2.5 text-[11px] text-gray-200">
+                  <div className="flex items-center gap-2">
+                    <Hand size={14} className="text-amber-300" />
+                    <span className="font-semibold">Mobile</span>
+                  </div>
+                  <div className="text-gray-300 mt-0.5">
+                    Tap a <span className="text-amber-200 font-semibold">bench</span> player, then tap a{" "}
+                    <span className="text-amber-200 font-semibold">starter</span> to swap.
+                  </div>
+                </div>
+                <div className="rounded-lg border border-white/10 bg-black/55 p-2.5 text-[11px] text-gray-200">
+                  <div className="flex items-center gap-2">
+                    <MousePointerClick size={14} className="text-amber-300" />
+                    <span className="font-semibold">Desktop</span>
+                  </div>
+                  <div className="text-gray-300 mt-0.5">
+                    Drag a bench player and <span className="text-amber-200 font-semibold">drop on a starter</span> to swap.
+                  </div>
+                </div>
+              </div>
+
+              <p className="text-[11px] mt-2" style={{ color: "#d1c3a9" }}>
+                Use the{" "}
                 <span className="inline-flex items-center gap-1">
                   <Info size={12} /> icon
                 </span>{" "}
-                for profile & best replacements (you can swap directly from
-                there).
+                to open profile & compare replacements (hover a suggestion to compare, click to transfer).
               </p>
             </div>
+
             <div className="flex items-center gap-3">
               <button
                 onClick={handlePrevGW}
-                disabled={
-                  currentGW === null || availableGWs.indexOf(currentGW) === 0
-                }
+                disabled={currentGW === null || availableGWs.indexOf(currentGW) === 0}
                 className="p-2 rounded-full text-sm disabled:opacity-40 disabled:cursor-not-allowed"
                 style={{
                   border: `1px solid ${PALETTE.gold}`,
@@ -1314,8 +1298,7 @@ export default function MyTeamOverview() {
                 onClick={handleNextGW}
                 disabled={
                   currentGW === null ||
-                  availableGWs.indexOf(currentGW) ===
-                    availableGWs.length - 1
+                  availableGWs.indexOf(currentGW) === availableGWs.length - 1
                 }
                 className="p-2 rounded-full text-sm disabled:opacity-40 disabled:cursor-not-allowed"
                 style={{
@@ -1328,6 +1311,32 @@ export default function MyTeamOverview() {
               </button>
             </div>
           </div>
+
+          {/* ✅ NEW: Swap mode banner */}
+          {swapHintText && (
+            <div className="mb-4">
+              <div
+                className="rounded-xl border border-amber-400/40 bg-black/65 px-3 py-2 flex items-center justify-between gap-3"
+                style={{ boxShadow: "0 10px 24px rgba(0,0,0,0.55)" }}
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <ArrowLeftRight size={16} className="text-amber-300" />
+                  <div className="text-[12px] text-gray-100 truncate">
+                    <span className="font-semibold">Swap</span>{" "}
+                    <span className="text-gray-300">{swapHintText}</span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={clearSwapMode}
+                  className="shrink-0 inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-full border border-white/15 bg-black/70 hover:bg-black/90"
+                >
+                  <X size={12} className="text-gray-300" />
+                  <span className="text-gray-200">Cancel</span>
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Pitch + Bench */}
           <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 items-stretch">
@@ -1342,19 +1351,13 @@ export default function MyTeamOverview() {
                     players={gkStarters}
                     label="GKP"
                     dragInfo={dragInfo}
+                    swapModeActive={swapModeActive}
                     onDrop={(benchIdx, starterIdx) =>
                       handleBenchToFieldSwap(currentGW, benchIdx, starterIdx)
                     }
                     onClickSwap={(starterIdx) => {
-                      if (
-                        selectedBenchIndex != null &&
-                        currentGW != null
-                      ) {
-                        handleBenchToFieldSwap(
-                          currentGW,
-                          selectedBenchIndex,
-                          starterIdx
-                        );
+                      if (selectedBenchIndex != null && currentGW != null) {
+                        handleBenchToFieldSwap(currentGW, selectedBenchIndex, starterIdx);
                         setSelectedBenchIndex(null);
                       }
                     }}
@@ -1364,19 +1367,13 @@ export default function MyTeamOverview() {
                     players={defStarters}
                     label="DEF"
                     dragInfo={dragInfo}
+                    swapModeActive={swapModeActive}
                     onDrop={(benchIdx, starterIdx) =>
                       handleBenchToFieldSwap(currentGW, benchIdx, starterIdx)
                     }
                     onClickSwap={(starterIdx) => {
-                      if (
-                        selectedBenchIndex != null &&
-                        currentGW != null
-                      ) {
-                        handleBenchToFieldSwap(
-                          currentGW,
-                          selectedBenchIndex,
-                          starterIdx
-                        );
+                      if (selectedBenchIndex != null && currentGW != null) {
+                        handleBenchToFieldSwap(currentGW, selectedBenchIndex, starterIdx);
                         setSelectedBenchIndex(null);
                       }
                     }}
@@ -1386,19 +1383,13 @@ export default function MyTeamOverview() {
                     players={midStarters}
                     label="MID"
                     dragInfo={dragInfo}
+                    swapModeActive={swapModeActive}
                     onDrop={(benchIdx, starterIdx) =>
                       handleBenchToFieldSwap(currentGW, benchIdx, starterIdx)
                     }
                     onClickSwap={(starterIdx) => {
-                      if (
-                        selectedBenchIndex != null &&
-                        currentGW != null
-                      ) {
-                        handleBenchToFieldSwap(
-                          currentGW,
-                          selectedBenchIndex,
-                          starterIdx
-                        );
+                      if (selectedBenchIndex != null && currentGW != null) {
+                        handleBenchToFieldSwap(currentGW, selectedBenchIndex, starterIdx);
                         setSelectedBenchIndex(null);
                       }
                     }}
@@ -1408,19 +1399,13 @@ export default function MyTeamOverview() {
                     players={fwdStarters}
                     label="FWD"
                     dragInfo={dragInfo}
+                    swapModeActive={swapModeActive}
                     onDrop={(benchIdx, starterIdx) =>
                       handleBenchToFieldSwap(currentGW, benchIdx, starterIdx)
                     }
                     onClickSwap={(starterIdx) => {
-                      if (
-                        selectedBenchIndex != null &&
-                        currentGW != null
-                      ) {
-                        handleBenchToFieldSwap(
-                          currentGW,
-                          selectedBenchIndex,
-                          starterIdx
-                        );
+                      if (selectedBenchIndex != null && currentGW != null) {
+                        handleBenchToFieldSwap(currentGW, selectedBenchIndex, starterIdx);
                         setSelectedBenchIndex(null);
                       }
                     }}
@@ -1432,11 +1417,21 @@ export default function MyTeamOverview() {
 
             {/* Bench */}
             <div className="w-full lg:w-[260px]">
-              <h3 className="text-sm font-semibold mb-2">Bench</h3>
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-semibold">Bench</h3>
+                {selectedBenchIndex != null && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedBenchIndex(null)}
+                    className="text-[11px] px-2 py-1 rounded-full border border-white/15 bg-black/60 hover:bg-black/80"
+                  >
+                    Clear selection
+                  </button>
+                )}
+              </div>
+
               {bench.length === 0 ? (
-                <div className="text-xs text-gray-300">
-                  No bench players for this GW.
-                </div>
+                <div className="text-xs text-gray-300">No bench players for this GW.</div>
               ) : (
                 <div className="space-y-2">
                   {bench.map((player) => {
@@ -1447,25 +1442,23 @@ export default function MyTeamOverview() {
                         : "–";
 
                     const costRaw =
-                      player.now_cost != null
-                        ? Number(player.now_cost)
-                        : null;
+                      player.now_cost != null ? Number(player.now_cost) : null;
                     const costDisplay =
                       costRaw != null && Number.isFinite(costRaw)
                         ? (costRaw / 10).toFixed(1)
                         : null;
 
-                    const isSelected =
-                      selectedBenchIndex === player.squadIndex;
+                    const isSelected = selectedBenchIndex === player.squadIndex;
 
                     return (
                       <div
                         key={player.name + player.squadIndex}
-                        className={`relative flex items-center gap-3 p-2.5 rounded-lg border ${
-                          isSelected
-                            ? "border-amber-400 bg-black/80"
-                            : "border-white/15 bg-black/60"
-                        }`}
+                        className={`relative flex items-center gap-3 p-2.5 rounded-lg border transition
+                          ${
+                            isSelected
+                              ? "border-amber-400 bg-black/85"
+                              : "border-white/15 bg-black/60 hover:bg-black/70"
+                          }`}
                         draggable
                         onDragStart={() =>
                           setDragInfo({
@@ -1476,12 +1469,14 @@ export default function MyTeamOverview() {
                         onDragEnd={() => setDragInfo(null)}
                         onClick={() =>
                           setSelectedBenchIndex((prev) =>
-                            prev === player.squadIndex
-                              ? null
-                              : player.squadIndex
+                            prev === player.squadIndex ? null : player.squadIndex
                           )
                         }
                       >
+                        {isSelected && (
+                          <div className="absolute inset-0 rounded-lg pointer-events-none ring-2 ring-amber-400/50" />
+                        )}
+
                         <button
                           type="button"
                           onClick={(e) => {
@@ -1489,6 +1484,7 @@ export default function MyTeamOverview() {
                             handleOpenProfile(player);
                           }}
                           className="absolute top-1 right-1 p-1 rounded-full bg-black/70 hover:bg-black/90"
+                          title="Open profile"
                         >
                           <Info size={12} className="text-amber-300" />
                         </button>
@@ -1521,16 +1517,18 @@ export default function MyTeamOverview() {
                               {player.position}
                             </span>
                             <span>Sel {selectedText}</span>
-                            {costDisplay && (
-                              <span>£{costDisplay}m</span>
-                            )}
+                            {costDisplay && <span>£{costDisplay}m</span>}
                           </div>
+                          {isSelected && (
+                            <div className="mt-1 text-[10px] text-amber-200 flex items-center gap-1">
+                              <ArrowLeftRight size={12} />
+                              Tap a starter to swap
+                            </div>
+                          )}
                         </div>
 
                         <div className="text-right">
-                          <div className="text-[10px] text-gray-400">
-                            Pred
-                          </div>
+                          <div className="text-[10px] text-gray-400">Pred</div>
                           <div className="text-sm font-bold text-purple-300">
                             {player.points_prediction.toFixed(1)}
                           </div>
@@ -1539,7 +1537,7 @@ export default function MyTeamOverview() {
                     );
                   })}
                   <p className="text-[11px] text-gray-300 mt-1">
-                    Tap and then tap a player on the pitch to swap.
+                    Tip: selecting a bench player highlights starters on the pitch.
                   </p>
                 </div>
               )}
@@ -1550,14 +1548,10 @@ export default function MyTeamOverview() {
           <div className="mt-6">
             <h3 className="text-sm font-semibold mb-2 flex items-center justify-between">
               Planned Transfers
-              <span className="text-[10px] text-gray-300">
-                (click ✕ to undo)
-              </span>
+              <span className="text-[10px] text-gray-300">(click ✕ to undo)</span>
             </h3>
             {sortedTransferLog.length === 0 ? (
-              <div className="text-xs text-gray-300">
-                No planned transfers yet.
-              </div>
+              <div className="text-xs text-gray-300">No planned transfers yet.</div>
             ) : (
               <div className="space-y-1 text-xs">
                 {sortedTransferLog.map((t) => (
@@ -1566,17 +1560,13 @@ export default function MyTeamOverview() {
                     className="flex items-center justify-between rounded-md border border-white/15 bg-black/70 px-2 py-1.5"
                   >
                     <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2">
-                      <span className="font-semibold text-amber-200">
-                        GW {t.gw}
-                      </span>
+                      <span className="font-semibold text-amber-200">GW {t.gw}</span>
                       <span className="text-gray-100">
-                        {t.fromName}{" "}
-                        <span className="text-gray-400">→</span>{" "}
+                        {t.fromName} <span className="text-gray-400">→</span>{" "}
                         {t.toName}
                       </span>
                       <span className="text-[10px] text-gray-400">
-                        Bank Δ:{" "}
-                        {(t.sellingPrice - t.incomingPrice).toFixed(1)}m
+                        Bank Δ: {(t.sellingPrice - t.incomingPrice).toFixed(1)}m
                       </span>
                     </div>
                     <button
@@ -1598,10 +1588,7 @@ export default function MyTeamOverview() {
       {/* PLAYER PROFILE OVERLAY */}
       {profilePlayer && (
         <div className="fixed inset-0 z-40 flex items-center justify-center px-4">
-          <div
-            className="absolute inset-0 bg-black/60"
-            onClick={handleCloseProfile}
-          />
+          <div className="absolute inset-0 bg-black/60" onClick={handleCloseProfile} />
           <div
             className="relative w-full max-w-md rounded-2xl p-4 sm:p-5 shadow-2xl"
             style={{
@@ -1632,11 +1619,11 @@ export default function MyTeamOverview() {
                   {profilePlayer.web_name?.slice(0, 2).toUpperCase()}
                 </div>
               )}
-              <div>
+              <div className="min-w-0">
                 <div className="text-sm uppercase tracking-wide text-gray-400">
                   {profilePlayer.position}
                 </div>
-                <div className="text-lg font-bold">
+                <div className="text-lg font-bold truncate">
                   {profilePlayer.web_name}
                 </div>
                 <div className="text-xs text-gray-400">
@@ -1673,13 +1660,72 @@ export default function MyTeamOverview() {
                   Total Pred Pts
                 </div>
                 <div className="text-sm font-semibold">
-                  {profileMeta
-                    ? profileMeta.totalPred.toFixed(1)
-                    : "–"}
+                  {profileMeta ? profileMeta.totalPred.toFixed(1) : "–"}
                 </div>
                 <div className="text-[9px] text-gray-500">
                   GW {currentGW ?? "-"}–{maxAvailableGW ?? "-"}
                 </div>
+              </div>
+            </div>
+
+            {/* Compare panel */}
+            <div className="mb-3">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[11px] uppercase tracking-wide text-gray-300">
+                  Compare
+                </span>
+                <span className="text-[11px] text-gray-400">
+                  Hover a suggestion to compare
+                </span>
+              </div>
+
+              <div className="rounded-xl border border-white/10 bg-black/60 p-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <CompareCard
+                    title="Current"
+                    player={{
+                      web_name: profilePlayer.web_name,
+                      photo: profilePlayer.photo,
+                      price: profileMeta?.nowCost,
+                      selected_pct: profileMeta?.selPct,
+                      totalPoints: profileMeta?.totalPred,
+                    }}
+                    accent="amber"
+                  />
+                  <CompareCard
+                    title="Candidate"
+                    player={
+                      compareCandidate
+                        ? {
+                            web_name: compareCandidate.web_name,
+                            photo: compareCandidate.photo,
+                            price: compareCandidate.price,
+                            selected_pct: compareCandidate.selected_pct,
+                            totalPoints: compareCandidate.totalPoints,
+                          }
+                        : null
+                    }
+                    accent="emerald"
+                    placeholder="Hover a replacement"
+                  />
+                </div>
+
+                {compareCandidate && (
+                  <button
+                    type="button"
+                    onClick={() => handleReplaceWithSuggested(compareCandidate)}
+                    className="mt-2 w-full inline-flex items-center justify-center gap-2 h-9 rounded-full text-xs font-semibold"
+                    style={{
+                      border: "1px solid rgba(16,185,129,0.45)",
+                      background:
+                        "linear-gradient(135deg, rgba(16,185,129,0.95), rgba(52,211,153,0.85))",
+                      color: "#04110b",
+                    }}
+                  >
+                    <ArrowLeftRight size={14} />
+                    Transfer in {compareCandidate.web_name}
+                  </button>
+                )}
               </div>
             </div>
 
@@ -1704,9 +1750,7 @@ export default function MyTeamOverview() {
                     max={replacementsMeta.maxVal}
                     step="0.1"
                     value={replacementMaxValue ?? replacementsMeta.maxVal}
-                    onChange={(e) =>
-                      setReplacementMaxValue(Number(e.target.value))
-                    }
+                    onChange={(e) => setReplacementMaxValue(Number(e.target.value))}
                     className="w-full mb-2"
                   />
                   <input
@@ -1724,14 +1768,10 @@ export default function MyTeamOverview() {
               )}
             </div>
 
-            <div
-              className="mt-2 max-h-60 overflow-y-auto rounded-lg border border-white/10 bg-black/60"
-              style={{ scrollbarWidth: "thin" }}
-            >
+            <div className="mt-2 max-h-60 overflow-y-auto rounded-lg border border-white/10 bg-black/60">
               {displayReplacements.length === 0 ? (
                 <div className="p-3 text-xs text-gray-400">
-                  No replacement suggestions found within the selected value
-                  range or search.
+                  No replacement suggestions found within the selected value range or search.
                 </div>
               ) : (
                 <ul className="divide-y divide-white/5 text-xs">
@@ -1739,11 +1779,20 @@ export default function MyTeamOverview() {
                     const oppShort = p.opponent
                       ? String(p.opponent).slice(0, 3).toUpperCase()
                       : "N/A";
+                    const isCompared = compareCandidate?.name === p.name;
+
                     return (
                       <li
                         key={p.id + p.name}
-                        className="px-3 py-2 flex items-center justify-between gap-2 cursor-pointer hover:bg-white/5"
+                        className={`px-3 py-2 flex items-center justify-between gap-2 cursor-pointer transition ${
+                          isCompared ? "bg-emerald-500/10" : "hover:bg-white/5"
+                        }`}
+                        onMouseEnter={() => setCompareCandidate(p)}
+                        onMouseLeave={() =>
+                          setCompareCandidate((prev) => (prev?.name === p.name ? null : prev))
+                        }
                         onClick={() => handleReplaceWithSuggested(p)}
+                        title="Click to transfer in"
                       >
                         <div className="flex items-center gap-2 min-w-0">
                           {p.photo ? (
@@ -1761,8 +1810,13 @@ export default function MyTeamOverview() {
                             </div>
                           )}
                           <div className="min-w-0">
-                            <div className="font-semibold truncate max-w-[140px]">
-                              {p.web_name}
+                            <div className="font-semibold truncate max-w-[140px] flex items-center gap-2">
+                              <span className="truncate">{p.web_name}</span>
+                              {isCompared && (
+                                <span className="text-[10px] px-1.5 py-0.5 rounded-full border border-emerald-400/40 bg-black/50 text-emerald-200">
+                                  comparing
+                                </span>
+                              )}
                             </div>
                             <div className="text-[10px] text-gray-400">
                               £{p.price.toFixed(1)}m • {oppShort}
@@ -1770,9 +1824,7 @@ export default function MyTeamOverview() {
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="text-[10px] text-gray-400">
-                            Total Pts
-                          </div>
+                          <div className="text-[10px] text-gray-400">Total Pts</div>
                           <div className="text-sm font-bold text-amber-300">
                             {p.totalPoints.toFixed(1)}
                           </div>
@@ -1789,6 +1841,10 @@ export default function MyTeamOverview() {
                 </ul>
               )}
             </div>
+
+            <div className="mt-2 text-[11px] text-gray-400">
+              Click a row to transfer. Hover to compare first.
+            </div>
           </div>
         </div>
       )}
@@ -1797,33 +1853,25 @@ export default function MyTeamOverview() {
 }
 
 // ---------- Pitch row (GKP / DEF / MID / FWD) ----------
-function PitchRow({
-  players,
-  label,
-  dragInfo,
-  onDrop,
-  onClickSwap,
-  openProfile,
-}) {
+function PitchRow({ players, label, dragInfo, swapModeActive, onDrop, onClickSwap, openProfile }) {
   return (
     <div className="flex justify-center gap-2 sm:gap-3 px-1">
       {players.map((player) => {
         const hasPhoto = !!player.photo;
-        const selectedText =
-          player.selected_pct != null
-            ? `${player.selected_pct.toFixed(1)}%`
-            : "–";
 
-        const costRaw =
-          player.now_cost != null ? Number(player.now_cost) : null;
+        const selectedText =
+          player.selected_pct != null ? `${player.selected_pct.toFixed(1)}%` : "–";
+
+        const costRaw = player.now_cost != null ? Number(player.now_cost) : null;
         const costDisplay =
-          costRaw != null && Number.isFinite(costRaw)
-            ? (costRaw / 10).toFixed(1)
-            : null;
+          costRaw != null && Number.isFinite(costRaw) ? (costRaw / 10).toFixed(1) : null;
 
         const oppShort = player.opponent
           ? String(player.opponent).slice(0, 3).toUpperCase()
           : "N/A";
+
+        const droppable = dragInfo && dragInfo.type === "bench";
+        const highlightAsTarget = swapModeActive || droppable;
 
         return (
           <div
@@ -1833,9 +1881,7 @@ function PitchRow({
               if (onClickSwap) onClickSwap(player.squadIndex);
             }}
             onDragOver={(e) => {
-              if (dragInfo && dragInfo.type === "bench") {
-                e.preventDefault();
-              }
+              if (dragInfo && dragInfo.type === "bench") e.preventDefault();
             }}
             onDrop={(e) => {
               e.preventDefault();
@@ -1843,6 +1889,24 @@ function PitchRow({
               onDrop(dragInfo.squadIndex, player.squadIndex);
             }}
           >
+            {/* Target highlight ring */}
+            {highlightAsTarget && (
+              <div
+                className="absolute inset-x-1 -top-1 bottom-0 rounded-xl pointer-events-none"
+                style={{
+                  border: "1px dashed rgba(251,191,36,0.45)",
+                  boxShadow: "0 0 0 2px rgba(251,191,36,0.12)",
+                }}
+              />
+            )}
+
+            {/* Drop hint */}
+            {droppable && (
+              <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] px-2 py-0.5 rounded-full bg-black/80 border border-amber-300/30 text-amber-200">
+                Drop to swap
+              </div>
+            )}
+
             <button
               type="button"
               onClick={(e) => {
@@ -1850,6 +1914,7 @@ function PitchRow({
                 openProfile && openProfile(player);
               }}
               className="absolute -top-1 right-0 p-1 rounded-full bg-black/70 hover:bg-black/90"
+              title="Open profile"
             >
               <Info size={11} className="text-amber-300" />
             </button>
@@ -1860,9 +1925,7 @@ function PitchRow({
                 {label} • Sel {selectedText}
               </div>
               {costDisplay && (
-                <div className="text-[9px] text-gray-200">
-                  £{costDisplay}m
-                </div>
+                <div className="text-[9px] text-gray-200">£{costDisplay}m</div>
               )}
             </div>
 
@@ -1896,6 +1959,65 @@ function PitchRow({
           </div>
         );
       })}
+    </div>
+  );
+}
+
+// ---------- Compare Card ----------
+function CompareCard({ title, player, accent = "amber", placeholder = "—" }) {
+  const ring = accent === "emerald" ? "border-emerald-400/30" : "border-amber-400/30";
+  const titleColor = accent === "emerald" ? "text-emerald-200" : "text-amber-200";
+
+  return (
+    <div className={`rounded-xl border ${ring} bg-black/55 p-2 min-w-0`}>
+      <div className={`text-[10px] uppercase tracking-wide ${titleColor} mb-1`}>
+        {title}
+      </div>
+
+      {!player ? (
+        <div className="text-[11px] text-gray-400 py-5 text-center">{placeholder}</div>
+      ) : (
+        <div className="flex items-center gap-2">
+          {player.photo ? (
+            <img
+              src={player.photo}
+              alt={player.web_name}
+              className="w-9 h-9 rounded-full object-cover bg-gray-800"
+              onError={(e) => {
+                e.currentTarget.src = "";
+              }}
+            />
+          ) : (
+            <div className="w-9 h-9 rounded-full bg-gray-800" />
+          )}
+
+          <div className="min-w-0 flex-1">
+            <div className="text-xs font-semibold truncate">{player.web_name}</div>
+            <div className="mt-1 grid grid-cols-3 gap-1 text-[10px] text-gray-300">
+              <div className="rounded-md bg-black/60 border border-white/10 px-1.5 py-1">
+                <div className="text-[9px] text-gray-400">Price</div>
+                <div className="font-semibold">
+                  {player.price != null ? `£${Number(player.price).toFixed(1)}m` : "–"}
+                </div>
+              </div>
+              <div className="rounded-md bg-black/60 border border-white/10 px-1.5 py-1">
+                <div className="text-[9px] text-gray-400">Sel</div>
+                <div className="font-semibold">
+                  {player.selected_pct != null
+                    ? `${Number(player.selected_pct).toFixed(1)}%`
+                    : "–"}
+                </div>
+              </div>
+              <div className="rounded-md bg-black/60 border border-white/10 px-1.5 py-1">
+                <div className="text-[9px] text-gray-400">Pts</div>
+                <div className="font-semibold">
+                  {player.totalPoints != null ? Number(player.totalPoints).toFixed(1) : "–"}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
