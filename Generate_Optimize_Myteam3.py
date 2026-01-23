@@ -156,15 +156,12 @@ def optimize_my_team(
     # Free Hit only makes sense if it lands on an actual GW in horizon (not "0")
     use_freehit = (freehit_round_rel is not None) and (freehit_round_rel >= 1)
 
-
     if wildcard_round_rel is not None and wildcard_round_rel < 1:
         wildcard_round_rel = 40
     if bench_points_gw is not None and bench_points_gw < 1:
         bench_points_gw = 40
     if is_first:
         wildcard_round_rel = 1
-
-    hit = n_hits
 
     # ---------------- Load base data ----------------
     data = pd.read_csv("Model_Optimizer.csv")
@@ -280,16 +277,23 @@ def optimize_my_team(
     saved_transfers = {t: LpVariable(f"saved_transfers_{t}", lowBound=0, upBound=5, cat="Integer") for t in gameweeks}
     money_in_bank_var = {t: LpVariable(f"money_in_bank_{t}", lowBound=0, cat="Continuous") for t in gameweeks}
 
-    # --- Free Hit temporary squad vars (one GW only) ---
+    # --- Free Hit temporary squad vars (one GW only) + FH transfer/bank vars ---
     if use_freehit:
         fh_t = freehit_round_rel
         fh_x = {i: LpVariable(f"fh_x_{i}", cat="Binary") for i in range(num_players)}
         fh_bench = {i: LpVariable(f"fh_bench_{i}", cat="Binary") for i in range(num_players)}
         fh_y = {i: LpVariable(f"fh_y_{i}", cat="Binary") for i in range(num_players)}
         fh_c = {i: LpVariable(f"fh_c_{i}", cat="Binary") for i in range(num_players)}
+
+        # New: model FH budget correctly via transfers from real squad at (fh_t-1)
+        fh_in = {i: LpVariable(f"fh_in_{i}", cat="Binary") for i in range(num_players)}
+        fh_out = {i: LpVariable(f"fh_out_{i}", cat="Binary") for i in range(num_players)}
+        fh_bank = LpVariable("fh_bank", lowBound=0, cat="Continuous")
     else:
         fh_t = None
         fh_x = fh_bench = fh_y = fh_c = None
+        fh_in = fh_out = None
+        fh_bank = None
 
     # Initial squad at t=0
     for i in range(num_players):
@@ -328,7 +332,7 @@ def optimize_my_team(
         model += lpSum(x[i, t] for i in mid_indices) == 5
         model += lpSum(x[i, t] for i in fwd_indices) == 3
 
-    # --- Free Hit squad composition constraints (one GW) ---
+    # --- Free Hit squad composition constraints + proper FH budget linking ---
     if use_freehit:
         model += lpSum(fh_x[i] for i in range(num_players)) == 15
         model += lpSum(fh_x[i] for i in def_indices) == 5
@@ -336,13 +340,34 @@ def optimize_my_team(
         model += lpSum(fh_x[i] for i in mid_indices) == 5
         model += lpSum(fh_x[i] for i in fwd_indices) == 3
 
-        # budget for FH squad: use bank from previous real GW if possible
-        prev_t = fh_t - 1  # safe because fh_t >= 1 when use_freehit == True
-        model += lpSum(fh_x[i] * costs[i] for i in range(num_players)) + money_in_bank_var[prev_t] <= budget_amount
-
-
+        # Max 3 per team on FH squad
         for team, indices in team_to_indices.items():
             model += lpSum(fh_x[i] for i in indices) <= 3
+
+        # --- FH budget: start from real squad at prev_t, apply FH transfers to reach fh_x ---
+        prev_t = fh_t - 1  # fh_t >= 1 by construction
+
+        # can only transfer out owned players (from real squad prev week)
+        for i in range(num_players):
+            model += fh_out[i] <= x[i, prev_t]
+
+        # (optional) can only transfer in players not already owned
+        for i in range(num_players):
+            model += fh_in[i] <= 1 - x[i, prev_t]
+
+        # link FH squad to previous real squad + FH transfers
+        for i in range(num_players):
+            model += fh_x[i] == x[i, prev_t] - fh_out[i] + fh_in[i]
+
+        # bank evolution during FH (uses sell prices list1 and buy prices costs)
+        model += fh_bank == (
+            money_in_bank_var[prev_t]
+            + lpSum(fh_out[i] * list1[i] for i in range(num_players))
+            - lpSum(fh_in[i] * costs[i] for i in range(num_players))
+        )
+
+        # bank must remain non-negative (lowBound already) and within overall cap
+        model += fh_bank <= budget_amount
 
     # --- Starting XI + bench + captain constraints (branch on FH week) ---
     for t in gameweeks:
@@ -406,7 +431,6 @@ def optimize_my_team(
 
     # --- Budget Constraints (real squad) ---
     for t in gameweeks[1:]:
-        # If freehit week, we forced transfer vars to 0 below; equation still OK
         model += (
             money_in_bank_var[t]
             == money_in_bank_var[t - 1]
@@ -460,7 +484,9 @@ def optimize_my_team(
                 if abs_gw_num.get(t) == 40:  # AFCON special rule in your code
                     model += saved_transfers[t] == 5
                 else:
-                    model += saved_transfers[t] == saved_transfers[t - 1] + (1 - lpSum(transfer_in[i, t] for i in range(num_players)))
+                    model += saved_transfers[t] == saved_transfers[t - 1] + (
+                        1 - lpSum(transfer_in[i, t] for i in range(num_players))
+                    )
         model += saved_transfers[t] <= 5
 
     # --- Initial Transfers & Bank ---
