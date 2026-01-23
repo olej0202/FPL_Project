@@ -139,15 +139,23 @@ def optimize_my_team(
     is_first = "1" in GW_list
     team_id = int(team_id)
 
-    # Adjust chip rounds to relative indices
-    wildcard_round_rel = None if wildcard_round is None else int(wildcard_round) - Last_GW
-    bench_points_gw = None if bb_round is None else int(bb_round) - Last_GW
-    freehit_round_rel = None if free_hit_round is None else int(free_hit_round) - Last_GW
+    # --- Chip indices: map absolute GW -> index in GW_list (robust) ---
+    def gw_index(gw_abs: Optional[int]) -> Optional[int]:
+        if gw_abs is None:
+            return None
+        gw_str = str(int(gw_abs))
+        return GW_list.index(gw_str) if gw_str in GW_list else None
 
-    # --- Free Hit setup (do NOT remove from GW_list) ---
+    wildcard_round_rel = gw_index(wildcard_round)
+    bench_points_gw = gw_index(bb_round)
+    freehit_round_rel = gw_index(free_hit_round)
+
     optimize_range = len(GW_list)
     gameweeks = range(optimize_range)
-    use_freehit = (freehit_round_rel is not None) and (freehit_round_rel in gameweeks)
+
+    # Free Hit only makes sense if it lands on an actual GW in horizon (not "0")
+    use_freehit = (freehit_round_rel is not None) and (freehit_round_rel >= 1)
+
 
     if wildcard_round_rel is not None and wildcard_round_rel < 1:
         wildcard_round_rel = 40
@@ -329,8 +337,9 @@ def optimize_my_team(
         model += lpSum(fh_x[i] for i in fwd_indices) == 3
 
         # budget for FH squad: use bank from previous real GW if possible
-        prev_t = max(fh_t - 1, 0)
+        prev_t = fh_t - 1  # safe because fh_t >= 1 when use_freehit == True
         model += lpSum(fh_x[i] * costs[i] for i in range(num_players)) + money_in_bank_var[prev_t] <= budget_amount
+
 
         for team, indices in team_to_indices.items():
             model += lpSum(fh_x[i] for i in indices) <= 3

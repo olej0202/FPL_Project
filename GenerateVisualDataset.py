@@ -443,7 +443,26 @@ def Player_adjustements(current_player_path):
     df["Pen_data"] = df["Team_Pen_Data"] * df["Pen_Number"]
     divisor = np.where(df["position"] == "DEF", 10, 12)
 
-    cbi_scaled = np.minimum(1, df["CBI"] / divisor)*0.8
+    # base scaling (your original logic)
+    base = np.minimum(1, df["CBI"] / divisor)
+    
+    cbi = df["CBI"].to_numpy()
+    
+    max_score = 0.8
+    small_penalty_at_7 = 0.10   # 10% loss at CBI=7
+    p = 4                       # strength of penalty below 7
+    
+    penalty_factor = np.where(
+        cbi >= 8,
+        1.0,
+        np.where(
+            cbi >= 7,
+            1.0 - small_penalty_at_7 * (8 - cbi),   # linear from 8 → 7
+            (cbi / 7.0) ** p * (1.0 - small_penalty_at_7)
+        )
+    )
+    
+    cbi_scaled = max_score * base * penalty_factor
     cbi_opp=1+(df["Opp_defcon"]-75)/75
 
     df["CBI_Percent"] = (

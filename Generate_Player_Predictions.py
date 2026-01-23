@@ -915,7 +915,7 @@ def Generate_point_predictions(GW_list):
             summary_dataset["Points_prediction"]=(2+summary_dataset["Goal_pred"]*5.5
                                                   +summary_dataset["Assist_pred"]*3.5
                                                   +summary_dataset["Bonus_pred"]
-                                                  +summary_dataset["GC_pred"]*0.8)*0.9+0.1*summary_dataset["Fantasy_pred"]+(np.minimum(1, summary_dataset["CBI_pred"] / 12) * 0.7+0.3*cbi_hit_rate)*0.8*2
+                                                  +summary_dataset["GC_pred"]*0.8)*0.9+0.1*summary_dataset["Fantasy_pred"]+(np.minimum(1, summary_dataset["CBI_pred"] / 12) * 0.7+0.3*cbi_hit_rate)*0.9*2
             
         elif(position=="GKP"):
             summary_dataset["Points_prediction"]=(2
