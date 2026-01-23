@@ -311,7 +311,7 @@ def add_team_share_per90(
         share_col = f"{metric}{share_suffix}"
         player_gw_contrib[share_col] = np.where(
             player_gw_contrib["team_total"] > 0,
-            player_gw_contrib["player_contrib"] / (player_gw_contrib["team_total"]*1.1),
+            player_gw_contrib["player_contrib"] / (player_gw_contrib["team_total"]*0.9),
             0.0
         )
 
