@@ -411,8 +411,9 @@ def Player_adjustements(current_player_path):
     # alternatively: df["average_minutes"].rdiv(75).clip(lower=1)
 
     df["Goal_share"] = (
-            df["Rolling_adjusted_XG_share"] * 0.27
-            )* risk_adj_minutes_factor+ df["Rolling_adjusted_XG_per90"] * 0.27+df["Big_Chances"]/3 * 0.2+df["Rolling_adjusted_Threat_per90"]/100 * 0.27
+            df["Rolling_adjusted_XG_share"] * 0.2+
+            df["Rolling_adjusted_XG_per90_share"] * 0.2
+            )* risk_adj_minutes_factor+ df["Rolling_adjusted_XG_per90"] * 0.2+(df["Big_Chances"]/3) * 0.2+(df["Rolling_adjusted_Threat_per90"]/100) * 0.2
 
     df["Goal_share"] = (df["Goal_share"]
             
@@ -423,7 +424,7 @@ def Player_adjustements(current_player_path):
     df["Assist_share"] = (
             df["Rolling_adjusted_XA_share"] * 0.2+
             df["Rolling_adjusted_XA_per90_share"] * 0.2
-            )* risk_adj_minutes_factor+df["Rolling_adjusted_XA_per90"] * 0.2+ df["Rolling_adjusted_creativity_per90"]/100 * 0.2+df["Big_Chances_Created"]/2 * 0.2
+            )* risk_adj_minutes_factor+df["Rolling_adjusted_XA_per90"] * 0.2+ (df["Rolling_adjusted_creativity_per90"]/100) * 0.2+(df["Big_Chances_Created"]/2) * 0.2
     
     df["Assist_share"] = (df["Assist_share"]
             
@@ -435,7 +436,7 @@ def Player_adjustements(current_player_path):
 
     # Cap overscore/overassist factors per player in [0.9, 1.15]
     overscore_factor = df["Average_Overscore"].clip(0.9, 1.1)
-    overassist_factor = df["Average_OverAssist"].clip(0.9, 1.15)
+    overassist_factor = df["Average_OverAssist"].clip(0.9, 1.1)
 
     df["Goal_share"] = df["Goal_share"] * overscore_factor
     df["Assist_share"] = df["Assist_share"] * overassist_factor
@@ -445,13 +446,13 @@ def Player_adjustements(current_player_path):
 
     # base scaling (your original logic)
     base = np.minimum(1, df["CBI"] / divisor)
-    
+
     cbi = df["CBI"].to_numpy()
-    
+
     max_score = 0.8
     small_penalty_at_7 = 0.10   # 10% loss at CBI=7
     p = 4                       # strength of penalty below 7
-    
+
     penalty_factor = np.where(
         cbi >= 8,
         1.0,
@@ -461,7 +462,7 @@ def Player_adjustements(current_player_path):
             (cbi / 7.0) ** p * (1.0 - small_penalty_at_7)
         )
     )
-    
+
     cbi_scaled = max_score * base * penalty_factor
     cbi_opp=1+(df["Opp_defcon"]-75)/75
 
