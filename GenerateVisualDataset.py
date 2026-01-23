@@ -411,8 +411,8 @@ def Player_adjustements(current_player_path):
     # alternatively: df["average_minutes"].rdiv(75).clip(lower=1)
 
     df["Goal_share"] = (
-            df["Rolling_adjusted_XG_share"] * 0.25
-            )* risk_adj_minutes_factor+ df["Rolling_adjusted_XG_per90"] * 0.25+df["Big_Chances"]/3 * 0.25+df["Rolling_adjusted_Threat_per90"]/100 * 0.25
+            df["Rolling_adjusted_XG_share"] * 0.27
+            )* risk_adj_minutes_factor+ df["Rolling_adjusted_XG_per90"] * 0.27+df["Big_Chances"]/3 * 0.2+df["Rolling_adjusted_Threat_per90"]/100 * 0.27
 
     df["Goal_share"] = (df["Goal_share"]
             
