@@ -651,310 +651,241 @@ def Generate_team_data():
     team_data['XGCA']=XGCAs
     team_data.to_csv("Fantasy-Premier-League/Fantasy-Premier-League/data/2024-25/teams2.csv")
     
+
+import math
+
+def predict_xg_from_indices(A: float, B: float) -> float:
+    """
+    xg = exp(0.5*(-2.66 + 1.24*A + 1.34*B - 0.14*A*B))
+    Assumes:
+      - A = offensive strength index (higher => more xG)
+      - B = defensive weakness index (higher => more xG conceded by opponent)
+    """
+    z = -2.66 + 1.24 * A + 1.34 * B - 0.14 * A * B
+    return math.exp(0.5 * z)
+
 def team_transformed2():
-    team_df=pd.read_csv("Team_data_transformed.csv").iloc[:,1:][["XGC_avg","XG_avg","code", "kickoff_time", "XG", "XGC","was_home", "opponent","Clean_Sheet","Result"]]
-    team_df['opponent'] = team_df['opponent'].astype(int)
-    team_df['kickoff_time'] = pd.to_datetime(team_df['kickoff_time'])
-    from sklearn.svm import SVR
-    from sklearn.linear_model import SGDRegressor
+    # Base team match dataframe
+    team_df = pd.read_csv("Team_data_transformed.csv").iloc[:, 1:][
+        ["XGC_avg", "XG_avg", "code", "kickoff_time", "XG", "XGC", "was_home",
+         "opponent", "Clean_Sheet", "Result"]
+    ].copy()
 
+    team_df["opponent"] = team_df["opponent"].astype(int)
+    team_df["kickoff_time"] = pd.to_datetime(team_df["kickoff_time"], errors="coerce")
+    team_df = team_df.sort_values("kickoff_time")
 
-    df=pd.read_csv("Team_data_transformed.csv").iloc[:,1:]
-    codes=df['code'].unique()
+    # Read full transformed (used later when writing out)
+    df = pd.read_csv("Team_data_transformed.csv").iloc[:, 1:].copy()
+    codes = df["code"].unique()
 
-    new_df=pd.DataFrame()
-    for code in codes:
-        team_df_train = df[df["code"] == code].copy()
-        df_opponent = df[['code', 'kickoff_time', 'XGA', 'XGCA', 'XGH', 'XGCH','XG_avg','XGC_avg']].copy()
-
-        merged = team_df_train.merge(df_opponent,
-                        how='left',
-                        left_on=['opponent', 'kickoff_time'],
-                        right_on=['code', 'kickoff_time'],
-                        suffixes=('', '_opp'))
-
-        merged.drop(columns='code_opp', inplace=True, errors='ignore')
-        own_xg=[]
-        own_xgc=[]
-        opp_xg=[]
-        opp_xgc=[]
-        own_avg_xg=[]
-        own_avg_xgc=[]
-        opp_avg_xg=[]
-        opp_avg_xgc=[]
-        for j in range(len(merged)):
-            home=merged["was_home"].values[j]
-            if home:
-                own_xg.append(merged["XGH"].values[j])
-                own_xgc.append(merged["XGCH"].values[j])
-                opp_xg.append(merged["XGA_opp"].values[j])
-                opp_xgc.append(merged["XGCA_opp"].values[j])
-            else:
-                own_xg.append(merged["XGA"].values[j])
-                own_xgc.append(merged["XGCA"].values[j])
-                opp_xg.append(merged["XGH_opp"].values[j])
-                opp_xgc.append(merged["XGCH_opp"].values[j])
-
-            own_avg_xg.append(merged["XG_avg"].values[j])
-            own_avg_xgc.append(merged["XGC_avg"].values[j])
-            opp_avg_xg.append(merged["XG_avg_opp"].values[j])
-            opp_avg_xgc.append(merged["XGC_avg_opp"].values[j])
-
-        train_df=pd.DataFrame()
-        train_df["Own_XG"]=own_xg
-        train_df["Own_XGC"]=own_xgc
-        train_df["opp_XG"]=opp_xg
-        train_df["opp_XGC"]=opp_xgc
-
-        train_df["Own_avg_XG"]=own_avg_xg
-        train_df["Own_avg_XGC"]=own_avg_xgc
-        train_df["opp_avg_XG"]=opp_avg_xg
-        train_df["opp_avg_XGC"]=opp_avg_xgc
-
-        train_df["XG"]=merged["XG"].values
-        train_df["XGC"]=merged["XGC"].values
-        train_df[["Own_XG","Own_XGC","opp_XG","opp_XGC","XG","XGC","Own_avg_XG","Own_avg_XGC","opp_avg_XG","opp_avg_XGC"]] = train_df[["Own_XG","Own_XGC","opp_XG","opp_XGC","XG","XGC","Own_avg_XG","Own_avg_XGC","opp_avg_XG","opp_avg_XGC"]].round(1)
-        train_df['XG'] = train_df['XG'].clip(lower=0.5, upper=3)
-        train_df['XGC'] = train_df['XGC'].clip(lower=0.5, upper=3)
-        new_df=pd.concat([new_df, train_df], axis=0, ignore_index=True)
-
-
-    train_xg=new_df[["Own_avg_XG","opp_avg_XGC"]].values
-    y_xg=new_df["XG"].values
-
-    model_xg = SVR(kernel='rbf', C=0.1, epsilon=0.1,gamma=0.1)
-    model_xg.fit(train_xg, y_xg)
-
-    train_xgc=new_df[["Own_avg_XGC","opp_avg_XG"]].values
-    y_xgc=new_df["XGC"].values
-    model_xgc = SVR(kernel='rbf', C=0.1, epsilon=0.1,gamma=0.1)
-    model_xgc.fit(train_xgc, y_xgc)
-
-
+    # Initialize per-team priors
     team_avg_xg = team_df.groupby("code")["XG_avg"].mean()
     team_avg_xgc = team_df.groupby("code")["XGC_avg"].mean()
 
-    # Get all teams (including opponents)
-    teams = pd.unique(team_df['code'].tolist() + team_df['opponent'].tolist())
+    teams = pd.unique(team_df["code"].tolist() + team_df["opponent"].tolist())
 
-    # Initialize ratings using the per-team mean, fallback to global mean if team not found
-    global_avg_xg = team_df["XG_avg"].mean()
-    global_avg_xgc = team_df["XGC_avg"].mean()
+    global_avg_xg = float(team_df["XG_avg"].mean())
+    global_avg_xgc = float(team_df["XGC_avg"].mean())
 
-    off_rating = {team: team_avg_xg.get(team, global_avg_xg) for team in teams}
-    def_rating = {team: team_avg_xgc.get(team, global_avg_xgc) for team in teams}
+    # Offense index A ~ xG_avg, Defense index B ~ xGC_avg (defensive weakness)
+    off_rating = {t: float(team_avg_xg.get(t, global_avg_xg)) for t in teams}
+    def_rating = {t: float(team_avg_xgc.get(t, global_avg_xgc)) for t in teams}
 
-    # Optional: initialize other rating dicts the same way
+    # Home/away splits
     off_rating_home = off_rating.copy()
     def_rating_home = def_rating.copy()
     off_rating_away = off_rating.copy()
     def_rating_away = def_rating.copy()
 
-    off_rating_history = {team: [off_rating[team]] for team in teams}
-    def_rating_history = {team: [def_rating[team]] for team in teams}
+    # History
+    off_rating_history = {t: [off_rating[t]] for t in teams}
+    def_rating_history = {t: [def_rating[t]] for t in teams}
+    off_rating_home_history = {t: [off_rating_home[t]] for t in teams}
+    def_rating_home_history = {t: [def_rating_home[t]] for t in teams}
+    off_rating_away_history = {t: [off_rating_away[t]] for t in teams}
+    def_rating_away_history = {t: [def_rating_away[t]] for t in teams}
 
-    off_rating_home_history = {team: [off_rating_home[team]] for team in teams}
-    def_rating_home_history = {team: [def_rating_home[team]] for team in teams}
-    off_rating_away_history = {team: [off_rating_away[team]] for team in teams}
-    def_rating_away_history = {team: [def_rating_away[team]] for team in teams}
-    
-    elo_rating = {team: 1000 for team in teams}
-    elo_history = {team: [1000] for team in teams}
-    k_elo = 30  # ELO update factor
+    # ELO
+    elo_rating = {t: 1000.0 for t in teams}
+    elo_history = {t: [1000.0] for t in teams}
+    k_elo = 30.0
 
-    team_df = team_df.sort_values('kickoff_time')
+    # Update params
+    k_off = 0.065
+    k_def = 0.065
+    min_val = 0.8
 
-    error_xg=[]
-    error_xgc=[]
+    # Optional: clip observed xG/xGC to reduce outliers
+    OBS_LO, OBS_HI = 0.5, 3.5  # <-- less distortion than (0.5..3); adjust as you like
+
+    error_xg = []
+    error_xgc = []
+
     for _, row in team_df.iterrows():
-        was_home=row['was_home']
-        team = row['code']
-        opponent = row['opponent']
-        xg = min(3,max(0.5,row['XG']))
-        xgc = min(3,max(0.5,row['XGC']))
+        was_home = int(row["was_home"])
+        team = int(row["code"])
+        opponent = int(row["opponent"])
 
+        # Observations (actual)
+        actual_xg = float(np.clip(row["XG"], OBS_LO, OBS_HI))
+        actual_xgc = float(np.clip(row["XGC"], OBS_LO, OBS_HI))
+
+        # Current global indices
         team_off = off_rating[team]
         team_def = def_rating[team]
         opp_off = off_rating[opponent]
         opp_def = def_rating[opponent]
-        pred_weight=0.0
-        team_weight=(1-pred_weight)/2
 
+        # --- Predict using your formula ---
+        # Team xG: A=team attack, B=opponent defensive weakness
+        expected_goals = predict_xg_from_indices(A=team_off, B=opp_def)
 
-        gap=(team_off-opp_off)-(team_def-opp_def)
-        if(gap>=1.7):
-            team_weight=0.8
-            pred_weight=0
-        elif(gap>=1.2):
-            team_weight=0.7
-            pred_weight=0
-        elif(gap<=-1.7):
-             team_weight=0.2
-             pred_weight=0
-        elif(gap<=-1.2):
-             pred_weight=0
-             team_weight=0.3  
-        opp_weight=1-team_weight
+        # Team xGC is opponent xG: A=opponent attack, B=team defensive weakness
+        expected_goals_conceded = predict_xg_from_indices(A=opp_off, B=team_def)
 
+        # --- Update global ratings ---
+        # Offense update: if actual_xg > expected, increase attack
+        delta_off = k_off * np.clip(actual_xg - expected_goals, -min_val, min_val)
+        off_rating[team] = max(0.05, team_off + delta_off)
 
+        # Defense weakness update: if opponent scored more xG than expected conceded, increase weakness
+        delta_def = k_def * np.clip(actual_xgc - expected_goals_conceded, -min_val, min_val)
+        def_rating[team] = max(0.05, team_def + delta_def)
 
-        k_def = 0.065
-        k_off=0.065
-        min_val=0.8
+        # Track errors
+        error_xg.append(abs(actual_xg - expected_goals))
+        error_xgc.append(abs(actual_xgc - expected_goals_conceded))
 
-        actual_goals = xg
-        if was_home==1:
+        # Log global histories
+        off_rating_history[team].append(off_rating[team])
+        def_rating_history[team].append(def_rating[team])
+
+        # --- Home/Away updates (same formula, but use split indices) ---
+        if was_home == 1:
             team_off_h = off_rating_home[team]
-            opp_def_a = def_rating_away[opponent]
             team_def_h = def_rating_home[team]
             opp_off_a = off_rating_away[opponent]
+            opp_def_a = def_rating_away[opponent]
 
-            preds_xg=model_xg.predict([[team_off_h,opp_def_a]])[0]
-            preds_xgc=model_xgc.predict([[opp_def_a,team_off_h]])[0]
+            exp_xg_h = predict_xg_from_indices(A=team_off_h, B=opp_def_a)
+            exp_xgc_h = predict_xg_from_indices(A=opp_off_a, B=team_def_h)
 
-            expected_goals = team_off_h*team_weight +pred_weight*(preds_xg)+opp_weight*opp_def_a
-            expected_goals_conceeded=opp_def_a*opp_weight+preds_xgc*pred_weight+team_weight*team_off_h
-
-            #model_xgc.partial_fit([[opp_def,team_off,opp_def_a,team_off_h]], [xg])
-
-            #model_xg.partial_fit([[team_off,opp_def,team_off_h,opp_def_a]], [xg])
-            delta_xg_h = k_off*min(min_val,max(-min_val,(actual_goals - expected_goals)))
-            delta_xgc_h=k_off*min(min_val,max(-min_val,(actual_goals - expected_goals_conceeded)))
-            New_off_rating_h=max(0.6, team_off_h+delta_xg_h)
-            New_def_rating_a=max(0.6, opp_def_a+delta_xgc_h)
-
-            off_rating_home[team] =New_off_rating_h
-            def_rating_away[opponent] = New_def_rating_a
-
+            off_rating_home[team] = max(
+                0.05,
+                team_off_h + k_off * np.clip(actual_xg - exp_xg_h, -min_val, min_val)
+            )
+            def_rating_home[team] = max(
+                0.05,
+                team_def_h + k_def * np.clip(actual_xgc - exp_xgc_h, -min_val, min_val)
+            )
         else:
             team_off_a = off_rating_away[team]
-            opp_def_h = def_rating_home[opponent]
             team_def_a = def_rating_away[team]
             opp_off_h = off_rating_home[opponent]
+            opp_def_h = def_rating_home[opponent]
 
-            preds_xg=model_xg.predict([[team_off_a,opp_def_h]])[0]
-            preds_xgc=model_xgc.predict([[opp_def_h,team_off_a]])[0]
+            exp_xg_a = predict_xg_from_indices(A=team_off_a, B=opp_def_h)
+            exp_xgc_a = predict_xg_from_indices(A=opp_off_h, B=team_def_a)
 
-            expected_goals = team_off_a*team_weight + pred_weight*(preds_xg)+opp_weight*opp_def_h
-            expected_goals_conceeded=opp_def_h*opp_weight+preds_xgc*pred_weight+team_weight*team_off_a
+            off_rating_away[team] = max(
+                0.05,
+                team_off_a + k_off * np.clip(actual_xg - exp_xg_a, -min_val, min_val)
+            )
+            def_rating_away[team] = max(
+                0.05,
+                team_def_a + k_def * np.clip(actual_xgc - exp_xgc_a, -min_val, min_val)
+            )
 
-            #model_xgc.partial_fit([[opp_def,team_off,opp_def_h,team_off_a]], [xg])
-
-            #model_xg.partial_fit([[team_off,opp_def,team_off_a,opp_def_h]], [xg])
-
-            delta_xg_a = k_off*min(min_val,max(-min_val,(actual_goals - expected_goals)))
-            delta_xgc_a=k_off*min(min_val,max(-min_val,(actual_goals - expected_goals_conceeded)))
-            New_off_rating_a=max(0.6, team_off_a+delta_xg_a)
-            New_def_rating_h=max(0.6, opp_def_h+delta_xgc_a)
-
-            off_rating_away[team] =New_off_rating_a
-            def_rating_home[opponent] = New_def_rating_h
-
-        """
-
-        expected_goals = team_off*0.3 + opp_def*0.2+0.4*(model_xg.predict([[team_off,opp_def]])[0]*1+model_xgc.predict([[opp_def,team_off]])[0]*0.0)
-        model_xgc.partial_fit([[opp_def,team_off]], [xg])
-        model_xg.partial_fit([[team_off,opp_def]], [xg])"""
-
-        preds_xg=model_xg.predict([[team_off,opp_def]])[0]
-        preds_xgc=model_xgc.predict([[opp_def,team_off]])[0]
-        expected_goals = team_off*team_weight+pred_weight*preds_xg+opp_weight*opp_def
-        expected_goals_conceeded= opp_def*opp_weight+pred_weight*(preds_xgc)+team_weight*team_off
-
-
-        delta_xg = k_off*min(min_val,max(-min_val,(actual_goals - expected_goals)))
-
-        delta_xgc = k_def*min(min_val,max(-min_val,(actual_goals - expected_goals_conceeded)))
-
-        error_xg.append(abs(actual_goals - expected_goals))
-
-
-        New_off_rating=max(0.6, team_off+delta_xg)
-        New_def_rating=max(0.6, opp_def+delta_xgc)
-
-        # Update ratings
-        off_rating[team] =New_off_rating
-        def_rating[opponent] = New_def_rating
-
-        # Log history
-        off_rating_history[team].append(off_rating[team])
-        def_rating_history[opponent].append(def_rating[opponent])
-
-
+        # Log split histories
         off_rating_home_history[team].append(off_rating_home[team])
-        def_rating_home_history[opponent].append(def_rating_home[opponent])
-
+        def_rating_home_history[team].append(def_rating_home[team])
         off_rating_away_history[team].append(off_rating_away[team])
-        def_rating_away_history[opponent].append(def_rating_away[opponent])
-        
+        def_rating_away_history[team].append(def_rating_away[team])
+
+        # --- ELO update (your logic) ---
         team_elo = elo_rating[team]
         opp_elo = elo_rating[opponent]
-
-        # Calculate expected result
         expected_team = 1 / (1 + 10 ** ((opp_elo - team_elo) / 400))
 
-        # Convert match result to outcome (1 win, 0.5 draw, 0 loss)
-        if row['Result'] == 2:
+        if row["Result"] == 2:
             actual_result = 1.0
-        elif row['Result'] == 1:
+        elif row["Result"] == 1:
             actual_result = 0.5
         else:
             actual_result = 0.0
 
-        new_factor=max(1,3-0.25*len(elo_history[team]))
-        # Update ratings
-        surprise_multiplier = abs(actual_result - expected_team) * 1.5  # tweakable
-        delta_elo = new_factor*k_elo * (actual_result - expected_team)*surprise_multiplier
+        new_factor = max(1.0, 3.0 - 0.25 * len(elo_history[team]))
+        surprise_multiplier = abs(actual_result - expected_team) * 1.5
+        delta_elo = new_factor * k_elo * (actual_result - expected_team) * surprise_multiplier
+
         elo_rating[team] += delta_elo
-        # Store history
         elo_history[team].append(elo_rating[team])
 
-    new_team_df=pd.read_csv("Team_data_transformed.csv").iloc[:,1:]
-    new_team_df_newest=pd.read_csv("Team_data_newest.csv").iloc[:,1:]
+    # ---- Write out transformed datasets using your blending logic ----
+    new_team_df = pd.read_csv("Team_data_transformed.csv").iloc[:, 1:].copy()
+    new_team_df_newest = pd.read_csv("Team_data_newest.csv").iloc[:, 1:].copy()
 
-    overall_weight=0.2
+    overall_weight = 0.0
 
-    team_transformed_df=pd.DataFrame()
-    team_transformed_df_newest=pd.DataFrame()
-    for t in range(len(teams)):
-        team=teams[t]
-        slope_df=pd.DataFrame()
-        slope_df["XG"]=off_rating_history[team]
-        slope_df["XG_slope"]=slope_df['XG'].rolling(window=6, min_periods=1).apply(rolling_slope, raw=True)
-        slope_df["XGC"]=def_rating_history[team]
-        slope_df["XGC_slope"]=slope_df['XGC'].rolling(window=6, min_periods=1).apply(rolling_slope, raw=True)
-        selected_team_df=new_team_df[new_team_df["code"]==team].copy()
-        selected_team_df["XGA"]=((1-overall_weight) * np.array(off_rating_away_history[team][:-1]) +overall_weight * selected_team_df["XGA"])*0.6+0.4*selected_team_df["Rolling_Threat"]
+    team_transformed_df = pd.DataFrame()
+    team_transformed_df_newest = pd.DataFrame()
 
-        selected_team_df["XGCA"]=((1-overall_weight)  * np.array(def_rating_away_history[team][:-1]) +overall_weight * selected_team_df["XGCA"])*0.6+0.4*selected_team_df["Rolling_Threat_Against"]
-        selected_team_df["XGH"]=((1-overall_weight)  * np.array(off_rating_home_history[team][:-1]) +overall_weight * selected_team_df["XGH"])*0.6+0.4*selected_team_df["Rolling_Threat"]
-        selected_team_df["XGCH"]=((1-overall_weight)  * np.array(def_rating_home_history[team][:-1]) +overall_weight* selected_team_df["XGCH"])*0.6+0.4*selected_team_df["Rolling_Threat_Against"]
-        selected_team_df["XG_avg"]=selected_team_df["XGH"]*0.5+selected_team_df["XGA"]*0.5
-        selected_team_df["XGC_avg"]=selected_team_df["XGCH"]*0.5+selected_team_df["XGCA"]*0.5
-        #selected_team_df["XG_avg"]=((1-overall_weight)  * np.array(off_rating_history[team][:-1]) +overall_weight* selected_team_df["XG_avg"])
-        #selected_team_df["XGC_avg"]=((1-overall_weight)  * np.array(def_rating_history[team][:-1]) +overall_weight* selected_team_df["XGC_avg"])
-        selected_team_df['XG_slope']=slope_df["XG_slope"].values[:-1]
-        selected_team_df['XGC_slope']=slope_df["XGC_slope"].values[:-1]
-        selected_team_df["Elo_Rating"]=elo_history[team][:-1]
-        team_transformed_df=pd.concat([team_transformed_df, selected_team_df], axis=0, ignore_index=True)
+    for team in teams:
+        # slopes from history
+        slope_df = pd.DataFrame({
+            "XG": off_rating_history[team],
+            "XGC": def_rating_history[team]
+        })
+        slope_df["XG_slope"] = slope_df["XG"].rolling(window=6, min_periods=1).apply(rolling_slope, raw=True)
+        slope_df["XGC_slope"] = slope_df["XGC"].rolling(window=6, min_periods=1).apply(rolling_slope, raw=True)
 
-        newest_selected_team_df=new_team_df_newest[new_team_df_newest["code"]==team].copy()
-        newest_selected_team_df["XGA"]=(off_rating_away_history[team][-1]*(1-overall_weight) +overall_weight * newest_selected_team_df["XGA"])*0.6+0.4*newest_selected_team_df["Rolling_Threat"]
-        newest_selected_team_df["XGCA"]=(def_rating_away_history[team][-1]*(1-overall_weight) +overall_weight * newest_selected_team_df["XGCA"])*0.6+0.4*newest_selected_team_df["Rolling_Threat_Against"]
-        newest_selected_team_df["XGH"]=(off_rating_home_history[team][-1]*(1-overall_weight) +overall_weight * newest_selected_team_df["XGH"])*0.6+0.4*newest_selected_team_df["Rolling_Threat"]
-        newest_selected_team_df["XGCH"]=(def_rating_home_history[team][-1]*(1-overall_weight) +overall_weight * newest_selected_team_df["XGCH"])*0.6+0.4*newest_selected_team_df["Rolling_Threat_Against"]
-        newest_selected_team_df["XG_avg"]=newest_selected_team_df["XGH"]*0.5+newest_selected_team_df["XGA"]*0.5
-        newest_selected_team_df["XGC_avg"]=newest_selected_team_df["XGCH"]*0.5+newest_selected_team_df["XGCA"]*0.5
-        #newest_selected_team_df["XG_avg"]=off_rating_history[team][-1]*(1-overall_weight) +overall_weight * newest_selected_team_df["XG_avg"]
-        #newest_selected_team_df["XGC_avg"]=def_rating_history[team][-1]*(1-overall_weight) +overall_weight * newest_selected_team_df["XGC_avg"]
-        newest_selected_team_df['XG_slope']=slope_df["XG_slope"].values[-1]
-        newest_selected_team_df['XGC_slope']=slope_df["XGC_slope"].values[-1]
-        newest_selected_team_df["Elo_Rating"]=elo_history[team][-1]
+        selected_team_df = new_team_df[new_team_df["code"] == team].copy()
 
-        team_transformed_df_newest=pd.concat([team_transformed_df_newest, newest_selected_team_df], axis=0, ignore_index=True)
+        # Use histories excluding final append (align lengths)
+        selected_team_df["XGA"] = ((1 - overall_weight) * np.array(off_rating_away_history[team][:-1]) +
+                                  overall_weight * selected_team_df["XGA"]) * 0.7 + 0.3 * selected_team_df["Rolling_Threat"]
+        selected_team_df["XGCA"] = ((1 - overall_weight) * np.array(def_rating_away_history[team][:-1]) +
+                                   overall_weight * selected_team_df["XGCA"]) * 0.7 + 0.3 * selected_team_df["Rolling_Threat_Against"]
+        selected_team_df["XGH"] = ((1 - overall_weight) * np.array(off_rating_home_history[team][:-1]) +
+                                  overall_weight * selected_team_df["XGH"]) * 0.7 + 0.3 * selected_team_df["Rolling_Threat"]
+        selected_team_df["XGCH"] = ((1 - overall_weight) * np.array(def_rating_home_history[team][:-1]) +
+                                   overall_weight * selected_team_df["XGCH"]) * 0.7 + 0.3 * selected_team_df["Rolling_Threat_Against"]
 
-    team_transformed_df.to_csv("Team_data_transformed2.csv")
-    team_transformed_df_newest.to_csv("Team_data_newest2.csv")
+        selected_team_df["XG_avg"] = selected_team_df["XGH"] * 0.5 + selected_team_df["XGA"] * 0.5
+        selected_team_df["XGC_avg"] = selected_team_df["XGCH"] * 0.5 + selected_team_df["XGCA"] * 0.5
+
+        selected_team_df["XG_slope"] = slope_df["XG_slope"].values[:-1]
+        selected_team_df["XGC_slope"] = slope_df["XGC_slope"].values[:-1]
+        selected_team_df["Elo_Rating"] = elo_history[team][:-1]
+
+        team_transformed_df = pd.concat([team_transformed_df, selected_team_df], ignore_index=True)
+
+        # newest
+        newest_selected_team_df = new_team_df_newest[new_team_df_newest["code"] == team].copy()
+        newest_selected_team_df["XGA"] = (off_rating_away_history[team][-1] * (1 - overall_weight) +
+                                          overall_weight * newest_selected_team_df["XGA"]) * 0.7 + 0.3 * newest_selected_team_df["Rolling_Threat"]
+        newest_selected_team_df["XGCA"] = (def_rating_away_history[team][-1] * (1 - overall_weight) +
+                                           overall_weight * newest_selected_team_df["XGCA"]) * 0.7 + 0.3 * newest_selected_team_df["Rolling_Threat_Against"]
+        newest_selected_team_df["XGH"] = (off_rating_home_history[team][-1] * (1 - overall_weight) +
+                                          overall_weight * newest_selected_team_df["XGH"]) * 0.7 + 0.3 * newest_selected_team_df["Rolling_Threat"]
+        newest_selected_team_df["XGCH"] = (def_rating_home_history[team][-1] * (1 - overall_weight) +
+                                           overall_weight * newest_selected_team_df["XGCH"]) * 0.7 + 0.3 * newest_selected_team_df["Rolling_Threat_Against"]
+
+        newest_selected_team_df["XG_avg"] = newest_selected_team_df["XGH"] * 0.5 + newest_selected_team_df["XGA"] * 0.5
+        newest_selected_team_df["XGC_avg"] = newest_selected_team_df["XGCH"] * 0.5 + newest_selected_team_df["XGCA"] * 0.5
+
+        newest_selected_team_df["XG_slope"] = slope_df["XG_slope"].values[-1]
+        newest_selected_team_df["XGC_slope"] = slope_df["XGC_slope"].values[-1]
+        newest_selected_team_df["Elo_Rating"] = elo_history[team][-1]
+
+        team_transformed_df_newest = pd.concat([team_transformed_df_newest, newest_selected_team_df], ignore_index=True)
+
+    team_transformed_df.to_csv("Team_data_transformed2.csv", index=False)
+    team_transformed_df_newest.to_csv("Team_data_newest2.csv", index=False)
+
+
+
     
     
 def Understat_teams():
@@ -1020,7 +951,7 @@ def Understat_teams():
     history["date_only"] = pd.to_datetime(history["date"], errors="coerce").dt.date
     num_cols = history.select_dtypes(include="number").columns.tolist()
 
-    team_data = pd.read_csv("Team_data_transformed2.csv").iloc[:, 1:].copy()
+    team_data = pd.read_csv("Team_data_transformed2.csv").copy()
     team_data["kickoff_date"] = pd.to_datetime(team_data["kickoff_time"], errors="coerce").dt.date
 
     right = history[["title", "date_only"] + num_cols].rename(columns={"title": "name"})
@@ -1055,7 +986,7 @@ def Understat_teams():
     new_table["date_only"] = pd.to_datetime(new_table["date"], errors="coerce").dt.date
     num_cols = new_table.select_dtypes(include="number").columns.tolist()
 
-    team_data = pd.read_csv("Team_data_newest2.csv").iloc[:, 1:].copy()
+    team_data = pd.read_csv("Team_data_newest2.csv").copy()
     team_data["kickoff_date"] = pd.to_datetime(team_data["kickoff_time"], errors="coerce").dt.date
 
     right = new_table[["title", "date_only"] + num_cols].rename(columns={"title": "name"})
