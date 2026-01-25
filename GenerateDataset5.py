@@ -712,10 +712,12 @@ def team_transformed2():
     k_elo = 30.0
 
     # Update params
-    k_off = 0.065
-    k_def = 0.065
-    min_val = 0.8
+    k_off = 0.05
+    k_def = 0.05
+    min_val = 1.2
 
+    #0.12, 0.06, 0.72
+    #før 0.065, 0.8
     # Optional: clip observed xG/xGC to reduce outliers
     OBS_LO, OBS_HI = 0.5, 3.5  # <-- less distortion than (0.5..3); adjust as you like
 
