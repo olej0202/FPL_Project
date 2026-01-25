@@ -828,9 +828,9 @@ def team_transformed2():
 
     # --- Choose TWO parameter sets ---
     # Example: one "fast" learner and one "slow" learner
-    k_off_1, k_def_1 = 0.05, 0.05
+    k_off_1, k_def_1 = 0.06, 0.06
     k_off_2, k_def_2 = 0.12, 0.12
-    min_val = 1.2
+    min_val = 0.9
 
     OBS_LO, OBS_HI = 0.5, 3.5
 
