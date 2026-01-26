@@ -472,7 +472,7 @@ def Player_adjustements(current_player_path):
     )*cbi_opp
 
     bps_scaled = np.maximum(4, df["Rolling_adjusted_BPS"]*0.4+df["Rolling_adjusted_BPS_2"]*0.6) 
-    df["BPS"]=bps_scaled*0.0377
+    df["BPS"]=bps_scaled*0.03
     # Final columns (including the new ones)
     final_cols =["name","position", "GW", "Team","average_minutes","Goal_share", "Assist_share", "Pen_data","CBI_Percent","BPS"]
     df = df[final_cols]
