@@ -128,6 +128,13 @@ export default function FixturesPage() {
 
   const gwIndex = selectedGW != null ? availableGWs.indexOf(selectedGW) : -1;
 
+    const gwChoices = useMemo(() => {
+    const min = toNum(minHorizonGW, 1);
+    const arr = [];
+    for (let g = min; g <= 38; g += 1) arr.push(g);
+    return arr;
+  }, [minHorizonGW]);
+
   if (loading && fixtures.length === 0) {
     return <div style={pageStyle}>Loading fixtures…</div>;
   }
@@ -213,12 +220,7 @@ export default function FixturesPage() {
 
   // GW dropdown inside each fixture option:
   // allow picking earlier GWs, but NOT earlier than the minimal GW across the horizon.
-  const gwChoices = useMemo(() => {
-    const min = toNum(minHorizonGW, 1);
-    const arr = [];
-    for (let g = min; g <= 38; g += 1) arr.push(g);
-    return arr;
-  }, [minHorizonGW]);
+
 
   return (
     <div style={pageStyle}>

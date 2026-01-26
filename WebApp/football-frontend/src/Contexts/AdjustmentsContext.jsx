@@ -25,32 +25,76 @@ export const fixtureIdFromRow = (row) => {
   const homeTeam = isHome ? row.team_name : opp;
   const awayTeam = isHome ? opp : row.team_name;
 
-  const normalizeName = (s) => String(s ?? "").trim().toLowerCase();
-  return `${normalizeName(homeTeam)}__${normalizeName(awayTeam)}`;
+  return fixtureIdFromTeams(homeTeam, awayTeam);
 };
 
-const buildFixturesFromTeamRows = (teamRows) => {
+const toNum = (v, fallback = null) => {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : fallback;
+};
+
+const normalizeOptions01 = (options01) => {
+  const cleaned = (options01 || [])
+    .map((o) => ({ gw: toNum(o.gw, null), p: toNum(o.p, 0) }))
+    .filter((o) => Number.isFinite(o.gw));
+
+  if (cleaned.length === 0) return null;
+
+  const sum = cleaned.reduce((a, o) => a + (Number.isFinite(o.p) ? o.p : 0), 0);
+
+  if (sum <= 0) {
+    return cleaned.map((o, i) => ({ ...o, p: i === 0 ? 1 : 0 }));
+  }
+
+  return cleaned.map((o) => ({ ...o, p: o.p / sum }));
+};
+
+// fixturesConfig format: { [fixture_code: string]: [{gw, probability}] }
+const optionsFromConfig = (fixturesConfig, fixtureCode) => {
+  const arr = fixturesConfig?.[String(fixtureCode)];
+  if (!Array.isArray(arr) || arr.length === 0) return null;
+
+  const options01 = arr.map((x) => ({
+    gw: toNum(x.gw, null),
+    p: toNum(x.probability, 0),
+  }));
+
+  return normalizeOptions01(options01);
+};
+
+const buildFixturesFromTeamRows = (teamRows, fixturesConfig) => {
   const byId = new Map();
 
   for (const r of teamRows || []) {
     const opp = r?.Opponent_team ?? r?.opponent_team;
     const isHome = r?.Home === "H" || r?.Home === "Home" || r?.Home === true;
+
     const homeTeam = isHome ? r.team_name : opp;
     const awayTeam = isHome ? opp : r.team_name;
 
-    const id = fixtureIdFromRow(r);
-    const gw = Number(r.GW);
+    const id = fixtureIdFromRow(r); // UI identity (home__away)
+    const gw = toNum(r.GW, null);
+
+    // IMPORTANT: this matches your fixtures_config keys
+    const fixtureCode = r?.fixture_code;
 
     if (!id || !homeTeam || !awayTeam || !Number.isFinite(gw)) continue;
 
     // IMPORTANT: initialize ONCE and ONLY ONCE per fixtureId
     if (!byId.has(id)) {
+      // default = current GW, 100%
+      let options = [{ gw, p: 1 }];
+
+      // override from config if present (keyed by fixture_code)
+      const cfg = optionsFromConfig(fixturesConfig, fixtureCode);
+      if (cfg) options = cfg;
+
       byId.set(id, {
         id,
         homeTeam,
         awayTeam,
-        // start with exactly one option: current GW, 100%
-        options: [{ gw, p: 1 }],
+        fixtureCode: fixtureCode ?? null, // optional: useful for debugging
+        options,
       });
     }
   }
@@ -65,6 +109,9 @@ export function AdjustmentDataProvider({ children }) {
 
   // NEW: fixtures ref
   const FixturesRef = useRef(null);
+
+  // NEW: fixtures_config ref (from API)
+  const FixturesConfigRef = useRef(null);
 
   const [loading, setLoading] = useState(false);
 
@@ -81,21 +128,28 @@ export function AdjustmentDataProvider({ children }) {
 
     setLoading(true);
     try {
-      const [TeamRes, PlayerRes] = await Promise.all([
+      const [TeamRes, PlayerRes, FixturesConfigRes] = await Promise.all([
         fetch("https://fpl-project-t5e9.onrender.com/Team_result_adjust").then(
           (res) => res.json()
         ),
         fetch("https://fpl-project-t5e9.onrender.com/Player_result_adjust").then(
           (res) => res.json()
         ),
+        fetch("https://fpl-project-t5e9.onrender.com/fixtures_config").then(
+          (res) => res.json()
+        ),
       ]);
 
       TeamRef.current = TeamRes;
       PlayerRef.current = PlayerRes;
+      FixturesConfigRef.current = FixturesConfigRes;
 
       // init fixtures if missing
       if (!FixturesRef.current) {
-        FixturesRef.current = buildFixturesFromTeamRows(TeamRes);
+        FixturesRef.current = buildFixturesFromTeamRows(
+          TeamRes,
+          FixturesConfigRef.current
+        );
         setFixturesVersion((v) => v + 1);
       }
 
@@ -108,20 +162,18 @@ export function AdjustmentDataProvider({ children }) {
     }
   }, []);
 
-  const forceRefetch = useCallback(
-    async () => {
-      TeamRef.current = null;
-      PlayerRef.current = null;
-      FixturesRef.current = null;
+  const forceRefetch = useCallback(async () => {
+    TeamRef.current = null;
+    PlayerRef.current = null;
+    FixturesRef.current = null;
+    FixturesConfigRef.current = null;
 
-      setDataVersion((v) => v + 1);
-      setTeamVersion((v) => v + 1);
-      setFixturesVersion((v) => v + 1);
+    setDataVersion((v) => v + 1);
+    setTeamVersion((v) => v + 1);
+    setFixturesVersion((v) => v + 1);
 
-      await fetchIfNeeded();
-    },
-    [fetchIfNeeded]
-  );
+    await fetchIfNeeded();
+  }, [fetchIfNeeded]);
 
   const updatePlayerData = useCallback((updater) => {
     if (typeof updater === "function") {
@@ -141,7 +193,10 @@ export function AdjustmentDataProvider({ children }) {
 
     // If fixtures haven't been initialized (or were reset), build them now.
     if (!FixturesRef.current) {
-      FixturesRef.current = buildFixturesFromTeamRows(TeamRef.current);
+      FixturesRef.current = buildFixturesFromTeamRows(
+        TeamRef.current,
+        FixturesConfigRef.current
+      );
       setFixturesVersion((v) => v + 1);
     }
 
@@ -185,29 +240,35 @@ export function AdjustmentDataProvider({ children }) {
     setDataVersion((v) => v + 1);
   }, []);
 
-  const normalizeFixtureProbabilities = useCallback((fixtureId) => {
-    updateFixture(fixtureId, (fx) => {
-      const options = (fx.options || []).map((o) => ({
-        gw: Number(o.gw),
-        p: Number(o.p),
-      }));
+  const normalizeFixtureProbabilities = useCallback(
+    (fixtureId) => {
+      updateFixture(fixtureId, (fx) => {
+        const options = (fx.options || []).map((o) => ({
+          gw: Number(o.gw),
+          p: Number(o.p),
+        }));
 
-      const sum = options.reduce((acc, o) => acc + (Number.isFinite(o.p) ? o.p : 0), 0);
+        const sum = options.reduce(
+          (acc, o) => acc + (Number.isFinite(o.p) ? o.p : 0),
+          0
+        );
 
-      // If sum is 0, fall back to first option = 1
-      if (sum <= 0) {
+        // If sum is 0, fall back to first option = 1
+        if (sum <= 0) {
+          return {
+            ...fx,
+            options: options.map((o, i) => ({ ...o, p: i === 0 ? 1 : 0 })),
+          };
+        }
+
         return {
           ...fx,
-          options: options.map((o, i) => ({ ...o, p: i === 0 ? 1 : 0 })),
+          options: options.map((o) => ({ ...o, p: o.p / sum })),
         };
-      }
-
-      return {
-        ...fx,
-        options: options.map((o) => ({ ...o, p: o.p / sum })),
-      };
-    });
-  }, [updateFixture]);
+      });
+    },
+    [updateFixture]
+  );
 
   return (
     <AdjustmentContext.Provider
@@ -219,13 +280,13 @@ export function AdjustmentDataProvider({ children }) {
         // refs
         Teamdata: TeamRef,
         Playerdata: PlayerRef,
-        Fixtures: FixturesRef, // NEW
+        Fixtures: FixturesRef,
 
         // versions
         dataVersion,
         teamVersion,
         changesVersion,
-        fixturesVersion, // NEW
+        fixturesVersion,
 
         // changes API
         changes: ChangesRef,
