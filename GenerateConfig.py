@@ -46,20 +46,20 @@ Manual_Player_Adjustments={
 Manual_Player_Risk={
         "Alexander_Isak":0.6,
         "Yoane_Wissa":0.8,
-        "Antoine_Semenyo":0.8,     
+        "Antoine_Semenyo":0.6,     
         "Marc_Guéhi":0.8        
 }
 
 Manual_min=[
         {"name": "Bukayo_Saka", "type": "const",   "GW": "any", "value": 90},
-        {"name": "Hugo_Ekitiké", "type": "const",   "GW": "any", "value": 80},
+        {"name": "Hugo_Ekitiké", "type": "const",   "GW": "any", "value": 75},
         {"name": "Alisson_Ramses Becker", "type": "const",   "GW": "any", "value": 90},
         {"name": "Gabriel_dos Santos Magalhães", "type": "const",   "GW": "any", "value": 90},
         {"name": "Bruno_Borges Fernandes", "type": "const",   "GW": "any", "value": 90},
         {"name": "Rayan_Aït-Nouri", "type": "const",   "GW": "any", "value": 1},
-        {"name": "Antoine_Semenyo", "type": "const",   "GW": "any", "value": 70},
+        {"name": "Antoine_Semenyo", "type": "const",   "GW": "any", "value": 75},
         {"name": "Rayan_Cherki", "type": "const",   "GW": "any", "value": 65},
-        {"name": "Daniel_Muñoz", "type": "const",   "GW": "any", "value": 75},
+        {"name": "Daniel_Muñoz", "type": "const",   "GW": "any", "value": 90},
         #Afcon
         {"name": "Mohamed_Salah", "type": "const",   "GW": "any", "value": 90},
         {"name": "Ismaïla_Sarr", "type": "const",   "GW": "any", "value": 90},
@@ -69,7 +69,7 @@ Manual_min=[
         {"name": "Dango_Ouattara", "type": "adjust_from",   "GW": "23", "value": 90},
         {"name": "Alex_Iwobi", "type": "adjust_from",   "GW": "23", "value": 90},
         
-        {"name": "Cole_Palmer", "type": "const",   "GW": "any", "value": 90},
+        {"name": "Cole_Palmer", "type": "const",   "GW": "any", "value": 75},
         {"name": "Anthony_Gordon", "type": "const",   "GW": "any", "value": 75},
         {"name": "Viktor_Gyökeres", "type": "const",   "GW": "any", "value": 80},
         {"name": "Matheus_Santos Carneiro da Cunha", "type": "const",   "GW": "any", "value": 70},
@@ -81,8 +81,8 @@ NEW_TEAMS=[]
 NEW_TEAMS_NAME=[]
 fixtures_config = {
         "2562204": [
-            {"gw": 26, "probability": 0.5},
-            {"gw": 31, "probability": 0.5},
+            {"gw": 26, "probability": 0.65},
+            {"gw": 31, "probability": 0.35},
         ]
 
     }

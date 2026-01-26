@@ -157,7 +157,7 @@ def Generate_Team_threats():
     # Threat metrics (rename Treat → Threat if that’s what you intend)
     latest_ewm["Goal_Threat"] = latest_ewm["npxG_share_ewm"] * 0.6 + 0.4 * latest_ewm["shots_share_ewm"]
     latest_ewm["Assist_Threat"] = latest_ewm["xA_share_ewm"] * 0.6 + 0.4 * latest_ewm["key_passes_share_ewm"]
-    latest_ewm["Threat"] = latest_ewm["Goal_Threat"] * 0.6 + 0.4 * latest_ewm["Assist_Threat"]
+    latest_ewm["Threat"] = latest_ewm["Goal_Threat"] * 1 + 0 * latest_ewm["Assist_Threat"]
 
     # Keep only relevant columns
 
