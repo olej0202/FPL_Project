@@ -383,7 +383,7 @@ def Generate_Team_Adjustments():
     max_gw = min_gw + 4
 
     # Filter DF to only include those GWs
-    df_filtered = df[(df["GW"] >= min_gw) & (df["GW"] <= max_gw)]
+    df_filtered = df[(df["GW"] >= min_gw)]
 
     df_filtered.to_csv("Visual_adjust_Team_results.csv")
 

@@ -665,9 +665,6 @@ def predict_xg_from_indices(A: float, B: float) -> float:
     return math.exp(0.5 * z)
 
 
-def predict_xg_from_indices(A: float, B: float) -> float:
-    z = -2.66 + 1.24 * A + 1.34 * B - 0.14 * A * B
-    return math.exp(0.5 * z)
 
 
 def _run_one_pass(team_df: pd.DataFrame, teams, team_avg_xg, team_avg_xgc, global_avg_xg, global_avg_xgc,
@@ -828,9 +825,9 @@ def team_transformed2():
 
     # --- Choose TWO parameter sets ---
     # Example: one "fast" learner and one "slow" learner
-    k_off_1, k_def_1 = 0.06, 0.06
-    k_off_2, k_def_2 = 0.12, 0.12
-    min_val = 0.9
+    k_off_1, k_def_1 = 0.05, 0.05
+    k_off_2, k_def_2 = 0.09, 0.09
+    min_val = 0.8
 
     OBS_LO, OBS_HI = 0.5, 3.5
 

@@ -14,6 +14,9 @@ from Generate_Optimize_Myteam3 import optimize_my_team
 from Generate_Fetch_Myteam import build_team_dataframe
 from typing import List, Optional, Literal
 from pydantic import BaseModel
+from fastapi.responses import JSONResponse
+from GenerateConfig import fixtures_config
+
 
 class PlayerInput(BaseModel):
     name: str
@@ -132,6 +135,11 @@ def get_data():
     df = load_and_transform("Season_Analysis")
     
     return df.to_dict(orient="records")
+
+@app.get("/fixtures_config")
+def get_fixtures_config():
+    # fixtures_config imported from GenerateConfig
+    return JSONResponse(content=fixtures_config)
 
 @app.get("/Team_Predictions")
 def get_data():
