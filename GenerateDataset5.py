@@ -827,9 +827,9 @@ def team_transformed2():
     # Example: one "fast" learner and one "slow" learner
     k_off_1, k_def_1 = 0.05, 0.05
     k_off_2, k_def_2 = 0.09, 0.09
-    min_val = 0.8
+    min_val = 1
 
-    OBS_LO, OBS_HI = 0.5, 3.5
+    OBS_LO, OBS_HI = 0.5, 3.0
 
     # Run twice
     run1 = _run_one_pass(team_df, teams, team_avg_xg, team_avg_xgc, global_avg_xg, global_avg_xgc,
@@ -849,7 +849,7 @@ def team_transformed2():
     # ---- Write out transformed datasets using your blending logic ----
     new_team_df = pd.read_csv("Team_data_transformed.csv").iloc[:, 1:].copy()
     new_team_df_newest = pd.read_csv("Team_data_newest.csv").iloc[:, 1:].copy()
-    overall_weight = 0.0
+    overall_weight = 0.2
 
     team_transformed_df = pd.DataFrame()
     team_transformed_df_newest = pd.DataFrame()
@@ -1512,7 +1512,7 @@ def adjust_measure(df, measure_name):
     else:
         current_expected_goals_start_value=player_df[measure_name].mean()*0.8
     current_expected_goals=current_expected_goals_start_value
-    smoothing_f=0.1
+    smoothing_f=0.08
     
     count=0
     in_row=0

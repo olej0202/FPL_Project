@@ -430,7 +430,7 @@ const computeMeasures = useCallback(
     const cs = Number(teamRow.CS) || 0;
 
     // per-match minutes adjustment
-    const minutesAdj = avgMin ? Math.min(1, avgMin / 75) : 0;
+    const minutesAdj = avgMin ? Math.min(1, avgMin / 80) : 0;
 
     // ✅ Goals/assists scale naturally with xg (which is already summed across fixtures)
     // ✅ Pen component is per match -> multiply by matchCount
