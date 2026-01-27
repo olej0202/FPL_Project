@@ -1,5 +1,7 @@
 // src/pages/MyTeamOverview.jsx
 import React, { useState, useEffect, useMemo, useCallback } from "react";
+import teamShort from "./utils/team_short"; // adjust path if needed
+
 import {
   LineChart,
   Line,
@@ -8,6 +10,7 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  Legend
 } from "recharts";
 import {
   ChevronLeft,
@@ -29,6 +32,65 @@ const PALETTE = {
   gold: "#B8860B",
   black: "#000000",
   beige: "#f7ead6",
+};
+
+// --- Opponent formatting helpers (teamShort mapping + DGW support) ---
+const normalizeTeamKey = (s) =>
+  String(s || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ");
+
+const getTeamShort = (teamNameOrCode) => {
+  if (!teamNameOrCode) return null;
+
+  // If it's already a short code like "ARS", keep it
+  const raw = String(teamNameOrCode).trim();
+  if (/^[A-Za-z]{2,4}$/.test(raw)) return raw.toUpperCase();
+
+  // Direct match (common case)
+  if (teamShort?.[raw]) return String(teamShort[raw]).toUpperCase();
+
+  // Case-insensitive match against keys
+  const target = normalizeTeamKey(raw);
+  const key = Object.keys(teamShort || {}).find(
+    (k) => normalizeTeamKey(k) === target
+  );
+  if (key) return String(teamShort[key]).toUpperCase();
+
+  return null;
+};
+
+// Returns { opp1, opp2, display } where display is "OPP1" or "OPP1/OPP2"
+const formatOpponent = (opponentValue) => {
+  if (!opponentValue) return { opp1: "N/A", opp2: null, display: "N/A" };
+
+  // If API ever gives an array for DGW
+  const partsFromArray = Array.isArray(opponentValue)
+    ? opponentValue
+    : null;
+
+  // Otherwise parse a string that might contain 2 opponents
+  // Handles: "Team A / Team B", "Team A & Team B", "Team A, Team B", "Team A; Team B", "Team A and Team B"
+  const partsFromString =
+    partsFromArray ||
+    String(opponentValue)
+      .split(/\s*(\/|&|,|;|\band\b|\bAND\b)\s*/g)
+      .filter((x) => x && !/^(\/|&|,|;|and|AND)$/i.test(x))
+      .map((x) => x.trim())
+      .filter(Boolean);
+
+  const oppA = partsFromString?.[0] ?? null;
+  const oppB = partsFromString?.[1] ?? null;
+
+  const shortA = getTeamShort(oppA) || "N/A";
+  const shortB = oppB ? getTeamShort(oppB) : null;
+
+  return {
+    opp1: shortA,
+    opp2: shortB || null,
+    display: shortB ? `${shortA}/${shortB}` : shortA,
+  };
 };
 
 // Compute default 11 starters given a squad and predictions
@@ -334,29 +396,45 @@ export default function MyTeamOverview() {
     }
 
     return currentSquad.map((player, squadIndex) => {
-      const prediction = playersData.find(
-        (p) => p.name === player.name && Number(p.GW) === Number(currentGW)
-      );
+const rows = playersData.filter(
+  (p) => p.name === player.name && Number(p.GW) === Number(currentGW)
+);
 
-      let selectedPct = player.selected_pct;
-      if (selectedPct == null && prediction?.selected != null) {
-        selectedPct = Number(prediction.selected) * 100;
-      }
+// keep existing behavior for points (do NOT sum)
+const prediction = rows[0];
 
-      const photo =
-        prediction?.photo ?? prediction?.photo_url ?? player.photo ?? null;
+// collect all opponents for DGW (unique, preserves order)
+const oppList = Array.from(
+  new Set(rows.map((r) => r.opponent_name).filter(Boolean))
+);
 
-      return {
-        ...player,
-        squadIndex,
-        photo,
-        points_prediction: prediction?.Points_prediction
-          ? Number(prediction.Points_prediction)
-          : 0,
-        opponent: prediction?.opponent_name || "N/A",
-        selected_pct: selectedPct,
-        model_value: prediction?.value != null ? Number(prediction.value) : null,
-      };
+const oppFmt = formatOpponent(oppList.length ? oppList : (prediction?.opponent_name || "N/A"));
+
+let selectedPct = player.selected_pct;
+if (selectedPct == null && prediction?.selected != null) {
+  selectedPct = Number(prediction.selected) * 100;
+}
+
+const photo =
+  prediction?.photo ?? prediction?.photo_url ?? player.photo ?? null;
+
+return {
+  ...player,
+  squadIndex,
+  photo,
+  points_prediction: prediction?.Points_prediction
+    ? Number(prediction.Points_prediction)
+    : 0,
+
+  opponent_raw: oppList.length ? oppList.join(" / ") : (prediction?.opponent_name || "N/A"),
+  opponent_opp1: oppFmt.opp1,
+  opponent_opp2: oppFmt.opp2,
+  opponent_display: oppFmt.display,
+
+  selected_pct: selectedPct,
+  model_value: prediction?.value != null ? Number(prediction.value) : null,
+};
+
     });
   }, [currentSquad, playersData, currentGW]);
 
@@ -743,6 +821,54 @@ export default function MyTeamOverview() {
 
     return { selPct, nowCost, totalPred };
   }, [profilePlayer, playersData, availableGWs, currentGW, maxAvailableGW]);
+
+
+  // --- Pred points per GW for a player (do NOT sum multiple rows in same GW) ---
+const getGwPointsForPlayer = useCallback(
+  (playerName) => {
+    const map = {};
+    if (!playerName || !playersData.length) return map;
+
+    availableGWs.forEach((gw) => {
+      const rows = playersData.filter(
+        (p) => p.name === playerName && Number(p.GW) === Number(gw)
+      );
+
+      const first = rows[0]; // IMPORTANT: do not sum
+      map[gw] = first?.Points_prediction ? Number(first.Points_prediction) : 0;
+    });
+
+    return map;
+  },
+  [playersData, availableGWs]
+);
+
+const compareChartData = useMemo(() => {
+  if (!profilePlayer || currentGW == null || maxAvailableGW == null) return [];
+
+  const horizon = availableGWs.filter(
+    (gw) => gw >= currentGW && gw <= maxAvailableGW
+  );
+
+  const curMap = getGwPointsForPlayer(profilePlayer.name);
+  const candMap = compareCandidate?.name
+    ? getGwPointsForPlayer(compareCandidate.name)
+    : null;
+
+  return horizon.map((gw) => ({
+    gw,
+    current: curMap[gw] ?? 0,
+    candidate: candMap ? (candMap[gw] ?? 0) : null,
+  }));
+}, [
+  profilePlayer,
+  compareCandidate,
+  availableGWs,
+  currentGW,
+  maxAvailableGW,
+  getGwPointsForPlayer,
+]);
+
 
   // ---------- REPLACEMENTS ----------
   const replacementsMeta = useMemo(() => {
@@ -1508,8 +1634,8 @@ export default function MyTeamOverview() {
                               {player.web_name}
                             </span>
                             <span className="text-[11px] text-gray-300 whitespace-nowrap">
-                              {player.opponent}
-                            </span>
+  {player.opponent_display || "N/A"}
+</span>
                           </div>
                           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-gray-400 mt-0.5">
                             <span>
@@ -1590,7 +1716,7 @@ export default function MyTeamOverview() {
         <div className="fixed inset-0 z-40 flex items-center justify-center px-4">
           <div className="absolute inset-0 bg-black/60" onClick={handleCloseProfile} />
           <div
-            className="relative w-full max-w-md rounded-2xl p-4 sm:p-5 shadow-2xl"
+            className="relative w-full max-w-4xl rounded-2xl p-4 sm:p-5 shadow-2xl"
             style={{
               border: `1px solid ${PALETTE.gold}`,
               background:
@@ -1708,6 +1834,64 @@ export default function MyTeamOverview() {
                     accent="emerald"
                     placeholder="Hover a replacement"
                   />
+                  {/* Per-GW predicted points comparison chart */}
+<div className="mt-3 rounded-xl border border-white/10 bg-black/60 p-3">
+  <div className="flex items-center justify-between mb-2">
+    <span className="text-[11px] uppercase tracking-wide text-gray-300">
+      Predicted points per GW
+    </span>
+    <span className="text-[11px] text-gray-400">
+      GW {currentGW ?? "-"}–{maxAvailableGW ?? "-"}
+    </span>
+  </div>
+
+  {compareChartData.length === 0 ? (
+    <div className="text-xs text-gray-400">No chart data available.</div>
+  ) : (
+    <div style={{ height: 240 }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={compareChartData}>
+  <CartesianGrid strokeDasharray="3 3" />
+  <XAxis dataKey="gw" />
+  <YAxis tickFormatter={(v) => Number(v).toFixed(1)} />
+  <Tooltip
+  labelFormatter={(label) => `GW ${label}`}
+  formatter={(value, name) => [Number(value).toFixed(1), name]}
+/>
+
+  <Legend />
+
+  <Line
+    type="monotone"
+    dataKey="current"
+    name={profilePlayer?.web_name || "Current"}
+    stroke="#f59e0b"
+    strokeWidth={2}
+    dot={{ r: 2 }}
+  />
+
+  {compareCandidate && (
+    <Line
+      type="monotone"
+      dataKey="candidate"
+      name={compareCandidate?.web_name || "Candidate"}
+      stroke="#10b981"
+      strokeWidth={2}
+      dot={{ r: 2 }}
+    />
+  )}
+</LineChart>
+      </ResponsiveContainer>
+    </div>
+  )}
+
+  {!compareCandidate && (
+    <div className="mt-2 text-[11px] text-gray-400">
+      Click a replacement below to compare.
+    </div>
+  )}
+</div>
+
                 </div>
 
                 {compareCandidate && (
@@ -1776,9 +1960,8 @@ export default function MyTeamOverview() {
               ) : (
                 <ul className="divide-y divide-white/5 text-xs">
                   {displayReplacements.map((p) => {
-                    const oppShort = p.opponent
-                      ? String(p.opponent).slice(0, 3).toUpperCase()
-                      : "N/A";
+                    const oppShort = formatOpponent(p.opponent).display;
+
                     const isCompared = compareCandidate?.name === p.name;
 
                     return (
@@ -1787,12 +1970,9 @@ export default function MyTeamOverview() {
                         className={`px-3 py-2 flex items-center justify-between gap-2 cursor-pointer transition ${
                           isCompared ? "bg-emerald-500/10" : "hover:bg-white/5"
                         }`}
-                        onMouseEnter={() => setCompareCandidate(p)}
-                        onMouseLeave={() =>
-                          setCompareCandidate((prev) => (prev?.name === p.name ? null : prev))
-                        }
-                        onClick={() => handleReplaceWithSuggested(p)}
-                        title="Click to transfer in"
+                        onClick={() => setCompareCandidate(p)}
+          title="Click to compare"
+
                       >
                         <div className="flex items-center gap-2 min-w-0">
                           {p.photo ? (
@@ -1843,7 +2023,7 @@ export default function MyTeamOverview() {
             </div>
 
             <div className="mt-2 text-[11px] text-gray-400">
-              Click a row to transfer. Hover to compare first.
+              Click a row to compare. Transfer using the button above.
             </div>
           </div>
         </div>
@@ -1866,9 +2046,8 @@ function PitchRow({ players, label, dragInfo, swapModeActive, onDrop, onClickSwa
         const costDisplay =
           costRaw != null && Number.isFinite(costRaw) ? (costRaw / 10).toFixed(1) : null;
 
-        const oppShort = player.opponent
-          ? String(player.opponent).slice(0, 3).toUpperCase()
-          : "N/A";
+        const oppShort = player.opponent_display || "N/A";
+
 
         const droppable = dragInfo && dragInfo.type === "bench";
         const highlightAsTarget = swapModeActive || droppable;
