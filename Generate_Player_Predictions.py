@@ -907,6 +907,7 @@ def Generate_point_predictions(GW_list):
         if(New_dataset["name"].values[0]=='Matheus_Santos Carneiro da Cunha'):
             summary_dataset.to_csv("debug2.csv")
             New_dataset.to_csv("debug1.csv")
+            
         if(position=="FWD"):
             summary_dataset["Points_prediction"]=(2+summary_dataset["Goal_pred"]*5.3
                                                   +summary_dataset["Assist_pred"]*3.5
@@ -915,7 +916,7 @@ def Generate_point_predictions(GW_list):
             summary_dataset["Points_prediction"]=(2+summary_dataset["Goal_pred"]*5.5
                                                   +summary_dataset["Assist_pred"]*3.5
                                                   +summary_dataset["Bonus_pred"]
-                                                  +summary_dataset["GC_pred"]*0.8)*0.9+0.1*summary_dataset["Fantasy_pred"]+(np.minimum(1, summary_dataset["CBI_pred"] / 12) * 0.7+0.3*cbi_hit_rate)*0.9*2
+                                                  +summary_dataset["GC_pred"]*0.8)*0.9+0.1*summary_dataset["Fantasy_pred"]+(np.minimum(1, summary_dataset["CBI_pred"] / 12) * 0.7+0.3*cbi_hit_rate)*0.8*2
             
         elif(position=="GKP"):
             summary_dataset["Points_prediction"]=(2
@@ -926,7 +927,7 @@ def Generate_point_predictions(GW_list):
             summary_dataset["Points_prediction"]=(1+summary_dataset["Goal_pred"]*6.3
                                                   +summary_dataset["Assist_pred"]*3.5
                                                   +summary_dataset["Bonus_pred"]
-                                                  +summary_dataset["GC_pred"]*5)*0.9+0.1*summary_dataset["Fantasy_pred"]+(np.minimum(1, summary_dataset["CBI_pred"] / 10) * 0.7+0.3*cbi_hit_rate)*0.9*2
+                                                  +summary_dataset["GC_pred"]*5)*0.9+0.1*summary_dataset["Fantasy_pred"]+(np.minimum(1, summary_dataset["CBI_pred"] / 10) * 0.7+0.3*cbi_hit_rate)*0.8*2
         
         
         full_df=pd.concat([full_df, summary_dataset], axis=0, ignore_index=True)
