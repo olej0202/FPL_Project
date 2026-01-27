@@ -58,7 +58,7 @@ Manual_min=[
         {"name": "Bruno_Borges Fernandes", "type": "const",   "GW": "any", "value": 90},
         {"name": "Rayan_Aït-Nouri", "type": "const",   "GW": "any", "value": 1},
         {"name": "Antoine_Semenyo", "type": "const",   "GW": "any", "value": 75},
-        {"name": "Rayan_Cherki", "type": "const",   "GW": "any", "value": 65},
+        {"name": "Rayan_Cherki", "type": "const",   "GW": "any", "value": 60},
         {"name": "Daniel_Muñoz", "type": "const",   "GW": "any", "value": 90},
         #Afcon
         {"name": "Mohamed_Salah", "type": "const",   "GW": "any", "value": 90},
@@ -72,7 +72,8 @@ Manual_min=[
         {"name": "Cole_Palmer", "type": "const",   "GW": "any", "value": 75},
         {"name": "Anthony_Gordon", "type": "const",   "GW": "any", "value": 75},
         {"name": "Viktor_Gyökeres", "type": "const",   "GW": "any", "value": 80},
-        {"name": "Matheus_Santos Carneiro da Cunha", "type": "const",   "GW": "any", "value": 70},
+        {"name": "Matheus_Santos Carneiro da Cunha", "type": "const",   "GW": "any", "value": 75},
+        {"name": "Patrick_Dorgu", "type": "const",   "GW": "any", "value": 0},
     ]
         
 
