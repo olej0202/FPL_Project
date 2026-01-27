@@ -873,9 +873,9 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
          
     css_stat_home = np.exp(
         -np.exp(
-            -1.3552097488
-            + 0.6777300426 * new_input_XGC["Own_XGC"]
-            + 0.62156006874 * new_input_XGC["Opposition_XG"]
+            -1.39
+            + 0.68 * new_input_XGC["Own_XGC"]
+            + 0.64 * new_input_XGC["Opposition_XG"]
             - 0.0503581036 * new_input_XGC["Own_XGC"] * new_input_XGC["Opposition_XG"]
         )
     )
@@ -901,9 +901,9 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     
     css_stat_away = np.exp(
         -np.exp(
-            -1.3552097488
-            + 0.6777300426 * new_input_XGC2["Own_XGC"]
-            + 0.62156006874 * new_input_XGC2["Opposition_XG"]
+            -1.39
+            + 0.68 * new_input_XGC2["Own_XGC"]
+            + 0.64 * new_input_XGC2["Opposition_XG"]
             - 0.0503581036 * new_input_XGC2["Own_XGC"] * new_input_XGC2["Opposition_XG"]
         )
     )

@@ -661,7 +661,7 @@ def predict_xg_from_indices(A: float, B: float) -> float:
       - A = offensive strength index (higher => more xG)
       - B = defensive weakness index (higher => more xG conceded by opponent)
     """
-    z = -2.66 + 1.24 * A + 1.34 * B - 0.14 * A * B
+    z = -2.84 + 1.32 * A + 1.39 * B - 0.13 * A * B
     return math.exp(0.5 * z)
 
 
@@ -669,7 +669,7 @@ def predict_xg_from_indices(A: float, B: float) -> float:
 
 def _run_one_pass(team_df: pd.DataFrame, teams, team_avg_xg, team_avg_xgc, global_avg_xg, global_avg_xgc,
                   k_off: float, k_def: float, min_val: float,
-                  OBS_LO: float = 0.5, OBS_HI: float = 3.5):
+                  OBS_LO: float = 0.5, OBS_HI: float = 3.2):
     """
     Runs your algorithm once and returns all histories needed to write outputs.
     """
@@ -715,10 +715,10 @@ def _run_one_pass(team_df: pd.DataFrame, teams, team_avg_xg, team_avg_xgc, globa
 
         # global updates
         delta_off = k_off * np.clip(actual_xg - expected_goals, -min_val, min_val)
-        off_rating[team] = max(0.05, team_off + delta_off)
+        off_rating[team] = max(0.5, team_off + delta_off)
 
         delta_def = k_def * np.clip(actual_xgc - expected_goals_conceded, -min_val, min_val)
-        def_rating[team] = max(0.05, team_def + delta_def)
+        def_rating[team] = max(0.5, team_def + delta_def)
 
         error_xg.append(abs(actual_xg - expected_goals))
         error_xgc.append(abs(actual_xgc - expected_goals_conceded))
@@ -736,8 +736,8 @@ def _run_one_pass(team_df: pd.DataFrame, teams, team_avg_xg, team_avg_xgc, globa
             exp_xg_h = predict_xg_from_indices(A=team_off_h, B=opp_def_a)
             exp_xgc_h = predict_xg_from_indices(A=opp_off_a, B=team_def_h)
 
-            off_rating_home[team] = max(0.05, team_off_h + k_off * np.clip(actual_xg - exp_xg_h, -min_val, min_val))
-            def_rating_home[team] = max(0.05, team_def_h + k_def * np.clip(actual_xgc - exp_xgc_h, -min_val, min_val))
+            off_rating_home[team] = max(0.5, team_off_h + k_off * np.clip(actual_xg - exp_xg_h, -min_val, min_val))
+            def_rating_home[team] = max(0.5, team_def_h + k_def * np.clip(actual_xgc - exp_xgc_h, -min_val, min_val))
         else:
             team_off_a = off_rating_away[team]
             team_def_a = def_rating_away[team]
@@ -747,8 +747,8 @@ def _run_one_pass(team_df: pd.DataFrame, teams, team_avg_xg, team_avg_xgc, globa
             exp_xg_a = predict_xg_from_indices(A=team_off_a, B=opp_def_h)
             exp_xgc_a = predict_xg_from_indices(A=opp_off_h, B=team_def_a)
 
-            off_rating_away[team] = max(0.05, team_off_a + k_off * np.clip(actual_xg - exp_xg_a, -min_val, min_val))
-            def_rating_away[team] = max(0.05, team_def_a + k_def * np.clip(actual_xgc - exp_xgc_a, -min_val, min_val))
+            off_rating_away[team] = max(0.5, team_off_a + k_off * np.clip(actual_xg - exp_xg_a, -min_val, min_val))
+            def_rating_away[team] = max(0.5, team_def_a + k_def * np.clip(actual_xgc - exp_xgc_a, -min_val, min_val))
 
         off_rating_home_history[team].append(off_rating_home[team])
         def_rating_home_history[team].append(def_rating_home[team])
@@ -867,13 +867,13 @@ def team_transformed2():
 
         # histories excluding final append (align lengths)
         selected_team_df["XGA"] = ((1 - overall_weight) * np.array(off_away_hist[team][:-1]) +
-                                  overall_weight * selected_team_df["XGA"]) * 0.7 + 0.3 * selected_team_df["Rolling_Threat"]
+                                  overall_weight * selected_team_df["XGA"]) * 0.8 + 0.2 * selected_team_df["Rolling_Threat"]
         selected_team_df["XGCA"] = ((1 - overall_weight) * np.array(def_away_hist[team][:-1]) +
-                                   overall_weight * selected_team_df["XGCA"]) * 0.7 + 0.3 * selected_team_df["Rolling_Threat_Against"]
+                                   overall_weight * selected_team_df["XGCA"]) * 0.8 + 0.2 * selected_team_df["Rolling_Threat_Against"]
         selected_team_df["XGH"] = ((1 - overall_weight) * np.array(off_home_hist[team][:-1]) +
-                                  overall_weight * selected_team_df["XGH"]) * 0.7 + 0.3 * selected_team_df["Rolling_Threat"]
+                                  overall_weight * selected_team_df["XGH"]) * 0.8 + 0.2 * selected_team_df["Rolling_Threat"]
         selected_team_df["XGCH"] = ((1 - overall_weight) * np.array(def_home_hist[team][:-1]) +
-                                   overall_weight * selected_team_df["XGCH"]) * 0.7 + 0.3 * selected_team_df["Rolling_Threat_Against"]
+                                   overall_weight * selected_team_df["XGCH"]) * 0.8 + 0.2 * selected_team_df["Rolling_Threat_Against"]
 
         selected_team_df["XG_avg"] = selected_team_df["XGH"] * 0.5 + selected_team_df["XGA"] * 0.5
         selected_team_df["XGC_avg"] = selected_team_df["XGCH"] * 0.5 + selected_team_df["XGCA"] * 0.5
@@ -887,13 +887,13 @@ def team_transformed2():
         # newest (use last element of averaged histories)
         newest_selected_team_df = new_team_df_newest[new_team_df_newest["code"] == team].copy()
         newest_selected_team_df["XGA"] = (off_away_hist[team][-1] * (1 - overall_weight) +
-                                          overall_weight * newest_selected_team_df["XGA"]) * 0.7 + 0.3 * newest_selected_team_df["Rolling_Threat"]
+                                          overall_weight * newest_selected_team_df["XGA"]) * 0.8 + 0.2 * newest_selected_team_df["Rolling_Threat"]
         newest_selected_team_df["XGCA"] = (def_away_hist[team][-1] * (1 - overall_weight) +
-                                           overall_weight * newest_selected_team_df["XGCA"]) * 0.7 + 0.3 * newest_selected_team_df["Rolling_Threat_Against"]
+                                           overall_weight * newest_selected_team_df["XGCA"]) * 0.8 + 0.2 * newest_selected_team_df["Rolling_Threat_Against"]
         newest_selected_team_df["XGH"] = (off_home_hist[team][-1] * (1 - overall_weight) +
-                                          overall_weight * newest_selected_team_df["XGH"]) * 0.7 + 0.3 * newest_selected_team_df["Rolling_Threat"]
+                                          overall_weight * newest_selected_team_df["XGH"]) * 0.8 + 0.2 * newest_selected_team_df["Rolling_Threat"]
         newest_selected_team_df["XGCH"] = (def_home_hist[team][-1] * (1 - overall_weight) +
-                                           overall_weight * newest_selected_team_df["XGCH"]) * 0.7 + 0.3 * newest_selected_team_df["Rolling_Threat_Against"]
+                                           overall_weight * newest_selected_team_df["XGCH"]) * 0.8 + 0.2 * newest_selected_team_df["Rolling_Threat_Against"]
 
         newest_selected_team_df["XG_avg"] = newest_selected_team_df["XGH"] * 0.5 + newest_selected_team_df["XGA"] * 0.5
         newest_selected_team_df["XGC_avg"] = newest_selected_team_df["XGCH"] * 0.5 + newest_selected_team_df["XGCA"] * 0.5

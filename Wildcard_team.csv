@@ -1,18 +1,18 @@
 ,Name,status,GW,position,photo,web_name,Is_captain
 0,Daniel_Ballard,transferred_out,29,DEF,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_56-110.png,Ballard,False
 1,Marc_Guéhi,transferred_in,29,DEF,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_43-110.png,Guéhi,False
-2,Bruno_Guimarães Rodriguez Moura,transferred_in,31,MID,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_4-110.png,Bruno G.,False
-3,Bukayo_Saka,transferred_out,31,MID,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_3-110.png,Saka,False
-4,Declan_Rice,transferred_out,31,MID,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_3-110.png,Rice,False
-5,Harry_Wilson,transferred_in,31,MID,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_54-110.png,Wilson,False
-6,José_Malheiro de Sá,transferred_out,31,GKP,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_39-110.png,José Sá,False
-7,Jurriën_Timber,transferred_out,31,DEF,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_3-110.png,J.Timber,False
-8,Lewis_Hall,transferred_in,31,DEF,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_4-110.png,Hall,False
-9,Mateus_Mané,transferred_out,31,FWD,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_39-110.png,Mané,False
-10,Nick_Pope,transferred_in,31,GKP,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_4-110.png,Pope,False
-11,Nico_O'Reilly,transferred_in,31,DEF,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_43-110.png,O'Reilly,False
-12,Raúl_Jiménez,transferred_in,31,FWD,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_54-110.png,Raúl,False
-13,Yerson_Mosquera Valdelamar,transferred_out,31,DEF,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_39-110.png,Mosquera,False
+2,Francisco_Evanilson de Lima Barbosa,transferred_in,30,FWD,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_91-110.png,Evanilson,False
+3,Ollie_Watkins,transferred_out,30,FWD,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_7-110.png,Watkins,False
+4,Bruno_Guimarães Rodriguez Moura,transferred_in,31,MID,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_4-110.png,Bruno G.,False
+5,Bukayo_Saka,transferred_out,31,MID,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_3-110.png,Saka,False
+6,Declan_Rice,transferred_out,31,MID,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_3-110.png,Rice,False
+7,Harry_Wilson,transferred_in,31,MID,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_54-110.png,Wilson,False
+8,José_Malheiro de Sá,transferred_out,31,GKP,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_39-110.png,José Sá,False
+9,Jurriën_Timber,transferred_out,31,DEF,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_3-110.png,J.Timber,False
+10,Lewis_Hall,transferred_in,31,DEF,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_4-110.png,Hall,False
+11,Mateus_Mané,transferred_out,31,FWD,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_39-110.png,Mané,False
+12,Nick_Pope,transferred_in,31,GKP,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_4-110.png,Pope,False
+13,Ollie_Watkins,transferred_in,31,FWD,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_7-110.png,Watkins,False
 14,Alisson_Ramses Becker,playing,24,GKP,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_14-110.png,A.Becker,False
 15,Anton_Stach,playing,24,MID,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_2-110.png,Stach,False
 16,Bruno_Borges Fernandes,playing,24,MID,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_1-110.png,B.Fernandes,True
@@ -110,13 +110,13 @@
 108,Declan_Rice,playing,30,MID,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_3-110.png,Rice,False
 109,Enzo_Fernández,playing,30,MID,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_8-110.png,Enzo,False
 110,Erling_Haaland,playing,30,FWD,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_43-110.png,Haaland,True
-111,James_Hill,benched,30,DEF,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_91-110.png,Hill,False
-112,José_Malheiro de Sá,benched,30,GKP,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_39-110.png,José Sá,False
-113,Jurriën_Timber,playing,30,DEF,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_3-110.png,J.Timber,False
-114,Marc_Guéhi,playing,30,DEF,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_43-110.png,Guéhi,False
-115,Marcos_Senesi,playing,30,DEF,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_91-110.png,Senesi,False
-116,Mateus_Mané,benched,30,FWD,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_39-110.png,Mané,False
-117,Ollie_Watkins,playing,30,FWD,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_7-110.png,Watkins,False
+111,Francisco_Evanilson de Lima Barbosa,playing,30,FWD,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_91-110.png,Evanilson,False
+112,James_Hill,benched,30,DEF,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_91-110.png,Hill,False
+113,José_Malheiro de Sá,benched,30,GKP,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_39-110.png,José Sá,False
+114,Jurriën_Timber,playing,30,DEF,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_3-110.png,J.Timber,False
+115,Marc_Guéhi,playing,30,DEF,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_43-110.png,Guéhi,False
+116,Marcos_Senesi,playing,30,DEF,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_91-110.png,Senesi,False
+117,Mateus_Mané,benched,30,FWD,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_39-110.png,Mané,False
 118,Yerson_Mosquera Valdelamar,benched,30,DEF,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_39-110.png,Mosquera,False
 119,Alisson_Ramses Becker,benched,31,GKP,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_14-110.png,A.Becker,False
 120,Anton_Stach,playing,31,MID,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_2-110.png,Stach,False
@@ -124,12 +124,12 @@
 122,Bruno_Guimarães Rodriguez Moura,playing,31,MID,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_4-110.png,Bruno G.,False
 123,Enzo_Fernández,playing,31,MID,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_8-110.png,Enzo,False
 124,Erling_Haaland,playing,31,FWD,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_43-110.png,Haaland,True
-125,Harry_Wilson,playing,31,MID,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_54-110.png,Wilson,False
-126,James_Hill,benched,31,DEF,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_91-110.png,Hill,False
-127,Lewis_Hall,playing,31,DEF,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_4-110.png,Hall,False
-128,Marc_Guéhi,playing,31,DEF,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_43-110.png,Guéhi,False
-129,Marcos_Senesi,benched,31,DEF,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_91-110.png,Senesi,False
-130,Nick_Pope,playing,31,GKP,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_4-110.png,Pope,False
-131,Nico_O'Reilly,playing,31,DEF,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_43-110.png,O'Reilly,False
+125,Francisco_Evanilson de Lima Barbosa,benched,31,FWD,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_91-110.png,Evanilson,False
+126,Harry_Wilson,playing,31,MID,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_54-110.png,Wilson,False
+127,James_Hill,benched,31,DEF,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_91-110.png,Hill,False
+128,Lewis_Hall,playing,31,DEF,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_4-110.png,Hall,False
+129,Marc_Guéhi,playing,31,DEF,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_43-110.png,Guéhi,False
+130,Marcos_Senesi,playing,31,DEF,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_91-110.png,Senesi,False
+131,Nick_Pope,playing,31,GKP,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_4-110.png,Pope,False
 132,Ollie_Watkins,playing,31,FWD,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_7-110.png,Watkins,False
-133,Raúl_Jiménez,benched,31,FWD,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_54-110.png,Raúl,False
+133,Yerson_Mosquera Valdelamar,benched,31,DEF,https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_39-110.png,Mosquera,False
