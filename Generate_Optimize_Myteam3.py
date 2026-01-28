@@ -238,7 +238,7 @@ def optimize_my_team(
 
     points_std = pd.to_numeric(data["Point_STD"], errors="coerce")
     points_std = points_std.fillna(points_std.median()).to_numpy(dtype=float)
-    points_std = np.clip(points_std, 0, None)
+    points_std = np.clip(points_std, 0, 3.5)
 
     # scale std (0.5..3) -> 0..1 (robust)
     std_min = float(np.nanpercentile(points_std, 5))
@@ -255,7 +255,7 @@ def optimize_my_team(
         lam = 5
         sign = -1
     elif risk_factor_clean == "high":   # prefer differentials -> reward risk
-        lam = 5
+        lam = 6
         sign = +1
     else:                               # neutral
         lam = 0.0
@@ -339,7 +339,7 @@ def optimize_my_team(
             if lam > 0:
                 # ✅ risk only counts if in REAL SQUAD
                 risk_terms.append(lpSum(
-                    x[i, t] * risk_score[i] for i in range(num_players)
+                    y[i, t] * risk_score[i] for i in range(num_players)
                 ))
 
     obj = lpSum(obj_terms) + lpSum(0.2 * saved_transfers[t] for t in gameweeks)
