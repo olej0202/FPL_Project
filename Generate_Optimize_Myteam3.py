@@ -236,7 +236,7 @@ def optimize_my_team(
     sel = np.clip(selected.astype(float), 0, 1)          # already 0..0.8
     ownership_risk = 1 - sel                             # 0.2..1
 
-    points_std = pd.to_numeric(data["points_std"], errors="coerce")
+    points_std = pd.to_numeric(data["Point_STD"], errors="coerce")
     points_std = points_std.fillna(points_std.median()).to_numpy(dtype=float)
     points_std = np.clip(points_std, 0, None)
 
@@ -252,10 +252,10 @@ def optimize_my_team(
     
     risk_factor_clean = (risk_factor or "med").strip().lower()
     if risk_factor_clean == "low":      # prefer safe/template -> penalize risk
-        lam = 3
+        lam = 5
         sign = -1
     elif risk_factor_clean == "high":   # prefer differentials -> reward risk
-        lam = 3
+        lam = 5
         sign = +1
     else:                               # neutral
         lam = 0.0
