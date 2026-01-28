@@ -238,8 +238,27 @@ def optimize_my_team(
         sel = sel / 100.0
     sel = np.clip(sel, 0, 1)
 
-    # Risk score: higher when low-owned (differential)
-    risk_score = (1 - sel)  # 0 for highly-owned, 1 for zero-owned
+    # points_std -> numeric, fill missing
+    points_std = pd.to_numeric(data.get("points_std", 0.0), errors="coerce")
+    if isinstance(points_std, pd.Series):
+        points_std = points_std.fillna(points_std.median() if points_std.notna().any() else 0.0).to_numpy()
+    else:
+        points_std = np.zeros(len(players), dtype=float)
+
+    points_std = np.clip(points_std.astype(float), 0, None)
+
+    # Normalize points_std to 0..1 (robust)
+    pstd_max = float(np.nanmax(points_std)) if np.isfinite(np.nanmax(points_std)) else 0.0
+    points_std_norm = points_std / (pstd_max + 1e-9) if pstd_max > 0 else np.zeros_like(points_std)
+
+    # Differential risk: higher when low owned
+    ownership_risk = 1 - sel  # 0 (template) .. 1 (differential)
+
+    # Combine (weights you can tune)
+    w_own = 0.7
+    w_std = 0.3
+    risk_score = w_own * ownership_risk + w_std * points_std_norm
+    risk_score = np.clip(risk_score, 0, 1)
     
     risk_factor_clean = (risk_factor or "med").strip().lower()
     if risk_factor_clean == "low":      # prefer safe/template -> penalize risk
@@ -310,7 +329,7 @@ def optimize_my_team(
     # --- Objective Function (branch on Free Hit GW) ---
     obj_terms = []
     risk_terms = []
-    
+
     for t in gameweeks:
         if use_freehit and t == fh_t:
             obj_terms.append(lpSum(
@@ -318,10 +337,9 @@ def optimize_my_team(
                 for i in range(num_players)
             ))
             if lam > 0:
-                # Apply risk to XI + captain (bench small weight or none)
+                # ✅ risk only counts if in FREE HIT SQUAD
                 risk_terms.append(lpSum(
-                    (fh_y[i] + 1.5 * fh_c[i]) * risk_score[i]
-                    for i in range(num_players)
+                    fh_x[i] * risk_score[i] for i in range(num_players)
                 ))
         else:
             obj_terms.append(lpSum(
@@ -329,17 +347,18 @@ def optimize_my_team(
                 for i in range(num_players)
             ))
             if lam > 0:
+                # ✅ risk only counts if in REAL SQUAD
                 risk_terms.append(lpSum(
-                    (y[i, t] + 1.5 * c[i, t]) * risk_score[i]
-                    for i in range(num_players)
+                    x[i, t] * risk_score[i] for i in range(num_players)
                 ))
-    
+
     obj = lpSum(obj_terms) + lpSum(0.2 * saved_transfers[t] for t in gameweeks)
-    
+
     # add risk adjustment without touching points
     if lam > 0 and sign != 0:
         obj += sign * lam * lpSum(risk_terms)
-    
+
+
 
     # Bench boost
     if bench_points_gw in gameweeks:

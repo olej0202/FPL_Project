@@ -118,7 +118,7 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
                base = df.loc[h, ['Rolling_adjusted_XA_share','Rolling_creativity_share','rolling_XA_share','Rolling_adjusted_XA','Rolling_adjusted_XA_per90','Rolling_adjusted_creativity_per90']].to_numpy(dtype=float)      # 1D array length 4
                row = np.hstack([base, team_xg]).reshape(1, -1)  
                pred=xgb_model_XA.predict(row)[0]*0.5+0.5*rf_model_XA.predict(row)[0]
-               stat_pred=df['Rolling_adjusted_XA_share'].values[h]*0.2+df['Rolling_adjusted_creativity_per90'].values[h]*0.2+df['Rolling_adjusted_XA_per90_share'].values[h]*0.2+df['rolling_Assist_historic'].values[h]*0.2+df["Big_Chances_Created"].values[h]/2 * 0.2
+               stat_pred=df['Rolling_adjusted_XA_share'].values[h]*0.2+df['Rolling_adjusted_XA_per90'].values[h]*0.2+df['Rolling_adjusted_XA_per90_share'].values[h]*0.2+df['rolling_Assist_historic'].values[h]*0.2+df["Big_Chances_Created"].values[h]/2 * 0.2
                pred=pred*0.7+0.3*stat_pred
                #own_data_xa_pred=((df['Rolling_adjusted_XA'].values[h]*0.7+df['rolling_Adjusted_XA_historic'].values[h]*0.3)*df["opposition_xgc"].values[h]+df['Share_of_XA'].values[h]*team_xg)*(0.5)
                own_data_xa_pred=(pred*team_xg)*0.8+0.2*((df['Rolling_adjusted_XA'].values[h]*0.7+df['rolling_Adjusted_XA_historic'].values[h]*0.3)*df["opposition_xgc"].values[h])
