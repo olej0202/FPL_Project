@@ -232,19 +232,27 @@ def optimize_my_team(
     predicted_points = data[GW_list].to_numpy(dtype=float)
 
     # ---------- Risk factor adjustment ----------
-    risk_raw = ((1 - selected) ** 2) / 0.7
-    risk_raw = np.maximum(risk_raw, 0.0)
-    risk_norm = risk_raw if risk_raw.max() > 0 else risk_raw
+    # ownership selected is 0..1 (after your pd.to_numeric); if it's 0..100 normalize it:
+    sel = selected.copy()
+    if np.nanmax(sel) > 1.5:
+        sel = sel / 100.0
+    sel = np.clip(sel, 0, 1)
 
+    # Risk score: higher when low-owned (differential)
+    risk_score = (1 - sel)  # 0 for highly-owned, 1 for zero-owned
+    
     risk_factor_clean = (risk_factor or "med").strip().lower()
-    if risk_factor_clean == "low":
-        mult = np.clip(1 / (risk_norm + 1e-9), 0.85, 1.2)
-    elif risk_factor_clean == "high":
-        mult = np.clip(risk_norm, 0.85, 1.2)
-    else:
-        mult = np.ones_like(risk_norm)
+    if risk_factor_clean == "low":      # prefer safe/template -> penalize risk
+        lam = 0.6
+        sign = -1
+    elif risk_factor_clean == "high":   # prefer differentials -> reward risk
+        lam = 0.6
+        sign = +1
+    else:                               # neutral
+        lam = 0.0
+        sign = 0
 
-    predicted_points = predicted_points * mult[:, np.newaxis]
+
 
     abs_gw_num = {t: (int(GW_list[t]) if str(GW_list[t]).isdigit() else None) for t in gameweeks}
     num_players = len(players)
@@ -301,19 +309,37 @@ def optimize_my_team(
 
     # --- Objective Function (branch on Free Hit GW) ---
     obj_terms = []
+    risk_terms = []
+    
     for t in gameweeks:
         if use_freehit and t == fh_t:
             obj_terms.append(lpSum(
                 (fh_y[i] + fh_c[i] + fh_bench[i] * 0.05) * predicted_points[i][t]
                 for i in range(num_players)
             ))
+            if lam > 0:
+                # Apply risk to XI + captain (bench small weight or none)
+                risk_terms.append(lpSum(
+                    (fh_y[i] + 1.5 * fh_c[i]) * risk_score[i]
+                    for i in range(num_players)
+                ))
         else:
             obj_terms.append(lpSum(
                 (y[i, t] + c[i, t] + bench[i, t] * 0.05) * predicted_points[i][t]
                 for i in range(num_players)
             ))
-
+            if lam > 0:
+                risk_terms.append(lpSum(
+                    (y[i, t] + 1.5 * c[i, t]) * risk_score[i]
+                    for i in range(num_players)
+                ))
+    
     obj = lpSum(obj_terms) + lpSum(0.2 * saved_transfers[t] for t in gameweeks)
+    
+    # add risk adjustment without touching points
+    if lam > 0 and sign != 0:
+        obj += sign * lam * lpSum(risk_terms)
+    
 
     # Bench boost
     if bench_points_gw in gameweeks:
