@@ -233,39 +233,29 @@ def optimize_my_team(
 
     # ---------- Risk factor adjustment ----------
     # ownership selected is 0..1 (after your pd.to_numeric); if it's 0..100 normalize it:
-    sel = selected.copy()
-    if np.nanmax(sel) > 1.5:
-        sel = sel / 100.0
-    sel = np.clip(sel, 0, 1)
+    sel = np.clip(selected.astype(float), 0, 1)          # already 0..0.8
+    ownership_risk = 1 - sel                             # 0.2..1
 
-    # points_std -> numeric, fill missing
-    points_std = pd.to_numeric(data.get("points_std", 0.0), errors="coerce")
-    if isinstance(points_std, pd.Series):
-        points_std = points_std.fillna(points_std.median() if points_std.notna().any() else 0.0).to_numpy()
-    else:
-        points_std = np.zeros(len(players), dtype=float)
+    points_std = pd.to_numeric(data["points_std"], errors="coerce")
+    points_std = points_std.fillna(points_std.median()).to_numpy(dtype=float)
+    points_std = np.clip(points_std, 0, None)
 
-    points_std = np.clip(points_std.astype(float), 0, None)
+    # scale std (0.5..3) -> 0..1 (robust)
+    std_min = float(np.nanpercentile(points_std, 5))
+    std_max = float(np.nanpercentile(points_std, 95))
+    points_std_scaled = (points_std - std_min) / (std_max - std_min + 1e-9)
+    points_std_scaled = np.clip(points_std_scaled, 0, 1)
 
-    # Normalize points_std to 0..1 (robust)
-    pstd_max = float(np.nanmax(points_std)) if np.isfinite(np.nanmax(points_std)) else 0.0
-    points_std_norm = points_std / (pstd_max + 1e-9) if pstd_max > 0 else np.zeros_like(points_std)
-
-    # Differential risk: higher when low owned
-    ownership_risk = 1 - sel  # 0 (template) .. 1 (differential)
-
-    # Combine (weights you can tune)
-    w_own = 0.7
-    w_std = 0.3
-    risk_score = w_own * ownership_risk + w_std * points_std_norm
-    risk_score = np.clip(risk_score, 0, 1)
+    # combine (tune weights)
+    w_own, w_std = 0.7, 0.3
+    risk_score = w_own * ownership_risk + w_std * points_std_scaled  # ~0.1..1
     
     risk_factor_clean = (risk_factor or "med").strip().lower()
     if risk_factor_clean == "low":      # prefer safe/template -> penalize risk
-        lam = 0.6
+        lam = 3
         sign = -1
     elif risk_factor_clean == "high":   # prefer differentials -> reward risk
-        lam = 0.6
+        lam = 3
         sign = +1
     else:                               # neutral
         lam = 0.0
