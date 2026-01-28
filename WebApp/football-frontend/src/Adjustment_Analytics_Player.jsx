@@ -1636,19 +1636,23 @@ const computeMeasures = useCallback(
                 <div style={{ fontSize: "0.85rem" }}>No minute data for this player.</div>
               ) : (
                 <svg
-                  ref={svgRefMinutes}
-                  width="100%"
-                  height="280"
-                  style={{
-                    border: `1px solid ${PALETTE.gold}`,
-                    borderRadius: "0.75rem",
-                    background: "#000000",
-                    touchAction: "none",
-                  }}
-                >
+  ref={svgRefMinutes}
+  width="100%"
+  height="280"
+  viewBox="0 0 600 280"
+  preserveAspectRatio="none"
+  style={{
+    border: `1px solid ${PALETTE.gold}`,
+    borderRadius: "0.75rem",
+    background: "#000000",
+    touchAction: "none",
+  }}
+>
+
                   {(() => {
                     const padding = 20;
-                    const width = svgRefMinutes.current ? svgRefMinutes.current.getBoundingClientRect().width : 600;
+                    const width = 600;
+
                     const height = 280;
 
                     const n = chartDataMinutes.length;
@@ -1718,18 +1722,21 @@ const computeMeasures = useCallback(
                 <div style={{ fontSize: "0.85rem" }}>No point data for this player.</div>
               ) : (
                 <svg
-                  ref={svgRefPoints}
-                  width="100%"
-                  height="250"
-                  style={{
-                    border: `1px solid ${PALETTE.gold}`,
-                    borderRadius: "0.75rem",
-                    background: "#000000",
-                  }}
-                >
+  ref={svgRefPoints}
+  width="100%"
+  height="250"
+  viewBox="0 0 600 250"
+  preserveAspectRatio="none"
+  style={{
+    border: `1px solid ${PALETTE.gold}`,
+    borderRadius: "0.75rem",
+    background: "#000000",
+  }}
+>
+
                   {(() => {
                     const padding = 20;
-                    const width = svgRefPoints.current ? svgRefPoints.current.getBoundingClientRect().width : 600;
+                    const width = 600;
                     const height = 250;
 
                     const n = chartDataPoints.length;

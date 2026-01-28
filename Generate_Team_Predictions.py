@@ -1000,26 +1000,534 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
 
 
 
+import numpy as np
+import pandas as pd
+from datetime import datetime
+
+from sklearn.metrics import log_loss, accuracy_score, confusion_matrix
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+from sklearn.linear_model import LogisticRegression
+
+import xgboost as xgb
+from sklearn.model_selection import train_test_split
+
+from sklearn.cluster import KMeans
+
+
+def multiclass_brier(y_true, proba, classes=(0, 1, 2)):
+    """
+    Multi-class Brier score: mean over samples of sum_k (p_k - 1{y=k})^2
+    """
+    y_true = np.asarray(y_true).astype(int)
+    proba = np.asarray(proba)
+    class_to_idx = {c: i for i, c in enumerate(classes)}
+    y_onehot = np.zeros_like(proba)
+
+    for i, y in enumerate(y_true):
+        y_onehot[i, class_to_idx[int(y)]] = 1.0
+
+    return float(np.mean(np.sum((proba - y_onehot) ** 2, axis=1)))
+
+
+def _ensure_all_classes(proba, classes_present, all_classes=(0, 1, 2)):
+    """
+    If a model was trained on subset of classes (rare, but can happen),
+    expand probability columns to always be [P0, P1, P2].
+    """
+    proba = np.asarray(proba)
+    out = np.zeros((proba.shape[0], len(all_classes)), dtype=float)
+    cls_to_idx_present = {c: i for i, c in enumerate(classes_present)}
+    for j, c in enumerate(all_classes):
+        if c in cls_to_idx_present:
+            out[:, j] = proba[:, cls_to_idx_present[c]]
+        else:
+            out[:, j] = 0.0
+    # normalize just in case
+    s = out.sum(axis=1, keepdims=True)
+    s[s == 0] = 1.0
+    out = out / s
+    return out
+
+
+def GenerateTeamPredictions_Results(fixture_path, current_team_path, horizon):
+    # =========================
+    # Load and prep team history
+    # =========================
+    team_df = pd.read_csv("Team_data_transformed2.csv").iloc[:, 1:]
+
+    team_df["XG_slope"] = team_df["XG_slope"].fillna(team_df["XG_slope"].median())
+    team_df["XGC_slope"] = team_df["XGC_slope"].fillna(team_df["XGC_slope"].median())
+
+    # KMeans cluster on XG_avg/XGC_avg
+    cluster_data = team_df[["XG_avg", "XGC_avg"]].values
+    kmeans = KMeans(n_clusters=4, random_state=31)
+    kmeans.fit(cluster_data)
+    team_df["Cluster"] = kmeans.predict(team_df[["XG_avg", "XGC_avg"]].values)
+
+    # Opponent view
+    opponent_df = team_df[
+        [
+            "code", "XGA", "XGCA", "XGH", "XGCH", "kickoff_time",
+            "XG_slope", "XGC_slope", "XG_avg", "XGC_avg", "Cluster",
+            "Rolling_Threat", "Rolling_Threat_Against",
+            "roll10_xpts", "roll10_deep", "roll10_deep_allowed",
+            "Rolling_XG", "Rolling_XGC",
+            # ---- Elo columns (already in dataset) ----
+            # >>> ADJUST THIS IF YOUR ELO COL NAME DIFFERS <<<
+            "Elo_Rating"
+        ]
+    ].copy()
+
+    # Merge team/opponent on opponent+kickoff_time like you do
+    pred_df = pd.merge(
+        team_df,
+        opponent_df,
+        left_on=["opponent", "kickoff_time"],
+        right_on=["code", "kickoff_time"],
+        how="left",
+        suffixes=("_team", "_opp"),
+    )
+
+    # =========================
+    # Cluster rolling features (your logic)
+    # =========================
+    new_pred_df = pd.DataFrame()
+    teams = pred_df["code_team"].unique()
+    latest_df = pd.DataFrame()
+
+    for teams_code in teams:
+        code_df = pred_df[pred_df["code_team"] == teams_code].copy()
+        code_df = code_df.sort_values(by="kickoff_time")
+
+        code_df["Cluster_XG"] = (
+            code_df.groupby("Cluster_opp")["XG"]
+            .transform(lambda x: x.shift(1).rolling(window=6, min_periods=1).mean())
+        )
+        code_df["Cluster_XG"] = code_df["Cluster_XG"].fillna(code_df["Cluster_XG"].mean())
+
+        code_df["Cluster_XGC"] = (
+            code_df.groupby("Cluster_opp")["XGC"]
+            .transform(lambda x: x.shift(1).rolling(window=6, min_periods=1).mean())
+        )
+        code_df["Cluster_XGC"] = code_df["Cluster_XGC"].fillna(code_df["Cluster_XGC"].mean())
+
+        code_df["Cluster_CS"] = (
+            code_df.groupby("Cluster_opp")["Clean_Sheet"]
+            .transform(lambda x: x.shift(1).rolling(window=6, min_periods=1).mean())
+        )
+        code_df["Cluster_CS"] = code_df["Cluster_CS"].fillna(code_df["Cluster_CS"].mean())
+
+        code_df["kickoff_time"] = pd.to_datetime(code_df["kickoff_time"])
+        latest_rows = code_df.loc[code_df.groupby("Cluster_opp")["kickoff_time"].idxmax()]
+        latest_rows = latest_rows[["code_team", "Cluster_opp", "Cluster_XG", "Cluster_XGC", "Cluster_CS"]]
+        latest_df = pd.concat([latest_df, latest_rows], axis=0, ignore_index=True)
+
+        new_pred_df = pd.concat([new_pred_df, code_df], axis=0, ignore_index=True)
+
+    latest_df.to_csv("Team_cluster_data.csv", index=False)
+    pred_df = new_pred_df.copy()
+
+    # =========================
+    # Build Model_pred (training frame)
+    # =========================
+    Model_pred = pred_df[
+        ["name", "kickoff_time", "was_home", "XG", "XGC", "Clean_Sheet", "Cluster_XG", "Cluster_XGC", "Result"]
+    ].copy()
+
+    # Own/Opp split
+    Model_pred["Own_XG"] = np.where(Model_pred["was_home"] == 1, pred_df["XGH_team"], pred_df["XGA_team"])
+    Model_pred["Own_XGC"] = np.where(Model_pred["was_home"] == 1, pred_df["XGCH_team"], pred_df["XGCA_team"])
+    Model_pred["Opposition_XG"] = np.where(Model_pred["was_home"] == 1, pred_df["XGA_opp"], pred_df["XGH_opp"])
+    Model_pred["Opposition_XGC"] = np.where(Model_pred["was_home"] == 1, pred_df["XGCA_opp"], pred_df["XGCH_opp"])
+
+    Model_pred["Opposition_XG_avg"] = pred_df["XG_avg_opp"]
+    Model_pred["Opposition_XGC_avg"] = pred_df["XGC_avg_opp"]
+    Model_pred["Own_XG_avg"] = pred_df["XG_avg_team"]
+    Model_pred["Own_XGC_avg"] = pred_df["XGC_avg_team"]
+
+    Model_pred["Own_XPTS"] = pred_df["roll10_xpts_team"]
+    Model_pred["Opposition_XPTS"] = pred_df["roll10_xpts_opp"]
+    Model_pred["Own_DEEP"] = pred_df["roll10_deep_team"]
+    Model_pred["Opposition_DEEP"] = pred_df["roll10_deep_opp"]
+    Model_pred["Own_DEEP_allowed"] = pred_df["roll10_deep_allowed_team"]
+    Model_pred["Opposition_DEEP_allowed"] = pred_df["roll10_deep_allowed_opp"]
+
+    Model_pred["Opposition_Treat"] = pred_df["Rolling_Threat_opp"]
+    Model_pred["Opposition_TreatAgainst"] = pred_df["Rolling_Threat_Against_opp"]
+    Model_pred["Own_Treat"] = pred_df["Rolling_Threat_team"]
+    Model_pred["Own_TreatAgainst"] = pred_df["Rolling_Threat_Against_team"]
+    Model_pred["Own_RollingXG"] = pred_df["Rolling_XG_team"]
+    Model_pred["Opposition_RollingXG"] = pred_df["Rolling_XG_opp"]
+    Model_pred["Own_RollingXGC"] = pred_df["Rolling_XGC_team"]
+    Model_pred["Opposition_RollingXGC"] = pred_df["Rolling_XGC_opp"]
+
+    Model_pred["Own_Cluster"] = pred_df["Cluster_team"]
+    Model_pred["Opposition_Cluster"] = pred_df["Cluster_opp"]
+
+    Model_pred["Own_XG_slope"] = pred_df["XG_slope_team"]
+    Model_pred["Own_XGC_slope"] = pred_df["XGC_slope_team"]
+    Model_pred["Opponent_XG_slope"] = pred_df["XG_slope_opp"]
+    Model_pred["Opponent_XGC_slope"] = pred_df["XGC_slope_opp"]
+
+    # =========================
+    # Elo features (already present in pred_df)
+    # =========================
+    # >>> ADJUST THESE TWO LINES IF YOUR MERGED ELO COLS ARE NAMED DIFFERENTLY <<<
+    # common pattern after merge: Elo_Rating_team and Elo_Rating_opp
+    if "Elo_Rating_team" in pred_df.columns and "Elo_Rating_opp" in pred_df.columns:
+        Model_pred["Own_Elo"] = pred_df["Elo_Rating_team"]
+        Model_pred["Opp_Elo"] = pred_df["Elo_Rating_opp"]
+    elif "Elo_Rating" in team_df.columns:
+        # fallback: if you only kept Elo_Rating and didn't suffix
+        # this is less ideal; you should ensure both team and opp Elo exist
+        Model_pred["Own_Elo"] = pred_df.get("Elo_Rating_team", np.nan)
+        Model_pred["Opp_Elo"] = pred_df.get("Elo_Rating_opp", np.nan)
+    else:
+        raise ValueError("Could not find Elo columns. Ensure Elo_Rating exists and survives the merges.")
+
+    Model_pred["Elo_diff"] = Model_pred["Own_Elo"] - Model_pred["Opp_Elo"]
+
+    # =========================
+    # Train/Test split by time (your logic)
+    # =========================
+    Model_pred["kickoff_time"] = pd.to_datetime(Model_pred["kickoff_time"])
+
+    current_year = datetime.today().year
+    current_month = datetime.today().month
+
+    test_df = Model_pred[
+        ((Model_pred["kickoff_time"].dt.year == current_year) & (Model_pred["kickoff_time"].dt.month == current_month))
+        | ((Model_pred["kickoff_time"].dt.year == current_year) & (Model_pred["kickoff_time"].dt.month == current_month - 2))
+    ].copy()
+
+    train_df = Model_pred[
+        (Model_pred["kickoff_time"].dt.year < current_year)
+        | ((Model_pred["kickoff_time"].dt.year == current_year) & (Model_pred["kickoff_time"].dt.month < current_month - 2))
+    ].copy()
+
+    train_df = train_df[train_df["kickoff_time"] > "2022-12-31"].copy()
+
+    # drop missing target
+    train_df = train_df.dropna(subset=["Result"])
+    test_df = test_df.dropna(subset=["Result"])
+
+    # enforce classes
+    train_df["Result"] = train_df["Result"].astype(int)
+    test_df["Result"] = test_df["Result"].astype(int)
+
+    # =========================
+    # Features (add Elo_home & Elo_away via Own_Elo / Opp_Elo)
+    # =========================
+    features = [
+        "Own_XG", "Own_XGC", "Opposition_XG", "Opposition_XGC",
+        "Own_XG_slope", "Opponent_XGC_slope", "Own_XGC_slope", "Opponent_XG_slope",
+        "Own_XG_avg", "Opposition_XGC_avg", "Opposition_XG_avg", "Own_XGC_avg",
+        "Own_Cluster", "Opposition_Cluster",
+        "Own_Treat", "Opposition_TreatAgainst", "Opposition_Treat", "Own_TreatAgainst",
+        # Elo features
+        "Own_Elo", "Opp_Elo", "Elo_diff"
+    ]
+
+    X_train = train_df[features].copy()
+    y_train = train_df["Result"].copy()
+    X_test = test_df[features].copy()
+    y_test = test_df["Result"].copy()
+
+    # mark categorical for xgboost
+    for cat_col in ["Own_Cluster", "Opposition_Cluster"]:
+        if cat_col in X_train.columns:
+            X_train[cat_col] = X_train[cat_col].astype("category")
+            X_test[cat_col] = X_test[cat_col].astype("category")
+
+    # =========================
+    # Model 1: XGBoost multiclass
+    # =========================
+    model_xgb = xgb.XGBClassifier(
+        objective="multi:softprob",
+        num_class=3,
+        eval_metric="mlogloss",
+        tree_method="hist",
+        max_depth=6,
+        learning_rate=0.1,
+        n_estimators=200,
+        min_child_weight=5,
+        enable_categorical=True,
+    )
+
+    model_xgb.fit(X_train, y_train)
+
+    # probabilities
+    proba_train_xgb = _ensure_all_classes(model_xgb.predict_proba(X_train), model_xgb.classes_)
+    proba_test_xgb = _ensure_all_classes(model_xgb.predict_proba(X_test), model_xgb.classes_)
+
+    # =========================
+    # Model 2: Statistical model = Multinomial Logistic Regression
+    # - OneHot for clusters
+    # - Standardize numeric
+    # =========================
+    cat_cols = ["Own_Cluster", "Opposition_Cluster"]
+    num_cols = [c for c in features if c not in cat_cols]
+
+    preproc = ColumnTransformer(
+        transformers=[
+            ("num", Pipeline([("scaler", StandardScaler())]), num_cols),
+            ("cat", OneHotEncoder(handle_unknown="ignore"), cat_cols),
+        ],
+        remainder="drop",
+    )
+
+    model_lr = Pipeline(
+        steps=[
+            ("prep", preproc),
+            ("clf", LogisticRegression(
+                multi_class="multinomial",
+                max_iter=2000,
+                C=1.0,
+                solver="lbfgs",
+                n_jobs=None
+            )),
+        ]
+    )
+
+    model_lr.fit(X_train, y_train)
+
+    proba_train_lr = _ensure_all_classes(model_lr.predict_proba(X_train), model_lr.named_steps["clf"].classes_)
+    proba_test_lr = _ensure_all_classes(model_lr.predict_proba(X_test), model_lr.named_steps["clf"].classes_)
+
+    # =========================
+    # Ensemble: average probabilities
+    # Order: [P(Result=0 draw), P(Result=1 away win), P(Result=2 home win)]
+    # =========================
+    proba_train_avg = 0.5 * (proba_train_xgb + proba_train_lr)
+    proba_test_avg = 0.5 * (proba_test_xgb + proba_test_lr)
+
+    # =========================
+    # Training/Test metrics
+    # =========================
+    def print_metrics(tag, y_true, proba):
+        pred = np.argmax(proba, axis=1)
+        ll = log_loss(y_true, proba, labels=[0, 1, 2])
+        acc = accuracy_score(y_true, pred)
+        brier = multiclass_brier(y_true, proba, classes=(0, 1, 2))
+        cm = confusion_matrix(y_true, pred, labels=[0, 1, 2])
+        print(f"\n[{tag}]")
+        print(f"  LogLoss: {ll:.4f}")
+        print(f"  Accuracy: {acc:.4f}")
+        print(f"  Brier: {brier:.4f}")
+        print("  Confusion Matrix (rows=true, cols=pred) for [0,1,2]:")
+        print(cm)
+
+    print_metrics("TRAIN (XGB)", y_train, proba_train_xgb)
+    print_metrics("TEST  (XGB)", y_test, proba_test_xgb)
+
+    print_metrics("TRAIN (LR )", y_train, proba_train_lr)
+    print_metrics("TEST  (LR )", y_test, proba_test_lr)
+
+    print_metrics("TRAIN (AVG)", y_train, proba_train_avg)
+    print_metrics("TEST  (AVG)", y_test, proba_test_avg)
+
+    # =========================
+    # Future fixtures prediction build (your merge logic)
+    # =========================
+    fixture_data = pd.read_csv(fixture_path)[["event", "team_a", "team_h", "finished"]]
+    team_code_data = pd.read_csv(current_team_path)[["name", "code", "id"]]
+
+    team_data = pd.read_csv("Team_data_newest3.csv")[
+        [
+            "code", "XGA", "XGCA", "XGH", "XGCH",
+            "XG_slope", "XGC_slope", "XG_avg", "XGC_avg",
+            "Rolling_Threat", "Rolling_Threat_Against",
+            "roll10_xpts", "roll10_deep", "roll10_deep_allowed",
+            "Rolling_XG", "Rolling_XGC",
+            # >>> Elo already present in dataset <<<
+            # >>> ADJUST IF NAME DIFFERENT <<<
+            "Elo_Rating"
+        ]
+    ].copy()
+
+    team_data["Cluster"] = kmeans.predict(team_data[["XG_avg", "XGC_avg"]].values)
+    cluster_data = pd.read_csv("Team_cluster_data.csv")[["code_team", "Cluster_opp", "Cluster_XG", "Cluster_XGC", "Cluster_CS"]]
+
+    fixture_data = fixture_data[fixture_data["finished"] == False].copy()
+    min_event = int(fixture_data["event"].min())
+
+    # merge fixture teams to codes/names
+    df_merged = fixture_data.merge(team_code_data, left_on="team_a", right_on="id", how="left")
+    df_merged = df_merged.merge(team_code_data, left_on="team_h", right_on="id", how="left")
+
+    predict_data = pd.DataFrame()
+    predict_data["event"] = df_merged["event"]
+    predict_data["team_a"] = df_merged["code_x"].values
+    predict_data["team_h"] = df_merged["code_y"].values
+    predict_data["team_a_name"] = df_merged["name_x"].values
+    predict_data["team_h_name"] = df_merged["name_y"].values
+
+    # Merge away team stats
+    df_merged = predict_data.merge(
+        team_data, left_on="team_a", right_on="code", how="left", suffixes=("", "_away")
+    )
+    # Merge home team stats (suffix _home)
+    df_merged = df_merged.merge(
+        team_data, left_on="team_h", right_on="code", how="left", suffixes=("_away", "_home")
+    )
+
+    # Cluster matchup stats (away vs home cluster)
+    df_merged = df_merged.merge(
+        cluster_data, left_on=["team_a", "Cluster_home"], right_on=["code_team", "Cluster_opp"], how="left"
+    ).rename(columns={
+        "Cluster_XG": "Cluster_XG_home",
+        "Cluster_XGC": "Cluster_XGC_home",
+        "Cluster_CS": "Cluster_CS_home"
+    }).drop(["code_team", "Cluster_opp"], axis=1)
+
+    # Cluster matchup stats (home vs away cluster)
+    df_merged = df_merged.merge(
+        cluster_data, left_on=["team_h", "Cluster_away"], right_on=["code_team", "Cluster_opp"], how="left"
+    ).rename(columns={
+        "Cluster_XG": "Cluster_XG_away",
+        "Cluster_XGC": "Cluster_XGC_away",
+        "Cluster_CS": "Cluster_CS_away"
+    }).drop(["code_team", "Cluster_opp"], axis=1)
+
+    # Fill cluster matchup fallbacks
+    for c, fillv in [("Cluster_XG_home", 0.9), ("Cluster_XG_away", 0.9),
+                     ("Cluster_XGC_home", 1.9), ("Cluster_XGC_away", 1.9),
+                     ("Cluster_CS_home", 0.1), ("Cluster_CS_away", 0.1)]:
+        if c in df_merged.columns:
+            df_merged[c] = df_merged[c].fillna(fillv)
+
+    # =========================
+    # Build prediction feature frame (match training feature names)
+    # Here we predict RESULT from HOME perspective:
+    # Result=2 home win, 1 away win, 0 draw
+    # =========================
+    X_pred = pd.DataFrame()
+
+    # "Own" = home team, "Opp" = away team
+    X_pred["Own_XG"] = df_merged["XGH_home"]
+    X_pred["Own_XGC"] = df_merged["XGCH_home"]
+    X_pred["Opposition_XG"] = df_merged["XGA_away"]
+    X_pred["Opposition_XGC"] = df_merged["XGCA_away"]
+
+    X_pred["Own_XG_slope"] = df_merged["XG_slope_home"]
+    X_pred["Own_XGC_slope"] = df_merged["XGC_slope_home"]
+    X_pred["Opponent_XG_slope"] = df_merged["XG_slope_away"]
+    X_pred["Opponent_XGC_slope"] = df_merged["XGC_slope_away"]
+
+    X_pred["Own_XG_avg"] = df_merged["XG_avg_home"]
+    X_pred["Own_XGC_avg"] = df_merged["XGC_avg_home"]
+    X_pred["Opposition_XG_avg"] = df_merged["XG_avg_away"]
+    X_pred["Opposition_XGC_avg"] = df_merged["XGC_avg_away"]
+
+    X_pred["Own_Cluster"] = df_merged["Cluster_home"]
+    X_pred["Opposition_Cluster"] = df_merged["Cluster_away"]
+
+    X_pred["Own_Treat"] = df_merged["Rolling_Threat_home"]
+    X_pred["Own_TreatAgainst"] = df_merged["Rolling_Threat_Against_home"]
+    X_pred["Opposition_Treat"] = df_merged["Rolling_Threat_away"]
+    X_pred["Opposition_TreatAgainst"] = df_merged["Rolling_Threat_Against_away"]
+
+    # Elo: Own=home, Opp=away
+    # >>> ADJUST IF YOUR ELO COLS NAMED DIFFERENTLY AFTER MERGE <<<
+    X_pred["Own_Elo"] = df_merged["Elo_Rating_home"]
+    X_pred["Opp_Elo"] = df_merged["Elo_Rating_away"]
+    X_pred["Elo_diff"] = X_pred["Own_Elo"] - X_pred["Opp_Elo"]
+
+    # Ensure dtypes match
+    X_pred = X_pred[features].copy()
+    X_pred["Own_Cluster"] = X_pred["Own_Cluster"].astype("category")
+    X_pred["Opposition_Cluster"] = X_pred["Opposition_Cluster"].astype("category")
+
+    # =========================
+    # Predict probabilities (AVG ensemble)
+    # =========================
+    proba_pred_xgb = _ensure_all_classes(model_xgb.predict_proba(X_pred), model_xgb.classes_)
+    proba_pred_lr = _ensure_all_classes(model_lr.predict_proba(X_pred), model_lr.named_steps["clf"].classes_)
+    proba_pred_avg = (0.2*proba_pred_xgb + 0.8*proba_pred_lr)
+
+    # columns: [P0 draw, P1 away win, P2 home win]
+    p_draw = proba_pred_avg[:, 1]
+    p_away = proba_pred_avg[:, 0]
+    p_home = proba_pred_avg[:, 2]
+
+    # =========================
+    # Write Team_prediction_visual5.csv
+    # =========================
+    result_df = pd.DataFrame()
+    result_df["GW"] = df_merged["event"].astype(int)
+    result_df["pred"] = result_df["GW"] - min_event + 1
+    result_df["home_team"] = df_merged["team_h_name"]
+    result_df["away_team"] = df_merged["team_a_name"]
+    result_df["home_code"] = df_merged["team_h"].astype(int)
+    result_df["away_code"] = df_merged["team_a"].astype(int)
+
+    # requested output columns
+    result_df["Home_win_Percent"] = (p_home * 100).round(2)
+    result_df["Away_win_Percent"] = (p_away * 100).round(2)
+    result_df["Draw_percent"] = (p_draw * 100).round(2)
+
+    result_df.to_csv("Team_prediction_visual_results2.csv", index=False)
+
+    # =========================
+    # Build Team_prediction5.csv (home/away rows)
+    # win% etc from that team's perspective
+    # =========================
+    home_df = result_df[["GW", "pred"]].copy()
+    home_df["team_name"] = result_df["home_team"]
+    home_df["team_code"] = result_df["home_code"]
+    home_df["win_Percent"] = result_df["Home_win_Percent"]
+    home_df["Draw_percent"] = result_df["Draw_percent"]
+    home_df["Loss_percent"] = result_df["Away_win_Percent"]
+    home_df["Opponent_team"] = result_df["away_team"]
+    home_df["Home"] = "H"
+
+    away_df = result_df[["GW", "pred"]].copy()
+    away_df["team_name"] = result_df["away_team"]
+    away_df["team_code"] = result_df["away_code"]
+    away_df["win_Percent"] = result_df["Away_win_Percent"]
+    away_df["Draw_percent"] = result_df["Draw_percent"]
+    away_df["Loss_percent"] = result_df["Home_win_Percent"]
+    away_df["Opponent_team"] = result_df["home_team"]
+    away_df["Home"] = "A"
+
+    ALL_pred = pd.concat([home_df, away_df], axis=0, ignore_index=True)
+    ALL_pred.to_csv("Team_prediction_results2.csv", index=False)
+
+    return result_df, ALL_pred
+
+
+
 
 def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
     GenerateTeamPredictions1(fixture_path, current_team_path,horizon)
     GenerateTeamPredictions2(fixture_path, current_team_path,horizon)
+    GenerateTeamPredictions_Results(fixture_path, current_team_path,horizon)
     
     
     team_pred1=pd.read_csv("Team_prediction1.csv")
     team_pred2=pd.read_csv("Team_prediction2.csv")
+    team_results=pd.read_csv("Team_prediction_results2.csv")
     
     team_pred1[["XG","XGC"]]=team_pred1[["XG","XGC"]]*0.3+team_pred2[["XG","XGC"]]*0.7
     team_pred1[["CS"]]=team_pred1[["CS"]]*0.4+team_pred2[["CS"]]*0.6
+    team_pred1["Win_Percent"]=team_results["win_Percent"]
+    team_pred1["Draw_percent"]=team_results["Draw_percent"]
+    team_pred1["Loss_percent"]=team_results["Loss_percent"]
 
     
     team_pred1.to_csv("Team_prediction.csv")
     
     team_pred_visual1=pd.read_csv("Team_prediction_visual1.csv")
     team_pred_visual2=pd.read_csv("Team_prediction_visual2.csv")
+    team_results_visual=pd.read_csv("Team_prediction_visual_results2.csv")
     
     team_pred_visual1[["home_goals","away_goals"]]=team_pred_visual1[["home_goals","away_goals"]]*0.5+team_pred_visual2[["home_goals","away_goals"]]*0.5
     team_pred_visual1[["Clean_Sheet_home","Clean_Sheet_away"]]=team_pred_visual1[["Clean_Sheet_home","Clean_Sheet_away"]]*0.5+team_pred_visual2[["Clean_Sheet_home","Clean_Sheet_away"]]*0.5
+    team_pred_visual1["Home_Win"]=team_results_visual["Home_win_Percent"]
+    team_pred_visual1["Away_Win"]=team_results_visual["Away_win_Percent"]
+    team_pred_visual1["Draw"]=team_results_visual["Draw_percent"]
 
     team_pred_visual1.to_csv("Team_prediction_visual.csv")
     
