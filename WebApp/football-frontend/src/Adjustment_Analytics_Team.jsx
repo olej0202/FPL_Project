@@ -19,7 +19,22 @@ const PALETTE = {
 };
 
 const normalizeName = (s) => String(s ?? "").trim().toLowerCase();
+  function useMediaQuery(query) {
+  const [matches, setMatches] = useState(() =>
+    typeof window !== "undefined" ? window.matchMedia(query).matches : false
+  );
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mql = window.matchMedia(query);
+    const onChange = () => setMatches(mql.matches);
+    onChange();
+    mql.addEventListener?.("change", onChange);
+    return () => mql.removeEventListener?.("change", onChange);
+  }, [query]);
+
+  return matches;
+}
 function TeamAdjustmentsPage() {
   const {
     fetchIfNeeded,
@@ -64,6 +79,7 @@ function TeamAdjustmentsPage() {
     setData(withMetrics);
     updateTeamData(withMetrics);
   };
+
 
   // Initial fetch
   useEffect(() => {
@@ -448,21 +464,26 @@ function TeamScatterPlot({ teamPoints, onTeamDrag }) {
   const minY = 0.6;
   const maxY = 2.5;
 
+  const isSmall = useMediaQuery("(max-width: 640px)");
+
+  // Taller on small screens so it doesn't feel squashed
+  const chartHeight = isSmall ? 520 : 400;
+
   return (
     <div
       style={{
         width: "100%",
-        height: 400,
+        height: chartHeight,
         background: "linear-gradient(145deg, rgba(0,0,0,0.98), rgba(90,0,0,0.85))",
         borderRadius: 12,
-        padding: "8px 4px 8px 0",
+        padding: isSmall ? "10px 6px 10px 0" : "8px 4px 8px 0",
         border: `1px solid ${PALETTE.gold}`,
         boxShadow: "0 18px 40px rgba(0,0,0,0.9)",
         touchAction: "none",
       }}
     >
-      <ResponsiveContainer>
-        <ScatterChart margin={{ top: 10, right: 20, bottom: 30, left: 30 }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <ScatterChart margin={{ top: 10, right: 20, bottom: 30, left: 10 }}>
           <CartesianGrid stroke="#333" strokeDasharray="3 3" />
           <XAxis
             type="number"
@@ -520,7 +541,18 @@ function TeamScatterPlot({ teamPoints, onTeamDrag }) {
               );
             }}
           />
-          <Scatter data={teamPoints} shape={(props) => <DraggableDot {...props} bounds={{ minX, maxX, minY, maxY }} onTeamDrag={onTeamDrag} />} />
+          <Scatter
+            data={teamPoints}
+            shape={(props) => (
+              <DraggableDot
+                {...props}
+                bounds={{ minX, maxX, minY, maxY }}
+                onTeamDrag={onTeamDrag}
+                // optional: pass size boost on mobile
+                mobileBoost={isSmall}
+              />
+            )}
+          />
         </ScatterChart>
       </ResponsiveContainer>
     </div>

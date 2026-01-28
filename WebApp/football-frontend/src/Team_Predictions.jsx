@@ -73,8 +73,7 @@ export default function Team_Predictions() {
 
   // Touch swipe (mobile)
   const touchStartX = useRef(null);
-  const onTouchStart = (e) =>
-    (touchStartX.current = e.changedTouches[0].clientX);
+  const onTouchStart = (e) => (touchStartX.current = e.changedTouches[0].clientX);
   const onTouchEnd = (e) => {
     if (touchStartX.current == null) return;
     const dx = e.changedTouches[0].clientX - touchStartX.current;
@@ -89,13 +88,45 @@ export default function Team_Predictions() {
 
   const normalizeProb = (v) => {
     const num = Number(v);
+    if (!Number.isFinite(num)) return NaN;
     const normalized = num > 1 ? num / 100 : num; // handles 0-1 or 0-100
     return Math.max(0, Math.min(1, normalized));
   };
 
   const formatPct = (v) => {
     const p = normalizeProb(v);
+    if (!Number.isFinite(p)) return "—";
     return `${(p * 100).toFixed(1)}%`;
+  };
+
+  const winTextClass = (p) => {
+  const prob = normalizeProb(p);
+  if (!Number.isFinite(prob)) return "";
+  return prob >= 0.4 ? "text-emerald-300 font-semibold" : "";
+};
+
+  // NEW: Match outcome probabilities from dataset
+  // Expects fields: Home_Win, Away_Win, Draw (can be 0..1 or 0..100)
+  // Home = first team in match section (match.home_team)
+  const getMatchOutcomeProbs = (match) => {
+    const pHomeRaw = normalizeProb(match.Home_Win);
+    const pAwayRaw = normalizeProb(match.Away_Win);
+    const pDrawRaw = normalizeProb(match.Draw);
+
+    const pHome = Number.isFinite(pHomeRaw) ? pHomeRaw : 0;
+    const pAway = Number.isFinite(pAwayRaw) ? pAwayRaw : 0;
+    const pDraw = Number.isFinite(pDrawRaw) ? pDrawRaw : 0;
+
+    const sum = pHome + pAway + pDraw;
+
+    if (sum <= 0) return { pHome: NaN, pAway: NaN, pDraw: NaN };
+
+    // Renormalize in case the three don't sum to 1
+    return {
+      pHome: pHome / sum,
+      pAway: pAway / sum,
+      pDraw: pDraw / sum,
+    };
   };
 
   // Highlight rules
@@ -112,10 +143,8 @@ export default function Team_Predictions() {
     if (!Number.isFinite(prob)) {
       return "bg-neutral-800 text-neutral-300 border-neutral-700";
     }
-    if (prob >= 0.35)
-      return "bg-emerald-900/80 text-emerald-200 border-emerald-500/60";
-    if (prob <= 0.25)
-      return "bg-red-900/80 text-red-200 border-red-500/60";
+    if (prob >= 0.35) return "bg-emerald-900/80 text-emerald-200 border-emerald-500/60";
+    if (prob <= 0.25) return "bg-red-900/80 text-red-200 border-red-500/60";
     return "bg-yellow-900/70 text-yellow-100 border-yellow-400/60";
   };
 
@@ -146,8 +175,8 @@ export default function Team_Predictions() {
             Score Predictions
           </h1>
           <p className="text-xs sm:text-sm text-neutral-400 max-w-xl">
-            Swipe or use the arrows to move between gameweeks and see
-            predicted scores and clean-sheet odds.
+            Swipe or use the arrows to move between gameweeks and see predicted scores,
+            clean-sheet odds, and match win probabilities.
           </p>
 
           {/* Progress across GWs */}
@@ -156,18 +185,12 @@ export default function Team_Predictions() {
               <div
                 className="h-full bg-royal-gold transition-[width] duration-300"
                 style={{
-                  width: `${
-                    ((uniqueGWs.indexOf(selectedGW) + 1) /
-                      uniqueGWs.length) *
-                    100
-                  }%`,
+                  width: `${((uniqueGWs.indexOf(selectedGW) + 1) / uniqueGWs.length) * 100}%`,
                 }}
                 aria-valuemin={0}
                 aria-valuemax={100}
                 aria-valuenow={Math.round(
-                  ((uniqueGWs.indexOf(selectedGW) + 1) /
-                    uniqueGWs.length) *
-                    100
+                  ((uniqueGWs.indexOf(selectedGW) + 1) / uniqueGWs.length) * 100
                 )}
                 role="progressbar"
               />
@@ -244,27 +267,61 @@ export default function Team_Predictions() {
               const homeCS = normalizeProb(match.Clean_Sheet_home);
               const awayCS = normalizeProb(match.Clean_Sheet_away);
 
+              const { pHome, pAway, pDraw } = getMatchOutcomeProbs(match);
+
               return (
                 <div
                   key={`${match.home_team}-${match.away_team}-${idx}`}
                   style={{ transitionDelay: `${idx * 40}ms` }}
                   className={`group rounded-2xl border border-white/10 bg-white/5 p-4 shadow-sm backdrop-blur-sm transition-all duration-300 ease-out will-change-transform ${
-                    mounted
-                      ? "opacity-100 translate-y-0"
-                      : "opacity-0 translate-y-2"
+                    mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
                   }`}
                 >
                   {/* Header on sm+ only (for column labels) */}
                   <div className="hidden sm:grid grid-cols-[minmax(0,1fr)_64px_96px] items-center gap-3 mb-2 text-[11px]">
-                    <span className="uppercase tracking-wide text-neutral-400">
-                      Match
-                    </span>
-                    <span className="uppercase tracking-wide text-neutral-400 text-right">
-                      Score
-                    </span>
-                    <span className="uppercase tracking-wide text-neutral-400 text-right">
-                      CS odds
-                    </span>
+                    <span className="uppercase tracking-wide text-neutral-400">Match</span>
+                    <span className="uppercase tracking-wide text-neutral-400 text-right">Score</span>
+                    <span className="uppercase tracking-wide text-neutral-400 text-right">CS odds</span>
+                  </div>
+
+                  {/* NEW: Win odds */}
+                  <div className="mt-1 mb-3 rounded-xl border border-white/10 bg-black/30 px-3 py-2">
+                    <div className="text-[11px] uppercase tracking-wide text-neutral-400 mb-1">
+                      Win odds
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 text-center">
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-[10px] text-neutral-400 truncate">
+                          {match.home_team} (Home)
+                        </span>
+                        <span
+  className={`text-sm tabular-nums ${winTextClass(pHome)}`}
+>
+  {formatPct(pHome)}
+</span>
+                      </div>
+
+                      <div className="flex flex-col">
+                        <span className="text-[10px] text-neutral-400">Draw</span>
+                        <span
+  className={`text-sm tabular-nums ${winTextClass(pDraw)}`}
+>
+  {formatPct(pDraw)}
+</span>
+                      </div>
+
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-[10px] text-neutral-400 truncate">
+                          {match.away_team} (Away)
+                        </span>
+                        <span
+  className={`text-sm tabular-nums ${winTextClass(pAway)}`}
+>
+  {formatPct(pAway)}
+</span>
+
+                      </div>
+                    </div>
                   </div>
 
                   {/* Home Team Row */}
@@ -288,7 +345,7 @@ export default function Team_Predictions() {
                           homeGoals
                         )}`}
                       >
-                        {homeGoals.toFixed(1)}
+                        {Number.isFinite(homeGoals) ? homeGoals.toFixed(1) : "—"}
                       </span>
                     </div>
 
@@ -336,7 +393,7 @@ export default function Team_Predictions() {
                           awayGoals
                         )}`}
                       >
-                        {awayGoals.toFixed(1)}
+                        {Number.isFinite(awayGoals) ? awayGoals.toFixed(1) : "—"}
                       </span>
                     </div>
 
