@@ -269,7 +269,7 @@ def optimize_my_team(
         sign = -1
     elif risk_value > 0:
         sign = +1
-        offset=1/2
+        offset=3/4
     else:
         sign = 0
 
