@@ -53,6 +53,14 @@ export default function MyTeamOptimize() {
     );
   }, [Playerdata, dataVersion]);
 
+  const clampRisk = (v) => Math.max(-1, Math.min(1, v));
+const formatRiskLabel = (v) => {
+  const n = Number(v);
+  if (n <= -0.3) return "Low risk";
+  if (n >= 0.3) return "High risk";
+  return "Neutral";
+};
+
   // Ensure we fall back to AI if statistical data disappears
   useEffect(() => {
     if (modelType === "statistical" && !hasStatisticalData) {
@@ -505,79 +513,106 @@ export default function MyTeamOptimize() {
               </p>
             </div>
                         {/* Risk preference */}
-            <div className="flex flex-col gap-1 lg:col-span-2">
-              <label
-                className="text-xs uppercase tracking-wide"
-                style={{ color: "#e5e7eb" }}
-              >
-                Risk preference
-              </label>
-              <div className="flex items-center gap-2 h-10">
-                {/* Low risk */}
-                <button
-                  type="button"
-                  onClick={() => setRisk("low")}
-                  className="flex-1 inline-flex items-center justify-center px-3 py-1.5 rounded-md text-xs sm:text-sm border transition"
-                  style={{
-                    border:
-                      risk === "low"
-                        ? `1px solid ${PALETTE.gold}`
-                        : "1px solid rgba(248, 250, 252, 0.18)",
-                    background:
-                      risk === "low"
-                        ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)`
-                        : "rgba(0,0,0,0.75)",
-                    color: risk === "low" ? "#000000" : "#e5e7eb",
-                  }}
-                >
-                  Low risk
-                </button>
+            {/* Risk preference (slider -1..1 step 0.2) */}
+{/* Risk preference (styled slider -1..1 step 0.2) */}
+<div className="flex flex-col gap-1 lg:col-span-2">
+  <label
+    className="text-xs uppercase tracking-wide"
+    style={{ color: "#e5e7eb" }}
+  >
+    Risk preference
+  </label>
 
-                {/* Independent / medium */}
-                <button
-                  type="button"
-                  onClick={() => setRisk("med")}
-                  className="flex-1 inline-flex items-center justify-center px-3 py-1.5 rounded-md text-xs sm:text-sm border transition"
-                  style={{
-                    border:
-                      risk === "med"
-                        ? `1px solid ${PALETTE.gold}`
-                        : "1px solid rgba(248, 250, 252, 0.18)",
-                    background:
-                      risk === "med"
-                        ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)`
-                        : "rgba(0,0,0,0.75)",
-                    color: risk === "med" ? "#000000" : "#e5e7eb",
-                  }}
-                >
-                  Neutral
-                </button>
+  <div
+    className="h-12 rounded-md px-3 flex items-center"
+    style={{
+      backgroundColor: "rgba(0,0,0,0.8)",
+      border: "1px solid rgba(248, 250, 252, 0.18)",
+    }}
+  >
+    <input
+      type="range"
+      min={-1}
+      max={1}
+      step={0.2}
+      value={Number(risk)}
+      onChange={(e) => setRisk(Number(e.target.value))}
+      aria-label="Risk preference"
+      className="w-full appearance-none bg-transparent cursor-pointer"
+      style={{
+        // Chrome / Safari track
+        WebkitAppearance: "none",
+        height: 6,
+        background: `linear-gradient(
+          to right,
+          ${PALETTE.gold} 0%,
+          ${PALETTE.gold} ${((risk + 1) / 2) * 100}%,
+          #374151 ${((risk + 1) / 2) * 100}%,
+          #374151 100%
+        )`,
+        borderRadius: 999,
+      }}
+    />
 
-                {/* High risk */}
-                <button
-                  type="button"
-                  onClick={() => setRisk("high")}
-                  className="flex-1 inline-flex items-center justify-center px-3 py-1.5 rounded-md text-xs sm:text-sm border transition"
-                  style={{
-                    border:
-                      risk === "high"
-                        ? `1px solid ${PALETTE.gold}`
-                        : "1px solid rgba(248, 250, 252, 0.18)",
-                    background:
-                      risk === "high"
-                        ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)`
-                        : "rgba(0,0,0,0.75)",
-                    color: risk === "high" ? "#000000" : "#e5e7eb",
-                  }}
-                >
-                  High risk
-                </button>
-              </div>
-              <p className="text-[11px] mt-0.5" style={{ color: "#9ca3af" }}>
-                Low risk favors higher-owned, more stable players. High risk leans into
-                volatile, lower-owned picks. Neutral is optimal.
-              </p>
-            </div>
+    {/* Inline styles for slider thumb */}
+    <style>{`
+      input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: ${PALETTE.gold};
+        border: 2px solid #000;
+        box-shadow: 0 0 0 2px rgba(184,134,11,0.35);
+        transition: transform 0.15s ease;
+      }
+      input[type="range"]::-webkit-slider-thumb:hover {
+        transform: scale(1.15);
+      }
+
+      input[type="range"]::-moz-range-thumb {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: ${PALETTE.gold};
+        border: 2px solid #000;
+        box-shadow: 0 0 0 2px rgba(184,134,11,0.35);
+      }
+
+      input[type="range"]::-moz-range-track {
+        height: 6px;
+        background: #374151;
+        border-radius: 999px;
+      }
+    `}</style>
+  </div>
+
+  {/* Labels */}
+  <div className="flex items-center justify-between mt-1">
+    <span className="text-[11px]" style={{ color: "#9ca3af" }}>
+      Low risk
+    </span>
+
+    <span
+      className="text-[11px] font-semibold"
+      style={{ color: PALETTE.gold }}
+    >
+      {Number(risk*10).toFixed(0)}
+    </span>
+
+    <span className="text-[11px]" style={{ color: "#9ca3af" }}>
+      High risk
+    </span>
+  </div>
+
+  <p className="text-[11px] mt-0.5" style={{ color: "#9ca3af" }}>
+    Low risk prefers high-ownership, stable picks.  
+    High risk rewards volatility and differentials.
+  </p>
+</div>
+
+
 
           </div>
         </section>

@@ -36,7 +36,7 @@ class OptimizeRequest(BaseModel):
     wildcard_round: int = 40
     freehit_round: int = 40
     n_hits: int = 0
-    risk:str='med'
+    risk:int=0
 
     # which engine to use
     model_type: Literal["ai", "statistical"] = "ai"
@@ -201,7 +201,7 @@ def get_my_team_optimize(
     wildcard_round: Optional[int]           = Query(40, title="Wildcard round"),
     freehit_round: Optional[int]           = Query(40, title="freehit round"),
     n_hits:Optional[int]                   = Query(0, title="n_hits"),
-    risk:Optional[str]                   = Query("med", title="risk"),
+    risk:Optional[int]                   = Query(0, title="risk"),
 ):
     """
     Optimize a team given:

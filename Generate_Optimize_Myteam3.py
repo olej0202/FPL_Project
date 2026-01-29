@@ -116,7 +116,7 @@ def optimize_my_team(
     n_hits: int = 0,
     current_player_path: str = "Raw_Data_25/current_players.csv",
     players_override: Optional[pd.DataFrame] = None,  # long format: [name, GW, Points]
-    risk_factor: str = "med",
+    risk_factor: int = 0,
 ) -> pd.DataFrame:
 
     if banned_list is None:
@@ -231,35 +231,49 @@ def optimize_my_team(
 
     predicted_points = data[GW_list].to_numpy(dtype=float)
 
-    # ---------- Risk factor adjustment ----------
-    # ownership selected is 0..1 (after your pd.to_numeric); if it's 0..100 normalize it:
-    sel = np.clip(selected.astype(float), 0, 1)          # already 0..0.8
-    ownership_risk = 1 - sel                             # 0.2..1
+    # ---------- Risk adjustment (risk is an int: -10..+10, step=1 => 0.1) ----------
+    # Example: risk=-10 => -1.0 (very low-risk), risk=0 => neutral, risk=+10 => +1.0 (very high-risk)
 
+    risk_float = float(risk_factor) if risk_factor is not None else 0.0
+
+    # map -1..1 → -10..10 (preserve 0.1 steps)
+    risk_int = int(round(risk_float * 10))
+    
+    risk_int = int(np.clip(risk_int, -10, 10))
+    risk_value = risk_int / 10.0  # -1..1
+
+    # ownership selected is already ~0..0.8, keep it clipped
+    sel = np.clip(selected.astype(float), 0, 1)
+    ownership_risk = 1 - sel  # higher => more differential
+
+    # Points STD (your ranges: ~0.5..3)
     points_std = pd.to_numeric(data["Point_STD"], errors="coerce")
     points_std = points_std.fillna(points_std.median()).to_numpy(dtype=float)
     points_std = np.clip(points_std, 0, 3.5)
 
-    # scale std (0.5..3) -> 0..1 (robust)
+    # robust scale std to 0..1
     std_min = float(np.nanpercentile(points_std, 5))
     std_max = float(np.nanpercentile(points_std, 95))
     points_std_scaled = (points_std - std_min) / (std_max - std_min + 1e-9)
     points_std_scaled = np.clip(points_std_scaled, 0, 1)
 
-    # combine (tune weights)
+    # combine into a single risk score (0..1-ish)
     w_own, w_std = 0.7, 0.3
-    risk_score = w_own * ownership_risk + w_std * points_std_scaled  # ~0.1..1
-    
-    risk_factor_clean = (risk_factor or "med").strip().lower()
-    if risk_factor_clean == "low":      # prefer safe/template -> penalize risk
-        lam = 5
+    risk_score = w_own * ownership_risk + w_std * points_std_scaled
+
+    # direction:
+    #  risk_value < 0 => low risk => penalize risky players
+    #  risk_value > 0 => high risk => reward risky players
+    if risk_value < 0:
         sign = -1
-    elif risk_factor_clean == "high":   # prefer differentials -> reward risk
-        lam = 6
+    elif risk_value > 0:
         sign = +1
-    else:                               # neutral
-        lam = 0.0
+    else:
         sign = 0
+
+    # lambda: starts at 3, +1 per 0.1 step away from zero
+    # if risk_int=0 => lam doesn't matter because sign=0 (no risk term)
+    lam = 1.5 + abs(risk_int)    
 
 
 

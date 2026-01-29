@@ -18,7 +18,7 @@ export function MyTeamDataContextProvider({ children }) {
   const [has_changed, sethas_changed] = useState(false);
   const [bannedPlayersData, setBannedPlayersData] = useState([]);
   const [n_hits, setn_hits] = useState("");
-  const [risk, setRisk] = useState("med");
+   const [risk, setRisk] = useState(0);
 
   /**
    * Fetch current team data from Get_My_Team endpoint
@@ -67,7 +67,7 @@ export function MyTeamDataContextProvider({ children }) {
         if (freehitROund) params.append("freehit_round", freehitROund);
         bannedList.forEach((id) => params.append("banned_list", id));
         if (n_hits) params.append("n_hits", n_hits);
-        if (risk) params.append("risk", risk);
+        params.append("risk", String(Number(risk) || 0));
 
         const url = `https://fpl-project-t5e9.onrender.com/My_Team_Optimize?${params.toString()}`;
         const resp = await fetch(url);
@@ -103,7 +103,7 @@ export function MyTeamDataContextProvider({ children }) {
         n_hits: n_hits ? Number(n_hits) : 0,
         model_type: "statistical",
         players: slimPlayers,
-        risk: risk,
+        risk: Number(risk) || 0,
       };
 
       const resp = await fetch("https://fpl-project-t5e9.onrender.com/My_Team_Optimize", {
