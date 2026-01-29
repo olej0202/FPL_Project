@@ -116,7 +116,7 @@ def optimize_my_team(
     n_hits: int = 0,
     current_player_path: str = "Raw_Data_25/current_players.csv",
     players_override: Optional[pd.DataFrame] = None,  # long format: [name, GW, Points]
-    risk_factor: int = 0,
+    risk_factor: float = 0.0,
 ) -> pd.DataFrame:
 
     if banned_list is None:
@@ -238,7 +238,7 @@ def optimize_my_team(
 
     # map -1..1 → -10..10 (preserve 0.1 steps)
     risk_int = int(round(risk_float * 10))
-    
+
     risk_int = int(np.clip(risk_int, -10, 10))
     risk_value = risk_int / 10.0  # -1..1
 
@@ -258,7 +258,7 @@ def optimize_my_team(
     points_std_scaled = np.clip(points_std_scaled, 0, 1)
 
     # combine into a single risk score (0..1-ish)
-    w_own, w_std = 0.7, 0.3
+    w_own, w_std = 0.6, 0.4
     risk_score = w_own * ownership_risk + w_std * points_std_scaled
 
     # direction:
