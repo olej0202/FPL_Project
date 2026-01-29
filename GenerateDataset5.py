@@ -1464,7 +1464,7 @@ def main_Transform():
             # minutes-adjusted avg_defcon per 90
             player_df["defcon_avg"] = (defcon_mean / minutes_mean) * 90
             
-            player_df['TP_std_20'] = (player_df['Adjusted_Fantasy'].rolling(window=20, min_periods=1).std())
+            player_df['TP_std_20'] = (player_df['Adjusted_Fantasy'].rolling(window=25, min_periods=1).std())
 
 
             if(namelist[0]=="Mohamed_Salah"):

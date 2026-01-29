@@ -237,10 +237,10 @@ def optimize_my_team(
     risk_float = float(risk_factor) if risk_factor is not None else 0.0
 
     # map -1..1 → -10..10 (preserve 0.1 steps)
-    risk_int = int(round(risk_float * 10))
+    risk_int = float(round(risk_float *5))
 
-    risk_int = int(np.clip(risk_int, -10, 10))
-    risk_value = risk_int / 15.0  # -1..1
+    risk_int = float(np.clip(risk_int, -10, 10))
+    risk_value = risk_int / 20.0  # -1..1
 
     # ownership selected is already ~0..0.8, keep it clipped
     sel = np.clip(selected.astype(float), 0, 1)
@@ -545,6 +545,29 @@ def optimize_my_team(
     # --- Solve ---
     model.solve()
     records = []
+    
+    def compute_points_only_objective():
+        total = 0.0
+
+        # same weight you used in objective: starter + captain + 0.05*bench
+        for t in gameweeks:
+            if use_freehit and t == fh_t:
+                for i in range(num_players):
+                    total += float((fh_y[i].varValue or 0)) * float(predicted_points[i][t])
+                    total += float((fh_c[i].varValue or 0)) * float(predicted_points[i][t])
+                    total += float((fh_bench[i].varValue or 0)) * 0.05 * float(predicted_points[i][t])
+            else:
+                for i in range(num_players):
+                    total += float((y[i, t].varValue or 0)) * float(predicted_points[i][t])
+                    total += float((c[i, t].varValue or 0)) * float(predicted_points[i][t])
+                    total += float((bench[i, t].varValue or 0)) * 0.05 * float(predicted_points[i][t])
+
+        # saved transfers bonus (also independent of risk)
+        for t in gameweeks:
+            total += 0.2 * float(saved_transfers[t].varValue or 0)
+
+        return total
+
 
     print(f"Status: {model.status}")
     if model.status == -1:
@@ -636,7 +659,8 @@ def optimize_my_team(
                     })
 
     # Final structured DataFrame with objective value
-    obj_val = float(value(model.objective)) - n_hits * 4 * 0.8
+    obj_val = compute_points_only_objective() - n_hits * 4 * 0.8
+
     records.append({
         "Name": "Obj Value",
         "status": obj_val,

@@ -534,7 +534,7 @@ const formatRiskLabel = (v) => {
       color: Number(risk) === -0.6 ? "#000" : PALETTE.gold,
     }}
   >
-    Optimal Averse
+    Low Risk
   </button>
   <button
     type="button"
@@ -559,7 +559,7 @@ const formatRiskLabel = (v) => {
       color: Number(risk) === 0.6 ? "#000" : PALETTE.gold,
     }}
   >
-    Optimal Risk
+    High Risk
   </button>
 
 
