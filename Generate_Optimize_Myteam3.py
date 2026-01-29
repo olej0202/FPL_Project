@@ -237,7 +237,7 @@ def optimize_my_team(
     risk_float = float(risk_factor) if risk_factor is not None else 0.0
 
     # map -1..1 → -10..10 (preserve 0.1 steps)
-    risk_int = float(round(risk_float *5))
+    risk_int = float(risk_float *10)
 
     risk_int = float(np.clip(risk_int, -10, 10))
     risk_value = risk_int / 20.0  # -1..1
@@ -266,14 +266,16 @@ def optimize_my_team(
     #  risk_value > 0 => high risk => reward risky players
     if risk_value < 0:
         sign = -1
+        offset=1
     elif risk_value > 0:
         sign = +1
+        offset=1/7
     else:
         sign = 0
 
     # lambda: starts at 3, +1 per 0.1 step away from zero
     # if risk_int=0 => lam doesn't matter because sign=0 (no risk term)
-    lam = 1.5 + abs(risk_int)    
+    lam = 1 + abs(risk_int)*offset    
 
 
 
