@@ -522,6 +522,49 @@ const formatRiskLabel = (v) => {
   >
     Risk preference
   </label>
+  {/* Presets (above the slider) */}
+<div className="flex items-center justify-between mb-1">
+    <button
+    type="button"
+    onClick={() => setRisk(-0.6)}
+    className="px-3 py-1.5  text-[11px] font-semibold transition"
+    style={{
+      border: `1px solid ${PALETTE.gold}`,
+      background: Number(risk) === -0.6 ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)` : "rgba(0,0,0,0.75)",
+      color: Number(risk) === -0.6 ? "#000" : PALETTE.gold,
+    }}
+  >
+    Optimal Averse
+  </button>
+  <button
+    type="button"
+    onClick={() => setRisk(0)}
+    className="px-3 py-1.5  text-[11px] font-semibold transition"
+    style={{
+      border: `1px solid ${PALETTE.gold}`,
+      background: Number(risk) === 0 ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)` : "rgba(0,0,0,0.75)",
+      color: Number(risk) === 0 ? "#000" : PALETTE.gold,
+    }}
+  >
+    Neutral
+  </button>
+
+  <button
+    type="button"
+    onClick={() => setRisk(0.6)}
+    className="px-3 py-1.5  text-[11px] font-semibold transition"
+    style={{
+      border: `1px solid ${PALETTE.gold}`,
+      background: Number(risk) === 0.6 ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)` : "rgba(0,0,0,0.75)",
+      color: Number(risk) === 0.6 ? "#000" : PALETTE.gold,
+    }}
+  >
+    Optimal Risk
+  </button>
+
+
+</div>
+
 
   <div
     className="h-12 rounded-md px-3 flex items-center"
@@ -530,6 +573,7 @@ const formatRiskLabel = (v) => {
       border: "1px solid rgba(248, 250, 252, 0.18)",
     }}
   >
+    
     <input
       type="range"
       min={-1}
@@ -594,12 +638,8 @@ const formatRiskLabel = (v) => {
       Low risk
     </span>
 
-    <span
-      className="text-[11px] font-semibold"
-      style={{ color: PALETTE.gold }}
-    >
-      {Number(risk*10).toFixed(0)}
-    </span>
+
+ 
 
     <span className="text-[11px]" style={{ color: "#9ca3af" }}>
       High risk

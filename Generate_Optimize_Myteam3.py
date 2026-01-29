@@ -240,7 +240,7 @@ def optimize_my_team(
     risk_int = int(round(risk_float * 10))
 
     risk_int = int(np.clip(risk_int, -10, 10))
-    risk_value = risk_int / 10.0  # -1..1
+    risk_value = risk_int / 15.0  # -1..1
 
     # ownership selected is already ~0..0.8, keep it clipped
     sel = np.clip(selected.astype(float), 0, 1)
@@ -258,7 +258,7 @@ def optimize_my_team(
     points_std_scaled = np.clip(points_std_scaled, 0, 1)
 
     # combine into a single risk score (0..1-ish)
-    w_own, w_std = 0.6, 0.4
+    w_own, w_std = 0.7, 0.3
     risk_score = w_own * ownership_risk + w_std * points_std_scaled
 
     # direction:
