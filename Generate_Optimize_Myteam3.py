@@ -264,9 +264,9 @@ def optimize_my_team(
     # direction:
     #  risk_value < 0 => low risk => penalize risky players
     #  risk_value > 0 => high risk => reward risky players
+    offset=1
     if risk_value < 0:
         sign = -1
-        offset=1
     elif risk_value > 0:
         sign = +1
         offset=1/2
@@ -287,6 +287,8 @@ def optimize_my_team(
     mid_indices = [i for i, pos in enumerate(positions) if pos == "MID"]
     fwd_indices = [i for i, pos in enumerate(positions) if pos == "FWD"]
     outfield_indices = [i for i, pos in enumerate(positions) if pos != "GKP"]
+    
+    risk_score[gk_indices] = 0.0
 
     # Slightly penalize GK points
     for i in gk_indices:
