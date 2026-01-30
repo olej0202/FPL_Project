@@ -47,7 +47,8 @@ Manual_Player_Risk={
         "Alexander_Isak":0.6,
         "Yoane_Wissa":0.8,
         "Antoine_Semenyo":0.6,     
-        "Marc_Guéhi":0.8        
+        "Marc_Guéhi":0.8,
+        "Tammy_Abraham":0.8        
 }
 
 Manual_min=[
@@ -74,6 +75,7 @@ Manual_min=[
         {"name": "Viktor_Gyökeres", "type": "const",   "GW": "any", "value": 80},
         {"name": "Matheus_Santos Carneiro da Cunha", "type": "const",   "GW": "any", "value": 75},
         {"name": "Patrick_Dorgu", "type": "const",   "GW": "any", "value": 0},
+        {"name": "Tammy_Abraham", "type": "const",   "GW": "any", "value": 70},
     ]
         
 
