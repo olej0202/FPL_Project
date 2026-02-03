@@ -54,14 +54,14 @@
 52,Brighton,Maxim De Cuyper,DL,2,5,40.0
 53,Brighton,Pascal Groß,MC,4,5,80.0
 54,Brighton,Yasin Ayari,MC,4,5,80.0
-55,Burnley,Armando Broja,FW,5,5,100.0
-56,Burnley,Axel Tuanzebe,CB,2,5,40.0
-57,Burnley,Bashir Humphreys,CB,4,5,80.0
-58,Burnley,Chimuanya Ugochukwu,MC,5,5,100.0
-59,Burnley,Florentino Luís,MC,5,5,100.0
-60,Burnley,Jaidon Anthony,AMC,3,5,60.0
-61,Burnley,Kyle Walker,DR,5,5,100.0
-62,Burnley,Lucas Pires,DL,5,5,100.0
+55,Burnley,Axel Tuanzebe,CB,3,5,60.0
+56,Burnley,Bashir Humphreys,CB,5,5,100.0
+57,Burnley,Chimuanya Ugochukwu,MC,5,5,100.0
+58,Burnley,Florentino Luís,MC,5,5,100.0
+59,Burnley,Jaidon Anthony,AMC,4,5,80.0
+60,Burnley,Kyle Walker,DR,5,5,100.0
+61,Burnley,Lucas Pires,DL,5,5,100.0
+62,Burnley,Lyle Foster,FW,1,5,20.0
 63,Burnley,Marcus Edwards,AMC,4,5,80.0
 64,Burnley,Martin Dubravka,GK,5,5,100.0
 65,Burnley,Maxime Estève,CB,4,5,80.0
@@ -242,16 +242,16 @@
 240,Spurs,Xavi Simons,AMC,4,5,80.0
 241,Spurs,Yves Bissouma,MC,2,5,40.0
 242,Sunderland,Brian Brobbey,FW,5,5,100.0
-243,Sunderland,Dan Ballard,CB,3,5,60.0
-244,Sunderland,Eliezer Mayenda,FW,3,5,60.0
+243,Sunderland,Chemsdine Talbi,LW,1,5,20.0
+244,Sunderland,Dan Ballard,CB,4,5,80.0
 245,Sunderland,Enzo Le Fée,MC,5,5,100.0
-246,Sunderland,Noah Sadiki,MC,2,5,40.0
-247,Sunderland,Nordi Mukiele,DR,5,5,100.0
-248,Sunderland,Omar Alderete,CB,5,5,100.0
-249,Sunderland,Reinildo,DL,2,5,40.0
-250,Sunderland,Robin Roefs,GK,5,5,100.0
-251,Sunderland,Romaine Mundle,LW,2,5,40.0
-252,Sunderland,Trai Hume,RW,5,5,100.0
+246,Sunderland,Habib Diarra,RW,1,5,20.0
+247,Sunderland,Noah Sadiki,MC,3,5,60.0
+248,Sunderland,Nordi Mukiele,CB,5,5,100.0
+249,Sunderland,Omar Alderete,CB,5,5,100.0
+250,Sunderland,Reinildo,DL,3,5,60.0
+251,Sunderland,Robin Roefs,GK,5,5,100.0
+252,Sunderland,Trai Hume,DR,5,5,100.0
 253,West Ham,Aaron Wan-Bissaka,DR,3,5,60.0
 254,West Ham,Alphonse Areola,GK,5,5,100.0
 255,West Ham,Crysencio Summerville,LW,5,5,100.0

@@ -264,6 +264,12 @@ def Generate_season_data(current_player_path, current_season_path):
     merged["GW"]=merged["round"].astype(int)
     merged["GOALS-XG"]=merged["goals_scored"]-merged["expected_goals"]
     merged["Assist-XA"]=merged["assists"]-merged["expected_assists"]
+    merged["XGI"] = merged["expected_goals"] + merged["expected_assists"]
+
+    merged["XGI_delta"] = (
+        (merged["expected_goals"] + merged["expected_assists"])
+        - (merged["goals_scored"] + merged["assists"])
+    )
     merged["GOALSCONCEEDED-XGOALSCONCEEDED"]=merged["goals_conceded"]-merged["expected_goals_conceded"]
     merged['defcon_hit'] = (
         ((merged['position'] == 'DEF') & (merged['defensive_contribution'] >= 10)) |
