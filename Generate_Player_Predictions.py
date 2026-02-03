@@ -70,6 +70,7 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
         df=data[data["name"]==players[i]]
         df=df.sort_values(by='GW').reset_index(drop=True)
         team=df['Team'].values[-1]
+        position=df["position"].values[-1]
 
         
         for h in range(len(df)):
@@ -142,7 +143,19 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
                real_variable="cbi" 
                #player_preds.append((min(12,df['CBI'].values[h])**2)/12)
                opp_defcon_fac=1+(df['Opp_defcon'].values[h]-75)/75
-               player_preds.append(df['CBI'].values[h]*opp_defcon_fac*other_metric)
+               base_pred = df['CBI'].values[h] * opp_defcon_fac * other_metric
+               
+               if position == "DEF" and base_pred < 6:
+                   base_pred *= 0.5
+               elif position == "DEF" and base_pred < 7.5:
+                   base_pred *= 0.8
+                   
+               elif position != "DEF" and base_pred < 9:
+                   base_pred *= 0.8
+               elif position != "DEF" and base_pred < 7:
+                   base_pred *= 0.5
+
+               player_preds.append(base_pred)
         
             if(pred_variable=="Fantasy"):
                real_variable="total_points"

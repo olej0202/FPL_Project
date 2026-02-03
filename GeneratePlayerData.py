@@ -482,19 +482,19 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
         assist_data=player_assists[player_assists["Assist_player_code"] == player_code].copy()
         
         if assist_data.empty:
-            big_chances_created = 0.1
+            big_chances_created = 0.15
         else:
             newest_row_ass = assist_data.sort_values("date").tail(1).iloc[0]
 
             bcc_rm = newest_row_ass.get("bc_created_rm25", np.nan)
 
             if pd.isna(bcc_rm):
-                big_chances_created = 0.1
+                big_chances_created = 0.15
             else:
                 big_chances_created=bcc_rm
 
         if shot_data.empty:
-            big_chances = 0.1
+            big_chances = 0.2
             goal_conv = 1
         else:
             newest_row = shot_data.sort_values("date").tail(1).iloc[0]
@@ -503,7 +503,7 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
             bc_ewm  = newest_row.get("big_chance_rate_ewm", np.nan)
 
             if pd.isna(bc_rm20) and pd.isna(bc_ewm):
-                big_chances = 0.1
+                big_chances = 0.2
             elif pd.isna(bc_rm20):
                 big_chances = bc_ewm
             elif pd.isna(bc_ewm):
