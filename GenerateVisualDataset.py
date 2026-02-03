@@ -71,7 +71,6 @@ def Visual_Teams_history(path="Team_Data_FUll.csv"):
     
     teams_df.to_csv("Teams_Visual_Analysis.csv")
 
-Visual_Teams_history()
     
 def Generate_Lineups():
 
@@ -266,9 +265,9 @@ def Generate_season_data(current_player_path, current_season_path):
     merged["Assist-XA"]=merged["assists"]-merged["expected_assists"]
     merged["XGI"] = merged["expected_goals"] + merged["expected_assists"]
 
-    merged["XGI_delta"] = (
+    merged["XGI_delta"] = ( 
+        (merged["goals_scored"] + merged["assists"])-
         (merged["expected_goals"] + merged["expected_assists"])
-        - (merged["goals_scored"] + merged["assists"])
     )
     merged["GOALSCONCEEDED-XGOALSCONCEEDED"]=merged["goals_conceded"]-merged["expected_goals_conceded"]
     merged['defcon_hit'] = (

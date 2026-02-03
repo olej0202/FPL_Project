@@ -728,6 +728,211 @@ def Player_assists(Understat_data: str):
     Player_ass_df.to_csv("Bronze/Understat_PlayerAssist.csv", index=False)
     return Player_ass_df
 
+
+import pandas as pd
+import numpy as np
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
+
+
+def _build_team_feature_df(
+    df_shots: pd.DataFrame,
+    team_col: str,
+    n_clusters: int,
+    rolling_window: int,
+) -> pd.DataFrame:
+    """
+    Builds features aggregated by [team_col, date]:
+      - Set_Piece_Threat_* (rolling avg)
+      - Cluster xG columns (rolling avg)
+      - Cluster % shares (cluster RA / total RA)
+      - Final_SP_* summary columns
+
+    Returns a dataframe indexed by [team_col, date] with feature columns.
+    """
+    # --- Cluster xG (ALL situations; clusters already assigned) ---
+    cluster_xg = (
+        df_shots
+        .groupby([team_col, "date", "xy_cluster"], as_index=False)
+        .agg(cluster_xg=("xG", "sum"))
+    )
+
+    cluster_xg_wide = (
+        cluster_xg
+        .pivot_table(
+            index=[team_col, "date"],
+            columns="xy_cluster",
+            values="cluster_xg",
+            fill_value=0
+        )
+        .reset_index()
+    )
+
+    cluster_cols = []
+    for col in list(cluster_xg_wide.columns):
+        if isinstance(col, (int, np.integer)):
+            new_name = f"Shot_Threat_Cluster_{int(col)}"
+            cluster_xg_wide = cluster_xg_wide.rename(columns={col: new_name})
+            cluster_cols.append(new_name)
+
+    # --- Set piece threat (Situation-only; independent of clusters) ---
+    set_piece_threat = (
+        df_shots[df_shots["situation"].isin(["FromCorner", "SetPiece"])]
+        .groupby([team_col, "date"], as_index=False)
+        .agg(Set_Piece_Threat=("xG", "sum"))
+    )
+
+    # --- Merge ---
+    feat = cluster_xg_wide.merge(
+        set_piece_threat,
+        on=[team_col, "date"],
+        how="left"
+    ).fillna({"Set_Piece_Threat": 0})
+
+    # Ensure all clusters exist
+    for c in cluster_cols:
+        if c not in feat.columns:
+            feat[c] = 0.0
+
+    # --- Rolling averages per team ---
+    feat = feat.sort_values([team_col, "date"]).reset_index(drop=True)
+
+    roll_base_cols = ["Set_Piece_Threat"] + cluster_cols
+    ra_cols = []
+    for c in roll_base_cols:
+        ra = f"{c}_RA{rolling_window}"
+        feat[ra] = feat.groupby(team_col)[c].transform(
+            lambda s: s.rolling(rolling_window, min_periods=1).mean()
+        )
+        ra_cols.append(ra)
+
+    # --- Total cluster threat + rolling ---
+    feat["Total_Shot_Threat"] = feat[cluster_cols].sum(axis=1)
+    total_ra = f"Total_Shot_Threat_RA{rolling_window}"
+    feat[total_ra] = feat.groupby(team_col)["Total_Shot_Threat"].transform(
+        lambda s: s.rolling(rolling_window, min_periods=1).mean()
+    )
+
+    # --- Percent shares (IMPORTANT: cluster % are comparable with each other; set-piece % is a subset share) ---
+    den = feat[total_ra].replace(0, np.nan)
+
+    # Cluster shares (sum to ~1)
+    for c in cluster_cols:
+        ra = f"{c}_RA{rolling_window}"
+        feat[f"{ra}_pct"] = feat[ra] / den
+
+    # Set-piece share of total (independent)
+    sp_ra = f"Set_Piece_Threat_RA{rolling_window}"
+    feat[f"{sp_ra}_pct"] = feat[sp_ra] / den
+
+    # --- Your final SP features (using RA and its share) ---
+    feat["Final_SP_Threat"] = feat[sp_ra] * 0.5 + 0.5 * feat[f"{sp_ra}_pct"].fillna(0)
+    feat["Final_SP"] = 1 + ((feat["Final_SP_Threat"] - 0.25) / 0.25)
+
+    # Keep a tidy set of output columns
+    out_cols = [team_col, "date", sp_ra, f"{sp_ra}_pct", "Final_SP_Threat", "Final_SP", total_ra]
+    out_cols += [f"Shot_Threat_Cluster_{i}_RA{rolling_window}" for i in range(n_clusters)]
+    out_cols += [f"Shot_Threat_Cluster_{i}_RA{rolling_window}_pct" for i in range(n_clusters)]
+
+    # Some clusters might not appear; ensure the columns exist
+    for col in out_cols:
+        if col not in feat.columns:
+            feat[col] = 0.0
+
+    return feat[out_cols]
+
+
+def GenerateTeamShots(
+    csv_path="Bronze/Understat_shots.csv",
+    n_clusters=5,
+    rolling_window=20,
+    random_state=42,
+):
+    # -----------------------------
+    # Load + select columns
+    # -----------------------------
+    shots_data = pd.read_csv(csv_path)
+
+    columns = [
+        "player_name", "result", "X", "Y", "xG", "h_a", "situation", "shotType",
+        "h_team", "a_team", "h_goals", "a_goals", "date", "lastAction",
+        "team_title", "own_team", "opponent_team", "distance_m", "angle", "big_chance"
+    ]
+    shots_data = shots_data[columns].copy()
+
+    # Keep only rows where team_title matches own_team OR opponent_team (row-wise consistency)
+    filtered = shots_data[
+        (shots_data["team_title"] == shots_data["own_team"]) |
+        (shots_data["team_title"] == shots_data["opponent_team"])
+    ].copy()
+
+    # Ensure numeric types for clustering features and xG
+    for c in ["distance_m", "angle", "xG"]:
+        filtered[c] = pd.to_numeric(filtered[c], errors="coerce")
+
+    # Ensure date is datetime
+    filtered["date"] = pd.to_datetime(filtered["date"], errors="coerce")
+
+    # Drop rows missing essentials
+    filtered = filtered.dropna(subset=["own_team", "opponent_team", "date", "distance_m", "angle", "xG"]).copy()
+
+    # -----------------------------
+    # Train clusters ONCE (ALL shots)
+    # -----------------------------
+    XY = filtered[["distance_m", "angle"]].values
+    scaler = StandardScaler()
+    XY_scaled = scaler.fit_transform(XY)
+
+    kmeans = KMeans(n_clusters=n_clusters, random_state=random_state, n_init=20)
+    filtered["xy_cluster"] = kmeans.fit_predict(XY_scaled)
+
+    # Cluster centers (original scale)
+    centers = scaler.inverse_transform(kmeans.cluster_centers_)
+    centers_df = pd.DataFrame(centers, columns=["distance_center", "angle_center"])
+    centers_df["cluster"] = centers_df.index
+
+    # -----------------------------
+    # Build features for BOTH perspectives
+    #   - Against: aggregate by opponent_team (shots conceded)
+    #   - For:     aggregate by own_team (shots taken)
+    # -----------------------------
+    against_df = _build_team_feature_df(
+        df_shots=filtered,
+        team_col="opponent_team",
+        n_clusters=n_clusters,
+        rolling_window=rolling_window,
+    )
+
+    for_df = _build_team_feature_df(
+        df_shots=filtered,
+        team_col="own_team",
+        n_clusters=n_clusters,
+        rolling_window=rolling_window,
+    )
+
+    # Rename key so we can merge to one row per team/date
+    against_df = against_df.rename(columns={"opponent_team": "team"}).copy()
+    for_df = for_df.rename(columns={"own_team": "team"}).copy()
+
+    # Prefix feature columns to avoid collisions
+    key_cols = {"team", "date"}
+    against_df = against_df.rename(columns={c: f"AGAINST_{c}" for c in against_df.columns if c not in key_cols})
+    for_df = for_df.rename(columns={c: f"FOR_{c}" for c in for_df.columns if c not in key_cols})
+
+    # Merge: one row has both FOR_ and AGAINST_ features
+    merged = (
+        for_df
+        .merge(against_df, on=["team", "date"], how="outer")
+        .sort_values(["team", "date"])
+        .reset_index(drop=True)
+        .fillna(0)
+    )
+
+    return merged, filtered, centers_df, kmeans, scaler
+
+
+
+
 def Generate_Shots_data(Understat_data,shots_path,player_path,team_path):
     mapping = {
         "Manchester City": "Man City",
@@ -772,6 +977,13 @@ def Generate_Shots_data(Understat_data,shots_path,player_path,team_path):
     match_best.to_csv("Bronze/Understat_Player_match_table_best.csv", index=False)
     Player_shots (Understat_data)
     Player_assists(Understat_data)
+    
+    merged_df, filtered, centers_df, kmeans, scaler = GenerateTeamShots(
+        csv_path="Bronze/Understat_shots.csv",
+        n_clusters=5,
+        rolling_window=20
+    )
+    merged_df.to_csv("Bronze/Understat_Teamshots.csv")
 
 
 

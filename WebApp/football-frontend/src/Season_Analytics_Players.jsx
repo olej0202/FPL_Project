@@ -33,9 +33,11 @@ const MEASURE_OPTIONS = [
   { key: "goals_scored", label: "Goals Scored" },
   { key: "assists", label: "Assists" },
   { key: "expected_assists", label: "Expected Assists" },
+  { key: "XGI", label: "XGI" },
   { key: "defcon_hit", label: "Defcon Hit" },
   { key: "GOALS-XG", label: "GOALS-XG" },
   { key: "Assist-XA", label: "Assist-XA" },
+  { key: "XGI_delta", label: "XGI_delta" },
   { key: "saves", label: "Saves" },
   { key: "yellow_cards", label: "Yellow Cards" },
   { key: "clean_sheets", label: "Clean Sheets" },
@@ -58,7 +60,7 @@ export default function PlayerMeasureAveragesChart_Player() {
 
   // Top/Bottom switch (kept for your “delta” style metrics)
   const [rankDirection, setRankDirection] = useState("top"); // 'top' | 'bottom'
-  const bottomEligibleKeys = new Set(["GOALS-XG", "Assist-XA"]);
+  const bottomEligibleKeys = new Set(["GOALS-XG", "Assist-XA","XGI_delta"]);
   const bottomEligible = bottomEligibleKeys.has(selectedMeasure);
 
   useEffect(() => {

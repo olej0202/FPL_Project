@@ -711,7 +711,7 @@ def _run_one_pass(
     # ELO
     elo_rating = {t: 1000.0 for t in teams}
     elo_history = {t: [1000.0] for t in teams}
-    k_elo = 25.0
+    k_elo = 30.0
 
     error_xg = []
     error_xgc = []
@@ -939,8 +939,8 @@ def team_transformed2():
     global_avg_xgc = float(team_df["XGC_avg"].mean())
 
     # params
-    k_off_1, k_def_1 = 0.05, 0.05
-    k_off_2, k_def_2 = 0.09, 0.09
+    k_off_1, k_def_1 = 0.06, 0.06
+    k_off_2, k_def_2 = 0.1, 0.1
     min_val = 1.1
     OBS_LO, OBS_HI = 0.5, 3.2
 
