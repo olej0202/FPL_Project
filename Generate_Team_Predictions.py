@@ -1446,12 +1446,16 @@ def GenerateTeamPredictions_Results(fixture_path, current_team_path, horizon):
     proba_pred_xgb = _ensure_all_classes(model_xgb.predict_proba(X_pred), model_xgb.classes_)
     proba_pred_lr = _ensure_all_classes(model_lr.predict_proba(X_pred), model_lr.named_steps["clf"].classes_)
     proba_pred_avg = (0.2*proba_pred_xgb + 0.8*proba_pred_lr)
+    proba_pred_avg2 = (1*proba_pred_xgb + 0*proba_pred_lr)
 
     # columns: [P0 draw, P1 away win, P2 home win]
     p_draw = proba_pred_avg[:, 1]
     p_away = proba_pred_avg[:, 0]
     p_home = proba_pred_avg[:, 2]
-
+    
+    p_draw2 = proba_pred_avg2[:, 1]
+    p_away2 = proba_pred_avg2[:, 0]
+    p_home2 = proba_pred_avg2[:, 2]
     # =========================
     # Write Team_prediction_visual5.csv
     # =========================
@@ -1467,6 +1471,9 @@ def GenerateTeamPredictions_Results(fixture_path, current_team_path, horizon):
     result_df["Home_win_Percent"] = (p_home * 100).round(2)
     result_df["Away_win_Percent"] = (p_away * 100).round(2)
     result_df["Draw_percent"] = (p_draw * 100).round(2)
+    result_df["Home_win_Percent2"] = (p_home2 * 100).round(2)
+    result_df["Away_win_Percent2"] = (p_away2 * 100).round(2)
+    result_df["Draw_percent2"] = (p_draw2 * 100).round(2)
 
     result_df.to_csv("Team_prediction_visual_results2.csv", index=False)
 
