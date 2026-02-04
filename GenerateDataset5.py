@@ -157,6 +157,9 @@ def process_player_data(player_df, team, team_id2,kmeans):
     df['opponent_code'] = player_df['opponent_code'].values
     df["Team_XG"]=own_team_xgs
     df["Team_XA"]=own_team_xas
+    
+    df["yellow_cards"]=player_df['yellow_cards'].values
+    df["red_cards"]=player_df['red_cards'].values
 
     return df
 
@@ -1294,6 +1297,12 @@ def main_Transform():
             player_df["XG_Mean"] = player_df['expected_goals'].ewm(span=15, adjust=False).mean()
             player_df["XA_Mean"] = player_df['expected_assists'].ewm(span=15, adjust=False).mean()
             player_df["Shots_Mean"] = player_df['shots'].rolling(window=15, min_periods=1).mean()
+            #Yellow
+            player_df["Rolling_cards"] = (
+                player_df["yellow_cards"] + player_df["red_cards"]
+            ).rolling(window=40, min_periods=1).mean()
+            
+
             xg_mean_feature=player_df["XG_Mean"].values[-1]
             xa_mean_feature=player_df["XA_Mean"].values[-1]
             shots_mean_feature=player_df["Shots_Mean"].values[-1]

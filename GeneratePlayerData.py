@@ -663,14 +663,26 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
         print(player_understat_pos)
         print(team_code)
         print(name)
+        
+        rolling_cards=0.1
+        
         if len(history_player)<=6:
             player_risiko=0.8
             overscore=1
             overassist=1
-        if len(history_player)<=15:
+        elif len(history_player)<=10:
             player_risiko=0.6
             overscore=1
             overassist=1
+            rolling_cards=player_row["Rolling_cards"].values[0]
+        elif len(history_player)<=15:
+            player_risiko=0.5
+            overscore=1
+            overassist=1
+            rolling_cards=player_row["Rolling_cards"].values[0]
+        else:
+            rolling_cards=player_row["Rolling_cards"].values[0]
+            
         if(name in Manual_Player_Risk):
                 player_risiko = Manual_Player_Risk[name]
         
@@ -716,6 +728,7 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
                 player_row["fix_percentage"] = fix_percent[i]
                 player_row["Big_Chances"] = big_chances
                 player_row["Big_Chances_Created"] = big_chances_created
+                player_row["Rolling_cards"] = rolling_cards
                 
         
                 
