@@ -1249,10 +1249,10 @@ def GenerateTeamPredictions_Results(fixture_path, current_team_path, horizon):
         num_class=3,
         eval_metric="mlogloss",
         tree_method="hist",
-        max_depth=6,
-        learning_rate=0.1,
-        n_estimators=200,
-        min_child_weight=5,
+        max_depth=4,
+        learning_rate=0.05,
+        n_estimators=150,
+        min_child_weight=8,
         enable_categorical=True,
     )
 
