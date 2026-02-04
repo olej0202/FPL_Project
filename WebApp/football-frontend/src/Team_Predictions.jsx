@@ -1,7 +1,7 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useOtherData } from "./Contexts/OtherContext";
 import teamLogos from "./utils/team_logos";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
 
 // Smooth, no-extra-libs version (visual refresh only — logic preserved)
 export default function Team_Predictions() {
@@ -10,7 +10,11 @@ export default function Team_Predictions() {
   const [isLoading, setIsLoading] = useState(true);
   const [mounted, setMounted] = useState(false); // trigger enter animations
 
-  const { fetchIfNeeded, ScorePredData } = useOtherData();
+  // NEW: Predicted table overlay state
+  const [showPredTable, setShowPredTable] = useState(false);
+
+  // ✅ Also read TableData from same context
+  const { fetchIfNeeded, ScorePredData, TableData } = useOtherData();
 
   useEffect(() => {
     const loadData = async () => {
@@ -23,11 +27,36 @@ export default function Team_Predictions() {
         setSelectedGW((prev) => prev ?? earliestGW);
       }
       setIsLoading(false);
-      // start mount animation on first paint
       requestAnimationFrame(() => setMounted(true));
     };
     loadData();
   }, [fetchIfNeeded, ScorePredData]);
+
+  // Close modal on Escape
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === "Escape") setShowPredTable(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  // --- Predicted Table Data ---
+  // Expect TableData.current to look like:
+  // team_id,code,name,played,points,gf,ga,gd,predicted_points
+  const predictedTableRows = useMemo(() => {
+    const rows = TableData?.current;
+    if (!Array.isArray(rows)) return [];
+    return [...rows]
+      .map((r) => ({
+        team_id: Number(r.team_id),
+        code: Number(r.code),
+        name: String(r.name ?? ""),
+        predicted_points: Number(r.predicted_points),
+      }))
+      .filter((r) => r.name && Number.isFinite(r.predicted_points))
+      .sort((a, b) => b.predicted_points - a.predicted_points);
+  }, [TableData]);
 
   const uniqueGWs = useMemo(() => {
     if (!predictions.length) return [];
@@ -61,7 +90,7 @@ export default function Team_Predictions() {
     });
   };
 
-  // Keyboard navigation
+  // Keyboard navigation (Left/Right) — keep your existing behavior
   useEffect(() => {
     const onKey = (e) => {
       if (e.key === "ArrowLeft") goPrev();
@@ -69,7 +98,7 @@ export default function Team_Predictions() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [uniqueGWs]);
+  }, [uniqueGWs]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Touch swipe (mobile)
   const touchStartX = useRef(null);
@@ -100,14 +129,12 @@ export default function Team_Predictions() {
   };
 
   const winTextClass = (p) => {
-  const prob = normalizeProb(p);
-  if (!Number.isFinite(prob)) return "";
-  return prob >= 0.4 ? "text-emerald-300 font-semibold" : "";
-};
+    const prob = normalizeProb(p);
+    if (!Number.isFinite(prob)) return "";
+    return prob >= 0.4 ? "text-emerald-300 font-semibold" : "";
+  };
 
   // NEW: Match outcome probabilities from dataset
-  // Expects fields: Home_Win, Away_Win, Draw (can be 0..1 or 0..100)
-  // Home = first team in match section (match.home_team)
   const getMatchOutcomeProbs = (match) => {
     const pHomeRaw = normalizeProb(match.Home_Win);
     const pAwayRaw = normalizeProb(match.Away_Win);
@@ -118,18 +145,11 @@ export default function Team_Predictions() {
     const pDraw = Number.isFinite(pDrawRaw) ? pDrawRaw : 0;
 
     const sum = pHome + pAway + pDraw;
-
     if (sum <= 0) return { pHome: NaN, pAway: NaN, pDraw: NaN };
 
-    // Renormalize in case the three don't sum to 1
-    return {
-      pHome: pHome / sum,
-      pAway: pAway / sum,
-      pDraw: pDraw / sum,
-    };
+    return { pHome: pHome / sum, pAway: pAway / sum, pDraw: pDraw / sum };
   };
 
-  // Highlight rules
   const scoreHighlightClass = (g) => {
     const val = Number(g);
     if (!Number.isFinite(val)) return "";
@@ -140,20 +160,18 @@ export default function Team_Predictions() {
 
   const csBadgeClass = (p) => {
     const prob = normalizeProb(p);
-    if (!Number.isFinite(prob)) {
-      return "bg-neutral-800 text-neutral-300 border-neutral-700";
-    }
+    if (!Number.isFinite(prob)) return "bg-neutral-800 text-neutral-300 border-neutral-700";
     if (prob >= 0.35) return "bg-emerald-900/80 text-emerald-200 border-emerald-500/60";
     if (prob <= 0.25) return "bg-red-900/80 text-red-200 border-red-500/60";
     return "bg-yellow-900/70 text-yellow-100 border-yellow-400/60";
   };
 
-  const crest = (team) => {
-    const src = teamLogos[team];
+  const crest = (teamName) => {
+    const src = teamLogos[teamName];
     return (
       <img
         src={src}
-        alt={`${team} logo`}
+        alt={`${teamName} logo`}
         onError={(e) => {
           e.currentTarget.style.visibility = "hidden";
         }}
@@ -198,36 +216,47 @@ export default function Team_Predictions() {
           )}
         </header>
 
-        {/* GW Navigation */}
-        <div className="flex items-center justify-center mb-6 gap-3 sm:gap-4">
-          <button
-            onClick={goPrev}
-            disabled={isAtStart}
-            className={`inline-flex items-center justify-center rounded-xl px-3 py-2 border shadow-sm text-sm sm:text-base transition focus:outline-none focus:ring-2 focus:ring-royal-gold/60 ${
-              isAtStart
-                ? "bg-neutral-800 text-neutral-500 border-neutral-700 cursor-not-allowed"
-                : "bg-royal-gold text-black border-yellow-400 hover:bg-yellow-300"
-            }`}
-            aria-label="Previous gameweek"
-          >
-            <ChevronLeft size={20} className="sm:mr-0" />
-          </button>
+        {/* GW Navigation + NEW BUTTON */}
+        <div className="flex flex-col sm:flex-row items-center justify-center mb-6 gap-3 sm:gap-4">
+          <div className="flex items-center justify-center gap-3 sm:gap-4">
+            <button
+              onClick={goPrev}
+              disabled={isAtStart}
+              className={`inline-flex items-center justify-center rounded-xl px-3 py-2 border shadow-sm text-sm sm:text-base transition focus:outline-none focus:ring-2 focus:ring-royal-gold/60 ${
+                isAtStart
+                  ? "bg-neutral-800 text-neutral-500 border-neutral-700 cursor-not-allowed"
+                  : "bg-royal-gold text-black border-yellow-400 hover:bg-yellow-300"
+              }`}
+              aria-label="Previous gameweek"
+            >
+              <ChevronLeft size={20} />
+            </button>
 
-          <span className="text-lg sm:text-2xl font-semibold select-none tracking-wide">
-            GW {selectedGW ?? "—"}
-          </span>
+            <span className="text-lg sm:text-2xl font-semibold select-none tracking-wide">
+              GW {selectedGW ?? "—"}
+            </span>
 
+            <button
+              onClick={goNext}
+              disabled={isAtEnd}
+              className={`inline-flex items-center justify-center rounded-xl px-3 py-2 border shadow-sm text-sm sm:text-base transition focus:outline-none focus:ring-2 focus:ring-royal-gold/60 ${
+                isAtEnd
+                  ? "bg-neutral-800 text-neutral-500 border-neutral-700 cursor-not-allowed"
+                  : "bg-royal-gold text-black border-yellow-400 hover:bg-yellow-300"
+              }`}
+              aria-label="Next gameweek"
+            >
+              <ChevronRight size={20} />
+            </button>
+          </div>
+
+          {/* NEW: Show predicted table button */}
           <button
-            onClick={goNext}
-            disabled={isAtEnd}
-            className={`inline-flex items-center justify-center rounded-xl px-3 py-2 border shadow-sm text-sm sm:text-base transition focus:outline-none focus:ring-2 focus:ring-royal-gold/60 ${
-              isAtEnd
-                ? "bg-neutral-800 text-neutral-500 border-neutral-700 cursor-not-allowed"
-                : "bg-royal-gold text-black border-yellow-400 hover:bg-yellow-300"
-            }`}
-            aria-label="Next gameweek"
+            onClick={() => setShowPredTable(true)}
+            className="inline-flex items-center justify-center rounded-xl px-4 py-2 border border-white/10 bg-white/5 hover:bg-white/10 shadow-sm text-sm sm:text-base transition focus:outline-none focus:ring-2 focus:ring-royal-gold/60"
+            aria-label="Show predicted table"
           >
-            <ChevronRight size={20} className="sm:ml-0" />
+            Show predicted table
           </button>
         </div>
 
@@ -280,11 +309,15 @@ export default function Team_Predictions() {
                   {/* Header on sm+ only (for column labels) */}
                   <div className="hidden sm:grid grid-cols-[minmax(0,1fr)_64px_96px] items-center gap-3 mb-2 text-[11px]">
                     <span className="uppercase tracking-wide text-neutral-400">Match</span>
-                    <span className="uppercase tracking-wide text-neutral-400 text-right">Score</span>
-                    <span className="uppercase tracking-wide text-neutral-400 text-right">CS odds</span>
+                    <span className="uppercase tracking-wide text-neutral-400 text-right">
+                      Score
+                    </span>
+                    <span className="uppercase tracking-wide text-neutral-400 text-right">
+                      CS odds
+                    </span>
                   </div>
 
-                  {/* NEW: Win odds */}
+                  {/* Win odds */}
                   <div className="mt-1 mb-3 rounded-xl border border-white/10 bg-black/30 px-3 py-2">
                     <div className="text-[11px] uppercase tracking-wide text-neutral-400 mb-1">
                       Win odds
@@ -294,32 +327,25 @@ export default function Team_Predictions() {
                         <span className="text-[10px] text-neutral-400 truncate">
                           {match.home_team} (Home)
                         </span>
-                        <span
-  className={`text-sm tabular-nums ${winTextClass(pHome)}`}
->
-  {formatPct(pHome)}
-</span>
+                        <span className={`text-sm tabular-nums ${winTextClass(pHome)}`}>
+                          {formatPct(pHome)}
+                        </span>
                       </div>
 
                       <div className="flex flex-col">
                         <span className="text-[10px] text-neutral-400">Draw</span>
-                        <span
-  className={`text-sm tabular-nums ${winTextClass(pDraw)}`}
->
-  {formatPct(pDraw)}
-</span>
+                        <span className={`text-sm tabular-nums ${winTextClass(pDraw)}`}>
+                          {formatPct(pDraw)}
+                        </span>
                       </div>
 
                       <div className="flex flex-col min-w-0">
                         <span className="text-[10px] text-neutral-400 truncate">
                           {match.away_team} (Away)
                         </span>
-                        <span
-  className={`text-sm tabular-nums ${winTextClass(pAway)}`}
->
-  {formatPct(pAway)}
-</span>
-
+                        <span className={`text-sm tabular-nums ${winTextClass(pAway)}`}>
+                          {formatPct(pAway)}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -361,7 +387,7 @@ export default function Team_Predictions() {
                     </div>
                   </div>
 
-                  {/* CS badge on mobile (separate line for breathing room) */}
+                  {/* CS badge on mobile */}
                   <div className="flex sm:hidden justify-end mb-1">
                     <span
                       className={`inline-flex items-center justify-center text-[11px] px-2 py-1 rounded-full border ${csBadgeClass(
@@ -431,6 +457,95 @@ export default function Team_Predictions() {
           </div>
         )}
       </div>
+
+      {/* ===================== */}
+      {/* NEW: Predicted Table Overlay */}
+      {/* ===================== */}
+      {showPredTable && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Predicted table"
+          onMouseDown={(e) => {
+            // click outside to close
+            if (e.target === e.currentTarget) setShowPredTable(false);
+          }}
+        >
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+
+          <div className="relative w-full max-w-2xl rounded-2xl border border-white/10 bg-neutral-950/95 shadow-xl overflow-hidden">
+            <div className="flex items-center justify-between px-4 sm:px-3 py-2 border-b border-white/10">
+              <div className="flex flex-col">
+                <span className="text-base sm:text-lg font-semibold">Predicted table for the season</span>
+                <span className="text-xs text-neutral-400">
+                </span>
+              </div>
+
+              <button
+                onClick={() => setShowPredTable(false)}
+                className="inline-flex items-center justify-center rounded-xl p-1 border border-white/10 bg-white/5 hover:bg-white/10 transition"
+                aria-label="Close predicted table"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="max-h-[70vh] overflow-auto">
+              {predictedTableRows.length === 0 ? (
+                <div className="p-3 text-center text-neutral-400">
+                  No predicted table data found.
+                </div>
+              ) : (
+                <div className="p-4 sm:p-4">
+                  <div className="grid grid-cols-[40px_minmax(0,1fr)_120px] sm:grid-cols-[56px_minmax(0,1fr)_140px] text-[11px] uppercase tracking-wide text-neutral-400 px-2 pb-2">
+                    <span></span>
+                    <span></span>
+                    <span className="text-right">Points</span>
+                  </div>
+
+                  <div className="space-y-0">
+                    {predictedTableRows.map((t, i) => (
+                      <div
+                        key={`${t.team_id}-${t.code}`}
+                        className="group rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 transition px-3 py-3"
+                      >
+                        <div className="grid grid-cols-[40px_minmax(0,1fr)_120px] sm:grid-cols-[56px_minmax(0,1fr)_140px] items-center gap-2">
+                          <div className="text-sm sm:text-base font-semibold text-neutral-200 tabular-nums">
+                            {i + 1}
+                          </div>
+
+                          <div className="flex items-center gap-3 min-w-0">
+                            {crest(t.name)}
+                            <div className="min-w-0">
+                              <div className="text-sm sm:text-base font-medium truncate">
+                                {t.name}
+                              </div>
+       
+                            </div>
+                          </div>
+
+                          <div className="text-right">
+                            <div className="text-base sm:text-lg font-semibold tabular-nums text-royal-gold">
+                              {Number.isFinite(t.predicted_points)
+                                ? t.predicted_points.toFixed(1)
+                                : "—"}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="px-4 sm:px-5 py-3 border-t border-white/10 text-xs text-neutral-500">
+              Tip: Press <span className="text-neutral-300">Esc</span> to close.
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
