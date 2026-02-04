@@ -431,6 +431,8 @@ const computeMeasures = useCallback(
 
     // per-match minutes adjustment
     const minutesAdj = avgMin ? Math.min(1, avgMin / 80) : 0;
+    const csPerMatch = matchCount > 0 ? (cs / matchCount) : 0; // 0..1 if cs is expected CS count
+    const csNonlinear = ((30 - Math.min(30, csPerMatch*100)) / -35) * matchCount;
 
     // ✅ Goals/assists scale naturally with xg (which is already summed across fixtures)
     // ✅ Pen component is per match -> multiply by matchCount
@@ -439,14 +441,15 @@ const computeMeasures = useCallback(
 
     // ✅ Per-match components must scale by expected matches
     const basePoints =
-      (defaultPoints + bps*0.8 + cbi * 1.8) * minutesAdj * matchCount;
+      (defaultPoints + bps*0.8 + cbi * 1.5) * minutesAdj * matchCount;
 
     // cs is already expected CS across fixtures (0..matchCount), so no extra matchCount needed
     const points =
       basePoints +
       goalScored * goalFactor +
       assists * assistFactor +
-      cs * csFactor * minutesAdj;
+      cs * csFactor * minutesAdj+csNonlinear
+      ;
 
     return {
       Goal_Scored: goalScored,
