@@ -1505,7 +1505,139 @@ def GenerateTeamPredictions_Results(fixture_path, current_team_path, horizon):
     return result_df, ALL_pred
 
 
+def build_current_table_from_fixtures(fixture_path, current_teams_path) -> pd.DataFrame:
+    """
+    Reads fixtures and current teams, returns a league table with:
+    team_id, code, name, played, points, gf, ga, gd
+    """
+    # --- Fixtures ---
+    df = pd.read_csv(fixture_path)
 
+    if df["finished"].dtype != bool:
+        df["finished"] = (
+            df["finished"]
+            .astype(str)
+            .str.strip()
+            .str.lower()
+            .map({"true": True, "false": False, "1": True, "0": False})
+            .fillna(False)
+            .astype(bool)
+        )
+
+    fin = df.loc[df["finished"]].copy()
+
+    fin["team_h_score"] = pd.to_numeric(fin["team_h_score"], errors="coerce")
+    fin["team_a_score"] = pd.to_numeric(fin["team_a_score"], errors="coerce")
+    fin = fin.dropna(subset=["team_h_score", "team_a_score"])
+
+    fin["played"] = 1
+
+    home_win = fin["team_h_score"] > fin["team_a_score"]
+    away_win = fin["team_a_score"] > fin["team_h_score"]
+    draw = fin["team_h_score"] == fin["team_a_score"]
+
+    fin["home_pts"] = np.select([home_win, draw, away_win], [3, 1, 0], default=0)
+    fin["away_pts"] = np.select([away_win, draw, home_win], [3, 1, 0], default=0)
+
+    home_agg = fin.groupby("team_h", as_index=False).agg(
+        played=("played", "sum"),
+        points=("home_pts", "sum"),
+        gf=("team_h_score", "sum"),
+        ga=("team_a_score", "sum"),
+    ).rename(columns={"team_h": "team_id"})
+
+    away_agg = fin.groupby("team_a", as_index=False).agg(
+        played=("played", "sum"),
+        points=("away_pts", "sum"),
+        gf=("team_a_score", "sum"),
+        ga=("team_h_score", "sum"),
+    ).rename(columns={"team_a": "team_id"})
+
+    table = (
+        pd.concat([home_agg, away_agg], ignore_index=True)
+        .groupby("team_id", as_index=False)[["played", "points", "gf", "ga"]]
+        .sum()
+    )
+
+    table["gd"] = table["gf"] - table["ga"]
+
+    # --- Current teams ---
+    teams = pd.read_csv(current_teams_path)[["id", "code", "name"]]
+
+    # Join
+    table = table.merge(
+        teams,
+        left_on="team_id",
+        right_on="id",
+        how="left"
+    ).drop(columns="id")
+
+    # Final sort
+    table = table.sort_values(
+        ["points", "gd", "gf", "team_id"],
+        ascending=[False, False, False, True],
+    ).reset_index(drop=True)
+
+    table.to_csv("Current_Table_Standings.csv")
+
+def build_predicted_table(
+    table_df: pd.DataFrame,
+    prediction_path: str,
+    points_col_name: str = "predicted_points"
+) -> pd.DataFrame:
+    """
+    Adds predicted points to an existing league table.
+
+    Predicted points per fixture:
+        3 * win_Percent + 1 * draw_Percent
+
+    Aggregated per team_code and merged into table_df.
+    """
+    # Read predictions
+    preds = pd.read_csv(prediction_path)
+
+    # Ensure numeric
+    preds["win_Percent"] = pd.to_numeric(preds["win_Percent"], errors="coerce").fillna(0)
+    preds["Draw_percent"] = pd.to_numeric(preds["Draw_percent"], errors="coerce").fillna(0)
+
+    # Per-row expected points
+    preds["expected_points"] = (
+        3 * preds["win_Percent"] +
+        1 * preds["Draw_percent"]
+    )/100
+
+    # Sum per team
+    team_pred_points = (
+        preds.groupby("team_code", as_index=False)["expected_points"]
+        .sum()
+        .rename(columns={"expected_points": points_col_name,"team_code": "code"})
+    )
+
+    # Merge into table
+    predicted_table = table_df.merge(
+        team_pred_points,
+        on="code",
+        how="left"
+    )
+
+    predicted_table[points_col_name] = predicted_table[points_col_name].fillna(0)
+
+    # Sort as predicted table
+    predicted_table = predicted_table.sort_values(
+        [points_col_name, "gd", "gf", "team_id"],
+        ascending=[False, False, False, True],
+    ).reset_index(drop=True)
+
+    predicted_table[points_col_name]=predicted_table[points_col_name]+predicted_table["points"]
+
+    final_table=predicted_table[["team_id", "code", "name", "played","points", "gf","ga","gd",points_col_name]]
+    final_table = final_table.sort_values(
+    by=points_col_name,
+    ascending=False
+    )
+    final_table.to_csv("Final_Table_Prediction.csv")
+
+    return final_table
 
 def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
     GenerateTeamPredictions1(fixture_path, current_team_path,horizon)
@@ -1537,6 +1669,12 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
     team_pred_visual1["Draw"]=team_results_visual["Draw_percent"]
 
     team_pred_visual1.to_csv("Team_prediction_visual.csv")
+    
+    build_current_table_from_fixtures(fixture_path, current_team_path)
+    predicted_table = build_predicted_table(
+        table_df=pd.read_csv("Current_Table_Standings.csv"),
+        prediction_path="Team_prediction_results2.csv"
+    )
     
 
 if __name__ == "__main__":
