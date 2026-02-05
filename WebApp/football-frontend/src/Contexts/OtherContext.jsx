@@ -10,6 +10,7 @@ export function OtherDataProvider({ children }) {
   const FixtureRef = useRef(null);
   const SeasonRef = useRef(null);
   const TableRef = useRef(null);
+  const [dataVersion, setDataVersion] = useState(0);
 
   const [loading, setLoading] = useState(false);
 
@@ -30,6 +31,7 @@ export function OtherDataProvider({ children }) {
       FixtureRef.current = FixtureRes;
       SeasonRef.current = SeasonRes;
       TableRef.current = TableRes;
+      setDataVersion((v) => v + 1);
     } catch (err) {
       console.error("Failed fetching AI team data:", err);
     } finally {
@@ -42,6 +44,7 @@ export function OtherDataProvider({ children }) {
       value={{
         fetchIfNeeded,
         loading,
+        dataVersion,
         NewsData: newsRef,
         ScorePredData: ScorePredRef,
         FixtureData: FixtureRef,
