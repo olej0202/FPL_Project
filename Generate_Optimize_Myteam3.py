@@ -107,10 +107,10 @@ def Get_times(current_fixture_path: str) -> int:
 
 def optimize_my_team(
     team_id: int = 7025308,
-    wildcard_round: int = 8,
-    bb_round: int = 10,
+    wildcard_round: int = 40,
+    bb_round: int = 40,
     free_hit_round: int = 40,
-    Last_GW: int = 7,
+    Last_GW: int = 24,
     banned_list: Optional[list[str]] = None,
     GW_list: list[str] = None,
     n_hits: int = 0,
@@ -129,7 +129,7 @@ def optimize_my_team(
 
     # Build final GW_list based on current time
     start = max(Last_GW + 1, 1)
-    cutoff = start + 4
+    cutoff = start + 7
     GW_list = ["0"] + [str(i) for i in range(start, cutoff + 1)]
     GW_list = [str(gw) for gw in GW_list]
     print("GW_list:", GW_list)
