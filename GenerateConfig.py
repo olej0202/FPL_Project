@@ -25,7 +25,7 @@ Spurs,6
 ,Ipswich,40"""
 
 
-Manual_team_offensive_adjustments = {17:1.1,94:0.9,2:0.9,91:0.95}
+Manual_team_offensive_adjustments = {17:1.1,94:0.95,2:0.9,91:0.95,4:0.95}
     
     
     
@@ -69,6 +69,7 @@ Manual_min=[
         {"name": "Viktor_Gyökeres", "type": "const",   "GW": "any", "value": 80},
         {"name": "Matheus_Santos Carneiro Da Cunha", "type": "const",   "GW": "any", "value": 75},
         {"name": "Tammy_Abraham", "type": "const",   "GW": "any", "value": 75},
+        {"name": "Dominic_Solanke-Mitchell", "type": "const",   "GW": "any", "value": 75},
     ]
         
 
@@ -78,6 +79,10 @@ NEW_TEAMS_NAME=[]
 fixtures_config = {
         "2562204": [
             {"gw": 26, "probability": 1},
+            {"gw": 31, "probability": 0},
+        ],
+        "2562201": [
+            {"gw": 38, "probability": 1},
             {"gw": 31, "probability": 0},
         ]
 
