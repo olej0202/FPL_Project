@@ -86,7 +86,7 @@ def Get_times(current_fixture_path,n_points_in_future):
     future = min_kicks[min_kicks['kickoff_time'] > now]
     n = n_points_in_future
     next_n = future.sort_values('kickoff_time').head(n)
-    return next_n["event"].astype(str).values
+    return next_n["event"].astype(int).values
     #w
 def Main_Orchestration():
     season=25
@@ -114,14 +114,14 @@ def Main_Orchestration():
     
     
     #EXTARCT DATA
-    Data_Extraction(season,is_new_season,has_been_error)
+    #Data_Extraction(season,is_new_season,has_been_error)
     
     
     #Transform data
-    Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos,Understat_path,Understat_shots_path)
+    #Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos,Understat_path,Understat_shots_path)
     
     #Predict data
-    Data_Predictions(current_fixture_path,current_team_path, n_points_in_future,time_list)
+    #Data_Predictions(current_fixture_path,current_team_path, n_points_in_future,time_list)
     
     Data_Generation(ownership,budget,GW_list_wildcard,GW_list_freehit,current_player_path,current_team_path,current_season_path )
     

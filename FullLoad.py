@@ -10,6 +10,7 @@ def fixtures(season):
     response = requests.get(url)
     json_data = response.json()
     df=pd.DataFrame(json_data)
+    df["event"] = df["event"].fillna(38).astype(int)
     df.to_csv(f"Raw_Data_{season}/Fantasy_season_20{season}_Fixtures.csv")
 
 def Fulload(season):
@@ -200,6 +201,7 @@ def current_players(season):
     players_new["name"] = players_new["name"].apply(lambda n: name_map.get(n, n))
 
     players_new.to_csv(f"Raw_Data_{season}/current_players.csv")
+    fixtures(season)
 def current_teams(season):
     url = "https://fantasy.premierleague.com/api/bootstrap-static/"
     response = requests.get(url)
@@ -220,7 +222,6 @@ def main_Extract(season, is_new_season, Has_been_error):
         Fulload(season)
     else:
         Incremental(Has_been_error,season)
-    fixtures(season)
     current_players(season)
 
 if __name__ == "__main__":

@@ -9,6 +9,8 @@ from pulp import value
 def wildcard_optimize_team(sel_thresh, budget, columns, file_path="Model_Optimizer.csv", current_player_path="Raw_Data_25/current_players.csv"):
     # Load and preprocess data
     data = pd.read_csv(file_path)
+    columns = [str(gw) for gw in columns]
+    print(columns)
     current_players=pd.read_csv(current_player_path)
     """for col in columns:
         data[col] = data[col] * data["minutes_multiplier"]"""
@@ -212,6 +214,7 @@ def freeHit_optimize_team(sel_thresh, budget, columns, file_path="Model_Optimize
 
     data = pd.read_csv(file_path)
     cols = columns
+    cols = [str(gw) for gw in cols]
     """for col in cols:
         data[col] =data[col] * data["minutes_multiplier"]"""
     budget = budget
@@ -326,7 +329,7 @@ def freeHit_values(sel_thresh, budget, columns, file_path="Model_Optimizer.csv",
 
     data = pd.read_csv(file_path)
     print(columns)
-    cols = columns
+    cols = str(columns)
     
     """data[cols] = data[cols] * data["minutes_multiplier"]"""
     budget = budget

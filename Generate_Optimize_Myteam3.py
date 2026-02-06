@@ -129,7 +129,7 @@ def optimize_my_team(
 
     # Build final GW_list based on current time
     start = max(Last_GW + 1, 1)
-    cutoff = start + 7
+    cutoff = start + 6
     GW_list = ["0"] + [str(i) for i in range(start, cutoff + 1)]
     GW_list = [str(gw) for gw in GW_list]
     print("GW_list:", GW_list)

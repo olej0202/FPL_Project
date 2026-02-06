@@ -548,7 +548,7 @@ def Player_adjustements(current_player_path):
 
     # Define limits
     min_gw = df["GW"].min()
-    max_gw = min_gw + 4
+    max_gw = min_gw + 6
 
     # Filter DF to only include those GWs
     df_filtered = df[(df["GW"] >= min_gw) & (df["GW"] <= max_gw)]

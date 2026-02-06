@@ -1250,8 +1250,8 @@ def GenerateTeamPredictions_Results(fixture_path, current_team_path, horizon):
         eval_metric="mlogloss",
         tree_method="hist",
         max_depth=4,
-        learning_rate=0.05,
-        n_estimators=150,
+        learning_rate=0.01,
+        n_estimators=100,
         min_child_weight=8,
         enable_categorical=True,
     )
@@ -1460,7 +1460,7 @@ def GenerateTeamPredictions_Results(fixture_path, current_team_path, horizon):
     # Write Team_prediction_visual5.csv
     # =========================
     result_df = pd.DataFrame()
-    result_df["GW"] = df_merged["event"].astype(int)
+    result_df["GW"] = df_merged["event"].fillna(38).astype(int)
     result_df["pred"] = result_df["GW"] - min_event + 1
     result_df["home_team"] = df_merged["team_h_name"]
     result_df["away_team"] = df_merged["team_a_name"]
