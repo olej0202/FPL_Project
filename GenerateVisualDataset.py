@@ -429,9 +429,9 @@ def Player_adjustements(current_player_path):
     )
     
     df["Assist_share"] = (
-            df["Rolling_adjusted_XA_share"] * 0.15+
+            df["Rolling_adjusted_XA_share"] * 0.2+
             df["Rolling_adjusted_XA_per90_share"] * 0.2+
-            df["Rolling_adjusted_creativity_per90"]*0.15
+            df["Rolling_adjusted_creativity_per90_share"]*0.1
             )* risk_adj_minutes_factor+df["Rolling_adjusted_XA_per90"] * 0.2+ (df["Rolling_adjusted_creativity_per90"]/100) * 0.1+(df["Big_Chances_Created"]/2) * 0.2
     
     df["Assist_share"] = (df["Assist_share"]
