@@ -96,48 +96,113 @@ export default function TeamPredictionRankingsTable() {
   }, [gwColumns, isMobile, gwWindowStart]);
 
   // Build table model: one row per team with per-GW cells and a total
-  const tableData = useMemo(() => {
-    const acc = new Map();
+// Build table model: one row per team with per-GW arrays, plus an aggregated total
+const tableData = useMemo(() => {
+  const acc = new Map();
 
-    for (const item of filtered) {
-      const team = item.team_name || item.team || "";
-      if (!team) continue;
-      const metricVal = parseFloat(item?.[selectedMetric] ?? 0) || 0;
-      if (!acc.has(team))
-        acc.set(team, { team_name: team, perGW: {}, total: 0 });
-      const entry = acc.get(team);
-      const existing = entry.perGW[item.GW];
-      // keep the instance with larger absolute magnitude for this GW
-      if (!existing || Math.abs(metricVal) > Math.abs(existing.value || 0)) {
-        entry.perGW[item.GW] = {
-          opponent_name:
-            item.opponent_name ??
-            item.Opponent_team ??
-            item.Opponent ??
-            "",
-          Home: item.Home ?? item.home ?? item.Venue,
-          value: metricVal,
+  // helper: how to aggregate multiple fixtures in same GW for the selected metric
+  const aggregateFixtures = (fixtures) => {
+    if (!fixtures || fixtures.length === 0) return null;
+
+    const values = fixtures
+      .map((f) => (Number.isFinite(f?.value) ? f.value : null))
+      .filter((v) => v !== null);
+
+    if (values.length === 0) {
+      return {
+        opponents: fixtures.map((f) => f.opponent_name || "TBD"),
+        havs: fixtures.map((f) => formatHAV(f.Home)),
+        value: null,
+      };
+    }
+
+    const sum = values.reduce((a, b) => a + b, 0);
+    const avg = sum / values.length;
+
+    const isSumMetric = selectedMetric === "XG" || selectedMetric === "CS"|| selectedMetric ==="Opposition_XGC";
+    const aggVal = isSumMetric ? sum : avg;
+
+    return {
+      opponents: fixtures.map((f) => f.opponent_name || "TBD"),
+      havs: fixtures.map((f) => formatHAV(f.Home)),
+      value: aggVal,
+    };
+  };
+
+  // collect fixtures per team per GW (ARRAY per GW now)
+  for (const item of filtered) {
+    const team = item.team_name || item.team || "";
+    if (!team) continue;
+
+    const metricVal = parseFloat(item?.[selectedMetric] ?? 0);
+    const value = Number.isFinite(metricVal) ? metricVal : 0;
+
+    if (!acc.has(team)) acc.set(team, { team_name: team, perGW: {}, total: 0 });
+
+    const entry = acc.get(team);
+
+    const gw = item.GW;
+    if (!Number.isFinite(gw)) continue;
+
+    if (!entry.perGW[gw]) entry.perGW[gw] = [];
+    entry.perGW[gw].push({
+      opponent_name:
+        item.opponent_name ?? item.Opponent_team ?? item.Opponent ?? "",
+      Home: item.Home ?? item.home ?? item.Venue,
+      value,
+    });
+  }
+
+  // compute totals based on aggregated per-GW values
+  for (const entry of acc.values()) {
+    let total = 0;
+    for (const gw of gwColumns) {
+      const fixtures = entry.perGW[gw];
+      const agg = aggregateFixtures(fixtures);
+      total += Number.isFinite(agg?.value) ? agg.value : 0;
+    }
+    entry.total = total;
+  }
+
+  const arr = Array.from(acc.values());
+  arr.sort((a, b) => {
+    const dir = ASCENDING_METRICS.includes(selectedMetric) ? 1 : -1;
+    if (a.total === b.total) return a.team_name.localeCompare(b.team_name);
+    return dir * (a.total - b.total);
+  });
+
+  // attach aggregator so render can use it without re-deriving logic
+  return arr.map((r) => ({
+    ...r,
+    _aggregateFixtures: (fixtures) => {
+      // re-use same logic inside returned rows
+      const values = (fixtures || [])
+        .map((f) => (Number.isFinite(f?.value) ? f.value : null))
+        .filter((v) => v !== null);
+
+      if (!fixtures || fixtures.length === 0) return null;
+
+      if (values.length === 0) {
+        return {
+          opponents: fixtures.map((f) => f.opponent_name || "TBD"),
+          havs: fixtures.map((f) => formatHAV(f.Home)),
+          value: null,
         };
       }
-    }
 
-    for (const entry of acc.values()) {
-      let total = 0;
-      for (const gw of gwColumns) {
-        const cell = entry.perGW[gw];
-        total += parseFloat(cell?.value ?? 0) || 0;
-      }
-      entry.total = total;
-    }
+      const sum = values.reduce((a, b) => a + b, 0);
+      const avg = sum / values.length;
 
-    const arr = Array.from(acc.values());
-    arr.sort((a, b) => {
-      const dir = ASCENDING_METRICS.includes(selectedMetric) ? 1 : -1; // 1 = ascending, -1 = descending
-      if (a.total === b.total) return a.team_name.localeCompare(b.team_name);
-      return dir * (a.total - b.total);
-    });
-    return arr;
-  }, [filtered, selectedMetric, gwColumns]);
+      const isSumMetric = selectedMetric === "XG" || selectedMetric === "CS";
+      return {
+        opponents: fixtures.map((f) => f.opponent_name || "TBD"),
+        havs: fixtures.map((f) => formatHAV(f.Home)),
+        value: isSumMetric ? sum : avg,
+      };
+    },
+  }));
+}, [filtered, selectedMetric, gwColumns]);
+
 
   // Value formatting
   const formatCellValue = (val) => {
@@ -361,85 +426,63 @@ export default function TeamPredictionRankingsTable() {
                       </td>
 
                       {visibleGwColumns.map((gw) => {
-                        const cell = row.perGW[gw];
-                        const opp = cell?.opponent_name || "";
-                        const hav = formatHAV(cell?.Home);
-                        const rawVal = Number.isFinite(
-                          cell?.value
-                        )
-                          ? cell.value
-                          : null;
+                        const fixtures = row.perGW[gw]; // now ARRAY
+const agg = row._aggregateFixtures(fixtures);
 
-                        let bg = "";
-                        if (rawVal !== null) {
-                          if (selectedMetric === "XG") {
-                            bg =
-                              rawVal > 1.7
-                                ? "bg-green-900/90"
-                                : rawVal < 1.1
-                                ? "bg-red-900/90"
-                                : "bg-yellow-900/90";
-                          } else if (
-                            selectedMetric === "Opposition_XGC"
-                          ) {
-                            bg =
-                              rawVal > 1.6
-                                ? "bg-green-900/90"
-                                : rawVal < 1.1
-                                ? "bg-red-900/90"
-                                : "bg-yellow-900/90";
-                          } else if (
-                            selectedMetric === "Opposition_XG"
-                          ) {
-                            bg =
-                              rawVal < 1.1
-                                ? "bg-green-900/90"
-                                : rawVal > 1.6
-                                ? "bg-red-900/90"
-                                : "bg-yellow-900/90";
-                          } else if (selectedMetric === "CS") {
-                            const p =
-                              rawVal > 1 ? rawVal / 100 : rawVal;
-                            bg =
-                              p > 0.35
-                                ? "bg-green-900/90"
-                                : p < 0.25
-                                ? "bg-red-900/90"
-                                : "bg-yellow-900/90";
-                          }
-                        }
+const oppText = agg?.opponents?.length ? agg.opponents.join(" / ") : "";
+const havText = agg?.havs?.length ? agg.havs.join("/") : "";
+const rawVal = Number.isFinite(agg?.value) ? agg.value : null;
 
-                        return (
-                          <td
-                            key={`${row.team_name}-gw-${gw}`}
-                            className="px-1 sm:px-2 py-1 sm:py-2 border-b border-white/5 align-top text-center min-w-[96px] w-[96px]"
-                          >
-                            {cell ? (
-                              <div
-                                className={`flex flex-col text-[13px] leading-tight rounded-md px-1 py-1 ${bg}`}
-                              >
-                                <span
-                                  className="font-medium truncate"
-                                  title={opp}
-                                >
-                                  {opp || "TBD"}
-                                </span>
-                                <span className="text-[11px] text-neutral-200">
-                                  ({hav})
-                                </span>
-                                <span className="text-[11px]">
-                                  {rawVal !== null
-                                    ? formatCellValue(rawVal)
-                                    : "-"}
-                                </span>
-                              </div>
-                            ) : (
-                              <span className="text-neutral-600">
-                                –
-                              </span>
-                            )}
-                          </td>
-                        );
+// same background logic, but based on aggregated rawVal
+let bg = "";
+if (rawVal !== null) {
+  if (selectedMetric === "XG") {
+    bg =
+      rawVal > 1.7 ? "bg-green-900/90" :
+      rawVal < 1.1 ? "bg-red-900/90" :
+      "bg-yellow-900/90";
+  } else if (selectedMetric === "Opposition_XGC") {
+    bg =
+      rawVal > 1.6 ? "bg-green-900/90" :
+      rawVal < 1.1 ? "bg-red-900/90" :
+      "bg-yellow-900/90";
+  } else if (selectedMetric === "Opposition_XG") {
+    bg =
+      rawVal < 1.1 ? "bg-green-900/90" :
+      rawVal > 1.6 ? "bg-red-900/90" :
+      "bg-yellow-900/90";
+  } else if (selectedMetric === "CS") {
+    const p = rawVal > 1 ? rawVal / 100 : rawVal;
+    bg =
+      p > 0.35 ? "bg-green-900/90" :
+      p < 0.25 ? "bg-red-900/90" :
+      "bg-yellow-900/90";
+  }
+}
+
+return (
+  <td
+    key={`${row.team_name}-gw-${gw}`}
+    className="px-1 sm:px-2 py-1 sm:py-2 border-b border-white/5 align-top text-center min-w-[96px] w-[96px]"
+  >
+    {fixtures && fixtures.length > 0 ? (
+      <div className={`flex flex-col text-[13px] leading-tight rounded-md px-1 py-1 ${bg}`}>
+        <span className="font-medium truncate" title={oppText}>
+          {oppText || "TBD"}
+        </span>
+        <span className="text-[11px] text-neutral-200">
+          ({havText || "-"})
+        </span>
+        <span className="text-[11px]">
+          {rawVal !== null ? formatCellValue(rawVal) : "-"}
+        </span>
+      </div>
+    ) : (
+      <span className="text-neutral-600">–</span>
+    )}
+  </td>
+);
+
                       })}
 
                       <td className="px-3 py-2 border-b border-white/5 align-top font-semibold min-w-[96px] w-[96px] tabular-nums text-right">
