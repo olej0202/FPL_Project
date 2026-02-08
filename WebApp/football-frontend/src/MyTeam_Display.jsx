@@ -1,7 +1,10 @@
 // src/pages/MyTeamOverview.jsx
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback,useRef } from "react";
 import teamShort from "./utils/team_short"; // adjust path if needed
 import { useAdjustmentData } from "./Contexts/AdjustmentsContext";
+
+import { useLocation } from "react-router-dom";
+
 
 import {
   LineChart,
@@ -176,6 +179,10 @@ export default function MyTeamOverview() {
 // "statistical" = use Playerdata.current calc_points
 const [modelType, setModelType] = useState("ai");
 
+  const location = useLocation();
+  const appliedOptimizedRef = useRef(false);
+
+
 const hasStatisticalData = useMemo(() => {
   const arr = Playerdata?.current;
   if (!Array.isArray(arr) || arr.length === 0) return false;
@@ -339,6 +346,20 @@ useEffect(() => {
     if (stored && stored.length) return stored;
     return computeDefaultStartersIndices(squad, gw, playersData);
   };
+
+    const getPlayerPrice = useCallback(
+    (playerName, gw) => {
+      // try PlayersData first (value/price)
+      const row = (playersData || []).find(
+        (p) => p?.name === playerName && Number(p.GW) === Number(gw)
+      );
+      const price = row?.value ?? row?.price;
+      const n = Number(price);
+      return Number.isFinite(n) ? n : null;
+    },
+    [playersData]
+  );
+
 
   // ---------- CURRENT SQUAD ----------
   const currentSquad = useMemo(() => {
@@ -670,6 +691,100 @@ const playersWithPredictions = useMemo(() => {
 
     return { squads, bankByGw: bankByGwNew, freeTransfers };
   };
+
+
+    useEffect(() => {
+    const incoming = location.state?.optimizedTransfers;
+
+    if (!incoming || !Array.isArray(incoming) || incoming.length === 0) return;
+    if (!teamData || !Array.isArray(teamData) || teamData.length === 0) return;
+
+    // prevent double-apply on re-render
+    if (appliedOptimizedRef.current) return;
+    appliedOptimizedRef.current = true;
+
+    // Build new transfers in YOUR transferLog format
+    const newTransfers = [];
+
+    incoming.forEach((t) => {
+      const gw = Number(t.gw);
+      if (!Number.isFinite(gw)) return;
+
+      // Find which squad slot is being replaced (by name match in that GW squad)
+      const squadForGw = getSquadForGw(gw);
+      const idx = squadForGw.findIndex((p) => p?.name === t.fromName);
+      if (idx === -1) return;
+
+      const template = squadForGw[idx];
+
+      const sellingPrice =
+        template?.selling_price_m != null
+          ? Number(template.selling_price_m)
+          : template?.now_cost != null
+          ? Number(template.now_cost) / 10
+          : 0;
+
+      const incomingPrice =
+        getPlayerPrice(t.toName, gw) ??
+        0;
+
+      newTransfers.push({
+        id: Date.now().toString(36) + "-" + Math.random().toString(36).slice(2),
+        gw,
+        squadIndex: idx,
+        fromName: template.web_name || template.name,
+        toName: t.toWebName || t.toName,
+        sellingPrice,
+        incomingPrice,
+        suggestion: {
+          name: t.toName,
+          web_name: t.toWebName || t.toName,
+          team_code: t.toTeamCode ?? null,
+          price: incomingPrice,
+          value: incomingPrice,
+          selected_pct: null,
+          photo: t.toPhoto ?? null,
+          photo_url: t.toPhoto ?? null,
+        },
+        createdAt: Date.now(),
+      });
+    });
+
+    if (newTransfers.length === 0) return;
+
+    // Merge with existing log then recompute all derived planner state
+    const updatedTransfers = [...transferLog, ...newTransfers].sort(
+      (a, b) => a.gw - b.gw || a.createdAt - b.createdAt
+    );
+
+    const { squads, bankByGw: newBankByGw, freeTransfers } =
+      recomputeFromTransfers(updatedTransfers);
+
+    setTransferLog(updatedTransfers);
+    setGwSquads(squads);
+    setBankByGw(newBankByGw);
+    setFreeTransfersByGw(freeTransfers);
+
+    // OPTIONAL: jump planner to the first GW in the optimized payload
+    const minGw = Math.min(...newTransfers.map((x) => x.gw));
+    if (Number.isFinite(minGw)) setCurrentGW(minGw);
+
+    // OPTIONAL: clear router state so refresh doesn't re-apply
+    // (this is “nice”, but not required)
+    // navigate(location.pathname, { replace: true, state: {} });
+  }, [
+    location.state,
+    teamData,
+    transferLog,
+    getPlayerPrice,
+    recomputeFromTransfers,
+    getSquadForGw,
+    setTransferLog,
+    setGwSquads,
+    setBankByGw,
+    setFreeTransfersByGw,
+    setCurrentGW,
+  ]);
 
   // ---------- REPLACE WITH SUGGESTED PLAYER (PlayersData) ----------
   const handleReplaceWithSuggested = (suggestion) => {

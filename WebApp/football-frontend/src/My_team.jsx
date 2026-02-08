@@ -61,6 +61,15 @@ const formatRiskLabel = (v) => {
   return "Neutral";
 };
 
+
+
+    const handleApplyToPlanner = () => {
+    if (!plannerPayload.length) return;
+    navigate("/Team_Overview", { state: { optimizedTransfers: plannerPayload } });
+  };
+
+
+
   // Ensure we fall back to AI if statistical data disappears
   useEffect(() => {
     if (modelType === "statistical" && !hasStatisticalData) {
@@ -194,6 +203,44 @@ const formatRiskLabel = (v) => {
       transfersWithFH = out;
     }
   }
+
+    // Build a simple payload to send to planner
+  const plannerPayload = useMemo(() => {
+    if (!data || transfersWithFH.length === 0) return [];
+
+    // Only real transfer rows (ignore the FH banner group if it has no moves)
+    const realGroups = transfersWithFH.filter(
+      (g) => (g.in && g.in.length) || (g.out && g.out.length)
+    );
+
+    // Pair OUT -> IN by position like your UI does
+    return realGroups.flatMap((grp) => {
+      const remainingIns = [...(grp.in || [])];
+
+      const pairs = (grp.out || []).map((outP) => {
+        const i = remainingIns.findIndex((inP) => inP.position === outP.position);
+        const inP = i !== -1 ? remainingIns.splice(i, 1)[0] : null;
+        return { outP, inP };
+      });
+
+      // Any leftover INs (rare) still get added
+      remainingIns.forEach((inP) => pairs.push({ outP: null, inP }));
+
+      // Convert to payload entries
+      return pairs
+        .filter((x) => x.outP && x.inP) // require both to apply a transfer
+        .map(({ outP, inP }) => ({
+          gw: Number(grp.GW),
+          position: outP.position,
+          fromName: outP.Name || outP.name,
+          toName: inP.Name || inP.name,
+          // optional metadata (nice to have)
+          toWebName: inP.web_name,
+          toTeamCode: inP.team_code,
+          toPhoto: inP.photo,
+        }));
+    });
+  }, [data, transfersWithFH]);
 
   // Loading overlay with page-2 theme
   if (loading) {
@@ -795,6 +842,38 @@ const formatRiskLabel = (v) => {
             </div>
           </section>
         )}
+                {data && (
+          <section className="mb-6 flex flex-col items-center gap-3">
+            {/* (your existing pitch markup stays exactly as is) */}
+            <div className="w-full flex justify-center">
+              {/* ... your pitch div ... */}
+            </div>
+
+            <button
+              type="button"
+              onClick={handleApplyToPlanner}
+              disabled={!plannerPayload.length}
+              className="inline-flex items-center gap-2 font-semibold px-4 py-2 rounded-full transition shadow-lg"
+              style={{
+                border: `1px solid ${plannerPayload.length ? PALETTE.gold : "#374151"}`,
+                background: plannerPayload.length
+                  ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)`
+                  : "rgba(0,0,0,0.7)",
+                color: plannerPayload.length ? "#000000" : "#9ca3af",
+                cursor: plannerPayload.length ? "pointer" : "not-allowed",
+              }}
+            >
+              Apply transfers to My Team
+            </button>
+
+            {!plannerPayload.length && (
+              <div className="text-xs" style={{ color: "#9ca3af" }}>
+                Run an optimization with transfers first.
+              </div>
+            )}
+          </section>
+        )}
+
 
         {/* Transfers */}
         {transfersWithFH.length > 0 && (

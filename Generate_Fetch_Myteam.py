@@ -253,7 +253,7 @@ def build_team_dataframe(entry_id: int, include_freehit_team: bool = False) -> p
 
     # keep your original saved_transfers shape
 
-    saved_transfers = min(max(free_start, 0), 5)
+    saved_transfers = min(max(free_start, 0), 4)
     
     if(free_start==0):
         saved_transfers=0
