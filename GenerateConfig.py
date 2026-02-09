@@ -25,7 +25,7 @@ Spurs,6
 ,Ipswich,40"""
 
 
-Manual_team_offensive_adjustments = {17:1.1,94:0.95,2:0.9,91:0.95,4:0.95}
+Manual_team_offensive_adjustments = {17:1.1,94:0.95,2:0.95,91:0.95,4:0.95}
     
     
     
@@ -52,10 +52,11 @@ Manual_Player_Risk={
 
 Manual_min=[
         {"name": "Hugo_Ekitiké", "type": "const",   "GW": "any", "value": 75},
-        {"name": "Rayan_Aït-Nouri", "type": "const",   "GW": "any", "value": 1},
-        {"name": "Antoine_Semenyo", "type": "const",   "GW": "any", "value": 75},
+        {"name": "Rayan_Aït-Nouri", "type": "const",   "GW": "any", "value": 60},
+        {"name": "Antoine_Semenyo", "type": "const",   "GW": "any", "value": 80},
         {"name": "Rayan_Cherki", "type": "const",   "GW": "any", "value": 65},
         {"name": "Daniel_Muñoz", "type": "const",   "GW": "any", "value": 90},
+        {"name": "Jean-Philippe_Mateta", "type": "const",   "GW": "any", "value": 0},
         #Afcon
         {"name": "Mohamed_Salah", "type": "const",   "GW": "any", "value": 90},
         {"name": "Ismaïla_Sarr", "type": "const",   "GW": "any", "value": 90},
@@ -64,9 +65,9 @@ Manual_min=[
         {"name": "Iliman_Ndiaye", "type": "const",   "GW": "any", "value": 90},
 
         
-        {"name": "Cole_Palmer", "type": "const",   "GW": "any", "value": 75},
+        {"name": "Cole_Palmer", "type": "const",   "GW": "any", "value": 80},
         {"name": "Anthony_Gordon", "type": "const",   "GW": "any", "value": 75},
-        {"name": "Viktor_Gyökeres", "type": "const",   "GW": "any", "value": 80},
+        {"name": "Viktor_Gyökeres", "type": "const",   "GW": "any", "value": 75},
         {"name": "Matheus_Santos Carneiro Da Cunha", "type": "const",   "GW": "any", "value": 75},
         {"name": "Tammy_Abraham", "type": "const",   "GW": "any", "value": 75},
         {"name": "Dominic_Solanke-Mitchell", "type": "const",   "GW": "any", "value": 75},
