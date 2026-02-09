@@ -322,7 +322,7 @@
 320,Zach_Marsh,Marsh,Marshall Munetsi,90.0,web_name-relaxed,Marshall Munetsi,MC,1
 321,Brennan_Johnson,Johnson,Brennan Johnson,100.0,name-strict,Brennan Johnson,AMC,1
 322,Rio_Cardines,Cardines,Unknown for understat,,no-match,,SUB,1
-323,Yéremy_Pino Santos,Yeremy,Unknown for understat,,no-match,,SUB,1
+323,Yéremy_Pino Santos,Yeremy,Unknown for understat,,no-match,,AMC,1
 324,Jaydee_Canvot,Canvot,Jaydee Canvot,100.0,name-strict,Jaydee Canvot,CB,1
 325,Christantus_Uche,Uche,Christantus Uche,100.0,name-strict,Christantus Uche,SUB,1
 326,Joél_Drakes-Thomas,Drakes-Thomas,Joél Drakes-Thomas,100.0,name-strict,Joél Drakes-Thomas,SUB,1
@@ -507,7 +507,7 @@
 505,Charlie_Gray,Gray,Demarai Gray,90.0,web_name-relaxed,Demarai Gray,FW,1
 506,Reigan_Heskey,Heskey,Unknown for understat,,no-match,,SUB,1
 507,Max_Alleyne,Alleyne,Max Alleyne,100.0,name-strict,Max Alleyne,CB,1
-508,Bryan_Mbeumo,Mbeumo,Bryan Mbeumo,100.0,name-strict,Bryan Mbeumo,AMC,1
+508,Bryan_Mbeumo,Mbeumo,Bryan Mbeumo,100.0,name-strict,Bryan Mbeumo,FW,1
 509,Altay_Bayındır,Bayindir,Altay Bayindir,90.0,web_name-relaxed,Altay Bayindir,GK,1
 510,André_Onana,Onana,André Onana,100.0,name-strict,André Onana,GK,1
 511,Elyh_Harrison,Harrison,Jack Harrison,90.0,web_name-relaxed,Jack Harrison,LW,1
@@ -527,9 +527,9 @@
 525,Ayden_Heaven,Heaven,Ayden Heaven,100.0,name-strict,Ayden Heaven,CB,1
 526,Tyrell_Malacia,Malacia,Tyrell Malacia,100.0,name-strict,Tyrell Malacia,DL,1
 527,Bruno_Borges Fernandes,B.Fernandes,Bruno Fernandes,95.0,name-strict,Bruno Fernandes,MC,1
-528,Matheus_Santos Carneiro Da Cunha,Cunha,Matheus Cunha,90.0,web_name-relaxed,Matheus Cunha,AMC,1
+528,Matheus_Santos Carneiro Da Cunha,Cunha,Matheus Cunha,90.0,web_name-relaxed,Matheus Cunha,LW,1
 529,Marcus_Rashford,Rashford,Marcus Rashford,100.0,name-strict,Marcus Rashford,FW,1
-530,Amad_Diallo,Amad,Amadou Diallo,91.66666666666666,name-relaxed,Amadou Diallo,AMC,1
+530,Amad_Diallo,Amad,Amadou Diallo,91.66666666666666,name-relaxed,Amadou Diallo,RW,1
 531,Antony_dos Santos,Antony,Antony,90.0,name-relaxed,Antony,RW,1
 532,Mason_Mount,Mount,Mason Mount,100.0,name-strict,Mason Mount,AMC,1
 533,Carlos_Henrique Casimiro,Casemiro,Casemiro,100.0,web_name-strict,Casemiro,DM,1

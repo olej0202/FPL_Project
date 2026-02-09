@@ -123,52 +123,7 @@ def Generate_Lineups():
     
     result.to_csv("Team_lineups.csv")
 
-def Generate_Team_threats():
-    df = pd.read_csv("Team_AggTest.csv")
-    team_df = df[["opponent", "pos_group", "date", "shots_share", "npxG_share", "xA_share", "key_passes_share"]].copy()
 
-    # ensure proper dtypes
-    team_df["date"] = pd.to_datetime(team_df["date"], errors="coerce")
-    metrics = ["shots_share", "npxG_share", "xA_share", "key_passes_share"]
-    team_df[metrics] = team_df[metrics].apply(pd.to_numeric, errors="coerce")
-
-    # sort by time within each group
-    team_df = team_df.sort_values(["opponent", "pos_group", "date"])
-
-    # EWM per opponent × pos_group (span=15)
-    span = 20
-    ewm_cols = [f"{c}_ewm" for c in metrics]
-    team_df[ewm_cols] = (
-        team_df
-        .groupby(["opponent", "pos_group"])[metrics]
-        .transform(lambda s: s.ewm(span=span, adjust=False).mean())
-    )
-
-    # Latest EWM per opponent × pos_group
-    latest_ewm = (
-        team_df
-        .sort_values("date")
-        .groupby(["opponent", "pos_group"], as_index=False)
-        .tail(1)[["opponent", "pos_group"] + ewm_cols]
-    )
-
-
-    # Threat metrics (rename Treat → Threat if that’s what you intend)
-    latest_ewm["Goal_Threat"] = latest_ewm["npxG_share_ewm"] * 0.6 + 0.4 * latest_ewm["shots_share_ewm"]
-    latest_ewm["Assist_Threat"] = latest_ewm["xA_share_ewm"] * 0.6 + 0.4 * latest_ewm["key_passes_share_ewm"]
-    latest_ewm["Threat"] = latest_ewm["Goal_Threat"] * 1 + 0 * latest_ewm["Assist_Threat"]
-
-    # Keep only relevant columns
-
-
-    # Filter out GK / SUB
-    pg = latest_ewm["pos_group"].str.upper().str.strip()
-    latest_ewm = latest_ewm.loc[
-        ~pg.isin(["SUB", "GK", "GKP"]),
-        ["opponent", "pos_group", "Threat"]
-    ]
-
-    latest_ewm.to_csv("Team_threat.csv", index=False)
 
 def Generate_Player_Historical():
     data=pd.read_csv("testML4.csv").iloc[:,1:]
@@ -408,10 +363,12 @@ def Player_adjustements(current_player_path):
         "Rolling_creativity_share", "rolling_Adjusted_XA_historic_share",
         "rolling_Adjusted_XG_historic_share", "Rolling_adjusted_BPS",
         "CBI", "Average_Overscore", "Average_OverAssist","defcon_avg_hit_rate", "Share_of_XG_share", "Share_of_XA_share","Threat_Mean_share"
-        ,"rolling_XG_share","Creativity_Mean_share","Opp_defcon","Rolling_cards"
+        ,"rolling_XG_share","Creativity_Mean_share","Opp_defcon","Rolling_cards","Opp_Goal_Threat_Pos","Opp_Assist_Threat_Pos"
         
         
     ]
+    
+
 
     # Goal & assist shares (blend model vs Understat, weighted by risk)
     risk_adj_minutes_factor = np.maximum(1, 75 / (df["average_minutes"]+0.01))
@@ -428,6 +385,8 @@ def Player_adjustements(current_player_path):
         + df["player_risiko"] * df["Understat_POSXG_Share"]
     )
     
+    df["Pos_Goal_Threat"]=df["Opp_Goal_Threat_Pos"]
+    df["Pos_Assist_Threat"]=df["Opp_Assist_Threat_Pos"]
     df["Assist_share"] = (
             df["Rolling_adjusted_XA_share"] * 0.2+
             df["Rolling_adjusted_XA_per90_share"] * 0.2+
@@ -482,7 +441,9 @@ def Player_adjustements(current_player_path):
     bps_scaled = np.maximum(4, df["Rolling_adjusted_BPS"]*0.4+df["Rolling_adjusted_BPS_2"]*0.6) 
     df["BPS"]=bps_scaled*0.03-np.minimum(0.4, df["Rolling_cards"]) 
     # Final columns (including the new ones)
-    final_cols =["name","position", "GW", "Team","average_minutes","Goal_share", "Assist_share", "Pen_data","CBI_Percent","BPS"]
+    final_cols =["name","position", "GW", "Team","average_minutes","Goal_share", "Assist_share", "Pen_data","CBI_Percent","BPS","Pos_Goal_Threat","Pos_Assist_Threat"]
+    
+
     df = df[final_cols]
 
     import numpy as np
@@ -619,7 +580,6 @@ def Player_adjustements(current_player_path):
 def Generate_ALL_datasets(current_teams,current_player_path,current_season_path):
     Generate_Player_Historical()
     Generate_Player_Rankings(current_teams)
-    Generate_Team_threats()
     Generate_Lineups()
     Visual_Teams_history()
     Generate_season_data(current_player_path, current_season_path)

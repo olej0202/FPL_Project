@@ -27,7 +27,7 @@ def Xmins(current_players):
         xmins_updated = pd.concat([xmins, missing_df], ignore_index=True)
         xmins_updated.to_csv("GenerateXmins.csv", index=False)
         
-def next_opp(team, n_future, fixtures,kmeans,team_code,current_teams):
+def next_opp(team, n_future, fixtures,kmeans,team_code,current_teams,position):
     fixtures=fixtures.copy()
     print(n_future)
     current_teams=current_teams.copy()
@@ -39,6 +39,7 @@ def next_opp(team, n_future, fixtures,kmeans,team_code,current_teams):
     fix_ids=filtered_fix["code"].values
     fix_percent=filtered_fix["probability"].values
     teams_dataset=pd.read_csv("Team_data_newest3.csv")
+    undeerstat_threats=pd.read_csv("Team_threat.csv")
 
     GW_now=filtered_fix["event"].values[0]
 
@@ -59,6 +60,8 @@ def next_opp(team, n_future, fixtures,kmeans,team_code,current_teams):
     GW=[]
     opp_code=[]
     defcons=[]
+    goal_pos=[]
+    ass_pos=[]
     kl=0
     for k in range(len(filtered_fix)):
         
@@ -81,6 +84,10 @@ def next_opp(team, n_future, fixtures,kmeans,team_code,current_teams):
         next_opp_data=teams_dataset[teams_dataset["code"]==nxt_opp_code]
         next_opp_newest_row = next_opp_data.sort_values(by="kickoff_time", ascending=False).iloc[0]
         nxt_oppstat=[next_opp_newest_row["XGH"],next_opp_newest_row["XGCH"],next_opp_newest_row["XGA"],next_opp_newest_row["XGCA"]]
+        nxt_oppname=next_opp_newest_row["name"]
+        opp_threat=undeerstat_threats[undeerstat_threats["opponent"]==nxt_oppname]
+        opp_threat=opp_threat[opp_threat["pos_group"]==position]
+        
         own_data=teams_dataset[teams_dataset["code"]==team_code]
         own_data_newest_row = own_data.sort_values(by="kickoff_time", ascending=False).iloc[0]
         if(team_a==team):
@@ -102,9 +109,20 @@ def next_opp(team, n_future, fixtures,kmeans,team_code,current_teams):
         XGC_FWD.append(next_opp_newest_row["XG_FORWARD"])
         XGC_MID.append(next_opp_newest_row["XG_MID"])
         defcons.append(next_opp_newest_row["Rolling_Defcon_against"])
+        if position in ["GK", "GKP"]:
+            goal_pos.append(0)
+            ass_pos.append(0)
+        elif position in ["SUB"]:
+            goal_pos.append(0.05)
+            ass_pos.append(0.05)
+        else:
+            goal_pos.append(opp_threat["Goal_Threat"].values[0])
+            ass_pos.append(opp_threat["Assist_Threat"].values[0])
         kl+=1
+    print(position)
+    print(goal_pos)
 
-    return clusters,home,n_matches,XGH,XGCH,XGA,XGCA,XGC_DEF,XGC_FWD,XGC_MID,own_XG,GW,played_XGC,played_XG,opp_code,defcons,fix_ids,fix_percent
+    return clusters,home,n_matches,XGH,XGCH,XGA,XGCA,XGC_DEF,XGC_FWD,XGC_MID,own_XG,GW,played_XGC,played_XG,opp_code,defcons,goal_pos,ass_pos,fix_ids,fix_percent
 
 import pandas as pd
 from datetime import datetime
@@ -645,7 +663,7 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
             
 
                 
-        clusters,home,n_matches,XGH,XGCH,XGA,XGCA,XGC_DEF,XGC_FWD,XGC_MID,own_XG,GW,played_XGC,played_XG,opp_code,defcons,fix_ids,fix_percent=next_opp(team_id, time_list, fixture_data,kmeans,team_code,current_teams)
+        clusters,home,n_matches,XGH,XGCH,XGA,XGCA,XGC_DEF,XGC_FWD,XGC_MID,own_XG,GW,played_XGC,played_XG,opp_code,defcons,goal_pos,ass_pos,fix_ids,fix_percent=next_opp(team_id, time_list, fixture_data,kmeans,team_code,current_teams,player_understat_pos)
         
         
         #if endre stats for nye spillere på et lag
@@ -729,8 +747,10 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
                 player_row["Big_Chances"] = big_chances
                 player_row["Big_Chances_Created"] = big_chances_created
                 player_row["Rolling_cards"] = rolling_cards
+                player_row["Opp_Goal_Threat_Pos"] = goal_pos[i]
+                player_row["Opp_Assist_Threat_Pos"] = ass_pos[i]
                 
-        
+                        
                 
             
 

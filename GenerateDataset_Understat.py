@@ -1,6 +1,52 @@
 
 from GenerateConfig import NEW_TEAMS_NAME
+def Generate_Team_threats():
+    import pandas as pd
+    df = pd.read_csv("Team_AggTest.csv")
+    team_df = df[["opponent", "pos_group", "date", "shots_share", "npxG_share", "xA_share", "key_passes_share"]].copy()
 
+    # ensure proper dtypes
+    team_df["date"] = pd.to_datetime(team_df["date"], errors="coerce")
+    metrics = ["shots_share", "npxG_share", "xA_share", "key_passes_share"]
+    team_df[metrics] = team_df[metrics].apply(pd.to_numeric, errors="coerce")
+
+    # sort by time within each group
+    team_df = team_df.sort_values(["opponent", "pos_group", "date"])
+
+    # EWM per opponent × pos_group (span=15)
+    span = 20
+    ewm_cols = [f"{c}_ewm" for c in metrics]
+    team_df[ewm_cols] = (
+        team_df
+        .groupby(["opponent", "pos_group"])[metrics]
+        .transform(lambda s: s.ewm(span=span, adjust=False).mean())
+    )
+
+    # Latest EWM per opponent × pos_group
+    latest_ewm = (
+        team_df
+        .sort_values("date")
+        .groupby(["opponent", "pos_group"], as_index=False)
+        .tail(1)[["opponent", "pos_group"] + ewm_cols]
+    )
+
+
+    # Threat metrics (rename Treat → Threat if that’s what you intend)
+    latest_ewm["Goal_Threat"] = latest_ewm["npxG_share_ewm"] * 0.7 + 0.3 * latest_ewm["shots_share_ewm"]
+    latest_ewm["Assist_Threat"] = latest_ewm["xA_share_ewm"] * 0.7 + 0.3 * latest_ewm["key_passes_share_ewm"]
+    latest_ewm["Threat"] = latest_ewm["Goal_Threat"] * 1 + 0 * latest_ewm["Assist_Threat"]
+
+    # Keep only relevant columns
+
+
+    # Filter out GK / SUB
+    pg = latest_ewm["pos_group"].str.upper().str.strip()
+    latest_ewm = latest_ewm.loc[
+        ~pg.isin(["SUB", "GK", "GKP"]),
+        ["opponent", "pos_group", "Threat","Goal_Threat","Assist_Threat"]
+    ]
+
+    latest_ewm.to_csv("Team_threat.csv", index=False)
 def Generate_Understat_dataset(current_players,run_player_pos):
 
     import pandas as pd
@@ -618,3 +664,4 @@ def Generate_Understat_dataset(current_players,run_player_pos):
 
     # 4) write to file
     latest.to_csv("Team_Positions_transformed_Newest.csv", index=False)
+    Generate_Team_threats()
