@@ -456,9 +456,9 @@ def Player_adjustements(current_player_path):
             df["position"] == "DEF",
         ],
         [
-            6,  # FWD
+            5.2,  # FWD
             5.7,  # MID
-            6.4,  # DEF
+            6.5,  # DEF
         ],
         default=0,
     )
