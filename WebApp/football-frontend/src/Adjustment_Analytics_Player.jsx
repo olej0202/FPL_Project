@@ -417,6 +417,9 @@ const computeMeasures = useCallback(
 
     // These are per match inputs in most models:
     const penData = Number(playerRow.Pen_data) || 0;
+    const oppGoalThreat = Number(playerRow.Pos_Goal_Threat) || 0;
+    const oppAssistThreat = Number(playerRow.Pos_Assist_Threat) || 0;
+
     const cbi = Number(playerRow.CBI_Percent) || 0;
     const bps = Number(playerRow.BPS) || 0;
     const defaultPoints = Number(playerRow.default_points) || 0;
@@ -438,8 +441,8 @@ const computeMeasures = useCallback(
 
     // ✅ Goals/assists scale naturally with xg (which is already summed across fixtures)
     // ✅ Pen component is per match -> multiply by matchCount
-    const goalScored = (goalShare * xg + (penData * 0.8) * matchCount) * minutesAdj;
-    const assists = (assistShare * xg) * minutesAdj;
+    const goalScored = ((goalShare*0.9+0.1*oppGoalThreat) * xg + (penData * 0.8) * matchCount) * minutesAdj;
+    const assists = ((assistShare*0.9+0.1*oppAssistThreat) * xg) * minutesAdj;
 
     // ✅ Per-match components must scale by expected matches
     const basePoints =

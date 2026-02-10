@@ -25,11 +25,11 @@ Spurs,6
 ,Ipswich,40"""
 
 
-Manual_team_offensive_adjustments = {17:1.1,94:0.95,2:0.95,91:0.95,4:0.95}
+Manual_team_offensive_adjustments = {17:1.1,94:0.95,2:0.95,91:0.95}
     
     
     
-Manual_team_defensive_adjustments = {31:1.1,4:1.1,56:1.15}
+Manual_team_defensive_adjustments = {4:1.1,56:1.15}
 
 
 Manual_NewPlayer_Adjustments={
@@ -47,12 +47,13 @@ Manual_Player_Risk={
         "Yoane_Wissa":0.8,
         "Antoine_Semenyo":0.6,     
         "Marc_Guéhi":0.8,
-        "Tammy_Abraham":0.8        
+        "Tammy_Abraham":0.8,
+        "Jørgen_Strand Larsen":0.7,        
 }
 
 Manual_min=[
         {"name": "Hugo_Ekitiké", "type": "const",   "GW": "any", "value": 75},
-        {"name": "Rayan_Aït-Nouri", "type": "const",   "GW": "any", "value": 60},
+        {"name": "Rayan_Aït-Nouri", "type": "const",   "GW": "any", "value": 65},
         {"name": "Antoine_Semenyo", "type": "const",   "GW": "any", "value": 80},
         {"name": "Rayan_Cherki", "type": "const",   "GW": "any", "value": 65},
         {"name": "Daniel_Muñoz", "type": "const",   "GW": "any", "value": 90},
@@ -69,8 +70,10 @@ Manual_min=[
         {"name": "Anthony_Gordon", "type": "const",   "GW": "any", "value": 75},
         {"name": "Viktor_Gyökeres", "type": "const",   "GW": "any", "value": 75},
         {"name": "Matheus_Santos Carneiro Da Cunha", "type": "const",   "GW": "any", "value": 75},
-        {"name": "Tammy_Abraham", "type": "const",   "GW": "any", "value": 75},
+        {"name": "Tammy_Abraham", "type": "const",   "GW": "any", "value": 70},
         {"name": "Dominic_Solanke-Mitchell", "type": "const",   "GW": "any", "value": 75},
+        {"name": "Jørgen_Strand Larsen", "type": "const",   "GW": "any", "value": 75},
+        {"name": "Bruno_Guimarães Rodriguez Moura", "type": "const",   "GW": "any", "value": 75},
     ]
         
 

@@ -851,7 +851,7 @@ def Generate_point_predictions(GW_list):
         overscore=min(1.1,overscore)
 
         overassist=max(0.9,player_data["Average_OverAssist"].values[0])
-        overassist=min(1.15,overassist)
+        overassist=min(1.1,overassist)
         
         historic_xg=player_data["rolling_XG_historic"].values[0]
         historic_Assist=player_data["rolling_Assist_historic"].values[-1]
@@ -943,12 +943,16 @@ def Generate_point_predictions(GW_list):
                                                   +summary_dataset["Assist_pred"]*3.5
                                                   +summary_dataset["Bonus_pred"]
                                                   -summary_dataset["Card_pred"] )*0.9+0.1*summary_dataset["Fantasy_pred"]+(summary_dataset["CBI_pred"]/12)*0.0*2
+            
+            summary_dataset["Risk_share"]=(summary_dataset["Goal_pred"]*5.3+summary_dataset["Assist_pred"]*3.5)/summary_dataset["Points_prediction"]
         elif(position=="MID"):
             summary_dataset["Points_prediction"]=(2+summary_dataset["Goal_pred"]*5.5
                                                   +summary_dataset["Assist_pred"]*3.5
                                                   +summary_dataset["Bonus_pred"]
                                                   +summary_dataset["GC_pred"]*0.8
                                                   -summary_dataset["Card_pred"])*0.9+0.1*summary_dataset["Fantasy_pred"]+(np.minimum(1, summary_dataset["CBI_pred"] / 12) * 0.7+0.3*cbi_hit_rate)*0.8*2
+            
+            summary_dataset["Risk_share"]=(summary_dataset["Goal_pred"]*5.5+summary_dataset["Assist_pred"]*3.5+summary_dataset["GC_pred"])/summary_dataset["Points_prediction"]
             
         elif(position=="GKP"):
             summary_dataset["Points_prediction"]=(2
@@ -963,6 +967,8 @@ def Generate_point_predictions(GW_list):
                                                   +summary_dataset["GC_pred"]*5
                                                   + (30 - np.minimum(30, summary_dataset["GC_pred"])) / -35
                                                   -summary_dataset["Card_pred"])*0.9+0.1*summary_dataset["Fantasy_pred"]+(np.minimum(1, summary_dataset["CBI_pred"] / 10) * 0.7+0.3*cbi_hit_rate)*0.8*2
+            summary_dataset["Risk_share"]=(summary_dataset["Goal_pred"]*6.3+summary_dataset["Assist_pred"]*3.5+summary_dataset["GC_pred"]*3)/summary_dataset["Points_prediction"]
+     
         
         
         full_df=pd.concat([full_df, summary_dataset], axis=0, ignore_index=True)

@@ -15,11 +15,22 @@ def Generate_Team_threats():
 
     # EWM per opponent × pos_group (span=15)
     span = 20
+    min_val = 0.05
+    max_val = 0.4
+
     ewm_cols = [f"{c}_ewm" for c in metrics]
+
     team_df[ewm_cols] = (
         team_df
         .groupby(["opponent", "pos_group"])[metrics]
-        .transform(lambda s: s.ewm(span=span, adjust=False).mean())
+        .transform(
+            lambda s: (
+                s
+                .clip(lower=min_val, upper=max_val)   # 👈 clip ground values
+                .ewm(span=span, adjust=False)
+                .mean()
+            )
+        )
     )
 
     # Latest EWM per opponent × pos_group
@@ -32,7 +43,7 @@ def Generate_Team_threats():
 
 
     # Threat metrics (rename Treat → Threat if that’s what you intend)
-    latest_ewm["Goal_Threat"] = latest_ewm["npxG_share_ewm"] * 0.7 + 0.3 * latest_ewm["shots_share_ewm"]
+    latest_ewm["Goal_Threat"] = latest_ewm["npxG_share_ewm"] * 0.8 + 0.2 * latest_ewm["shots_share_ewm"]
     latest_ewm["Assist_Threat"] = latest_ewm["xA_share_ewm"] * 0.7 + 0.3 * latest_ewm["key_passes_share_ewm"]
     latest_ewm["Threat"] = latest_ewm["Goal_Threat"] * 1 + 0 * latest_ewm["Assist_Threat"]
 
@@ -435,11 +446,11 @@ def Generate_Understat_dataset(current_players,run_player_pos):
 
     agg_df["shots_share"] = (
         agg_df["shots"] / team_tot_shots
-    ).replace([np.inf, -np.inf], np.nan).fillna(0).clip(upper=5)
+    ).replace([np.inf, -np.inf], np.nan).fillna(0).clip(upper=0.5)
 
     agg_df["key_passes_share"] = (
         agg_df["key_passes"] / team_tot_kp
-    ).replace([np.inf, -np.inf], np.nan).fillna(0).clip(upper=3)
+    ).replace([np.inf, -np.inf], np.nan).fillna(0).clip(upper=0.5)
 
 
     positions = (agg_df["pos_group"]
@@ -613,8 +624,8 @@ def Generate_Understat_dataset(current_players,run_player_pos):
     )
 
 
-    agg_enriched["XGIndex"]= agg_enriched["Rolling_Adjusted_XG2"]*0.3+agg_enriched["Rolling_Adjusted_XG"]*0.7
-    agg_enriched["XAIndex"]= agg_enriched["Rolling_Adjusted_XA2"]*0.3+agg_enriched["Rolling_Adjusted_XA"]*0.7
+    agg_enriched["XGIndex"]= agg_enriched["Rolling_Adjusted_XG2"]*0+agg_enriched["Rolling_Adjusted_XG"]*1
+    agg_enriched["XAIndex"]= agg_enriched["Rolling_Adjusted_XA2"]*0+agg_enriched["Rolling_Adjusted_XA"]*1
     
     team_tot_xgindex = agg_enriched.groupby(["date", "player_team"])["XGIndex"].transform("sum")
     team_tot_xaindex = agg_enriched.groupby(["date", "player_team"])["XAIndex"].transform("sum")

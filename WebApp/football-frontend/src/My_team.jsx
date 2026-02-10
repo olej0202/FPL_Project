@@ -65,7 +65,7 @@ const formatRiskLabel = (v) => {
 
     const handleApplyToPlanner = () => {
     if (!plannerPayload.length) return;
-    navigate("/Team_Overview", { state: { optimizedTransfers: plannerPayload } });
+    navigate("/Team_Overview", { state: { optimizedTransfers: plannerPayload ,applyId: Date.now() }, });
   };
 
 
