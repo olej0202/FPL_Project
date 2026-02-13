@@ -1268,14 +1268,36 @@ def main_Transform():
             player_df["XA_min"]=(player_df['expected_assists']/player_df["minutes"].clip(lower=20))*90
             player_df["Threat_min"]=(player_df['Threat']/player_df["minutes"].clip(lower=20))*90
             player_df["Creativity_min"]=(player_df['creativity']/player_df["minutes"].clip(lower=20))*90
-            player_df["Goal_min"]=(player_df['goals_scored']/player_df["minutes"].clip(lower=20))*90
-            player_df["Assist_min"]=(player_df['assists']/player_df["minutes"].clip(lower=20))*90
-            player_df["rolling_Goal_min"] = player_df['Goal_min'].rolling(window=20, min_periods=1).mean()
-            player_df["rolling_Assist_min"] = player_df['Assist_min'].rolling(window=20, min_periods=1).mean()
+            player_df["Goal_min"]=(player_df['goals_scored'].clip(upper=1.5)/player_df["minutes"].clip(lower=10))*90
             
-            player_df["rolling_Goal_min"] = player_df['rolling_Goal_min']*0.5+0.5*player_df['XG_min'].rolling(window=20, min_periods=1).mean()
-            player_df["rolling_Assist_min"] = player_df['rolling_Assist_min']*0.5+0.5*player_df['XA_min'].rolling(window=20, min_periods=1).mean()
+
+            player_df["rolling_Goal_min"] = (
+                player_df["goals_scored"]
+                    .clip(upper=1.7)
+                    .rolling(window=30, min_periods=1)
+                    .sum()
+                /
+                player_df["minutes"]
+                    .clip(lower=10)
+                    .rolling(window=30, min_periods=1)
+                    .sum()
+            ) * 90
             
+            player_df["rolling_Assist_min"] = (
+                player_df["assists"]
+                    .clip(upper=1.7)
+                    .rolling(window=30, min_periods=1)
+                    .sum()
+                /
+                player_df["minutes"]
+                    .clip(lower=10)
+                    .rolling(window=30, min_periods=1)
+                    .sum()
+            ) * 90
+                        
+            player_df["rolling_Goal_min"] =player_df["rolling_Goal_min"].rolling(window=10, min_periods=1).mean()    
+            player_df["rolling_Assist_min"]=player_df["rolling_Assist_min"].rolling(window=10, min_periods=1).mean()   
+                        
             player_df["rolling_key_passes"] = player_df['key_passes'].ewm(span=lookback, adjust=False).mean()
             player_df["rolling_XG_historic"] = player_df['expected_goals'].rolling(window=30, min_periods=1).mean()
             player_df["rolling_XA_historic"] = player_df['expected_assists'].rolling(window=30, min_periods=1).mean()
@@ -1357,6 +1379,7 @@ def main_Transform():
 
             player_df["Rolling_adjusted_XA_per90"] = (
                 player_df["Adjusted_XA"]
+                    .clip(upper=1)
                     .rolling(window=30, min_periods=1)
                     .sum()
                 /
@@ -1367,6 +1390,7 @@ def main_Transform():
             ) * 90
             player_df["Rolling_adjusted_XG_per90"] = (
                 player_df["Adjusted_XG"]
+                    .clip(upper=1.2)
                     .rolling(window=30, min_periods=1)
                     .sum()
                 /
@@ -1377,6 +1401,7 @@ def main_Transform():
             ) * 90   
             player_df["Rolling_adjusted_Threat_per90"] = (
                 player_df["Adjusted_Threat"]
+                    .clip(upper=100)
                     .rolling(window=30, min_periods=1)
                     .sum()
                 /

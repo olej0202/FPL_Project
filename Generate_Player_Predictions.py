@@ -62,6 +62,7 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
     players=data["name"].unique()
     all_preds=[]
     all_preds_model=[]
+    all_preds2=[]
     MSE=[]
     for i in range(len(players)):
         preds=[]
@@ -76,11 +77,14 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
         for h in range(len(df)):
             player_preds=[]
             player_model=[]
+            player_preds2=[]
             player_preds.append(players[i])
+            player_preds2.append(players[i])
             GW=df["GW"].values[h]
             fix_id=df["fix_id"].values[h]
             fix_precent=df["fix_percentage"].values[h]
             player_preds.append(GW)
+            player_preds2.append(GW)
             player_model.append(players[i])
             player_model.append(GW)
             team_stats=team_data[(team_data["team_code"]==team) & (team_data["fixture_code"]==fix_id)].copy()
@@ -113,6 +117,11 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
                team_data_xg_pred=(df['Understat_POSXG'].values[h]*df["opposition_xgc"].values[h]*0+1*(df['Understat_POSXG_Share'].values[h]*0.7+0.3*df['Opp_Goal_Threat_Pos'].values[h])*team_xg)
         
                player_preds.append(own_data_xg_pred*(1-fordelings_faktor)+fordelings_faktor*team_data_xg_pred+df['Team_Pen_Data'].values[h]*df['Pen_Number'].values[h]*0.8)
+               
+               xgind=df["Rolling_adjusted_XG_per90"].values[h]*0.5+(df["Rolling_adjusted_Threat_per90"].values[h]/100)*0.25+df["rolling_Goal_min"].values[h]*0.25
+               eta=-5.2+0.55*team_xg+5.53*xgind+0.018*90
+               player_preds2.append(np.exp(eta))
+               
                real_variable="expected_goals" 
                
                
@@ -127,6 +136,9 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
                own_data_xa_pred=(pred*team_xg)*0.8+0.2*((df['Rolling_adjusted_XA'].values[h]*0.7+df['rolling_Adjusted_XA_historic'].values[h]*0.3)*df["opposition_xgc"].values[h])
                team_data_xa_pred=(df['Understat_POSXA'].values[h]*df["opposition_xgc"].values[h]*0+1*(df['Understat_POSXA_Share'].values[h]*0.7+0.3*df['Opp_Assist_Threat_Pos'].values[h])*team_xg)
                player_preds.append(own_data_xa_pred*(1-fordelings_faktor)+fordelings_faktor*team_data_xa_pred) 
+               
+               eta=-5.23+0.425*team_xg+4.92*(df["Rolling_adjusted_XA_per90"].values[h]*0.33+(df["Rolling_adjusted_creativity_per90"].values[h]/100)*0.33+df["rolling_Assist_min"].values[h]*0.33)+0.019*90
+               player_preds2.append(np.exp(eta))
                       
                
                 
@@ -139,7 +151,7 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
             
             if(pred_variable=="bps"):
                real_variable="bonus" 
-               player_preds.append(max(df['Rolling_adjusted_BPS'].values[h]*0.4+df['Rolling_adjusted_BPS_2'].values[h]*0.6,5)*0.03*other_metric)
+               player_preds.append(max(df['Rolling_adjusted_BPS'].values[h]*0.4+df['Rolling_adjusted_BPS_2'].values[h]*0.6,5)*0.01*other_metric)
                
             if(pred_variable=="cards"):
                real_variable="cards" 
@@ -148,7 +160,7 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
             if(pred_variable=="CBI"):
                real_variable="cbi" 
                #player_preds.append((min(12,df['CBI'].values[h])**2)/12)
-               opp_defcon_fac=1+(df['Opp_defcon'].values[h]-75)/75
+               opp_defcon_fac=1+(df['Opp_defcon'].values[h]-75)/60
                base_pred = df['CBI'].values[h] * opp_defcon_fac * other_metric
                
                if position == "DEF" and base_pred < 6:
@@ -167,10 +179,13 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
                real_variable="total_points"
                player_preds.append(df['Rolling_adjusted_Fantasy'].values[h]*0.04)
             player_preds.append(df["position"].values[0])
+            player_preds2.append(df["position"].values[0])
             player_model.append(df["position"].values[0])
             player_preds.append(xggc)
+            player_preds2.append(xggc)
             player_model.append(xggc)
             all_preds.append(player_preds)
+            all_preds2.append(player_preds2)
             all_preds_model.append(player_model)
             
         
@@ -179,6 +194,10 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
     if(pred_variable in ["GOALS","Assist"]):
         data_f_model=pd.DataFrame(all_preds_model, columns=columns)
         data_f_model.to_csv(f"STAT2_{pred_variable}.csv", index=False)
+        
+    if(pred_variable in ['Assist','GOALS']):
+        data_f_model=pd.DataFrame(all_preds2, columns=columns)
+        data_f_model.to_csv(f"STAT_Pois_{pred_variable}.csv", index=False)
     data_f.to_csv(f"STAT_{pred_variable}.csv", index=False)
     
 def XGB_Make_dataset(position,position2):
@@ -430,9 +449,9 @@ def XGB_Make_Pred(trainingdf,target_value,position2,column_list,predlength,posit
 
     preds_list=test['name'].unique()
     train.to_csv("Debugg2.csv")
-    model=XGB_Train(60,0.1,5,0.1,6,dtrain,target_value,train,Y_train )
-    model25= XGB_Train_Quantile(60, 0.1, 5, 0.1, 6, dtrain, 0.25)
-    model75  = XGB_Train_Quantile(60, 0.1, 5, 0.1, 6, dtrain, 0.75)
+    model=XGB_Train(100,0.05,5,0.1,6,dtrain,target_value,train,Y_train )
+    model25= XGB_Train_Quantile(100, 0.05, 5, 0.1, 6, dtrain, 0.25)
+    model75  = XGB_Train_Quantile(100, 0.05, 5, 0.1, 6, dtrain, 0.75)
     model2=SVR(kernel='rbf', C=0.5, epsilon=0.1,gamma=0.1)
     #model2=xgb.XGBRegressor(objective='reg:squarederror', n_estimators=100, learning_rate=0.01, max_depth=5,min_child_weight=6)
 
@@ -944,21 +963,22 @@ def Generate_point_predictions(GW_list):
                                                   +summary_dataset["Bonus_pred"]
                                                   -summary_dataset["Card_pred"] )*0.9+0.1*summary_dataset["Fantasy_pred"]+(summary_dataset["CBI_pred"]/12)*0.0*2
             
-            summary_dataset["Risk_share"]=(summary_dataset["Goal_pred"]*5.3+summary_dataset["Assist_pred"]*3.5)/summary_dataset["Points_prediction"]
+            summary_dataset["Risk_share"]=(summary_dataset["Goal_pred"]*5.2+summary_dataset["Assist_pred"]*3.4)/summary_dataset["Points_prediction"]
         elif(position=="MID"):
-            summary_dataset["Points_prediction"]=(2+summary_dataset["Goal_pred"]*5.7
+            summary_dataset["Points_prediction"]=(2+summary_dataset["Goal_pred"]*5.5
                                                   +summary_dataset["Assist_pred"]*3.4
                                                   +summary_dataset["Bonus_pred"]
                                                   +summary_dataset["GC_pred"]*0.8
-                                                  -summary_dataset["Card_pred"])*0.9+0.1*summary_dataset["Fantasy_pred"]+(np.minimum(1, summary_dataset["CBI_pred"] / 12) * 0.7+0.3*cbi_hit_rate)*0.8*2
+                                                  -summary_dataset["Card_pred"])*0.9+0.1*summary_dataset["Fantasy_pred"]+(np.minimum(1, summary_dataset["CBI_pred"] / 12) * 0.6+0.4*cbi_hit_rate)*0.8*2
             
-            summary_dataset["Risk_share"]=(summary_dataset["Goal_pred"]*5.5+summary_dataset["Assist_pred"]*3.5+summary_dataset["GC_pred"])/summary_dataset["Points_prediction"]
+            summary_dataset["Risk_share"]=(summary_dataset["Goal_pred"]*5.5+summary_dataset["Assist_pred"]*3.4+summary_dataset["GC_pred"]*0.8)/summary_dataset["Points_prediction"]
             
         elif(position=="GKP"):
             summary_dataset["Points_prediction"]=(2
                                                   +summary_dataset["Bonus_pred"]
                                                   + (30 - np.minimum(30, summary_dataset["GC_pred"])) / -35
                                                   +summary_dataset["GC_pred"]*5)*0.8+0.2*summary_dataset["Fantasy_pred"]
+            summary_dataset["Risk_share"]=(summary_dataset["GC_pred"]*5)/summary_dataset["Points_prediction"]
 
         else:
             summary_dataset["Points_prediction"]=(1+summary_dataset["Goal_pred"]*6.5
@@ -966,8 +986,8 @@ def Generate_point_predictions(GW_list):
                                                   +summary_dataset["Bonus_pred"]
                                                   +summary_dataset["GC_pred"]*5
                                                   + (30 - np.minimum(30, summary_dataset["GC_pred"])) / -35
-                                                  -summary_dataset["Card_pred"])*0.9+0.1*summary_dataset["Fantasy_pred"]+(np.minimum(1, summary_dataset["CBI_pred"] / 10) * 0.7+0.3*cbi_hit_rate)*0.8*2
-            summary_dataset["Risk_share"]=(summary_dataset["Goal_pred"]*6.3+summary_dataset["Assist_pred"]*3.5+summary_dataset["GC_pred"]*3)/summary_dataset["Points_prediction"]
+                                                  -summary_dataset["Card_pred"])*0.9+0.1*summary_dataset["Fantasy_pred"]+(np.minimum(1, summary_dataset["CBI_pred"] / 10) * 0.6+0.4*cbi_hit_rate)*0.8*2
+            summary_dataset["Risk_share"]=(summary_dataset["Goal_pred"]*6.5+summary_dataset["Assist_pred"]*3.4+summary_dataset["GC_pred"]*3.5)/summary_dataset["Points_prediction"]
      
         
         
