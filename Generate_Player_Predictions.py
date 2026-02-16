@@ -119,7 +119,7 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
                player_preds.append(own_data_xg_pred*(1-fordelings_faktor)+fordelings_faktor*team_data_xg_pred+df['Team_Pen_Data'].values[h]*df['Pen_Number'].values[h]*0.8)
                
                xgind=df["Rolling_adjusted_XG_per90"].values[h]*0.5+(df["Rolling_adjusted_Threat_per90"].values[h]/100)*0.25+df["rolling_Goal_min"].values[h]*0.25
-               eta=-5.2+0.55*team_xg+5.53*xgind+0.018*90
+               eta=-5.2+0.58*team_xg+5.53*xgind+0.018*90
                player_preds2.append(np.exp(eta))
                
                real_variable="expected_goals" 

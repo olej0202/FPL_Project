@@ -201,7 +201,7 @@
 199,Paris_Maghoma,Maghoma,Paris Maghoma,100.0,name-strict,Paris Maghoma,SUB,1
 200,Myles_Peart-Harris,Peart-Harris,Myles Peart-Harris,100.0,name-strict,Myles Peart-Harris,SUB,1
 201,Ryan_Trevitt,Trevitt,Ryan Trevitt,100.0,name-strict,Ryan Trevitt,SUB,1
-202,Igor_Thiago Nascimento Rodrigues,Thiago,Rodri,90.0,name-relaxed,Rodri,DM,1
+202,Igor_Thiago Nascimento Rodrigues,Thiago,Rodri,90.0,name-relaxed,Rodri,FW,1
 203,Iwan_Morgan,Morgan,Morgan Gibbs-White,90.0,web_name-relaxed,Morgan Gibbs-White,AMC,1
 204,Josh_Dasilva,Dasilva,Josh Dasilva,100.0,name-strict,Josh Dasilva,MC,1
 205,Jason_Steele,Steele,Jason Steele,100.0,name-strict,Jason Steele,GK,1
@@ -695,12 +695,12 @@
 693,Rodrigo_Bentancur,Bentancur,Rodrigo Bentancur,100.0,name-strict,Rodrigo Bentancur,DM,1
 694,Lucas_Bergvall,Bergvall,Lucas Bergvall,100.0,name-strict,Lucas Bergvall,AMC,1
 695,Yves_Bissouma,Bissouma,Yves Bissouma,100.0,name-strict,Yves Bissouma,MC,1
-696,Wilson_Odobert,Odobert,Wilson Odobert,100.0,name-strict,Wilson Odobert,AMC,1
+696,Wilson_Odobert,Odobert,Wilson Odobert,100.0,name-strict,Wilson Odobert,RW,1
 697,Manor_Solomon,Solomon,Manor Solomon,100.0,name-strict,Manor Solomon,LW,1
 698,Bryan_Gil Salvatierra,Bryan,Bryan Gil Salvatierra,100.0,name-strict,Bryan Gil Salvatierra,LW,1
 699,Archie_Gray,Gray,Archie Gray,100.0,name-strict,Archie Gray,DM,1
 700,Mikey_Moore,Moore,Mikey Moore,100.0,name-strict,Mikey Moore,RW,1
-701,Pape_Matar Sarr,P.M.Sarr,Unknown for understat,,no-match,,SUB,1
+701,Pape_Matar Sarr,P.M.Sarr,Unknown for understat,,no-match,,MC,1
 702,Yang_Min-hyeok,Min-hyeok,Unknown for understat,,no-match,,SUB,1
 703,Callum_Olusesi,Olusesi,Unknown for understat,,no-match,,SUB,1
 704,Dominic_Solanke-Mitchell,Solanke,Dominic Solanke,90.0,name-relaxed,Dominic Solanke,FW,1
@@ -708,7 +708,7 @@
 706,Will_Lankshear,Lankshear,Will Lankshear,100.0,name-strict,Will Lankshear,SUB,1
 707,Dane_Scarlett,Scarlett,Dane Scarlett,100.0,name-strict,Dane Scarlett,SUB,1
 708,João_Maria Lobo Alves Palhares Costa Palhinha Gonçalves,J.Palhinha,Unknown for understat,,no-match,,SUB,1
-709,Xavi_Simons,Xavi,Xavi Simons,100.0,name-strict,Xavi Simons,AMC,1
+709,Xavi_Simons,Xavi,Xavi Simons,100.0,name-strict,Xavi Simons,LW,1
 710,Randal_Kolo Muani,Kolo Muani,Randal Kolo Muani,100.0,name-strict,Randal Kolo Muani,FW,1
 711,Jun'ai_Byfield,Byfield,Unknown for understat,,no-match,,SUB,1
 712,James_Rowswell,Rowswell,Unknown for understat,,no-match,,SUB,1
