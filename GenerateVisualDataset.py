@@ -371,7 +371,7 @@ def Player_adjustements(current_player_path):
 
 
     # Goal & assist shares (blend model vs Understat, weighted by risk)
-    risk_adj_minutes_factor = np.maximum(1, 75 / (df["average_minutes"]+0.01))
+    risk_adj_minutes_factor = np.maximum(1, 80 / (df["average_minutes"]+0.01))
     # alternatively: df["average_minutes"].rdiv(75).clip(lower=1)
 
     df["Goal_share"] = (
