@@ -106,7 +106,7 @@ def Get_times(current_fixture_path: str) -> int:
 # =====================================================================
 
 def optimize_my_team(
-    team_id: int = 7025308,
+    team_id: int = 46805,
     wildcard_round: int = 40,
     bb_round: int = 40,
     free_hit_round: int = 40,
@@ -129,7 +129,7 @@ def optimize_my_team(
 
     # Build final GW_list based on current time
     start = max(Last_GW + 1, 1)
-    cutoff = start + 5
+    cutoff = start + 4
     GW_list = ["0"] + [str(i) for i in range(start, cutoff + 1)]
     GW_list = [str(gw) for gw in GW_list]
     print("GW_list:", GW_list)
@@ -249,6 +249,9 @@ def optimize_my_team(
     # Points STD (your ranges: ~0.5..3)
     points_std = pd.to_numeric(data["Point_STD"], errors="coerce")
     points_std = points_std.fillna(points_std.median()).to_numpy(dtype=float)
+    points_risk = pd.to_numeric(data["Risk_share"], errors="coerce")
+    points_risk = points_risk.fillna(points_risk.median()).to_numpy(dtype=float)
+    points_risk = np.clip(points_std, 0, 0.8)
     points_std = np.clip(points_std, 0, 3.5)
 
     # robust scale std to 0..1
@@ -258,8 +261,8 @@ def optimize_my_team(
     points_std_scaled = np.clip(points_std_scaled, 0, 1)
 
     # combine into a single risk score (0..1-ish)
-    w_own, w_std = 0.7, 0.3
-    risk_score = w_own * ownership_risk + w_std * points_std_scaled
+    w_own, w_std = 0.6, 0.4
+    risk_score = w_own * ownership_risk + w_std * (points_std_scaled*0.5+0.5*points_risk)
 
     # direction:
     #  risk_value < 0 => low risk => penalize risky players
@@ -680,4 +683,6 @@ def optimize_my_team(
 
 
 if __name__ == "__main__":
-    optimize_my_team()
+    optimize_my_team(wildcard_round=32)
+    
+    
