@@ -262,7 +262,7 @@ def optimize_my_team(
 
     # combine into a single risk score (0..1-ish)
     w_own, w_std = 0.6, 0.4
-    risk_score = w_own * ownership_risk + w_std * (points_std_scaled*0.5+0.5*points_risk)
+    risk_score = w_own * ownership_risk + w_std * (points_std_scaled*0.3+0.7*points_risk)
 
     # direction:
     #  risk_value < 0 => low risk => penalize risky players

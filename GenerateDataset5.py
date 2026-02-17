@@ -659,6 +659,10 @@ import numpy as np
 import pandas as pd
 
 
+import math
+import numpy as np
+import pandas as pd
+
 def predict_xg_from_indices(A: float, B: float) -> float:
     z = -2.94 + 1.388 * A + 1.4 * B - 0.136 * A * B
     return math.exp(0.5 * z)
@@ -691,7 +695,7 @@ def _run_one_pass(
     OBS_LO: float = 0.5,
     OBS_HI: float = 3.2,
     use_squared_updates: bool = True,
-    error_split: float = 0.5,            # ✅ 50/50
+    error_split: float = 0.5,
     debug_print: bool = True,
     debug_max_rows: int | None = None,
 ):
@@ -714,7 +718,8 @@ def _run_one_pass(
     # ELO
     elo_rating = {t: 1000.0 for t in teams}
     elo_history = {t: [1000.0] for t in teams}
-    k_elo = 30.0
+    elo_debug_rows = []  # ✅ NEW: store debug per row
+    k_elo = 25.0
 
     error_xg = []
     error_xgc = []
@@ -722,15 +727,12 @@ def _run_one_pass(
     def signed_sq(err: float) -> float:
         return err * abs(err)  # sign(err) * err^2
 
-    # ✅ fixed 50/50 weights
     w_off = float(np.clip(error_split, 0.0, 1.0))
     w_def = float(np.clip(1.0 - error_split, 0.0, 1.0))
 
-    # --- ELO xG-margin tuning knobs ---
-    # Bigger xG-xGC => outcome is "more convincing".
-    # Small gap => less convincing.
-    xgcap = 1.0      # cap for margin effect (in xG)
-    beta = 0.5       # strength of margin effect (0.0 disables it)
+    # ELO margin knobs
+    xgcap = 1.0
+    beta = 0.6
 
     for i, (_, row) in enumerate(team_df.iterrows(), start=1):
         if debug_max_rows is not None and i > debug_max_rows:
@@ -763,7 +765,6 @@ def _run_one_pass(
             upd_xg = err_xg
             upd_xgc = err_xgc
 
-        # fixed 50/50 weighting, no extreme multipliers
         applied_term_off_preclip = w_off * upd_xg
         applied_term_def_preclip = w_def * upd_xgc
 
@@ -795,7 +796,7 @@ def _run_one_pass(
         off_rating_history[team].append(off_rating[team])
         def_rating_history[team].append(def_rating[team])
 
-        # split updates (home/away) with same 50/50 weighting
+        # split updates (home/away)
         if was_home == 1:
             team_off_h = off_rating_home[team]
             team_def_h = def_rating_home[team]
@@ -811,12 +812,8 @@ def _run_one_pass(
             upd_xg_h = signed_sq(err_xg_h) if use_squared_updates else err_xg_h
             upd_xgc_h = signed_sq(err_xgc_h) if use_squared_updates else err_xgc_h
 
-            off_rating_home[team] = max(
-                0.5, team_off_h + k_off *w_off* np.clip( upd_xg_h, -min_val, min_val)
-            )
-            def_rating_home[team] = max(
-                0.5, team_def_h + k_def * w_def *np.clip( upd_xgc_h, -min_val, min_val)
-            )
+            off_rating_home[team] = max(0.5, team_off_h + k_off * w_off * np.clip(upd_xg_h, -min_val, min_val))
+            def_rating_home[team] = max(0.5, team_def_h + k_def * w_def * np.clip(upd_xgc_h, -min_val, min_val))
         else:
             team_off_a = off_rating_away[team]
             team_def_a = def_rating_away[team]
@@ -832,29 +829,26 @@ def _run_one_pass(
             upd_xg_a = signed_sq(err_xg_a) if use_squared_updates else err_xg_a
             upd_xgc_a = signed_sq(err_xgc_a) if use_squared_updates else err_xgc_a
 
-            off_rating_away[team] = max(
-                0.5, team_off_a + k_off *w_off* np.clip( upd_xg_a, -min_val, min_val)
-            )
-            def_rating_away[team] = max(
-                0.5, team_def_a + k_def * w_def *np.clip( upd_xgc_a, -min_val, min_val)
-            )
+            off_rating_away[team] = max(0.5, team_off_a + k_off * w_off * np.clip(upd_xg_a, -min_val, min_val))
+            def_rating_away[team] = max(0.5, team_def_a + k_def * w_def * np.clip(upd_xgc_a, -min_val, min_val))
 
         off_rating_home_history[team].append(off_rating_home[team])
         def_rating_home_history[team].append(def_rating_home[team])
         off_rating_away_history[team].append(off_rating_away[team])
         def_rating_away_history[team].append(def_rating_away[team])
 
-        # -----------------------------------------------------------------
-        # ✅ CHANGED ELO: use xG margin to scale how "convincing" outcome is.
-        #
-        # If (XG - XGC) is big relative to expected => bigger Elo swing.
-        # If gap is small => smaller Elo swing.
-        # Uses expected margin too, so you don't over-reward teams expected to dominate.
-        # -----------------------------------------------------------------
+        # xG margin relative to expectation (positive = better than expected)
+        xg_diff_actual   = actual_xg - actual_xgc
+        xg_diff_expected = expected_goals - expected_goals_conceded
+        xg_margin        = xg_diff_actual - xg_diff_expected
+
+
         team_elo = elo_rating[team]
         opp_elo = elo_rating[opponent]
         expected_team = 1 / (1 + 10 ** ((opp_elo - team_elo) / 400))
-
+        # normalize + squash to [-1, 1]
+        m = float(np.tanh(xg_margin / max(1e-6, xgcap)))   # signed
+        
         if row["Result"] == 2:
             actual_result = 1.0
         elif row["Result"] == 1:
@@ -862,31 +856,36 @@ def _run_one_pass(
         else:
             actual_result = 0.0
 
-        # xG goal difference style margin
-        xg_diff_actual = actual_xg - actual_xgc
-        xg_diff_expected = expected_goals - expected_goals_conceded
-        xg_margin = xg_diff_actual - xg_diff_expected  # >0 means "better than expected"
+        # Agreement between xG and match result:
+        # +1 if xG supports result, -1 if xG contradicts result
+        if actual_result == 1.0:        # WIN: positive margin supports
+            agree = m                   # m>0 => amplify, m<0 => dampen
+        elif actual_result == 0.0:      # LOSS: negative margin supports
+            agree = -m                  # m<0 => amplify (since -m>0), m>0 => dampen
+        else:                           # DRAW: use xG direction but make it mild
+            # draw direction: if xG_margin > 0, "draw feels like should have won"
+            # if xG_margin < 0, "draw feels like should have lost"
+            agree = m
 
-        # scale 0..1 by capped magnitude
-        pos_strength = float(np.clip(xg_diff_actual / xgcap, 0.0, 1.0))
-        neg_strength = float(np.clip((-xg_diff_actual) / xgcap, 0.0, 1.0))
+        # Make draw adjustment smaller, and smaller still when expected_team is extreme
+        # (if E~0.5, xG should matter more; if E~0 or ~1, be cautious)
+        draw_scale = 0.35  # mild draws by default
+        expectation_caution = 1.0 - 2.0 * abs(expected_team - 0.5)  # 1 at E=0.5, 0 at E=0/1
+        expectation_caution = float(np.clip(expectation_caution, 0.0, 1.0))
+        
+        scale = 0.8
+        if actual_result == 0.5:
+            scale = draw_scale * expectation_caution
 
-        # margin multiplier by outcome type
-        if actual_result == 1.0:
-            # win: bigger positive margin => more convincing
-            margin_mult = 1.0 + beta * pos_strength
-        elif actual_result == 0.0:
-            # loss: bigger negative margin => more convincing loss
-            margin_mult = 1.0 + beta * neg_strength
-        else:
-            # draw: if you "should" have won on xG, nudge slightly; otherwise also slight.
-            # keep this mild so draws don't swing too hard
-            draw_strength = float(np.clip(abs(xg_diff_actual) / xgcap, 0.0, 1.0))
-            margin_mult = 1.0 + 0.35 * beta * draw_strength
+        # Final multiplier in [1 - beta*scale, 1 + beta*scale]
+        margin_mult = 1.0 + beta * scale * agree
 
-        # keep the rest of your Elo logic, but include margin_mult
+        # extra safety: never flip sign or go crazy
+        margin_mult = float(np.clip(margin_mult, 1.0 - beta*scale, 1.0 + beta*scale))
+
+
         new_factor = max(1.0, 3.0 - 0.25 * len(elo_history[team]))
-        surprise_multiplier = abs(actual_result - expected_team) * 1.5
+        surprise_multiplier = 1.0 + 0.2 * abs(actual_result - expected_team)
 
         delta_elo = (
             new_factor
@@ -895,6 +894,43 @@ def _run_one_pass(
             * surprise_multiplier
             * margin_mult
         )
+
+        # ✅ NEW: record debug row + optional print
+        old_elo = float(elo_rating[team])
+        new_elo = float(old_elo + delta_elo)
+        res_label = "W" if actual_result == 1.0 else ("D" if actual_result == 0.5 else "L")
+
+        elo_debug_rows.append({
+            "i": i,
+            "kickoff_time": row.get("kickoff_time", None),
+            "team": team,
+            "opponent": opponent,
+            "home": was_home,
+            "Result": res_label,
+            "S_actual": actual_result,
+            "E_expected": float(expected_team),
+            "old_elo": old_elo,
+            "delta_elo": float(delta_elo),
+            "new_elo": new_elo,
+            "k_elo": float(k_elo),
+            "new_factor": float(new_factor),
+            "surprise_mult": float(surprise_multiplier),
+            "margin_mult": float(margin_mult),
+            "actual_xg": float(actual_xg),
+            "actual_xgc": float(actual_xgc),
+            "exp_xg": float(expected_goals),
+            "exp_xgc": float(expected_goals_conceded),
+            "xg_diff_actual": float(xg_diff_actual),
+            "xg_diff_expected": float(xg_diff_expected),
+            "xg_margin": float(xg_margin),
+        })
+
+        if debug_print:
+            print(
+                f"    ELO {res_label}: old={old_elo:.1f}  E={expected_team:.3f}  S={actual_result:.1f}  "
+                f"new_factor={new_factor:.3f}  k={k_elo:.1f}  surprise={surprise_multiplier:.3f}  "
+                f"margin={margin_mult:.3f}  Δ={delta_elo:+.2f}  new={new_elo:.1f}"
+            )
 
         elo_rating[team] += delta_elo
         elo_history[team].append(elo_rating[team])
@@ -907,6 +943,7 @@ def _run_one_pass(
         "off_away_hist": off_rating_away_history,
         "def_away_hist": def_rating_away_history,
         "elo_hist": elo_history,
+        "elo_debug": elo_debug_rows,  # ✅ NEW
         "err_xg": error_xg,
         "err_xgc": error_xgc,
     }
@@ -946,7 +983,6 @@ def team_transformed2():
     k_off_2, k_def_2 = 0.1, 0.1
     min_val = 1.1
     OBS_LO, OBS_HI = 0.5, 3.2
-
     error_split = 0.5
 
     run1 = _run_one_pass(
@@ -954,7 +990,7 @@ def team_transformed2():
         k_off_1, k_def_1, min_val, OBS_LO, OBS_HI,
         use_squared_updates=False,
         error_split=error_split,
-        debug_print=True,
+        debug_print=False,
         debug_max_rows=None,
     )
 
@@ -974,6 +1010,12 @@ def team_transformed2():
     def_away_hist = _avg_histories(run1["def_away_hist"], run2["def_away_hist"], teams)
     elo_hist = _avg_histories(run1["elo_hist"], run2["elo_hist"], teams)
 
+    # ✅ NEW: write Elo debug log from run1
+    elo_dbg = pd.DataFrame(run1["elo_debug"])
+    elo_dbg.to_csv("elo_debug_log.csv", index=False)
+    print("\nWrote: elo_debug_log.csv (first 10 rows)")
+    print(elo_dbg.head(10).to_string(index=False))
+
     new_team_df = pd.read_csv("Team_data_transformed.csv").iloc[:, 1:].copy()
     new_team_df_newest = pd.read_csv("Team_data_newest.csv").iloc[:, 1:].copy()
     overall_weight = 0.0
@@ -989,13 +1031,13 @@ def team_transformed2():
         selected_team_df = new_team_df[new_team_df["code"] == team].copy()
 
         selected_team_df["XGA"] = ((1 - overall_weight) * np.array(off_away_hist[team][:-1]) +
-                                  overall_weight * selected_team_df["XGA"]) * 0.8 + 0.2 * selected_team_df["Rolling_Threat"]
+                                   overall_weight * selected_team_df["XGA"]) * 0.8 + 0.2 * selected_team_df["Rolling_Threat"]
         selected_team_df["XGCA"] = ((1 - overall_weight) * np.array(def_away_hist[team][:-1]) +
-                                   overall_weight * selected_team_df["XGCA"]) * 0.8 + 0.2 * selected_team_df["Rolling_Threat_Against"]
+                                    overall_weight * selected_team_df["XGCA"]) * 0.8 + 0.2 * selected_team_df["Rolling_Threat_Against"]
         selected_team_df["XGH"] = ((1 - overall_weight) * np.array(off_home_hist[team][:-1]) +
-                                  overall_weight * selected_team_df["XGH"]) * 0.8 + 0.2 * selected_team_df["Rolling_Threat"]
+                                   overall_weight * selected_team_df["XGH"]) * 0.8 + 0.2 * selected_team_df["Rolling_Threat"]
         selected_team_df["XGCH"] = ((1 - overall_weight) * np.array(def_home_hist[team][:-1]) +
-                                   overall_weight * selected_team_df["XGCH"]) * 0.8 + 0.2 * selected_team_df["Rolling_Threat_Against"]
+                                    overall_weight * selected_team_df["XGCH"]) * 0.8 + 0.2 * selected_team_df["Rolling_Threat_Against"]
 
         selected_team_df["XG_avg"] = selected_team_df["XGH"] * 0.5 + selected_team_df["XGA"] * 0.5
         selected_team_df["XGC_avg"] = selected_team_df["XGCH"] * 0.5 + selected_team_df["XGCA"] * 0.5
@@ -1028,6 +1070,8 @@ def team_transformed2():
 
     team_transformed_df.to_csv("Team_data_transformed2.csv", index=False)
     team_transformed_df_newest.to_csv("Team_data_newest2.csv", index=False)
+
+
 
 
 

@@ -55,7 +55,6 @@ Manual_min=[
         {"name": "Hugo_Ekitiké", "type": "const",   "GW": "any", "value": 75},
         {"name": "Rayan_Aït-Nouri", "type": "const",   "GW": "any", "value": 65},
         {"name": "Antoine_Semenyo", "type": "const",   "GW": "any", "value": 80},
-        {"name": "Rayan_Cherki", "type": "const",   "GW": "any", "value": 65},
         {"name": "Daniel_Muñoz", "type": "const",   "GW": "any", "value": 90},
         {"name": "Jean-Philippe_Mateta", "type": "const",   "GW": "any", "value": 0},
         #Afcon
