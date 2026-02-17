@@ -47,7 +47,6 @@ def GenerateOptimizeSet(Current_data_path):
     visual_df["web_name"] = visual_df["web_name"].fillna("Ukjent")
     visual_df["DefCon"] = visual_df["DefCon"].fillna(0)
     visual_df["Point_STD"] = visual_df["Point_STD"].fillna(3)
-    visual_df["Risk_share"] = visual_df["Risk_share"].fillna(0.4)
     
 
     
@@ -117,9 +116,25 @@ def GenerateOptimizeSet(Current_data_path):
     optimized_player_set["Points_prediction"]
 )
     optimized_player_set["Points_prediction"] = optimized_player_set["Points_prediction"] * optimized_player_set["minutes_multiplier"]
+    optimized_player_set["Risk_share"] = pd.to_numeric(optimized_player_set["Risk_share"], errors="coerce"
+    )
+    risk_avg = (
+    optimized_player_set
+        .groupby(["name"], as_index=False)["Risk_share"]
+        .mean()
+        .rename(columns={"Risk_share": "Risk_share_avg"})
+    )
+    print(risk_avg)
+    
+    optimized_player_set = optimized_player_set.merge(
+    risk_avg,
+        on=["name"],
+    how="left"
+    )
+    
     
 
-    constant_cols = ["name", "position","value", 'team_code','selected','web_name','DefCon','Point_STD','Risk_share','offset','id','0']
+    constant_cols = ["name", "position","value", 'team_code','selected','web_name','DefCon','Risk_share_avg','Point_STD','offset','id','0']
     
 
     pivoted_df = optimized_player_set.pivot_table(

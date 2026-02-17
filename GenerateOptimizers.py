@@ -340,7 +340,8 @@ def freeHit_values(sel_thresh, budget, columns, file_path="Model_Optimizer.csv",
     teams = data['team_code'].tolist() 
     selected = data['selected'].tolist() 
     predicted_points = data[cols].values.flatten()  # Only use 'p1' for Gameweek 1
-
+    print(predicted_points)
+    print(cols)
     not_sel_list=[]
 
     num_players = len(players)
