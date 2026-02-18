@@ -261,7 +261,7 @@ def optimize_my_team(
     points_std_scaled = np.clip(points_std_scaled, 0, 1)
 
     # combine into a single risk score (0..1-ish)
-    w_own, w_std = 0.6, 0.4
+    w_own, w_std = 0.7, 0.3
     risk_score = w_own * ownership_risk + w_std * (points_std_scaled*0.3+0.7*points_risk)
 
     # direction:
@@ -272,7 +272,7 @@ def optimize_my_team(
         sign = -1
     elif risk_value > 0:
         sign = +1
-        offset=3/4
+        offset=1
     else:
         sign = 0
 
