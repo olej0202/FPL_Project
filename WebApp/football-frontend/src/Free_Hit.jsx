@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import pitch from "./assets/Pitch2.png";
+import pitch from "./assets/Pitch4.png";
 import Navbar from "./components/team_navigation"; // Optional team nav
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { useAITeamData } from "./Contexts/AITeamsContext";
@@ -66,11 +66,22 @@ export default function FreeHitTeam() {
   );
 }
 
-function PlayerRow({ players, isBench = false, navigate,fallbackUrl }) {
+function PlayerRow({ players, isBench = false, navigate, fallbackUrl }) {
+
+  // If bench, sort so GKP comes first
+  const sortedPlayers = isBench
+    ? [...players].sort((a, b) => {
+        if (a.position === "GKP") return -1;
+        if (b.position === "GKP") return 1;
+        return 0;
+      })
+    : players;
+
   return (
     <div className="flex justify-center gap-3 py-2 overflow-x-auto">
-      {players.map((player, idx) => {
-        const name = player.web_name
+      {sortedPlayers.map((player, idx) => {
+        const name = player.web_name;
+
         return (
           <div
             key={idx}
@@ -79,41 +90,38 @@ function PlayerRow({ players, isBench = false, navigate,fallbackUrl }) {
                 state: { selectedPlayer: player.Name },
               })
             }
-            className={`relative flex flex-col items-center cursor-pointer hover:scale-105 transition-transform ${
-              isBench ? "text-black opacity-90" : "text-white"
-            }`}
-
+            className="relative flex flex-col items-center cursor-pointer hover:scale-105 transition-transform"
           >
+            {/* Grey transparent rounded background */}
+            <div className="absolute inset-0 bg-gray-400/20 backdrop-blur-sm rounded-xl"></div>
+
+            {/* Captain badge */}
             {player.Is_captain && (
-              <div
-                className="
-                  absolute top-2 -left-2
-                  bg-black text-white font-bold
-                  text-xs rounded-full
-                  w-5 h-5 flex items-center justify-center
-                "
-              >
+              <div className="absolute top-0 -left-2 bg-black text-white font-bold text-xs rounded-full w-5 h-5 flex items-center justify-center z-10">
                 C
               </div>
             )}
+
+            {/* Player image */}
             <img
-                src={player.photo}
-                alt={player.Name}
-                onError={(e) => {
-            e.currentTarget.onerror = null;       // prevent loop
-            e.currentTarget.src = fallbackUrl;    // use fallback
-          }}
-                className={`object-contain ${
-                isBench
-                ? "w-[60px] h-[80px] sm:w-[70px] sm:h-[90px]"
-                : "w-[60px] h-[80px] sm:w-[70px] sm:h-[90px]"
-                }`}
+              src={player.photo}
+              alt={player.Name}
+              onError={(e) => {
+                e.currentTarget.onerror = null;
+                e.currentTarget.src = fallbackUrl;
+              }}
+              className="relative z-10 object-contain w-[60px] h-[80px] sm:w-[70px] sm:h-[90px]"
             />
-            <span className="mt-1 text-center font-small text-xs sm:text-sm leading-tight">
+
+            {/* Name badge (rounded white/grey) */}
+            <span className="relative z-10 mt-1 px-3 py-1 bg-white/90 text-black text-xs sm:text-sm rounded-full shadow-md text-center leading-tight">
               {name}
             </span>
+
             {isBench && (
-              <span className="text-xs text-black/60">{player.position}</span>
+              <span className="relative z-10 text-xs text-black/70 mt-1">
+                {player.position}
+              </span>
             )}
           </div>
         );
@@ -121,3 +129,4 @@ function PlayerRow({ players, isBench = false, navigate,fallbackUrl }) {
     </div>
   );
 }
+

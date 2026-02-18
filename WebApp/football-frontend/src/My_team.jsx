@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { X, ArrowRight } from "lucide-react";
-import pitch from "./assets/pitch.png";
+import pitch from "./assets/Pitch4.png";
 import { useMyteamData } from "./Contexts/MyTeamContext";
 import { useAdjustmentData } from "./Contexts/AdjustmentsContext";
 
@@ -1067,10 +1067,24 @@ function PlayerRow({
 }) {
   const fallback =
     "https://d2kq0urxkarztv.cloudfront.net/51812cad594df29a1a0003f0/661303/upload-643ff5d9-840e-4bbb-b099-07c26ef505c9.png?w=578";
+
+  // Define official FPL position order
+  const positionOrder = ["GKP", "DEF", "MID", "FWD"];
+
+  // Only sort if bench
+  const sortedPlayers = isBench
+    ? [...players].sort(
+        (a, b) =>
+          positionOrder.indexOf(a.position) -
+          positionOrder.indexOf(b.position)
+      )
+    : players;
+
   return (
     <div className="flex justify-center gap-2 px-1 overflow-x-auto text-center w-full">
-      {players.map((p) => (
+      {sortedPlayers.map((p) => (
         <div key={p.Name} className="relative">
+
           {p.Is_captain && (
             <div className="absolute top-5 -left-2 bg-black/80 text-white font-bold text-xs rounded-full w-5 h-5 flex items-center justify-center shadow">
               C
@@ -1111,8 +1125,8 @@ function PlayerRow({
           </button>
           <div
             className={`${
-              isBench ? "text-black/95" : "text-white/95"
-            } mt-1 text-[11px] sm:text-xs leading-tight max-w-[70px] truncate`}
+              isBench ? "text-black/95" : "text-black/95"
+            } mt-1 text-[11px] sm:text-xs leading-tight max-w-[70px] truncate bg-gray-100/90 rounded-full`}
           >
             {p.web_name}
           </div>
