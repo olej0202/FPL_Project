@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import pitch from "./assets/pitch.png";
+import pitch from "./assets/Pitch2.png";
 import Navbar from "./components/team_navigation"; // Optional team nav
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { useAITeamData } from "./Contexts/AITeamsContext";
@@ -56,7 +56,7 @@ export default function FreeHitTeam() {
           </div>
 
           {benchPlayers.length > 0 && (
-            <div className="absolute bottom-[-6px] left-0 right-0 px-2">
+            <div className="absolute bottom-[-1px] left-0 right-0 px-1">
               <PlayerRow players={benchPlayers} isBench navigate={navigate} fallbackUrl={fallbackUrl}/>
             </div>
           )}
@@ -105,7 +105,7 @@ function PlayerRow({ players, isBench = false, navigate,fallbackUrl }) {
           }}
                 className={`object-contain ${
                 isBench
-                ? "w-[45px] h-[65px] sm:w-[55px] sm:h-[75px]"
+                ? "w-[60px] h-[80px] sm:w-[70px] sm:h-[90px]"
                 : "w-[60px] h-[80px] sm:w-[70px] sm:h-[90px]"
                 }`}
             />

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import pitch from "./assets/pitch.png";
+import pitch from "./assets/Pitch2.png";
 import { useAITeamData } from "./Contexts/AITeamsContext";
 import { ArrowRight } from "lucide-react";
 
@@ -191,7 +191,7 @@ function PlayerRow({ players, isBench = false, navigate,fallbackUrl }) {
           }}
               className={`object-contain ${
                 isBench
-                  ? "w-[45px] h-[65px] sm:w-[55px] sm:h-[75px]"
+                  ? "w-[60px] h-[80px] sm:w-[70px] sm:h-[90px]"
                   : "w-[60px] h-[80px] sm:w-[70px] sm:h-[90px]"
               }`}
             />

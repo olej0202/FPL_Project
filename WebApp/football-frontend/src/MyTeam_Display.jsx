@@ -34,7 +34,7 @@ import {
 } from "lucide-react";
 import { useMyteamData } from "./Contexts/MyTeamContext";
 import { useStatsData } from "./Contexts/StatsContext";
-import pitch from "./assets/pitch_lineup.png";
+import pitch from "./assets/Pitch3.png";
 
 const PALETTE = {
   red: "#5A0000",
@@ -1797,7 +1797,7 @@ export default function MyTeamOverview() {
                 className="w-full max-w-[430px] mx-auto aspect-[9/15] sm:aspect-[2/3.1] bg-no-repeat bg-cover bg-center border border-white/40 rounded-xl px-2 py-2"
                 style={{ backgroundImage: `url(${pitch})` }}
               >
-                <div className="flex flex-col h-full pt-1 pb-2 gap-1 justify-start">
+                <div className="flex flex-col h-full pt-1 pb-2 gap-8 justify-start">
                   <PitchRow
                     players={gkStarters}
                     label="GKP"

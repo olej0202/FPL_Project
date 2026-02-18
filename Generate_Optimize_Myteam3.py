@@ -363,7 +363,7 @@ def optimize_my_team(
                     y[i, t] * risk_score[i] for i in range(num_players)
                 ))
 
-    obj = lpSum(obj_terms) + lpSum(0.2 * saved_transfers[t] for t in gameweeks)
+    obj = lpSum(obj_terms) + lpSum(0.27 * saved_transfers[t] for t in gameweeks)
 
     # add risk adjustment without touching points
     if lam > 0 and sign != 0:

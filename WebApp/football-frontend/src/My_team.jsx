@@ -863,7 +863,7 @@ const formatRiskLabel = (v) => {
                 cursor: plannerPayload.length ? "pointer" : "not-allowed",
               }}
             >
-              Apply transfers to My Team
+              See transfers on My Team
             </button>
 
             {!plannerPayload.length && (
