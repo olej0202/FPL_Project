@@ -261,23 +261,17 @@ def get_my_team_optimize(
 def get_player_rankings():
     df = load_and_transform("Player_rankings")
 
-    # Replace ±Inf with NaN
+    # 1) Replace ±Inf with NaN
     df.replace([np.inf, -np.inf], np.nan, inplace=True)
 
-    # Fill numeric columns with 0
-    num_cols = df.select_dtypes(include=["number"]).columns
-    df[num_cols] = df[num_cols].fillna(0)
+    # 2) Fill all NaNs with 0 (or another sentinel)
+    df.fillna(0, inplace=True)
 
-    # Fill non-numeric columns with empty string (or keep NaN if you prefer)
-    other_cols = df.columns.difference(num_cols)
-    df[other_cols] = df[other_cols].fillna("")
-
-    # gzip JSON
+    # 3) Now dump to gzipped JSON
     buffer = io.BytesIO()
     with gzip.GzipFile(fileobj=buffer, mode="w") as gz:
         gz.write(json.dumps(df.to_dict(orient="records")).encode("utf-8"))
     buffer.seek(0)
-
     return StreamingResponse(
         buffer,
         media_type="application/json",
@@ -286,7 +280,6 @@ def get_player_rankings():
             "Access-Control-Allow-Origin": "*",
         },
     )
-
 @app.get("/Player_result_adjust")
 def get_data():
     df = load_and_transform("Player_result_adjust")
