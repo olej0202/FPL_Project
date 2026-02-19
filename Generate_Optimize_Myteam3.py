@@ -316,6 +316,8 @@ def optimize_my_team(
     transfer_out = {(i, t): LpVariable(f"transfer_out_{i}_{t}", cat="Binary") for i in range(num_players) for t in gameweeks}
 
     saved_transfers = {t: LpVariable(f"saved_transfers_{t}", lowBound=0, upBound=5, cat="Integer") for t in gameweeks}
+    transfers_used = {t: LpVariable(f"transfers_used_{t}", lowBound=0, upBound=5, cat="Integer")for t in gameweeks}
+
     money_in_bank_var = {t: LpVariable(f"money_in_bank_{t}", lowBound=0, cat="Continuous") for t in gameweeks}
 
     # --- Free Hit temporary squad vars (one GW only) + FH transfer/bank vars ---
@@ -368,15 +370,9 @@ def optimize_my_team(
     obj = lpSum(obj_terms)
 
     # your existing "in-horizon" saved transfer value
-    obj += lpSum(0.35 * transfervalue * saved_transfers[t] for t in gameweeks)
+    obj += lpSum(-0.35 * transfervalue * transfers_used[t] for t in gameweeks)
 
-    # ✅ NEW: terminal value for saved transfers if the horizon doesn't reach GW38
-    last_t = gameweeks[-1]-1
-    last_abs_gw = int(GW_list[last_t])  # GW_list like ["0","25","26",...]
-    if last_abs_gw != 38:
-        remaining = 0.5*min(2, 38 - last_abs_gw)
-        # value saved transfers as if they can be used in the remaining future weeks
-        obj += 0.35 * transfervalue * remaining * saved_transfers[last_t]
+
 
     # add risk adjustment without touching points
     if lam > 0 and sign != 0:
@@ -522,6 +518,7 @@ def optimize_my_team(
     for t in gameweeks[1:]:
         # Free Hit week: real squad does NOT change
         if use_freehit and t == fh_t:
+            model += transfers_used[t]==1
             for i in range(num_players):
                 model += x[i, t] == x[i, t - 1]
                 model += transfer_in[i, t] == 0
@@ -532,13 +529,15 @@ def optimize_my_team(
             for i in range(num_players):
                 model += x[i, t] >= x[i, t - 1] - transfer_out[i, t]
                 model += x[i, t] <= x[i, t - 1] + transfer_in[i, t]
+            model += transfers_used[t]==1
         else:
             for i in range(num_players):
                 model += transfer_in[i, t] >= x[i, t] - x[i, t - 1]
                 model += transfer_out[i, t] >= x[i, t - 1] - x[i, t]
                 model += transfer_out[i, t] <= x[i, t - 1]
             model += lpSum(transfer_in[i, t] for i in range(num_players)) <= 1 + saved_transfers[t - 1]
-
+            model += transfers_used[t] == lpSum(transfer_in[i, t] for i in range(num_players))
+    model += transfers_used[0] == 0
     # --- Saved transfer evolution ---
     for t in gameweeks[1:]:
         if t == wildcard_round_rel:
