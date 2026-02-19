@@ -556,7 +556,7 @@ return (
                   </div>
                 ) : (
                   <div className="p-2 sm:p-3">
-                    <div className="grid grid-cols-[34px_26px_minmax(0,1fr)_88px_88px] text-[10px] uppercase tracking-wide text-neutral-400 px-2 pb-1">
+                    <div className="grid grid-cols-[40px_26px_minmax(0,1fr)_88px_88px] text-[10px] uppercase tracking-wide text-neutral-400 px-2 pb-1">
                       <span>#</span>
                       <span />
                       <span>Team</span>
@@ -574,7 +574,7 @@ return (
                             key={`${t.GW}-${t.code}`}
                             className={`group rounded-xl border transition px-2 py-2 ${cls}`}
                           >
-                            <div className="grid grid-cols-[34px_26px_minmax(0,1fr)_88px_88px] items-center gap-2">
+                            <div className="grid grid-cols-[0px_26px_minmax(0,1fr)_88px_88px] items-center gap-2">
                               <div className="text-sm font-semibold tabular-nums text-neutral-100">
                                 {t.position}
                               </div>
@@ -586,9 +586,11 @@ return (
                               <div className="flex items-center gap-2 min-w-0">
                                 {crest(t.name, "sm")}
                                 <div className="min-w-0">
-                                  <div className="text-sm font-medium truncate text-neutral-100">
-                                    {t.name}
-                                  </div>
+                                  <div className="text-sm font-medium text-neutral-100 leading-tight whitespace-normal break-words">
+  {t.name}
+</div>
+
+
                                 </div>
                               </div>
 

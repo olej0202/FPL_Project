@@ -264,22 +264,9 @@ def get_player_rankings():
     # 1) Replace ±Inf with NaN
     df.replace([np.inf, -np.inf], np.nan, inplace=True)
 
-    # 2) Fill all NaNs with 0 (or another sentinel)
-    df.fillna(0, inplace=True)
+    df=df.fillna(0)
+    return df.to_dict(orient="records")  
 
-    # 3) Now dump to gzipped JSON
-    buffer = io.BytesIO()
-    with gzip.GzipFile(fileobj=buffer, mode="w") as gz:
-        gz.write(json.dumps(df.to_dict(orient="records")).encode("utf-8"))
-    buffer.seek(0)
-    return StreamingResponse(
-        buffer,
-        media_type="application/json",
-        headers={
-            "Content-Encoding": "gzip",
-            "Access-Control-Allow-Origin": "*",
-        },
-    )
 @app.get("/Player_result_adjust")
 def get_data():
     df = load_and_transform("Player_result_adjust")
