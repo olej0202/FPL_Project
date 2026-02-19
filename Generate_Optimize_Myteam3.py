@@ -351,7 +351,6 @@ def optimize_my_team(
                 for i in range(num_players)
             ))
             if lam > 0:
-                # ✅ risk only counts if in FREE HIT SQUAD
                 risk_terms.append(lpSum(
                     fh_x[i] * risk_score[i] for i in range(num_players)
                 ))
@@ -361,18 +360,27 @@ def optimize_my_team(
                 for i in range(num_players)
             ))
             if lam > 0:
-                # ✅ risk only counts if in REAL SQUAD
                 risk_terms.append(lpSum(
                     y[i, t] * risk_score[i] for i in range(num_players)
                 ))
 
-    obj = lpSum(obj_terms) + lpSum(0.35*transfervalue * saved_transfers[t] for t in gameweeks)
+    # base points objective
+    obj = lpSum(obj_terms)
+
+    # your existing "in-horizon" saved transfer value
+    obj += lpSum(0.35 * transfervalue * saved_transfers[t] for t in gameweeks)
+
+    # ✅ NEW: terminal value for saved transfers if the horizon doesn't reach GW38
+    last_t = gameweeks[-1]
+    last_abs_gw = int(GW_list[last_t])  # GW_list like ["0","25","26",...]
+    if last_abs_gw != 38:
+        remaining = 0.5*min(2, 38 - last_abs_gw)
+        # value saved transfers as if they can be used in the remaining future weeks
+        obj += 0.35 * transfervalue * remaining * saved_transfers[last_t]
 
     # add risk adjustment without touching points
     if lam > 0 and sign != 0:
         obj += sign * lam * lpSum(risk_terms)
-
-
 
     # Bench boost
     if bench_points_gw in gameweeks:
