@@ -62,8 +62,8 @@ def Data_Predictions(current_fixture_path,current_team_path, n_points_in_future,
     
    
 def Data_Generation(ownership,budget,GW_list_wildcard,GW_list_freehit,current_player_path,current_team_path,current_season_path ):
-    #GenerateOptimizeSet(current_player_path)
-    #generate_optimizers(ownership=ownership,budget=budget,GW_list_wildcard=GW_list_wildcard,GW_list_freehit=GW_list_freehit  )
+    GenerateOptimizeSet(current_player_path)
+    generate_optimizers(ownership=ownership,budget=budget,GW_list_wildcard=GW_list_wildcard,GW_list_freehit=GW_list_freehit  )
     Generate_ALL_datasets(current_team_path,current_player_path,current_season_path)
     #main_GPT_News()
     
