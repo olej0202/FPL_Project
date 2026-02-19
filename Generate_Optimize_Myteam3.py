@@ -370,7 +370,7 @@ def optimize_my_team(
     obj = lpSum(obj_terms)
 
     # your existing "in-horizon" saved transfer value
-    obj += lpSum(-0.5 * transfervalue * transfers_used[t] for t in gameweeks)
+    obj += lpSum(-1 * transfervalue * transfers_used[t] for t in gameweeks)
 
 
 
@@ -518,7 +518,7 @@ def optimize_my_team(
     for t in gameweeks[1:]:
         # Free Hit week: real squad does NOT change
         if use_freehit and t == fh_t:
-            model += transfers_used[t]==1
+            model += transfers_used[t]==0
             for i in range(num_players):
                 model += x[i, t] == x[i, t - 1]
                 model += transfer_in[i, t] == 0
@@ -529,7 +529,7 @@ def optimize_my_team(
             for i in range(num_players):
                 model += x[i, t] >= x[i, t - 1] - transfer_out[i, t]
                 model += x[i, t] <= x[i, t - 1] + transfer_in[i, t]
-            model += transfers_used[t]==1
+            model += transfers_used[t]==0
         else:
             for i in range(num_players):
                 model += transfer_in[i, t] >= x[i, t] - x[i, t - 1]
