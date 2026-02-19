@@ -234,7 +234,26 @@ export default function Team_Predictions() {
   const tableIsEmpty = predictedTableRows.length === 0;
   const tableShowLoading = tableLoading || (showPredTable && tableIsEmpty);
 
-  return (
+
+    const rowStyleByRank = (rank, totalTeams) => {
+    // top 4
+    if (rank === 1) return "bg-emerald-500/25 border-emerald-500/40"; // darkest
+    if (rank === 2) return "bg-emerald-500/20 border-emerald-500/35";
+    if (rank === 3) return "bg-emerald-500/15 border-emerald-500/30";
+    if (rank === 4) return "bg-emerald-500/10 border-emerald-500/25";
+
+    // 5th orange
+    if (rank === 5) return "bg-orange-500/15 border-orange-500/35";
+
+    // bottom 3 red
+    if (rank >= Math.max(1, totalTeams - 2)) return "bg-red-500/15 border-red-500/35";
+
+    // neutral
+    return "bg-white/5 border-white/10";
+  };
+
+    const totalTeams = predictedTableRows.length;
+return (
     <div
       className="min-h-screen bg-gradient-to-b from-neutral-950 to-black text-neutral-100"
       onTouchStart={onTouchStart}
@@ -270,7 +289,7 @@ export default function Team_Predictions() {
             <button
               onClick={goPrev}
               disabled={isAtStart}
-              className={`inline-flex items-center justify-center rounded-xl px-3 py-2 border shadow-sm text-sm sm:text-base transition focus:outline-none focus:ring-2 focus:ring-royal-gold/60 ${
+              className={`inline-flex items-center justify-center rounded-xl px-3 py-2 border shadow-sm text-sm sm:text-base transition focus:outline-none focus:ring-0 ${
                 isAtStart
                   ? "bg-neutral-800 text-neutral-500 border-neutral-700 cursor-not-allowed"
                   : "bg-royal-gold text-black border-yellow-400 hover:bg-yellow-300"
@@ -287,7 +306,7 @@ export default function Team_Predictions() {
             <button
               onClick={goNext}
               disabled={isAtEnd}
-              className={`inline-flex items-center justify-center rounded-xl px-3 py-2 border shadow-sm text-sm sm:text-base transition focus:outline-none focus:ring-2 focus:ring-royal-gold/60 ${
+              className={`inline-flex items-center justify-center rounded-xl px-3 py-2 border shadow-sm text-sm sm:text-base transition focus:outline-none focus:ring-0 ${
                 isAtEnd
                   ? "bg-neutral-800 text-neutral-500 border-neutral-700 cursor-not-allowed"
                   : "bg-royal-gold text-black border-yellow-400 hover:bg-yellow-300"
@@ -298,16 +317,17 @@ export default function Team_Predictions() {
             </button>
           </div>
 
+          {/* ✅ No blue hover/outline: remove ring + use neutral hover only */}
           <button
             onClick={() => setShowPredTable(true)}
-            className="inline-flex items-center justify-center rounded-xl px-4 py-2 border border-white/10 bg-white/5 hover:bg-white/10 shadow-sm text-sm sm:text-base transition focus:outline-none focus:ring-2 focus:ring-royal-gold/60"
+            className="inline-flex items-center justify-center rounded-xl px-4 py-2 border border-white/10 bg-white/5 hover:bg-white/10 shadow-sm text-sm sm:text-base transition focus:outline-none focus:ring-0 active:scale-[0.99]"
             aria-label="Show predicted table"
           >
             Show predicted table
           </button>
         </div>
 
-        {/* Content (Score cards) */}
+        {/* Score cards (UNCHANGED) */}
         {isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             {Array.from({ length: 6 }).map((_, i) => (
@@ -516,8 +536,6 @@ export default function Team_Predictions() {
                   <span className="text-base sm:text-lg font-semibold">
                     Predicted table — GW {selectedGW ?? "—"}
                   </span>
-
-               
                 </div>
 
                 <button
@@ -531,9 +549,7 @@ export default function Team_Predictions() {
 
               <div className="max-h-[70vh] overflow-y-auto overscroll-contain">
                 {tableShowLoading ? (
-                  <div className="p-4 text-center text-neutral-400">
-                    Loading predicted table…
-                  </div>
+                  <div className="p-4 text-center text-neutral-400">Loading predicted table…</div>
                 ) : predictedTableRows.length === 0 ? (
                   <div className="p-4 text-center text-neutral-400">
                     No predicted table data found for GW {selectedGW}.
@@ -549,45 +565,52 @@ export default function Team_Predictions() {
                     </div>
 
                     <div className="space-y-1">
-                      {predictedTableRows.map((t) => (
-                        <div
-                          key={`${t.GW}-${t.code}`}
-                          className="group rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition px-2 py-2"
-                        >
-                          <div className="grid grid-cols-[34px_26px_minmax(0,1fr)_88px_88px] items-center gap-2">
-                            <div className="text-sm font-semibold tabular-nums text-neutral-200">
-                              {t.position}
-                            </div>
+                      {predictedTableRows.map((t) => {
+                        const rank = t.position; // 1-based
+                        const cls = rowStyleByRank(rank, totalTeams);
 
-                            <div className="flex items-center justify-center">
-                              {movementIcon(t.movement)}
-                            </div>
+                        return (
+                          <div
+                            key={`${t.GW}-${t.code}`}
+                            className={`group rounded-xl border transition px-2 py-2 ${cls}`}
+                          >
+                            <div className="grid grid-cols-[34px_26px_minmax(0,1fr)_88px_88px] items-center gap-2">
+                              <div className="text-sm font-semibold tabular-nums text-neutral-100">
+                                {t.position}
+                              </div>
 
-                            <div className="flex items-center gap-2 min-w-0">
-                              {crest(t.name, "sm")}
-                              <div className="min-w-0">
-                                <div className="text-sm font-medium truncate text-neutral-200">
-                                  {t.name}
+                              <div className="flex items-center justify-center">
+                                {movementIcon(t.movement)}
+                              </div>
+
+                              <div className="flex items-center gap-2 min-w-0">
+                                {crest(t.name, "sm")}
+                                <div className="min-w-0">
+                                  <div className="text-sm font-medium truncate text-neutral-100">
+                                    {t.name}
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="text-right">
+                                <div className="text-sm font-semibold tabular-nums text-royal-gold">
+                                  {Number.isFinite(t.predicted_points)
+                                    ? t.predicted_points.toFixed(2)
+                                    : "—"}
+                                </div>
+                              </div>
+
+                              <div className="text-right">
+                                <div className="text-sm font-semibold tabular-nums text-neutral-100">
+                                  {Number.isFinite(t.total_points)
+                                    ? t.total_points.toFixed(0)
+                                    : "—"}
                                 </div>
                               </div>
                             </div>
-
-                            <div className="text-right">
-                              <div className="text-sm font-semibold tabular-nums text-royal-gold">
-                                {Number.isFinite(t.predicted_points)
-                                  ? t.predicted_points.toFixed(2)
-                                  : "—"}
-                              </div>
-                            </div>
-
-                            <div className="text-right">
-                              <div className="text-sm font-semibold tabular-nums text-neutral-200">
-                                {Number.isFinite(t.total_points) ? t.total_points.toFixed(0) : "—"}
-                              </div>
-                            </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 )}
