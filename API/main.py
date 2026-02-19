@@ -265,11 +265,6 @@ def get_player_rankings():
     df.replace([np.inf, -np.inf], np.nan, inplace=True)
 
     # 2) Fill all NaNs with 0 (or another sentinel)
-    str_cols = df.select_dtypes(include=["string", "object"]).columns
-    print("String/object columns:", list(str_cols))
-    print(df[str_cols].isna().sum().sort_values(ascending=False).head(20))
-    print(df.dtypes)
-    df = df.astype(object)
     df.fillna(0, inplace=True)
 
     # 3) Now dump to gzipped JSON

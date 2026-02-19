@@ -186,7 +186,7 @@ def Generate_Player_Rankings(current_teams):
 
     # ✅ Fill ONLY when there was no fixture match for that GW
     # Use "nan" string as you requested (not actual NaN)
-    df3["opponent_name"] = df3["opponent_name"].fillna("nan")
+    
     df3["was_home"] = df3["was_home"].fillna(True)
     df3["fix_id"] = df3["fix_id"].fillna(0)
 
@@ -196,7 +196,7 @@ def Generate_Player_Rankings(current_teams):
     # Optional: photo missing -> "nan" (only if you want)
     # df3["photo"] = df3["photo"].fillna("nan")
 
-    df3["DefCon"] = df3["CBI"].values
+    
     
     static_cols = ["CBI", "Player_code", "photo", "rolling_ICT"]
 
@@ -206,6 +206,12 @@ def Generate_Player_Rankings(current_teams):
             .groupby("name")[col]
             .transform(lambda x: x.fillna(x.dropna().iloc[0] if x.notna().any() else x))
         )
+        
+    df3["CBI"] = df3["CBI"].fillna(0)
+    df3["opponent_name"] = df3["opponent_name"].fillna("No/A")
+    df3["DefCon"] = df3["CBI"].values
+    df3 = df3.fillna("0")
+    
 
     df3.to_csv("Model_Predictions_visual2.csv", index=False)
 
