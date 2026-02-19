@@ -1,15 +1,15 @@
 ,player_team,player_name,pos_latest,appearances_last5,n_dates,appear_pct_last5
-0,Arsenal,Cristhian Mosquera,CB,1,5,20.0
+0,Arsenal,Bukayo Saka,AMC,2,5,40.0
 1,Arsenal,David Raya,GK,5,5,100.0
 2,Arsenal,Declan Rice,DM,5,5,100.0
-3,Arsenal,Eberechi Eze,AMC,1,5,20.0
-4,Arsenal,Gabriel,CB,5,5,100.0
+3,Arsenal,Gabriel,CB,5,5,100.0
+4,Arsenal,Gabriel Martinelli,LW,1,5,20.0
 5,Arsenal,Jurriën Timber,DR,5,5,100.0
-6,Arsenal,Leandro Trossard,LW,4,5,80.0
-7,Arsenal,Martín Zubimendi,DM,5,5,100.0
-8,Arsenal,Noni Madueke,RW,4,5,80.0
-9,Arsenal,Piero Hincapié,DL,3,5,60.0
-10,Arsenal,Viktor Gyokeres,FW,3,5,60.0
+6,Arsenal,Martín Zubimendi,DM,5,5,100.0
+7,Arsenal,Noni Madueke,RW,4,5,80.0
+8,Arsenal,Piero Hincapié,DL,4,5,80.0
+9,Arsenal,Viktor Gyokeres,FW,3,5,60.0
+10,Arsenal,William Saliba,CB,4,5,80.0
 11,Aston Villa,Amadou Onana,DM,3,5,60.0
 12,Aston Villa,Douglas Luiz,DM,3,5,60.0
 13,Aston Villa,Emiliano Buendía,LW,5,5,100.0
@@ -263,14 +263,14 @@
 261,West Ham,Mateus Fernandes,DM,5,5,100.0
 262,West Ham,Tomas Soucek,AMC,5,5,100.0
 263,West Ham,Valentín Castellanos,FW,5,5,100.0
-264,Wolves,Adam Armstrong,FW,2,5,40.0
-265,Wolves,Angel Gomes,MC,2,5,40.0
-266,Wolves,Hugo Bueno,LW,5,5,100.0
-267,Wolves,José Sá,GK,5,5,100.0
-268,Wolves,João Gomes,MC,5,5,100.0
-269,Wolves,Ladislav Krejcí,CB,3,5,60.0
-270,Wolves,Mateus Mané,AMC,5,5,100.0
-271,Wolves,Rodrigo Gomes,RW,2,5,40.0
-272,Wolves,Santiago Bueno,CB,5,5,100.0
-273,Wolves,Tolu Arokodare,FW,4,5,80.0
+264,Wolves,Adam Armstrong,FW,3,5,60.0
+265,Wolves,André,MC,3,5,60.0
+266,Wolves,Angel Gomes,MC,3,5,60.0
+267,Wolves,Hugo Bueno,DL,5,5,100.0
+268,Wolves,Jackson Tchatchoua,DR,2,5,40.0
+269,Wolves,Jean-Ricner Bellegarde,AMC,1,5,20.0
+270,Wolves,José Sá,GK,5,5,100.0
+271,Wolves,Ladislav Krejcí,CB,3,5,60.0
+272,Wolves,Mateus Mané,AMC,5,5,100.0
+273,Wolves,Santiago Bueno,CB,5,5,100.0
 274,Wolves,Yerson Mosquera,CB,5,5,100.0

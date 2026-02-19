@@ -69,10 +69,11 @@ Manual_min=[
         {"name": "Anthony_Gordon", "type": "const",   "GW": "any", "value": 75},
         {"name": "Viktor_Gyökeres", "type": "const",   "GW": "any", "value": 75},
         {"name": "Matheus_Santos Carneiro Da Cunha", "type": "const",   "GW": "any", "value": 75},
-        {"name": "Tammy_Abraham", "type": "const",   "GW": "any", "value": 70},
+        {"name": "Tammy_Abraham", "type": "const",   "GW": "any", "value": 60},
         {"name": "Dominic_Solanke-Mitchell", "type": "const",   "GW": "any", "value": 75},
-        {"name": "Jørgen_Strand Larsen", "type": "const",   "GW": "any", "value": 75},
-        {"name": "Bruno_Guimarães Rodriguez Moura", "type": "const",   "GW": "any", "value": 75},
+        {"name": "Jørgen_Strand Larsen", "type": "const",   "GW": "any", "value": 80},
+        {"name": "Bruno_Guimarães Rodriguez Moura", "type": "const",   "GW": "any", "value": 80},
+        {"name": "Bukayo_Saka", "type": "const",   "GW": "any", "value": 80},
     ]
         
 
@@ -80,10 +81,6 @@ Manual_min=[
 NEW_TEAMS=[]
 NEW_TEAMS_NAME=[]
 fixtures_config = {
-        "2562204": [
-            {"gw": 26, "probability": 1},
-            {"gw": 31, "probability": 0},
-        ],
         "2562201": [
             {"gw": 38, "probability": 1},
             {"gw": 31, "probability": 0},

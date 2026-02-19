@@ -1,7 +1,7 @@
 // src/pages/OptimizeTeam.jsx
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { X, ArrowRight } from "lucide-react";
+import { X, ArrowRight,Search } from "lucide-react";
 import pitch from "./assets/Pitch4.png";
 import { useMyteamData } from "./Contexts/MyTeamContext";
 import { useAdjustmentData } from "./Contexts/AdjustmentsContext";
@@ -54,21 +54,19 @@ export default function MyTeamOptimize() {
   }, [Playerdata, dataVersion]);
 
   const clampRisk = (v) => Math.max(-1, Math.min(1, v));
-const formatRiskLabel = (v) => {
-  const n = Number(v);
-  if (n <= -0.3) return "Low risk";
-  if (n >= 0.3) return "High risk";
-  return "Neutral";
-};
-
-
-
-    const handleApplyToPlanner = () => {
-    if (!plannerPayload.length) return;
-    navigate("/Team_Overview", { state: { optimizedTransfers: plannerPayload ,applyId: Date.now() }, });
+  const formatRiskLabel = (v) => {
+    const n = Number(v);
+    if (n <= -0.3) return "Low risk";
+    if (n >= 0.3) return "High risk";
+    return "Neutral";
   };
 
-
+  const handleApplyToPlanner = () => {
+    if (!plannerPayload.length) return;
+    navigate("/Team_Overview", {
+      state: { optimizedTransfers: plannerPayload, applyId: Date.now() },
+    });
+  };
 
   // Ensure we fall back to AI if statistical data disappears
   useEffect(() => {
@@ -82,6 +80,11 @@ const formatRiskLabel = (v) => {
   const [showWildInput, setShowWildInput] = useState(!!wildRound);
   const [showfreehitInput, setshowfreehitInput] = useState(!!freehitROund);
 
+  // NEW: expandable "Add chips"
+  const [chipsOpen, setChipsOpen] = useState(
+    !!bbRound || !!wildRound || !!freehitROund
+  );
+
   // Loading progress animation
   const [loadingPhase, setLoadingPhase] = useState("idle");
   const [progress, setProgress] = useState(0);
@@ -89,7 +92,7 @@ const formatRiskLabel = (v) => {
   useEffect(() => {
     sethas_changed(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [teamId, bbRound, wildRound, bannedList, freehitROund, n_hits, modelType,risk]);
+  }, [teamId, bbRound, wildRound, bannedList, freehitROund, n_hits, modelType, risk]);
 
   useEffect(() => {
     if (loading) {
@@ -153,9 +156,7 @@ const formatRiskLabel = (v) => {
     transfers = Object.values(
       moves.reduce((acc, curr) => {
         if (!acc[curr.GW]) acc[curr.GW] = { GW: curr.GW, in: [], out: [] };
-        acc[curr.GW][
-          curr.status === "transferred_in" ? "in" : "out"
-        ].push(curr);
+        acc[curr.GW][curr.status === "transferred_in" ? "in" : "out"].push(curr);
         return acc;
       }, {})
     ).sort((a, b) => Number(a.GW) - Number(b.GW));
@@ -171,9 +172,7 @@ const formatRiskLabel = (v) => {
 
     if (objRow) {
       const asNum =
-        objRow.objective != null
-          ? Number(objRow.objective)
-          : Number(objRow.status);
+        objRow.objective != null ? Number(objRow.objective) : Number(objRow.status);
       totalPredPoints = Number.isFinite(asNum) ? asNum : null;
     }
   }
@@ -184,8 +183,7 @@ const formatRiskLabel = (v) => {
 
   if (data && Number.isFinite(minGW) && Number.isFinite(maxGW)) {
     const fhGW = Number(freehitROund);
-    const fhActive =
-      Number.isFinite(fhGW) && fhGW >= minGW - 1 && fhGW <= maxGW;
+    const fhActive = Number.isFinite(fhGW) && fhGW >= minGW - 1 && fhGW <= maxGW;
 
     if (fhActive) {
       const out = [...transfers].sort((a, b) => toNum(a.GW) - toNum(b.GW));
@@ -204,7 +202,7 @@ const formatRiskLabel = (v) => {
     }
   }
 
-    // Build a simple payload to send to planner
+  // Build a simple payload to send to planner
   const plannerPayload = useMemo(() => {
     if (!data || transfersWithFH.length === 0) return [];
 
@@ -258,8 +256,7 @@ const formatRiskLabel = (v) => {
           className="w-full max-w-md rounded-2xl p-5 shadow-2xl"
           style={{
             border: `1px solid ${PALETTE.gold}`,
-            background:
-              "linear-gradient(145deg, rgba(0,0,0,0.96), rgba(0,0,0,0.9))",
+            background: "linear-gradient(145deg, rgba(0,0,0,0.96), rgba(0,0,0,0.9))",
           }}
         >
           <div className="mb-2 text-center text-sm" style={{ color: "#d1c3a9" }}>
@@ -292,14 +289,12 @@ const formatRiskLabel = (v) => {
     const arr = Playerdata?.current;
     if (!Array.isArray(arr) || arr.length === 0) return null;
     return arr.map((p) => ({
-  ...p,
-
-  // make absolutely sure the optimizer gets the correct number
-  calc_points: Number.isFinite(Number(p.calc_points)) ? Number(p.calc_points) : 0,
-
-  // IMPORTANT: if your backend optimizer uses "Points" instead of "calc_points"
-  Points: Number.isFinite(Number(p.calc_points)) ? Number(p.calc_points) : 0,
-}));
+      ...p,
+      // make absolutely sure the optimizer gets the correct number
+      calc_points: Number.isFinite(Number(p.calc_points)) ? Number(p.calc_points) : 0,
+      // IMPORTANT: if your backend optimizer uses "Points" instead of "calc_points"
+      Points: Number.isFinite(Number(p.calc_points)) ? Number(p.calc_points) : 0,
+    }));
   };
 
   const handleOptimizeClick = () => {
@@ -312,6 +307,9 @@ const formatRiskLabel = (v) => {
     });
     sethas_changed(false);
   };
+
+  const activeChipsCount =
+    (bbRound ? 1 : 0) + (wildRound ? 1 : 0) + (freehitROund ? 1 : 0);
 
   return (
     <div
@@ -358,8 +356,7 @@ const formatRiskLabel = (v) => {
           className="mb-8 rounded-2xl p-4 sm:p-6"
           style={{
             border: `1px solid ${PALETTE.gold}`,
-            background:
-              "linear-gradient(145deg, rgba(0,0,0,0.96), rgba(90,0,0,0.9))",
+            background: "linear-gradient(145deg, rgba(0,0,0,0.96), rgba(90,0,0,0.9))",
             boxShadow: "0 18px 40px rgba(0,0,0,0.9)",
           }}
         >
@@ -374,77 +371,111 @@ const formatRiskLabel = (v) => {
                 Team ID
               </label>
               <input
-                id="team-id"
-                type="number"
-                inputMode="numeric"
-                placeholder="Required"
-                value={teamId}
-                onChange={(e) => setTeamId(e.target.value)}
-                className="w-full h-10 px-3 rounded-md text-sm"
+  id="team-id"
+  type="number"
+  inputMode="numeric"
+  placeholder="Required"
+  value={teamId}
+  onChange={(e) => setTeamId(e.target.value)}
+  className="w-full h-10 px-3 rounded-md text-base sm:text-sm"
+  style={{
+    fontSize: 16, // iOS Safari: prevents zoom
+    border: "1px solid rgba(248, 250, 252, 0.18)",
+    backgroundColor: "rgba(0,0,0,0.75)",
+    color: PALETTE.beige,
+  }}
+/>
+
+            </div>
+
+            {/* NEW: Chips expandable section (Bench Boost / Wildcard / Free Hit) */}
+            <div className="flex flex-col gap-1 lg:col-span-3">
+              <label
+                className="text-xs uppercase tracking-wide"
+                style={{ color: "#e5e7eb" }}
+              >
+                Chips
+              </label>
+
+              <details
+                open={chipsOpen}
+                onToggle={(e) => setChipsOpen(e.currentTarget.open)}
+                className="rounded-md"
                 style={{
                   border: "1px solid rgba(248, 250, 252, 0.18)",
                   backgroundColor: "rgba(0,0,0,0.75)",
-                  color: PALETTE.beige,
                 }}
-              />
+              >
+                <summary
+                  className="cursor-pointer select-none list-none flex items-center justify-between px-3 h-10"
+                  style={{ color: PALETTE.gold }}
+                >
+                  <span>Add chips</span>
+                  <span className="text-[11px]" style={{ color: "#9ca3af" }}>
+                    {activeChipsCount} active
+                  </span>
+                </summary>
+
+                <div className="p-3 pt-2 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {/* Bench Boost */}
+                  <ChipSelect
+                    label="Bench Boost GW"
+                    show={showBbInput}
+                    onShow={() => {
+                      setShowBbInput(true);
+                      if (minGW != null) setBbRound(minGW);
+                    }}
+                    onHide={() => {
+                      setShowBbInput(false);
+                      setBbRound("");
+                    }}
+                    value={bbRound}
+                    onChange={(v) => setBbRound(Number(v))}
+                    minGW={minGW}
+                    maxGW={maxGW}
+                    addLabel="Add Bench Boost"
+                  />
+
+                  {/* Wildcard */}
+                  <ChipSelect
+                    label="Wildcard GW"
+                    show={showWildInput}
+                    onShow={() => {
+                      setShowWildInput(true);
+                      if (minGW != null) setWildRound(minGW);
+                    }}
+                    onHide={() => {
+                      setShowWildInput(false);
+                      setWildRound("");
+                    }}
+                    value={wildRound}
+                    onChange={(v) => setWildRound(Number(v))}
+                    minGW={minGW}
+                    maxGW={maxGW}
+                    addLabel="Add Wildcard"
+                  />
+
+                  {/* Free Hit */}
+                  <ChipSelect
+                    label="Free Hit GW"
+                    show={showfreehitInput}
+                    onShow={() => {
+                      setshowfreehitInput(true);
+                      if (minGW != null) setfreehitROund(minGW);
+                    }}
+                    onHide={() => {
+                      setshowfreehitInput(false);
+                      setfreehitROund("");
+                    }}
+                    value={freehitROund}
+                    onChange={(v) => setfreehitROund(Number(v))}
+                    minGW={minGW}
+                    maxGW={maxGW}
+                    addLabel="Add Free Hit"
+                  />
+                </div>
+              </details>
             </div>
-
-            {/* Bench Boost */}
-            <ChipSelect
-              label="Bench Boost GW"
-              show={showBbInput}
-              onShow={() => {
-                setShowBbInput(true);
-                if (minGW != null) setBbRound(minGW);
-              }}
-              onHide={() => {
-                setShowBbInput(false);
-                setBbRound("");
-              }}
-              value={bbRound}
-              onChange={(v) => setBbRound(Number(v))}
-              minGW={minGW}
-              maxGW={maxGW}
-              addLabel="Add Bench Boost"
-            />
-
-            {/* Wildcard */}
-            <ChipSelect
-              label="Wildcard GW"
-              show={showWildInput}
-              onShow={() => {
-                setShowWildInput(true);
-                if (minGW != null) setWildRound(minGW);
-              }}
-              onHide={() => {
-                setShowWildInput(false);
-                setWildRound("");
-              }}
-              value={wildRound}
-              onChange={(v) => setWildRound(Number(v))}
-              minGW={minGW}
-              maxGW={maxGW}
-              addLabel="Add Wildcard"
-            />
-
-            {/* Free Hit */}
-            <ChipSelect
-              label="Free Hit GW"
-              show={showfreehitInput}
-              onShow={() => {
-                setshowfreehitInput(true);
-                if (minGW != null) setfreehitROund(minGW);
-              }}
-              onHide={() => {
-                setshowfreehitInput(false);
-                setfreehitROund("");
-              }}
-              value={freehitROund}
-              onChange={(v) => setfreehitROund(Number(v))}
-              minGW={minGW}
-              maxGW={maxGW}
-              addLabel="Add Free Hit"
-            />
 
             {/* Hits */}
             <div className="flex flex-col gap-1">
@@ -473,9 +504,7 @@ const formatRiskLabel = (v) => {
                   >
                     Count
                   </span>
-                  <span className="text-sm font-semibold">
-                    {Number(n_hits || 0)}
-                  </span>
+                  <span className="text-sm font-semibold">{Number(n_hits || 0)}</span>
                 </div>
                 <IconButton
                   ariaLabel="Increase hits"
@@ -514,27 +543,25 @@ const formatRiskLabel = (v) => {
                 </button>
                 <button
                   type="button"
-                  onClick={() =>
-                    hasStatisticalData && setModelType("statistical")
-                  }
+                  onClick={() => hasStatisticalData && setModelType("statistical")}
                   disabled={!hasStatisticalData}
                   className="flex-1 inline-flex items-center justify-center px-3 py-1.5 rounded-md text-xs sm:text-sm border transition"
                   style={{
                     border: !hasStatisticalData
                       ? "1px solid #4b5563"
                       : modelType === "statistical"
-                      ? `1px solid ${PALETTE.gold}`
-                      : "1px solid rgba(248, 250, 252, 0.18)",
+                        ? `1px solid ${PALETTE.gold}`
+                        : "1px solid rgba(248, 250, 252, 0.18)",
                     background: !hasStatisticalData
                       ? "rgba(0,0,0,0.5)"
                       : modelType === "statistical"
-                      ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)`
-                      : "rgba(0,0,0,0.75)",
+                        ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)`
+                        : "rgba(0,0,0,0.75)",
                     color: !hasStatisticalData
                       ? "#6b7280"
                       : modelType === "statistical"
-                      ? "#000000"
-                      : "#e5e7eb",
+                        ? "#000000"
+                        : "#e5e7eb",
                     cursor: !hasStatisticalData ? "not-allowed" : "pointer",
                   }}
                 >
@@ -552,155 +579,148 @@ const formatRiskLabel = (v) => {
                   Open Your Statistical Model
                 </button>
                 {!hasStatisticalData && (
-                  <span style={{ color: "#fbbf24" }}>
-                    {" "}
-                    (needed to enable the model)
-                  </span>
+                  <span style={{ color: "#fbbf24" }}> (needed to enable the model)</span>
                 )}
               </p>
             </div>
-                        {/* Risk preference */}
-            {/* Risk preference (slider -1..1 step 0.2) */}
-{/* Risk preference (styled slider -1..1 step 0.2) */}
-<div className="flex flex-col gap-1 lg:col-span-2">
-  <label
-    className="text-xs uppercase tracking-wide"
-    style={{ color: "#e5e7eb" }}
-  >
-    Risk preference
-  </label>
-  {/* Presets (above the slider) */}
-<div className="flex items-center justify-between mb-1">
-    <button
-    type="button"
-    onClick={() => setRisk(-0.6)}
-    className="px-3 py-1.5  text-[11px] font-semibold transition"
-    style={{
-      border: `1px solid ${PALETTE.gold}`,
-      background: Number(risk) === -0.6 ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)` : "rgba(0,0,0,0.75)",
-      color: Number(risk) === -0.6 ? "#000" : PALETTE.gold,
-    }}
-  >
-    Low Risk
-  </button>
-  <button
-    type="button"
-    onClick={() => setRisk(0)}
-    className="px-3 py-1.5  text-[11px] font-semibold transition"
-    style={{
-      border: `1px solid ${PALETTE.gold}`,
-      background: Number(risk) === 0 ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)` : "rgba(0,0,0,0.75)",
-      color: Number(risk) === 0 ? "#000" : PALETTE.gold,
-    }}
-  >
-    Neutral
-  </button>
 
-  <button
-    type="button"
-    onClick={() => setRisk(0.6)}
-    className="px-3 py-1.5  text-[11px] font-semibold transition"
-    style={{
-      border: `1px solid ${PALETTE.gold}`,
-      background: Number(risk) === 0.6 ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)` : "rgba(0,0,0,0.75)",
-      color: Number(risk) === 0.6 ? "#000" : PALETTE.gold,
-    }}
-  >
-    High Risk
-  </button>
+            {/* Risk preference */}
+            <div className="flex flex-col gap-1 lg:col-span-2">
+              <label
+                className="text-xs uppercase tracking-wide"
+                style={{ color: "#e5e7eb" }}
+              >
+                Risk preference
+              </label>
 
+              {/* Presets */}
+              <div className="flex items-center justify-between mb-1">
+                <button
+                  type="button"
+                  onClick={() => setRisk(-0.6)}
+                  className="px-3 py-1.5  text-[11px] font-semibold transition"
+                  style={{
+                    border: `1px solid ${PALETTE.gold}`,
+                    background:
+                      Number(risk) === -0.6
+                        ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)`
+                        : "rgba(0,0,0,0.75)",
+                    color: Number(risk) === -0.6 ? "#000" : PALETTE.gold,
+                  }}
+                >
+                  Low Risk
+                </button>
 
-</div>
+                <button
+                  type="button"
+                  onClick={() => setRisk(0)}
+                  className="px-3 py-1.5  text-[11px] font-semibold transition"
+                  style={{
+                    border: `1px solid ${PALETTE.gold}`,
+                    background:
+                      Number(risk) === 0
+                        ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)`
+                        : "rgba(0,0,0,0.75)",
+                    color: Number(risk) === 0 ? "#000" : PALETTE.gold,
+                  }}
+                >
+                  Neutral
+                </button>
 
+                <button
+                  type="button"
+                  onClick={() => setRisk(0.6)}
+                  className="px-3 py-1.5  text-[11px] font-semibold transition"
+                  style={{
+                    border: `1px solid ${PALETTE.gold}`,
+                    background:
+                      Number(risk) === 0.6
+                        ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)`
+                        : "rgba(0,0,0,0.75)",
+                    color: Number(risk) === 0.6 ? "#000" : PALETTE.gold,
+                  }}
+                >
+                  High Risk
+                </button>
+              </div>
 
-  <div
-    className="h-12 rounded-md px-3 flex items-center"
-    style={{
-      backgroundColor: "rgba(0,0,0,0.8)",
-      border: "1px solid rgba(248, 250, 252, 0.18)",
-    }}
-  >
-    
-    <input
-      type="range"
-      min={-1}
-      max={1}
-      step={0.2}
-      value={Number(risk)}
-      onChange={(e) => setRisk(Number(e.target.value))}
-      aria-label="Risk preference"
-      className="w-full appearance-none bg-transparent cursor-pointer"
-      style={{
-        // Chrome / Safari track
-        WebkitAppearance: "none",
-        height: 6,
-        background: `linear-gradient(
-          to right,
-          ${PALETTE.gold} 0%,
-          ${PALETTE.gold} ${((risk + 1) / 2) * 100}%,
-          #374151 ${((risk + 1) / 2) * 100}%,
-          #374151 100%
-        )`,
-        borderRadius: 999,
-      }}
-    />
+              <div
+                className="h-12 rounded-md px-3 flex items-center"
+                style={{
+                  backgroundColor: "rgba(0,0,0,0.8)",
+                  border: "1px solid rgba(248, 250, 252, 0.18)",
+                }}
+              >
+                <input
+                  type="range"
+                  min={-1}
+                  max={1}
+                  step={0.2}
+                  value={clampRisk(Number(risk))}
+                  onChange={(e) => setRisk(clampRisk(Number(e.target.value)))}
+                  aria-label="Risk preference"
+                  className="w-full appearance-none bg-transparent cursor-pointer"
+                  style={{
+                    WebkitAppearance: "none",
+                    height: 6,
+                    background: `linear-gradient(
+                      to right,
+                      ${PALETTE.gold} 0%,
+                      ${PALETTE.gold} ${((Number(risk) + 1) / 2) * 100}%,
+                      #374151 ${((Number(risk) + 1) / 2) * 100}%,
+                      #374151 100%
+                    )`,
+                    borderRadius: 999,
+                  }}
+                />
 
-    {/* Inline styles for slider thumb */}
-    <style>{`
-      input[type="range"]::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        appearance: none;
-        width: 22px;
-        height: 22px;
-        border-radius: 50%;
-        background: ${PALETTE.gold};
-        border: 2px solid #000;
-        box-shadow: 0 0 0 2px rgba(184,134,11,0.35);
-        transition: transform 0.15s ease;
-      }
-      input[type="range"]::-webkit-slider-thumb:hover {
-        transform: scale(1.15);
-      }
+                <style>{`
+                  input[type="range"]::-webkit-slider-thumb {
+                    -webkit-appearance: none;
+                    appearance: none;
+                    width: 22px;
+                    height: 22px;
+                    border-radius: 50%;
+                    background: ${PALETTE.gold};
+                    border: 2px solid #000;
+                    box-shadow: 0 0 0 2px rgba(184,134,11,0.35);
+                    transition: transform 0.15s ease;
+                  }
+                  input[type="range"]::-webkit-slider-thumb:hover {
+                    transform: scale(1.15);
+                  }
 
-      input[type="range"]::-moz-range-thumb {
-        width: 22px;
-        height: 22px;
-        border-radius: 50%;
-        background: ${PALETTE.gold};
-        border: 2px solid #000;
-        box-shadow: 0 0 0 2px rgba(184,134,11,0.35);
-      }
+                  input[type="range"]::-moz-range-thumb {
+                    width: 22px;
+                    height: 22px;
+                    border-radius: 50%;
+                    background: ${PALETTE.gold};
+                    border: 2px solid #000;
+                    box-shadow: 0 0 0 2px rgba(184,134,11,0.35);
+                  }
 
-      input[type="range"]::-moz-range-track {
-        height: 6px;
-        background: #374151;
-        border-radius: 999px;
-      }
-    `}</style>
-  </div>
+                  input[type="range"]::-moz-range-track {
+                    height: 6px;
+                    background: #374151;
+                    border-radius: 999px;
+                  }
+                `}</style>
+              </div>
 
-  {/* Labels */}
-  <div className="flex items-center justify-between mt-1">
-    <span className="text-[11px]" style={{ color: "#9ca3af" }}>
-      Low risk
-    </span>
+              <div className="flex items-center justify-between mt-1">
+                <span className="text-[11px]" style={{ color: "#9ca3af" }}>
+                  Low risk
+                </span>
+                <span className="text-[11px]" style={{ color: "#9ca3af" }}>
+                  High risk
+                </span>
+              </div>
 
-
- 
-
-    <span className="text-[11px]" style={{ color: "#9ca3af" }}>
-      High risk
-    </span>
-  </div>
-
-  <p className="text-[11px] mt-0.5" style={{ color: "#9ca3af" }}>
-    Low risk prefers high-ownership, stable picks.  
-    High risk rewards volatility and differentials.
-  </p>
-</div>
-
-
-
+              <p className="text-[11px] mt-0.5" style={{ color: "#9ca3af" }}>
+                Low risk prefers high-ownership, stable picks. High risk rewards
+                volatility and differentials.
+              </p>
+            </div>
           </div>
         </section>
 
@@ -729,15 +749,11 @@ const formatRiskLabel = (v) => {
                     }}
                     className="w-7 h-7 rounded-full object-cover"
                   />
-                  <span className="truncate max-w-[8rem]">
-                    {player.web_name}
-                  </span>
+                  <span className="truncate max-w-[8rem]">{player.web_name}</span>
                   <button
                     onClick={() => removeBan(player.Name)}
                     className="absolute -top-1 -right-1 rounded-full p-0.5"
-                    style={{
-                      backgroundColor: "rgba(0,0,0,0.7)",
-                    }}
+                    style={{ backgroundColor: "rgba(0,0,0,0.7)" }}
                     aria-label={`Remove ${player.web_name} from unwanted`}
                   >
                     <X size={12} className="text-white" />
@@ -760,33 +776,19 @@ const formatRiskLabel = (v) => {
                 boxShadow: "0 16px 32px rgba(0,0,0,0.95)",
               }}
             >
-              <div
-                className="text-sm uppercase tracking-wide"
-                style={{ color: "#9ca3af" }}
-              >
+              <div className="text-sm uppercase tracking-wide" style={{ color: "#9ca3af" }}>
                 Team for GW {minGW}
               </div>
-              <div
-                className="text-[11px] uppercase tracking-wide"
-                style={{ color: "#9ca3af" }}
-              >
+              <div className="text-[11px] uppercase tracking-wide" style={{ color: "#9ca3af" }}>
                 Total predicted points GW {minGW}-{maxGW}
               </div>
-              <div
-                className="font-bold text-xl"
-                style={{ color: PALETTE.gold }}
-              >
+              <div className="font-bold text-xl" style={{ color: PALETTE.gold }}>
                 {totalPredPoints.toFixed(2)}
               </div>
-              <p
-                className="max-w-md text-center text-xs leading-tight mt-1"
-                style={{ color: "#9ca3af" }}
-              >
+              <p className="max-w-md text-center text-xs leading-tight mt-1" style={{ color: "#9ca3af" }}>
                 Model:{" "}
                 <span className="font-semibold">
-                  {modelType === "ai"
-                    ? "AI"
-                    : "Statistical (Player-adjusted)"}
+                  {modelType === "ai" ? "AI" : "Statistical (Player-adjusted)"}
                 </span>
                 . Click a player to view stats, or add them to{" "}
                 <span className="font-medium">Unwanted</span>.
@@ -842,18 +844,16 @@ const formatRiskLabel = (v) => {
             </div>
           </section>
         )}
-                {data && (
+
+        {data && (
           <section className="mb-6 flex flex-col items-center gap-3">
-            {/* (your existing pitch markup stays exactly as is) */}
-            <div className="w-full flex justify-center">
-              {/* ... your pitch div ... */}
-            </div>
+            <div className="w-full flex justify-center">{/* ... your pitch div ... */}</div>
 
             <button
               type="button"
               onClick={handleApplyToPlanner}
               disabled={!plannerPayload.length}
-              className="inline-flex items-center gap-2 font-semibold px-4 py-2 rounded-full transition shadow-lg"
+              className="inline-flex items-center gap-2 font-semibold px-6 py-2 rounded-full transition shadow-lg"
               style={{
                 border: `1px solid ${plannerPayload.length ? PALETTE.gold : "#374151"}`,
                 background: plannerPayload.length
@@ -863,6 +863,7 @@ const formatRiskLabel = (v) => {
                 cursor: plannerPayload.length ? "pointer" : "not-allowed",
               }}
             >
+              <Search className="text-black" style={{ color: PALETTE.balck }} />
               See transfers on My Team
             </button>
 
@@ -874,27 +875,20 @@ const formatRiskLabel = (v) => {
           </section>
         )}
 
-
         {/* Transfers */}
         {transfersWithFH.length > 0 && (
           <section className="mb-4">
-            <h2 className="text-2xl font-bold text-center mb-4">
-              Transfers
-            </h2>
+            <h2 className="text-2xl font-bold text-center mb-4">Transfers</h2>
             <div className="space-y-6">
               {transfersWithFH.map((grp) => {
                 const remainingIns = [...grp.in];
                 const pairs = grp.out.map((outP) => {
-                  const i = remainingIns.findIndex(
-                    (inP) => inP.position === outP.position
-                  );
+                  const i = remainingIns.findIndex((inP) => inP.position === outP.position);
                   return i !== -1
                     ? { outP, inP: remainingIns.splice(i, 1)[0] }
                     : { outP, inP: null };
                 });
-                remainingIns.forEach((inP) =>
-                  pairs.push({ outP: null, inP })
-                );
+                remainingIns.forEach((inP) => pairs.push({ outP: null, inP }));
 
                 return (
                   <div
@@ -908,9 +902,7 @@ const formatRiskLabel = (v) => {
                     }}
                   >
                     <div className="flex items-center justify-center gap-3 mb-3">
-                      <div className="text-sm font-medium">
-                        GW {grp.GW}
-                      </div>
+                      <div className="text-sm font-medium">GW {grp.GW}</div>
                       {grp.freehit && (
                         <span
                           className="text-xs px-2 py-1 rounded-full"
@@ -926,10 +918,7 @@ const formatRiskLabel = (v) => {
                     </div>
                     <div className="flex flex-wrap justify-center items-center gap-6">
                       {pairs.map(({ outP, inP }, idx) => (
-                        <div
-                          key={idx}
-                          className="flex items-center gap-2"
-                        >
+                        <div key={idx} className="flex items-center gap-2">
                           {outP && (
                             <TransferCard
                               player={outP}
@@ -940,10 +929,7 @@ const formatRiskLabel = (v) => {
                             />
                           )}
                           {outP && inP && (
-                            <ArrowRight
-                              className="text-royal-gold"
-                              style={{ color: PALETTE.gold }}
-                            />
+                            <ArrowRight className="text-royal-gold" style={{ color: PALETTE.gold }} />
                           )}
                           {inP && (
                             <TransferCard
@@ -969,23 +955,10 @@ const formatRiskLabel = (v) => {
 }
 
 /** Controls helper components **/
-function ChipSelect({
-  label,
-  show,
-  onShow,
-  onHide,
-  value,
-  onChange,
-  minGW,
-  maxGW,
-  addLabel,
-}) {
+function ChipSelect({ label, show, onShow, onHide, value, onChange, minGW, maxGW, addLabel }) {
   return (
     <div className="flex flex-col gap-1">
-      <label
-        className="text-xs uppercase tracking-wide"
-        style={{ color: "#e5e7eb" }}
-      >
+      <label className="text-xs uppercase tracking-wide" style={{ color: "#e5e7eb" }}>
         {label}
       </label>
 
@@ -1001,10 +974,7 @@ function ChipSelect({
             <option value="" disabled className="text-neutral-400">
               {label}
             </option>
-            {Array.from(
-              { length: maxGW - minGW + 1 },
-              (_, i) => minGW + i
-            ).map((gw) => (
+            {Array.from({ length: maxGW - minGW + 1 }, (_, i) => minGW + i).map((gw) => (
               <option key={gw} value={gw}>
                 GW {gw}
               </option>
@@ -1058,13 +1028,7 @@ function IconButton({ ariaLabel, onClick, label }) {
 }
 
 /** Player row and cards **/
-function PlayerRow({
-  players,
-  isBench = false,
-  toggleBan,
-  bannedList,
-  navigate,
-}) {
+function PlayerRow({ players, isBench = false, toggleBan, bannedList, navigate }) {
   const fallback =
     "https://d2kq0urxkarztv.cloudfront.net/51812cad594df29a1a0003f0/661303/upload-643ff5d9-840e-4bbb-b099-07c26ef505c9.png?w=578";
 
@@ -1074,9 +1038,7 @@ function PlayerRow({
   // Only sort if bench
   const sortedPlayers = isBench
     ? [...players].sort(
-        (a, b) =>
-          positionOrder.indexOf(a.position) -
-          positionOrder.indexOf(b.position)
+        (a, b) => positionOrder.indexOf(a.position) - positionOrder.indexOf(b.position)
       )
     : players;
 
@@ -1084,7 +1046,6 @@ function PlayerRow({
     <div className="flex justify-center gap-2 px-1 overflow-x-auto text-center w-full">
       {sortedPlayers.map((p) => (
         <div key={p.Name} className="relative">
-
           {p.Is_captain && (
             <div className="absolute top-5 -left-2 bg-black/80 text-white font-bold text-xs rounded-full w-5 h-5 flex items-center justify-center shadow">
               C
@@ -1116,11 +1077,7 @@ function PlayerRow({
           >
             <X
               size={12}
-              className={
-                bannedList.includes(p.Name)
-                  ? "text-rose-500"
-                  : "text-royal-gold"
-              }
+              className={bannedList.includes(p.Name) ? "text-rose-500" : "text-royal-gold"}
             />
           </button>
           <div
@@ -1136,15 +1093,8 @@ function PlayerRow({
   );
 }
 
-function TransferCard({
-  player,
-  label,
-  toggleBan,
-  bannedList,
-  navigate,
-}) {
-  const fallback =
-    "https://cdn.nba.com/headshots/nba/latest/1040x760/1709.png";
+function TransferCard({ player, label, toggleBan, bannedList, navigate }) {
+  const fallback = "https://cdn.nba.com/headshots/nba/latest/1040x760/1709.png";
   return (
     <div className="flex flex-col items-center text-neutral-100">
       <div className="relative">
@@ -1171,11 +1121,7 @@ function TransferCard({
           >
             <X
               size={14}
-              className={
-                bannedList.includes(player.Name)
-                  ? "text-rose-500"
-                  : "text-royal-gold"
-              }
+              className={bannedList.includes(player.Name) ? "text-rose-500" : "text-royal-gold"}
             />
           </button>
         )}

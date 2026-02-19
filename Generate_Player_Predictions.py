@@ -73,7 +73,6 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
         team=df['Team'].values[-1]
         position=df["position"].values[-1]
 
-        
         for h in range(len(df)):
             player_preds=[]
             player_model=[]
