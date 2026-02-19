@@ -286,6 +286,16 @@ def optimize_my_team(
 
 
     abs_gw_num = {t: (int(GW_list[t]) if str(GW_list[t]).isdigit() else None) for t in gameweeks}
+    discount_t = {}
+    for t in gameweeks:
+        gw = abs_gw_num.get(t)
+        if gw is None or gw == 0:
+            # GW "0" / non-numeric: choose 0 (no effect) or 1 (full effect). I recommend 0.
+            discount_t[t] = 0.0
+        else:
+            Gwagain = 38 - gw
+            end = min(3, max(0, Gwagain))
+            discount_t[t] = end / 3.0  # 0..1
     num_players = len(players)
 
     def_indices = [i for i, pos in enumerate(positions) if pos == "DEF"]
@@ -370,7 +380,11 @@ def optimize_my_team(
     obj = lpSum(obj_terms)
 
     # your existing "in-horizon" saved transfer value
-    obj += lpSum(-1 * transfervalue * transfers_used[t] for t in gameweeks)
+    
+    obj += lpSum(
+        discount_t[t] * (-1.2 * transfervalue) * transfers_used[t]
+        for t in gameweeks
+    )
 
 
 
