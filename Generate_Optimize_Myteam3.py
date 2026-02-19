@@ -357,7 +357,7 @@ def optimize_my_team(
                 ))
         else:
             obj_terms.append(lpSum(
-                (y[i, t] + c[i, t] + bench[i, t] * 0.05) * predicted_points[i][t]
+                (y[i, t] + c[i, t] + bench[i, t] * 0.1) * predicted_points[i][t]
                 for i in range(num_players)
             ))
             if lam > 0:
@@ -366,7 +366,7 @@ def optimize_my_team(
                     y[i, t] * risk_score[i] for i in range(num_players)
                 ))
 
-    obj = lpSum(obj_terms) + lpSum(0.4*transfervalue * saved_transfers[t] for t in gameweeks)
+    obj = lpSum(obj_terms) + lpSum(0.35*transfervalue * saved_transfers[t] for t in gameweeks)
 
     # add risk adjustment without touching points
     if lam > 0 and sign != 0:
@@ -534,7 +534,7 @@ def optimize_my_team(
     # --- Saved transfer evolution ---
     for t in gameweeks[1:]:
         if t == wildcard_round_rel:
-            model += saved_transfers[t] == 0
+            model += saved_transfers[t] == saved_transfers[t - 1]
         else:
             if use_freehit and t == fh_t:
                 # Treat FH week as "1 transfer used" -> no +1 saved gained
