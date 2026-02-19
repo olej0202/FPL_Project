@@ -96,7 +96,7 @@ def load_and_transform(endpoint):
         csv_path=os.path.join(parent_dir,"Player_Adjusted_data.csv")
         
     elif endpoint=="Table_Prediction":
-        csv_path=os.path.join(parent_dir,"Final_Table_Prediction.csv")
+        csv_path=os.path.join(parent_dir,"Final_Table_Prediction_All_GW.csv")
         
         
         
