@@ -36,6 +36,7 @@ export default function MyTeamOptimize() {
     setn_hits,
     risk,
     setRisk,
+    valtrans, setValtrans
   } = useMyteamData();
 
   const { Playerdata, dataVersion } = useAdjustmentData();
@@ -60,6 +61,17 @@ export default function MyTeamOptimize() {
     if (n >= 0.3) return "High risk";
     return "Neutral";
   };
+
+  const clampValTrans = (v) => Math.max(0, Math.min(1, v));
+  const formatValTransLabel = (v) => {
+    const n = Number(v);
+    if (n <= 0.125) return "0";
+    if (n <= 0.375) return "0.25";
+    if (n <= 0.625) return "0.5";
+    if (n <= 0.875) return "0.75";
+    return "1";
+  };
+
 
   const handleApplyToPlanner = () => {
     if (!plannerPayload.length) return;
@@ -92,7 +104,7 @@ export default function MyTeamOptimize() {
   useEffect(() => {
     sethas_changed(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [teamId, bbRound, wildRound, bannedList, freehitROund, n_hits, modelType, risk]);
+  }, [teamId, bbRound, wildRound, bannedList, freehitROund, n_hits, modelType, risk,valtrans]);
 
   useEffect(() => {
     if (loading) {
@@ -721,6 +733,173 @@ export default function MyTeamOptimize() {
                 volatility and differentials.
               </p>
             </div>
+                        {/* Value of saved transfers */}
+            <div className="flex flex-col gap-1 lg:col-span-2">
+              <label
+                className="text-xs uppercase tracking-wide"
+                style={{ color: "#e5e7eb" }}
+              >
+                Value of saved transfers
+              </label>
+
+              {/* Presets */}
+              <div className="flex items-center justify-between mb-1">
+                <button
+                  type="button"
+                  onClick={() => setValtrans(0)}
+                  className="px-3 py-1.5 text-[11px] font-semibold transition"
+                  style={{
+                    border: `1px solid ${PALETTE.gold}`,
+                    background:
+                      Number(valtrans) === 0
+                        ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)`
+                        : "rgba(0,0,0,0.75)",
+                    color: Number(valtrans) === 0 ? "#000" : PALETTE.gold,
+                  }}
+                >
+                  0
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setValtrans(0.25)}
+                  className="px-3 py-1.5 text-[11px] font-semibold transition"
+                  style={{
+                    border: `1px solid ${PALETTE.gold}`,
+                    background:
+                      Number(valtrans) === 0.25
+                        ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)`
+                        : "rgba(0,0,0,0.75)",
+                    color: Number(valtrans) === 0.25 ? "#000" : PALETTE.gold,
+                  }}
+                >
+                  0.25
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setValtrans(0.5)}
+                  className="px-3 py-1.5 text-[11px] font-semibold transition"
+                  style={{
+                    border: `1px solid ${PALETTE.gold}`,
+                    background:
+                      Number(valtrans) === 0.5
+                        ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)`
+                        : "rgba(0,0,0,0.75)",
+                    color: Number(valtrans) === 0.5 ? "#000" : PALETTE.gold,
+                  }}
+                >
+                  0.5
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setValtrans(0.75)}
+                  className="px-3 py-1.5 text-[11px] font-semibold transition"
+                  style={{
+                    border: `1px solid ${PALETTE.gold}`,
+                    background:
+                      Number(valtrans) === 0.75
+                        ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)`
+                        : "rgba(0,0,0,0.75)",
+                    color: Number(valtrans) === 0.75 ? "#000" : PALETTE.gold,
+                  }}
+                >
+                  0.75
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setValtrans(1)}
+                  className="px-3 py-1.5 text-[11px] font-semibold transition"
+                  style={{
+                    border: `1px solid ${PALETTE.gold}`,
+                    background:
+                      Number(valtrans) === 1
+                        ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)`
+                        : "rgba(0,0,0,0.75)",
+                    color: Number(valtrans) === 1 ? "#000" : PALETTE.gold,
+                  }}
+                >
+                  1
+                </button>
+              </div>
+
+              <div
+                className="h-12 rounded-md px-3 flex items-center"
+                style={{
+                  backgroundColor: "rgba(0,0,0,0.8)",
+                  border: "1px solid rgba(248, 250, 252, 0.18)",
+                }}
+              >
+                <input
+                  type="range"
+                  min={0}
+                  max={1}
+                  step={0.25}
+                  value={clampValTrans(Number(valtrans))}
+                  onChange={(e) =>
+                    setValtrans(clampValTrans(Number(e.target.value)))
+                  }
+                  aria-label="Value of saved transfers"
+                  className="w-full appearance-none bg-transparent cursor-pointer"
+                  style={{
+                    WebkitAppearance: "none",
+                    height: 6,
+                    background: `linear-gradient(
+                      to right,
+                      ${PALETTE.gold} 0%,
+                      ${PALETTE.gold} ${Number(valtrans) * 100}%,
+                      #374151 ${Number(valtrans) * 100}%,
+                      #374151 100%
+                    )`,
+                    borderRadius: 999,
+                  }}
+                />
+
+                <style>{`
+                  input[type="range"]::-webkit-slider-thumb {
+                    -webkit-appearance: none;
+                    appearance: none;
+                    width: 22px;
+                    height: 22px;
+                    border-radius: 50%;
+                    background: ${PALETTE.gold};
+                    border: 2px solid #000;
+                    box-shadow: 0 0 0 2px rgba(184,134,11,0.35);
+                    transition: transform 0.15s ease;
+                  }
+                  input[type="range"]::-webkit-slider-thumb:hover {
+                    transform: scale(1.15);
+                  }
+
+                  input[type="range"]::-moz-range-thumb {
+                    width: 22px;
+                    height: 22px;
+                    border-radius: 50%;
+                    background: ${PALETTE.gold};
+                    border: 2px solid #000;
+                    box-shadow: 0 0 0 2px rgba(184,134,11,0.35);
+                  }
+
+                  input[type="range"]::-moz-range-track {
+                    height: 6px;
+                    background: #374151;
+                    border-radius: 999px;
+                  }
+                `}</style>
+              </div>
+
+
+
+              <p className="text-[11px] mt-0.5" style={{ color: "#9ca3af" }}>
+                How much you value saved transfers. Current:{" "}
+                <span style={{ color: PALETTE.gold, fontWeight: 700 }}>
+                  {formatValTransLabel(valtrans)}
+                </span>
+              </p>
+            </div>
+
           </div>
         </section>
 

@@ -19,6 +19,7 @@ export function MyTeamDataContextProvider({ children }) {
   const [bannedPlayersData, setBannedPlayersData] = useState([]);
   const [n_hits, setn_hits] = useState("");
    const [risk, setRisk] = useState(0);
+   const [valtrans, setValtrans] = useState(0.5);
 
   /**
    * Fetch current team data from Get_My_Team endpoint
@@ -68,6 +69,7 @@ export function MyTeamDataContextProvider({ children }) {
         bannedList.forEach((id) => params.append("banned_list", id));
         if (n_hits) params.append("n_hits", n_hits);
         params.append("risk", String(Number(risk) || 0));
+        params.append("transval", String(Number(valtrans) || 0));
 
         const url = `https://fpl-project-t5e9.onrender.com/My_Team_Optimize?${params.toString()}`;
         const resp = await fetch(url);
@@ -104,6 +106,7 @@ export function MyTeamDataContextProvider({ children }) {
         model_type: "statistical",
         players: slimPlayers,
         risk: Number(risk) || 0,
+        transval:Number(valtrans) || 0.5,
       };
 
       const resp = await fetch("https://fpl-project-t5e9.onrender.com/My_Team_Optimize", {
@@ -176,6 +179,8 @@ export function MyTeamDataContextProvider({ children }) {
         setn_hits,
         risk,
         setRisk,
+        valtrans,
+        setValtrans
       }}
     >
       {children}

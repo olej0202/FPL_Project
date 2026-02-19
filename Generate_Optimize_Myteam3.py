@@ -117,6 +117,7 @@ def optimize_my_team(
     current_player_path: str = "Raw_Data_25/current_players.csv",
     players_override: Optional[pd.DataFrame] = None,  # long format: [name, GW, Points]
     risk_factor: float = 0.0,
+    transval:float=0.5,
 ) -> pd.DataFrame:
 
     if banned_list is None:
@@ -279,6 +280,8 @@ def optimize_my_team(
     # lambda: starts at 3, +1 per 0.1 step away from zero
     # if risk_int=0 => lam doesn't matter because sign=0 (no risk term)
     lam = 1.3 + abs(risk_int)*offset    
+    
+    transfervalue=transval*2
 
 
 
@@ -363,7 +366,7 @@ def optimize_my_team(
                     y[i, t] * risk_score[i] for i in range(num_players)
                 ))
 
-    obj = lpSum(obj_terms) + lpSum(0.27 * saved_transfers[t] for t in gameweeks)
+    obj = lpSum(obj_terms) + lpSum(0.4*transfervalue * saved_transfers[t] for t in gameweeks)
 
     # add risk adjustment without touching points
     if lam > 0 and sign != 0:
