@@ -104,7 +104,7 @@ def load_and_transform(endpoint):
         raise ValueError(f"Unknown endpoint: {endpoint}")
         
     # Load the CSV
-    if endpoint == "Team_Threat":
+    if endpoint in ["Team_Threat","Table_Prediction"] :
         df = pd.read_csv(csv_path)
 
     
