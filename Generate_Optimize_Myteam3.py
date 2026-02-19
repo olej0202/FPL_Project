@@ -371,7 +371,7 @@ def optimize_my_team(
     obj += lpSum(0.35 * transfervalue * saved_transfers[t] for t in gameweeks)
 
     # ✅ NEW: terminal value for saved transfers if the horizon doesn't reach GW38
-    last_t = gameweeks[-1]
+    last_t = gameweeks[-1]-1
     last_abs_gw = int(GW_list[last_t])  # GW_list like ["0","25","26",...]
     if last_abs_gw != 38:
         remaining = 0.5*min(2, 38 - last_abs_gw)
