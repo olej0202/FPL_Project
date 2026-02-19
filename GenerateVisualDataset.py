@@ -142,38 +142,73 @@ def Generate_Player_Historical():
     merged_df.columns = ['Name', 'Position', 'Kickoff time', 'Season','Assists','Bonus',"Expected Assists", "Expected Goals", "Goals Scored", "Minutes", "Fantasy Points", "ICT", "Adjusted XG", "Adjusted XA",'Defcon Hit','Opponent Name']
     merged_df.to_csv("player_history.csv")
     
+import pandas as pd
+
 def Generate_Player_Rankings(current_teams):
-    df=pd.read_csv("Player_prediction_set.csv")
-    teams=pd.read_csv(current_teams)[["code", "name"]]
-    teams = teams.rename(columns={"name": "opponent_name"})
+    df = pd.read_csv("Player_prediction_set.csv")
+    teams = pd.read_csv(current_teams)[["code", "name"]].rename(columns={"name": "opponent_name"})
+
+    # Add opponent_name to df (fixture-side)
     df = df.merge(
         teams,
         left_on="opp_code",
         right_on="code",
-        how="left"   # use 'inner' if you only want rows with a match
+        how="left",
     )
 
-    # 5) Drop the no-longer-needed code columns
-    df = df.drop(columns=["code", "opponent_code"])
-    df=df[["name", "GW","opponent_name","rolling_ICT","was_home","CBI","Player_code","fix_id","fix_percentage"]]
+    # Drop helper columns
+    df = df.drop(columns=["code", "opponent_code"], errors="ignore")
+
+    df = df[[
+        "name", "GW", "opponent_name", "rolling_ICT", "was_home",
+        "CBI", "Player_code", "fix_id", "fix_percentage"
+    ]]
+
     df["photo"] = (
         "https://resources.premierleague.com/premierleague25/photos/players/500x500/"
         + df["Player_code"].astype(str)
         + ".png"
-        )
-    df = df.rename(columns={"name": "name2","GW": "GW2"})
+    )
 
+    # Rename merge keys to avoid collision
+    df = df.rename(columns={"name": "name2", "GW": "GW2"})
 
-    df2=pd.read_csv("Model_Predictions_visual.csv").iloc[:,1:]
+    # Base predictions table (all players/GWs you want)
+    df2 = pd.read_csv("Model_Predictions_visual.csv").iloc[:, 1:]
+
+    # Merge fixture info onto df2
     df3 = df2.merge(
         df,
-        left_on=["name","GW"],
-        right_on=["name2","GW2"],
-        how="left"   # use 'inner' if you only want rows with a match
-    )
-    df3 = df3.drop(columns=["name2", "GW2"])
-    df3["DefCon"]=df3["CBI"].values
-    df3.to_csv("Model_Predictions_visual2.csv")
+        left_on=["name", "GW"],
+        right_on=["name2", "GW2"],
+        how="left",
+    ).drop(columns=["name2", "GW2"])
+
+    # ✅ Fill ONLY when there was no fixture match for that GW
+    # Use "nan" string as you requested (not actual NaN)
+    df3["opponent_name"] = df3["opponent_name"].fillna("nan")
+    df3["was_home"] = df3["was_home"].fillna(True)
+    df3["fix_id"] = df3["fix_id"].fillna(0)
+
+    # fix_percentage: default to 1 if no match
+    df3["fix_percentage_y"] = pd.to_numeric(df3["fix_percentage_y"], errors="coerce").fillna(1)
+
+    # Optional: photo missing -> "nan" (only if you want)
+    # df3["photo"] = df3["photo"].fillna("nan")
+
+    df3["DefCon"] = df3["CBI"].values
+    
+    static_cols = ["CBI", "Player_code", "photo", "rolling_ICT"]
+
+    for col in static_cols:
+        df3[col] = (
+            df3
+            .groupby("name")[col]
+            .transform(lambda x: x.fillna(x.dropna().iloc[0] if x.notna().any() else x))
+        )
+
+    df3.to_csv("Model_Predictions_visual2.csv", index=False)
+
     
 
 def Generate_season_data(current_player_path, current_season_path):

@@ -1642,74 +1642,62 @@ def build_predicted_table(
 
 import pandas as pd
 
+import pandas as pd
+import numpy as np
+
 def build_predicted_table_with_gw(
     table_df: pd.DataFrame,
     prediction_path: str,
-    points_col_name: str = "predicted_points",
+    points_col_name: str = "predicted_points",   # this will mean "predicted points THIS GW"
     gw_col: str = "GW",
 ) -> pd.DataFrame:
-    
-
-    """
-    Builds ONE combined predicted table across all GWs.
-
-    Output:
-        One DataFrame with:
-            - GW
-            - position
-            - movement (up/down/same vs previous GW)
-            - predicted total points
-    """
-
     preds = pd.read_csv(prediction_path)
 
-    # --- Validate columns ---
     required = {"team_code", "win_Percent", "Draw_percent", gw_col}
     missing = required - set(preds.columns)
     if missing:
         raise ValueError(f"Missing required columns in predictions: {missing}")
 
-    # --- Ensure numeric ---
     preds["win_Percent"] = pd.to_numeric(preds["win_Percent"], errors="coerce").fillna(0)
     preds["Draw_percent"] = pd.to_numeric(preds["Draw_percent"], errors="coerce").fillna(0)
     preds[gw_col] = pd.to_numeric(preds[gw_col], errors="coerce")
-
     preds = preds.dropna(subset=[gw_col])
     preds[gw_col] = preds[gw_col].astype(int)
 
-    # --- Expected points per row ---
-    preds["expected_points"] = (
-        3 * preds["win_Percent"] +
-        1 * preds["Draw_percent"]
-    ) / 100.0
+    preds["expected_points"] = (3 * preds["win_Percent"] + 1 * preds["Draw_percent"]) / 100.0
 
-    # Sort GWs
     gws = sorted(preds[gw_col].unique())
 
     all_tables = []
     prev_positions = {}
 
-    for gw in gws:
+    # running cumulative predicted points per team code
+    cum_pred = {int(c): 0.0 for c in table_df["code"].astype(int).tolist()}
 
+    for gw in gws:
         preds_gw = preds[preds[gw_col] == gw]
 
-        # Aggregate predicted points per team for this GW
         team_pred_points = (
             preds_gw.groupby("team_code", as_index=False)["expected_points"]
             .sum()
             .rename(columns={"team_code": "code", "expected_points": points_col_name})
         )
 
-        # Merge with base table
         predicted_table = table_df.merge(team_pred_points, on="code", how="left")
         predicted_table[points_col_name] = predicted_table[points_col_name].fillna(0)
 
-        # Add to current real points
-        predicted_table["total_points"] = (
-            predicted_table["points"] + predicted_table[points_col_name]
+        # update cumulative predicted points
+        for _, r in predicted_table[["code", points_col_name]].iterrows():
+            code = int(r["code"])
+            cum_pred[code] = float(cum_pred.get(code, 0.0)) + float(r[points_col_name])
+
+        predicted_table["cum_predicted_points"] = predicted_table["code"].apply(
+            lambda c: float(cum_pred.get(int(c), 0.0))
         )
 
-        # Sort league table
+        # ✅ cumulative total points up to this GW
+        predicted_table["total_points"] = predicted_table["points"] + predicted_table["cum_predicted_points"]
+
         predicted_table = predicted_table.sort_values(
             ["total_points", "gd", "gf", "team_id"],
             ascending=[False, False, False, True],
@@ -1718,8 +1706,8 @@ def build_predicted_table_with_gw(
         predicted_table["position"] = predicted_table.index + 1
         predicted_table["GW"] = gw
 
-        # Movement calculation
         def get_movement(code, pos):
+            code = int(code)
             if code not in prev_positions:
                 return "same"
             if pos < prev_positions[code]:
@@ -1733,12 +1721,8 @@ def build_predicted_table_with_gw(
             axis=1
         )
 
-        # Update previous positions
-        prev_positions = dict(
-            zip(predicted_table["code"], predicted_table["position"])
-        )
+        prev_positions = dict(zip(predicted_table["code"].astype(int), predicted_table["position"].astype(int)))
 
-        # Select final columns
         final_cols = [
             "GW",
             "position",
@@ -1751,19 +1735,17 @@ def build_predicted_table_with_gw(
             "gf",
             "ga",
             "gd",
-            points_col_name,
-            "total_points",
+            points_col_name,           # predicted points THIS GW
+            "cum_predicted_points",    # cumulative predicted points up to GW
+            "total_points",            # points + cumulative predicted points
         ]
 
         all_tables.append(predicted_table[final_cols])
 
-    # Combine into one table
     final_table = pd.concat(all_tables, ignore_index=True)
-
-    # Save one CSV
     final_table.to_csv("Final_Table_Prediction_All_GW.csv", index=False)
-
     return final_table
+
 
 def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
     GenerateTeamPredictions1(fixture_path, current_team_path,horizon)
