@@ -104,7 +104,7 @@ def load_and_transform(endpoint):
         raise ValueError(f"Unknown endpoint: {endpoint}")
         
     # Load the CSV
-    if endpoint in ["Team_Threat","Table_Prediction"] :
+    if endpoint in ["Team_Threat","Table_Prediction","Player_rankings"] :
         df = pd.read_csv(csv_path)
 
     
@@ -266,8 +266,6 @@ def get_player_rankings():
 
     # 2) Fill all NaNs with 0 (or another sentinel)
     df.fillna(0, inplace=True)
-    
-    print(df)
 
     # 3) Now dump to gzipped JSON
     buffer = io.BytesIO()
