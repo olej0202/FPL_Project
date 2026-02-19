@@ -370,7 +370,7 @@ def optimize_my_team(
     obj = lpSum(obj_terms)
 
     # your existing "in-horizon" saved transfer value
-    obj += lpSum(-0.35 * transfervalue * transfers_used[t] for t in gameweeks)
+    obj += lpSum(-0.5 * transfervalue * transfers_used[t] for t in gameweeks)
 
 
 
