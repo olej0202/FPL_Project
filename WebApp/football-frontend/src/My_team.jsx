@@ -1,7 +1,7 @@
 // src/pages/OptimizeTeam.jsx
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { X, ArrowRight,Search } from "lucide-react";
+import { X, ArrowRight, Search, ArrowDown } from "lucide-react";
 import pitch from "./assets/Pitch4.png";
 import { useMyteamData } from "./Contexts/MyTeamContext";
 import { useAdjustmentData } from "./Contexts/AdjustmentsContext";
@@ -36,7 +36,8 @@ export default function MyTeamOptimize() {
     setn_hits,
     risk,
     setRisk,
-    valtrans, setValtrans
+    valtrans,
+    setValtrans,
   } = useMyteamData();
 
   const { Playerdata, dataVersion } = useAdjustmentData();
@@ -44,6 +45,9 @@ export default function MyTeamOptimize() {
 
   // Model toggle: "ai" | "statistical"
   const [modelType, setModelType] = useState("ai");
+
+  // "Optimization params" dropdown open/closed
+  const [optParamsOpen, setOptParamsOpen] = useState(false);
 
   // Statistical model is only allowed if we have Playerdata with Points
   const hasStatisticalData = useMemo(() => {
@@ -62,16 +66,13 @@ export default function MyTeamOptimize() {
     return "Neutral";
   };
 
-const clampValTrans = (v) => Math.max(0, Math.min(1, v));
-
-const formatValTransLabel = (v) => {
-  const n = Number(v);
-  if (n <= 0.375) return "Low value";     // 0.25
-  if (n >= 0.625) return "High value";    // 0.75
-  return "Neutral";                       // 0.5
-};
-
-
+  const clampValTrans = (v) => Math.max(0, Math.min(1, v));
+  const formatValTransLabel = (v) => {
+    const n = Number(v);
+    if (n <= 0.1) return "Low value";
+    if (n >= 0.9) return "High value";
+    return "Neutral";
+  };
 
   const handleApplyToPlanner = () => {
     if (!plannerPayload.length) return;
@@ -92,7 +93,7 @@ const formatValTransLabel = (v) => {
   const [showWildInput, setShowWildInput] = useState(!!wildRound);
   const [showfreehitInput, setshowfreehitInput] = useState(!!freehitROund);
 
-  // NEW: expandable "Add chips"
+  // expandable "Add chips"
   const [chipsOpen, setChipsOpen] = useState(
     !!bbRound || !!wildRound || !!freehitROund
   );
@@ -104,7 +105,17 @@ const formatValTransLabel = (v) => {
   useEffect(() => {
     sethas_changed(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [teamId, bbRound, wildRound, bannedList, freehitROund, n_hits, modelType, risk,valtrans]);
+  }, [
+    teamId,
+    bbRound,
+    wildRound,
+    bannedList,
+    freehitROund,
+    n_hits,
+    modelType,
+    risk,
+    valtrans,
+  ]);
 
   useEffect(() => {
     if (loading) {
@@ -184,7 +195,9 @@ const formatValTransLabel = (v) => {
 
     if (objRow) {
       const asNum =
-        objRow.objective != null ? Number(objRow.objective) : Number(objRow.status);
+        objRow.objective != null
+          ? Number(objRow.objective)
+          : Number(objRow.status);
       totalPredPoints = Number.isFinite(asNum) ? asNum : null;
     }
   }
@@ -218,12 +231,10 @@ const formatValTransLabel = (v) => {
   const plannerPayload = useMemo(() => {
     if (!data || transfersWithFH.length === 0) return [];
 
-    // Only real transfer rows (ignore the FH banner group if it has no moves)
     const realGroups = transfersWithFH.filter(
       (g) => (g.in && g.in.length) || (g.out && g.out.length)
     );
 
-    // Pair OUT -> IN by position like your UI does
     return realGroups.flatMap((grp) => {
       const remainingIns = [...(grp.in || [])];
 
@@ -233,18 +244,15 @@ const formatValTransLabel = (v) => {
         return { outP, inP };
       });
 
-      // Any leftover INs (rare) still get added
       remainingIns.forEach((inP) => pairs.push({ outP: null, inP }));
 
-      // Convert to payload entries
       return pairs
-        .filter((x) => x.outP && x.inP) // require both to apply a transfer
+        .filter((x) => x.outP && x.inP)
         .map(({ outP, inP }) => ({
           gw: Number(grp.GW),
           position: outP.position,
           fromName: outP.Name || outP.name,
           toName: inP.Name || inP.name,
-          // optional metadata (nice to have)
           toWebName: inP.web_name,
           toTeamCode: inP.team_code,
           toPhoto: inP.photo,
@@ -268,7 +276,8 @@ const formatValTransLabel = (v) => {
           className="w-full max-w-md rounded-2xl p-5 shadow-2xl"
           style={{
             border: `1px solid ${PALETTE.gold}`,
-            background: "linear-gradient(145deg, rgba(0,0,0,0.96), rgba(0,0,0,0.9))",
+            background:
+              "linear-gradient(145deg, rgba(0,0,0,0.96), rgba(0,0,0,0.9))",
           }}
         >
           <div className="mb-2 text-center text-sm" style={{ color: "#d1c3a9" }}>
@@ -287,7 +296,10 @@ const formatValTransLabel = (v) => {
               role="progressbar"
             />
           </div>
-          <div className="mt-3 text-center text-xs animate-pulse" style={{ color: "#9ca3af" }}>
+          <div
+            className="mt-3 text-center text-xs animate-pulse"
+            style={{ color: "#9ca3af" }}
+          >
             This can take a moment…
           </div>
         </div>
@@ -302,9 +314,7 @@ const formatValTransLabel = (v) => {
     if (!Array.isArray(arr) || arr.length === 0) return null;
     return arr.map((p) => ({
       ...p,
-      // make absolutely sure the optimizer gets the correct number
       calc_points: Number.isFinite(Number(p.calc_points)) ? Number(p.calc_points) : 0,
-      // IMPORTANT: if your backend optimizer uses "Points" instead of "calc_points"
       Points: Number.isFinite(Number(p.calc_points)) ? Number(p.calc_points) : 0,
     }));
   };
@@ -368,7 +378,8 @@ const formatValTransLabel = (v) => {
           className="mb-8 rounded-2xl p-4 sm:p-6"
           style={{
             border: `1px solid ${PALETTE.gold}`,
-            background: "linear-gradient(145deg, rgba(0,0,0,0.96), rgba(90,0,0,0.9))",
+            background:
+              "linear-gradient(145deg, rgba(0,0,0,0.96), rgba(90,0,0,0.9))",
             boxShadow: "0 18px 40px rgba(0,0,0,0.9)",
           }}
         >
@@ -383,24 +394,23 @@ const formatValTransLabel = (v) => {
                 Team ID
               </label>
               <input
-  id="team-id"
-  type="number"
-  inputMode="numeric"
-  placeholder="Required"
-  value={teamId}
-  onChange={(e) => setTeamId(e.target.value)}
-  className="w-full h-10 px-3 rounded-md text-base sm:text-sm"
-  style={{
-    fontSize: 16, // iOS Safari: prevents zoom
-    border: "1px solid rgba(248, 250, 252, 0.18)",
-    backgroundColor: "rgba(0,0,0,0.75)",
-    color: PALETTE.beige,
-  }}
-/>
-
+                id="team-id"
+                type="number"
+                inputMode="numeric"
+                placeholder="Required"
+                value={teamId}
+                onChange={(e) => setTeamId(e.target.value)}
+                className="w-full h-10 px-3 rounded-md text-base sm:text-sm"
+                style={{
+                  fontSize: 16, // iOS Safari: prevents zoom
+                  border: "1px solid rgba(248, 250, 252, 0.18)",
+                  backgroundColor: "rgba(0,0,0,0.75)",
+                  color: PALETTE.beige,
+                }}
+              />
             </div>
 
-            {/* NEW: Chips expandable section (Bench Boost / Wildcard / Free Hit) */}
+            {/* Chips expandable section */}
             <div className="flex flex-col gap-1 lg:col-span-3">
               <label
                 className="text-xs uppercase tracking-wide"
@@ -429,7 +439,6 @@ const formatValTransLabel = (v) => {
                 </summary>
 
                 <div className="p-3 pt-2 grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  {/* Bench Boost */}
                   <ChipSelect
                     label="Bench Boost GW"
                     show={showBbInput}
@@ -448,7 +457,6 @@ const formatValTransLabel = (v) => {
                     addLabel="Add Bench Boost"
                   />
 
-                  {/* Wildcard */}
                   <ChipSelect
                     label="Wildcard GW"
                     show={showWildInput}
@@ -467,7 +475,6 @@ const formatValTransLabel = (v) => {
                     addLabel="Add Wildcard"
                   />
 
-                  {/* Free Hit */}
                   <ChipSelect
                     label="Free Hit GW"
                     show={showfreehitInput}
@@ -516,7 +523,9 @@ const formatValTransLabel = (v) => {
                   >
                     Count
                   </span>
-                  <span className="text-sm font-semibold">{Number(n_hits || 0)}</span>
+                  <span className="text-sm font-semibold">
+                    {Number(n_hits || 0)}
+                  </span>
                 </div>
                 <IconButton
                   ariaLabel="Increase hits"
@@ -553,6 +562,7 @@ const formatValTransLabel = (v) => {
                 >
                   AI model
                 </button>
+
                 <button
                   type="button"
                   onClick={() => hasStatisticalData && setModelType("statistical")}
@@ -562,24 +572,25 @@ const formatValTransLabel = (v) => {
                     border: !hasStatisticalData
                       ? "1px solid #4b5563"
                       : modelType === "statistical"
-                        ? `1px solid ${PALETTE.gold}`
-                        : "1px solid rgba(248, 250, 252, 0.18)",
+                      ? `1px solid ${PALETTE.gold}`
+                      : "1px solid rgba(248, 250, 252, 0.18)",
                     background: !hasStatisticalData
                       ? "rgba(0,0,0,0.5)"
                       : modelType === "statistical"
-                        ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)`
-                        : "rgba(0,0,0,0.75)",
+                      ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)`
+                      : "rgba(0,0,0,0.75)",
                     color: !hasStatisticalData
                       ? "#6b7280"
                       : modelType === "statistical"
-                        ? "#000000"
-                        : "#e5e7eb",
+                      ? "#000000"
+                      : "#e5e7eb",
                     cursor: !hasStatisticalData ? "not-allowed" : "pointer",
                   }}
                 >
                   Statistical model
                 </button>
               </div>
+
               <p className="text-[11px] mt-0.5" style={{ color: "#9ca3af" }}>
                 Make your own statistical model and use it in the solver
                 <button
@@ -591,103 +602,244 @@ const formatValTransLabel = (v) => {
                   Open Your Statistical Model
                 </button>
                 {!hasStatisticalData && (
-                  <span style={{ color: "#fbbf24" }}> (needed to enable the model)</span>
+                  <span style={{ color: "#fbbf24" }}>
+                    {" "}
+                    (needed to enable the model)
+                  </span>
                 )}
               </p>
             </div>
 
-            {/* Risk preference */}
-            <div className="flex flex-col gap-1 lg:col-span-2">
+            {/* Optimization params dropdown (moved higher on small screens) */}
+            <div className="flex flex-col gap-1 lg:col-span-4 order-2 sm:order-none">
               <label
                 className="text-xs uppercase tracking-wide"
                 style={{ color: "#e5e7eb" }}
               >
-                Risk preference
+                Optimization params
               </label>
 
-              {/* Presets */}
-              <div className="flex items-center justify-between mb-1">
-                <button
-                  type="button"
-                  onClick={() => setRisk(-0.6)}
-                  className="px-3 py-1.5  text-[11px] font-semibold transition"
-                  style={{
-                    border: `1px solid ${PALETTE.gold}`,
-                    background:
-                      Number(risk) === -0.6
-                        ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)`
-                        : "rgba(0,0,0,0.75)",
-                    color: Number(risk) === -0.6 ? "#000" : PALETTE.gold,
-                  }}
-                >
-                  Low Risk
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setRisk(0)}
-                  className="px-3 py-1.5  text-[11px] font-semibold transition"
-                  style={{
-                    border: `1px solid ${PALETTE.gold}`,
-                    background:
-                      Number(risk) === 0
-                        ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)`
-                        : "rgba(0,0,0,0.75)",
-                    color: Number(risk) === 0 ? "#000" : PALETTE.gold,
-                  }}
-                >
-                  Neutral
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setRisk(0.6)}
-                  className="px-3 py-1.5  text-[11px] font-semibold transition"
-                  style={{
-                    border: `1px solid ${PALETTE.gold}`,
-                    background:
-                      Number(risk) === 0.6
-                        ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)`
-                        : "rgba(0,0,0,0.75)",
-                    color: Number(risk) === 0.6 ? "#000" : PALETTE.gold,
-                  }}
-                >
-                  High Risk
-                </button>
-              </div>
-
-              <div
-                className="h-12 rounded-md px-3 flex items-center"
+              <details
+                open={optParamsOpen}
+                onToggle={(e) => setOptParamsOpen(e.currentTarget.open)}
+                className="rounded-md"
                 style={{
-                  backgroundColor: "rgba(0,0,0,0.8)",
                   border: "1px solid rgba(248, 250, 252, 0.18)",
+                  backgroundColor: "rgba(0,0,0,0.75)",
                 }}
               >
-                <input
-                  type="range"
-                  min={-1}
-                  max={1}
-                  step={0.2}
-                  value={clampRisk(Number(risk))}
-                  onChange={(e) => setRisk(clampRisk(Number(e.target.value)))}
-                  aria-label="Risk preference"
-                  className="w-full appearance-none bg-transparent cursor-pointer"
-                  style={{
-                    WebkitAppearance: "none",
-                    height: 6,
-                    background: `linear-gradient(
-                      to right,
-                      ${PALETTE.gold} 0%,
-                      ${PALETTE.gold} ${((Number(risk) + 1) / 2) * 100}%,
-                      #374151 ${((Number(risk) + 1) / 2) * 100}%,
-                      #374151 100%
-                    )`,
-                    borderRadius: 999,
-                  }}
-                />
+                <summary
+                  className="cursor-pointer select-none list-none flex items-center justify-between px-2 h-12 text-[16px]"
+                  style={{ color: PALETTE.gold }}
+                >
+         
 
+                  <span>Adjust Optimization</span>
+                  
+
+                  <span className="text-[10px]" style={{ color: "#9ca3af" }}>
+                    {formatRiskLabel(risk)} · {formatValTransLabel(valtrans)}
+                  </span>
+                </summary>
+
+                <div className="p-3 pt-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Risk preference */}
+                  <div className="flex flex-col gap-1">
+                    <label
+                      className="text-xs uppercase tracking-wide"
+                      style={{ color: "#e5e7eb" }}
+                    >
+                      Risk preference
+                    </label>
+
+                    <div className="flex items-center justify-between mb-1">
+                      <button
+                        type="button"
+                        onClick={() => setRisk(-0.6)}
+                        className="px-3 py-1.5 text-[11px] font-semibold transition"
+                        style={{
+                          border: `1px solid ${PALETTE.gold}`,
+                          background:
+                            Number(risk) === -0.6
+                              ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)`
+                              : "rgba(0,0,0,0.75)",
+                          color: Number(risk) === -0.6 ? "#000" : PALETTE.gold,
+                        }}
+                      >
+                        Low Risk
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setRisk(0)}
+                        className="px-3 py-1.5 text-[11px] font-semibold transition"
+                        style={{
+                          border: `1px solid ${PALETTE.gold}`,
+                          background:
+                            Number(risk) === 0
+                              ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)`
+                              : "rgba(0,0,0,0.75)",
+                          color: Number(risk) === 0 ? "#000" : PALETTE.gold,
+                        }}
+                      >
+                        Neutral
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setRisk(0.6)}
+                        className="px-3 py-1.5 text-[11px] font-semibold transition"
+                        style={{
+                          border: `1px solid ${PALETTE.gold}`,
+                          background:
+                            Number(risk) === 0.6
+                              ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)`
+                              : "rgba(0,0,0,0.75)",
+                          color: Number(risk) === 0.6 ? "#000" : PALETTE.gold,
+                        }}
+                      >
+                        High Risk
+                      </button>
+                    </div>
+
+                    <div
+                      className="h-12 rounded-md px-3 flex items-center"
+                      style={{
+                        backgroundColor: "rgba(0,0,0,0.8)",
+                        border: "1px solid rgba(248, 250, 252, 0.18)",
+                      }}
+                    >
+                      <input
+                        type="range"
+                        min={-1}
+                        max={1}
+                        step={0.2}
+                        value={clampRisk(Number(risk))}
+                        onChange={(e) => setRisk(clampRisk(Number(e.target.value)))}
+                        aria-label="Risk preference"
+                        className="opt-range w-full appearance-none bg-transparent cursor-pointer"
+                        style={{
+                          WebkitAppearance: "none",
+                          height: 6,
+                          background: `linear-gradient(
+                            to right,
+                            ${PALETTE.gold} 0%,
+                            ${PALETTE.gold} ${((Number(risk) + 1) / 2) * 100}%,
+                            #374151 ${((Number(risk) + 1) / 2) * 100}%,
+                            #374151 100%
+                          )`,
+                          borderRadius: 999,
+                        }}
+                      />
+                    </div>
+
+                    <p className="text-[11px] mt-1" style={{ color: "#9ca3af" }}>
+                      Low risk prefers high-ownership, stable picks. High risk rewards
+                      volatility and differentials.
+                    </p>
+                  </div>
+
+                  {/* Value of transfers */}
+                  <div className="flex flex-col gap-1">
+                    <label
+                      className="text-xs uppercase tracking-wide"
+                      style={{ color: "#e5e7eb" }}
+                    >
+                      Value of transfers
+                    </label>
+
+                    <div className="flex items-center justify-between mb-1">
+                      <button
+                        type="button"
+                        onClick={() => setValtrans(0.0)}
+                        className="px-3 py-1.5 text-[11px] font-semibold transition"
+                        style={{
+                          border: `1px solid ${PALETTE.gold}`,
+                          background:
+                            Number(valtrans) === 0.0
+                              ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)`
+                              : "rgba(0,0,0,0.75)",
+                          color: Number(valtrans) === 0.0 ? "#000" : PALETTE.gold,
+                        }}
+                      >
+                        Low value
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setValtrans(0.5)}
+                        className="px-3 py-1.5 text-[11px] font-semibold transition"
+                        style={{
+                          border: `1px solid ${PALETTE.gold}`,
+                          background:
+                            Number(valtrans) === 0.5
+                              ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)`
+                              : "rgba(0,0,0,0.75)",
+                          color: Number(valtrans) === 0.5 ? "#000" : PALETTE.gold,
+                        }}
+                      >
+                        Neutral
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setValtrans(1)}
+                        className="px-3 py-1.5 text-[11px] font-semibold transition"
+                        style={{
+                          border: `1px solid ${PALETTE.gold}`,
+                          background:
+                            Number(valtrans) === 1
+                              ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)`
+                              : "rgba(0,0,0,0.75)",
+                          color: Number(valtrans) === 1 ? "#000" : PALETTE.gold,
+                        }}
+                      >
+                        High value
+                      </button>
+                    </div>
+
+                    <div
+                      className="h-12 rounded-md px-3 flex items-center"
+                      style={{
+                        backgroundColor: "rgba(0,0,0,0.8)",
+                        border: "1px solid rgba(248, 250, 252, 0.18)",
+                      }}
+                    >
+                      <input
+                        type="range"
+                        min={0}
+                        max={1}
+                        step={0.25}
+                        value={clampValTrans(Number(valtrans))}
+                        onChange={(e) =>
+                          setValtrans(clampValTrans(Number(e.target.value)))
+                        }
+                        aria-label="Value of saved transfers"
+                        className="opt-range w-full appearance-none bg-transparent cursor-pointer"
+                        style={{
+                          WebkitAppearance: "none",
+                          height: 6,
+                          background: `linear-gradient(
+                            to right,
+                            ${PALETTE.gold} 0%,
+                            ${PALETTE.gold} ${Number(valtrans) * 100}%,
+                            #374151 ${Number(valtrans) * 100}%,
+                            #374151 100%
+                          )`,
+                          borderRadius: 999,
+                        }}
+                      />
+                    </div>
+
+                    <p className="text-[11px] mt-1" style={{ color: "#9ca3af" }}>
+                      How much you value saved transfers.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Shared slider thumb styling (fixes blue thumb) */}
                 <style>{`
-                  input[type="range"]::-webkit-slider-thumb {
+                  .opt-range::-webkit-slider-thumb {
                     -webkit-appearance: none;
                     appearance: none;
                     width: 22px;
@@ -698,11 +850,11 @@ const formatValTransLabel = (v) => {
                     box-shadow: 0 0 0 2px rgba(184,134,11,0.35);
                     transition: transform 0.15s ease;
                   }
-                  input[type="range"]::-webkit-slider-thumb:hover {
+                  .opt-range::-webkit-slider-thumb:hover {
                     transform: scale(1.15);
                   }
 
-                  input[type="range"]::-moz-range-thumb {
+                  .opt-range::-moz-range-thumb {
                     width: 22px;
                     height: 22px;
                     border-radius: 50%;
@@ -711,137 +863,14 @@ const formatValTransLabel = (v) => {
                     box-shadow: 0 0 0 2px rgba(184,134,11,0.35);
                   }
 
-                  input[type="range"]::-moz-range-track {
+                  .opt-range::-moz-range-track {
                     height: 6px;
                     background: #374151;
                     border-radius: 999px;
                   }
                 `}</style>
-              </div>
-
-              <div className="flex items-center justify-between mt-1">
-                <span className="text-[11px]" style={{ color: "#9ca3af" }}>
-                  Low risk
-                </span>
-                <span className="text-[11px]" style={{ color: "#9ca3af" }}>
-                  High risk
-                </span>
-              </div>
-
-              <p className="text-[11px] mt-0.5" style={{ color: "#9ca3af" }}>
-                Low risk prefers high-ownership, stable picks. High risk rewards
-                volatility and differentials.
-              </p>
+              </details>
             </div>
-                        {/* Value of saved transfers */}
-{/* Value of saved transfers */}
-<div className="flex flex-col gap-1 lg:col-span-2">
-  <label
-    className="text-xs uppercase tracking-wide"
-    style={{ color: "#e5e7eb" }}
-  >
-    Value of transfers
-  </label>
-
-  {/* Presets */}
-  <div className="flex items-center justify-between mb-1">
-    <button
-      type="button"
-      onClick={() => setValtrans(0.25)}
-      className="px-3 py-1.5 text-[11px] font-semibold transition"
-      style={{
-        border: `1px solid ${PALETTE.gold}`,
-        background:
-          Number(valtrans) === 0.25
-            ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)`
-            : "rgba(0,0,0,0.75)",
-        color: Number(valtrans) === 0.25 ? "#000" : PALETTE.gold,
-      }}
-    >
-      Low value
-    </button>
-
-    <button
-      type="button"
-      onClick={() => setValtrans(0.5)}
-      className="px-3 py-1.5 text-[11px] font-semibold transition"
-      style={{
-        border: `1px solid ${PALETTE.gold}`,
-        background:
-          Number(valtrans) === 0.5
-            ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)`
-            : "rgba(0,0,0,0.75)",
-        color: Number(valtrans) === 0.5 ? "#000" : PALETTE.gold,
-      }}
-    >
-      Neutral
-    </button>
-
-    <button
-      type="button"
-      onClick={() => setValtrans(0.75)}
-      className="px-3 py-1.5 text-[11px] font-semibold transition"
-      style={{
-        border: `1px solid ${PALETTE.gold}`,
-        background:
-          Number(valtrans) === 0.75
-            ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)`
-            : "rgba(0,0,0,0.75)",
-        color: Number(valtrans) === 0.75 ? "#000" : PALETTE.gold,
-      }}
-    >
-      High value
-    </button>
-  </div>
-
-  <div
-    className="h-12 rounded-md px-3 flex items-center"
-    style={{
-      backgroundColor: "rgba(0,0,0,0.8)",
-      border: "1px solid rgba(248, 250, 252, 0.18)",
-    }}
-  >
-    <input
-      type="range"
-      min={0}
-      max={1}
-      step={0.25}
-      value={clampValTrans(Number(valtrans))}
-      onChange={(e) =>
-        setValtrans(clampValTrans(Number(e.target.value)))
-      }
-      aria-label="Value of saved transfers"
-      className="w-full appearance-none bg-transparent cursor-pointer"
-      style={{
-        WebkitAppearance: "none",
-        height: 6,
-        background: `linear-gradient(
-          to right,
-          ${PALETTE.gold} 0%,
-          ${PALETTE.gold} ${Number(valtrans) * 100}%,
-          #374151 ${Number(valtrans) * 100}%,
-          #374151 100%
-        )`,
-        borderRadius: 999,
-      }}
-    />
-  </div>
-
-  <div className="flex items-center justify-between mt-1">
-    <span className="text-[11px]" style={{ color: "#9ca3af" }}>
-      Low value
-    </span>
-    <span className="text-[11px]" style={{ color: "#9ca3af" }}>
-      High value
-    </span>
-  </div>
-
-  <p className="text-[11px] mt-0.5" style={{ color: "#9ca3af" }}>
-    How much you value saved transfers.
-  </p>
-</div>
-
-
           </div>
         </section>
 
@@ -906,7 +935,10 @@ const formatValTransLabel = (v) => {
               <div className="font-bold text-xl" style={{ color: PALETTE.gold }}>
                 {totalPredPoints.toFixed(2)}
               </div>
-              <p className="max-w-md text-center text-xs leading-tight mt-1" style={{ color: "#9ca3af" }}>
+              <p
+                className="max-w-md text-center text-xs leading-tight mt-1"
+                style={{ color: "#9ca3af" }}
+              >
                 Model:{" "}
                 <span className="font-semibold">
                   {modelType === "ai" ? "AI" : "Statistical (Player-adjusted)"}
@@ -918,7 +950,7 @@ const formatValTransLabel = (v) => {
           </section>
         )}
 
-        {/* Squad Pitch – UNCHANGED STYLING as requested */}
+        {/* Squad Pitch */}
         {data && (
           <section className="mb-2 flex justify-center">
             <div
@@ -1004,7 +1036,9 @@ const formatValTransLabel = (v) => {
               {transfersWithFH.map((grp) => {
                 const remainingIns = [...grp.in];
                 const pairs = grp.out.map((outP) => {
-                  const i = remainingIns.findIndex((inP) => inP.position === outP.position);
+                  const i = remainingIns.findIndex(
+                    (inP) => inP.position === outP.position
+                  );
                   return i !== -1
                     ? { outP, inP: remainingIns.splice(i, 1)[0] }
                     : { outP, inP: null };
@@ -1050,7 +1084,10 @@ const formatValTransLabel = (v) => {
                             />
                           )}
                           {outP && inP && (
-                            <ArrowRight className="text-royal-gold" style={{ color: PALETTE.gold }} />
+                            <ArrowRight
+                              className="text-royal-gold"
+                              style={{ color: PALETTE.gold }}
+                            />
                           )}
                           {inP && (
                             <TransferCard
@@ -1076,7 +1113,17 @@ const formatValTransLabel = (v) => {
 }
 
 /** Controls helper components **/
-function ChipSelect({ label, show, onShow, onHide, value, onChange, minGW, maxGW, addLabel }) {
+function ChipSelect({
+  label,
+  show,
+  onShow,
+  onHide,
+  value,
+  onChange,
+  minGW,
+  maxGW,
+  addLabel,
+}) {
   return (
     <div className="flex flex-col gap-1">
       <label className="text-xs uppercase tracking-wide" style={{ color: "#e5e7eb" }}>
@@ -1095,11 +1142,13 @@ function ChipSelect({ label, show, onShow, onHide, value, onChange, minGW, maxGW
             <option value="" disabled className="text-neutral-400">
               {label}
             </option>
-            {Array.from({ length: maxGW - minGW + 1 }, (_, i) => minGW + i).map((gw) => (
-              <option key={gw} value={gw}>
-                GW {gw}
-              </option>
-            ))}
+            {Array.from({ length: maxGW - minGW + 1 }, (_, i) => minGW + i).map(
+              (gw) => (
+                <option key={gw} value={gw}>
+                  GW {gw}
+                </option>
+              )
+            )}
           </select>
 
           <button
@@ -1153,10 +1202,8 @@ function PlayerRow({ players, isBench = false, toggleBan, bannedList, navigate }
   const fallback =
     "https://d2kq0urxkarztv.cloudfront.net/51812cad594df29a1a0003f0/661303/upload-643ff5d9-840e-4bbb-b099-07c26ef505c9.png?w=578";
 
-  // Define official FPL position order
   const positionOrder = ["GKP", "DEF", "MID", "FWD"];
 
-  // Only sort if bench
   const sortedPlayers = isBench
     ? [...players].sort(
         (a, b) => positionOrder.indexOf(a.position) - positionOrder.indexOf(b.position)

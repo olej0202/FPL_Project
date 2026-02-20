@@ -282,6 +282,7 @@ def optimize_my_team(
     lam = 1.3 + abs(risk_int)*offset    
     
     transfervalue=transval*2
+    risk_transfer_offset=(1+abs(risk_float))
 
 
 
@@ -382,7 +383,7 @@ def optimize_my_team(
     # your existing "in-horizon" saved transfer value
     
     obj += lpSum(
-        discount_t[t] * (-1.5 * transfervalue) * transfers_used[t]
+        discount_t[t] * (-1.5 * transfervalue*risk_transfer_offset) * transfers_used[t]
         for t in gameweeks
     )
 
