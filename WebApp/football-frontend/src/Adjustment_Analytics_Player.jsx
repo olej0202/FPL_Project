@@ -446,7 +446,7 @@ const computeMeasures = useCallback(
 
     // ✅ Per-match components must scale by expected matches
     const basePoints =
-      (defaultPoints + bps + cbi * 1.5) * minutesAdj * matchCount;
+      (defaultPoints + bps + cbi * 1.7) * minutesAdj * matchCount;
 
     // cs is already expected CS across fixtures (0..matchCount), so no extra matchCount needed
     const points =

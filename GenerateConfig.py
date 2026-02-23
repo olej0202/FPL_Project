@@ -58,22 +58,16 @@ Manual_min=[
         {"name": "Daniel_Muñoz", "type": "const",   "GW": "any", "value": 90},
         {"name": "Jean-Philippe_Mateta", "type": "const",   "GW": "any", "value": 0},
         #Afcon
-        {"name": "Mohamed_Salah", "type": "const",   "GW": "any", "value": 90},
-        {"name": "Ismaïla_Sarr", "type": "const",   "GW": "any", "value": 90},
-        {"name": "Bryan_Mbeumo", "type": "const",   "GW": "any", "value": 90},
         {"name": "Amad_Diallo", "type": "const",   "GW": "any", "value": 75},
-        {"name": "Iliman_Ndiaye", "type": "const",   "GW": "any", "value": 90},
-
-        
-        {"name": "Cole_Palmer", "type": "const",   "GW": "any", "value": 80},
         {"name": "Anthony_Gordon", "type": "const",   "GW": "any", "value": 75},
         {"name": "Viktor_Gyökeres", "type": "const",   "GW": "any", "value": 75},
         {"name": "Matheus_Santos Carneiro Da Cunha", "type": "const",   "GW": "any", "value": 75},
+        
         {"name": "Tammy_Abraham", "type": "const",   "GW": "any", "value": 60},
-        {"name": "Dominic_Solanke-Mitchell", "type": "const",   "GW": "any", "value": 75},
         {"name": "Jørgen_Strand Larsen", "type": "const",   "GW": "any", "value": 80},
-        {"name": "Bruno_Guimarães Rodriguez Moura", "type": "const",   "GW": "any", "value": 80},
         {"name": "Bukayo_Saka", "type": "const",   "GW": "any", "value": 80},
+        {"name": "Anton_Stach", "type": "const",   "GW": "any", "value": 90},
+        {"name": "Dango_Ouattara", "type": "const",   "GW": "any", "value": 90},
     ]
         
 

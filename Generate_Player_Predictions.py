@@ -132,7 +132,7 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
                player_model.append(pred)
                pred=pred*0.6+0.4*stat_pred
                #own_data_xa_pred=((df['Rolling_adjusted_XA'].values[h]*0.7+df['rolling_Adjusted_XA_historic'].values[h]*0.3)*df["opposition_xgc"].values[h]+df['Share_of_XA'].values[h]*team_xg)*(0.5)
-               own_data_xa_pred=(pred*team_xg)*0.8+0.2*((df['Rolling_adjusted_XA'].values[h]*0.7+df['rolling_Adjusted_XA_historic'].values[h]*0.3)*df["opposition_xgc"].values[h])
+               own_data_xa_pred=(pred*team_xg)*1+0*((df['Rolling_adjusted_XA'].values[h]*0.7+df['rolling_Adjusted_XA_historic'].values[h]*0.3)*df["opposition_xgc"].values[h])
                team_data_xa_pred=(df['Understat_POSXA'].values[h]*df["opposition_xgc"].values[h]*0+1*(df['Understat_POSXA_Share'].values[h]*0.7+0.3*df['Opp_Assist_Threat_Pos'].values[h])*team_xg)
                player_preds.append(own_data_xa_pred*(1-fordelings_faktor)+fordelings_faktor*team_data_xa_pred) 
                
@@ -960,7 +960,7 @@ def Generate_point_predictions(GW_list):
             summary_dataset["Points_prediction"]=(2+summary_dataset["Goal_pred"]*5.2
                                                   +summary_dataset["Assist_pred"]*3.4
                                                   +summary_dataset["Bonus_pred"]
-                                                  -summary_dataset["Card_pred"] )*0.9+0.1*summary_dataset["Fantasy_pred"]+(summary_dataset["CBI_pred"]/12)*0.0*2
+                                                  -summary_dataset["Card_pred"] )*0.9+0.1*summary_dataset["Fantasy_pred"]+(np.minimum(1, summary_dataset["CBI_pred"] / 12) * 0.6+0.4*cbi_hit_rate)*0.6*2
             
             summary_dataset["Risk_share"]=(summary_dataset["Goal_pred"]*5.2+summary_dataset["Assist_pred"]*3.4)/summary_dataset["Points_prediction"]
         elif(position=="MID"):

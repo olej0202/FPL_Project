@@ -709,7 +709,7 @@ def GeneratePlayerData(time_list, fixture_path,current_player_path, current_team
         player_row["Understat_POSXG"]=player_understat_team["XGIndex"].values[0]
         player_row["Understat_POSXG_Share"]=player_understat_team["Rolling_XG_Share"].values[0]*0.8+0.2*player_understat_team["Rolling_Shots_Share"].values[0]
         player_row["Understat_POSXA"]=player_understat_team["XAIndex"].values[0]
-        player_row["Understat_POSXA_Share"]=player_understat_team["Rolling_XA_Share"].values[0]*0.7+0.3*player_understat_team["Rolling_KeyPasses_Share"].values[0]
+        player_row["Understat_POSXA_Share"]=player_understat_team["Rolling_XA_Share"].values[0]*0.8+0.2*player_understat_team["Rolling_KeyPasses_Share"].values[0]
         player_row["Team_Pen_Data"]=player_team_pen_data
         player_row["Pen_Number"]=pen_number
         player_row["player_risiko"]=player_risiko

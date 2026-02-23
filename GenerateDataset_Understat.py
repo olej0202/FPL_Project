@@ -44,7 +44,7 @@ def Generate_Team_threats():
 
     # Threat metrics (rename Treat → Threat if that’s what you intend)
     latest_ewm["Goal_Threat"] = latest_ewm["npxG_share_ewm"] * 0.8 + 0.2 * latest_ewm["shots_share_ewm"]
-    latest_ewm["Assist_Threat"] = latest_ewm["xA_share_ewm"] * 0.7 + 0.3 * latest_ewm["key_passes_share_ewm"]
+    latest_ewm["Assist_Threat"] = latest_ewm["xA_share_ewm"] * 0.8 + 0.2 * latest_ewm["key_passes_share_ewm"]
     latest_ewm["Threat"] = latest_ewm["Goal_Threat"] * 1 + 0 * latest_ewm["Assist_Threat"]
 
     # Keep only relevant columns
@@ -382,7 +382,7 @@ def Generate_Understat_dataset(current_players,run_player_pos):
 
     # 4) cap at 0.25
     df_penalty["Penalty"] = (
-        df_penalty["penalty_roll30_mean"].fillna(0.10).clip(0.10, 0.2)
+        df_penalty["penalty_roll30_mean"].fillna(0.10).clip(0.12, 0.17)
     )
     
     team_dataset_newest = pd.read_csv(
@@ -527,21 +527,21 @@ def Generate_Understat_dataset(current_players,run_player_pos):
 
     agg_enriched["Rolling_XG_Share"] = (
         agg_enriched.groupby(["player_team", "pos_group"])["npxG_share"]
-          .transform(lambda s: s.rolling(window=15, min_periods=1).mean())
+          .transform(lambda s: s.rolling(window=20, min_periods=1).mean())
     )
 
     agg_enriched["Rolling_XA_Share"] = (
         agg_enriched.groupby(["player_team", "pos_group"])["xA_share"]
-          .transform(lambda s: s.rolling(window=15, min_periods=1).mean())
+          .transform(lambda s: s.rolling(window=1520, min_periods=1).mean())
     )
     agg_enriched["Rolling_Shots_Share"] = (
         agg_enriched.groupby(["player_team", "pos_group"])["shots_share"]
-          .transform(lambda s: s.rolling(window=15, min_periods=1).mean())
+          .transform(lambda s: s.rolling(window=20, min_periods=1).mean())
     )
 
     agg_enriched["Rolling_KeyPasses_Share"] = (
         agg_enriched.groupby(["player_team", "pos_group"])["key_passes_share"]
-          .transform(lambda s: s.rolling(window=15, min_periods=1).mean())
+          .transform(lambda s: s.rolling(window=20, min_periods=1).mean())
     )
 
 
