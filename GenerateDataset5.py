@@ -664,7 +664,7 @@ import numpy as np
 import pandas as pd
 
 def predict_xg_from_indices(A: float, B: float) -> float:
-    z = -2.94 + 1.388 * A + 1.4 * B - 0.136 * A * B
+    z = -3.183 + 1.522 * A + 1.541 * B - 0.2049 * A * B
     return math.exp(0.5 * z)
 
 
