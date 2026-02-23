@@ -52,7 +52,7 @@ Manual_Player_Risk={
 }
 
 Manual_min=[
-        {"name": "Hugo_Ekitiké", "type": "const",   "GW": "any", "value": 75},
+        {"name": "Hugo_Ekitiké", "type": "const",   "GW": "any", "value": 80},
         {"name": "Rayan_Aït-Nouri", "type": "const",   "GW": "any", "value": 65},
         {"name": "Antoine_Semenyo", "type": "const",   "GW": "any", "value": 80},
         {"name": "Daniel_Muñoz", "type": "const",   "GW": "any", "value": 90},

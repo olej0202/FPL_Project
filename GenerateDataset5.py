@@ -719,7 +719,7 @@ def _run_one_pass(
     elo_rating = {t: 1000.0 for t in teams}
     elo_history = {t: [1000.0] for t in teams}
     elo_debug_rows = []  # ✅ NEW: store debug per row
-    k_elo = 25.0
+    k_elo = 30.0
 
     error_xg = []
     error_xgc = []
@@ -885,6 +885,7 @@ def _run_one_pass(
 
 
         new_factor = max(1.0, 3.0 - 0.25 * len(elo_history[team]))
+        actual_result=actual_result*0.4+0.6*((xg_diff_actual+1.5)/3)
         surprise_multiplier = 1.0 + 0.2 * abs(actual_result - expected_team)
 
         delta_elo = (
@@ -892,7 +893,6 @@ def _run_one_pass(
             * k_elo
             * (actual_result - expected_team)
             * surprise_multiplier
-            * margin_mult
         )
 
         # ✅ NEW: record debug row + optional print
