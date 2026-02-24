@@ -1018,7 +1018,7 @@ def team_transformed2():
 
     new_team_df = pd.read_csv("Team_data_transformed.csv").iloc[:, 1:].copy()
     new_team_df_newest = pd.read_csv("Team_data_newest.csv").iloc[:, 1:].copy()
-    overall_weight = 0.0
+    overall_weight = 0.4
 
     team_transformed_df = pd.DataFrame()
     team_transformed_df_newest = pd.DataFrame()

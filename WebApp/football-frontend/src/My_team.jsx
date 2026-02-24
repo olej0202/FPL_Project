@@ -49,7 +49,7 @@ export default function MyTeamOptimize() {
   const navigate = useNavigate();
 
   const [modelType, setModelType] = useState("ai");
-  const [optParamsOpen, setOptParamsOpen] = useState(true);
+  const [optParamsOpen, setOptParamsOpen] = useState(false);
 
   // Save UI
   const [saveName, setSaveName] = useState("");
@@ -1075,7 +1075,6 @@ export default function MyTeamOptimize() {
                 className="text-[11px] sm:text-xs"
                 style={{ color: saveError ? "#fbbf24" : "#9ca3af" }}
               >
-                {saveError ? saveError : saveHint ? saveHint : "Saved locally and listed above."}
               </div>
             </div>
           </div>
