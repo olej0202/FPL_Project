@@ -416,9 +416,13 @@ def Player_adjustements(current_player_path):
     # alternatively: df["average_minutes"].rdiv(75).clip(lower=1)
 
     df["Goal_share"] = (
-            df["Rolling_adjusted_XG_share"] * 0.2+
-            df["Rolling_adjusted_XG_per90_share"] * 0.2
-            )* risk_adj_minutes_factor+ df["Rolling_adjusted_XG_per90"] * 0.2+(df["Big_Chances"]/3) * 0.2+(df["Rolling_adjusted_Threat_per90"]/100) * 0.2
+        (df["Rolling_adjusted_XG_share"] * 0.15 + df["Rolling_adjusted_XG_per90_share"]*0.15+df["Rolling_adjusted_Threat_per90_share"] * 0.15)
+        * risk_adj_minutes_factor
+        + df["Rolling_adjusted_XG_per90"] * 0.138
+        + (df["Big_Chances"] / 3) * 0.138
+        + (df["rolling_Goal_min"]) * 0.138
+        + (df["Rolling_adjusted_XG_per90"]) * 0.138
+    )
 
     df["Goal_share"] = (df["Goal_share"]
             
@@ -429,11 +433,14 @@ def Player_adjustements(current_player_path):
     df["Pos_Goal_Threat"]=df["Opp_Goal_Threat_Pos"]
     df["Pos_Assist_Threat"]=df["Opp_Assist_Threat_Pos"]
     df["Assist_share"] = (
-            df["Rolling_adjusted_XA_share"] * 0.2+
-            df["Rolling_adjusted_XA_per90_share"] * 0.2+
-            df["Rolling_adjusted_creativity_per90_share"]*0.1
-            )* risk_adj_minutes_factor+df["Rolling_adjusted_XA_per90"] * 0.2+ (df["Rolling_adjusted_creativity_per90"]/100) * 0.1+(df["Big_Chances_Created"]/2) * 0.2
-    
+        (df["Rolling_adjusted_XA_share"] * 0.15 + df["Rolling_adjusted_XA_per90_share"]*0.15+df["Rolling_adjusted_creativity_per90_share"] * 0.15)
+        * risk_adj_minutes_factor
+        + df["Rolling_adjusted_XA_per90"] * 0.138
+        + (df["Big_Chances_Created"] / 2) * 0.138
+        + (df["rolling_Assist_min"]) * 0.138
+        + (df["Rolling_adjusted_XA_per90"]) * 0.138
+    )
+
     df["Assist_share"] = (df["Assist_share"]
             
         * (1 - df["player_risiko"])

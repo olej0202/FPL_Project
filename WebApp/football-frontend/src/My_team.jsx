@@ -1,7 +1,7 @@
 // src/pages/OptimizeTeam.jsx
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { X, ArrowRight, Search, ArrowDown } from "lucide-react";
+import { X, ArrowRight, Search, BookmarkPlus } from "lucide-react";
 import pitch from "./assets/Pitch4.png";
 import { useMyteamData } from "./Contexts/MyTeamContext";
 import { useAdjustmentData } from "./Contexts/AdjustmentsContext";
@@ -38,18 +38,25 @@ export default function MyTeamOptimize() {
     setRisk,
     valtrans,
     setValtrans,
+
+    savedOptimizations = [],
+    saveOptimization,
+    deleteOptimization,
+    loadOptimization,
   } = useMyteamData();
 
   const { Playerdata, dataVersion } = useAdjustmentData();
   const navigate = useNavigate();
 
-  // Model toggle: "ai" | "statistical"
   const [modelType, setModelType] = useState("ai");
+  const [optParamsOpen, setOptParamsOpen] = useState(true);
 
-  // "Optimization params" dropdown open/closed
-  const [optParamsOpen, setOptParamsOpen] = useState(false);
+  // Save UI
+  const [saveName, setSaveName] = useState("");
+  const [saveError, setSaveError] = useState("");
+  const [saveHint, setSaveHint] = useState("");
+  const [activeSavedId, setActiveSavedId] = useState(null);
 
-  // Statistical model is only allowed if we have Playerdata with Points
   const hasStatisticalData = useMemo(() => {
     const arr = Playerdata?.current;
     if (!Array.isArray(arr) || arr.length === 0) return false;
@@ -81,19 +88,16 @@ export default function MyTeamOptimize() {
     });
   };
 
-  // Ensure we fall back to AI if statistical data disappears
   useEffect(() => {
     if (modelType === "statistical" && !hasStatisticalData) {
       setModelType("ai");
     }
   }, [modelType, hasStatisticalData]);
 
-  // UI state
+  // UI state for chips
   const [showBbInput, setShowBbInput] = useState(!!bbRound);
   const [showWildInput, setShowWildInput] = useState(!!wildRound);
   const [showfreehitInput, setshowfreehitInput] = useState(!!freehitROund);
-
-  // expandable "Add chips"
   const [chipsOpen, setChipsOpen] = useState(
     !!bbRound || !!wildRound || !!freehitROund
   );
@@ -124,7 +128,7 @@ export default function MyTeamOptimize() {
 
       let rafId;
       const start = performance.now();
-      const duration = 3000; // 3s
+      const duration = 3000;
 
       const tick = (now) => {
         const elapsed = now - start;
@@ -195,14 +199,12 @@ export default function MyTeamOptimize() {
 
     if (objRow) {
       const asNum =
-        objRow.objective != null
-          ? Number(objRow.objective)
-          : Number(objRow.status);
+        objRow.objective != null ? Number(objRow.objective) : Number(objRow.status);
       totalPredPoints = Number.isFinite(asNum) ? asNum : null;
     }
   }
 
-  // --- Insert/mark Free Hit banner in the correct GW order ---
+  // --- Insert/mark Free Hit banner in correct GW order ---
   const toNum = (v) => Number(v);
   let transfersWithFH = transfers;
 
@@ -214,9 +216,8 @@ export default function MyTeamOptimize() {
       const out = [...transfers].sort((a, b) => toNum(a.GW) - toNum(b.GW));
       const idx = out.findIndex((g) => toNum(g.GW) === fhGW);
 
-      if (idx !== -1) {
-        out[idx] = { ...out[idx], freehit: true };
-      } else {
+      if (idx !== -1) out[idx] = { ...out[idx], freehit: true };
+      else {
         const insertAt = out.findIndex((g) => toNum(g.GW) > fhGW);
         const fhGroup = { GW: fhGW, in: [], out: [], freehit: true };
         if (insertAt === -1) out.push(fhGroup);
@@ -227,7 +228,7 @@ export default function MyTeamOptimize() {
     }
   }
 
-  // Build a simple payload to send to planner
+  // Planner payload
   const plannerPayload = useMemo(() => {
     if (!data || transfersWithFH.length === 0) return [];
 
@@ -260,54 +261,7 @@ export default function MyTeamOptimize() {
     });
   }, [data, transfersWithFH]);
 
-  // Loading overlay with page-2 theme
-  if (loading) {
-    return (
-      <div
-        className="min-h-screen flex items-center justify-center p-6"
-        style={{
-          background: `radial-gradient(circle at top, ${PALETTE.red}, ${PALETTE.black})`,
-          color: PALETTE.beige,
-          fontFamily:
-            "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-        }}
-      >
-        <div
-          className="w-full max-w-md rounded-2xl p-5 shadow-2xl"
-          style={{
-            border: `1px solid ${PALETTE.gold}`,
-            background:
-              "linear-gradient(145deg, rgba(0,0,0,0.96), rgba(0,0,0,0.9))",
-          }}
-        >
-          <div className="mb-2 text-center text-sm" style={{ color: "#d1c3a9" }}>
-            {loadingPhase === "fetch" ? "Fetching team…" : "Optimizing team…"}
-          </div>
-          <div className="h-2 w-full rounded bg-neutral-900 overflow-hidden">
-            <div
-              className="h-full transition-[width] duration-200 ease-out"
-              style={{
-                width: `${progress}%`,
-                backgroundColor: PALETTE.gold,
-              }}
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-valuenow={Math.round(progress)}
-              role="progressbar"
-            />
-          </div>
-          <div
-            className="mt-3 text-center text-xs animate-pulse"
-            style={{ color: "#9ca3af" }}
-          >
-            This can take a moment…
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Helper to get players data for statistical model
+  // Statistical payload
   const getStatisticalPlayersPayload = () => {
     if (!hasStatisticalData) return null;
     const arr = Playerdata?.current;
@@ -328,10 +282,121 @@ export default function MyTeamOptimize() {
       playersData: playersPayload,
     });
     sethas_changed(false);
+    setSaveError("");
+    setSaveHint("");
+  };
+
+  const canSave =
+    !!data &&
+    Array.isArray(data) &&
+    data.length > 0 &&
+    typeof saveOptimization === "function";
+
+  const normalizeName = (s) =>
+    (s || "")
+      .trim()
+      .replace(/\s+/g, " ")
+      .slice(0, 40);
+
+  const handleSaveOptimization = () => {
+    setSaveError("");
+    setSaveHint("");
+
+    if (!canSave) {
+      setSaveError("Run an optimization first.");
+      return;
+    }
+
+    const trimmed = normalizeName(saveName);
+    if (!trimmed) {
+      setSaveError("Add a name (e.g. “Low risk · FH GW29”).");
+      return;
+    }
+
+    const payload = {
+      id: `${Date.now()}_${Math.random().toString(16).slice(2)}`,
+      name: trimmed,
+      createdAt: Date.now(),
+      snapshot: {
+        params: {
+          teamId: String(teamId || ""),
+          bbRound: bbRound || "",
+          wildRound: wildRound || "",
+          freehitROund: freehitROund || "",
+          bannedList: Array.isArray(bannedList) ? bannedList : [],
+          n_hits: Number(n_hits || 0),
+          risk: Number(risk || 0),
+          valtrans: Number(valtrans || 0.5),
+          modelType: modelType,
+        },
+        result: { data },
+      },
+    };
+
+    saveOptimization(payload);
+    setActiveSavedId(payload.id);
+    setSaveName("");
+    setSaveHint("Saved.");
+    setTimeout(() => setSaveHint(""), 1400);
+  };
+
+  const runLabel = (opt) => {
+    const created = opt?.createdAt ? new Date(opt.createdAt) : null;
+    const ts = created
+      ? created.toLocaleString(undefined, {
+          year: "numeric",
+          month: "short",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      : "";
+    const mt = opt?.snapshot?.params?.modelType === "statistical" ? "Statistical" : "AI";
+    return `${mt}${ts ? ` · ${ts}` : ""}`;
   };
 
   const activeChipsCount =
     (bbRound ? 1 : 0) + (wildRound ? 1 : 0) + (freehitROund ? 1 : 0);
+
+  // Loading overlay
+  if (loading) {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center p-6"
+        style={{
+          background: `radial-gradient(circle at top, ${PALETTE.red}, ${PALETTE.black})`,
+          color: PALETTE.beige,
+          fontFamily:
+            "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+        }}
+      >
+        <div
+          className="w-full max-w-md rounded-2xl p-5 shadow-2xl"
+          style={{
+            border: `1px solid ${PALETTE.gold}`,
+            background: "linear-gradient(145deg, rgba(0,0,0,0.96), rgba(0,0,0,0.9))",
+          }}
+        >
+          <div className="mb-2 text-center text-sm" style={{ color: "#d1c3a9" }}>
+            {loadingPhase === "fetch" ? "Fetching team…" : "Optimizing team…"}
+          </div>
+          <div className="h-2 w-full rounded bg-neutral-900 overflow-hidden">
+            <div
+              className="h-full transition-[width] duration-200 ease-out"
+              style={{ width: `${progress}%`, backgroundColor: PALETTE.gold }}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={Math.round(progress)}
+              role="progressbar"
+            />
+          </div>
+          <div className="mt-3 text-center text-xs animate-pulse" style={{ color: "#9ca3af" }}>
+            This can take a moment…
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -343,46 +408,189 @@ export default function MyTeamOptimize() {
           "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
       }}
     >
+      {/* Harden lucide SVG rendering even if global CSS overrides stroke */}
+      <style>{`
+        .lucide-icon {
+          stroke: currentColor !important;
+          fill: none !important;
+          display: block;
+          flex-shrink: 0;
+        }
+        summary::-webkit-details-marker { display:none; }
+      `}</style>
+
       <div className="mx-auto max-w-6xl px-4 py-6 sm:py-10">
         {/* Header */}
-        <header className="mb-6 sm:mb-8 flex items-center justify-between gap-3">
+        <header className="mb-5 sm:mb-7 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
               Optimize My Team
             </h1>
             <p className="text-xs sm:text-sm mt-1" style={{ color: "#d1c3a9" }}>
-              Set your chips, choose model, adjust hits, and optimize your team
+              Configure chips and preferences, then run the optimizer.
             </p>
           </div>
-          <button
-            onClick={handleOptimizeClick}
-            disabled={!has_changed || !teamId}
-            className="inline-flex items-center gap-2 font-semibold px-4 py-2 rounded-full transition shadow-lg"
-            style={{
-              border: `1px solid ${has_changed && teamId ? PALETTE.gold : "#374151"}`,
-              background:
-                has_changed && teamId
-                  ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)`
-                  : "rgba(0,0,0,0.7)",
-              color: has_changed && teamId ? "#000000" : "#9ca3af",
-              cursor: has_changed && teamId ? "pointer" : "not-allowed",
-            }}
-            aria-disabled={!has_changed || !teamId}
-          >
-            <span>Optimize Team</span>
-          </button>
+
+          {totalPredPoints != null && (
+            <div
+              className="inline-flex items-center gap-3 rounded-2xl px-4 py-3"
+              style={{
+                border: `1px solid rgba(248, 250, 252, 0.16)`,
+                background: "rgba(0,0,0,0.55)",
+              }}
+            >
+              <div>
+                <div className="text-[10px] uppercase tracking-wide" style={{ color: "#9ca3af" }}>
+                  Predicted points
+                </div>
+                <div className="text-lg font-bold" style={{ color: PALETTE.gold }}>
+                  {totalPredPoints.toFixed(2)}
+                </div>
+              </div>
+              <div className="h-9 w-px" style={{ backgroundColor: "rgba(255,255,255,0.12)" }} />
+              <div className="text-[11px]" style={{ color: "#9ca3af" }}>
+                GW {minGW}–{maxGW} · {modelType === "ai" ? "AI" : "Statistical"}
+              </div>
+            </div>
+          )}
         </header>
+
+        {/* Saved Optimizations */}
+        <section
+          className="mb-6 rounded-2xl p-4 sm:p-6"
+          style={{
+            border: `1px solid ${PALETTE.gold}`,
+            background: "linear-gradient(145deg, rgba(0,0,0,0.94), rgba(0,0,0,0.86))",
+            boxShadow: "0 18px 40px rgba(0,0,0,0.85)",
+          }}
+        >
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <div className="text-sm font-semibold" style={{ color: PALETTE.gold }}>
+                Saved optimizations
+              </div>
+              <div className="text-[11px]" style={{ color: "#9ca3af" }}>
+                Click one to load it instantly.
+              </div>
+            </div>
+
+          </div>
+
+          <div className="mt-4">
+            {typeof loadOptimization !== "function" || typeof deleteOptimization !== "function" ? (
+              <div className="text-xs" style={{ color: "#fbbf24" }}>
+                Missing context functions:{" "}
+                <span className="font-semibold">loadOptimization</span> and/or{" "}
+                <span className="font-semibold">deleteOptimization</span>.
+              </div>
+            ) : savedOptimizations.length === 0 ? (
+              <div className="text-xs" style={{ color: "#9ca3af" }}>
+                No saved optimizations yet.
+              </div>
+            ) : (
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {savedOptimizations
+                  .slice()
+                  .sort((a, b) => (b?.createdAt || 0) - (a?.createdAt || 0))
+                  .map((opt) => {
+                    const isActive = opt.id === activeSavedId;
+                    return (
+                      <div
+                        key={opt.id}
+                        className="flex items-center gap-2 rounded-full px-3 py-2 whitespace-nowrap"
+                        style={{
+                          border: isActive
+                            ? `1px solid ${PALETTE.gold}`
+                            : "1px solid rgba(248, 250, 252, 0.16)",
+                          background: isActive
+                            ? "rgba(184,134,11,0.14)"
+                            : "rgba(0,0,0,0.55)",
+                        }}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => {
+                            loadOptimization(opt.id);
+                            setActiveSavedId(opt.id);
+                            setSaveError("");
+                            setSaveHint("");
+                          }}
+                          className="text-left"
+                          style={{ color: PALETTE.beige }}
+                          title="Load this optimization"
+                        >
+                          <div className="text-sm font-semibold leading-none" style={{ color: "#cba108ff" }} >
+                            {opt.name}
+                          </div>
+                          <div className="text-[10px] leading-none mt-1" style={{ color: "#873f0cff" }}>
+                            {runLabel(opt)}
+                          </div>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            deleteOptimization(opt.id);
+                            if (activeSavedId === opt.id) setActiveSavedId(null);
+                          }}
+                          className="inline-flex items-center justify-center w-8 h-8 rounded-full transition"
+                          style={{
+                            border: "1px solid rgba(255,255,255,0.14)",
+                            backgroundColor: "rgba(0,0,0,0.65)",
+                            color: "#ef4444",
+                          }}
+                          aria-label={`Delete ${opt.name}`}
+                          title="Delete"
+                        >
+                          <X size={16} className="lucide-icon" />
+                        </button>
+                      </div>
+                    );
+                  })}
+              </div>
+            )}
+          </div>
+        </section>
 
         {/* Controls Card */}
         <section
-          className="mb-8 rounded-2xl p-4 sm:p-6"
+          className="mb-6 rounded-2xl p-4 sm:p-6"
           style={{
             border: `1px solid ${PALETTE.gold}`,
-            background:
-              "linear-gradient(145deg, rgba(0,0,0,0.96), rgba(90,0,0,0.9))",
-            boxShadow: "0 18px 40px rgba(0,0,0,0.9)",
+            background: "linear-gradient(145deg, rgba(0,0,0,0.94), rgba(90,0,0,0.82))",
+            boxShadow: "0 18px 40px rgba(0,0,0,0.85)",
           }}
         >
+          <header className="mb-5 sm:mb-7 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+  <div>
+    <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+      Optimize My Team
+    </h1>
+    <p className="text-xs sm:text-sm mt-1" style={{ color: "#d1c3a9" }}>
+      Configure chips and preferences, then run the optimizer.
+    </p>
+  </div>
+
+  {/* Top-right Optimize */}
+  <button
+    onClick={handleOptimizeClick}
+    disabled={!has_changed || !teamId}
+    className="inline-flex items-center gap-2 font-semibold px-4 py-2 rounded-full transition"
+    style={{
+      border: `1px solid ${has_changed && teamId ? PALETTE.gold : "#374151"}`,
+      background:
+        has_changed && teamId
+          ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)`
+          : "rgba(0,0,0,0.55)",
+      color: has_changed && teamId ? "#000000" : "#9ca3af",
+      cursor: has_changed && teamId ? "pointer" : "not-allowed",
+      boxShadow: has_changed && teamId ? "0 14px 28px rgba(0,0,0,0.55)" : "none",
+    }}
+    aria-disabled={!has_changed || !teamId}
+  >
+    Optimize
+  </button>
+</header>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
             {/* Team ID */}
             <div className="flex flex-col gap-1">
@@ -400,9 +608,9 @@ export default function MyTeamOptimize() {
                 placeholder="Required"
                 value={teamId}
                 onChange={(e) => setTeamId(e.target.value)}
-                className="w-full h-10 px-3 rounded-md text-base sm:text-sm"
+                className="w-full h-11 px-3 rounded-xl text-base sm:text-sm outline-none"
                 style={{
-                  fontSize: 16, // iOS Safari: prevents zoom
+                  fontSize: 16,
                   border: "1px solid rgba(248, 250, 252, 0.18)",
                   backgroundColor: "rgba(0,0,0,0.75)",
                   color: PALETTE.beige,
@@ -410,26 +618,23 @@ export default function MyTeamOptimize() {
               />
             </div>
 
-            {/* Chips expandable section */}
+            {/* Chips */}
             <div className="flex flex-col gap-1 lg:col-span-3">
-              <label
-                className="text-xs uppercase tracking-wide"
-                style={{ color: "#e5e7eb" }}
-              >
+              <label className="text-xs uppercase tracking-wide" style={{ color: "#e5e7eb" }}>
                 Chips
               </label>
 
               <details
                 open={chipsOpen}
                 onToggle={(e) => setChipsOpen(e.currentTarget.open)}
-                className="rounded-md"
+                className="rounded-xl"
                 style={{
                   border: "1px solid rgba(248, 250, 252, 0.18)",
                   backgroundColor: "rgba(0,0,0,0.75)",
                 }}
               >
                 <summary
-                  className="cursor-pointer select-none list-none flex items-center justify-between px-3 h-10"
+                  className="cursor-pointer select-none list-none flex items-center justify-between px-3 h-11"
                   style={{ color: PALETTE.gold }}
                 >
                   <span>Add chips</span>
@@ -498,14 +703,11 @@ export default function MyTeamOptimize() {
 
             {/* Hits */}
             <div className="flex flex-col gap-1">
-              <label
-                className="text-xs uppercase tracking-wide"
-                style={{ color: "#e5e7eb" }}
-              >
+              <label className="text-xs uppercase tracking-wide" style={{ color: "#e5e7eb" }}>
                 Hits
               </label>
               <div
-                className="h-10 rounded-md flex items-center justify-between px-2"
+                className="h-11 rounded-xl flex items-center justify-between px-2"
                 style={{
                   backgroundColor: "rgba(0,0,0,0.8)",
                   border: "1px solid rgba(248, 250, 252, 0.18)",
@@ -517,15 +719,10 @@ export default function MyTeamOptimize() {
                   label="−"
                 />
                 <div className="flex flex-col items-center leading-none select-none">
-                  <span
-                    className="text-[10px] uppercase tracking-wide"
-                    style={{ color: "#9ca3af" }}
-                  >
+                  <span className="text-[10px] uppercase tracking-wide" style={{ color: "#9ca3af" }}>
                     Count
                   </span>
-                  <span className="text-sm font-semibold">
-                    {Number(n_hits || 0)}
-                  </span>
+                  <span className="text-sm font-semibold">{Number(n_hits || 0)}</span>
                 </div>
                 <IconButton
                   ariaLabel="Increase hits"
@@ -535,19 +732,16 @@ export default function MyTeamOptimize() {
               </div>
             </div>
 
-            {/* Model selector */}
+            {/* Model */}
             <div className="flex flex-col gap-1 lg:col-span-2">
-              <label
-                className="text-xs uppercase tracking-wide"
-                style={{ color: "#e5e7eb" }}
-              >
+              <label className="text-xs uppercase tracking-wide" style={{ color: "#e5e7eb" }}>
                 Model
               </label>
-              <div className="flex items-center gap-2 h-10">
+              <div className="flex items-center gap-2 h-11">
                 <button
                   type="button"
                   onClick={() => setModelType("ai")}
-                  className="flex-1 inline-flex items-center justify-center px-3 py-1.5 rounded-md text-xs sm:text-sm border transition"
+                  className="flex-1 inline-flex items-center justify-center px-3 py-2 rounded-xl text-xs sm:text-sm border transition"
                   style={{
                     border:
                       modelType === "ai"
@@ -560,14 +754,14 @@ export default function MyTeamOptimize() {
                     color: modelType === "ai" ? "#000000" : "#e5e7eb",
                   }}
                 >
-                  AI model
+                  AI
                 </button>
 
                 <button
                   type="button"
                   onClick={() => hasStatisticalData && setModelType("statistical")}
                   disabled={!hasStatisticalData}
-                  className="flex-1 inline-flex items-center justify-center px-3 py-1.5 rounded-md text-xs sm:text-sm border transition"
+                  className="flex-1 inline-flex items-center justify-center px-3 py-2 rounded-xl text-xs sm:text-sm border transition"
                   style={{
                     border: !hasStatisticalData
                       ? "1px solid #4b5563"
@@ -587,123 +781,73 @@ export default function MyTeamOptimize() {
                     cursor: !hasStatisticalData ? "not-allowed" : "pointer",
                   }}
                 >
-                  Statistical model
+                  Statistical
                 </button>
               </div>
 
-              <p className="text-[11px] mt-0.5" style={{ color: "#9ca3af" }}>
-                Make your own statistical model and use it in the solver
-                <button
-                  type="button"
-                  onClick={() => navigate("/Adjustment_Analysis")}
-                  className="ml-2 inline-flex items-center gap-1 underline decoration-dotted mt-2"
-                  style={{ color: PALETTE.gold }}
-                >
-                  Open Your Statistical Model
-                </button>
+              <button
+                type="button"
+                onClick={() => navigate("/Adjustment_Analysis")}
+                className="mt-2 text-[11px] inline-flex items-center gap-2 underline decoration-dotted"
+                style={{ color: PALETTE.gold, alignSelf: "flex-start" }}
+              >
+                Open Your Statistical Model
                 {!hasStatisticalData && (
-                  <span style={{ color: "#fbbf24" }}>
-                    {" "}
-                    (needed to enable the model)
-                  </span>
+                  <span style={{ color: "#fbbf24" }}>(needed to enable)</span>
                 )}
-              </p>
+              </button>
             </div>
 
-            {/* Optimization params dropdown (moved higher on small screens) */}
-            <div className="flex flex-col gap-1 lg:col-span-4 order-2 sm:order-none">
-              <label
-                className="text-xs uppercase tracking-wide"
-                style={{ color: "#e5e7eb" }}
-              >
-                Optimization params
-              </label>
+            {/* Optimization params (WITH Optimize button moved here) */}
+            <div className="flex flex-col gap-1 lg:col-span-4">
+              <div className="flex items-end justify-between gap-3">
+                <label className="text-xs uppercase tracking-wide" style={{ color: "#e5e7eb" }}>
+                  Optimization params
+                </label>
+
+                
+              </div>
 
               <details
                 open={optParamsOpen}
                 onToggle={(e) => setOptParamsOpen(e.currentTarget.open)}
-                className="rounded-md"
+                className="rounded-xl"
                 style={{
                   border: "1px solid rgba(248, 250, 252, 0.18)",
                   backgroundColor: "rgba(0,0,0,0.75)",
                 }}
               >
                 <summary
-                  className="cursor-pointer select-none list-none flex items-center justify-between px-2 h-12 text-[16px]"
+                  className="cursor-pointer select-none list-none flex items-center justify-between px-3 h-12"
                   style={{ color: PALETTE.gold }}
                 >
-         
-
-                  <span>Adjust Optimization</span>
-                  
-
+                  <span className="font-semibold">Adjust Optimization</span>
                   <span className="text-[10px]" style={{ color: "#9ca3af" }}>
                     {formatRiskLabel(risk)} · {formatValTransLabel(valtrans)}
                   </span>
                 </summary>
 
                 <div className="p-3 pt-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {/* Risk preference */}
+                  {/* Risk */}
                   <div className="flex flex-col gap-1">
-                    <label
-                      className="text-xs uppercase tracking-wide"
-                      style={{ color: "#e5e7eb" }}
-                    >
+                    <label className="text-xs uppercase tracking-wide" style={{ color: "#e5e7eb" }}>
                       Risk preference
                     </label>
 
-                    <div className="flex items-center justify-between mb-1">
-                      <button
-                        type="button"
-                        onClick={() => setRisk(-0.6)}
-                        className="px-3 py-1.5 text-[11px] font-semibold transition"
-                        style={{
-                          border: `1px solid ${PALETTE.gold}`,
-                          background:
-                            Number(risk) === -0.6
-                              ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)`
-                              : "rgba(0,0,0,0.75)",
-                          color: Number(risk) === -0.6 ? "#000" : PALETTE.gold,
-                        }}
-                      >
-                        Low Risk
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => setRisk(0)}
-                        className="px-3 py-1.5 text-[11px] font-semibold transition"
-                        style={{
-                          border: `1px solid ${PALETTE.gold}`,
-                          background:
-                            Number(risk) === 0
-                              ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)`
-                              : "rgba(0,0,0,0.75)",
-                          color: Number(risk) === 0 ? "#000" : PALETTE.gold,
-                        }}
-                      >
+                    <div className="flex items-center gap-2 mb-1">
+                      <MiniPill active={Number(risk) === -0.6} onClick={() => setRisk(-0.6)}>
+                        Low
+                      </MiniPill>
+                      <MiniPill active={Number(risk) === 0} onClick={() => setRisk(0)}>
                         Neutral
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => setRisk(0.6)}
-                        className="px-3 py-1.5 text-[11px] font-semibold transition"
-                        style={{
-                          border: `1px solid ${PALETTE.gold}`,
-                          background:
-                            Number(risk) === 0.6
-                              ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)`
-                              : "rgba(0,0,0,0.75)",
-                          color: Number(risk) === 0.6 ? "#000" : PALETTE.gold,
-                        }}
-                      >
-                        High Risk
-                      </button>
+                      </MiniPill>
+                      <MiniPill active={Number(risk) === 0.6} onClick={() => setRisk(0.6)}>
+                        High
+                      </MiniPill>
                     </div>
 
                     <div
-                      className="h-12 rounded-md px-3 flex items-center"
+                      className="h-12 rounded-xl px-3 flex items-center"
                       style={{
                         backgroundColor: "rgba(0,0,0,0.8)",
                         border: "1px solid rgba(248, 250, 252, 0.18)",
@@ -734,72 +878,30 @@ export default function MyTeamOptimize() {
                     </div>
 
                     <p className="text-[11px] mt-1" style={{ color: "#9ca3af" }}>
-                      Low risk prefers high-ownership, stable picks. High risk rewards
-                      volatility and differentials.
+                      Low risk prefers stable picks. High risk rewards differentials.
                     </p>
                   </div>
 
-                  {/* Value of transfers */}
+                  {/* Value */}
                   <div className="flex flex-col gap-1">
-                    <label
-                      className="text-xs uppercase tracking-wide"
-                      style={{ color: "#e5e7eb" }}
-                    >
+                    <label className="text-xs uppercase tracking-wide" style={{ color: "#e5e7eb" }}>
                       Value of transfers
                     </label>
 
-                    <div className="flex items-center justify-between mb-1">
-                      <button
-                        type="button"
-                        onClick={() => setValtrans(0.0)}
-                        className="px-3 py-1.5 text-[11px] font-semibold transition"
-                        style={{
-                          border: `1px solid ${PALETTE.gold}`,
-                          background:
-                            Number(valtrans) === 0.0
-                              ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)`
-                              : "rgba(0,0,0,0.75)",
-                          color: Number(valtrans) === 0.0 ? "#000" : PALETTE.gold,
-                        }}
-                      >
-                        Low value
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => setValtrans(0.5)}
-                        className="px-3 py-1.5 text-[11px] font-semibold transition"
-                        style={{
-                          border: `1px solid ${PALETTE.gold}`,
-                          background:
-                            Number(valtrans) === 0.5
-                              ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)`
-                              : "rgba(0,0,0,0.75)",
-                          color: Number(valtrans) === 0.5 ? "#000" : PALETTE.gold,
-                        }}
-                      >
+                    <div className="flex items-center gap-2 mb-1">
+                      <MiniPill active={Number(valtrans) === 0} onClick={() => setValtrans(0)}>
+                        Low
+                      </MiniPill>
+                      <MiniPill active={Number(valtrans) === 0.5} onClick={() => setValtrans(0.5)}>
                         Neutral
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => setValtrans(1)}
-                        className="px-3 py-1.5 text-[11px] font-semibold transition"
-                        style={{
-                          border: `1px solid ${PALETTE.gold}`,
-                          background:
-                            Number(valtrans) === 1
-                              ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)`
-                              : "rgba(0,0,0,0.75)",
-                          color: Number(valtrans) === 1 ? "#000" : PALETTE.gold,
-                        }}
-                      >
-                        High value
-                      </button>
+                      </MiniPill>
+                      <MiniPill active={Number(valtrans) === 1} onClick={() => setValtrans(1)}>
+                        High
+                      </MiniPill>
                     </div>
 
                     <div
-                      className="h-12 rounded-md px-3 flex items-center"
+                      className="h-12 rounded-xl px-3 flex items-center"
                       style={{
                         backgroundColor: "rgba(0,0,0,0.8)",
                         border: "1px solid rgba(248, 250, 252, 0.18)",
@@ -811,9 +913,7 @@ export default function MyTeamOptimize() {
                         max={1}
                         step={0.25}
                         value={clampValTrans(Number(valtrans))}
-                        onChange={(e) =>
-                          setValtrans(clampValTrans(Number(e.target.value)))
-                        }
+                        onChange={(e) => setValtrans(clampValTrans(Number(e.target.value)))}
                         aria-label="Value of saved transfers"
                         className="opt-range w-full appearance-none bg-transparent cursor-pointer"
                         style={{
@@ -832,12 +932,11 @@ export default function MyTeamOptimize() {
                     </div>
 
                     <p className="text-[11px] mt-1" style={{ color: "#9ca3af" }}>
-                      How much you value saved transfers.
+                      Higher value preserves transfers more.
                     </p>
                   </div>
                 </div>
 
-                {/* Shared slider thumb styling (fixes blue thumb) */}
                 <style>{`
                   .opt-range::-webkit-slider-thumb {
                     -webkit-appearance: none;
@@ -850,10 +949,7 @@ export default function MyTeamOptimize() {
                     box-shadow: 0 0 0 2px rgba(184,134,11,0.35);
                     transition: transform 0.15s ease;
                   }
-                  .opt-range::-webkit-slider-thumb:hover {
-                    transform: scale(1.15);
-                  }
-
+                  .opt-range::-webkit-slider-thumb:hover { transform: scale(1.12); }
                   .opt-range::-moz-range-thumb {
                     width: 22px;
                     height: 22px;
@@ -862,7 +958,6 @@ export default function MyTeamOptimize() {
                     border: 2px solid #000;
                     box-shadow: 0 0 0 2px rgba(184,134,11,0.35);
                   }
-
                   .opt-range::-moz-range-track {
                     height: 6px;
                     background: #374151;
@@ -876,16 +971,21 @@ export default function MyTeamOptimize() {
 
         {/* Unwanted players */}
         {bannedPlayersData.length > 0 && (
-          <section className="mb-8">
-            <h2 className="text-lg font-semibold mb-2">Unwanted players</h2>
+          <section className="mb-6">
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-lg font-semibold">Unwanted players</h2>
+              <div className="text-[11px]" style={{ color: "#9ca3af" }}>
+                Tap “X” on a player to add/remove.
+              </div>
+            </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
               {bannedPlayersData.map((player) => (
                 <div
                   key={player.Name}
                   className="relative flex items-center gap-2 px-2 py-1 rounded-full text-sm transition"
                   style={{
-                    backgroundColor: "rgba(248, 113, 113, 0.15)",
-                    border: "1px solid rgba(248, 113, 113, 0.4)",
+                    backgroundColor: "rgba(248, 113, 113, 0.12)",
+                    border: "1px solid rgba(248, 113, 113, 0.3)",
                     color: "#fee2e2",
                   }}
                 >
@@ -903,10 +1003,10 @@ export default function MyTeamOptimize() {
                   <button
                     onClick={() => removeBan(player.Name)}
                     className="absolute -top-1 -right-1 rounded-full p-0.5"
-                    style={{ backgroundColor: "rgba(0,0,0,0.7)" }}
+                    style={{ backgroundColor: "rgba(0,0,0,0.7)", color: "#fff" }}
                     aria-label={`Remove ${player.web_name} from unwanted`}
                   >
-                    <X size={12} className="text-white" />
+                    <X size={12} className="lucide-icon" />
                   </button>
                 </div>
               ))}
@@ -914,48 +1014,83 @@ export default function MyTeamOptimize() {
           </section>
         )}
 
-        {/* Header & total points */}
-        {totalPredPoints != null && (
-          <section className="mb-8 text-center">
-            <div
-              className="inline-flex flex-col items-center rounded-xl px-4 py-3"
-              style={{
-                border: `1px solid ${PALETTE.gold}`,
-                background:
-                  "linear-gradient(145deg, rgba(0,0,0,0.96), rgba(0,0,0,0.9))",
-                boxShadow: "0 16px 32px rgba(0,0,0,0.95)",
-              }}
-            >
-              <div className="text-sm uppercase tracking-wide" style={{ color: "#9ca3af" }}>
-                Team for GW {minGW}
+        {/* Save bar above pitch */}
+        <section className="mb-3 flex justify-center">
+          <div
+            className="w-full max-w-[420px] rounded-2xl p-3 sm:p-4"
+            style={{
+              border: `1px solid rgba(248, 250, 252, 0.16)`,
+              background: "rgba(0,0,0,0.72)",
+              boxShadow: "0 14px 26px rgba(0,0,0,0.65)",
+            }}
+          >
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <div className="text-[10px] uppercase tracking-wide" style={{ color: "#9ca3af" }}>
+                  Save this run
+                </div>
+                <div className="text-sm font-semibold" style={{ color: PALETTE.beige }}>
+                  Optimization name
+                </div>
               </div>
-              <div className="text-[11px] uppercase tracking-wide" style={{ color: "#9ca3af" }}>
-                Total predicted points GW {minGW}-{maxGW}
-              </div>
-              <div className="font-bold text-xl" style={{ color: PALETTE.gold }}>
-                {totalPredPoints.toFixed(2)}
-              </div>
-              <p
-                className="max-w-md text-center text-xs leading-tight mt-1"
-                style={{ color: "#9ca3af" }}
-              >
-                Model:{" "}
-                <span className="font-semibold">
-                  {modelType === "ai" ? "AI" : "Statistical (Player-adjusted)"}
-                </span>
-                . Click a player to view stats, or add them to{" "}
-                <span className="font-medium">Unwanted</span>.
-              </p>
-            </div>
-          </section>
-        )}
 
-        {/* Squad Pitch */}
+              <button
+                type="button"
+                onClick={handleSaveOptimization}
+                disabled={!canSave}
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-full font-semibold transition"
+                style={{
+                  border: `1px solid ${canSave ? PALETTE.gold : "#374151"}`,
+                  background: canSave
+                    ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)`
+                    : "rgba(0,0,0,0.55)",
+                  color: canSave ? "#000" : "#9ca3af",
+                  cursor: canSave ? "pointer" : "not-allowed",
+                  boxShadow: canSave ? "0 10px 18px rgba(0,0,0,0.45)" : "none",
+                }}
+              >
+                <BookmarkPlus size={16} className="lucide-icon" />
+                Save
+              </button>
+            </div>
+
+            <div className="mt-2 flex flex-col sm:flex-row gap-2 sm:items-center">
+              <input
+                value={saveName}
+                onChange={(e) => setSaveName(e.target.value)}
+                placeholder={canSave ? "e.g. Low risk · FH GW29" : "Run optimization to enable saving"}
+                disabled={!canSave}
+                className="h-11 w-full px-3 rounded-xl text-sm outline-none"
+                style={{
+                  fontSize: 16,
+                  border: `1px solid ${
+                    saveError ? "rgba(248,113,113,0.6)" : "rgba(248, 250, 252, 0.16)"
+                  }`,
+                  backgroundColor: !canSave ? "rgba(0,0,0,0.5)" : "rgba(0,0,0,0.78)",
+                  color: PALETTE.beige,
+                }}
+              />
+
+              <div
+                className="text-[11px] sm:text-xs"
+                style={{ color: saveError ? "#fbbf24" : "#9ca3af" }}
+              >
+                {saveError ? saveError : saveHint ? saveHint : "Saved locally and listed above."}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Pitch */}
         {data && (
-          <section className="mb-2 flex justify-center">
+          <section className="mb-3 flex justify-center">
             <div
-              className="w-full max-w-[400px] aspect-[1/2] bg-no-repeat bg-cover bg-center border border-white rounded-lg px-2 py-1 relative"
-              style={{ backgroundImage: `url(${pitch})` }}
+              className="w-full max-w-[420px] aspect-[1/2] bg-no-repeat bg-cover bg-center rounded-2xl px-2 py-1 relative"
+              style={{
+                backgroundImage: `url(${pitch})`,
+                border: "1px solid rgba(255,255,255,0.16)",
+                boxShadow: "0 18px 40px rgba(0,0,0,0.75)",
+              }}
             >
               <div className="flex flex-col justify-between h-[480px] pt-0 space-y-0 width-full">
                 <PlayerRow
@@ -998,10 +1133,9 @@ export default function MyTeamOptimize() {
           </section>
         )}
 
+        {/* Apply transfers */}
         {data && (
-          <section className="mb-6 flex flex-col items-center gap-3">
-            <div className="w-full flex justify-center">{/* ... your pitch div ... */}</div>
-
+          <section className="mb-6 flex flex-col items-center gap-3 mt-10">
             <button
               type="button"
               onClick={handleApplyToPlanner}
@@ -1016,7 +1150,7 @@ export default function MyTeamOptimize() {
                 cursor: plannerPayload.length ? "pointer" : "not-allowed",
               }}
             >
-              <Search className="text-black" style={{ color: PALETTE.balck }} />
+              <Search size={18} className="lucide-icon" />
               See transfers on My Team
             </button>
 
@@ -1036,9 +1170,7 @@ export default function MyTeamOptimize() {
               {transfersWithFH.map((grp) => {
                 const remainingIns = [...grp.in];
                 const pairs = grp.out.map((outP) => {
-                  const i = remainingIns.findIndex(
-                    (inP) => inP.position === outP.position
-                  );
+                  const i = remainingIns.findIndex((inP) => inP.position === outP.position);
                   return i !== -1
                     ? { outP, inP: remainingIns.splice(i, 1)[0] }
                     : { outP, inP: null };
@@ -1048,12 +1180,11 @@ export default function MyTeamOptimize() {
                 return (
                   <div
                     key={grp.GW}
-                    className="rounded-xl p-4"
+                    className="rounded-2xl p-4"
                     style={{
                       border: `1px solid ${PALETTE.gold}`,
-                      background:
-                        "linear-gradient(145deg, rgba(0,0,0,0.96), rgba(0,0,0,0.9))",
-                      boxShadow: "0 18px 40px rgba(0,0,0,0.9)",
+                      background: "linear-gradient(145deg, rgba(0,0,0,0.94), rgba(0,0,0,0.86))",
+                      boxShadow: "0 18px 40px rgba(0,0,0,0.85)",
                     }}
                   >
                     <div className="flex items-center justify-center gap-3 mb-3">
@@ -1064,13 +1195,14 @@ export default function MyTeamOptimize() {
                           style={{
                             border: `1px solid ${PALETTE.gold}`,
                             color: PALETTE.gold,
-                            backgroundColor: "rgba(0,0,0,0.8)",
+                            backgroundColor: "rgba(0,0,0,0.7)",
                           }}
                         >
                           Played Free Hit
                         </span>
                       )}
                     </div>
+
                     <div className="flex flex-wrap justify-center items-center gap-6">
                       {pairs.map(({ outP, inP }, idx) => (
                         <div key={idx} className="flex items-center gap-2">
@@ -1084,10 +1216,7 @@ export default function MyTeamOptimize() {
                             />
                           )}
                           {outP && inP && (
-                            <ArrowRight
-                              className="text-royal-gold"
-                              style={{ color: PALETTE.gold }}
-                            />
+                            <ArrowRight size={18} className="lucide-icon" style={{ color: PALETTE.gold }} />
                           )}
                           {inP && (
                             <TransferCard
@@ -1112,18 +1241,8 @@ export default function MyTeamOptimize() {
   );
 }
 
-/** Controls helper components **/
-function ChipSelect({
-  label,
-  show,
-  onShow,
-  onHide,
-  value,
-  onChange,
-  minGW,
-  maxGW,
-  addLabel,
-}) {
+/** Components **/
+function ChipSelect({ label, show, onShow, onHide, value, onChange, minGW, maxGW, addLabel }) {
   return (
     <div className="flex flex-col gap-1">
       <label className="text-xs uppercase tracking-wide" style={{ color: "#e5e7eb" }}>
@@ -1136,19 +1255,17 @@ function ChipSelect({
             value={value || ""}
             onChange={(e) => onChange(e.target.value)}
             style={{ colorScheme: "dark" }}
-            className="w-full h-10 pl-3 pr-9 rounded-md text-sm outline-none"
+            className="w-full h-11 pl-3 pr-9 rounded-xl text-sm outline-none"
             aria-label={label}
           >
             <option value="" disabled className="text-neutral-400">
               {label}
             </option>
-            {Array.from({ length: maxGW - minGW + 1 }, (_, i) => minGW + i).map(
-              (gw) => (
-                <option key={gw} value={gw}>
-                  GW {gw}
-                </option>
-              )
-            )}
+            {Array.from({ length: maxGW - minGW + 1 }, (_, i) => minGW + i).map((gw) => (
+              <option key={gw} value={gw}>
+                GW {gw}
+              </option>
+            ))}
           </select>
 
           <button
@@ -1158,14 +1275,14 @@ function ChipSelect({
             aria-label={`Clear ${label}`}
             type="button"
           >
-            <X size={16} />
+            <X size={16} className="lucide-icon" />
           </button>
         </div>
       ) : (
         <button
           onClick={onShow}
           type="button"
-          className="h-10 w-full inline-flex items-center justify-center rounded-md text-sm"
+          className="h-11 w-full inline-flex items-center justify-center rounded-xl text-sm"
           style={{
             border: `1px dashed ${PALETTE.gold}`,
             backgroundColor: "rgba(0,0,0,0.8)",
@@ -1185,9 +1302,9 @@ function IconButton({ ariaLabel, onClick, label }) {
       type="button"
       aria-label={ariaLabel}
       onClick={onClick}
-      className="inline-flex items-center justify-center w-7 h-7 rounded-full text-sm leading-none"
+      className="inline-flex items-center justify-center w-8 h-8 rounded-full text-sm leading-none"
       style={{
-        border: `1px solid ${PALETTE.gold}`,
+        border: `1px solid rgba(248, 250, 252, 0.18)`,
         backgroundColor: "rgba(0,0,0,0.8)",
         color: PALETTE.gold,
       }}
@@ -1197,7 +1314,23 @@ function IconButton({ ariaLabel, onClick, label }) {
   );
 }
 
-/** Player row and cards **/
+function MiniPill({ active, onClick, children }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="px-3 py-2 text-[11px] font-semibold transition rounded-full"
+      style={{
+        border: `1px solid ${PALETTE.gold}`,
+        background: active ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)` : "rgba(0,0,0,0.65)",
+        color: active ? "#000" : PALETTE.gold,
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
 function PlayerRow({ players, isBench = false, toggleBan, bannedList, navigate }) {
   const fallback =
     "https://d2kq0urxkarztv.cloudfront.net/51812cad594df29a1a0003f0/661303/upload-643ff5d9-840e-4bbb-b099-07c26ef505c9.png?w=578";
@@ -1226,14 +1359,10 @@ function PlayerRow({ players, isBench = false, toggleBan, bannedList, navigate }
               e.currentTarget.src = fallback;
             }}
             className={`${
-              isBench
-                ? "w-[50px] h-[60px] sm:w-[56px] sm:h-[76px]"
-                : "w-[55px] h-[70px] sm:w-[62px] sm:h-[86px]"
+              isBench ? "w-[50px] h-[60px] sm:w-[56px] sm:h-[76px]" : "w-[55px] h-[70px] sm:w-[62px] sm:h-[86px]"
             } object-contain drop-shadow`}
             onClick={() =>
-              navigate("/Player_Analytics/Individual", {
-                state: { selectedPlayer: p.Name },
-              })
+              navigate("/Player_Analytics/Individual", { state: { selectedPlayer: p.Name } })
             }
             alt={p.web_name}
             role="button"
@@ -1243,16 +1372,9 @@ function PlayerRow({ players, isBench = false, toggleBan, bannedList, navigate }
             className="absolute top-1 -right-2 bg-black/70 p-1 rounded-full hover:bg-black/90"
             aria-label={`Toggle unwanted for ${p.web_name}`}
           >
-            <X
-              size={12}
-              className={bannedList.includes(p.Name) ? "text-rose-500" : "text-royal-gold"}
-            />
+            <X size={12} className="lucide-icon" style={{ color: bannedList.includes(p.Name) ? "#fb7185" : PALETTE.gold }} />
           </button>
-          <div
-            className={`${
-              isBench ? "text-black/95" : "text-black/95"
-            } mt-1 text-[11px] sm:text-xs leading-tight max-w-[70px] truncate bg-gray-100/90 rounded-full`}
-          >
+          <div className="mt-1 text-[11px] sm:text-xs leading-tight max-w-[70px] truncate bg-gray-100/90 rounded-full text-black/95">
             {p.web_name}
           </div>
         </div>
@@ -1275,9 +1397,7 @@ function TransferCard({ player, label, toggleBan, bannedList, navigate }) {
           }}
           className="w-12 h-16 rounded object-cover border border-white/10 shadow"
           onClick={() =>
-            navigate("/Player_Analytics/Individual", {
-              state: { selectedPlayer: player.Name },
-            })
+            navigate("/Player_Analytics/Individual", { state: { selectedPlayer: player.Name } })
           }
           role="button"
         />
@@ -1287,16 +1407,11 @@ function TransferCard({ player, label, toggleBan, bannedList, navigate }) {
             className="absolute -top-2 -right-4 bg-black/70 p-1 rounded-full hover:bg-black/90"
             aria-label={`Toggle unwanted for ${player.web_name}`}
           >
-            <X
-              size={14}
-              className={bannedList.includes(player.Name) ? "text-rose-500" : "text-royal-gold"}
-            />
+            <X size={14} className="lucide-icon" style={{ color: bannedList.includes(player.Name) ? "#fb7185" : PALETTE.gold }} />
           </button>
         )}
       </div>
-      <span className="text-xs mt-1 max-w-[80px] truncate text-center">
-        {player.web_name}
-      </span>
+      <span className="text-xs mt-1 max-w-[80px] truncate text-center">{player.web_name}</span>
       <span className="text-[11px] text-neutral-400">{label}</span>
     </div>
   );
