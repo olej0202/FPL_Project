@@ -762,7 +762,7 @@ function FixturesTable({ tableData }) {
   const COL_TEAM = 240;
 
   // ✅ horizon slider (number of GW columns to show from earliest)
-  const [gwHorizon, setGwHorizon] = useState(() => Math.min(8, gws.length || 1));
+  const [gwHorizon, setGwHorizon] = useState(() => Math.min(5, gws.length || 1));
 
   useEffect(() => {
     setGwHorizon((h) => Math.min(Math.max(1, h), gws.length || 1));
