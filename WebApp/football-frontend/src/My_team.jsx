@@ -314,24 +314,28 @@ export default function MyTeamOptimize() {
     }
 
     const payload = {
-      id: `${Date.now()}_${Math.random().toString(16).slice(2)}`,
-      name: trimmed,
-      createdAt: Date.now(),
-      snapshot: {
-        params: {
-          teamId: String(teamId || ""),
-          bbRound: bbRound || "",
-          wildRound: wildRound || "",
-          freehitROund: freehitROund || "",
-          bannedList: Array.isArray(bannedList) ? bannedList : [],
-          n_hits: Number(n_hits || 0),
-          risk: Number(risk || 0),
-          valtrans: Number(valtrans || 0.5),
-          modelType: modelType,
-        },
-        result: { data },
-      },
-    };
+  id: `${Date.now()}_${Math.random().toString(16).slice(2)}`,
+  name: trimmed,
+  createdAt: Date.now(),
+  snapshot: {
+    params: {
+      teamId: String(teamId || ""),
+      bbRound: bbRound || "",
+      wildRound: wildRound || "",
+      freehitROund: freehitROund || "",
+      bannedList: Array.isArray(bannedList) ? bannedList : [],
+      n_hits: Number(n_hits || 0),
+      risk: Number(risk || 0),
+      valtrans: Number(valtrans || 0.5),
+      modelType: modelType,
+    },
+    // ✅ NEW: store unwanted chip display data too
+    result: {
+      data,
+      bannedPlayersData: Array.isArray(bannedPlayersData) ? bannedPlayersData : [],
+    },
+  },
+};
 
     saveOptimization(payload);
     setActiveSavedId(payload.id);
@@ -1162,79 +1166,103 @@ export default function MyTeamOptimize() {
         )}
 
         {/* Transfers */}
-        {transfersWithFH.length > 0 && (
-          <section className="mb-4">
-            <h2 className="text-2xl font-bold text-center mb-4">Transfers</h2>
-            <div className="space-y-6">
-              {transfersWithFH.map((grp) => {
-                const remainingIns = [...grp.in];
-                const pairs = grp.out.map((outP) => {
-                  const i = remainingIns.findIndex((inP) => inP.position === outP.position);
-                  return i !== -1
-                    ? { outP, inP: remainingIns.splice(i, 1)[0] }
-                    : { outP, inP: null };
-                });
-                remainingIns.forEach((inP) => pairs.push({ outP: null, inP }));
+        {/* Transfers (Pro timeline) */}
+{transfersWithFH.length > 0 && (
+  <section className="mb-6">
+    <div className="flex items-end justify-between mb-3">
+      <h2 className="text-xl sm:text-2xl font-bold">Transfer plan</h2>
+      <div className="text-[11px]" style={{ color: "#9ca3af" }}>
+        {minGW}–{maxGW} window
+      </div>
+    </div>
 
-                return (
-                  <div
-                    key={grp.GW}
-                    className="rounded-2xl p-4"
-                    style={{
-                      border: `1px solid ${PALETTE.gold}`,
-                      background: "linear-gradient(145deg, rgba(0,0,0,0.94), rgba(0,0,0,0.86))",
-                      boxShadow: "0 18px 40px rgba(0,0,0,0.85)",
-                    }}
-                  >
-                    <div className="flex items-center justify-center gap-3 mb-3">
-                      <div className="text-sm font-medium">GW {grp.GW}</div>
-                      {grp.freehit && (
-                        <span
-                          className="text-xs px-2 py-1 rounded-full"
-                          style={{
-                            border: `1px solid ${PALETTE.gold}`,
-                            color: PALETTE.gold,
-                            backgroundColor: "rgba(0,0,0,0.7)",
-                          }}
-                        >
-                          Played Free Hit
-                        </span>
-                      )}
-                    </div>
+    <div className="space-y-4">
+      {transfersWithFH.map((grp) => {
+        const remainingIns = [...(grp.in || [])];
+        const pairs = (grp.out || []).map((outP) => {
+          const i = remainingIns.findIndex((inP) => inP.position === outP.position);
+          return i !== -1
+            ? { outP, inP: remainingIns.splice(i, 1)[0] }
+            : { outP, inP: null };
+        });
+        remainingIns.forEach((inP) => pairs.push({ outP: null, inP }));
 
-                    <div className="flex flex-wrap justify-center items-center gap-6">
-                      {pairs.map(({ outP, inP }, idx) => (
-                        <div key={idx} className="flex items-center gap-2">
-                          {outP && (
-                            <TransferCard
-                              player={outP}
-                              label="Out"
-                              toggleBan={toggleBan}
-                              bannedList={bannedList}
-                              navigate={navigate}
-                            />
-                          )}
-                          {outP && inP && (
-                            <ArrowRight size={18} className="lucide-icon" style={{ color: PALETTE.gold }} />
-                          )}
-                          {inP && (
-                            <TransferCard
-                              player={inP}
-                              label="In"
-                              toggleBan={toggleBan}
-                              bannedList={bannedList}
-                              navigate={navigate}
-                            />
-                          )}
-                        </div>
-                      ))}
-                    </div>
+        // only show “real” transfers
+        const realPairs = pairs.filter((x) => x.outP && x.inP);
+        if (realPairs.length === 0 && !grp.freehit) return null;
+
+        return (
+          <div
+            key={grp.GW}
+            className="rounded-2xl overflow-hidden"
+            style={{
+              border: `1px solid rgba(248, 250, 252, 0.14)`,
+              background: "rgba(0,0,0,0.55)",
+              boxShadow: "0 18px 40px rgba(0,0,0,0.75)",
+            }}
+          >
+            {/* GW header */}
+            <div
+              className="px-4 py-3 flex items-center justify-between"
+              style={{
+                borderBottom: "1px solid rgba(255,255,255,0.08)",
+                background:
+                  "linear-gradient(135deg, rgba(184,134,11,0.16), rgba(0,0,0,0.55))",
+              }}
+            >
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-9 h-9 rounded-xl flex items-center justify-center font-bold"
+                  style={{
+                    backgroundColor: "rgba(0,0,0,0.55)",
+                    border: `1px solid ${PALETTE.gold}`,
+                    color: PALETTE.gold,
+                  }}
+                >
+                  {grp.GW}
+                </div>
+                <div>
+                  <div className="text-sm font-semibold">Gameweek {grp.GW}</div>
+                  <div className="text-[11px]" style={{ color: "#9ca3af" }}>
+                    {realPairs.length} transfer{realPairs.length === 1 ? "" : "s"}
                   </div>
-                );
-              })}
+                </div>
+              </div>
+
+              {grp.freehit && (
+                <span
+                  className="text-[11px] px-3 py-1 rounded-full font-semibold"
+                  style={{
+                    border: `1px solid ${PALETTE.gold}`,
+                    color: PALETTE.gold,
+                    backgroundColor: "rgba(0,0,0,0.6)",
+                  }}
+                >
+                  Free Hit
+                </span>
+              )}
             </div>
-          </section>
-        )}
+
+            {/* rows */}
+            <div className="divide-y" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
+              {realPairs.map(({ outP, inP }, idx) => (
+                <TransferRow
+                  key={`${grp.GW}_${idx}`}
+                  outP={outP}
+                  inP={inP}
+                  PALETTE={PALETTE}
+                  navigate={navigate}
+                  toggleBan={toggleBan}
+                  bannedList={bannedList}
+                />
+              ))}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  </section>
+)}
       </div>
     </div>
   );
@@ -1412,6 +1440,136 @@ function TransferCard({ player, label, toggleBan, bannedList, navigate }) {
       </div>
       <span className="text-xs mt-1 max-w-[80px] truncate text-center">{player.web_name}</span>
       <span className="text-[11px] text-neutral-400">{label}</span>
+    </div>
+  );
+}
+
+function PosPill({ pos, PALETTE }) {
+  const map = {
+    GKP: { label: "GK" },
+    DEF: { label: "DEF" },
+    MID: { label: "MID" },
+    FWD: { label: "FWD" },
+  };
+  const t = map[pos] || { label: pos || "-" };
+
+  return (
+    <span
+      className="text-[10px] font-bold px-2 py-1 rounded-full"
+      style={{
+        border: `1px solid rgba(255,255,255,0.12)`,
+        backgroundColor: "rgba(0,0,0,0.55)",
+        color: PALETTE.gold,
+        letterSpacing: "0.08em",
+      }}
+    >
+      {t.label}
+    </span>
+  );
+}
+
+function PlayerChip({ p, side, PALETTE, navigate, toggleBan, bannedList }) {
+  const isIn = side === "in";
+  const isBanned = bannedList?.includes(p?.Name);
+
+  return (
+    <div className="flex items-center gap-3 min-w-0">
+      <div className="relative">
+        <img
+          src={p.photo}
+          alt={p.web_name}
+          className="w-10 h-10 rounded-xl object-cover"
+          style={{ border: "1px solid rgba(255,255,255,0.10)" }}
+          onClick={() =>
+            navigate("/Player_Analytics/Individual", { state: { selectedPlayer: p.Name } })
+          }
+          role="button"
+        />
+        {isIn && (
+          <button
+            type="button"
+            onClick={() => toggleBan(p.Name)}
+            className="absolute -top-2 -right-2 rounded-full p-1"
+            style={{
+              backgroundColor: "rgba(0,0,0,0.75)",
+              border: "1px solid rgba(255,255,255,0.10)",
+            }}
+            aria-label={`Toggle unwanted for ${p.web_name}`}
+            title="Toggle unwanted"
+          >
+            <X size={12} className="lucide-icon" style={{ color: isBanned ? "#fb7185" : PALETTE.gold }} />
+          </button>
+        )}
+      </div>
+
+      <div className="min-w-0">
+        <div className="text-sm font-semibold truncate">{p.web_name}</div>
+        <div className="text-[11px] truncate" style={{ color: "#9ca3af" }}>
+          {p.Team ? String(p.Team) : ""}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TransferRow({ outP, inP, PALETTE, navigate, toggleBan, bannedList }) {
+  return (
+    <div className="px-4 py-3">
+      <div className="grid grid-cols-12 items-center gap-3">
+        {/* left: OUT */}
+        <div className="col-span-5 min-w-0">
+          <div className="flex items-center justify-between gap-2">
+            <div className="text-[11px] uppercase tracking-wide" style={{ color: "#9ca3af" }}>
+              Out
+            </div>
+            <PosPill pos={outP.position} PALETTE={PALETTE} />
+          </div>
+          <div className="mt-1">
+            <PlayerChip
+              p={outP}
+              side="out"
+              PALETTE={PALETTE}
+              navigate={navigate}
+              toggleBan={toggleBan}
+              bannedList={bannedList}
+            />
+          </div>
+        </div>
+
+        {/* center arrow */}
+        <div className="col-span-2 flex items-center justify-center">
+          <div
+            className="w-10 h-10 rounded-full flex items-center justify-center"
+            style={{
+              backgroundColor: "rgba(0,0,0,0.45)",
+              border: `1px solid rgba(184,134,11,0.35)`,
+              color: PALETTE.gold,
+            }}
+          >
+            <ArrowRight size={18} className="lucide-icon" />
+          </div>
+        </div>
+
+        {/* right: IN */}
+        <div className="col-span-5 min-w-0">
+          <div className="flex items-center justify-between gap-2">
+            <div className="text-[11px] uppercase tracking-wide" style={{ color: "#9ca3af" }}>
+              In
+            </div>
+            <PosPill pos={inP.position} PALETTE={PALETTE} />
+          </div>
+          <div className="mt-1">
+            <PlayerChip
+              p={inP}
+              side="in"
+              PALETTE={PALETTE}
+              navigate={navigate}
+              toggleBan={toggleBan}
+              bannedList={bannedList}
+            />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
