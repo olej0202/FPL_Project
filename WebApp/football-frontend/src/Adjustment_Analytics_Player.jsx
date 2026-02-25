@@ -1,8 +1,5 @@
 import React, { useEffect, useMemo, useState, useRef, useCallback } from "react";
-import {
-  useAdjustmentData,
-  fixtureIdFromRow,
-} from "./Contexts/AdjustmentsContext";
+import { useAdjustmentData, fixtureIdFromRow } from "./Contexts/AdjustmentsContext";
 
 const PALETTE = {
   red: "#5A0000",
@@ -20,6 +17,8 @@ const MEASURE_LABELS = {
   Avg_Minutes: "Predicted Minutes",
   CBI_Predictions: "Predicted Defcon",
 };
+
+const clamp01 = (x) => Math.max(0, Math.min(1, Number.isFinite(x) ? x : 0));
 
 /** Simple reusable searchable multi-select dropdown */
 function SearchableMultiSelect({
@@ -42,20 +41,12 @@ function SearchableMultiSelect({
   }, [options, search]);
 
   const toggleValue = (value) => {
-    if (selectedValues.includes(value)) {
-      onChange(selectedValues.filter((v) => v !== value));
-    } else {
-      onChange([...selectedValues, value]);
-    }
+    if (selectedValues.includes(value)) onChange(selectedValues.filter((v) => v !== value));
+    else onChange([...selectedValues, value]);
   };
 
-  const handleSelectAll = () => {
-    onChange(options.map((o) => o.value));
-  };
-
-  const handleClearAll = () => {
-    onChange([]);
-  };
+  const handleSelectAll = () => onChange(options.map((o) => o.value));
+  const handleClearAll = () => onChange([]);
 
   const selectedLabel =
     selectedValues.length === 0 ? "All" : `${selectedValues.length} selected`;
@@ -169,16 +160,9 @@ function SearchableMultiSelect({
             </div>
           </div>
 
-          <div
-            style={{
-              padding: "0.25rem 0.35rem 0.4rem",
-              fontSize: "0.8rem",
-            }}
-          >
+          <div style={{ padding: "0.25rem 0.35rem 0.4rem", fontSize: "0.8rem" }}>
             {filteredOptions.length === 0 ? (
-              <div style={{ padding: "0.3rem 0.4rem", color: "#9ca3af" }}>
-                No matches
-              </div>
+              <div style={{ padding: "0.3rem 0.4rem", color: "#9ca3af" }}>No matches</div>
             ) : (
               filteredOptions.map((opt) => {
                 const value = opt.value;
@@ -194,9 +178,7 @@ function SearchableMultiSelect({
                       cursor: "pointer",
                       borderRadius: "0.375rem",
                       color: PALETTE.beige,
-                      backgroundColor: checked
-                        ? "rgba(184,134,11,0.25)"
-                        : "transparent",
+                      backgroundColor: checked ? "rgba(184,134,11,0.25)" : "transparent",
                     }}
                     onMouseDown={(e) => e.preventDefault()}
                   >
@@ -234,19 +216,18 @@ export default function PlayerAdjustmentsPage() {
     fixturesVersion,
   } = useAdjustmentData();
 
-  const [playersState, setPlayersState] = useState(null); // saved copy
+  const [playersState, setPlayersState] = useState(null);
   const [teamsState, setTeamsState] = useState(null);
   const [hasHydratedFromContext, setHasHydratedFromContext] = useState(false);
 
   const [selectedMeasure, setSelectedMeasure] = useState("Points");
-
   const [selectedPlayerNames, setSelectedPlayerNames] = useState([]);
   const [selectedTeamCodes, setSelectedTeamCodes] = useState([]);
   const [selectedPositions, setSelectedPositions] = useState([]);
   const [valueThreshold, setValueThreshold] = useState(null);
 
   const [sortConfig, setSortConfig] = useState({
-    type: null, // "gw" | "total" | null
+    type: null,
     gw: null,
     direction: "desc",
   });
@@ -255,17 +236,21 @@ export default function PlayerAdjustmentsPage() {
   const [activePlayerKey, setActivePlayerKey] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Local unsaved draft for shares (per active player)
+  // Local drafts
   const [pendingGoalShare, setPendingGoalShare] = useState(null);
   const [pendingAssistShare, setPendingAssistShare] = useState(null);
+  const [minutesDraft, setMinutesDraft] = useState({});
 
-  // Local unsaved draft for minutes (per active player, per GW)
-  const [minutesDraft, setMinutesDraft] = useState({}); // { [gw]: minutes }
+  // ✅ NEW: Defcon adjustment is a single slider 0..1 (one value applied to all GWs)
+  // Formula per GW:
+  // adjusted_cbi = clamp01(raw_cbi_gw - mean(raw_cbi) + new_adjustment)
+  const [defconAdjust01, setDefconAdjust01] = useState(0.5);
+  const [defconMean01, setDefconMean01] = useState(0);
 
-  // Baseline snapshot of active player rows (for modal only)
+  // Baseline snapshot for modal
   const [modalBaselineRows, setModalBaselineRows] = useState([]);
 
-  // For line-chart drag (minutes)
+  // Drag helpers (minutes)
   const svgRefMinutes = useRef(null);
   const svgRefPoints = useRef(null);
   const [draggingGW, setDraggingGW] = useState(null);
@@ -287,17 +272,15 @@ export default function PlayerAdjustmentsPage() {
     fetchIfNeeded();
   }, [fetchIfNeeded]);
 
-  // Hydrate from context ONCE per load/reset (prevents constant overwrites)
+  // Hydrate once
   useEffect(() => {
     if (hasHydratedFromContext) return;
-
     if (Teamdata?.current) setTeamsState([...Teamdata.current]);
     if (Playerdata?.current) setPlayersState([...Playerdata.current]);
-
     if (Teamdata?.current || Playerdata?.current) setHasHydratedFromContext(true);
   }, [Teamdata, Playerdata, dataVersion, hasHydratedFromContext]);
 
-  // If team data changes (e.g., team strength dragging), refresh teamsState
+  // If team data changes
   useEffect(() => {
     if (!Teamdata?.current) return;
     setTeamsState([...Teamdata.current]);
@@ -310,62 +293,49 @@ export default function PlayerAdjustmentsPage() {
     !loading;
 
   /**
-   * Build EXPECTED team lookup (team_code + GW) by aggregating fixture-weighted rows.
-   * If a team has multiple fixtures in a GW, we sum their contributions.
-   * If a team has no fixture in a GW, lookup misses -> treated as 0 by computeMeasures.
+   * Build team lookup (fixture-weighted)
    */
   const { teamLookup, teamNamesByCode } = useMemo(() => {
     const names = new Map();
-    const lookup = new Map(); // key: `${team_code}_${gw}` -> { XG, CS }
+    const lookup = new Map();
 
     const teamsRows = teamsState || [];
     const fixtures = Fixtures?.current || [];
 
-    // Build optionsByFixtureId
     const optionsById = new Map();
     for (const fx of fixtures) {
       optionsById.set(
         fx.id,
-        (fx.options || []).map((o) => ({
-          gw: Number(o.gw),
-          p: Number(o.p), // 0..1
-        }))
+        (fx.options || []).map((o) => ({ gw: Number(o.gw), p: Number(o.p) }))
       );
     }
 
-  const add = (team_code, gw, xg, cs, matches) => {
-    const key = `${String(team_code)}_${Number(gw)}`;
-    const prev = lookup.get(key);
+    const add = (team_code, gw, xg, cs, matches) => {
+      const key = `${String(team_code)}_${Number(gw)}`;
+      const prev = lookup.get(key);
+      const prevXG = prev ? Number(prev.XG) || 0 : 0;
+      const prevCS = prev ? Number(prev.CS) || 0 : 0;
+      const prevM = prev ? Number(prev.Matches) || 0 : 0;
 
-    const prevXG = prev ? Number(prev.XG) || 0 : 0;
-    const prevCS = prev ? Number(prev.CS) || 0 : 0;
-    const prevM = prev ? Number(prev.Matches) || 0 : 0;
-
-    lookup.set(key, {
-      team_code,
-      GW: Number(gw),
-      XG: prevXG + (Number(xg) || 0),
-      CS: prevCS + (Number(cs) || 0),
-      Matches: prevM + (Number(matches) || 0), // ✅ expected matches count
-    });
-  };
+      lookup.set(key, {
+        team_code,
+        GW: Number(gw),
+        XG: prevXG + (Number(xg) || 0),
+        CS: prevCS + (Number(cs) || 0),
+        Matches: prevM + (Number(matches) || 0),
+      });
+    };
 
     for (const r of teamsRows) {
       const code = r.team_code;
       const gw0 = Number(r.GW);
 
-      if (!names.has(String(code)) && r.team_name) {
-        names.set(String(code), r.team_name);
-      }
+      if (!names.has(String(code)) && r.team_name) names.set(String(code), r.team_name);
 
       const rowXG = Number(r.XG) || 0;
       const rowCS = Number(r.CS) || 0;
 
-      const id = fixtureIdFromRow({
-        ...r,
-        Opponent_team: r.Opponent_team,
-      });
-
+      const id = fixtureIdFromRow({ ...r, Opponent_team: r.Opponent_team });
       const dist =
         optionsById.get(id)?.length ? optionsById.get(id) : [{ gw: gw0, p: 1 }];
 
@@ -394,143 +364,196 @@ export default function PlayerAdjustmentsPage() {
     return Array.from(set);
   }, [playersState]);
 
-const computeMeasures = useCallback(
-  (playerRow, teamRow) => {
-    if (!teamRow) {
-      return {
-        Goal_Scored: 0,
-        Assists: 0,
-        Points: 0,
-        Avg_Minutes: 0,
-        CBI_Predictions: 0,
-      };
-    }
-
-    // ✅ expected matches in this GW for this team (can be 0..2..)
-    const matchCount = Math.max(0, Number(teamRow.Matches) || 0);
-
-    const avgMinRaw = Number(playerRow.average_minutes) || 0;
-    const avgMin = Math.max(MIN_MINUTES, Math.min(MAX_MINUTES, avgMinRaw));
-
-    const goalShare = Number(playerRow.Goal_share) || 0;
-    const assistShare = Number(playerRow.Assist_share) || 0;
-
-    // These are per match inputs in most models:
-    const penData = Number(playerRow.Pen_data) || 0;
-    const oppGoalThreat = Number(playerRow.Pos_Goal_Threat) || 0;
-    const oppAssistThreat = Number(playerRow.Pos_Assist_Threat) || 0;
-
-    const cbi = Number(playerRow.CBI_Percent) || 0;
-    const bps = Number(playerRow.BPS) || 0;
-    const defaultPoints = Number(playerRow.default_points) || 0;
-
-    const goalFactor = Number(playerRow.Goal_factor) || 0;
-    const assistFactor = Number(playerRow.Assist_factor) || 0;
-    const csFactor = Number(playerRow.CS_factor) || 0;
-
-    // These already reflect multiple fixtures because we summed them in teamLookup
-    const xg = Number(teamRow.XG) || 0;
-    const cs = Number(teamRow.CS) || 0;
-
-    // per-match minutes adjustment
-    const minutesAdj = avgMin ? Math.min(1, avgMin / 80) : 0;
-    const csPerMatch = matchCount > 0 ? (cs / matchCount) : 0; // 0..1 if cs is expected CS count
-
-
-    const csNonlinear =csFactor > 1? ((30 - Math.min(30, csPerMatch*100)) / -35) * matchCount: 0;
-
-    // ✅ Goals/assists scale naturally with xg (which is already summed across fixtures)
-    // ✅ Pen component is per match -> multiply by matchCount
-    const goalScored = ((goalShare*0.9+0.1*oppGoalThreat) * xg + (penData * 0.8) * matchCount) * minutesAdj;
-    const assists = ((assistShare*0.9+0.1*oppAssistThreat) * xg) * minutesAdj;
-
-    // ✅ Per-match components must scale by expected matches
-    const basePoints =
-      (defaultPoints + bps + cbi * 1.7) * minutesAdj * matchCount;
-
-    // cs is already expected CS across fixtures (0..matchCount), so no extra matchCount needed
-    const points =
-      basePoints +
-      goalScored * goalFactor +
-      assists * assistFactor +
-      cs * csFactor * minutesAdj+csNonlinear
-      ;
-
-    return {
-      Goal_Scored: goalScored,
-      Assists: assists,
-      Points: points,
-
-      // ✅ Minutes should be total minutes in the GW
-      Avg_Minutes: avgMin * matchCount,
-
-      // ✅ CBI predictions are per match too
-      CBI_Predictions: cbi * minutesAdj * matchCount,
-    };
-  },
-  [MIN_MINUTES, MAX_MINUTES]
-);
-
-
   /**
-   * ✅ SINGLE source of truth recalculation:
-   * Recompute calc_* using fixture-weighted teamLookup and push to context.
-   * Includes a "did anything change?" guard to avoid loops.
+   * computeMeasures(playerRow, teamRow, cbi01Override?)
+   * - raw CBI for display is ALWAYS 0..1
+   * - adjusted CBI is clamped 0..1
+   * - Points uses adjusted CBI through a per-GW term: (cbi01 * minutesAdj * matchCount * 1.7)
    */
-  useEffect(() => {
-    if (!isDataReady) return;
-    if (!playersState) return;
-
-    const timeoutId = setTimeout(() => {
-      const updated = playersState.map((row) => {
-        const key = `${String(row.Team)}_${Number(row.GW)}`;
-        const teamRow = teamLookup.get(key); // ✅ fixture-weighted
-        const measures = computeMeasures(row, teamRow);
-
+  const computeMeasures = useCallback(
+    (playerRow, teamRow, cbi01Override = null) => {
+      if (!teamRow) {
         return {
-          ...row,
-          calc_points: measures.Points,
-          calc_goals: measures.Goal_Scored,
-          calc_assists: measures.Assists,
-          calc_minutes: measures.Avg_Minutes,
-          calc_cbi: measures.CBI_Predictions,
+          Goal_Scored: 0,
+          Assists: 0,
+          Points: 0,
+          Avg_Minutes: 0,
+          CBI_Predictions: 0,
+          _CBI01_Raw: 0,
         };
-      });
-
-      // Guard: if nothing changed, don't write (prevents effect loops)
-      let changed = false;
-      for (let i = 0; i < updated.length; i++) {
-        const a = updated[i];
-        const b = playersState[i];
-        if (!b) {
-          changed = true;
-          break;
-        }
-        if (
-          a.calc_points !== b.calc_points ||
-          a.calc_goals !== b.calc_goals ||
-          a.calc_assists !== b.calc_assists ||
-          a.calc_minutes !== b.calc_minutes ||
-          a.calc_cbi !== b.calc_cbi
-        ) {
-          changed = true;
-          break;
-        }
       }
 
-      if (!changed) return;
+      const matchCount = Math.max(0, Number(teamRow.Matches) || 0);
 
-      // write to context
-      updatePlayerData(() => updated);
+      const avgMinRaw = Number(playerRow.average_minutes) || 0;
+      const avgMin = Math.max(MIN_MINUTES, Math.min(MAX_MINUTES, avgMinRaw));
 
-      // keep local state aligned with what you pushed
-      setPlayersState(updated);
-    }, 150);
+      const goalShare = Number(playerRow.Goal_share) || 0;
+      const assistShare = Number(playerRow.Assist_share) || 0;
 
-    return () => clearTimeout(timeoutId);
-  }, [isDataReady, playersState, teamLookup, computeMeasures, updatePlayerData]);
+      const penData = Number(playerRow.Pen_data) || 0;
+      const oppGoalThreat = Number(playerRow.Pos_Goal_Threat) || 0;
+      const oppAssistThreat = Number(playerRow.Pos_Assist_Threat) || 0;
 
-  // Pivot + table data (uses saved playersState)
+      const bps = Number(playerRow.BPS) || 0;
+      const defaultPoints = Number(playerRow.default_points) || 0;
+
+      const goalFactor = Number(playerRow.Goal_factor) || 0;
+      const assistFactor = Number(playerRow.Assist_factor) || 0;
+      const csFactor = Number(playerRow.CS_factor) || 0;
+
+      const xg = Number(teamRow.XG) || 0;
+      const cs = Number(teamRow.CS) || 0;
+
+      const minutesAdj = avgMin ? Math.min(1, avgMin / 80) : 0;
+      const csPerMatch = matchCount > 0 ? cs / matchCount : 0;
+      const csNonlinear =
+        csFactor > 1 ? ((30 - Math.min(30, csPerMatch * 100)) / -35) * matchCount : 0;
+
+      const goalScored =
+        ((goalShare * 0.9 + 0.1 * oppGoalThreat) * xg + (penData * 0.8) * matchCount) *
+        minutesAdj;
+
+      const assists = ((assistShare * 0.9 + 0.1 * oppAssistThreat) * xg) * minutesAdj;
+
+      // ✅ raw defcon in [0,1]
+      const rawCbi01 = clamp01(Number(playerRow.CBI_Percent) || 0);
+
+      // ✅ adjusted defcon in [0,1]
+      const cbi01 =
+        typeof cbi01Override === "number" && Number.isFinite(cbi01Override)
+          ? clamp01(cbi01Override)
+          : rawCbi01;
+
+      // ✅ Points: keep scaling with minutes+matches, but defcon itself stays 0..1
+      const defconPointsTerm = cbi01 * minutesAdj * matchCount * 1.7;
+
+      const basePoints = (defaultPoints + bps) * minutesAdj * matchCount + defconPointsTerm;
+
+      const points =
+        basePoints +
+        goalScored * goalFactor +
+        assists * assistFactor +
+        cs * csFactor * minutesAdj +
+        csNonlinear;
+
+      return {
+        Goal_Scored: goalScored,
+        Assists: assists,
+        Points: points,
+        Avg_Minutes: avgMin * matchCount,
+        CBI_Predictions: cbi01, // ✅ shown as 0..1
+        _CBI01_Raw: rawCbi01,
+      };
+    },
+    [MIN_MINUTES, MAX_MINUTES]
+  );
+
+  /**
+   * Recompute calc_* and push to context (baseline/raw).
+   * (Your table + modal will show adjusted values; context calc_* remains baseline.)
+   */
+useEffect(() => {
+  if (!isDataReady) return;
+  if (!playersState) return;
+
+  const timeoutId = setTimeout(() => {
+    // 1) Build groups by player key
+    const groups = new Map(); // key -> array of indices
+    for (let i = 0; i < playersState.length; i++) {
+      const row = playersState[i];
+      const key = getPlayerKey(row);
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(i);
+    }
+
+    // 2) Compute per-player mean raw CBI (0..1) and chosen adjustment (0..1)
+    const meanRawByKey = new Map();
+    const adjByKey = new Map();
+
+    groups.forEach((idxs, key) => {
+      let sum = 0;
+      let n = 0;
+
+      for (const idx of idxs) {
+        const row = playersState[idx];
+        const teamRow = teamLookup.get(`${String(row.Team)}_${Number(row.GW)}`);
+        const m = computeMeasures(row, teamRow); // raw
+        const raw01 = clamp01(Number(m._CBI01_Raw));
+        sum += raw01;
+        n += 1;
+      }
+
+      const meanRaw = n ? sum / n : 0;
+      meanRawByKey.set(key, meanRaw);
+
+      // Use stored defcon_adjust_01 if present, otherwise default to mean
+      const firstRow = playersState[idxs[0]];
+      const stored = Number(firstRow?.defcon_adjust_01);
+      const adj = Number.isFinite(stored) ? clamp01(stored) : clamp01(meanRaw);
+      adjByKey.set(key, adj);
+    });
+
+    // 3) Recompute calc_* using adjusted defcon
+    const updated = playersState.map((row) => {
+      const key = getPlayerKey(row);
+      const teamRow = teamLookup.get(`${String(row.Team)}_${Number(row.GW)}`);
+
+      // compute raw for this GW
+      const mRaw = computeMeasures(row, teamRow);
+      const raw01 = clamp01(Number(mRaw._CBI01_Raw));
+
+      const meanRaw = meanRawByKey.get(key) ?? 0;
+      const newAdj = adjByKey.get(key) ?? clamp01(meanRaw);
+
+      // ✅ requested formula
+      const adjustedCbi01 = clamp01(raw01 - meanRaw + newAdj);
+
+      const measures = computeMeasures(row, teamRow, adjustedCbi01);
+
+      return {
+        ...row,
+        // store adjusted model outputs
+        calc_points: measures.Points,
+        calc_goals: measures.Goal_Scored,
+        calc_assists: measures.Assists,
+        calc_minutes: measures.Avg_Minutes,
+        calc_cbi: measures.CBI_Predictions, // adjusted 0..1
+      };
+    });
+
+    // 4) Guard to avoid loops (include calc_* diffs)
+    let changed = false;
+    for (let i = 0; i < updated.length; i++) {
+      const a = updated[i];
+      const b = playersState[i];
+      if (!b) {
+        changed = true;
+        break;
+      }
+      if (
+        a.calc_points !== b.calc_points ||
+        a.calc_goals !== b.calc_goals ||
+        a.calc_assists !== b.calc_assists ||
+        a.calc_minutes !== b.calc_minutes ||
+        a.calc_cbi !== b.calc_cbi
+      ) {
+        changed = true;
+        break;
+      }
+    }
+
+    if (!changed) return;
+
+    // ✅ write to context ("model") AND local
+    updatePlayerData(() => updated);
+    setPlayersState(updated);
+  }, 150);
+
+  return () => clearTimeout(timeoutId);
+}, [isDataReady, playersState, teamLookup, computeMeasures, updatePlayerData]);
+
+  // Pivot + table data (with adjusted defcon applied per player)
   const { playerTableRows, globalMinValue, globalMaxValue, allTeamOptions } = useMemo(() => {
     if (!playersState || !teamsState) {
       return {
@@ -562,10 +585,14 @@ const computeMeasures = useCallback(
           teamName,
           value: Number(p.value) || 0,
           rowsByGW: new Map(),
+          defcon_adjust_01: Number(p.defcon_adjust_01), // keep raw (may be undefined/NaN)
         });
       }
       const entry = playerMap.get(key);
       entry.rowsByGW.set(p.GW, p);
+
+      const stored = Number(p.defcon_adjust_01);
+      if (Number.isFinite(stored)) entry.defcon_adjust_01 = stored;
     });
 
     const tableRows = [];
@@ -576,6 +603,27 @@ const computeMeasures = useCallback(
       const gwValues = {};
       let totalMeasure = 0;
 
+      // compute mean(raw defcon) across this player's GWs
+      const rawByGw = new Map();
+      let sum = 0;
+      let n = 0;
+
+      allGWs.forEach((gw) => {
+        const playerRow = entry.rowsByGW.get(gw);
+        if (!playerRow) return;
+        const teamRow = teamLookup.get(`${entry.teamCode}_${gw}`);
+        const m = computeMeasures(playerRow, teamRow);
+        const raw01 = clamp01(Number(m._CBI01_Raw));
+        rawByGw.set(gw, raw01);
+        sum += raw01;
+        n += 1;
+      });
+
+      const meanRaw = n ? sum / n : 0;
+      // If player has no stored adjustment yet, default to meanRaw
+      const storedAdj = Number(entry.defcon_adjust_01);
+      const newAdj = Number.isFinite(storedAdj) ? clamp01(storedAdj) : clamp01(meanRaw);
+
       allGWs.forEach((gw) => {
         const playerRow = entry.rowsByGW.get(gw);
         if (!playerRow) {
@@ -584,7 +632,14 @@ const computeMeasures = useCallback(
         }
 
         const teamRow = teamLookup.get(`${entry.teamCode}_${gw}`);
-        const measures = computeMeasures(playerRow, teamRow);
+
+        const raw01 = rawByGw.get(gw) ?? 0;
+
+        // ✅ requested formula:
+        // cbi = cbi_gw - mean(cbi_gw) + new_adjustment
+        const adjustedCbi01 = clamp01(raw01 - meanRaw + newAdj);
+
+        const measures = computeMeasures(playerRow, teamRow, adjustedCbi01);
         const v = measures[selectedMeasure];
         gwValues[gw] = v;
 
@@ -623,7 +678,7 @@ const computeMeasures = useCallback(
     }
   }, [globalMinValue, globalMaxValue, valueThreshold]);
 
-  // Hydrate filters from localStorage
+  // Hydrate filters
   useEffect(() => {
     if (!isDataReady || filtersHydrated) return;
     if (typeof window === "undefined") return;
@@ -681,12 +736,10 @@ const computeMeasures = useCallback(
       const set = new Set(selectedPlayerNames);
       rows = rows.filter((r) => set.has(r.nameKey));
     }
-
     if (selectedTeamCodes.length > 0) {
       const set = new Set(selectedTeamCodes);
       rows = rows.filter((r) => set.has(r.teamCode));
     }
-
     if (selectedPositions.length > 0) {
       const set = new Set(selectedPositions);
       rows = rows.filter((r) => set.has(r.position));
@@ -777,6 +830,8 @@ const computeMeasures = useCallback(
     setPendingAssistShare(null);
     setMinutesDraft({});
     setModalBaselineRows([]);
+    setDefconAdjust01(0);
+    setDefconMean01(0);
   };
 
   const activePlayerFirstRow = modalBaselineRows.length > 0 ? modalBaselineRows[0] : null;
@@ -788,6 +843,8 @@ const computeMeasures = useCallback(
       setPendingGoalShare(null);
       setPendingAssistShare(null);
       setMinutesDraft({});
+      setDefconAdjust01(0.5);
+      setDefconMean01(0);
       return;
     }
 
@@ -811,12 +868,22 @@ const computeMeasures = useCallback(
         );
       });
       setMinutesDraft(draft);
-    } else {
-      setPendingGoalShare(null);
-      setPendingAssistShare(null);
-      setMinutesDraft({});
+
+      // mean raw defcon (0..1)
+      const rawVals = rows.map((row) => {
+        const teamRow = teamLookup.get(`${String(row.Team)}_${row.GW}`);
+        const m = computeMeasures(row, teamRow);
+        return clamp01(Number(m._CBI01_Raw));
+      });
+      const mean = rawVals.length ? rawVals.reduce((a, b) => a + b, 0) / rawVals.length : 0;
+      setDefconMean01(mean);
+
+      // init slider from stored
+      const stored = Number(first.defcon_adjust_01);
+      // Slider starts at player's mean if no stored value
+      setDefconAdjust01(Number.isFinite(stored) ? clamp01(stored) : clamp01(mean));
     }
-  }, [isModalOpen, activePlayerKey, playersState]);
+  }, [isModalOpen, activePlayerKey, playersState, teamLookup, computeMeasures]);
 
   const chartDataMinutes = useMemo(() => {
     if (!modalBaselineRows || modalBaselineRows.length === 0) return [];
@@ -830,26 +897,48 @@ const computeMeasures = useCallback(
     });
   }, [modalBaselineRows, minutesDraft]);
 
+  // ✅ Points chart uses adjusted defcon (0..1)
   const chartDataPoints = useMemo(() => {
     if (!modalBaselineRows || modalBaselineRows.length === 0) return [];
 
-    return modalBaselineRows.map((row) => {
-      const teamCode = String(row.Team);
-      const teamRow = teamLookup.get(`${teamCode}_${row.GW}`);
-
-      const overrideMinutes = minutesDraft[row.GW];
+    // compute raw defcon series using current minutes/share drafts
+    const rawSeries = modalBaselineRows.map((row) => {
+      const teamRow = teamLookup.get(`${String(row.Team)}_${row.GW}`);
 
       const effectiveRow = {
         ...row,
-        average_minutes: overrideMinutes != null ? overrideMinutes : row.average_minutes,
+        average_minutes: minutesDraft[row.GW] ?? row.average_minutes,
         Goal_share: pendingGoalShare != null ? pendingGoalShare : row.Goal_share,
         Assist_share: pendingAssistShare != null ? pendingAssistShare : row.Assist_share,
       };
 
-      const measures = computeMeasures(effectiveRow, teamRow);
-      return { GW: row.GW, points: measures.Points };
+      const m = computeMeasures(effectiveRow, teamRow);
+      const raw01 = clamp01(Number(m._CBI01_Raw));
+      return { GW: row.GW, raw01, teamRow, effectiveRow };
     });
-  }, [modalBaselineRows, teamLookup, minutesDraft, pendingGoalShare, pendingAssistShare, computeMeasures]);
+
+    const meanRaw = rawSeries.length ? rawSeries.reduce((s, x) => s + x.raw01, 0) / rawSeries.length : 0;
+    const newAdj = clamp01(Number(defconAdjust01));
+
+    return rawSeries.map(({ GW, raw01, teamRow, effectiveRow }) => {
+      const adjusted01 = clamp01(raw01 - meanRaw + newAdj);
+      const measures = computeMeasures(effectiveRow, teamRow, adjusted01);
+
+      return {
+        GW,
+        points: measures.Points,
+        defcon: measures.CBI_Predictions,
+      };
+    });
+  }, [
+    modalBaselineRows,
+    teamLookup,
+    minutesDraft,
+    pendingGoalShare,
+    pendingAssistShare,
+    defconAdjust01,
+    computeMeasures,
+  ]);
 
   const logAdjustment = (entry) => {
     updateChanges((prev) => [
@@ -911,8 +1000,21 @@ const computeMeasures = useCallback(
       }
     }
 
+    const oldStored = Number(activePlayerFirstRow.defcon_adjust_01);
+    const baseline = Number.isFinite(oldStored) ? clamp01(oldStored) : clamp01(defconMean01);
+    if (clamp01(defconAdjust01) !== baseline) return true;
+
     return false;
-  }, [activePlayerFirstRow, modalBaselineRows, pendingGoalShare, pendingAssistShare, minutesDraft]);
+  }, [
+    activePlayerFirstRow,
+    modalBaselineRows,
+    pendingGoalShare,
+    pendingAssistShare,
+    minutesDraft,
+    defconAdjust01,
+    MIN_MINUTES,
+    MAX_MINUTES,
+  ]);
 
   const handleSavePlayerChanges = () => {
     if (!activePlayerKey || !playersState || !activePlayerFirstRow || !hasPlayerChanges) return;
@@ -969,20 +1071,49 @@ const computeMeasures = useCallback(
       }
     });
 
+    // ✅ Defcon: single stored value 0..1
+    const oldDA = Number(activePlayerFirstRow.defcon_adjust_01);
+    const baselineDA = Number.isFinite(oldDA) ? clamp01(oldDA) : clamp01(defconMean01);
+    const newDA = clamp01(Number(defconAdjust01));
+    if (newDA !== baselineDA) {
+      adjustmentsToLog.push({
+        type: "Defcon",
+        playerKey: activePlayerKey,
+        playerName: activePlayerFirstRow.name,
+        webName: activePlayerFirstRow.web_name,
+        oldValue: baselineDA,
+        newValue: newDA,
+      });
+    }
+
     if (adjustmentsToLog.length === 0) return;
 
-    setPlayersState((prev) => {
-      if (!prev) return prev;
-      return prev.map((p) => {
-        if (getPlayerKey(p) !== activePlayerKey) return p;
-        const gw = p.GW;
-        const updated = { ...p };
-        updated.Goal_share = newGoal;
-        updated.Assist_share = newAssist;
-        if (minutesDraft[gw] != null) updated.average_minutes = minutesDraft[gw];
-        return updated;
-      });
-    });
+    // build the updated array once
+const applyPlayerEdits = (prev) => {
+  if (!prev) return prev;
+  return prev.map((p) => {
+    if (getPlayerKey(p) !== activePlayerKey) return p;
+
+    const gw = p.GW;
+    const updated = { ...p };
+
+    updated.Goal_share = newGoal;
+    updated.Assist_share = newAssist;
+
+    if (minutesDraft[gw] != null) updated.average_minutes = minutesDraft[gw];
+
+    // ✅ persist defcon adjustment per player (copied onto every GW row)
+    updated.defcon_adjust_01 = newDA;
+
+    return updated;
+  });
+};
+
+// ✅ update local state
+setPlayersState(applyPlayerEdits);
+
+// ✅ IMPORTANT: update context ("model") immediately so it persists
+updatePlayerData(applyPlayerEdits);
 
     adjustmentsToLog.forEach(logAdjustment);
   };
@@ -992,7 +1123,7 @@ const computeMeasures = useCallback(
     closeModal();
   };
 
-  // Pointer / touch helpers for minutes drag (only minutesDraft)
+  // Drag helpers for minutes
   const updateMinutesFromClientY = (clientY) => {
     if (!svgRefMinutes.current || !activePlayerKey || !draggingGW) return;
 
@@ -1105,8 +1236,7 @@ const computeMeasures = useCallback(
             Player Adjustment Tool
           </h1>
           <p style={{ margin: "0.25rem 0 0", fontSize: "0.85rem", color: "#d1c3a9" }}>
-            Click a player and adjust minutes, Goal and Assist shares
-            shares
+            Click a player and adjust minutes, Goal/Assist shares and Defcon (0–1)
           </p>
         </div>
 
@@ -1368,7 +1498,15 @@ const computeMeasures = useCallback(
 
                     <div>
                       <span style={{ color: "#e5e7eb" }}>
-                        {a.type === "Goal_share" ? "Goal share" : a.type === "Assist_share" ? "Assist share" : "Minutes"}
+                        {a.type === "Goal_share"
+                          ? "Goal share"
+                          : a.type === "Assist_share"
+                          ? "Assist share"
+                          : a.type === "Minutes"
+                          ? "Minutes"
+                          : a.type === "Defcon"
+                          ? "Defcon"
+                          : a.type}
                         {a.gw != null ? ` · GW ${a.gw}` : ""}:{" "}
                       </span>
                       <span>
@@ -1384,7 +1522,7 @@ const computeMeasures = useCallback(
         </details>
       </div>
 
-      {/* Data table */}
+      {/* Data table (NO mean column) */}
       <div
         style={{
           overflowX: "auto",
@@ -1495,7 +1633,9 @@ const computeMeasures = useCallback(
 
                 {allGWs.map((gw) => (
                   <td key={gw} style={{ borderBottom: "1px solid #222222", padding: "0.5rem", textAlign: "right" }}>
-                    {row.gwValues[gw] != null && !Number.isNaN(row.gwValues[gw]) ? row.gwValues[gw].toFixed(2) : "0.00"}
+                    {row.gwValues[gw] != null && !Number.isNaN(row.gwValues[gw])
+                      ? row.gwValues[gw].toFixed(2)
+                      : "0.00"}
                   </td>
                 ))}
 
@@ -1611,6 +1751,41 @@ const computeMeasures = useCallback(
               </div>
             </div>
 
+            {/* Defcon slider (0..1) */}
+            <div
+              style={{
+                marginBottom: "1rem",
+                padding: "0.6rem 0.75rem",
+                borderRadius: "0.75rem",
+                backgroundColor: "rgba(0,0,0,0.9)",
+                border: `1px solid ${PALETTE.gold}`,
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: "0.75rem" }}>
+                <h3 style={{ margin: 0, fontSize: "0.95rem" }}>Defcon adjustment</h3>
+                <div style={{ fontSize: "0.8rem", color: "#d1c3a9" }}>
+                </div>
+              </div>
+
+              <div style={{ marginTop: "0.45rem" }}>
+                <input
+                  type="range"
+                  min={0}
+                  max={1}
+                  step={0.01}
+                  value={clamp01(defconAdjust01)}
+                  onChange={(e) => setDefconAdjust01(clamp01(Number(e.target.value)))}
+                  style={{ width: "100%" }}
+                />
+                <div style={{ marginTop: "0.25rem", fontSize: "0.8rem", color: "#d1c3a9" }}>
+                  <span>{clamp01(defconAdjust01).toFixed(2)}</span>
+                </div>
+                <div style={{ marginTop: "0.35rem", fontSize: "0.78rem", color: "#d1c3a9" }}>
+
+                </div>
+              </div>
+            </div>
+
             {/* Save button */}
             <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "0.75rem" }}>
               <button
@@ -1644,23 +1819,21 @@ const computeMeasures = useCallback(
                 <div style={{ fontSize: "0.85rem" }}>No minute data for this player.</div>
               ) : (
                 <svg
-  ref={svgRefMinutes}
-  width="100%"
-  height="280"
-  viewBox="0 0 600 280"
-  preserveAspectRatio="none"
-  style={{
-    border: `1px solid ${PALETTE.gold}`,
-    borderRadius: "0.75rem",
-    background: "#000000",
-    touchAction: "none",
-  }}
->
-
+                  ref={svgRefMinutes}
+                  width="100%"
+                  height="280"
+                  viewBox="0 0 600 280"
+                  preserveAspectRatio="none"
+                  style={{
+                    border: `1px solid ${PALETTE.gold}`,
+                    borderRadius: "0.75rem",
+                    background: "#000000",
+                    touchAction: "none",
+                  }}
+                >
                   {(() => {
                     const padding = 20;
                     const width = 600;
-
                     const height = 280;
 
                     const n = chartDataMinutes.length;
@@ -1723,25 +1896,24 @@ const computeMeasures = useCallback(
             {/* Points chart */}
             <div>
               <h3 style={{ marginTop: 0, marginBottom: "0.4rem", fontSize: "0.95rem" }}>
-                Calculated Points
+                Calculated Points (Defcon adjustment applied)
               </h3>
 
               {chartDataPoints.length === 0 ? (
                 <div style={{ fontSize: "0.85rem" }}>No point data for this player.</div>
               ) : (
                 <svg
-  ref={svgRefPoints}
-  width="100%"
-  height="250"
-  viewBox="0 0 600 250"
-  preserveAspectRatio="none"
-  style={{
-    border: `1px solid ${PALETTE.gold}`,
-    borderRadius: "0.75rem",
-    background: "#000000",
-  }}
->
-
+                  ref={svgRefPoints}
+                  width="100%"
+                  height="250"
+                  viewBox="0 0 600 250"
+                  preserveAspectRatio="none"
+                  style={{
+                    border: `1px solid ${PALETTE.gold}`,
+                    borderRadius: "0.75rem",
+                    background: "#000000",
+                  }}
+                >
                   {(() => {
                     const padding = 20;
                     const width = 600;

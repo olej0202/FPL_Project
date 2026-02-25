@@ -283,6 +283,12 @@ def optimize_my_team(
     
     transfervalue=transval*2
     risk_transfer_offset=(1+abs(risk_float))
+    
+    
+    HIT_PENALTY = 4.0   # points per hit (classic FPL)
+    HIT_MAX = 1         # allow at most 1 hit per GW (one extra transfer)
+
+
 
 
 
@@ -322,6 +328,7 @@ def optimize_my_team(
     bench = {(i, t): LpVariable(f"bench_{i}_{t}", cat="Binary") for i in range(num_players) for t in gameweeks}
     c = {(i, t): LpVariable(f"captain_{i}_{t}", cat="Binary") for i in range(num_players) for t in gameweeks}
     y = {(i, t): LpVariable(f"y_{i}_{t}", cat="Binary") for i in range(num_players) for t in gameweeks}
+    hit = {t: LpVariable(f"hit_{t}", lowBound=0, upBound=HIT_MAX, cat="Integer") for t in gameweeks}
 
     transfer_in = {(i, t): LpVariable(f"transfer_in_{i}_{t}", cat="Binary") for i in range(num_players) for t in gameweeks}
     transfer_out = {(i, t): LpVariable(f"transfer_out_{i}_{t}", cat="Binary") for i in range(num_players) for t in gameweeks}
@@ -379,6 +386,7 @@ def optimize_my_team(
 
     # base points objective
     obj = lpSum(obj_terms)
+    
 
     # your existing "in-horizon" saved transfer value
     
@@ -386,6 +394,8 @@ def optimize_my_team(
         discount_t[t] * (-1.5 * transfervalue*risk_transfer_offset) * transfers_used[t]
         for t in gameweeks
     )
+    
+    obj += lpSum(-HIT_PENALTY * hit[t] for t in gameweeks)
 
 
 
@@ -534,6 +544,7 @@ def optimize_my_team(
         # Free Hit week: real squad does NOT change
         if use_freehit and t == fh_t:
             model += transfers_used[t]==0
+            model += hit[t]==0
             for i in range(num_players):
                 model += x[i, t] == x[i, t - 1]
                 model += transfer_in[i, t] == 0
@@ -545,14 +556,16 @@ def optimize_my_team(
                 model += x[i, t] >= x[i, t - 1] - transfer_out[i, t]
                 model += x[i, t] <= x[i, t - 1] + transfer_in[i, t]
             model += transfers_used[t]==0
+            model += hit[t]==0
         else:
             for i in range(num_players):
                 model += transfer_in[i, t] >= x[i, t] - x[i, t - 1]
                 model += transfer_out[i, t] >= x[i, t - 1] - x[i, t]
                 model += transfer_out[i, t] <= x[i, t - 1]
-            model += lpSum(transfer_in[i, t] for i in range(num_players)) <= 1 + saved_transfers[t - 1]
+            model += lpSum(transfer_in[i, t] for i in range(num_players)) <= 1 + saved_transfers[t - 1] + hit[t]
             model += transfers_used[t] == lpSum(transfer_in[i, t] for i in range(num_players))
     model += transfers_used[0] == 0
+    model += hit[0]==0
     # --- Saved transfer evolution ---
     for t in gameweeks[1:]:
         if t == wildcard_round_rel:
@@ -593,10 +606,6 @@ def optimize_my_team(
                     total += float((y[i, t].varValue or 0)) * float(predicted_points[i][t])
                     total += float((c[i, t].varValue or 0)) * float(predicted_points[i][t])
                     total += float((bench[i, t].varValue or 0)) * 0.05 * float(predicted_points[i][t])
-
-        # saved transfers bonus (also independent of risk)
-        for t in gameweeks:
-            total += 0.2 * float(saved_transfers[t].varValue or 0)
 
         return total
 
