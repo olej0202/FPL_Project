@@ -115,9 +115,6 @@ def compute_free_transfers(
         event_id = row["event"]
         event_transfers = int(row.get("event_transfers", 0) or 0)
         chip_name = chips_by_event.get(event_id)
-        print(event_id)
-        print(event_transfers)
-        print(chip_name)
 
         # --- free_start for this GW ---
         if event_id == first_event:
