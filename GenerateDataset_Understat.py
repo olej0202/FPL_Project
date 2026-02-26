@@ -16,7 +16,7 @@ def Generate_Team_threats():
     # EWM per opponent × pos_group (span=15)
     span = 20
     min_val = 0.05
-    max_val = 0.4
+    max_val = 0.5
 
     ewm_cols = [f"{c}_ewm" for c in metrics]
 
@@ -510,8 +510,10 @@ def Generate_Understat_dataset(current_players,run_player_pos):
     agg_enriched["Team_code"]=agg_enriched["Team_code"].astype("int")
     agg_enriched["xA2"]=agg_enriched["xA"]*1+agg_enriched["assists"]*0
     agg_enriched["Adjusted_XG"]=agg_enriched["npxG"]/(agg_enriched["opp_Rolling_Threat_Against"]*0.5+agg_enriched["opp_XGC_avg"]*0.5)
+    agg_enriched["Adjusted_XG"]=agg_enriched["Adjusted_XG"].clip(upper=1)
 
     agg_enriched["Adjusted_XA"]=agg_enriched["xA2"]/(agg_enriched["opp_Rolling_Threat_Against"]*0.5+agg_enriched["opp_XGC_avg"]*0.5)
+    agg_enriched["Adjusted_XA"]=agg_enriched["Adjusted_XA"].clip(upper=1)
     agg_enriched["date"] = pd.to_datetime(agg_enriched["date"], errors="coerce")
     agg_enriched = agg_enriched.sort_values(["player_team", "pos_group", "date"])
 
@@ -521,7 +523,7 @@ def Generate_Understat_dataset(current_players,run_player_pos):
               .transform(lambda s: s.ewm(span=20, adjust=False, min_periods=1).mean())
     )
     agg_enriched["Rolling_Adjusted_XA"] = (
-        agg_enriched.groupby(["player_team", "pos_group"])["assists"]
+        agg_enriched.groupby(["player_team", "pos_group"])["Adjusted_XA"]
               .transform(lambda s: s.ewm(span=20, adjust=False, min_periods=1).mean())
     )
 
@@ -532,7 +534,7 @@ def Generate_Understat_dataset(current_players,run_player_pos):
 
     agg_enriched["Rolling_XA_Share"] = (
         agg_enriched.groupby(["player_team", "pos_group"])["xA_share"]
-          .transform(lambda s: s.rolling(window=1520, min_periods=1).mean())
+          .transform(lambda s: s.rolling(window=20, min_periods=1).mean())
     )
     agg_enriched["Rolling_Shots_Share"] = (
         agg_enriched.groupby(["player_team", "pos_group"])["shots_share"]
@@ -547,7 +549,7 @@ def Generate_Understat_dataset(current_players,run_player_pos):
 
     def adjust_measure_safe(g: pd.DataFrame, measure_name: str,
                             w_threat: float = 0.5, w_xgc: float = 0.5,
-                            smoothing: float = 0.08, min_std_mult: float = 1.2,
+                            smoothing: float = 0.06, min_std_mult: float = 1,
                             start_from: str = "mean") -> pd.Series:
         """Stateful smoother per group; returns a Series aligned to g.index."""
         # ensure expected columns exist
@@ -624,8 +626,8 @@ def Generate_Understat_dataset(current_players,run_player_pos):
     )
 
 
-    agg_enriched["XGIndex"]= agg_enriched["Rolling_Adjusted_XG2"]*0+agg_enriched["Rolling_Adjusted_XG"]*1
-    agg_enriched["XAIndex"]= agg_enriched["Rolling_Adjusted_XA2"]*0+agg_enriched["Rolling_Adjusted_XA"]*1
+    agg_enriched["XGIndex"]= agg_enriched["Rolling_Adjusted_XG2"]*0.3+agg_enriched["Rolling_Adjusted_XG"]*0.7
+    agg_enriched["XAIndex"]= agg_enriched["Rolling_Adjusted_XA2"]*0.3+agg_enriched["Rolling_Adjusted_XA"]*0.7
     
     team_tot_xgindex = agg_enriched.groupby(["date", "player_team"])["XGIndex"].transform("sum")
     team_tot_xaindex = agg_enriched.groupby(["date", "player_team"])["XAIndex"].transform("sum")
