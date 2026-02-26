@@ -1762,7 +1762,7 @@ updatePlayerData(applyPlayerEdits);
               }}
             >
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: "0.75rem" }}>
-                <h3 style={{ margin: 0, fontSize: "0.95rem" }}>Defcon adjustment</h3>
+                <h3 style={{ margin: 0, fontSize: "0.95rem" }}>Defcon%</h3>
                 <div style={{ fontSize: "0.8rem", color: "#d1c3a9" }}>
                 </div>
               </div>
@@ -1778,7 +1778,7 @@ updatePlayerData(applyPlayerEdits);
                   style={{ width: "100%" }}
                 />
                 <div style={{ marginTop: "0.25rem", fontSize: "0.8rem", color: "#d1c3a9" }}>
-                  <span>{clamp01(defconAdjust01).toFixed(2)}</span>
+                  <span>{clamp01(defconAdjust01).toFixed(2)*100}%</span>
                 </div>
                 <div style={{ marginTop: "0.35rem", fontSize: "0.78rem", color: "#d1c3a9" }}>
 

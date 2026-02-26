@@ -282,7 +282,7 @@ def optimize_my_team(
     lam = 1.3 + abs(risk_int)*offset    
     
     transfervalue=transval*2
-    risk_transfer_offset=(1+abs(risk_float))
+    risk_transfer_offset=(1+abs(risk_float)/2)
     
     
     HIT_PENALTY = 4.0   # points per hit (classic FPL)

@@ -76,62 +76,71 @@ def resolve_squad_event_id(entry_id: int, event_id: int, events, include_freehit
     return event_id
 
 
+from typing import Optional, Dict, Any
+
 def compute_free_transfers(
     history_current,
     chips_by_event,
     max_ft: int = 5,
     afcon_topup_event: Optional[int] = 16,
-):
+) -> Dict[int, Dict[str, int]]:
     """
-    Reconstruct free transfers per GW using the 2025/26 rules.
+    Your requested rules:
 
-    (Kept as you wrote, just organized and returned as before.)
+    - event_start for the first event is 1 (i.e., free_start[first_event] = 1)
+    - For each round:
+        free_end = min(
+            5,
+            free_start - 1                        if chip_name in (wildcard, freehit)
+            else free_start - event_transfers
+        )
+      (and clamp to >= 0)
+    - Next round:
+        free_start[next] = min(5, free_end_prev + 1)
+
+    - Optional: AFCON top-up event sets free_start = max_ft for that event (if provided).
+      (kept because your function signature includes it)
     """
     history_sorted = sorted(history_current, key=lambda row: row["event"])
-    result: dict[int, dict[str, int]] = {}
+    result: Dict[int, Dict[str, int]] = {}
 
     if not history_sorted:
         return result
 
     first_event = history_sorted[0]["event"]
-    prev_end_ft = 0
-    prev_chip_name: Optional[str] = None
+
+    prev_free_end = 0  # free_end from previous event
 
     for row in history_sorted:
         event_id = row["event"]
-        event_transfers = row["event_transfers"]
+        event_transfers = int(row.get("event_transfers", 0) or 0)
         chip_name = chips_by_event.get(event_id)
+        print(event_id)
+        print(event_transfers)
+        print(chip_name)
 
-        # --- 1) Determine free_start for this GW ---
+        # --- free_start for this GW ---
         if event_id == first_event:
-            if afcon_topup_event is not None and event_id == afcon_topup_event:
-                free_start = max_ft
-            else:
-                free_start = 1
+            free_start = 1
         else:
-            if prev_chip_name is not None:
-                base_start = prev_end_ft      # no +1 after chip GW
-            else:
-                base_start = prev_end_ft + 1  # standard +1
+            free_start = min(max_ft, prev_free_end + 1)
 
-            free_start = min(max_ft, base_start)
+        # AFCON top-up override (if you want it)
+        if afcon_topup_event is not None and event_id == afcon_topup_event:
+            free_start = max_ft
 
-            if afcon_topup_event is not None and event_id == afcon_topup_event:
-                free_start = max_ft
-
-        # --- 2) Determine free_end for this GW ---
-        if chip_name is not None:
-            free_end = free_start
-        elif afcon_topup_event is not None and event_id == afcon_topup_event:
-            free_end = max_ft
+        # --- free_end for this GW ---
+        if chip_name in ("wildcard", "freehit"):
+            free_end = free_start - 1
         else:
-            free_used = min(event_transfers, free_start)
-            free_end = free_start - free_used
+            free_end = free_start - event_transfers
 
-        result[event_id] = {"free_start": free_start, "free_end": free_end}
+        # clamp and cap
+        free_end = max(0, min(max_ft, free_end))
 
-        prev_end_ft = free_end
-        prev_chip_name = chip_name
+        result[event_id] = {"free_start": int(free_start), "free_end": int(free_end)}
+
+        prev_free_end = free_end
 
     return result
 
@@ -242,7 +251,7 @@ def build_team_dataframe(entry_id: int, include_freehit_team: bool = False) -> p
         history_current,
         chips_by_event,
         max_ft=5,
-        afcon_topup_event=15,
+        afcon_topup_event=16,
     )
     print(ft_info)
     this_ft = ft_info[event_id]
@@ -342,5 +351,3 @@ def enrich(df: pd.DataFrame) -> pd.DataFrame:
     )
     merged_df["news"] = merged_df["news"].fillna("NoNews")
     return merged_df
-
-

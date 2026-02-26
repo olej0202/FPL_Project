@@ -150,11 +150,11 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
             
             if(pred_variable=="bps"):
                real_variable="bonus" 
-               player_preds.append(max(df['Rolling_adjusted_BPS'].values[h]*0.4+df['Rolling_adjusted_BPS_2'].values[h]*0.6,5)*0.01*other_metric)
+               player_preds.append(max(df['Rolling_adjusted_BPS'].values[h]*0.4+df['Rolling_adjusted_BPS_2'].values[h]*0.6,5)*0.015*other_metric)
                
             if(pred_variable=="cards"):
                real_variable="cards" 
-               player_preds.append(min(df['Rolling_cards'].values[h],0.4)*other_metric)
+               player_preds.append(min(df['Rolling_cards'].values[h],0.3)*other_metric)
                
             if(pred_variable=="CBI"):
                real_variable="cbi" 
