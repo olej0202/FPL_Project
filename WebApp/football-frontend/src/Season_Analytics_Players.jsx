@@ -99,6 +99,30 @@ const allPositions = useMemo(() => {
   return Array.from(s).sort((a, b) => a.localeCompare(b));
 }, [rowsRaw]);
 
+
+const CustomTooltip = ({ active, payload }) => {
+  if (!active || !payload || !payload.length) return null;
+
+  const data = payload[0].payload;
+
+  return (
+    <div
+      style={{
+        background: "#111",
+        border: "1px solid #333",
+        padding: "10px",
+        color: "#fff",
+      }}
+    >
+      <div style={{ fontWeight: "bold", marginBottom: 6 }}>
+        {data.name}
+      </div>
+      <div>{labelOf(selectedMeasure)}: {data.x.toFixed(3)}</div>
+      <div>{labelOf(selectedMeasure2)}: {data.y.toFixed(3)}</div>
+    </div>
+  );
+};
+
   const togglePos = (p) => {
     setPosFilter((prev) => {
       const n = new Set(prev);
@@ -524,18 +548,7 @@ const allPositions = useMemo(() => {
           }}
         />
 
-        <Tooltip
-          cursor={{ strokeDasharray: "3 3" }}
-          contentStyle={{
-            backgroundColor: "#111",
-            border: "1px solid #333",
-          }}
-          // make tooltip text white
-          labelStyle={{ color: "#fff" }}
-          itemStyle={{ color: "#fff" }}
-          formatter={(v, n) => [Number(v).toFixed(3), n]}
-          labelFormatter={(_, payload) => payload?.[0]?.payload?.name ?? ""}
-        />
+        <Tooltip content={<CustomTooltip />} />
 
         {/* Removed <Legend /> */}
 

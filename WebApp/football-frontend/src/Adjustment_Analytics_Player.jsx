@@ -1896,7 +1896,7 @@ updatePlayerData(applyPlayerEdits);
             {/* Points chart */}
             <div>
               <h3 style={{ marginTop: 0, marginBottom: "0.4rem", fontSize: "0.95rem" }}>
-                Calculated Points (Defcon adjustment applied)
+                Calculated Points
               </h3>
 
               {chartDataPoints.length === 0 ? (

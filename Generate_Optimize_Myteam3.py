@@ -561,7 +561,7 @@ def optimize_my_team(
             for i in range(num_players):
                 model += transfer_in[i, t] >= x[i, t] - x[i, t - 1]
                 model += transfer_out[i, t] >= x[i, t - 1] - x[i, t]
-                model += transfer_out[i, t] <= x[i, t - 1]
+                #model += transfer_out[i, t] <= x[i, t - 1]
             model += lpSum(transfer_in[i, t] for i in range(num_players)) <= 1 + saved_transfers[t - 1] + hit[t]
             model += transfers_used[t] == lpSum(transfer_in[i, t] for i in range(num_players))
     model += transfers_used[0] == 0
