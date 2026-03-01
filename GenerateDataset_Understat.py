@@ -1,19 +1,136 @@
+# understat_pipeline_locf_shares.py
+# ------------------------------------------------------------
+# Full script version of your pipeline with ONE consistent fix:
+# Every "share" (npxG_share, xA_share, shots_share, key_passes_share,
+# Rolling_XG_Share2, Rolling_XA_Share2) is computed using LOCF totals:
+#   - totals are NOT "sum of rows on that date"
+#   - totals ARE "sum of latest known value per position for that team"
+#
+# This fixes teams like Man City where some pos_group rows are missing on a date.
+# ------------------------------------------------------------
+
+import numpy as np
+import pandas as pd
 
 from GenerateConfig import NEW_TEAMS_NAME
+# from Generate_Fetch_Myteam import build_team_dataframe  # (not used here)
+# from GenerateConfig import ... (your other imports)
+
+
+# ============================================================
+# Helper: LOCF shares for any value columns
+# ============================================================
+def add_locf_shares(
+    df: pd.DataFrame,
+    team_col: str,
+    date_col: str,
+    pos_col: str,
+    value_cols: list[str],
+    share_names: dict[str, str] | None = None,   # map value_col -> output share col name
+    pos_universe: list[str] | None = None,
+    exclude_pos: set[str] = {"SUB", "GK", "GKP"},
+    keep_grid: bool = False,  # debug option: return the full grid too
+) -> pd.DataFrame:
+    """
+    Compute shares using LOCF (last-observation-carried-forward) totals.
+
+    For each team and date:
+      total(value_col) = sum over pos_group of latest known value for that pos_group <= date
+      share = value / total
+
+    This avoids spikes when some pos_groups are missing on that date.
+    """
+
+    out = df.copy()
+
+    # ensure datetime
+    out[date_col] = pd.to_datetime(out[date_col], errors="coerce")
+    out = out.dropna(subset=[team_col, pos_col, date_col]).copy()
+
+    # normalize pos
+    out[pos_col] = out[pos_col].astype(str).str.strip()
+    pos_upper = out[pos_col].str.upper().str.strip()
+
+    # only positions that count toward totals
+    valid_mask = ~pos_upper.isin(exclude_pos)
+    base = out.loc[valid_mask, [team_col, date_col, pos_col] + value_cols].copy()
+
+    # numeric
+    for c in value_cols:
+        base[c] = pd.to_numeric(base[c], errors="coerce")
+
+    # choose universe of pos_group for the grid
+    if pos_universe is None:
+        pos_universe = (
+            base[pos_col]
+            .dropna()
+            .astype(str)
+            .str.strip()
+            .unique()
+            .tolist()
+        )
+
+    teams = base[team_col].dropna().unique()
+    dates = np.sort(base[date_col].dropna().unique())
+
+    # build complete grid: team x date x pos
+    grid = pd.MultiIndex.from_product(
+        [teams, dates, pos_universe],
+        names=[team_col, date_col, pos_col],
+    ).to_frame(index=False)
+
+    full = grid.merge(base, on=[team_col, date_col, pos_col], how="left")
+    full = full.sort_values([team_col, pos_col, date_col])
+
+    # LOCF per (team, pos)
+    full[value_cols] = (
+        full.groupby([team_col, pos_col])[value_cols]
+            .ffill()
+            .fillna(0.0)
+    )
+
+    # compute shares
+    if share_names is None:
+        share_names = {c: f"{c}_share" for c in value_cols}
+
+    for c in value_cols:
+        tot_col = f"__tot_{c}"
+        full[tot_col] = full.groupby([team_col, date_col])[c].transform("sum")
+
+        share_col = share_names.get(c, f"{c}_share")
+        full[share_col] = (full[c] / full[tot_col]).replace([np.inf, -np.inf], np.nan).fillna(0.0)
+
+    share_cols = [share_names[c] for c in value_cols]
+
+    # merge shares back to original rows (all positions, including excluded ones will get NaN -> fill 0)
+    out = out.merge(
+        full[[team_col, date_col, pos_col] + share_cols],
+        on=[team_col, date_col, pos_col],
+        how="left",
+        suffixes=("", "_locf"),
+    )
+
+    for sc in share_cols:
+        out[sc] = out[sc].fillna(0.0)
+
+    if keep_grid:
+        return out, full
+    return out
+
+
+# ============================================================
+# Team threats (your existing function, unchanged)
+# ============================================================
 def Generate_Team_threats():
-    import pandas as pd
     df = pd.read_csv("Team_AggTest.csv")
     team_df = df[["opponent", "pos_group", "date", "shots_share", "npxG_share", "xA_share", "key_passes_share"]].copy()
 
-    # ensure proper dtypes
     team_df["date"] = pd.to_datetime(team_df["date"], errors="coerce")
     metrics = ["shots_share", "npxG_share", "xA_share", "key_passes_share"]
     team_df[metrics] = team_df[metrics].apply(pd.to_numeric, errors="coerce")
 
-    # sort by time within each group
     team_df = team_df.sort_values(["opponent", "pos_group", "date"])
 
-    # EWM per opponent × pos_group (span=15)
     span = 20
     min_val = 0.05
     max_val = 0.5
@@ -23,48 +140,32 @@ def Generate_Team_threats():
     team_df[ewm_cols] = (
         team_df
         .groupby(["opponent", "pos_group"])[metrics]
-        .transform(
-            lambda s: (
-                s
-                .clip(lower=min_val, upper=max_val)   # 👈 clip ground values
-                .ewm(span=span, adjust=False)
-                .mean()
-            )
-        )
+        .transform(lambda s: s.clip(lower=min_val, upper=max_val).ewm(span=span, adjust=False).mean())
     )
 
-    # Latest EWM per opponent × pos_group
     latest_ewm = (
-        team_df
-        .sort_values("date")
+        team_df.sort_values("date")
         .groupby(["opponent", "pos_group"], as_index=False)
         .tail(1)[["opponent", "pos_group"] + ewm_cols]
     )
 
-
-    # Threat metrics (rename Treat → Threat if that’s what you intend)
     latest_ewm["Goal_Threat"] = latest_ewm["npxG_share_ewm"] * 0.8 + 0.2 * latest_ewm["shots_share_ewm"]
     latest_ewm["Assist_Threat"] = latest_ewm["xA_share_ewm"] * 0.8 + 0.2 * latest_ewm["key_passes_share_ewm"]
     latest_ewm["Threat"] = latest_ewm["Goal_Threat"] * 1 + 0 * latest_ewm["Assist_Threat"]
 
-    # Keep only relevant columns
-
-
-    # Filter out GK / SUB
     pg = latest_ewm["pos_group"].str.upper().str.strip()
-    latest_ewm = latest_ewm.loc[
-        ~pg.isin(["SUB", "GK", "GKP"]),
-        ["opponent", "pos_group", "Threat","Goal_Threat","Assist_Threat"]
-    ]
+    latest_ewm = latest_ewm.loc[~pg.isin(["SUB", "GK", "GKP"]),
+                                ["opponent", "pos_group", "Threat", "Goal_Threat", "Assist_Threat"]]
 
     latest_ewm.to_csv("Team_threat.csv", index=False)
-def Generate_Understat_dataset(current_players,run_player_pos):
 
-    import pandas as pd
-    import numpy as np
+
+# ============================================================
+# Main Understat dataset function (your full pipeline, with LOCF shares everywhere)
+# ============================================================
+def Generate_Understat_dataset(current_players, run_player_pos):
     import re, unicodedata
     from rapidfuzz import process, fuzz
-
 
     def _normalize(s: str) -> str:
         s = str(s)
@@ -86,7 +187,7 @@ def Generate_Understat_dataset(current_players,run_player_pos):
         us = us.dropna(subset=[player_col, date_col]).sort_values([player_col, date_col])
 
         rows = []
-        out_col="Matched_Pos"
+        out_col = "Matched_Pos"
         for name, g in us.groupby(player_col, sort=False):
             def pick_from_last(n):
                 last = g.tail(n)
@@ -96,25 +197,18 @@ def Generate_Understat_dataset(current_players,run_player_pos):
                     return None
                 vc = non_sub.value_counts()
                 top = set(vc[vc == vc.max()].index)
-                # pick the most recent among the tied top positions
                 return next((p for p in reversed(non_sub.tolist()) if p in top), None)
 
-            pick = pick_from_last(5)
-            if pick is None:
-                pick = pick_from_last(15)
-            if pick is None:
-                pick = "SUB"
-
+            pick = pick_from_last(5) or pick_from_last(15) or "SUB"
             rows.append({player_col: name, out_col: pick})
 
         return pd.DataFrame(rows)
 
-# ---------- integrated function ----------
     def attach_fpl_names_to_understat(df_understat: pd.DataFrame,
-                                  current_players_csv: str = "Raw_Data_25/current_players.csv",
-                                  strict: int = 95,
-                                  relaxed: int = 90,
-                                  aliases: dict | None = None):
+                                     current_players_csv: str = "Raw_Data_25/current_players.csv",
+                                     strict: int = 95,
+                                     relaxed: int = 90,
+                                     aliases: dict | None = None):
 
         cp = pd.read_csv(current_players_csv)
         needed_cols = ["name", "web_name"]
@@ -128,20 +222,17 @@ def Generate_Understat_dataset(current_players,run_player_pos):
             "heung min son": "son heung min",
         }
 
-        # Understat name universe
-        us_names = (df_understat["player_name"]
-                    .dropna().astype(str).str.strip().unique().tolist())
-        us_norm_to_orig = { _normalize(u): u for u in us_names }
+        us_names = (df_understat["player_name"].dropna().astype(str).str.strip().unique().tolist())
+        us_norm_to_orig = {_normalize(u): u for u in us_names}
         us_choices = list(us_norm_to_orig.keys())
 
-        # Build FPL → Understat mapping (keep ALL FPL players)
         rows = []
         for _, r in cp.iterrows():
             fpl_name = str(r["name"])
-            fpl_web  = str(r["web_name"])
+            fpl_web = str(r["web_name"])
 
             q1 = aliases.get(_normalize(fpl_name), _normalize(fpl_name))
-            q2 = aliases.get(_normalize(fpl_web),  _normalize(fpl_web))
+            q2 = aliases.get(_normalize(fpl_web), _normalize(fpl_web))
 
             picked, score, matched_on = None, np.nan, "no-match"
 
@@ -160,57 +251,35 @@ def Generate_Understat_dataset(current_players,run_player_pos):
             if picked is None:
                 picked = "Unknown for understat"
 
-            out_row = {
+            rows.append({
                 "fpl_name": fpl_name,
                 "fpl_web_name": fpl_web,
                 "understat_player_name": picked,
                 "match_score": score,
-                "matched_on": matched_on
-            }
-
-
-            rows.append(out_row)
+                "matched_on": matched_on,
+            })
 
         match_table = pd.DataFrame(rows)
 
-        # ---- FPL-centric view (keep all FPL players) ----
-        # Compute last-10 position mode per Understat player and attach
         pos_table = _last10_pos_mode_excl_sub(df_understat, player_col="player_name",
                                               pos_col="pos_group", date_col="date", window=10)
 
         fpl_view = match_table.merge(
             pos_table, left_on="understat_player_name", right_on="player_name", how="left"
         )
-        # fill position for unmatched or no history
         fpl_view["Matched_Pos"] = fpl_view["Matched_Pos"].fillna("SUB")
         fpl_view["Test"] = 1
-        fpl_view.to_csv("Generate_Player_Matches.csv")
+        fpl_view.to_csv("Generate_Player_Matches.csv", index=False)
 
-
-    def player_positions(df, current_players):
-        currentplayers=pd.read_csv("Raw_Data_25/current_players.csv")
-        understat_names=df["player_name"].unique()
-        names=currentplayers["web_name"].unique()
-        webnames=currentplayers["name"].unique()
-        all=[]
-        for i in range(len(names)):
-            player_row=[]
-            name=names[i]
-            player_row.append(name)
-            webname=webnames[i]
-
-    # ---- helpers ----
+    # ---- helpers for season filtering ----
     def _add_parsed_dt_col(df, candidates=("date", "kickoff_utc", "datetime")):
-        """Find a date-like column, parse to datetime, return (copy_of_df, dt_col_name)."""
         col = next((c for c in candidates if c in df.columns), None)
         if col is None:
             raise ValueError(f"No date-like column found (looked for {candidates}). Columns: {list(df.columns)}")
         out = df.copy()
-        # try ISO first, then dayfirst (handles e.g. '01.08.2022')
         dt = pd.to_datetime(out[col], errors="coerce", utc=False, infer_datetime_format=True)
         if dt.isna().all():
             dt = pd.to_datetime(out[col], errors="coerce", utc=False, dayfirst=True, infer_datetime_format=True)
-        # drop timezone if present
         try:
             if dt.dt.tz is not None:
                 dt = dt.dt.tz_localize(None)
@@ -220,18 +289,16 @@ def Generate_Understat_dataset(current_players,run_player_pos):
         return out, "_dt"
 
     def filter_by_window(df, start, end):
-        """Filter df to start<=date<=end using best-guess date column."""
         tmp, dtcol = _add_parsed_dt_col(df)
         mask = (tmp[dtcol] >= pd.Timestamp(start)) & (tmp[dtcol] <= pd.Timestamp(end))
         return tmp.loc[mask].drop(columns=[dtcol])
 
     # ---- load your data ----
-    df1 = pd.read_csv("Raw_Data_22/Understat_data.csv")      # season "22" -> 2022/23
-    df2 = pd.read_csv("Raw_Data_23/Understat_data.csv")     # season "23" -> 2023/24
-    df3 = pd.read_csv("Raw_Data_24/Understat_data.csv")     # season "24" -> 2024/25
-    df4 = pd.read_csv("Raw_Data_25/Understat_data.csv")     # season "25" -> 2025/26
+    df1 = pd.read_csv("Raw_Data_22/Understat_data.csv")
+    df2 = pd.read_csv("Raw_Data_23/Understat_data.csv")
+    df3 = pd.read_csv("Raw_Data_24/Understat_data.csv")
+    df4 = pd.read_csv("Raw_Data_25/Understat_data.csv")
 
-    # ---- define season windows ----
     windows = {
         "22": ("2022-08-01", "2023-05-30"),
         "23": ("2023-08-01", "2024-05-30"),
@@ -239,17 +306,14 @@ def Generate_Understat_dataset(current_players,run_player_pos):
         "25": ("2025-08-01", "2026-05-30"),
     }
 
-    # ---- filter and tag ----
     f1 = filter_by_window(df1, *windows["22"]); f1["season"] = "22"
     f2 = filter_by_window(df2, *windows["23"]); f2["season"] = "23"
     f3 = filter_by_window(df3, *windows["24"]); f3["season"] = "24"
     f4 = filter_by_window(df4, *windows["25"]); f4["season"] = "25"
 
-    # ---- concat (columns will union; missing fields become NaN) ----
     final = pd.concat([f1, f2, f3, f4], ignore_index=True, sort=False)
 
-
-    # --- find home/away columns present in your df ---
+    # ---- find home/away team cols ----
     def _find_team_cols(df):
         home_candidates = ["home_team", "h_team", "h_title"]
         away_candidates = ["away_team", "a_team", "a_title"]
@@ -261,10 +325,10 @@ def Generate_Understat_dataset(current_players,run_player_pos):
 
     home_col, away_col = _find_team_cols(final)
 
-    # --- (re)build player_team EXACT from team_title vs home/away ---
+    # ---- player_team from team_title vs home/away ----
     final["player_team"] = final.apply(
         lambda r: next(
-            (v for v in map(str.strip, str(r.get("team_title","")).split(","))
+            (v for v in map(str.strip, str(r.get("team_title", "")).split(","))
              if v.lower() in {
                  str(r.get(home_col, "")).strip().lower(),
                  str(r.get(away_col, "")).strip().lower()
@@ -274,37 +338,30 @@ def Generate_Understat_dataset(current_players,run_player_pos):
         axis=1
     )
 
-    # --- build opponent from home/away (vectorized, case-insensitive) ---
-    pt_lc  = final["player_team"].astype(str).str.strip().str.casefold()
+    pt_lc = final["player_team"].astype(str).str.strip().str.casefold()
     home_lc = final[home_col].astype(str).str.strip().str.casefold()
     away_lc = final[away_col].astype(str).str.strip().str.casefold()
 
     final["opponent"] = np.where(pt_lc.eq(home_lc), final[away_col],
                           np.where(pt_lc.eq(away_lc), final[home_col], np.nan))
+
     priority_map = {
-        # group 1: centre-backs
         "DC": "CB",
-        # group 2: right mids & wings
         "MR": "RW", "AMR": "RW", "FWR": "RW",
-        # group 3: defensive mids
-        "DMC": "DM", 
-        
+        "DMC": "DM",
         "DML": "DL", "DMR": "DR",
-        # group 4: offensive mids (AMR is already caught by RW above)
-        "ML": "LW","AML":"LW","FWL":"LW"
+        "ML": "LW", "AML": "LW", "FWL": "LW",
     }
 
     def to_group(p):
         p = str(p).upper().strip()
-        return priority_map.get(p, p)   # fallback: keep original for others (DL, DR, ML, FWL, FW, MC, GK, Sub)
+        return priority_map.get(p, p)
 
-    final["pos_group"] = final['position'].apply(to_group)
+    final["pos_group"] = final["position"].apply(to_group)
 
-    import pandas as pd
+    df = final.copy()
 
-    df = final.copy()  # or whichever df you want to aggregate
-
-    # 1) Ensure we have a 'date' column (as date, not datetime)
+    # Ensure date as date (not datetime) early, then later convert as needed
     if "date" in df.columns:
         df["date"] = pd.to_datetime(df["date"], errors="coerce").dt.date
     elif "kickoff_utc" in df.columns:
@@ -314,51 +371,34 @@ def Generate_Understat_dataset(current_players,run_player_pos):
     else:
         raise ValueError("No date-like column found (tried 'date', 'kickoff_utc', 'datetime').")
 
-    # 2) Make sure we have a 'position' column (rename if needed)
-    if "pos_group" not in df.columns:
-        for alt in ("pos", "player_position"):
-            if alt in df.columns:
-                df = df.rename(columns={alt: "position"})
-                break
-    if "pos_group" not in df.columns:
-        raise ValueError("No 'position' (or 'pos' / 'player_position') column found.")
-
-    # 3) Ensure player_team exists (from your previous step)
-    if "player_team" not in df.columns:
-        raise ValueError("Expected 'player_team' column is missing.")
-
-    # 4) Coerce metrics to numeric and fill NaN with 0
-    metrics = ["npg", "npxG", "key_passes", "shots","goals","xG","xA","assists","xGChain","xGBuildup"]
+    # metrics
+    metrics = ["npg", "npxG", "key_passes", "shots", "goals", "xG", "xA", "assists", "xGChain", "xGBuildup"]
     for c in metrics:
         if c not in df.columns:
             df[c] = 0
         df[c] = pd.to_numeric(df[c], errors="coerce").fillna(0)
 
-    # Optional: drop rows where team didn't resolve
     df = df.dropna(subset=["player_team"])
-    def most_common(s):
-        s = s.dropna().astype(str).str.strip()
-        return s.value_counts().idxmax() if not s.empty else np.nan
 
-
+    # name mapping
     mapping = {
-            "Manchester City": "Man City",
-            "Manchester United": "Man Utd",
-            "Newcastle United": "Newcastle",
-            "Nottingham Forest": "Nott'm Forest",
-            "Sheffield United": "Sheffield Utd",
-            "Tottenham": "Spurs",                 # if your data has "Tottenham Hotspur", map that too:
-            "Tottenham Hotspur": "Spurs",
-            "Wolverhampton Wanderers": "Wolves",
-        }
+        "Manchester City": "Man City",
+        "Manchester United": "Man Utd",
+        "Newcastle United": "Newcastle",
+        "Nottingham Forest": "Nott'm Forest",
+        "Sheffield United": "Sheffield Utd",
+        "Tottenham": "Spurs",
+        "Tottenham Hotspur": "Spurs",
+        "Wolverhampton Wanderers": "Wolves",
+    }
 
-        # tidy whitespace then map
-    df["player_team"] = df["player_team"].astype(str).str.strip().replace(mapping)# agg_df.to_csv("grouped_by_pos_date_team.csv", index=False)
-    df["opponent"] = df["opponent"].astype(str).str.strip().replace(mapping)# agg_df.to_csv("grouped_by_pos_date_team.csv", index=False)
+    df["player_team"] = df["player_team"].astype(str).str.strip().replace(mapping)
+    df["opponent"] = df["opponent"].astype(str).str.strip().replace(mapping)
 
-    if(run_player_pos==1):
+    if run_player_pos == 1:
         attach_fpl_names_to_understat(df, current_players)
 
+    # penalty model (unchanged)
     df["Penalty"] = np.where((df["xG"] - df["npxG"]) > 0, 1, 0)
 
     df_penalty = (
@@ -369,114 +409,119 @@ def Generate_Understat_dataset(current_players,run_player_pos):
           .reset_index(drop=True)
     )
     df_penalty["date"] = pd.to_datetime(df_penalty["date"], errors="coerce")
-
     df_penalty = df_penalty.sort_values(["player_team", "date"])
 
-    # 3) rolling mean over last 30 matches per team (proportion of matches with a penalty)
     df_penalty["penalty_roll30_mean"] = (
         df_penalty.groupby("player_team")["penalty_sum"]
-                  .rolling(window=40, min_periods=1)   # use min_periods=30 if you only want values after 30 games
+                  .rolling(window=40, min_periods=1)
                   .mean()
                   .reset_index(level=0, drop=True)
     )
 
-    # 4) cap at 0.25
-    df_penalty["Penalty"] = (
-        df_penalty["penalty_roll30_mean"].fillna(0.10).clip(0.12, 0.17)
-    )
-    
-    team_dataset_newest = pd.read_csv(
-    "Team_data_newest2.csv",
-    usecols=["name", "code"]
-    )
-    
+    df_penalty["Penalty"] = df_penalty["penalty_roll30_mean"].fillna(0.10).clip(0.12, 0.17)
 
+    team_dataset_newest = pd.read_csv("Team_data_newest2.csv", usecols=["name", "code"])
     latest_penalty_df = (
         df_penalty.drop_duplicates(subset=["player_team"], keep="last")
           .sort_values(["player_team"])
           .reset_index(drop=True)
     )
-    
-    latest_penalty_df = latest_penalty_df.merge(
-        team_dataset_newest, left_on="player_team",right_on= "name",how="left"
-    )
+    latest_penalty_df = latest_penalty_df.merge(team_dataset_newest, left_on="player_team", right_on="name", how="left")
+    latest_penalty_df.to_csv("Team_Penalties.csv", index=False)
 
+    # save transformed base
+    df.to_csv("Understat_transformed.csv", index=False)
 
-    latest_penalty_df.to_csv("Team_Penalties.csv")
-
-
-
-    agg_ops = {c: "mean" for c in ["npg","npxG","key_passes","shots","goals","xG","xA","assists","xGChain","xGBuildup"]}
-    agg_ops["opponent"] = most_common   # <- add the opponent “mode”
-    df.to_csv("Understat_transformed.csv")
+    # =========================
+    # Aggregate by pos/date/team
+    # =========================
+    def most_common(s):
+        s = s.dropna().astype(str).str.strip()
+        return s.value_counts().idxmax() if not s.empty else np.nan
 
     agg_df = (
-        df.groupby(["pos_group","date","player_team"])
+        df.groupby(["pos_group", "date", "player_team"])
           .agg({
-              "npg":"mean","key_passes":"mean","shots":"mean","goals":"mean","xG":"mean",
-              "xA":["mean","sum"],              # mean + sum
-              "npxG":["mean","sum"],            # mean + sum
-              "assists":"mean","xGChain":"mean","xGBuildup":"mean",
-              "opponent": most_common
+              "npg": "mean",
+              "key_passes": "mean",
+              "shots": "mean",
+              "goals": "mean",
+              "xG": "mean",
+              "xA": ["mean", "sum"],
+              "npxG": ["mean", "sum"],
+              "assists": "mean",
+              "xGChain": "mean",
+              "xGBuildup": "mean",
+              "opponent": most_common,
           })
           .reset_index()
     )
+
     def _rename(col):
-        if not isinstance(col, tuple):     # non-multi cols (e.g., group keys)
+        if not isinstance(col, tuple):
             return col
         base, func = col
-        if func in (None, "", "mean"):
-            return base     
-        if func in (None, "", "most_common"):
-            return base  # no postfix for mean
+        if func in (None, "", "mean", "most_common"):
+            return base
         if func == "sum":
-            return f"{base}_sum"           # postfix only for sum
+            return f"{base}_sum"
         return f"{base}_{func}"
 
     agg_df.columns = [_rename(c) for c in agg_df.columns]
 
-    team_tot_xg = agg_df.groupby(["date","player_team"])["npxG_sum"].transform("sum")
-    team_tot_xa = agg_df.groupby(["date","player_team"])["xA"].transform("sum")
+    # make date datetime for locf logic
+    agg_df["date"] = pd.to_datetime(agg_df["date"], errors="coerce")
 
-    agg_df["npxG_share"] = (agg_df["npxG"] / team_tot_xg).replace([np.inf, -np.inf], np.nan).fillna(0).clip(upper=0.5)
-    agg_df["xA_share"] = (agg_df["xA"] / team_tot_xa).replace([np.inf, -np.inf], np.nan).fillna(0).clip(upper=0.5)
-    
-    team_tot_shots = agg_df.groupby(["date","player_team"])["shots"].transform("sum")
-    team_tot_kp    = agg_df.groupby(["date","player_team"])["key_passes"].transform("sum")
+    # ------------------------------------------------------------
+    # LOCF SHARES (fixes your npxG_share/xA_share/shots_share/kp_share)
+    # IMPORTANT: use SUM columns for the "team-total" logic
+    # ------------------------------------------------------------
+    # Ensure *_sum exist
+    if "npxG_sum" not in agg_df.columns:
+        agg_df["npxG_sum"] = pd.to_numeric(agg_df.get("npxG", 0), errors="coerce").fillna(0.0)
+    if "xA_sum" not in agg_df.columns:
+        # your rename makes xA_sum. If not, fallback:
+        agg_df["xA_sum"] = pd.to_numeric(agg_df.get("xA", 0), errors="coerce").fillna(0.0)
 
-    agg_df["shots_share"] = (
-        agg_df["shots"] / team_tot_shots
-    ).replace([np.inf, -np.inf], np.nan).fillna(0).clip(upper=0.5)
+    agg_df = add_locf_shares(
+        agg_df,
+        team_col="player_team",
+        date_col="date",
+        pos_col="pos_group",
+        value_cols=["npxG_sum", "xA_sum", "shots", "key_passes"],
+        share_names={
+            "npxG_sum": "npxG_share",
+            "xA_sum": "xA_share",
+            "shots": "shots_share",
+            "key_passes": "key_passes_share",
+        },
+        pos_universe=None,
+        exclude_pos={"SUB", "GK", "GKP"},
+    )
 
-    agg_df["key_passes_share"] = (
-        agg_df["key_passes"] / team_tot_kp
-    ).replace([np.inf, -np.inf], np.nan).fillna(0).clip(upper=0.5)
+    # your caps
+    agg_df["npxG_share"] = agg_df["npxG_share"].clip(upper=0.5)
+    agg_df["xA_share"] = agg_df["xA_share"].clip(upper=0.5)
+    agg_df["shots_share"] = agg_df["shots_share"].clip(upper=0.5)
+    agg_df["key_passes_share"] = agg_df["key_passes_share"].clip(upper=0.5)
 
+    agg_df.to_csv("Team_AggTest.csv", index=False)
 
-    positions = (agg_df["pos_group"]
-                 .dropna()
-                 .astype(str)
-                 .str.strip()
-                 .replace({"": None})
-                 .dropna()
-                 .unique())
-
-    # if you want them sorted:
-    agg_df.to_csv("Team_AggTest.csv")
-    team_dataset=pd.read_csv("Team_data_transformed2.csv")
+    # =========================
+    # Enrich with team dataset
+    # =========================
+    team_dataset = pd.read_csv("Team_data_transformed2.csv")
 
     agg_df["date"] = pd.to_datetime(agg_df["date"], errors="coerce").dt.date
-
     team_dataset["date"] = pd.to_datetime(team_dataset["kickoff_time"], errors="coerce").dt.date
 
-    needed_for = ["date", "name", "XG_avg", "Rolling_Threat","code"]
+    needed_for = ["date", "name", "XG_avg", "Rolling_Threat", "code"]
     needed_against = ["date", "name", "XGC_avg", "Rolling_Threat_Against"]
 
     for col in needed_for + needed_against:
         if col not in team_dataset.columns:
-            team_dataset[col] = pd.NA  # tolerate missing columns
+            team_dataset[col] = pd.NA
 
-    # If there are multiple rows per (date,name), reduce to a single row (mean)
     team_for = (
         team_dataset[needed_for]
         .groupby(["date", "name"], as_index=False)
@@ -485,7 +530,7 @@ def Generate_Understat_dataset(current_players,run_player_pos):
             "name": "player_team",
             "XG_avg": "team_XG_avg",
             "Rolling_Threat": "team_Rolling_Threat",
-            "code":"Team_code"
+            "code": "Team_code",
         })
     )
 
@@ -500,75 +545,67 @@ def Generate_Understat_dataset(current_players,run_player_pos):
         })
     )
 
-    # 4) Merge onto agg_df
-    agg_enriched = agg_df.merge(
-        team_for, on=["date", "player_team"], how="left"
-    ).merge(
-        team_against, on=["date", "opponent"], how="left"
-    )
+    agg_enriched = agg_df.merge(team_for, on=["date", "player_team"], how="left") \
+                        .merge(team_against, on=["date", "opponent"], how="left")
 
-    agg_enriched["Team_code"]=agg_enriched["Team_code"].astype("int")
-    agg_enriched["xA2"]=agg_enriched["xA"]*1+agg_enriched["assists"]*0
-    agg_enriched["Adjusted_XG"]=agg_enriched["npxG"]/(agg_enriched["opp_Rolling_Threat_Against"]*0.5+agg_enriched["opp_XGC_avg"]*0.5)
-    agg_enriched["Adjusted_XG"]=agg_enriched["Adjusted_XG"].clip(upper=1)
+    agg_enriched["Team_code"] = pd.to_numeric(agg_enriched["Team_code"], errors="coerce").fillna(0).astype(int)
 
-    agg_enriched["Adjusted_XA"]=agg_enriched["xA2"]/(agg_enriched["opp_Rolling_Threat_Against"]*0.5+agg_enriched["opp_XGC_avg"]*0.5)
-    agg_enriched["Adjusted_XA"]=agg_enriched["Adjusted_XA"].clip(upper=1)
+    agg_enriched["xA2"] = agg_enriched["xA"] * 1 + agg_enriched["assists"] * 0
+    agg_enriched["Adjusted_XG"] = agg_enriched["npxG"] / (agg_enriched["opp_Rolling_Threat_Against"] * 0.5 + agg_enriched["opp_XGC_avg"] * 0.5)
+    agg_enriched["Adjusted_XG"] = agg_enriched["Adjusted_XG"].clip(upper=1)
+
+    agg_enriched["Adjusted_XA"] = agg_enriched["xA2"] / (agg_enriched["opp_Rolling_Threat_Against"] * 0.5 + agg_enriched["opp_XGC_avg"] * 0.5)
+    agg_enriched["Adjusted_XA"] = agg_enriched["Adjusted_XA"].clip(upper=1)
+
     agg_enriched["date"] = pd.to_datetime(agg_enriched["date"], errors="coerce")
     agg_enriched = agg_enriched.sort_values(["player_team", "pos_group", "date"])
 
-    # EWM(15) for xG per team & position group
+    # EWM / rolling
     agg_enriched["Rolling_Adjusted_XG"] = (
         agg_enriched.groupby(["player_team", "pos_group"])["Adjusted_XG"]
-              .transform(lambda s: s.ewm(span=20, adjust=False, min_periods=1).mean())
+                    .transform(lambda s: s.ewm(span=20, adjust=False, min_periods=1).mean())
     )
     agg_enriched["Rolling_Adjusted_XA"] = (
         agg_enriched.groupby(["player_team", "pos_group"])["Adjusted_XA"]
-              .transform(lambda s: s.ewm(span=20, adjust=False, min_periods=1).mean())
+                    .transform(lambda s: s.ewm(span=20, adjust=False, min_periods=1).mean())
     )
 
     agg_enriched["Rolling_XG_Share"] = (
         agg_enriched.groupby(["player_team", "pos_group"])["npxG_share"]
-          .transform(lambda s: s.rolling(window=20, min_periods=1).mean())
+                    .transform(lambda s: s.rolling(window=20, min_periods=1).mean())
     )
-
     agg_enriched["Rolling_XA_Share"] = (
         agg_enriched.groupby(["player_team", "pos_group"])["xA_share"]
-          .transform(lambda s: s.rolling(window=20, min_periods=1).mean())
+                    .transform(lambda s: s.rolling(window=20, min_periods=1).mean())
     )
     agg_enriched["Rolling_Shots_Share"] = (
         agg_enriched.groupby(["player_team", "pos_group"])["shots_share"]
-          .transform(lambda s: s.rolling(window=20, min_periods=1).mean())
+                    .transform(lambda s: s.rolling(window=20, min_periods=1).mean())
     )
-
     agg_enriched["Rolling_KeyPasses_Share"] = (
         agg_enriched.groupby(["player_team", "pos_group"])["key_passes_share"]
-          .transform(lambda s: s.rolling(window=20, min_periods=1).mean())
+                    .transform(lambda s: s.rolling(window=20, min_periods=1).mean())
     )
 
-
+    # ---- your adjust_measure_safe (unchanged) ----
     def adjust_measure_safe(g: pd.DataFrame, measure_name: str,
                             w_threat: float = 0.5, w_xgc: float = 0.5,
                             smoothing: float = 0.06, min_std_mult: float = 1,
                             start_from: str = "mean") -> pd.Series:
-        """Stateful smoother per group; returns a Series aligned to g.index."""
-        # ensure expected columns exist
+
         for c in [measure_name, "opp_Rolling_Threat_Against", "opp_XGC_avg"]:
             if c not in g.columns:
-                # create zeros if missing
                 g = g.copy()
                 g[c] = 0.0
 
-        # numeric arrays
         y = pd.to_numeric(g[measure_name], errors="coerce").fillna(0.0).to_numpy(dtype="float64")
         threat = pd.to_numeric(g["opp_Rolling_Threat_Against"], errors="coerce").fillna(0.0).to_numpy(dtype="float64")
-        xgc    = pd.to_numeric(g["opp_XGC_avg"], errors="coerce").fillna(0.0).to_numpy(dtype="float64")
+        xgc = pd.to_numeric(g["opp_XGC_avg"], errors="coerce").fillna(0.0).to_numpy(dtype="float64")
         opp_fac = w_threat * threat + w_xgc * xgc
 
         n = len(y)
         out = np.empty(n, dtype="float64")
 
-        # scalars only below
         clip_upper = float(np.nanmax(y)) if np.isfinite(np.nanmax(y)) else 0.0
         std = float(np.nanstd(y, ddof=1)) if np.isfinite(np.nanstd(y, ddof=1)) else 0.0
         min_val = max(1e-9, std * min_std_mult)
@@ -583,15 +620,10 @@ def Generate_Understat_dataset(current_players,run_player_pos):
         in_row_fac = 1.0
 
         for i in range(n):
-            # decay offset (scalar)
-            offset = 1
-
-            # predicted = current * opp_fac[i] (guard NaN)
             fac_i = opp_fac[i] if np.isfinite(opp_fac[i]) else 1.0
             pred = current * fac_i
             diff = float(y[i] - pred)
 
-            # outlier tracking (all scalars)
             if abs(diff) > min_val:
                 in_row += 1
             else:
@@ -600,12 +632,11 @@ def Generate_Understat_dataset(current_players,run_player_pos):
             if in_row >= 2:
                 in_row_fac = 1.5
 
-            # clamp adj and update
             adj = diff
-            if adj >  min_val: adj =  min_val
+            if adj > min_val: adj = min_val
             if adj < -min_val: adj = -min_val
 
-            current = current + in_row_fac * offset * smoothing * adj
+            current = current + in_row_fac * smoothing * adj
             if current > clip_upper:
                 current = clip_upper
 
@@ -613,68 +644,77 @@ def Generate_Understat_dataset(current_players,run_player_pos):
 
         return pd.Series(out, index=g.index, name=f"{measure_name}_adj")
 
-
-
     agg_enriched["Rolling_Adjusted_XG2"] = (
         agg_enriched.groupby(["player_team", "pos_group"], group_keys=False)
-              .apply(lambda g: adjust_measure_safe(g, "Adjusted_XG"))
+                    .apply(lambda g: adjust_measure_safe(g, "Adjusted_XG"))
     )
-
     agg_enriched["Rolling_Adjusted_XA2"] = (
         agg_enriched.groupby(["player_team", "pos_group"], group_keys=False)
-              .apply(lambda g: adjust_measure_safe(g, "Adjusted_XA"))
+                    .apply(lambda g: adjust_measure_safe(g, "Adjusted_XA"))
     )
 
+    agg_enriched["XGIndex"] = agg_enriched["Rolling_Adjusted_XG2"] * 0.3 + agg_enriched["Rolling_Adjusted_XG"] * 0.7
+    agg_enriched["XAIndex"] = agg_enriched["Rolling_Adjusted_XA2"] * 0.3 + agg_enriched["Rolling_Adjusted_XA"] * 0.7
 
-    agg_enriched["XGIndex"]= agg_enriched["Rolling_Adjusted_XG2"]*0.3+agg_enriched["Rolling_Adjusted_XG"]*0.7
-    agg_enriched["XAIndex"]= agg_enriched["Rolling_Adjusted_XA2"]*0.3+agg_enriched["Rolling_Adjusted_XA"]*0.7
-    
-    team_tot_xgindex = agg_enriched.groupby(["date", "player_team"])["XGIndex"].transform("sum")
-    team_tot_xaindex = agg_enriched.groupby(["date", "player_team"])["XAIndex"].transform("sum")
+    # ------------------------------------------------------------
+    # LOCF SHARES AGAIN (fixes Rolling_XG_Share2 / Rolling_XA_Share2)
+    # ------------------------------------------------------------
+    agg_enriched = add_locf_shares(
+        agg_enriched,
+        team_col="player_team",
+        date_col="date",
+        pos_col="pos_group",
+        value_cols=["XGIndex", "XAIndex"],
+        share_names={
+            "XGIndex": "Rolling_XG_Share2",
+            "XAIndex": "Rolling_XA_Share2",
+        },
+        pos_universe=None,
+        exclude_pos={"SUB", "GK", "GKP"},
+    )
 
-        # Shares as fractions (0–1)
-    agg_enriched["Rolling_XG_Share2"] = (
-        agg_enriched["XGIndex"] / team_tot_xgindex
-    ).replace([np.inf, -np.inf], np.nan).fillna(0)
-
-    agg_enriched["Rolling_XA_Share2"] = (
-        agg_enriched["XAIndex"] / team_tot_xaindex
-    ).replace([np.inf, -np.inf], np.nan).fillna(0)
-
-
-    # 5) (Optional) save
+    # save full enriched dataset
     agg_enriched.to_csv("Team_Positions_transformed.csv", index=False)
 
-    df = agg_enriched.copy()
-    df["date"] = pd.to_datetime(df["date"], errors="coerce")
-    df = df.dropna(subset=["player_team", "pos_group", "date"])
+    # =========================
+    # Latest row per team/pos
+    # =========================
+    df_latest = agg_enriched.copy()
+    df_latest["date"] = pd.to_datetime(df_latest["date"], errors="coerce")
+    df_latest = df_latest.dropna(subset=["player_team", "pos_group", "date"])
+    df_latest = df_latest.sort_values(["player_team", "pos_group", "date"])
 
-    # 2) sort so the newest date is last within each group
-    # (add extra tie-breakers if you have e.g. 'kickoff_utc' or 'match_id')
-    df = df.sort_values(["player_team", "pos_group", "date"])
-
-    # 3) keep the last row per (team, position) = newest date
     latest = (
-        df.drop_duplicates(subset=["player_team", "pos_group"], keep="last")
-          .sort_values(["player_team", "pos_group"])
-          .reset_index(drop=True)
+        df_latest.drop_duplicates(subset=["player_team", "pos_group"], keep="last")
+                 .sort_values(["player_team", "pos_group"])
+                 .reset_index(drop=True)
     )
-    
-    
+
+    # flatten newly promoted teams
     teams_to_flatten = NEW_TEAMS_NAME
+    cols_to_avg = [
+        "XGIndex", "XAIndex",
+        "Rolling_XG_Share", "Rolling_XA_Share",
+        "Rolling_XG_Share2", "Rolling_XA_Share2",
+        "Rolling_Shots_Share", "Rolling_KeyPasses_Share",
+    ]
 
-    cols_to_avg = ["XGIndex", "XAIndex", "Rolling_XG_Share", "Rolling_XA_Share", "Rolling_XG_Share2", "Rolling_XA_Share2","Rolling_Shots_Share","Rolling_KeyPasses_Share"]
-
-
-    # mask of rows that belong to those teams
     mask = latest["player_team"].isin(teams_to_flatten)
-
-    # compute per-pos_group averages for these columns (aligned to index via transform)
     pos_group_means = latest.groupby("pos_group")[cols_to_avg].transform("mean")
-
-    # overwrite only for the chosen teams, with the pos_group mean
     latest.loc[mask, cols_to_avg] = pos_group_means.loc[mask, cols_to_avg]
 
-    # 4) write to file
     latest.to_csv("Team_Positions_transformed_Newest.csv", index=False)
+
+    # regenerate team threats from Team_AggTest.csv (now fixed shares)
     Generate_Team_threats()
+
+
+# ============================================================
+# Run
+# ============================================================
+if __name__ == "__main__":
+    # You pass these in your environment; keeping your signature
+    # current_players is used only if run_player_pos==1
+    current_players = "Raw_Data_25/current_players.csv"
+    run_player_pos = 0
+    Generate_Understat_dataset(current_players, run_player_pos)
