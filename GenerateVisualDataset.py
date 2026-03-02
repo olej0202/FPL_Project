@@ -421,7 +421,7 @@ def Player_adjustements(current_player_path):
         + df["Rolling_adjusted_XG_per90"] * 0.138
         + (df["Big_Chances"] / 3) * 0.138
         + (df["rolling_Goal_min"]) * 0.138
-        + (df["Rolling_adjusted_XG_per90"]) * 0.138
+        + (df["Rolling_adjusted_XG"]) * 0.138
     )
 
     df["Goal_share"] = (df["Goal_share"]
@@ -438,7 +438,7 @@ def Player_adjustements(current_player_path):
         + df["Rolling_adjusted_XA_per90"] * 0.138
         + (df["Big_Chances_Created"] / 2) * 0.138
         + (df["rolling_Assist_min"]) * 0.138
-        + (df["Rolling_adjusted_XA_per90"]) * 0.138
+        + (df["Rolling_adjusted_XA"]) * 0.138
     )
 
     df["Assist_share"] = (df["Assist_share"]
@@ -450,7 +450,7 @@ def Player_adjustements(current_player_path):
 
 
     # Cap overscore/overassist factors per player in [0.9, 1.15]
-    overscore_factor = df["Average_Overscore"].clip(0.9, 1.1)
+    overscore_factor = df["Average_Overscore"].clip(0.9, 1.12)
     overassist_factor = df["Average_OverAssist"].clip(0.9, 1.1)
 
     df["Goal_share"] = df["Goal_share"] * overscore_factor
