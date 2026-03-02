@@ -966,9 +966,9 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     result_df["away_goals"]=(xg2*0.3+0.7*xg_stat_a)
     result_df["Clean_Sheet_home"]=css_test*0.2+0.8*css_stat_home
     result_df["Clean_Sheet_away"]=css_test2*0.2+0.8*css_stat_away
-    result_df["test_XG"]=xg_stat_h
-    result_df["test_cluster"]=xg_stat_a
-    result_df["test_opp_XGC"]=xg2
+    result_df["test_XG"]=xg
+    result_df["test_cluster"]=xg2
+    result_df["test_opp_XGC"]=css_test
     result_df.to_csv("Team_prediction_visual2.csv")
 
     home_df=result_df[["GW", "pred"]]

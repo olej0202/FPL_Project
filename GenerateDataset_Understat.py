@@ -123,17 +123,17 @@ def add_locf_shares(
 # ============================================================
 def Generate_Team_threats():
     df = pd.read_csv("Team_AggTest.csv")
-    team_df = df[["opponent", "pos_group", "date", "shots_share", "npxG_share", "xA_share", "key_passes_share"]].copy()
+    team_df = df[["opponent", "pos_group", "date", "shots_share", "npxG_share", "xA_share", "key_passes_share","npxG","xA"]].copy()
 
     team_df["date"] = pd.to_datetime(team_df["date"], errors="coerce")
-    metrics = ["shots_share", "npxG_share", "xA_share", "key_passes_share"]
+    metrics = ["shots_share", "npxG_share", "xA_share", "key_passes_share","npxG","xA"]
     team_df[metrics] = team_df[metrics].apply(pd.to_numeric, errors="coerce")
 
     team_df = team_df.sort_values(["opponent", "pos_group", "date"])
 
     span = 20
     min_val = 0.05
-    max_val = 0.5
+    max_val = 0.9
 
     ewm_cols = [f"{c}_ewm" for c in metrics]
 
@@ -155,7 +155,7 @@ def Generate_Team_threats():
 
     pg = latest_ewm["pos_group"].str.upper().str.strip()
     latest_ewm = latest_ewm.loc[~pg.isin(["SUB", "GK", "GKP"]),
-                                ["opponent", "pos_group", "Threat", "Goal_Threat", "Assist_Threat"]]
+                                ["opponent", "pos_group", "Threat", "Goal_Threat", "Assist_Threat","npxG_ewm","xA_ewm"]]
 
     latest_ewm.to_csv("Team_threat.csv", index=False)
 
@@ -488,10 +488,10 @@ def Generate_Understat_dataset(current_players, run_player_pos):
         team_col="player_team",
         date_col="date",
         pos_col="pos_group",
-        value_cols=["npxG_sum", "xA_sum", "shots", "key_passes"],
+        value_cols=["npxG", "xA", "shots", "key_passes"],
         share_names={
-            "npxG_sum": "npxG_share",
-            "xA_sum": "xA_share",
+            "npxG": "npxG_share",
+            "xA": "xA_share",
             "shots": "shots_share",
             "key_passes": "key_passes_share",
         },
@@ -500,10 +500,10 @@ def Generate_Understat_dataset(current_players, run_player_pos):
     )
 
     # your caps
-    agg_df["npxG_share"] = agg_df["npxG_share"].clip(upper=0.5)
-    agg_df["xA_share"] = agg_df["xA_share"].clip(upper=0.5)
-    agg_df["shots_share"] = agg_df["shots_share"].clip(upper=0.5)
-    agg_df["key_passes_share"] = agg_df["key_passes_share"].clip(upper=0.5)
+    agg_df["npxG_share"] = agg_df["npxG_share"].clip(upper=0.6)
+    agg_df["xA_share"] = agg_df["xA_share"].clip(upper=0.6)
+    agg_df["shots_share"] = agg_df["shots_share"].clip(upper=0.6)
+    agg_df["key_passes_share"] = agg_df["key_passes_share"].clip(upper=0.6)
 
     agg_df.to_csv("Team_AggTest.csv", index=False)
 

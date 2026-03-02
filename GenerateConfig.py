@@ -45,17 +45,13 @@ Manual_Player_Adjustments={
 Manual_Player_Risk={
         "Alexander_Isak":0.6,
         "Yoane_Wissa":0.8,
-        "Antoine_Semenyo":0.6,     
+        "Antoine_Semenyo":0.5,     
         "Marc_Guéhi":0.8,
         "Tammy_Abraham":0.8,
         "Jørgen_Strand Larsen":0.7,        
 }
 
 Manual_min=[
-        {"name": "Hugo_Ekitiké", "type": "const",   "GW": "any", "value": 80},
-        {"name": "Rayan_Aït-Nouri", "type": "const",   "GW": "any", "value": 65},
-        {"name": "Antoine_Semenyo", "type": "const",   "GW": "any", "value": 80},
-        {"name": "Daniel_Muñoz", "type": "const",   "GW": "any", "value": 90},
         {"name": "Jean-Philippe_Mateta", "type": "const",   "GW": "any", "value": 0},
         #Afcon
         {"name": "Amad_Diallo", "type": "const",   "GW": "any", "value": 75},

@@ -116,8 +116,8 @@ def next_opp(team, n_future, fixtures,kmeans,team_code,current_teams,position):
             goal_pos.append(0.05)
             ass_pos.append(0.05)
         else:
-            goal_pos.append(opp_threat["Goal_Threat"].values[0])
-            ass_pos.append(opp_threat["Assist_Threat"].values[0])
+            goal_pos.append(opp_threat["Goal_Threat"].values[0]*0.6+0.4*opp_threat["npxG_ewm"].values[0])
+            ass_pos.append(opp_threat["Assist_Threat"].values[0]*0.6+0.4*opp_threat["xA_ewm"].values[0])
         kl+=1
     print(position)
     print(goal_pos)
