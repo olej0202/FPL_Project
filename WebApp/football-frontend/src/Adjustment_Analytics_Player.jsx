@@ -430,12 +430,14 @@ export default function PlayerAdjustmentsPage() {
 
       const basePoints = (defaultPoints + bps) * minutesAdj * matchCount + defconPointsTerm;
 
-      const points =
-        basePoints +
-        goalScored * goalFactor +
-        assists * assistFactor +
-        cs * csFactor * minutesAdj +
-        csNonlinear;
+      const points = Math.max(
+  0,
+  basePoints +
+    goalScored * goalFactor +
+    assists * assistFactor +
+    cs * csFactor * minutesAdj +
+    csNonlinear
+);
 
       return {
         Goal_Scored: goalScored,

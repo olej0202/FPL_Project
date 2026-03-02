@@ -151,7 +151,7 @@ def Generate_Team_threats():
 
     latest_ewm["Goal_Threat"] = latest_ewm["npxG_share_ewm"] * 0.8 + 0.2 * latest_ewm["shots_share_ewm"]
     latest_ewm["Assist_Threat"] = latest_ewm["xA_share_ewm"] * 0.8 + 0.2 * latest_ewm["key_passes_share_ewm"]
-    latest_ewm["Threat"] = latest_ewm["Goal_Threat"] * 1 + 0 * latest_ewm["Assist_Threat"]
+    latest_ewm["Threat"] = latest_ewm["Goal_Threat"] * 0.7 + 0.3 * latest_ewm["npxG_ewm"]
 
     pg = latest_ewm["pos_group"].str.upper().str.strip()
     latest_ewm = latest_ewm.loc[~pg.isin(["SUB", "GK", "GKP"]),

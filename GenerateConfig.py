@@ -25,11 +25,11 @@ Spurs,6
 ,Ipswich,40"""
 
 
-Manual_team_offensive_adjustments = {17:1.1,94:0.95,2:0.95,91:0.95}
+Manual_team_offensive_adjustments = {17:1.1,31:0.95,2:0.95,91:0.95}
     
     
     
-Manual_team_defensive_adjustments = {4:1.1,56:1.1}
+Manual_team_defensive_adjustments = {6:1.1}
 
 
 Manual_NewPlayer_Adjustments={
@@ -46,7 +46,6 @@ Manual_Player_Risk={
         "Alexander_Isak":0.6,
         "Yoane_Wissa":0.8,
         "Antoine_Semenyo":0.5,     
-        "Marc_Guéhi":0.8,
         "Tammy_Abraham":0.8,
         "Jørgen_Strand Larsen":0.7,        
 }
@@ -74,7 +73,23 @@ fixtures_config = {
         "2562201": [
             {"gw": 38, "probability": 1},
             {"gw": 31, "probability": 0},
+        ],
+        "2562226":[
+            {"gw": 34, "probability": 0.37},
+            {"gw": 33, "probability": 0.63},
+            
+        ],
+        "2562227":[
+            {"gw": 34, "probability": 0.6},
+            {"gw": 33, "probability": 0.4},
+            
+        ],
+        "2562230":[
+            {"gw": 34, "probability": 0.7},
+            {"gw": 33, "probability": 0.3},
+            
         ]
+
 
     }
 
