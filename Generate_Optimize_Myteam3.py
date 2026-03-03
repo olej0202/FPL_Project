@@ -285,7 +285,7 @@ def optimize_my_team(
     risk_transfer_offset=(1+abs(risk_float)/2)
     
     
-    HIT_PENALTY = 2.5   # points per hit (classic FPL)
+    HIT_PENALTY = 1.7   # points per hit (classic FPL)
     HIT_MAX = 1         # allow at most 1 hit per GW (one extra transfer)
 
 
