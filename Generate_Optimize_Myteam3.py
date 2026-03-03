@@ -578,9 +578,8 @@ def optimize_my_team(
                 if abs_gw_num.get(t) == 40:  # AFCON special rule in your code
                     model += saved_transfers[t] == 5
                 else:
-                    model += saved_transfers[t] == saved_transfers[t - 1] + (
-                        1 - lpSum(transfer_in[i, t] for i in range(num_players))
-                    )
+                    model += saved_transfers[t] == saved_transfers[t - 1] + 1- transfers_used[t] + hit[t]
+                    
         model += saved_transfers[t] <= 5
 
     # --- Initial Transfers & Bank ---
