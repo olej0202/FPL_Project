@@ -29,7 +29,7 @@ Manual_team_offensive_adjustments = {17:1.1,31:0.95,2:0.95,91:0.95}
     
     
     
-Manual_team_defensive_adjustments = {6:1.1}
+Manual_team_defensive_adjustments = {}
 
 
 Manual_NewPlayer_Adjustments={
@@ -63,6 +63,7 @@ Manual_min=[
         {"name": "Bukayo_Saka", "type": "const",   "GW": "any", "value": 80},
         {"name": "Anton_Stach", "type": "const",   "GW": "any", "value": 90},
         {"name": "Dango_Ouattara", "type": "const",   "GW": "any", "value": 90},
+        {"name": "Marcus_Tavernier", "type": "const",   "GW": "any", "value": 90},
     ]
         
 
