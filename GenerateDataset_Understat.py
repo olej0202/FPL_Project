@@ -203,6 +203,58 @@ def Generate_Understat_dataset(current_players, run_player_pos):
             rows.append({player_col: name, out_col: pick})
 
         return pd.DataFrame(rows)
+    
+    
+    def _lastN_pos_distribution_excl_sub(
+            df_understat: pd.DataFrame,
+            player_col="player_name",
+            pos_col="pos_group",
+            date_col="date",
+            window=10
+        ) -> pd.DataFrame:
+
+        us = df_understat[[player_col, pos_col, date_col]].copy()
+        us[date_col] = pd.to_datetime(us[date_col], errors="coerce")
+        us = us.dropna(subset=[player_col, date_col]).sort_values([player_col, date_col])
+
+        rows = []
+        for name, g in us.groupby(player_col, sort=False):
+            last = g.tail(window)
+            pos = last[pos_col].astype(str).str.strip()
+
+            # exclude SUB
+            non_sub = pos[~pos.str.upper().eq("SUB")]
+
+            if non_sub.empty:
+                rows.append({
+                    player_col: name,
+                    "Matched_Pos_List": ["SUB"],
+                    "Matched_Pos_Pct_List": [1.0],
+                })
+                continue
+
+            # counts and percentages
+            vc = non_sub.value_counts()  # by default sorts by count desc
+            total = float(vc.sum())
+
+            # Stable ordering choice:
+            # - primary: higher % first (value_counts already does this)
+            # - tie-break: by recency in the last window (more recent first)
+            last_pos_list = non_sub.tolist()
+            last_index = {}
+            for i, p in enumerate(last_pos_list):
+                last_index[p] = i  # last occurrence index
+            ordered_positions = sorted(vc.index, key=lambda p: (-vc[p], -last_index.get(p, -1)))
+
+            pct_list = [float(vc[p] / total) for p in ordered_positions]
+
+            rows.append({
+                player_col: name,
+                "Matched_Pos_List": ordered_positions,
+                "Matched_Pos_Pct_List": pct_list,
+            })
+
+        return pd.DataFrame(rows)
 
     def attach_fpl_names_to_understat(df_understat: pd.DataFrame,
                                      current_players_csv: str = "Raw_Data_25/current_players.csv",
@@ -261,13 +313,23 @@ def Generate_Understat_dataset(current_players, run_player_pos):
 
         match_table = pd.DataFrame(rows)
 
-        pos_table = _last10_pos_mode_excl_sub(df_understat, player_col="player_name",
-                                              pos_col="pos_group", date_col="date", window=10)
+        pos_table = _lastN_pos_distribution_excl_sub(
+            df_understat,
+            player_col="player_name",
+            pos_col="pos_group",
+            date_col="date",
+            window=10
+        )
 
         fpl_view = match_table.merge(
             pos_table, left_on="understat_player_name", right_on="player_name", how="left"
         )
-        fpl_view["Matched_Pos"] = fpl_view["Matched_Pos"].fillna("SUB")
+        # Fill missing (no Understat match etc.)
+        fpl_view["Matched_Pos_List"] = fpl_view["Matched_Pos_List"].apply(
+            lambda x: x if isinstance(x, list) else ["SUB"]
+        )
+        fpl_view["Matched_Pos_Pct_List"] = fpl_view["Matched_Pos_Pct_List"].apply(
+            lambda x: x if isinstance(x, list) else [1.0])
         fpl_view["Test"] = 1
         fpl_view.to_csv("Generate_Player_Matches.csv", index=False)
 
