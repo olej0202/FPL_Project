@@ -707,7 +707,10 @@ def optimize_my_team(
         "web_name": "obj",
     })
     print("Objective record:", records[-1])
-    print(hit)
+    for t in range(1, optimize_range - 1):
+        print("HIT")
+        print(t)
+        print(hit[t].varValue) 
 
     return pd.DataFrame(records)
 
