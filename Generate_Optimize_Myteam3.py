@@ -711,6 +711,7 @@ def optimize_my_team(
         "web_name": "obj",
     })
     print("Objective record:", records[-1])
+    print(hit)
 
     return pd.DataFrame(records)
 
