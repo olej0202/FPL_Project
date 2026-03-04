@@ -512,10 +512,6 @@ def optimize_my_team(
         for i in range(num_players):
             model += c[i, t] <= y[i, t]
 
-    # No immediate back-to-back transfers (keep your original logic)
-    for t in range(1, optimize_range - 1):
-        for i in range(num_players):
-            model += transfer_in[i, t] + transfer_out[i, t + 1] <= 1
 
     # --- Budget Constraints (real squad) ---
     for t in gameweeks[1:]:
