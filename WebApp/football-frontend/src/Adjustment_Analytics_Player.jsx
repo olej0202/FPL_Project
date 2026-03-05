@@ -421,9 +421,9 @@ export default function PlayerAdjustmentsPage() {
 
       // ✅ adjusted defcon in [0,1]
       const cbi01 =
-        typeof cbi01Override === "number" && Number.isFinite(cbi01Override)
+        (typeof cbi01Override === "number" && Number.isFinite(cbi01Override)
           ? clamp01(cbi01Override)
-          : rawCbi01;
+          : rawCbi01)*minutesAdj;
 
       // ✅ Points: keep scaling with minutes+matches, but defcon itself stays 0..1
       const defconPointsTerm = cbi01 * minutesAdj * matchCount * 1.7;
