@@ -416,12 +416,13 @@ def Player_adjustements(current_player_path):
     # alternatively: df["average_minutes"].rdiv(75).clip(lower=1)
 
     df["Goal_share"] = (
-        (df["Rolling_adjusted_XG_share"] * 0.15 + df["Rolling_adjusted_XG_per90_share"]*0.15+df["Rolling_adjusted_Threat_per90_share"] * 0.15)
+        (df["Rolling_adjusted_XG_per90_both_share"] * 0.15 + df["Rolling_adjusted_XG_per90_share"]*0.15+df["Rolling_adjusted_Threat_per90_share"] * 0.15)
         * risk_adj_minutes_factor
-        + df["Rolling_adjusted_XG_per90"] * 0.138
-        + (df["Big_Chances"] / 3) * 0.138
-        + (df["rolling_Goal_min"]) * 0.138
-        + (df["Rolling_adjusted_XG"]) * 0.138
+        + df["Rolling_adjusted_XG_per90"] * 0.125
+        + (df["Big_Chances"] / 3) * 0.1
+        + (df["rolling_Goal_min"]) * 0.1
+        + (df["Rolling_adjusted_XG"]) * 0.1
+        + (df["Rolling_adjusted_XG_per90_both"]) * 0.125
     )
 
     df["Goal_share"] = (df["Goal_share"]
@@ -433,12 +434,13 @@ def Player_adjustements(current_player_path):
     df["Pos_Goal_Threat"]=df["Opp_Goal_Threat_Pos"]
     df["Pos_Assist_Threat"]=df["Opp_Assist_Threat_Pos"]
     df["Assist_share"] = (
-        (df["Rolling_adjusted_XA_share"] * 0.15 + df["Rolling_adjusted_XA_per90_share"]*0.15+df["Rolling_adjusted_creativity_per90_share"] * 0.15)
+        (df["Rolling_adjusted_XA_per90_both_share"] * 0.15 + df["Rolling_adjusted_XA_per90_share"]*0.15+df["Rolling_adjusted_creativity_per90_share"] * 0.15)
         * risk_adj_minutes_factor
-        + df["Rolling_adjusted_XA_per90"] * 0.138
-        + (df["Big_Chances_Created"] / 2) * 0.138
-        + (df["rolling_Assist_min"]) * 0.138
-        + (df["Rolling_adjusted_XA"]) * 0.138
+        + df["Rolling_adjusted_XA_per90"] * 0.125
+        + (df["Big_Chances_Created"] / 2) * 0.1
+        + (df["rolling_Assist_min"]) * 0.1
+        + (df["Rolling_adjusted_XA"]) * 0.1
+        + (df["Rolling_adjusted_XA_per90_both"]) * 0.125
     )
 
     df["Assist_share"] = (df["Assist_share"]
@@ -482,7 +484,7 @@ def Player_adjustements(current_player_path):
     cbi_opp=1+(df["Opp_defcon"]-75)/60
 
     df["CBI_Percent"] = (
-        df["defcon_avg_hit_rate"] * 0.5+df["defcon_avg_hit_rate_T1"] * 0.35+df["defcon_avg_hit_rate_T2"] * 0.25
+        df["defcon_avg_hit_rate"] * 0.35+df["defcon_avg_hit_rate_T0"] * 0.35+df["defcon_avg_hit_rate_T1"] * 0.2+df["defcon_avg_hit_rate_T2"] * 0.1+df["defcon_avg_hit_rate_T3"] * 0.1
     )*cbi_opp
 
     bps_scaled = np.maximum(4, df["Rolling_adjusted_BPS"]*0.4+df["Rolling_adjusted_BPS_2"]*0.6) 

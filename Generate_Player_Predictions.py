@@ -160,7 +160,7 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
                real_variable="cbi" 
                #player_preds.append((min(12,df['CBI'].values[h])**2)/12)
                opp_defcon_fac=1+(df['Opp_defcon'].values[h]-75)/60
-               base_pred = min(1,(df['defcon_avg_hit_rate'].values[h] *0.5 +df["defcon_avg_hit_rate_T1"].values[h] * 0.3+df["defcon_avg_hit_rate_T2"].values[h] * 0.2)*opp_defcon_fac) * other_metric
+               base_pred = min(1,(df['defcon_avg_hit_rate'].values[h] *0.35+df["defcon_avg_hit_rate_T0"].values[h] * 0.35 +df["defcon_avg_hit_rate_T1"].values[h] * 0.2+df["defcon_avg_hit_rate_T2"].values[h] * 0.1+df["defcon_avg_hit_rate_T3"].values[h] * 0.1)*opp_defcon_fac) * other_metric
                player_preds.append(base_pred)
         
             if(pred_variable=="Fantasy"):

@@ -426,7 +426,7 @@ export default function PlayerAdjustmentsPage() {
           : rawCbi01)*minutesAdj;
 
       // ✅ Points: keep scaling with minutes+matches, but defcon itself stays 0..1
-      const defconPointsTerm = cbi01 * minutesAdj * matchCount * 1.7;
+      const defconPointsTerm = cbi01 * minutesAdj * matchCount * 1.8;
 
       const basePoints = (defaultPoints + bps) * minutesAdj * matchCount + defconPointsTerm;
 

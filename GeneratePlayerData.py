@@ -282,8 +282,10 @@ def add_team_share_per90(
         "Rolling_adjusted_XG","rolling_Threat","Rolling_adjusted_XA",
         "Rolling_creativity","Rolling_adjusted_BPS","rolling_XG","rolling_XA","Share_of_XG","Share_of_XA", "rolling_Adjusted_XG_historic","rolling_Adjusted_XA_historic"
         ,"Threat_Mean","Creativity_Mean","rolling_Goal_min","rolling_Assist_min","Rolling_adjusted_XG_per90","Rolling_adjusted_XA_per90"
-        ,"Rolling_adjusted_Threat_per90","Rolling_adjusted_creativity_per90","Big_Chances","Big_Chances_Created"
+        ,"Rolling_adjusted_Threat_per90","Rolling_adjusted_creativity_per90","Big_Chances","Big_Chances_Created","Rolling_adjusted_XA_per90_both","Rolling_adjusted_XG_per90_both"
     ]
+    
+
     for m in metrics:
         if m not in df.columns:
             raise ValueError(f"Metric column '{m}' not found in Player_Prediction_set.csv")
