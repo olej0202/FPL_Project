@@ -1543,12 +1543,13 @@ def main_Transform():
             player_df['defcon_hit_rate_T0'] = ((player_df['position'].eq('DEF') & player_df['defcon_adjusted_min'].gt(8)) |(~player_df['position'].eq('DEF') & player_df['defcon'].gt(10))).astype(int)
             player_df['defcon_hit_rate_T1'] = ((player_df['position'].eq('DEF') & player_df['defcon_adjusted_min'].gt(7)) |(~player_df['position'].eq('DEF') & player_df['defcon'].gt(9))).astype(int)
             player_df['defcon_hit_rate_T2'] = ((player_df['position'].eq('DEF') & player_df['defcon_adjusted_min'].gt(5)) |(~player_df['position'].eq('DEF') & player_df['defcon'].gt(7))).astype(int)
-            
+            player_df['defcon_hit_rate_T3'] = ((player_df['position'].eq('DEF') & player_df['defcon_adjusted_min'].gt(11)) |(~player_df['position'].eq('DEF') & player_df['defcon'].gt(13))).astype(int)
             player_df['defcon_avg'] = player_df['defcon_adjusted'].where(player_df['defcon'] > 0).rolling(30, min_periods=1).mean()
             player_df['defcon_avg_hit_rate'] = player_df['defcon_hit_rate'].where(player_df['defcon'] > 0).rolling(30, min_periods=1).mean()
             player_df['defcon_avg_hit_rate_T1'] = player_df['defcon_hit_rate_T1'].where(player_df['defcon'] > 0).rolling(30, min_periods=1).mean()
             player_df['defcon_avg_hit_rate_T2'] = player_df['defcon_hit_rate_T2'].where(player_df['defcon'] > 0).rolling(30, min_periods=1).mean()
             player_df['defcon_avg_hit_rate_T0'] = player_df['defcon_hit_rate_T0'].where(player_df['defcon'] > 0).rolling(30, min_periods=1).mean()
+            player_df['defcon_avg_hit_rate_T3'] = player_df['defcon_hit_rate_T3'].where(player_df['defcon'] > 0).rolling(30, min_periods=1).mean()
 
             mask = player_df["defcon"].gt(0)
 

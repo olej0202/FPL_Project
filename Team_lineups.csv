@@ -76,16 +76,16 @@
 74,Chelsea,Reece James,MC,3,5,60.0
 75,Chelsea,Trevoh Chalobah,CB,5,5,100.0
 76,Chelsea,Wesley Fofana,CB,3,5,60.0
-77,Crystal Palace,Adam Wharton,MC,4,5,80.0
-78,Crystal Palace,Brennan Johnson,AMC,2,5,40.0
+77,Crystal Palace,Adam Wharton,MC,5,5,100.0
+78,Crystal Palace,Chadi Riad,CB,2,5,40.0
 79,Crystal Palace,Chris Richards,CB,5,5,100.0
-80,Crystal Palace,Daichi Kamada,MC,2,5,40.0
+80,Crystal Palace,Daichi Kamada,MC,3,5,60.0
 81,Crystal Palace,Daniel Muñoz,DR,5,5,100.0
 82,Crystal Palace,Dean Henderson,GK,5,5,100.0
-83,Crystal Palace,Ismaila Sarr,AMC,5,5,100.0
-84,Crystal Palace,Jaydee Canvot,CB,2,5,40.0
-85,Crystal Palace,Jørgen Strand Larsen,FW,4,5,80.0
-86,Crystal Palace,Maxence Lacroix,CB,4,5,80.0
+83,Crystal Palace,Evann Guessand,AMC,2,5,40.0
+84,Crystal Palace,Ismaila Sarr,AMC,5,5,100.0
+85,Crystal Palace,Jaydee Canvot,CB,3,5,60.0
+86,Crystal Palace,Jørgen Strand Larsen,FW,5,5,100.0
 87,Crystal Palace,Tyrick Mitchell,DL,5,5,100.0
 88,Everton,Beto,FW,2,5,40.0
 89,Everton,Dwight McNeil,RW,2,5,40.0
@@ -230,17 +230,17 @@
 228,Southampton,Ross Stewart,FW,3,5,60.0
 229,Southampton,Welington,DL,3,5,60.0
 230,Southampton,Yukinari Sugawara,DR,1,5,20.0
-231,Spurs,Archie Gray,DL,5,5,100.0
-232,Spurs,Conor Gallagher,RW,5,5,100.0
-233,Spurs,Dominic Solanke,FW,4,5,80.0
-234,Spurs,Guglielmo Vicario,GK,5,5,100.0
-235,Spurs,João Palhinha,MC,4,5,80.0
-236,Spurs,Micky van de Ven,CB,4,5,80.0
-237,Spurs,Pedro Porro,DR,1,5,20.0
-238,Spurs,Radu Dragusin,CB,4,5,80.0
-239,Spurs,Randal Kolo Muani,FW,3,5,60.0
-240,Spurs,Xavi Simons,LW,5,5,100.0
-241,Spurs,Yves Bissouma,MC,4,5,80.0
+231,Spurs,Archie Gray,DR,5,5,100.0
+232,Spurs,Dominic Solanke,FW,4,5,80.0
+233,Spurs,Guglielmo Vicario,GK,5,5,100.0
+234,Spurs,João Palhinha,MC,4,5,80.0
+235,Spurs,Kevin Danso,CB,1,5,20.0
+236,Spurs,Mathys Tel,AMC,1,5,20.0
+237,Spurs,Micky van de Ven,CB,5,5,100.0
+238,Spurs,Pape Sarr,MC,4,5,80.0
+239,Spurs,Pedro Porro,CB,2,5,40.0
+240,Spurs,Randal Kolo Muani,AMC,3,5,60.0
+241,Spurs,Souza,DL,1,5,20.0
 242,Sunderland,Dan Ballard,CB,5,5,100.0
 243,Sunderland,Eliezer Mayenda,FW,2,5,40.0
 244,Sunderland,Enzo Le Fée,LW,5,5,100.0
