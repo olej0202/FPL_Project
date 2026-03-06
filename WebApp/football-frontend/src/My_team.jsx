@@ -131,7 +131,7 @@ export default function MyTeamOptimize() {
       let rafId;
       let iv;
       const start = performance.now();
-      const duration = 2600;
+      const duration = 4600;
 
       const tick = (now) => {
         const elapsed = now - start;
