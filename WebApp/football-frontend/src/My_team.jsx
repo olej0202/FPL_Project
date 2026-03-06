@@ -1,7 +1,29 @@
-// src/pages/OptimizeTeam.jsx
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { X, ArrowRight, Search, BookmarkPlus } from "lucide-react";
+import {
+  X,
+  ArrowRight,
+  Search,
+  BookmarkPlus,
+  Sparkles,
+  Shield,
+  Trophy,
+  Brain,
+  SlidersHorizontal,
+  Save,
+  CalendarRange,
+  ChevronDown,
+  ChevronRight,
+  Users,
+  Target,
+  Wand2,
+  RefreshCw,
+  Ban,
+  CheckCircle2,
+  CircleDashed,
+  Zap,
+  Lock,
+} from "lucide-react";
 import pitch from "./assets/Pitch4.png";
 import { useMyteamData } from "./Contexts/MyTeamContext";
 import { useAdjustmentData } from "./Contexts/AdjustmentsContext";
@@ -9,8 +31,15 @@ import { useAdjustmentData } from "./Contexts/AdjustmentsContext";
 const PALETTE = {
   red: "#5A0000",
   gold: "#B8860B",
+  goldSoft: "#D4A72C",
   black: "#000000",
   beige: "#f7ead6",
+  panel: "rgba(8,8,8,0.82)",
+  panelStrong: "rgba(0,0,0,0.92)",
+  border: "rgba(248, 250, 252, 0.14)",
+  muted: "#9ca3af",
+  success: "#86efac",
+  danger: "#f87171",
 };
 
 export default function MyTeamOptimize() {
@@ -38,7 +67,6 @@ export default function MyTeamOptimize() {
     setRisk,
     valtrans,
     setValtrans,
-
     savedOptimizations = [],
     saveOptimization,
     deleteOptimization,
@@ -50,22 +78,26 @@ export default function MyTeamOptimize() {
 
   const [modelType, setModelType] = useState("ai");
   const [optParamsOpen, setOptParamsOpen] = useState(false);
-
-  // Save UI
   const [saveName, setSaveName] = useState("");
   const [saveError, setSaveError] = useState("");
   const [saveHint, setSaveHint] = useState("");
   const [activeSavedId, setActiveSavedId] = useState(null);
+  const [showBbInput, setShowBbInput] = useState(!!bbRound);
+  const [showWildInput, setShowWildInput] = useState(!!wildRound);
+  const [showfreehitInput, setshowfreehitInput] = useState(!!freehitROund);
+  const [chipsOpen, setChipsOpen] = useState(!!bbRound || !!wildRound || !!freehitROund);
+  const [loadingPhase, setLoadingPhase] = useState("idle");
+  const [progress, setProgress] = useState(0);
 
   const hasStatisticalData = useMemo(() => {
     const arr = Playerdata?.current;
     if (!Array.isArray(arr) || arr.length === 0) return false;
-    return arr.some(
-      (p) => p && p.calc_points != null && Number.isFinite(Number(p.calc_points))
-    );
+    return arr.some((p) => p && p.calc_points != null && Number.isFinite(Number(p.calc_points)));
   }, [Playerdata, dataVersion]);
 
   const clampRisk = (v) => Math.max(-1, Math.min(1, v));
+  const clampValTrans = (v) => Math.max(0, Math.min(1, v));
+
   const formatRiskLabel = (v) => {
     const n = Number(v);
     if (n <= -0.3) return "Low risk";
@@ -73,19 +105,11 @@ export default function MyTeamOptimize() {
     return "Neutral";
   };
 
-  const clampValTrans = (v) => Math.max(0, Math.min(1, v));
   const formatValTransLabel = (v) => {
     const n = Number(v);
     if (n <= 0.1) return "Low value";
     if (n >= 0.9) return "High value";
     return "Neutral";
-  };
-
-  const handleApplyToPlanner = () => {
-    if (!plannerPayload.length) return;
-    navigate("/Team_Overview", {
-      state: { optimizedTransfers: plannerPayload, applyId: Date.now() },
-    });
   };
 
   useEffect(() => {
@@ -94,32 +118,10 @@ export default function MyTeamOptimize() {
     }
   }, [modelType, hasStatisticalData]);
 
-  // UI state for chips
-  const [showBbInput, setShowBbInput] = useState(!!bbRound);
-  const [showWildInput, setShowWildInput] = useState(!!wildRound);
-  const [showfreehitInput, setshowfreehitInput] = useState(!!freehitROund);
-  const [chipsOpen, setChipsOpen] = useState(
-    !!bbRound || !!wildRound || !!freehitROund
-  );
-
-  // Loading progress animation
-  const [loadingPhase, setLoadingPhase] = useState("idle");
-  const [progress, setProgress] = useState(0);
-
   useEffect(() => {
     sethas_changed(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    teamId,
-    bbRound,
-    wildRound,
-    bannedList,
-    freehitROund,
-    n_hits,
-    modelType,
-    risk,
-    valtrans,
-  ]);
+  }, [teamId, bbRound, wildRound, bannedList, freehitROund, n_hits, modelType, risk, valtrans]);
 
   useEffect(() => {
     if (loading) {
@@ -127,59 +129,61 @@ export default function MyTeamOptimize() {
       setProgress(0);
 
       let rafId;
+      let iv;
       const start = performance.now();
-      const duration = 3000;
+      const duration = 2600;
 
       const tick = (now) => {
         const elapsed = now - start;
-        const pct = Math.min(40, (elapsed / duration) * 40);
+        const pct = Math.min(42, (elapsed / duration) * 42);
         setProgress(pct);
 
         if (elapsed < duration && loading) {
           rafId = requestAnimationFrame(tick);
         } else if (loading) {
           setLoadingPhase("optimize");
-          let p = Math.max(pct, 40);
-          const iv = setInterval(() => {
+          let p = Math.max(pct, 42);
+          iv = setInterval(() => {
             if (!loading) return clearInterval(iv);
-            p = Math.min(98, p + 1);
+            p = Math.min(97, p + 1.1);
             setProgress(p);
-            if (p >= 98) clearInterval(iv);
-          }, 200);
+            if (p >= 97) clearInterval(iv);
+          }, 180);
         }
       };
 
       rafId = requestAnimationFrame(tick);
-      return () => cancelAnimationFrame(rafId);
-    } else {
-      setProgress(100);
-      const t = setTimeout(() => setProgress(0), 300);
-      setLoadingPhase("idle");
-      return () => clearTimeout(t);
+      return () => {
+        cancelAnimationFrame(rafId);
+        clearInterval(iv);
+      };
     }
+
+    setProgress(100);
+    const t = setTimeout(() => setProgress(0), 320);
+    setLoadingPhase("idle");
+    return () => clearTimeout(t);
   }, [loading]);
 
-  // --- Compute GWs and split squad ---
-  let minGW = 1,
-    maxGW = 38,
-    starters = [],
-    bench = [],
-    transfers = [],
-    gwData = [];
+  let minGW = 1;
+  let maxGW = 38;
+  let starters = [];
+  let bench = [];
+  let transfers = [];
+  let gwData = [];
 
   if (data) {
-    const gws = data.map((p) => Number(p.GW)).filter((n) => !isNaN(n));
+    const gws = data.map((p) => Number(p.GW)).filter((n) => !Number.isNaN(n));
     if (gws.length) {
       minGW = Math.min(...gws);
       maxGW = Math.min(38, minGW + 5);
     }
+
     gwData = data.filter((p) => Number(p.GW) === minGW);
     starters = gwData.filter((p) => p.status === "playing");
     bench = gwData.filter((p) => p.status === "benched");
 
-    const moves = data.filter((p) =>
-      ["transferred_in", "transferred_out"].includes(p.status)
-    );
+    const moves = data.filter((p) => ["transferred_in", "transferred_out"].includes(p.status));
     transfers = Object.values(
       moves.reduce((acc, curr) => {
         if (!acc[curr.GW]) acc[curr.GW] = { GW: curr.GW, in: [], out: [] };
@@ -189,22 +193,19 @@ export default function MyTeamOptimize() {
     ).sort((a, b) => Number(a.GW) - Number(b.GW));
   }
 
-  // --- Total objective points ---
   let totalPredPoints = null;
   if (data) {
     const objRow =
       data.find((p) => p.Name === "Obj Value") ||
-      (Array.isArray(gwData) && gwData.find((p) => p.Name === "Obj Value")) ||
+      gwData.find((p) => p.Name === "Obj Value") ||
       data.find((p) => p.Name === "__TOTAL_OBJECTIVE__");
 
     if (objRow) {
-      const asNum =
-        objRow.objective != null ? Number(objRow.objective) : Number(objRow.status);
+      const asNum = objRow.objective != null ? Number(objRow.objective) : Number(objRow.status);
       totalPredPoints = Number.isFinite(asNum) ? asNum : null;
     }
   }
 
-  // --- Insert/mark Free Hit banner in correct GW order ---
   const toNum = (v) => Number(v);
   let transfersWithFH = transfers;
 
@@ -228,17 +229,13 @@ export default function MyTeamOptimize() {
     }
   }
 
-  // Planner payload
   const plannerPayload = useMemo(() => {
     if (!data || transfersWithFH.length === 0) return [];
 
-    const realGroups = transfersWithFH.filter(
-      (g) => (g.in && g.in.length) || (g.out && g.out.length)
-    );
+    const realGroups = transfersWithFH.filter((g) => (g.in && g.in.length) || (g.out && g.out.length));
 
     return realGroups.flatMap((grp) => {
       const remainingIns = [...(grp.in || [])];
-
       const pairs = (grp.out || []).map((outP) => {
         const i = remainingIns.findIndex((inP) => inP.position === outP.position);
         const inP = i !== -1 ? remainingIns.splice(i, 1)[0] : null;
@@ -261,7 +258,6 @@ export default function MyTeamOptimize() {
     });
   }, [data, transfersWithFH]);
 
-  // Statistical payload
   const getStatisticalPlayersPayload = () => {
     if (!hasStatisticalData) return null;
     const arr = Playerdata?.current;
@@ -281,16 +277,20 @@ export default function MyTeamOptimize() {
       useStatisticalModel: useStatistical,
       playersData: playersPayload,
     });
+
     sethas_changed(false);
     setSaveError("");
     setSaveHint("");
   };
 
-  const canSave =
-    !!data &&
-    Array.isArray(data) &&
-    data.length > 0 &&
-    typeof saveOptimization === "function";
+  const handleApplyToPlanner = () => {
+    if (!plannerPayload.length) return;
+    navigate("/Team_Overview", {
+      state: { optimizedTransfers: plannerPayload, applyId: Date.now() },
+    });
+  };
+
+  const canSave = !!data && Array.isArray(data) && data.length > 0 && typeof saveOptimization === "function";
 
   const normalizeName = (s) =>
     (s || "")
@@ -309,39 +309,38 @@ export default function MyTeamOptimize() {
 
     const trimmed = normalizeName(saveName);
     if (!trimmed) {
-      setSaveError("Add a name (e.g. “Low risk · FH GW29”).");
+      setSaveError("Add a name like ‘Low risk · FH GW29’.");
       return;
     }
 
     const payload = {
-  id: `${Date.now()}_${Math.random().toString(16).slice(2)}`,
-  name: trimmed,
-  createdAt: Date.now(),
-  snapshot: {
-    params: {
-      teamId: String(teamId || ""),
-      bbRound: bbRound || "",
-      wildRound: wildRound || "",
-      freehitROund: freehitROund || "",
-      bannedList: Array.isArray(bannedList) ? bannedList : [],
-      n_hits: Number(n_hits || 0),
-      risk: Number(risk || 0),
-      valtrans: Number(valtrans || 0.5),
-      modelType: modelType,
-    },
-    // ✅ NEW: store unwanted chip display data too
-    result: {
-      data,
-      bannedPlayersData: Array.isArray(bannedPlayersData) ? bannedPlayersData : [],
-    },
-  },
-};
+      id: `${Date.now()}_${Math.random().toString(16).slice(2)}`,
+      name: trimmed,
+      createdAt: Date.now(),
+      snapshot: {
+        params: {
+          teamId: String(teamId || ""),
+          bbRound: bbRound || "",
+          wildRound: wildRound || "",
+          freehitROund: freehitROund || "",
+          bannedList: Array.isArray(bannedList) ? bannedList : [],
+          n_hits: Number(n_hits || 0),
+          risk: Number(risk || 0),
+          valtrans: Number(valtrans || 0.5),
+          modelType,
+        },
+        result: {
+          data,
+          bannedPlayersData: Array.isArray(bannedPlayersData) ? bannedPlayersData : [],
+        },
+      },
+    };
 
     saveOptimization(payload);
     setActiveSavedId(payload.id);
     setSaveName("");
-    setSaveHint("Saved.");
-    setTimeout(() => setSaveHint(""), 1400);
+    setSaveHint("Saved successfully.");
+    setTimeout(() => setSaveHint(""), 1500);
   };
 
   const runLabel = (opt) => {
@@ -359,10 +358,9 @@ export default function MyTeamOptimize() {
     return `${mt}${ts ? ` · ${ts}` : ""}`;
   };
 
-  const activeChipsCount =
-    (bbRound ? 1 : 0) + (wildRound ? 1 : 0) + (freehitROund ? 1 : 0);
+  const activeChipsCount = (bbRound ? 1 : 0) + (wildRound ? 1 : 0) + (freehitROund ? 1 : 0);
+  const totalTransfers = plannerPayload.length;
 
-  // Loading overlay
   if (loading) {
     return (
       <div
@@ -370,32 +368,53 @@ export default function MyTeamOptimize() {
         style={{
           background: `radial-gradient(circle at top, ${PALETTE.red}, ${PALETTE.black})`,
           color: PALETTE.beige,
-          fontFamily:
-            "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+          fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
         }}
       >
         <div
-          className="w-full max-w-md rounded-2xl p-5 shadow-2xl"
+          className="w-full max-w-md rounded-[28px] p-6 shadow-2xl"
           style={{
             border: `1px solid ${PALETTE.gold}`,
-            background: "linear-gradient(145deg, rgba(0,0,0,0.96), rgba(0,0,0,0.9))",
+            background: "linear-gradient(145deg, rgba(0,0,0,0.96), rgba(0,0,0,0.88))",
+            boxShadow: "0 25px 80px rgba(0,0,0,0.7)",
           }}
         >
-          <div className="mb-2 text-center text-sm" style={{ color: "#d1c3a9" }}>
-            {loadingPhase === "fetch" ? "Fetching team…" : "Optimizing team…"}
-          </div>
-          <div className="h-2 w-full rounded bg-neutral-900 overflow-hidden">
+          <div className="flex items-center justify-center mb-4">
             <div
-              className="h-full transition-[width] duration-200 ease-out"
-              style={{ width: `${progress}%`, backgroundColor: PALETTE.gold }}
+              className="w-14 h-14 rounded-2xl flex items-center justify-center animate-pulse"
+              style={{
+                background: "rgba(184,134,11,0.12)",
+                border: `1px solid rgba(184,134,11,0.45)`,
+              }}
+            >
+              <RefreshCw size={24} className="lucide-icon animate-spin" style={{ color: PALETTE.gold }} />
+            </div>
+          </div>
+
+          <div className="mb-2 text-center text-sm font-medium" style={{ color: "#d1c3a9" }}>
+            {loadingPhase === "fetch" ? "Fetching your team data" : "Building the optimal plan"}
+          </div>
+          <div className="mb-4 text-center text-xs" style={{ color: PALETTE.muted }}>
+            Evaluating chips, transfers, and projected outcomes.
+          </div>
+
+          <div className="h-2.5 w-full rounded-full bg-neutral-900 overflow-hidden">
+            <div
+              className="h-full transition-[width] duration-200 ease-out rounded-full"
+              style={{
+                width: `${progress}%`,
+                background: `linear-gradient(90deg, ${PALETTE.gold}, #facc15)`,
+              }}
               aria-valuemin={0}
               aria-valuemax={100}
               aria-valuenow={Math.round(progress)}
               role="progressbar"
             />
           </div>
-          <div className="mt-3 text-center text-xs animate-pulse" style={{ color: "#9ca3af" }}>
-            This can take a moment…
+
+          <div className="mt-4 flex items-center justify-between text-[11px]" style={{ color: PALETTE.muted }}>
+            <span>{loadingPhase === "fetch" ? "Step 1 of 2" : "Step 2 of 2"}</span>
+            <span>{Math.round(progress)}%</span>
           </div>
         </div>
       </div>
@@ -406,13 +425,11 @@ export default function MyTeamOptimize() {
     <div
       className="min-h-screen"
       style={{
-        background: `radial-gradient(circle at top, ${PALETTE.red} 0, ${PALETTE.black} 45%, #000000 100%)`,
+        background: `radial-gradient(circle at top, ${PALETTE.red} 0, ${PALETTE.black} 42%, #000 100%)`,
         color: PALETTE.beige,
-        fontFamily:
-          "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+        fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
       }}
     >
-      {/* Harden lucide SVG rendering even if global CSS overrides stroke */}
       <style>{`
         .lucide-icon {
           stroke: currentColor !important;
@@ -420,234 +437,185 @@ export default function MyTeamOptimize() {
           display: block;
           flex-shrink: 0;
         }
-        summary::-webkit-details-marker { display:none; }
+        summary::-webkit-details-marker { display: none; }
+        .glass-card {
+          border: 1px solid rgba(248, 250, 252, 0.12);
+          background: linear-gradient(145deg, rgba(0,0,0,0.88), rgba(17,17,17,0.72));
+          box-shadow: 0 18px 50px rgba(0,0,0,0.5);
+          backdrop-filter: blur(12px);
+        }
+        .gold-ring:focus-visible {
+          outline: 2px solid ${PALETTE.gold};
+          outline-offset: 2px;
+        }
+        .opt-range::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          appearance: none;
+          width: 20px;
+          height: 20px;
+          border-radius: 999px;
+          background: ${PALETTE.gold};
+          border: 2px solid #000;
+          box-shadow: 0 0 0 2px rgba(184,134,11,0.35);
+          transition: transform .15s ease;
+        }
+        .opt-range::-webkit-slider-thumb:hover { transform: scale(1.08); }
+        .opt-range::-moz-range-thumb {
+          width: 20px;
+          height: 20px;
+          border-radius: 999px;
+          background: ${PALETTE.gold};
+          border: 2px solid #000;
+          box-shadow: 0 0 0 2px rgba(184,134,11,0.35);
+        }
+        .opt-range::-moz-range-track {
+          height: 6px;
+          background: #374151;
+          border-radius: 999px;
+        }
       `}</style>
 
-      <div className="mx-auto max-w-6xl px-4 py-6 sm:py-10">
-        {/* Header */}
-        <header className="mb-5 sm:mb-7 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:py-8 lg:py-10">
+        <header className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-              Optimize My Team
-            </h1>
-            <p className="text-xs sm:text-sm mt-1" style={{ color: "#d1c3a9" }}>
-              Configure chips and preferences, then run the optimizer.
+            <div className="inline-flex items-center gap-2 rounded-full px-3 py-1 mb-3 text-[11px] uppercase tracking-[0.18em]"
+              style={{
+                color: PALETTE.gold,
+                border: `1px solid rgba(184,134,11,0.35)`,
+                background: "rgba(184,134,11,0.08)",
+              }}
+            >
+              <Sparkles size={14} className="lucide-icon" />
+              Optimization Workspace
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">Optimize My Team</h1>
+            <p className="text-sm mt-2 max-w-2xl" style={{ color: "#d1c3a9" }}>
+              Build a cleaner transfer plan, compare AI vs statistical logic, and move the best recommendations straight into your planner.
             </p>
           </div>
 
-          {totalPredPoints != null && (
-            <div
-              className="inline-flex items-center gap-3 rounded-2xl px-4 py-3"
-              style={{
-                border: `1px solid rgba(248, 250, 252, 0.16)`,
-                background: "rgba(0,0,0,0.55)",
-              }}
-            >
-              <div>
-                <div className="text-[10px] uppercase tracking-wide" style={{ color: "#9ca3af" }}>
-                  Predicted points
-                </div>
-                <div className="text-lg font-bold" style={{ color: PALETTE.gold }}>
-                  {totalPredPoints.toFixed(2)}
-                </div>
-              </div>
-              <div className="h-9 w-px" style={{ backgroundColor: "rgba(255,255,255,0.12)" }} />
-              <div className="text-[11px]" style={{ color: "#9ca3af" }}>
-                GW {minGW}–{maxGW} · {modelType === "ai" ? "AI" : "Statistical"}
-              </div>
-            </div>
-          )}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full lg:w-auto">
+            <TopStat icon={Target} label="Predicted" value={totalPredPoints != null ? totalPredPoints.toFixed(2) : "—"} />
+            <TopStat icon={CalendarRange} label="Window" value={`GW ${minGW}-${maxGW}`} />
+            <TopStat icon={Zap} label="Transfers" value={String(totalTransfers)} />
+            <TopStat icon={Ban} label="Blocked" value={String(bannedPlayersData.length || 0)} />
+          </div>
         </header>
 
-        {/* Saved Optimizations */}
-        <section
-          className="mb-6 rounded-2xl p-4 sm:p-6"
-          style={{
-            border: `1px solid ${PALETTE.gold}`,
-            background: "linear-gradient(145deg, rgba(0,0,0,0.94), rgba(0,0,0,0.86))",
-            boxShadow: "0 18px 40px rgba(0,0,0,0.85)",
-          }}
-        >
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <div className="text-sm font-semibold" style={{ color: PALETTE.gold }}>
-                Saved optimizations
+        <section className="mb-6 grid grid-cols-1 xl:grid-cols-[1.2fr_0.8fr] gap-6">
+          <div className="glass-card rounded-[28px] p-4 sm:p-6">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <div className="flex items-center gap-2 text-sm font-semibold" style={{ color: PALETTE.gold }}>
+                  <SlidersHorizontal size={16} className="lucide-icon" />
+                  Optimization controls
+                </div>
+                <p className="text-xs mt-1" style={{ color: PALETTE.muted }}>
+                  Tune your team ID, chips, model, and optimization profile.
+                </p>
               </div>
-              <div className="text-[11px]" style={{ color: "#9ca3af" }}>
-                Click one to load it instantly.
-              </div>
-            </div>
 
-          </div>
-
-          <div className="mt-4">
-            {typeof loadOptimization !== "function" || typeof deleteOptimization !== "function" ? (
-              <div className="text-xs" style={{ color: "#fbbf24" }}>
-                Missing context functions:{" "}
-                <span className="font-semibold">loadOptimization</span> and/or{" "}
-                <span className="font-semibold">deleteOptimization</span>.
-              </div>
-            ) : savedOptimizations.length === 0 ? (
-              <div className="text-xs" style={{ color: "#9ca3af" }}>
-                No saved optimizations yet.
-              </div>
-            ) : (
-              <div className="flex gap-2 overflow-x-auto pb-1">
-                {savedOptimizations
-                  .slice()
-                  .sort((a, b) => (b?.createdAt || 0) - (a?.createdAt || 0))
-                  .map((opt) => {
-                    const isActive = opt.id === activeSavedId;
-                    return (
-                      <div
-                        key={opt.id}
-                        className="flex items-center gap-2 rounded-full px-3 py-2 whitespace-nowrap"
-                        style={{
-                          border: isActive
-                            ? `1px solid ${PALETTE.gold}`
-                            : "1px solid rgba(248, 250, 252, 0.16)",
-                          background: isActive
-                            ? "rgba(184,134,11,0.14)"
-                            : "rgba(0,0,0,0.55)",
-                        }}
-                      >
-                        <button
-                          type="button"
-                          onClick={() => {
-                            loadOptimization(opt.id);
-                            setActiveSavedId(opt.id);
-                            setSaveError("");
-                            setSaveHint("");
-                          }}
-                          className="text-left"
-                          style={{ color: PALETTE.beige }}
-                          title="Load this optimization"
-                        >
-                          <div className="text-sm font-semibold leading-none" style={{ color: "#cba108ff" }} >
-                            {opt.name}
-                          </div>
-                          <div className="text-[10px] leading-none mt-1" style={{ color: "#873f0cff" }}>
-                            {runLabel(opt)}
-                          </div>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => {
-                            deleteOptimization(opt.id);
-                            if (activeSavedId === opt.id) setActiveSavedId(null);
-                          }}
-                          className="inline-flex items-center justify-center w-8 h-8 rounded-full transition"
-                          style={{
-                            border: "1px solid rgba(255,255,255,0.14)",
-                            backgroundColor: "rgba(0,0,0,0.65)",
-                            color: "#ef4444",
-                          }}
-                          aria-label={`Delete ${opt.name}`}
-                          title="Delete"
-                        >
-                          <X size={16} className="lucide-icon" />
-                        </button>
-                      </div>
-                    );
-                  })}
-              </div>
-            )}
-          </div>
-        </section>
-
-        {/* Controls Card */}
-        <section
-          className="mb-6 rounded-2xl p-4 sm:p-6"
-          style={{
-            border: `1px solid ${PALETTE.gold}`,
-            background: "linear-gradient(145deg, rgba(0,0,0,0.94), rgba(90,0,0,0.82))",
-            boxShadow: "0 18px 40px rgba(0,0,0,0.85)",
-          }}
-        >
-          <header className="mb-5 sm:mb-7 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
-  <div>
-    <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-      Optimize My Team
-    </h1>
-    <p className="text-xs sm:text-sm mt-1" style={{ color: "#d1c3a9" }}>
-      Configure chips and preferences, then run the optimizer.
-    </p>
-  </div>
-
-  {/* Top-right Optimize */}
-  <button
-    onClick={handleOptimizeClick}
-    disabled={!has_changed || !teamId}
-    className="inline-flex items-center gap-2 font-semibold px-4 py-2 rounded-full transition"
-    style={{
-      border: `1px solid ${has_changed && teamId ? PALETTE.gold : "#374151"}`,
-      background:
-        has_changed && teamId
-          ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)`
-          : "rgba(0,0,0,0.55)",
-      color: has_changed && teamId ? "#000000" : "#9ca3af",
-      cursor: has_changed && teamId ? "pointer" : "not-allowed",
-      boxShadow: has_changed && teamId ? "0 14px 28px rgba(0,0,0,0.55)" : "none",
-    }}
-    aria-disabled={!has_changed || !teamId}
-  >
-    Optimize
-  </button>
-</header>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
-            {/* Team ID */}
-            <div className="flex flex-col gap-1">
-              <label
-                htmlFor="team-id"
-                className="text-xs uppercase tracking-wide"
-                style={{ color: "#e5e7eb" }}
-              >
-                Team ID
-              </label>
-              <input
-                id="team-id"
-                type="number"
-                inputMode="numeric"
-                placeholder="Required"
-                value={teamId}
-                onChange={(e) => setTeamId(e.target.value)}
-                className="w-full h-11 px-3 rounded-xl text-base sm:text-sm outline-none"
+              <button
+                onClick={handleOptimizeClick}
+                disabled={!has_changed || !teamId}
+                className="gold-ring inline-flex items-center justify-center gap-2 font-semibold px-4 py-3 rounded-2xl transition-all"
                 style={{
-                  fontSize: 16,
-                  border: "1px solid rgba(248, 250, 252, 0.18)",
-                  backgroundColor: "rgba(0,0,0,0.75)",
-                  color: PALETTE.beige,
+                  border: `1px solid ${has_changed && teamId ? PALETTE.gold : "#374151"}`,
+                  background: has_changed && teamId ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)` : "rgba(0,0,0,0.55)",
+                  color: has_changed && teamId ? "#000" : PALETTE.muted,
+                  cursor: has_changed && teamId ? "pointer" : "not-allowed",
+                  boxShadow: has_changed && teamId ? "0 14px 30px rgba(0,0,0,0.35)" : "none",
                 }}
-              />
+              >
+                <Wand2 size={17} className="lucide-icon" />
+                Optimize now
+              </button>
             </div>
 
-            {/* Chips */}
-            <div className="flex flex-col gap-1 lg:col-span-3">
-              <label className="text-xs uppercase tracking-wide" style={{ color: "#e5e7eb" }}>
-                Chips
-              </label>
+            <div className="mt-5 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-12 gap-3 items-start">
+              <FieldShell label="Team ID" icon={Users} className="min-w-0 md:col-span-1 xl:col-span-3">
+                <input
+                  id="team-id"
+                  type="number"
+                  inputMode="numeric"
+                  placeholder="Required"
+                  value={teamId}
+                  onChange={(e) => setTeamId(e.target.value)}
+                  className="gold-ring w-full h-12 px-3 rounded-2xl text-base sm:text-sm outline-none"
+                  style={{
+                    fontSize: 16,
+                    border: `1px solid ${PALETTE.border}`,
+                    backgroundColor: "rgba(0,0,0,0.72)",
+                    color: PALETTE.beige,
+                  }}
+                />
+              </FieldShell>
 
+              <FieldShell label="Hits" icon={Shield} className="min-w-0 md:col-span-1 xl:col-span-2">
+                {/* Hits box */}
+<div
+  className="h-11 min-w-0 rounded-2xl flex items-center justify-between px-1.5 gap-1.5"
+  style={{ backgroundColor: "rgba(0,0,0,0.8)", border: `1px solid ${PALETTE.border}` }}
+>
+                  <IconButton ariaLabel="Decrease hits" onClick={() => setn_hits(Math.max(0, Number(n_hits || 0) - 1))} label="−" />
+                  <div className="flex min-w-0 flex-col items-center leading-none select-none px-0.5">
+  <span className="text-[9px] uppercase tracking-wide" style={{ color: PALETTE.muted }}>
+    Hits
+  </span>
+  <span className="text-[13px] sm:text-sm font-semibold tabular-nums">
+    {Number(n_hits || 0)}
+  </span>
+</div>
+                  <IconButton ariaLabel="Increase hits" onClick={() => setn_hits(Number(n_hits || 0) + 1)} label="+" />
+                </div>
+              </FieldShell>
+
+              <FieldShell label="Model" icon={Brain} className="min-w-0 md:col-span-2 xl:col-span-7">
+                <div className="grid grid-cols-2 gap-2">
+                  <ModelButton active={modelType === "ai"} onClick={() => setModelType("ai")} icon={Sparkles}>
+                    AI model
+                  </ModelButton>
+                  <ModelButton
+                    active={modelType === "statistical"}
+                    onClick={() => hasStatisticalData && setModelType("statistical")}
+                    disabled={!hasStatisticalData}
+                    icon={Trophy}
+                  >
+                    Statistical
+                  </ModelButton>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => navigate("/Adjustment_Analysis")}
+                  className="gold-ring mt-2 text-[11px] inline-flex items-center gap-2 underline decoration-dotted"
+                  style={{ color: PALETTE.gold, alignSelf: "flex-start" }}
+                >
+                  <Brain size={13} className="lucide-icon" />
+                  Open your statistical model
+                  {!hasStatisticalData && <span style={{ color: "#fbbf24" }}>(required to enable)</span>}
+                </button>
+              </FieldShell>
+            </div>
+
+            <div className="mt-4 grid grid-cols-1 gap-4">
               <details
                 open={chipsOpen}
                 onToggle={(e) => setChipsOpen(e.currentTarget.open)}
-                className="rounded-xl"
-                style={{
-                  border: "1px solid rgba(248, 250, 252, 0.18)",
-                  backgroundColor: "rgba(0,0,0,0.75)",
-                }}
+                className="rounded-[24px] overflow-hidden min-w-0"
+                style={{ border: `1px solid ${PALETTE.border}`, backgroundColor: "rgba(0,0,0,0.65)" }}
               >
-                <summary
-                  className="cursor-pointer select-none list-none flex items-center justify-between px-3 h-11"
-                  style={{ color: PALETTE.gold }}
-                >
-                  <span>Add chips</span>
-                  <span className="text-[11px]" style={{ color: "#9ca3af" }}>
-                    {activeChipsCount} active
-                  </span>
+                <summary className="cursor-pointer select-none list-none flex items-center justify-between px-4 h-14">
+                  <div className="flex items-center gap-2" style={{ color: PALETTE.gold }}>
+                    <CalendarRange size={16} className="lucide-icon" />
+                    <span className="font-semibold">Chip strategy</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-[11px]" style={{ color: PALETTE.muted }}>
+                    <span>{activeChipsCount} active</span>
+                    {chipsOpen ? <ChevronDown size={14} className="lucide-icon" /> : <ChevronRight size={14} className="lucide-icon" />}
+                  </div>
                 </summary>
 
-                <div className="p-3 pt-2 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="px-4 pb-4 grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-3">
                   <ChipSelect
                     label="Bench Boost GW"
                     show={showBbInput}
@@ -664,6 +632,7 @@ export default function MyTeamOptimize() {
                     minGW={minGW}
                     maxGW={maxGW}
                     addLabel="Add Bench Boost"
+                    icon={Shield}
                   />
 
                   <ChipSelect
@@ -682,6 +651,7 @@ export default function MyTeamOptimize() {
                     minGW={minGW}
                     maxGW={maxGW}
                     addLabel="Add Wildcard"
+                    icon={RefreshCw}
                   />
 
                   <ChipSelect
@@ -700,314 +670,238 @@ export default function MyTeamOptimize() {
                     minGW={minGW}
                     maxGW={maxGW}
                     addLabel="Add Free Hit"
+                    icon={Zap}
                   />
                 </div>
               </details>
-            </div>
-
-            {/* Hits */}
-            <div className="flex flex-col gap-1">
-              <label className="text-xs uppercase tracking-wide" style={{ color: "#e5e7eb" }}>
-                Hits
-              </label>
-              <div
-                className="h-11 rounded-xl flex items-center justify-between px-2"
-                style={{
-                  backgroundColor: "rgba(0,0,0,0.8)",
-                  border: "1px solid rgba(248, 250, 252, 0.18)",
-                }}
-              >
-                <IconButton
-                  ariaLabel="Decrease hits"
-                  onClick={() => setn_hits(Math.max(0, Number(n_hits || 0) - 1))}
-                  label="−"
-                />
-                <div className="flex flex-col items-center leading-none select-none">
-                  <span className="text-[10px] uppercase tracking-wide" style={{ color: "#9ca3af" }}>
-                    Count
-                  </span>
-                  <span className="text-sm font-semibold">{Number(n_hits || 0)}</span>
-                </div>
-                <IconButton
-                  ariaLabel="Increase hits"
-                  onClick={() => setn_hits(Number(n_hits || 0) + 1)}
-                  label="+"
-                />
-              </div>
-            </div>
-
-            {/* Model */}
-            <div className="flex flex-col gap-1 lg:col-span-2">
-              <label className="text-xs uppercase tracking-wide" style={{ color: "#e5e7eb" }}>
-                Model
-              </label>
-              <div className="flex items-center gap-2 h-11">
-                <button
-                  type="button"
-                  onClick={() => setModelType("ai")}
-                  className="flex-1 inline-flex items-center justify-center px-3 py-2 rounded-xl text-xs sm:text-sm border transition"
-                  style={{
-                    border:
-                      modelType === "ai"
-                        ? `1px solid ${PALETTE.gold}`
-                        : "1px solid rgba(248, 250, 252, 0.18)",
-                    background:
-                      modelType === "ai"
-                        ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)`
-                        : "rgba(0,0,0,0.75)",
-                    color: modelType === "ai" ? "#000000" : "#e5e7eb",
-                  }}
-                >
-                  AI
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => hasStatisticalData && setModelType("statistical")}
-                  disabled={!hasStatisticalData}
-                  className="flex-1 inline-flex items-center justify-center px-3 py-2 rounded-xl text-xs sm:text-sm border transition"
-                  style={{
-                    border: !hasStatisticalData
-                      ? "1px solid #4b5563"
-                      : modelType === "statistical"
-                      ? `1px solid ${PALETTE.gold}`
-                      : "1px solid rgba(248, 250, 252, 0.18)",
-                    background: !hasStatisticalData
-                      ? "rgba(0,0,0,0.5)"
-                      : modelType === "statistical"
-                      ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)`
-                      : "rgba(0,0,0,0.75)",
-                    color: !hasStatisticalData
-                      ? "#6b7280"
-                      : modelType === "statistical"
-                      ? "#000000"
-                      : "#e5e7eb",
-                    cursor: !hasStatisticalData ? "not-allowed" : "pointer",
-                  }}
-                >
-                  Statistical
-                </button>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => navigate("/Adjustment_Analysis")}
-                className="mt-2 text-[11px] inline-flex items-center gap-2 underline decoration-dotted"
-                style={{ color: PALETTE.gold, alignSelf: "flex-start" }}
-              >
-                Open Your Statistical Model
-                {!hasStatisticalData && (
-                  <span style={{ color: "#fbbf24" }}>(needed to enable)</span>
-                )}
-              </button>
-            </div>
-
-            {/* Optimization params (WITH Optimize button moved here) */}
-            <div className="flex flex-col gap-1 lg:col-span-4">
-              <div className="flex items-end justify-between gap-3">
-                <label className="text-xs uppercase tracking-wide" style={{ color: "#e5e7eb" }}>
-                  Optimization params
-                </label>
-
-                
-              </div>
 
               <details
                 open={optParamsOpen}
                 onToggle={(e) => setOptParamsOpen(e.currentTarget.open)}
-                className="rounded-xl"
-                style={{
-                  border: "1px solid rgba(248, 250, 252, 0.18)",
-                  backgroundColor: "rgba(0,0,0,0.75)",
-                }}
+                className="rounded-[24px] overflow-hidden min-w-0"
+                style={{ border: `1px solid ${PALETTE.border}`, backgroundColor: "rgba(0,0,0,0.65)" }}
               >
-                <summary
-                  className="cursor-pointer select-none list-none flex items-center justify-between px-3 h-12"
-                  style={{ color: PALETTE.gold }}
-                >
-                  <span className="font-semibold">Adjust Optimization</span>
-                  <span className="text-[10px]" style={{ color: "#9ca3af" }}>
+                <summary className="cursor-pointer select-none list-none flex items-center justify-between px-4 h-14">
+                  <div className="flex items-center gap-2" style={{ color: PALETTE.gold }}>
+                    <SlidersHorizontal size={16} className="lucide-icon" />
+                    <span className="font-semibold">Optimization profile</span>
+                  </div>
+                  <div className="text-[11px]" style={{ color: PALETTE.muted }}>
                     {formatRiskLabel(risk)} · {formatValTransLabel(valtrans)}
-                  </span>
+                  </div>
                 </summary>
 
-                <div className="p-3 pt-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {/* Risk */}
-                  <div className="flex flex-col gap-1">
-                    <label className="text-xs uppercase tracking-wide" style={{ color: "#e5e7eb" }}>
-                      Risk preference
-                    </label>
+                <div className="px-4 pb-4 grid grid-cols-1 gap-4">
+                  <PreferenceSlider
+                    title="Risk preference"
+                    icon={Shield}
+                    value={risk}
+                    setValue={setRisk}
+                    min={-1}
+                    max={1}
+                    step={0.2}
+                    clamp={clampRisk}
+                    presets={[
+                      { label: "Low", value: -0.6 },
+                      { label: "Neutral", value: 0 },
+                      { label: "High", value: 0.6 },
+                    ]}
+                    description="Low risk prefers stable picks. High risk rewards differentials."
+                    fillPercent={((Number(risk) + 1) / 2) * 100}
+                  />
 
-                    <div className="flex items-center gap-2 mb-1">
-                      <MiniPill active={Number(risk) === -0.6} onClick={() => setRisk(-0.6)}>
-                        Low
-                      </MiniPill>
-                      <MiniPill active={Number(risk) === 0} onClick={() => setRisk(0)}>
-                        Neutral
-                      </MiniPill>
-                      <MiniPill active={Number(risk) === 0.6} onClick={() => setRisk(0.6)}>
-                        High
-                      </MiniPill>
-                    </div>
+                  <PreferenceSlider
+                    title="Transfer value"
+                    icon={Lock}
+                    value={valtrans}
+                    setValue={setValtrans}
+                    min={0}
+                    max={1}
+                    step={0.25}
+                    clamp={clampValTrans}
+                    presets={[
+                      { label: "Low", value: 0 },
+                      { label: "Neutral", value: 0.5 },
+                      { label: "High", value: 1 },
+                    ]}
+                    description="Higher value preserves transfers more."
+                    fillPercent={Number(valtrans) * 100}
+                  />
+                </div>
+              </details>
+            </div>
+          </div>
 
-                    <div
-                      className="h-12 rounded-xl px-3 flex items-center"
-                      style={{
-                        backgroundColor: "rgba(0,0,0,0.8)",
-                        border: "1px solid rgba(248, 250, 252, 0.18)",
-                      }}
-                    >
-                      <input
-                        type="range"
-                        min={-1}
-                        max={1}
-                        step={0.2}
-                        value={clampRisk(Number(risk))}
-                        onChange={(e) => setRisk(clampRisk(Number(e.target.value)))}
-                        aria-label="Risk preference"
-                        className="opt-range w-full appearance-none bg-transparent cursor-pointer"
-                        style={{
-                          WebkitAppearance: "none",
-                          height: 6,
-                          background: `linear-gradient(
-                            to right,
-                            ${PALETTE.gold} 0%,
-                            ${PALETTE.gold} ${((Number(risk) + 1) / 2) * 100}%,
-                            #374151 ${((Number(risk) + 1) / 2) * 100}%,
-                            #374151 100%
-                          )`,
-                          borderRadius: 999,
-                        }}
-                      />
-                    </div>
+          <div className="glass-card rounded-[28px] p-4 sm:p-6">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <div className="flex items-center gap-2 text-sm font-semibold" style={{ color: PALETTE.gold }}>
+                  <Save size={16} className="lucide-icon" />
+                  Saved optimizations
+                </div>
+                <div className="text-xs mt-1" style={{ color: PALETTE.muted }}>
+                  Save strong runs and reload them instantly.
+                </div>
+              </div>
+            </div>
 
-                    <p className="text-[11px] mt-1" style={{ color: "#9ca3af" }}>
-                      Low risk prefers stable picks. High risk rewards differentials.
-                    </p>
+            <div className="mt-4 rounded-[24px] p-4" style={{ border: `1px solid ${PALETTE.border}`, background: "rgba(0,0,0,0.55)" }}>
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <div className="text-[10px] uppercase tracking-wide" style={{ color: PALETTE.muted }}>
+                    Save this run
                   </div>
+                  <div className="text-sm font-semibold">Optimization name</div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleSaveOptimization}
+                  disabled={!canSave}
+                  className="gold-ring inline-flex items-center gap-2 px-3 py-2 rounded-full font-semibold transition"
+                  style={{
+                    border: `1px solid ${canSave ? PALETTE.gold : "#374151"}`,
+                    background: canSave ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)` : "rgba(0,0,0,0.55)",
+                    color: canSave ? "#000" : PALETTE.muted,
+                    cursor: canSave ? "pointer" : "not-allowed",
+                  }}
+                >
+                  <BookmarkPlus size={16} className="lucide-icon" />
+                  Save
+                </button>
+              </div>
 
-                  {/* Value */}
-                  <div className="flex flex-col gap-1">
-                    <label className="text-xs uppercase tracking-wide" style={{ color: "#e5e7eb" }}>
-                      Value of transfers
-                    </label>
+              <input
+                value={saveName}
+                onChange={(e) => setSaveName(e.target.value)}
+                placeholder={canSave ? "e.g. Low risk · FH GW29" : "Run optimization to enable saving"}
+                disabled={!canSave}
+                className="gold-ring mt-3 h-12 w-full px-3 rounded-2xl text-sm outline-none"
+                style={{
+                  fontSize: 16,
+                  border: `1px solid ${saveError ? "rgba(248,113,113,0.6)" : PALETTE.border}`,
+                  backgroundColor: !canSave ? "rgba(0,0,0,0.5)" : "rgba(0,0,0,0.78)",
+                  color: PALETTE.beige,
+                }}
+              />
 
-                    <div className="flex items-center gap-2 mb-1">
-                      <MiniPill active={Number(valtrans) === 0} onClick={() => setValtrans(0)}>
-                        Low
-                      </MiniPill>
-                      <MiniPill active={Number(valtrans) === 0.5} onClick={() => setValtrans(0.5)}>
-                        Neutral
-                      </MiniPill>
-                      <MiniPill active={Number(valtrans) === 1} onClick={() => setValtrans(1)}>
-                        High
-                      </MiniPill>
-                    </div>
+              {(saveError || saveHint) && (
+                <div className="mt-2 text-xs inline-flex items-center gap-2" style={{ color: saveError ? "#fbbf24" : PALETTE.success }}>
+                  {saveError ? <CircleDashed size={14} className="lucide-icon" /> : <CheckCircle2 size={14} className="lucide-icon" />}
+                  {saveError || saveHint}
+                </div>
+              )}
+            </div>
 
-                    <div
-                      className="h-12 rounded-xl px-3 flex items-center"
-                      style={{
-                        backgroundColor: "rgba(0,0,0,0.8)",
-                        border: "1px solid rgba(248, 250, 252, 0.18)",
-                      }}
-                    >
-                      <input
-                        type="range"
-                        min={0}
-                        max={1}
-                        step={0.25}
-                        value={clampValTrans(Number(valtrans))}
-                        onChange={(e) => setValtrans(clampValTrans(Number(e.target.value)))}
-                        aria-label="Value of saved transfers"
-                        className="opt-range w-full appearance-none bg-transparent cursor-pointer"
-                        style={{
-                          WebkitAppearance: "none",
-                          height: 6,
-                          background: `linear-gradient(
-                            to right,
-                            ${PALETTE.gold} 0%,
-                            ${PALETTE.gold} ${Number(valtrans) * 100}%,
-                            #374151 ${Number(valtrans) * 100}%,
-                            #374151 100%
-                          )`,
-                          borderRadius: 999,
-                        }}
-                      />
-                    </div>
-
-                    <p className="text-[11px] mt-1" style={{ color: "#9ca3af" }}>
-                      Higher value preserves transfers more.
-                    </p>
+            <div className="mt-4">
+              {typeof loadOptimization !== "function" || typeof deleteOptimization !== "function" ? (
+                <div className="text-xs rounded-2xl p-4" style={{ color: "#fbbf24", border: `1px solid rgba(251,191,36,0.25)`, background: "rgba(251,191,36,0.06)" }}>
+                  Missing context functions: <span className="font-semibold">loadOptimization</span> and/or <span className="font-semibold">deleteOptimization</span>.
+                </div>
+              ) : savedOptimizations.length === 0 ? (
+                <div className="rounded-2xl p-6 text-center" style={{ border: `1px dashed ${PALETTE.border}`, background: "rgba(0,0,0,0.32)" }}>
+                  <Save size={24} className="lucide-icon mx-auto mb-2" style={{ color: PALETTE.gold }} />
+                  <div className="text-sm font-semibold">No saved optimizations yet</div>
+                  <div className="text-xs mt-1" style={{ color: PALETTE.muted }}>
+                    Run an optimization and save it for quick comparisons.
                   </div>
                 </div>
+              ) : (
+                <div className="space-y-2 max-h-[420px] overflow-auto pr-1">
+                  {savedOptimizations
+                    .slice()
+                    .sort((a, b) => (b?.createdAt || 0) - (a?.createdAt || 0))
+                    .map((opt) => {
+                      const isActive = opt.id === activeSavedId;
+                      return (
+                        <div
+                          key={opt.id}
+                          className="rounded-2xl p-3 flex items-center justify-between gap-3 transition"
+                          style={{
+                            border: isActive ? `1px solid ${PALETTE.gold}` : `1px solid ${PALETTE.border}`,
+                            background: isActive ? "rgba(184,134,11,0.10)" : "rgba(0,0,0,0.45)",
+                          }}
+                        >
+                          <button
+                            type="button"
+                            onClick={() => {
+                              loadOptimization(opt.id);
+                              setActiveSavedId(opt.id);
+                              setSaveError("");
+                              setSaveHint("");
+                            }}
+                            className="gold-ring text-left flex-1"
+                            title="Load this optimization"
+                            style={{ color: PALETTE.beige }}
+                          >
+                            <div className="flex items-center gap-2 text-sm font-semibold" style={{ color: PALETTE.goldSoft }}>
+                              <Sparkles size={14} className="lucide-icon" />
+                              {opt.name}
+                            </div>
+                            <div className="text-[11px] mt-1" style={{ color: PALETTE.muted }}>
+                              {runLabel(opt)}
+                            </div>
+                          </button>
 
-                <style>{`
-                  .opt-range::-webkit-slider-thumb {
-                    -webkit-appearance: none;
-                    appearance: none;
-                    width: 22px;
-                    height: 22px;
-                    border-radius: 50%;
-                    background: ${PALETTE.gold};
-                    border: 2px solid #000;
-                    box-shadow: 0 0 0 2px rgba(184,134,11,0.35);
-                    transition: transform 0.15s ease;
-                  }
-                  .opt-range::-webkit-slider-thumb:hover { transform: scale(1.12); }
-                  .opt-range::-moz-range-thumb {
-                    width: 22px;
-                    height: 22px;
-                    border-radius: 50%;
-                    background: ${PALETTE.gold};
-                    border: 2px solid #000;
-                    box-shadow: 0 0 0 2px rgba(184,134,11,0.35);
-                  }
-                  .opt-range::-moz-range-track {
-                    height: 6px;
-                    background: #374151;
-                    border-radius: 999px;
-                  }
-                `}</style>
-              </details>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              deleteOptimization(opt.id);
+                              if (activeSavedId === opt.id) setActiveSavedId(null);
+                            }}
+                            className="gold-ring inline-flex items-center justify-center w-9 h-9 rounded-full transition"
+                            style={{ border: `1px solid ${PALETTE.border}`, backgroundColor: "rgba(0,0,0,0.65)", color: PALETTE.danger }}
+                            aria-label={`Delete ${opt.name}`}
+                            title="Delete"
+                          >
+                            <X size={16} className="lucide-icon" />
+                          </button>
+                        </div>
+                      );
+                    })}
+                </div>
+              )}
             </div>
           </div>
         </section>
 
-        {/* Unwanted players */}
         {bannedPlayersData.length > 0 && (
-          <section className="mb-6">
-            <div className="flex items-center justify-between mb-2">
-              <h2 className="text-lg font-semibold">Unwanted players</h2>
-              <div className="text-[11px]" style={{ color: "#9ca3af" }}>
-                Tap “X” on a player to add/remove.
+          <section className="mb-6 glass-card rounded-[28px] p-4 sm:p-5">
+            <div className="flex items-center justify-between mb-3 gap-3">
+              <div>
+                <h2 className="text-lg font-semibold inline-flex items-center gap-2">
+                  <Ban size={18} className="lucide-icon" style={{ color: PALETTE.gold }} />
+                  Unwanted players
+                </h2>
+                <div className="text-xs mt-1" style={{ color: PALETTE.muted }}>
+                  Players marked here are excluded from incoming recommendations.
+                </div>
+              </div>
+              <div className="text-[11px] px-3 py-1 rounded-full" style={{ color: PALETTE.gold, border: `1px solid rgba(184,134,11,0.35)`, background: "rgba(184,134,11,0.08)" }}>
+                {bannedPlayersData.length} blocked
               </div>
             </div>
+
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
               {bannedPlayersData.map((player) => (
                 <div
                   key={player.Name}
-                  className="relative flex items-center gap-2 px-2 py-1 rounded-full text-sm transition"
-                  style={{
-                    backgroundColor: "rgba(248, 113, 113, 0.12)",
-                    border: "1px solid rgba(248, 113, 113, 0.3)",
-                    color: "#fee2e2",
-                  }}
+                  className="relative flex items-center gap-2 px-2 py-2 rounded-full text-sm transition"
+                  style={{ backgroundColor: "rgba(248,113,113,0.10)", border: "1px solid rgba(248,113,113,0.25)", color: "#fee2e2" }}
                 >
                   <img
                     src={player.photo}
                     alt={player.web_name}
                     onError={(e) => {
                       e.currentTarget.onerror = null;
-                      e.currentTarget.src =
-                        "https://d2kq0urxkarztv.cloudfront.net/51812cad594df29a1a0003f0/661303/upload-643ff5d9-840e-4bbb-b099-07c26ef505c9.png?w=578";
+                      e.currentTarget.src = "https://d2kq0urxkarztv.cloudfront.net/51812cad594df29a1a0003f0/661303/upload-643ff5d9-840e-4bbb-b099-07c26ef505c9.png?w=578";
                     }}
-                    className="w-7 h-7 rounded-full object-cover"
+                    className="w-8 h-8 rounded-full object-cover"
                   />
                   <span className="truncate max-w-[8rem]">{player.web_name}</span>
                   <button
                     onClick={() => removeBan(player.Name)}
-                    className="absolute -top-1 -right-1 rounded-full p-0.5"
-                    style={{ backgroundColor: "rgba(0,0,0,0.7)", color: "#fff" }}
+                    className="gold-ring absolute -top-1 -right-1 rounded-full p-1"
+                    style={{ backgroundColor: "rgba(0,0,0,0.78)", color: "#fff" }}
                     aria-label={`Remove ${player.web_name} from unwanted`}
                   >
                     <X size={12} className="lucide-icon" />
@@ -1018,261 +912,326 @@ export default function MyTeamOptimize() {
           </section>
         )}
 
-        {/* Save bar above pitch */}
-        <section className="mb-3 flex justify-center">
+{data && (
+  <section className="mb-6 grid grid-cols-1 xl:grid-cols-[0.92fr_1.08fr] gap-6 items-start">
+    <div className="glass-card rounded-[28px] p-4 sm:p-5">
+      <div className="flex items-center justify-between mb-4">
+        <div>
           <div
-            className="w-full max-w-[420px] rounded-2xl p-3 sm:p-4"
-            style={{
-              border: `1px solid rgba(248, 250, 252, 0.16)`,
-              background: "rgba(0,0,0,0.72)",
-              boxShadow: "0 14px 26px rgba(0,0,0,0.65)",
-            }}
+            className="text-sm font-semibold inline-flex items-center gap-2"
+            style={{ color: PALETTE.gold }}
           >
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <div className="text-[10px] uppercase tracking-wide" style={{ color: "#9ca3af" }}>
-                  Save this run
-                </div>
-                <div className="text-sm font-semibold" style={{ color: PALETTE.beige }}>
-                  Optimization name
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={handleSaveOptimization}
-                disabled={!canSave}
-                className="inline-flex items-center gap-2 px-3 py-2 rounded-full font-semibold transition"
-                style={{
-                  border: `1px solid ${canSave ? PALETTE.gold : "#374151"}`,
-                  background: canSave
-                    ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)`
-                    : "rgba(0,0,0,0.55)",
-                  color: canSave ? "#000" : "#9ca3af",
-                  cursor: canSave ? "pointer" : "not-allowed",
-                  boxShadow: canSave ? "0 10px 18px rgba(0,0,0,0.45)" : "none",
-                }}
-              >
-                <BookmarkPlus size={16} className="lucide-icon" />
-                Save
-              </button>
-            </div>
-
-            <div className="mt-2 flex flex-col sm:flex-row gap-2 sm:items-center">
-              <input
-                value={saveName}
-                onChange={(e) => setSaveName(e.target.value)}
-                placeholder={canSave ? "e.g. Low risk · FH GW29" : "Run optimization to enable saving"}
-                disabled={!canSave}
-                className="h-11 w-full px-3 rounded-xl text-sm outline-none"
-                style={{
-                  fontSize: 16,
-                  border: `1px solid ${
-                    saveError ? "rgba(248,113,113,0.6)" : "rgba(248, 250, 252, 0.16)"
-                  }`,
-                  backgroundColor: !canSave ? "rgba(0,0,0,0.5)" : "rgba(0,0,0,0.78)",
-                  color: PALETTE.beige,
-                }}
-              />
-
-              <div
-                className="text-[11px] sm:text-xs"
-                style={{ color: saveError ? "#fbbf24" : "#9ca3af" }}
-              >
-              </div>
-            </div>
+            <Trophy size={16} className="lucide-icon" />
+            Optimized XI
           </div>
-        </section>
+          <div className="text-xs mt-1" style={{ color: PALETTE.muted }}>
+            Tap a player to open analytics. Tap the X icon to mark as unwanted.
+          </div>
+        </div>
+      </div>
 
-        {/* Pitch */}
-        {data && (
-          <section className="mb-3 flex justify-center">
-            <div
-              className="w-full max-w-[420px] aspect-[1/2] bg-no-repeat bg-cover bg-center rounded-2xl px-2 py-1 relative"
-              style={{
-                backgroundImage: `url(${pitch})`,
-                border: "1px solid rgba(255,255,255,0.16)",
-                boxShadow: "0 18px 40px rgba(0,0,0,0.75)",
-              }}
-            >
-              <div className="flex flex-col justify-between h-[480px] pt-0 space-y-0 width-full">
-                <PlayerRow
-                  players={starters.filter((p) => p.position === "GKP")}
-                  toggleBan={toggleBan}
-                  bannedList={bannedList}
-                  navigate={navigate}
-                />
-                <PlayerRow
-                  players={starters.filter((p) => p.position === "DEF")}
-                  toggleBan={toggleBan}
-                  bannedList={bannedList}
-                  navigate={navigate}
-                />
-                <PlayerRow
-                  players={starters.filter((p) => p.position === "MID")}
-                  toggleBan={toggleBan}
-                  bannedList={bannedList}
-                  navigate={navigate}
-                />
-                <PlayerRow
-                  players={starters.filter((p) => p.position === "FWD")}
-                  toggleBan={toggleBan}
-                  bannedList={bannedList}
-                  navigate={navigate}
-                />
-              </div>
-              {bench.length > 0 && (
-                <div className="absolute bottom-4 left-0 right-0">
-                  <PlayerRow
-                    players={bench}
-                    isBench
-                    toggleBan={toggleBan}
-                    bannedList={bannedList}
-                    navigate={navigate}
-                  />
-                </div>
-              )}
-            </div>
-          </section>
+      <div
+        className="w-full max-w-[380px] sm:max-w-[420px] mx-auto aspect-[0.65/1] bg-no-repeat bg-cover bg-center rounded-[24px] px-1.5 sm:px-2 py-1 relative overflow-hidden"
+        style={{
+          backgroundImage: `url(${pitch})`,
+          border: `1px solid ${PALETTE.border}`,
+          boxShadow: "0 18px 40px rgba(0,0,0,0.55)",
+        }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-b from-black/5 via-transparent to-black/10 pointer-events-none" />
+
+        <div className="relative flex flex-col justify-between h-[350px] sm:h-[450px] pt-1 space-y-0 w-full">
+          <PlayerRow
+            players={starters.filter((p) => p.position === "GKP")}
+            toggleBan={toggleBan}
+            bannedList={bannedList}
+            navigate={navigate}
+          />
+          <PlayerRow
+            players={starters.filter((p) => p.position === "DEF")}
+            toggleBan={toggleBan}
+            bannedList={bannedList}
+            navigate={navigate}
+          />
+          <PlayerRow
+            players={starters.filter((p) => p.position === "MID")}
+            toggleBan={toggleBan}
+            bannedList={bannedList}
+            navigate={navigate}
+          />
+          <PlayerRow
+            players={starters.filter((p) => p.position === "FWD")}
+            toggleBan={toggleBan}
+            bannedList={bannedList}
+            navigate={navigate}
+          />
+        </div>
+
+        {bench.length > 0 && (
+          <div className="absolute bottom-0 sm:bottom-0 left-0 right-0">
+
+            <PlayerRow
+              players={bench}
+              isBench
+              toggleBan={toggleBan}
+              bannedList={bannedList}
+              navigate={navigate}
+            />
+          </div>
         )}
+      </div>
 
-        {/* Apply transfers */}
-        {data && (
-          <section className="mb-6 flex flex-col items-center gap-3 mt-10">
-            <button
-              type="button"
-              onClick={handleApplyToPlanner}
-              disabled={!plannerPayload.length}
-              className="inline-flex items-center gap-2 font-semibold px-6 py-2 rounded-full transition shadow-lg"
-              style={{
-                border: `1px solid ${plannerPayload.length ? PALETTE.gold : "#374151"}`,
-                background: plannerPayload.length
-                  ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)`
-                  : "rgba(0,0,0,0.7)",
-                color: plannerPayload.length ? "#000000" : "#9ca3af",
-                cursor: plannerPayload.length ? "pointer" : "not-allowed",
-              }}
-            >
-              <Search size={18} className="lucide-icon" />
-              See transfers on My Team
-            </button>
+      <div className="mt-4 flex flex-col items-center gap-3">
+        <button
+          type="button"
+          onClick={handleApplyToPlanner}
+          disabled={!plannerPayload.length}
+          className="gold-ring inline-flex items-center gap-2 font-semibold px-6 py-3 rounded-full transition shadow-lg"
+          style={{
+            border: `1px solid ${plannerPayload.length ? PALETTE.gold : "#374151"}`,
+            background: plannerPayload.length
+              ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)`
+              : "rgba(0,0,0,0.7)",
+            color: plannerPayload.length ? "#000" : PALETTE.muted,
+            cursor: plannerPayload.length ? "pointer" : "not-allowed",
+          }}
+        >
+          <Search size={18} className="lucide-icon" />
+          See transfers on My Team
+        </button>
 
-            {!plannerPayload.length && (
-              <div className="text-xs" style={{ color: "#9ca3af" }}>
-                Run an optimization with transfers first.
-              </div>
-            )}
-          </section>
+        {!plannerPayload.length && (
+          <div className="text-xs" style={{ color: PALETTE.muted }}>
+            Run an optimization with transfers first.
+          </div>
         )}
-
-        {/* Transfers */}
-        {/* Transfers (Pro timeline) */}
-{transfersWithFH.length > 0 && (
-  <section className="mb-6">
-    <div className="flex items-end justify-between mb-3">
-      <h2 className="text-xl sm:text-2xl font-bold">Transfer plan</h2>
-      <div className="text-[11px]" style={{ color: "#9ca3af" }}>
-        {minGW}–{maxGW} window
       </div>
     </div>
 
-    <div className="space-y-4">
-      {transfersWithFH.map((grp) => {
-        const remainingIns = [...(grp.in || [])];
-        const pairs = (grp.out || []).map((outP) => {
-          const i = remainingIns.findIndex((inP) => inP.position === outP.position);
-          return i !== -1
-            ? { outP, inP: remainingIns.splice(i, 1)[0] }
-            : { outP, inP: null };
-        });
-        remainingIns.forEach((inP) => pairs.push({ outP: null, inP }));
+    <div className="glass-card rounded-[28px] p-4 sm:p-5">
+      <div className="flex items-end justify-between mb-4 gap-3">
+        <div>
+          <h2 className="text-xl sm:text-2xl font-bold inline-flex items-center gap-2">
+            <ArrowRight
+              size={20}
+              className="lucide-icon"
+              style={{ color: PALETTE.gold }}
+            />
+            Transfer plan
+          </h2>
+          <div className="text-xs mt-1" style={{ color: PALETTE.muted }}>
+            Recommended moves across your optimization window.
+          </div>
+        </div>
+        <div
+          className="text-[11px] px-3 py-1 rounded-full"
+          style={{
+            color: PALETTE.gold,
+            border: `1px solid rgba(184,134,11,0.35)`,
+            background: "rgba(184,134,11,0.08)",
+          }}
+        >
+          GW {minGW}–{maxGW}
+        </div>
+      </div>
 
-        // only show “real” transfers
-        const realPairs = pairs.filter((x) => x.outP && x.inP);
-        if (realPairs.length === 0 && !grp.freehit) return null;
+      {transfersWithFH.length > 0 ? (
+        <div className="space-y-4">
+          {transfersWithFH.map((grp) => {
+            const remainingIns = [...(grp.in || [])];
+            const pairs = (grp.out || []).map((outP) => {
+              const i = remainingIns.findIndex(
+                (inP) => inP.position === outP.position
+              );
+              return i !== -1
+                ? { outP, inP: remainingIns.splice(i, 1)[0] }
+                : { outP, inP: null };
+            });
 
-        return (
-          <div
-            key={grp.GW}
-            className="rounded-2xl overflow-hidden"
-            style={{
-              border: `1px solid rgba(248, 250, 252, 0.14)`,
-              background: "rgba(0,0,0,0.55)",
-              boxShadow: "0 18px 40px rgba(0,0,0,0.75)",
-            }}
-          >
-            {/* GW header */}
-            <div
-              className="px-4 py-3 flex items-center justify-between"
-              style={{
-                borderBottom: "1px solid rgba(255,255,255,0.08)",
-                background:
-                  "linear-gradient(135deg, rgba(184,134,11,0.16), rgba(0,0,0,0.55))",
-              }}
-            >
-              <div className="flex items-center gap-3">
+            remainingIns.forEach((inP) => pairs.push({ outP: null, inP }));
+
+            const realPairs = pairs.filter((x) => x.outP && x.inP);
+            if (realPairs.length === 0 && !grp.freehit) return null;
+
+            return (
+              <div
+                key={grp.GW}
+                className="rounded-[24px] overflow-hidden"
+                style={{
+                  border: `1px solid ${PALETTE.border}`,
+                  background: "rgba(0,0,0,0.48)",
+                  boxShadow: "0 14px 30px rgba(0,0,0,0.35)",
+                }}
+              >
                 <div
-                  className="w-9 h-9 rounded-xl flex items-center justify-center font-bold"
+                  className="px-4 py-3 flex items-center justify-between"
                   style={{
-                    backgroundColor: "rgba(0,0,0,0.55)",
-                    border: `1px solid ${PALETTE.gold}`,
-                    color: PALETTE.gold,
+                    borderBottom: `1px solid ${PALETTE.border}`,
+                    background:
+                      "linear-gradient(135deg, rgba(184,134,11,0.14), rgba(0,0,0,0.5))",
                   }}
                 >
-                  {grp.GW}
-                </div>
-                <div>
-                  <div className="text-sm font-semibold">Gameweek {grp.GW}</div>
-                  <div className="text-[11px]" style={{ color: "#9ca3af" }}>
-                    {realPairs.length} transfer{realPairs.length === 1 ? "" : "s"}
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-10 h-10 rounded-2xl flex items-center justify-center font-bold"
+                      style={{
+                        backgroundColor: "rgba(0,0,0,0.55)",
+                        border: `1px solid ${PALETTE.gold}`,
+                        color: PALETTE.gold,
+                      }}
+                    >
+                      {grp.GW}
+                    </div>
+                    <div>
+                      <div className="text-sm font-semibold">
+                        Gameweek {grp.GW}
+                      </div>
+                      <div
+                        className="text-[11px]"
+                        style={{ color: PALETTE.muted }}
+                      >
+                        {realPairs.length} transfer
+                        {realPairs.length === 1 ? "" : "s"}
+                      </div>
+                    </div>
                   </div>
+
+                  {grp.freehit && (
+                    <span
+                      className="text-[11px] px-3 py-1 rounded-full font-semibold inline-flex items-center gap-1.5"
+                      style={{
+                        border: `1px solid ${PALETTE.gold}`,
+                        color: PALETTE.gold,
+                        backgroundColor: "rgba(0,0,0,0.6)",
+                      }}
+                    >
+                      <Zap size={12} className="lucide-icon" />
+                      Free Hit
+                    </span>
+                  )}
+                </div>
+
+                <div className="divide-y" style={{ borderColor: PALETTE.border }}>
+                  {realPairs.map(({ outP, inP }, idx) => (
+                    <TransferRow
+                      key={`${grp.GW}_${idx}`}
+                      outP={outP}
+                      inP={inP}
+                      PALETTE={PALETTE}
+                      navigate={navigate}
+                      toggleBan={toggleBan}
+                      bannedList={bannedList}
+                    />
+                  ))}
                 </div>
               </div>
-
-              {grp.freehit && (
-                <span
-                  className="text-[11px] px-3 py-1 rounded-full font-semibold"
-                  style={{
-                    border: `1px solid ${PALETTE.gold}`,
-                    color: PALETTE.gold,
-                    backgroundColor: "rgba(0,0,0,0.6)",
-                  }}
-                >
-                  Free Hit
-                </span>
-              )}
-            </div>
-
-            {/* rows */}
-            <div className="divide-y" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
-              {realPairs.map(({ outP, inP }, idx) => (
-                <TransferRow
-                  key={`${grp.GW}_${idx}`}
-                  outP={outP}
-                  inP={inP}
-                  PALETTE={PALETTE}
-                  navigate={navigate}
-                  toggleBan={toggleBan}
-                  bannedList={bannedList}
-                />
-              ))}
-            </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div
+          className="rounded-[24px] p-8 text-center"
+          style={{
+            border: `1px dashed ${PALETTE.border}`,
+            background: "rgba(0,0,0,0.28)",
+          }}
+        >
+          <ArrowRight
+            size={26}
+            className="lucide-icon mx-auto mb-2"
+            style={{ color: PALETTE.gold }}
+          />
+          <div className="text-sm font-semibold">No transfer plan yet</div>
+          <div className="text-xs mt-1" style={{ color: PALETTE.muted }}>
+            Run the optimizer to generate a recommended transfer timeline.
           </div>
-        );
-      })}
+        </div>
+      )}
     </div>
   </section>
 )}
+
+{!data && (
+  <section className="glass-card rounded-[28px] p-8 text-center">
+    <Sparkles
+      size={28}
+      className="lucide-icon mx-auto mb-3"
+      style={{ color: PALETTE.gold }}
+    />
+    <div className="text-lg font-semibold">Ready to optimize</div>
+    <div className="text-sm mt-2 max-w-xl mx-auto" style={{ color: PALETTE.muted }}>
+      Enter your team ID, choose your chip strategy, and run the optimizer to
+      see your XI and transfer plan.
+    </div>
+  </section>
+)}
+
+        {!data && (
+          <section className="glass-card rounded-[28px] p-8 text-center">
+            <Sparkles size={28} className="lucide-icon mx-auto mb-3" style={{ color: PALETTE.gold }} />
+            <div className="text-lg font-semibold">Ready to optimize</div>
+            <div className="text-sm mt-2 max-w-xl mx-auto" style={{ color: PALETTE.muted }}>
+              Enter your team ID, choose your chip strategy, and run the optimizer to see your XI and transfer plan.
+            </div>
+          </section>
+        )}
       </div>
     </div>
   );
 }
 
-/** Components **/
-function ChipSelect({ label, show, onShow, onHide, value, onChange, minGW, maxGW, addLabel }) {
+function TopStat({ icon: Icon, label, value }) {
+  return (
+    <div
+      className="rounded-2xl px-4 py-3"
+      style={{ border: `1px solid ${PALETTE.border}`, background: "rgba(0,0,0,0.48)" }}
+    >
+      <div className="flex items-center gap-2 text-[11px] uppercase tracking-wide" style={{ color: PALETTE.muted }}>
+        <Icon size={14} className="lucide-icon" />
+        {label}
+      </div>
+      <div className="text-lg font-bold mt-1" style={{ color: PALETTE.gold }}>{value}</div>
+    </div>
+  );
+}
+
+function FieldShell({ label, icon: Icon, className = "", children }) {
+  return (
+    <div className={`flex flex-col gap-1 min-w-0 w-full ${className}`}>
+      <label className="text-xs uppercase tracking-wide inline-flex items-center gap-2 min-w-0" style={{ color: "#e5e7eb" }}>
+        <Icon size={13} className="lucide-icon" style={{ color: PALETTE.gold }} />
+        {label}
+      </label>
+      {children}
+    </div>
+  );
+}
+
+function ModelButton({ active, disabled, onClick, icon: Icon, children }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className="gold-ring min-w-0 w-full inline-flex items-center justify-center gap-2 px-3 py-3 rounded-2xl text-xs sm:text-sm border transition text-center leading-tight whitespace-normal"
+      style={{
+        border: disabled ? "1px solid #4b5563" : active ? `1px solid ${PALETTE.gold}` : `1px solid ${PALETTE.border}`,
+        background: disabled ? "rgba(0,0,0,0.5)" : active ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)` : "rgba(0,0,0,0.72)",
+        color: disabled ? "#6b7280" : active ? "#000" : "#e5e7eb",
+        cursor: disabled ? "not-allowed" : "pointer",
+      }}
+    >
+      <Icon size={15} className="lucide-icon" />
+      {children}
+    </button>
+  );
+}
+
+function ChipSelect({ label, show, onShow, onHide, value, onChange, minGW, maxGW, addLabel, icon: Icon }) {
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-xs uppercase tracking-wide" style={{ color: "#e5e7eb" }}>
+      <label className="text-xs uppercase tracking-wide inline-flex items-center gap-2 min-w-0" style={{ color: "#e5e7eb" }}>
+        <Icon size={13} className="lucide-icon" style={{ color: PALETTE.gold }} />
         {label}
       </label>
 
@@ -1281,24 +1240,25 @@ function ChipSelect({ label, show, onShow, onHide, value, onChange, minGW, maxGW
           <select
             value={value || ""}
             onChange={(e) => onChange(e.target.value)}
-            style={{ colorScheme: "dark" }}
-            className="w-full h-11 pl-3 pr-9 rounded-xl text-sm outline-none"
+            style={{
+              colorScheme: "dark",
+              border: `1px solid ${PALETTE.border}`,
+              backgroundColor: "rgba(0,0,0,0.78)",
+              color: PALETTE.beige,
+            }}
+            className="gold-ring w-full h-12 pl-3 pr-10 rounded-2xl text-sm outline-none"
             aria-label={label}
           >
-            <option value="" disabled className="text-neutral-400">
-              {label}
-            </option>
+            <option value="" disabled>{label}</option>
             {Array.from({ length: maxGW - minGW + 1 }, (_, i) => minGW + i).map((gw) => (
-              <option key={gw} value={gw}>
-                GW {gw}
-              </option>
+              <option key={gw} value={gw}>GW {gw}</option>
             ))}
           </select>
 
           <button
             onClick={onHide}
-            className="absolute inset-y-0 right-0 px-3 flex items-center"
-            style={{ color: "#f87171" }}
+            className="gold-ring absolute inset-y-0 right-0 px-3 flex items-center"
+            style={{ color: PALETTE.danger }}
             aria-label={`Clear ${label}`}
             type="button"
           >
@@ -1309,16 +1269,56 @@ function ChipSelect({ label, show, onShow, onHide, value, onChange, minGW, maxGW
         <button
           onClick={onShow}
           type="button"
-          className="h-11 w-full inline-flex items-center justify-center rounded-xl text-sm"
-          style={{
-            border: `1px dashed ${PALETTE.gold}`,
-            backgroundColor: "rgba(0,0,0,0.8)",
-            color: PALETTE.gold,
-          }}
+          className="gold-ring min-w-0 h-auto min-h-[48px] w-full inline-flex items-center justify-center gap-2 rounded-2xl text-sm text-center leading-tight whitespace-normal px-3 py-2"
+          style={{ border: `1px dashed ${PALETTE.gold}`, backgroundColor: "rgba(0,0,0,0.8)", color: PALETTE.gold }}
         >
-          + {addLabel}
+          <Icon size={15} className="lucide-icon" />
+          {addLabel}
         </button>
       )}
+    </div>
+  );
+}
+
+function PreferenceSlider({ title, icon: Icon, value, setValue, min, max, step, clamp, presets, description, fillPercent }) {
+  return (
+    <div className="flex flex-col gap-2 rounded-2xl p-3 min-w-0 w-full overflow-hidden" style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${PALETTE.border}` }}>
+      <div className="flex items-center justify-between gap-2">
+        <label className="text-xs uppercase tracking-wide inline-flex items-center gap-2 min-w-0" style={{ color: "#e5e7eb" }}>
+          <Icon size={13} className="lucide-icon" style={{ color: PALETTE.gold }} />
+          {title}
+        </label>
+
+      </div>
+
+      <div className="flex items-center gap-2 flex-wrap min-w-0">
+        {presets.map((preset) => (
+          <MiniPill key={preset.label} active={Number(value) === preset.value} onClick={() => setValue(preset.value)}>
+            {preset.label}
+          </MiniPill>
+        ))}
+      </div>
+
+      <div className="h-12 rounded-xl px-3 flex items-center" style={{ backgroundColor: "rgba(0,0,0,0.8)", border: `1px solid ${PALETTE.border}` }}>
+        <input
+          type="range"
+          min={min}
+          max={max}
+          step={step}
+          value={clamp(Number(value))}
+          onChange={(e) => setValue(clamp(Number(e.target.value)))}
+          aria-label={title}
+          className="opt-range w-full appearance-none bg-transparent cursor-pointer"
+          style={{
+            WebkitAppearance: "none",
+            height: 6,
+            background: `linear-gradient(to right, ${PALETTE.gold} 0%, ${PALETTE.gold} ${fillPercent}%, #374151 ${fillPercent}%, #374151 100%)`,
+            borderRadius: 999,
+          }}
+        />
+      </div>
+
+      <p className="text-[11px]" style={{ color: PALETTE.muted }}>{description}</p>
     </div>
   );
 }
@@ -1329,9 +1329,9 @@ function IconButton({ ariaLabel, onClick, label }) {
       type="button"
       aria-label={ariaLabel}
       onClick={onClick}
-      className="inline-flex items-center justify-center w-8 h-8 rounded-full text-sm leading-none"
+      className="gold-ring inline-flex shrink-0 items-center justify-center w-7 h-7 rounded-full text-xs leading-none"
       style={{
-        border: `1px solid rgba(248, 250, 252, 0.18)`,
+        border: `1px solid ${PALETTE.border}`,
         backgroundColor: "rgba(0,0,0,0.8)",
         color: PALETTE.gold,
       }}
@@ -1346,7 +1346,7 @@ function MiniPill({ active, onClick, children }) {
     <button
       type="button"
       onClick={onClick}
-      className="px-3 py-2 text-[11px] font-semibold transition rounded-full"
+      className="gold-ring max-w-full px-3 py-2 text-[11px] font-semibold transition rounded-full whitespace-normal break-words text-center leading-tight"
       style={{
         border: `1px solid ${PALETTE.gold}`,
         background: active ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)` : "rgba(0,0,0,0.65)",
@@ -1371,37 +1371,44 @@ function PlayerRow({ players, isBench = false, toggleBan, bannedList, navigate }
     : players;
 
   return (
-    <div className="flex justify-center gap-2 px-1 overflow-x-auto text-center w-full">
+    <div className="flex justify-center items-start gap-1 sm:gap-2 px-0.5 sm:px-1 text-center w-full min-w-0">
       {sortedPlayers.map((p) => (
-        <div key={p.Name} className="relative">
+        <div key={p.Name} className="relative min-w-0">
           {p.Is_captain && (
-            <div className="absolute top-5 -left-2 bg-black/80 text-white font-bold text-xs rounded-full w-5 h-5 flex items-center justify-center shadow">
+            <div className="absolute top-4 -left-1 bg-black/80 text-white font-bold text-[10px] rounded-full w-4 h-4 flex items-center justify-center shadow">
               C
             </div>
           )}
+
           <img
             src={p.photo}
             onError={(e) => {
               e.currentTarget.onerror = null;
               e.currentTarget.src = fallback;
             }}
-            className={`${
-              isBench ? "w-[50px] h-[60px] sm:w-[56px] sm:h-[76px]" : "w-[55px] h-[70px] sm:w-[62px] sm:h-[86px]"
-            } object-contain drop-shadow`}
+            className="w-[44px] h-[56px] sm:w-[56px] sm:h-[72px] object-contain drop-shadow cursor-pointer hover:scale-[1.03] transition-transform"
             onClick={() =>
-              navigate("/Player_Analytics/Individual", { state: { selectedPlayer: p.Name } })
+              navigate("/Player_Analytics/Individual", {
+                state: { selectedPlayer: p.Name },
+              })
             }
             alt={p.web_name}
             role="button"
           />
+
           <button
             onClick={() => toggleBan(p.Name)}
-            className="absolute top-1 -right-2 bg-black/70 p-1 rounded-full hover:bg-black/90"
+            className="gold-ring absolute top-0.5 right-0 bg-black/70 p-0.5 rounded-full hover:bg-black/90"
             aria-label={`Toggle unwanted for ${p.web_name}`}
           >
-            <X size={12} className="lucide-icon" style={{ color: bannedList.includes(p.Name) ? "#fb7185" : PALETTE.gold }} />
+            <X
+              size={9}
+              className="lucide-icon"
+              style={{ color: bannedList.includes(p.Name) ? "#fb7185" : PALETTE.gold }}
+            />
           </button>
-          <div className="mt-1 text-[11px] sm:text-xs leading-tight max-w-[70px] truncate bg-gray-100/90 rounded-full text-black/95">
+
+          <div className="mt-1 text-[10px] sm:text-xs leading-tight w-[48px] sm:w-[64px] truncate bg-gray-100/90 rounded-full text-black/95 px-1 py-0.5 mx-auto">
             {p.web_name}
           </div>
         </div>
@@ -1410,65 +1417,21 @@ function PlayerRow({ players, isBench = false, toggleBan, bannedList, navigate }
   );
 }
 
-function TransferCard({ player, label, toggleBan, bannedList, navigate }) {
-  const fallback = "https://cdn.nba.com/headshots/nba/latest/1040x760/1709.png";
-  return (
-    <div className="flex flex-col items-center text-neutral-100">
-      <div className="relative">
-        <img
-          src={player.photo}
-          alt={player.Name}
-          onError={(e) => {
-            e.currentTarget.onerror = null;
-            e.currentTarget.src = fallback;
-          }}
-          className="w-12 h-16 rounded object-cover border border-white/10 shadow"
-          onClick={() =>
-            navigate("/Player_Analytics/Individual", { state: { selectedPlayer: player.Name } })
-          }
-          role="button"
-        />
-        {label === "In" && (
-          <button
-            onClick={() => toggleBan(player.Name)}
-            className="absolute -top-2 -right-4 bg-black/70 p-1 rounded-full hover:bg-black/90"
-            aria-label={`Toggle unwanted for ${player.web_name}`}
-          >
-            <X size={14} className="lucide-icon" style={{ color: bannedList.includes(player.Name) ? "#fb7185" : PALETTE.gold }} />
-          </button>
-        )}
-      </div>
-      <span className="text-xs mt-1 max-w-[80px] truncate text-center">{player.web_name}</span>
-      <span className="text-[11px] text-neutral-400">{label}</span>
-    </div>
-  );
-}
-
-function PosPill({ pos, PALETTE }) {
-  const map = {
-    GKP: { label: "GK" },
-    DEF: { label: "DEF" },
-    MID: { label: "MID" },
-    FWD: { label: "FWD" },
-  };
+function PosPill({ pos }) {
+  const map = { GKP: { label: "GK" }, DEF: { label: "DEF" }, MID: { label: "MID" }, FWD: { label: "FWD" } };
   const t = map[pos] || { label: pos || "-" };
 
   return (
     <span
       className="text-[10px] font-bold px-2 py-1 rounded-full"
-      style={{
-        border: `1px solid rgba(255,255,255,0.12)`,
-        backgroundColor: "rgba(0,0,0,0.55)",
-        color: PALETTE.gold,
-        letterSpacing: "0.08em",
-      }}
+      style={{ border: `1px solid rgba(255,255,255,0.12)`, backgroundColor: "rgba(0,0,0,0.55)", color: PALETTE.gold, letterSpacing: "0.08em" }}
     >
       {t.label}
     </span>
   );
 }
 
-function PlayerChip({ p, side, PALETTE, navigate, toggleBan, bannedList }) {
+function PlayerChip({ p, side, navigate, toggleBan, bannedList }) {
   const isIn = side === "in";
   const isBanned = bannedList?.includes(p?.Name);
 
@@ -1478,22 +1441,17 @@ function PlayerChip({ p, side, PALETTE, navigate, toggleBan, bannedList }) {
         <img
           src={p.photo}
           alt={p.web_name}
-          className="w-10 h-10 rounded-xl object-cover"
+          className="w-11 h-11 rounded-xl object-cover cursor-pointer"
           style={{ border: "1px solid rgba(255,255,255,0.10)" }}
-          onClick={() =>
-            navigate("/Player_Analytics/Individual", { state: { selectedPlayer: p.Name } })
-          }
+          onClick={() => navigate("/Player_Analytics/Individual", { state: { selectedPlayer: p.Name } })}
           role="button"
         />
         {isIn && (
           <button
             type="button"
             onClick={() => toggleBan(p.Name)}
-            className="absolute -top-2 -right-2 rounded-full p-1"
-            style={{
-              backgroundColor: "rgba(0,0,0,0.75)",
-              border: "1px solid rgba(255,255,255,0.10)",
-            }}
+            className="gold-ring absolute -top-2 -right-2 rounded-full p-1"
+            style={{ backgroundColor: "rgba(0,0,0,0.75)", border: "1px solid rgba(255,255,255,0.10)" }}
             aria-label={`Toggle unwanted for ${p.web_name}`}
             title="Toggle unwanted"
           >
@@ -1504,7 +1462,7 @@ function PlayerChip({ p, side, PALETTE, navigate, toggleBan, bannedList }) {
 
       <div className="min-w-0">
         <div className="text-sm font-semibold truncate">{p.web_name}</div>
-        <div className="text-[11px] truncate" style={{ color: "#9ca3af" }}>
+        <div className="text-[11px] truncate" style={{ color: PALETTE.muted }}>
           {p.Team ? String(p.Team) : ""}
         </div>
       </div>
@@ -1512,61 +1470,36 @@ function PlayerChip({ p, side, PALETTE, navigate, toggleBan, bannedList }) {
   );
 }
 
-function TransferRow({ outP, inP, PALETTE, navigate, toggleBan, bannedList }) {
+function TransferRow({ outP, inP, navigate, toggleBan, bannedList }) {
   return (
-    <div className="px-4 py-3">
+    <div className="px-4 py-3 hover:bg-white/[0.02] transition-colors">
       <div className="grid grid-cols-12 items-center gap-3">
-        {/* left: OUT */}
         <div className="col-span-5 min-w-0">
           <div className="flex items-center justify-between gap-2">
-            <div className="text-[11px] uppercase tracking-wide" style={{ color: "#9ca3af" }}>
-              Out
-            </div>
-            <PosPill pos={outP.position} PALETTE={PALETTE} />
+            <div className="text-[11px] uppercase tracking-wide" style={{ color: PALETTE.muted }}>Out</div>
+            <PosPill pos={outP.position} />
           </div>
           <div className="mt-1">
-            <PlayerChip
-              p={outP}
-              side="out"
-              PALETTE={PALETTE}
-              navigate={navigate}
-              toggleBan={toggleBan}
-              bannedList={bannedList}
-            />
+            <PlayerChip p={outP} side="out" navigate={navigate} toggleBan={toggleBan} bannedList={bannedList} />
           </div>
         </div>
 
-        {/* center arrow */}
         <div className="col-span-2 flex items-center justify-center">
           <div
             className="w-10 h-10 rounded-full flex items-center justify-center"
-            style={{
-              backgroundColor: "rgba(0,0,0,0.45)",
-              border: `1px solid rgba(184,134,11,0.35)`,
-              color: PALETTE.gold,
-            }}
+            style={{ backgroundColor: "rgba(0,0,0,0.45)", border: `1px solid rgba(184,134,11,0.35)`, color: PALETTE.gold }}
           >
             <ArrowRight size={18} className="lucide-icon" />
           </div>
         </div>
 
-        {/* right: IN */}
         <div className="col-span-5 min-w-0">
           <div className="flex items-center justify-between gap-2">
-            <div className="text-[11px] uppercase tracking-wide" style={{ color: "#9ca3af" }}>
-              In
-            </div>
-            <PosPill pos={inP.position} PALETTE={PALETTE} />
+            <div className="text-[11px] uppercase tracking-wide" style={{ color: PALETTE.muted }}>In</div>
+            <PosPill pos={inP.position} />
           </div>
           <div className="mt-1">
-            <PlayerChip
-              p={inP}
-              side="in"
-              PALETTE={PALETTE}
-              navigate={navigate}
-              toggleBan={toggleBan}
-              bannedList={bannedList}
-            />
+            <PlayerChip p={inP} side="in" navigate={navigate} toggleBan={toggleBan} bannedList={bannedList} />
           </div>
         </div>
       </div>

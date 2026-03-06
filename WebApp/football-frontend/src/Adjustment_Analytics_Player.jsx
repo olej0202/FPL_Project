@@ -1,11 +1,41 @@
 import React, { useEffect, useMemo, useState, useRef, useCallback } from "react";
+import {
+  Search,
+  RotateCcw,
+  SlidersHorizontal,
+  Users,
+  Shield,
+  DollarSign,
+  Filter,
+  ChevronDown,
+  Sparkles,
+  BarChart3,
+  PencilLine,
+  X,
+  Save,
+  Target,
+  Clock3,
+  Activity,
+  ArrowUpDown,
+  Star,
+  CircleDot,
+  Footprints,
+  Eye,
+  EyeOff,
+  CalendarRange,
+} from "lucide-react";
 import { useAdjustmentData, fixtureIdFromRow } from "./Contexts/AdjustmentsContext";
 
 const PALETTE = {
   red: "#5A0000",
   gold: "#B8860B",
+  goldSoft: "#D4A72C",
   black: "#000000",
   beige: "#f7ead6",
+  border: "rgba(248, 250, 252, 0.14)",
+  muted: "#9ca3af",
+  success: "#86efac",
+  danger: "#f87171",
 };
 
 const FILTERS_STORAGE_KEY = "player_adjustments_filters_v2";
@@ -20,10 +50,100 @@ const MEASURE_LABELS = {
 
 const clamp01 = (x) => Math.max(0, Math.min(1, Number.isFinite(x) ? x : 0));
 
-/** Simple reusable searchable multi-select dropdown */
+function getMeasureMeta(measure) {
+  switch (measure) {
+    case "Points":
+      return { label: MEASURE_LABELS.Points, icon: Star };
+    case "Goal_Scored":
+      return { label: MEASURE_LABELS.Goal_Scored, icon: CircleDot };
+    case "Assists":
+      return { label: MEASURE_LABELS.Assists, icon: Footprints };
+    case "Avg_Minutes":
+      return { label: MEASURE_LABELS.Avg_Minutes, icon: Clock3 };
+    case "CBI_Predictions":
+      return { label: MEASURE_LABELS.CBI_Predictions, icon: Shield };
+    default:
+      return { label: measure, icon: Activity };
+  }
+}
+
+function GlassCard({ children, className = "", style = {} }) {
+  return (
+    <div
+      className={`rounded-[28px] border ${className}`}
+      style={{
+        borderColor: PALETTE.border,
+        background: "linear-gradient(145deg, rgba(0,0,0,0.9), rgba(17,17,17,0.72))",
+        boxShadow: "0 18px 50px rgba(0,0,0,0.45)",
+        backdropFilter: "blur(12px)",
+        ...style,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+function StatCard({ icon: Icon, label, value }) {
+  return (
+    <div
+      className="rounded-2xl px-4 py-3"
+      style={{ border: `1px solid ${PALETTE.border}`, background: "rgba(0,0,0,0.45)" }}
+    >
+      <div className="flex items-center gap-2 text-[11px] uppercase tracking-wide" style={{ color: PALETTE.muted }}>
+        <Icon size={14} />
+        {label}
+      </div>
+      <div className="mt-1 text-lg font-bold" style={{ color: PALETTE.gold }}>
+        {value}
+      </div>
+    </div>
+  );
+}
+
+function FilterCard({ icon: Icon, label, children }) {
+  return (
+    <div
+      className="rounded-2xl p-4"
+      style={{
+        border: `1px solid ${PALETTE.border}`,
+        background: "linear-gradient(145deg, rgba(0,0,0,0.94), rgba(90,0,0,0.18))",
+      }}
+    >
+      <label
+        className="mb-2 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wide"
+        style={{ color: "#e5e7eb" }}
+      >
+        <Icon size={13} style={{ color: PALETTE.gold }} />
+        {label}
+      </label>
+      {children}
+    </div>
+  );
+}
+
+function PillButton({ active, onClick, children }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="rounded-full px-3 py-2 text-xs font-semibold transition"
+      style={{
+        border: `1px solid ${active ? PALETTE.gold : PALETTE.border}`,
+        background: active
+          ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)`
+          : "rgba(0,0,0,0.72)",
+        color: active ? "#000" : PALETTE.beige,
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
 function SearchableMultiSelect({
   label,
-  options, // [{ value, label }]
+  options,
   selectedValues,
   onChange,
   placeholder = "Search...",
@@ -52,107 +172,79 @@ function SearchableMultiSelect({
     selectedValues.length === 0 ? "All" : `${selectedValues.length} selected`;
 
   return (
-    <div style={{ position: "relative" }}>
-      <label
-        style={{
-          display: "block",
-          fontWeight: 600,
-          marginBottom: "0.25rem",
-          color: PALETTE.beige,
-        }}
-      >
+    <div className="relative z-40">
+      <label className="mb-2 block text-sm font-semibold" style={{ color: PALETTE.beige }}>
         {label}
       </label>
 
-      <div
+      <button
+        type="button"
         onClick={() => setIsOpen((p) => !p)}
+        className="w-full rounded-2xl px-3 py-3 text-left text-sm"
         style={{
-          padding: "0.4rem 0.6rem",
-          borderRadius: "0.375rem",
-          border: `1px solid ${PALETTE.gold}`,
-          background:
-            "linear-gradient(135deg, rgba(0,0,0,0.95), rgba(90,0,0,0.9))",
+          border: `1px solid ${PALETTE.border}`,
+          background: "rgba(0,0,0,0.75)",
           color: PALETTE.beige,
-          cursor: "pointer",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: "0.5rem",
-          fontSize: "0.875rem",
         }}
       >
-        <span>{selectedLabel}</span>
-        <span style={{ opacity: 0.9 }}>▾</span>
-      </div>
+        <span className="flex items-center justify-between gap-3">
+          <span className="truncate">{selectedLabel}</span>
+          <ChevronDown size={16} style={{ color: PALETTE.gold }} />
+        </span>
+      </button>
 
       {isOpen && (
         <div
+          className="absolute left-0 right-0 z-[60] mt-2 overflow-hidden rounded-2xl"
           style={{
-            position: "absolute",
-            zIndex: 20,
-            marginTop: "0.25rem",
-            width: "100%",
-            maxHeight: "260px",
-            overflow: "auto",
-            borderRadius: "0.5rem",
+            maxHeight: 280,
             border: `1px solid ${PALETTE.gold}`,
-            backgroundColor: PALETTE.black,
-            boxShadow: "0 14px 30px rgba(0,0,0,0.9)",
+            background: "rgba(0,0,0,0.98)",
+            boxShadow: "0 18px 40px rgba(0,0,0,0.7)",
           }}
         >
-          <div style={{ padding: "0.4rem 0.6rem" }}>
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder={placeholder}
-              style={{
-                width: "100%",
-                padding: "0.35rem 0.5rem",
-                borderRadius: "0.375rem",
-                border: `1px solid ${PALETTE.gold}`,
-                backgroundColor: PALETTE.black,
-                color: PALETTE.beige,
-                fontSize: "0.8rem",
-              }}
-            />
+          <div className="p-3">
+            <div className="relative">
+              <Search
+                size={14}
+                className="absolute left-3 top-1/2 -translate-y-1/2"
+                style={{ color: PALETTE.muted }}
+              />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder={placeholder}
+                className="w-full rounded-xl py-2 pl-9 pr-3 text-sm outline-none"
+                style={{
+                  border: `1px solid ${PALETTE.border}`,
+                  background: "#050505",
+                  color: PALETTE.beige,
+                }}
+              />
+            </div>
 
-            <div
-              style={{
-                marginTop: "0.35rem",
-                display: "flex",
-                justifyContent: "space-between",
-                gap: "0.35rem",
-                fontSize: "0.75rem",
-              }}
-            >
+            <div className="mt-3 flex gap-2">
               <button
                 type="button"
                 onClick={handleSelectAll}
+                className="flex-1 rounded-full px-3 py-2 text-xs font-semibold"
                 style={{
-                  flex: 1,
-                  padding: "0.2rem 0.35rem",
-                  borderRadius: "999px",
                   border: `1px solid ${PALETTE.gold}`,
-                  background: "rgba(0,0,0,0.9)",
+                  background: "rgba(184,134,11,0.08)",
                   color: PALETTE.beige,
-                  cursor: "pointer",
                 }}
               >
                 Select all
               </button>
-
               <button
                 type="button"
                 onClick={handleClearAll}
+                className="flex-1 rounded-full px-3 py-2 text-xs font-semibold"
                 style={{
-                  flex: 1,
-                  padding: "0.2rem 0.35rem",
-                  borderRadius: "999px",
-                  border: "1px solid #4b5563",
-                  background: "rgba(0,0,0,0.9)",
+                  border: `1px solid ${PALETTE.border}`,
+                  background: "rgba(0,0,0,0.75)",
                   color: "#e5e7eb",
-                  cursor: "pointer",
                 }}
               >
                 Clear
@@ -160,35 +252,31 @@ function SearchableMultiSelect({
             </div>
           </div>
 
-          <div style={{ padding: "0.25rem 0.35rem 0.4rem", fontSize: "0.8rem" }}>
+          <div className="max-h-[180px] overflow-auto px-2 pb-3 text-sm">
             {filteredOptions.length === 0 ? (
-              <div style={{ padding: "0.3rem 0.4rem", color: "#9ca3af" }}>No matches</div>
+              <div className="px-3 py-2" style={{ color: PALETTE.muted }}>
+                No matches
+              </div>
             ) : (
               filteredOptions.map((opt) => {
-                const value = opt.value;
-                const checked = selectedValues.includes(value);
+                const checked = selectedValues.includes(opt.value);
                 return (
                   <label
-                    key={value}
+                    key={opt.value}
+                    className="flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2"
                     style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "0.4rem",
-                      padding: "0.25rem 0.4rem",
-                      cursor: "pointer",
-                      borderRadius: "0.375rem",
+                      background: checked ? "rgba(184,134,11,0.14)" : "transparent",
                       color: PALETTE.beige,
-                      backgroundColor: checked ? "rgba(184,134,11,0.25)" : "transparent",
                     }}
                     onMouseDown={(e) => e.preventDefault()}
                   >
                     <input
                       type="checkbox"
                       checked={checked}
-                      onChange={() => toggleValue(value)}
-                      style={{ margin: 0, accentColor: PALETTE.gold }}
+                      onChange={() => toggleValue(opt.value)}
+                      style={{ accentColor: PALETTE.gold }}
                     />
-                    <span>{opt.label}</span>
+                    <span className="truncate">{opt.label}</span>
                   </label>
                 );
               })
@@ -225,6 +313,9 @@ export default function PlayerAdjustmentsPage() {
   const [selectedTeamCodes, setSelectedTeamCodes] = useState([]);
   const [selectedPositions, setSelectedPositions] = useState([]);
   const [valueThreshold, setValueThreshold] = useState(null);
+  const [showFilters, setShowFilters] = useState(true);
+  const [selectedGwStart, setSelectedGwStart] = useState(null);
+  const [selectedGwEnd, setSelectedGwEnd] = useState(null);
 
   const [sortConfig, setSortConfig] = useState({
     type: null,
@@ -232,31 +323,27 @@ export default function PlayerAdjustmentsPage() {
     direction: "desc",
   });
 
-  // Modal state
   const [activePlayerKey, setActivePlayerKey] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Local drafts
   const [pendingGoalShare, setPendingGoalShare] = useState(null);
   const [pendingAssistShare, setPendingAssistShare] = useState(null);
   const [minutesDraft, setMinutesDraft] = useState({});
 
-  // ✅ NEW: Defcon adjustment is a single slider 0..1 (one value applied to all GWs)
-  // Formula per GW:
-  // adjusted_cbi = clamp01(raw_cbi_gw - mean(raw_cbi) + new_adjustment)
   const [defconAdjust01, setDefconAdjust01] = useState(0.5);
   const [defconMean01, setDefconMean01] = useState(0);
-
-  // Baseline snapshot for modal
   const [modalBaselineRows, setModalBaselineRows] = useState([]);
 
-  // Drag helpers (minutes)
   const svgRefMinutes = useRef(null);
   const svgRefPoints = useRef(null);
   const [draggingGW, setDraggingGW] = useState(null);
   const dragGWRef = useRef(null);
 
   const [filtersHydrated, setFiltersHydrated] = useState(false);
+  const shareFrameRef = useRef(null);
+  const assistFrameRef = useRef(null);
+  const defconFrameRef = useRef(null);
+  const minutesFrameRef = useRef(null);
 
   const adjustments = useMemo(
     () => (changes?.current ? changes.current : []),
@@ -272,7 +359,6 @@ export default function PlayerAdjustmentsPage() {
     fetchIfNeeded();
   }, [fetchIfNeeded]);
 
-  // Hydrate once
   useEffect(() => {
     if (hasHydratedFromContext) return;
     if (Teamdata?.current) setTeamsState([...Teamdata.current]);
@@ -280,7 +366,6 @@ export default function PlayerAdjustmentsPage() {
     if (Teamdata?.current || Playerdata?.current) setHasHydratedFromContext(true);
   }, [Teamdata, Playerdata, dataVersion, hasHydratedFromContext]);
 
-  // If team data changes
   useEffect(() => {
     if (!Teamdata?.current) return;
     setTeamsState([...Teamdata.current]);
@@ -292,17 +377,13 @@ export default function PlayerAdjustmentsPage() {
     Array.isArray(teamsState) &&
     !loading;
 
-  /**
-   * Build team lookup (fixture-weighted)
-   */
   const { teamLookup, teamNamesByCode } = useMemo(() => {
     const names = new Map();
     const lookup = new Map();
-
     const teamsRows = teamsState || [];
     const fixtures = Fixtures?.current || [];
-
     const optionsById = new Map();
+
     for (const fx of fixtures) {
       optionsById.set(
         fx.id,
@@ -364,12 +445,12 @@ export default function PlayerAdjustmentsPage() {
     return Array.from(set);
   }, [playersState]);
 
-  /**
-   * computeMeasures(playerRow, teamRow, cbi01Override?)
-   * - raw CBI for display is ALWAYS 0..1
-   * - adjusted CBI is clamped 0..1
-   * - Points uses adjusted CBI through a per-GW term: (cbi01 * minutesAdj * matchCount * 1.7)
-   */
+  useEffect(() => {
+    if (!allGWs.length) return;
+    if (selectedGwStart == null) setSelectedGwStart(allGWs[0]);
+    if (selectedGwEnd == null) setSelectedGwEnd(allGWs[allGWs.length - 1]);
+  }, [allGWs, selectedGwStart, selectedGwEnd]);
+
   const computeMeasures = useCallback(
     (playerRow, teamRow, cbi01Override = null) => {
       if (!teamRow) {
@@ -411,151 +492,131 @@ export default function PlayerAdjustmentsPage() {
         csFactor > 1 ? ((30 - Math.min(30, csPerMatch * 100)) / -35) * matchCount : 0;
 
       const goalScored =
-        ((goalShare * 0.9 + 0.1 * oppGoalThreat) * xg + (penData * 0.8) * matchCount) *
+        ((goalShare * 0.9 + 0.1 * oppGoalThreat) * xg + penData * 0.8 * matchCount) *
         minutesAdj;
 
-      const assists = ((assistShare * 0.9 + 0.1 * oppAssistThreat) * xg) * minutesAdj;
+      const assists =
+        ((assistShare * 0.9 + 0.1 * oppAssistThreat) * xg) * minutesAdj;
 
-      // ✅ raw defcon in [0,1]
       const rawCbi01 = clamp01(Number(playerRow.CBI_Percent) || 0);
 
-      // ✅ adjusted defcon in [0,1]
       const cbi01 =
         (typeof cbi01Override === "number" && Number.isFinite(cbi01Override)
           ? clamp01(cbi01Override)
-          : rawCbi01)*minutesAdj;
+          : rawCbi01) * minutesAdj;
 
-      // ✅ Points: keep scaling with minutes+matches, but defcon itself stays 0..1
       const defconPointsTerm = cbi01 * minutesAdj * matchCount * 1.8;
-
-      const basePoints = (defaultPoints + bps) * minutesAdj * matchCount + defconPointsTerm;
+      const basePoints =
+        (defaultPoints + bps) * minutesAdj * matchCount + defconPointsTerm;
 
       const points = Math.max(
-  0,
-  basePoints +
-    goalScored * goalFactor +
-    assists * assistFactor +
-    cs * csFactor * minutesAdj +
-    csNonlinear
-);
+        0,
+        basePoints +
+          goalScored * goalFactor +
+          assists * assistFactor +
+          cs * csFactor * minutesAdj +
+          csNonlinear
+      );
 
       return {
         Goal_Scored: goalScored,
         Assists: assists,
         Points: points,
         Avg_Minutes: avgMin * matchCount,
-        CBI_Predictions: cbi01, // ✅ shown as 0..1
+        CBI_Predictions: cbi01,
         _CBI01_Raw: rawCbi01,
       };
     },
-    [MIN_MINUTES, MAX_MINUTES]
+    []
   );
 
-  /**
-   * Recompute calc_* and push to context (baseline/raw).
-   * (Your table + modal will show adjusted values; context calc_* remains baseline.)
-   */
-useEffect(() => {
-  if (!isDataReady) return;
-  if (!playersState) return;
+  useEffect(() => {
+    if (!isDataReady) return;
+    if (!playersState) return;
 
-  const timeoutId = setTimeout(() => {
-    // 1) Build groups by player key
-    const groups = new Map(); // key -> array of indices
-    for (let i = 0; i < playersState.length; i++) {
-      const row = playersState[i];
-      const key = getPlayerKey(row);
-      if (!groups.has(key)) groups.set(key, []);
-      groups.get(key).push(i);
-    }
+    const timeoutId = setTimeout(() => {
+      const groups = new Map();
+      for (let i = 0; i < playersState.length; i++) {
+        const row = playersState[i];
+        const key = getPlayerKey(row);
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(i);
+      }
 
-    // 2) Compute per-player mean raw CBI (0..1) and chosen adjustment (0..1)
-    const meanRawByKey = new Map();
-    const adjByKey = new Map();
+      const meanRawByKey = new Map();
+      const adjByKey = new Map();
 
-    groups.forEach((idxs, key) => {
-      let sum = 0;
-      let n = 0;
+      groups.forEach((idxs, key) => {
+        let sum = 0;
+        let n = 0;
 
-      for (const idx of idxs) {
-        const row = playersState[idx];
+        for (const idx of idxs) {
+          const row = playersState[idx];
+          const teamRow = teamLookup.get(`${String(row.Team)}_${Number(row.GW)}`);
+          const m = computeMeasures(row, teamRow);
+          const raw01 = clamp01(Number(m._CBI01_Raw));
+          sum += raw01;
+          n += 1;
+        }
+
+        const meanRaw = n ? sum / n : 0;
+        meanRawByKey.set(key, meanRaw);
+
+        const firstRow = playersState[idxs[0]];
+        const stored = Number(firstRow?.defcon_adjust_01);
+        const adj = Number.isFinite(stored) ? clamp01(stored) : clamp01(meanRaw);
+        adjByKey.set(key, adj);
+      });
+
+      const updated = playersState.map((row) => {
+        const key = getPlayerKey(row);
         const teamRow = teamLookup.get(`${String(row.Team)}_${Number(row.GW)}`);
-        const m = computeMeasures(row, teamRow); // raw
-        const raw01 = clamp01(Number(m._CBI01_Raw));
-        sum += raw01;
-        n += 1;
+
+        const mRaw = computeMeasures(row, teamRow);
+        const raw01 = clamp01(Number(mRaw._CBI01_Raw));
+
+        const meanRaw = meanRawByKey.get(key) ?? 0;
+        const newAdj = adjByKey.get(key) ?? clamp01(meanRaw);
+        const adjustedCbi01 = clamp01(raw01 - meanRaw + newAdj);
+
+        const measures = computeMeasures(row, teamRow, adjustedCbi01);
+
+        return {
+          ...row,
+          calc_points: measures.Points,
+          calc_goals: measures.Goal_Scored,
+          calc_assists: measures.Assists,
+          calc_minutes: measures.Avg_Minutes,
+          calc_cbi: measures.CBI_Predictions,
+        };
+      });
+
+      let changed = false;
+      for (let i = 0; i < updated.length; i++) {
+        const a = updated[i];
+        const b = playersState[i];
+        if (
+          !b ||
+          a.calc_points !== b.calc_points ||
+          a.calc_goals !== b.calc_goals ||
+          a.calc_assists !== b.calc_assists ||
+          a.calc_minutes !== b.calc_minutes ||
+          a.calc_cbi !== b.calc_cbi
+        ) {
+          changed = true;
+          break;
+        }
       }
 
-      const meanRaw = n ? sum / n : 0;
-      meanRawByKey.set(key, meanRaw);
+      if (!changed) return;
 
-      // Use stored defcon_adjust_01 if present, otherwise default to mean
-      const firstRow = playersState[idxs[0]];
-      const stored = Number(firstRow?.defcon_adjust_01);
-      const adj = Number.isFinite(stored) ? clamp01(stored) : clamp01(meanRaw);
-      adjByKey.set(key, adj);
-    });
+      updatePlayerData(() => updated);
+      setPlayersState(updated);
+    }, 150);
 
-    // 3) Recompute calc_* using adjusted defcon
-    const updated = playersState.map((row) => {
-      const key = getPlayerKey(row);
-      const teamRow = teamLookup.get(`${String(row.Team)}_${Number(row.GW)}`);
+    return () => clearTimeout(timeoutId);
+  }, [isDataReady, playersState, teamLookup, computeMeasures, updatePlayerData]);
 
-      // compute raw for this GW
-      const mRaw = computeMeasures(row, teamRow);
-      const raw01 = clamp01(Number(mRaw._CBI01_Raw));
-
-      const meanRaw = meanRawByKey.get(key) ?? 0;
-      const newAdj = adjByKey.get(key) ?? clamp01(meanRaw);
-
-      // ✅ requested formula
-      const adjustedCbi01 = clamp01(raw01 - meanRaw + newAdj);
-
-      const measures = computeMeasures(row, teamRow, adjustedCbi01);
-
-      return {
-        ...row,
-        // store adjusted model outputs
-        calc_points: measures.Points,
-        calc_goals: measures.Goal_Scored,
-        calc_assists: measures.Assists,
-        calc_minutes: measures.Avg_Minutes,
-        calc_cbi: measures.CBI_Predictions, // adjusted 0..1
-      };
-    });
-
-    // 4) Guard to avoid loops (include calc_* diffs)
-    let changed = false;
-    for (let i = 0; i < updated.length; i++) {
-      const a = updated[i];
-      const b = playersState[i];
-      if (!b) {
-        changed = true;
-        break;
-      }
-      if (
-        a.calc_points !== b.calc_points ||
-        a.calc_goals !== b.calc_goals ||
-        a.calc_assists !== b.calc_assists ||
-        a.calc_minutes !== b.calc_minutes ||
-        a.calc_cbi !== b.calc_cbi
-      ) {
-        changed = true;
-        break;
-      }
-    }
-
-    if (!changed) return;
-
-    // ✅ write to context ("model") AND local
-    updatePlayerData(() => updated);
-    setPlayersState(updated);
-  }, 150);
-
-  return () => clearTimeout(timeoutId);
-}, [isDataReady, playersState, teamLookup, computeMeasures, updatePlayerData]);
-
-  // Pivot + table data (with adjusted defcon applied per player)
   const { playerTableRows, globalMinValue, globalMaxValue, allTeamOptions } = useMemo(() => {
     if (!playersState || !teamsState) {
       return {
@@ -587,9 +648,10 @@ useEffect(() => {
           teamName,
           value: Number(p.value) || 0,
           rowsByGW: new Map(),
-          defcon_adjust_01: Number(p.defcon_adjust_01), // keep raw (may be undefined/NaN)
+          defcon_adjust_01: Number(p.defcon_adjust_01),
         });
       }
+
       const entry = playerMap.get(key);
       entry.rowsByGW.set(p.GW, p);
 
@@ -605,7 +667,6 @@ useEffect(() => {
       const gwValues = {};
       let totalMeasure = 0;
 
-      // compute mean(raw defcon) across this player's GWs
       const rawByGw = new Map();
       let sum = 0;
       let n = 0;
@@ -622,7 +683,6 @@ useEffect(() => {
       });
 
       const meanRaw = n ? sum / n : 0;
-      // If player has no stored adjustment yet, default to meanRaw
       const storedAdj = Number(entry.defcon_adjust_01);
       const newAdj = Number.isFinite(storedAdj) ? clamp01(storedAdj) : clamp01(meanRaw);
 
@@ -634,11 +694,7 @@ useEffect(() => {
         }
 
         const teamRow = teamLookup.get(`${entry.teamCode}_${gw}`);
-
         const raw01 = rawByGw.get(gw) ?? 0;
-
-        // ✅ requested formula:
-        // cbi = cbi_gw - mean(cbi_gw) + new_adjustment
         const adjustedCbi01 = clamp01(raw01 - meanRaw + newAdj);
 
         const measures = computeMeasures(playerRow, teamRow, adjustedCbi01);
@@ -673,14 +729,12 @@ useEffect(() => {
     };
   }, [playersState, teamsState, allGWs, selectedMeasure, teamLookup, teamNamesByCode, computeMeasures]);
 
-  // Init value slider
   useEffect(() => {
     if (globalMinValue != null && globalMaxValue != null && valueThreshold === null) {
       setValueThreshold(globalMaxValue);
     }
   }, [globalMinValue, globalMaxValue, valueThreshold]);
 
-  // Hydrate filters
   useEffect(() => {
     if (!isDataReady || filtersHydrated) return;
     if (typeof window === "undefined") return;
@@ -696,29 +750,35 @@ useEffect(() => {
         if (typeof parsed.valueThreshold === "number" && !Number.isNaN(parsed.valueThreshold)) {
           setValueThreshold(parsed.valueThreshold);
         }
+        if (typeof parsed.showFilters === "boolean") setShowFilters(parsed.showFilters);
+        if (parsed.selectedGwStart != null) setSelectedGwStart(parsed.selectedGwStart);
+        if (parsed.selectedGwEnd != null) setSelectedGwEnd(parsed.selectedGwEnd);
         if (parsed.sortConfig) setSortConfig(parsed.sortConfig);
       }
     } catch {
-      // ignore
     } finally {
       setFiltersHydrated(true);
     }
   }, [isDataReady, filtersHydrated]);
 
-  // Persist filters
   useEffect(() => {
     if (!isDataReady || !filtersHydrated) return;
     if (typeof window === "undefined") return;
 
-    const payload = {
-      selectedMeasure,
-      selectedPlayerNames,
-      selectedTeamCodes,
-      selectedPositions,
-      valueThreshold,
-      sortConfig,
-    };
-    window.localStorage.setItem(FILTERS_STORAGE_KEY, JSON.stringify(payload));
+    window.localStorage.setItem(
+      FILTERS_STORAGE_KEY,
+      JSON.stringify({
+        selectedMeasure,
+        selectedPlayerNames,
+        selectedTeamCodes,
+        selectedPositions,
+        valueThreshold,
+        showFilters,
+        selectedGwStart,
+        selectedGwEnd,
+        sortConfig,
+      })
+    );
   }, [
     isDataReady,
     filtersHydrated,
@@ -727,12 +787,26 @@ useEffect(() => {
     selectedTeamCodes,
     selectedPositions,
     valueThreshold,
+    showFilters,
+    selectedGwStart,
+    selectedGwEnd,
     sortConfig,
   ]);
 
-  // Filtering + sorting
   const filteredPlayerRows = useMemo(() => {
-    let rows = playerTableRows;
+    const horizonStart = selectedGwStart != null ? Number(selectedGwStart) : allGWs[0];
+    const horizonEnd = selectedGwEnd != null ? Number(selectedGwEnd) : allGWs[allGWs.length - 1];
+    const horizonMin = Math.min(horizonStart ?? 0, horizonEnd ?? 0);
+    const horizonMax = Math.max(horizonStart ?? 0, horizonEnd ?? 0);
+
+    let rows = playerTableRows.map((row) => {
+      const totalMeasure = allGWs.reduce((sum, gw) => {
+        if (Number(gw) < horizonMin || Number(gw) > horizonMax) return sum;
+        const v = row.gwValues[gw];
+        return typeof v === "number" && !Number.isNaN(v) ? sum + v : sum;
+      }, 0);
+      return { ...row, totalMeasure };
+    });
 
     if (selectedPlayerNames.length > 0) {
       const set = new Set(selectedPlayerNames);
@@ -758,9 +832,6 @@ useEffect(() => {
       rows = [...rows].sort((a, b) => {
         const va = typeof a.gwValues[gwKey] === "number" ? a.gwValues[gwKey] : -Infinity;
         const vb = typeof b.gwValues[gwKey] === "number" ? b.gwValues[gwKey] : -Infinity;
-        if (Number.isNaN(va) && Number.isNaN(vb)) return 0;
-        if (Number.isNaN(va)) return 1;
-        if (Number.isNaN(vb)) return -1;
         return dir === "asc" ? va - vb : vb - va;
       });
     } else if (sortConfig.type === "total") {
@@ -768,9 +839,6 @@ useEffect(() => {
       rows = [...rows].sort((a, b) => {
         const va = typeof a.totalMeasure === "number" ? a.totalMeasure : -Infinity;
         const vb = typeof b.totalMeasure === "number" ? b.totalMeasure : -Infinity;
-        if (Number.isNaN(va) && Number.isNaN(vb)) return 0;
-        if (Number.isNaN(va)) return 1;
-        if (Number.isNaN(vb)) return -1;
         return dir === "asc" ? va - vb : vb - va;
       });
     }
@@ -784,6 +852,9 @@ useEffect(() => {
     valueThreshold,
     globalMaxValue,
     sortConfig,
+    selectedGwStart,
+    selectedGwEnd,
+    allGWs,
   ]);
 
   const handleSortByGW = (gw) => {
@@ -817,7 +888,6 @@ useEffect(() => {
     await fetchIfNeeded();
   };
 
-  // Modal helpers
   const openPlayerModal = (nameKey) => {
     setActivePlayerKey(nameKey);
     setIsModalOpen(true);
@@ -838,7 +908,6 @@ useEffect(() => {
 
   const activePlayerFirstRow = modalBaselineRows.length > 0 ? modalBaselineRows[0] : null;
 
-  // Snapshot baseline rows when modal opens
   useEffect(() => {
     if (!isModalOpen || !activePlayerKey || !playersState) {
       setModalBaselineRows([]);
@@ -871,7 +940,6 @@ useEffect(() => {
       });
       setMinutesDraft(draft);
 
-      // mean raw defcon (0..1)
       const rawVals = rows.map((row) => {
         const teamRow = teamLookup.get(`${String(row.Team)}_${row.GW}`);
         const m = computeMeasures(row, teamRow);
@@ -880,9 +948,7 @@ useEffect(() => {
       const mean = rawVals.length ? rawVals.reduce((a, b) => a + b, 0) / rawVals.length : 0;
       setDefconMean01(mean);
 
-      // init slider from stored
       const stored = Number(first.defcon_adjust_01);
-      // Slider starts at player's mean if no stored value
       setDefconAdjust01(Number.isFinite(stored) ? clamp01(stored) : clamp01(mean));
     }
   }, [isModalOpen, activePlayerKey, playersState, teamLookup, computeMeasures]);
@@ -899,11 +965,9 @@ useEffect(() => {
     });
   }, [modalBaselineRows, minutesDraft]);
 
-  // ✅ Points chart uses adjusted defcon (0..1)
   const chartDataPoints = useMemo(() => {
     if (!modalBaselineRows || modalBaselineRows.length === 0) return [];
 
-    // compute raw defcon series using current minutes/share drafts
     const rawSeries = modalBaselineRows.map((row) => {
       const teamRow = teamLookup.get(`${String(row.Team)}_${row.GW}`);
 
@@ -919,7 +983,10 @@ useEffect(() => {
       return { GW: row.GW, raw01, teamRow, effectiveRow };
     });
 
-    const meanRaw = rawSeries.length ? rawSeries.reduce((s, x) => s + x.raw01, 0) / rawSeries.length : 0;
+    const meanRaw = rawSeries.length
+      ? rawSeries.reduce((s, x) => s + x.raw01, 0) / rawSeries.length
+      : 0;
+
     const newAdj = clamp01(Number(defconAdjust01));
 
     return rawSeries.map(({ GW, raw01, teamRow, effectiveRow }) => {
@@ -1014,8 +1081,7 @@ useEffect(() => {
     pendingAssistShare,
     minutesDraft,
     defconAdjust01,
-    MIN_MINUTES,
-    MAX_MINUTES,
+    defconMean01,
   ]);
 
   const handleSavePlayerChanges = () => {
@@ -1073,7 +1139,6 @@ useEffect(() => {
       }
     });
 
-    // ✅ Defcon: single stored value 0..1
     const oldDA = Number(activePlayerFirstRow.defcon_adjust_01);
     const baselineDA = Number.isFinite(oldDA) ? clamp01(oldDA) : clamp01(defconMean01);
     const newDA = clamp01(Number(defconAdjust01));
@@ -1090,33 +1155,26 @@ useEffect(() => {
 
     if (adjustmentsToLog.length === 0) return;
 
-    // build the updated array once
-const applyPlayerEdits = (prev) => {
-  if (!prev) return prev;
-  return prev.map((p) => {
-    if (getPlayerKey(p) !== activePlayerKey) return p;
+    const applyPlayerEdits = (prev) => {
+      if (!prev) return prev;
+      return prev.map((p) => {
+        if (getPlayerKey(p) !== activePlayerKey) return p;
 
-    const gw = p.GW;
-    const updated = { ...p };
+        const gw = p.GW;
+        const updated = { ...p };
 
-    updated.Goal_share = newGoal;
-    updated.Assist_share = newAssist;
+        updated.Goal_share = newGoal;
+        updated.Assist_share = newAssist;
 
-    if (minutesDraft[gw] != null) updated.average_minutes = minutesDraft[gw];
+        if (minutesDraft[gw] != null) updated.average_minutes = minutesDraft[gw];
+        updated.defcon_adjust_01 = newDA;
 
-    // ✅ persist defcon adjustment per player (copied onto every GW row)
-    updated.defcon_adjust_01 = newDA;
+        return updated;
+      });
+    };
 
-    return updated;
-  });
-};
-
-// ✅ update local state
-setPlayersState(applyPlayerEdits);
-
-// ✅ IMPORTANT: update context ("model") immediately so it persists
-updatePlayerData(applyPlayerEdits);
-
+    setPlayersState(applyPlayerEdits);
+    updatePlayerData(applyPlayerEdits);
     adjustmentsToLog.forEach(logAdjustment);
   };
 
@@ -1125,7 +1183,23 @@ updatePlayerData(applyPlayerEdits);
     closeModal();
   };
 
-  // Drag helpers for minutes
+  const scheduleGoalShareChange = (value) => {
+    if (shareFrameRef.current) cancelAnimationFrame(shareFrameRef.current);
+    shareFrameRef.current = requestAnimationFrame(() => setPendingGoalShare(value));
+  };
+
+  const scheduleAssistShareChange = (value) => {
+    if (assistFrameRef.current) cancelAnimationFrame(assistFrameRef.current);
+    assistFrameRef.current = requestAnimationFrame(() => setPendingAssistShare(value));
+  };
+
+  const scheduleDefconChange = (value) => {
+    if (defconFrameRef.current) cancelAnimationFrame(defconFrameRef.current);
+    defconFrameRef.current = requestAnimationFrame(() =>
+      setDefconAdjust01(clamp01(value))
+    );
+  };
+
   const updateMinutesFromClientY = (clientY) => {
     if (!svgRefMinutes.current || !activePlayerKey || !draggingGW) return;
 
@@ -1139,7 +1213,10 @@ updatePlayerData(applyPlayerEdits);
     const minutes = MIN_MINUTES + ratio * (MAX_MINUTES - MIN_MINUTES);
     const rounded = Math.round(minutes);
 
-    setMinutesDraft((prev) => ({ ...prev, [dragGWRef.current]: rounded }));
+    if (minutesFrameRef.current) cancelAnimationFrame(minutesFrameRef.current);
+    minutesFrameRef.current = requestAnimationFrame(() => {
+      setMinutesDraft((prev) => ({ ...prev, [dragGWRef.current]: rounded }));
+    });
   };
 
   const handleCircleMouseDown = (gw, e) => {
@@ -1151,32 +1228,9 @@ updatePlayerData(applyPlayerEdits);
   const handleCircleTouchStart = (gw, e) => {
     setDraggingGW(gw);
     dragGWRef.current = gw;
-    if (e.touches && e.touches[0]) updateMinutesFromClientY(e.touches[0].clientY);
+    if (e.touches?.[0]) updateMinutesFromClientY(e.touches[0].clientY);
   };
 
-  const handleSvgMouseMove = (e) => {
-    if (!draggingGW) return;
-    updateMinutesFromClientY(e.clientY);
-  };
-
-  const handleSvgTouchMove = (e) => {
-    if (!draggingGW) return;
-    const touch = e.touches && e.touches[0];
-    if (!touch) return;
-    updateMinutesFromClientY(touch.clientY);
-  };
-
-  const handleSvgMouseUp = () => {
-    setDraggingGW(null);
-    dragGWRef.current = null;
-  };
-
-  const handleSvgTouchEnd = () => {
-    setDraggingGW(null);
-    dragGWRef.current = null;
-  };
-
-  // Player options for filter
   const playerDisplayByKey = useMemo(() => {
     const m = new Map();
     playerTableRows.forEach((r) => {
@@ -1195,311 +1249,314 @@ updatePlayerData(applyPlayerEdits);
     [allTeamOptions]
   );
 
-  const handleSelectAllPositions = () => setSelectedPositions(allPositions);
-  const handleClearPositions = () => setSelectedPositions([]);
+  const currentMeasureMeta = useMemo(() => getMeasureMeta(selectedMeasure), [selectedMeasure]);
+  const CurrentMeasureIcon = currentMeasureMeta.icon;
 
   if (!isDataReady) {
     return (
       <div
+        className="min-h-screen p-6"
         style={{
-          padding: "2rem",
-          minHeight: "100vh",
           background: `radial-gradient(circle at top, ${PALETTE.red}, ${PALETTE.black})`,
           color: PALETTE.beige,
         }}
       >
-        Loading data…
+        <div className="mx-auto flex min-h-[70vh] max-w-md items-center justify-center">
+          <GlassCard className="w-full p-6 text-center">
+            <div
+              className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl"
+              style={{
+                background: "rgba(184,134,11,0.12)",
+                border: `1px solid rgba(184,134,11,0.35)`,
+              }}
+            >
+              <Sparkles size={24} style={{ color: PALETTE.gold }} />
+            </div>
+            <div className="text-lg font-semibold">Loading adjustment workspace</div>
+            <div className="mt-2 text-sm" style={{ color: PALETTE.muted }}>
+              Preparing player projections, fixtures, and saved adjustments.
+            </div>
+          </GlassCard>
+        </div>
       </div>
     );
   }
 
   return (
     <div
+      className="min-h-screen"
       style={{
-        padding: "1.5rem",
-        minHeight: "100vh",
-        background: `radial-gradient(circle at top, ${PALETTE.red} 0, ${PALETTE.black} 45%, #000000 100%)`,
+        background: `radial-gradient(circle at top, ${PALETTE.red} 0, ${PALETTE.black} 45%, #000 100%)`,
         color: PALETTE.beige,
-        fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+        fontFamily:
+          "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
       }}
     >
-      {/* Header */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "1.25rem",
-          gap: "1rem",
-        }}
-      >
-        <div>
-          <h1 style={{ margin: 0, fontSize: "1.5rem", fontWeight: 700 }}>
-            Player Adjustment Tool
-          </h1>
-          <p style={{ margin: "0.25rem 0 0", fontSize: "0.85rem", color: "#d1c3a9" }}>
-            Click a player and adjust minutes, Goal/Assist shares and Defcon (0–1)
-          </p>
-        </div>
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-5 sm:py-8 lg:px-6 lg:py-10">
+        <header className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <div
+              className="mb-3 inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] uppercase tracking-[0.18em]"
+              style={{
+                color: PALETTE.gold,
+                border: `1px solid rgba(184,134,11,0.35)`,
+                background: "rgba(184,134,11,0.08)",
+              }}
+            >
+              <Sparkles size={14} />
+              Adjustment Workspace
+            </div>
+            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+              Player Adjustment Tool
+            </h1>
+            <p className="mt-2 max-w-2xl text-sm" style={{ color: "#d1c3a9" }}>
+              Filter your player pool, inspect projected outputs by gameweek, and fine-tune
+              shares, minutes, and Defcon with a cleaner workflow.
+            </p>
+          </div>
 
-        <button
-          type="button"
-          onClick={handleResetData}
-          style={{
-            padding: "0.45rem 0.9rem",
-            borderRadius: "999px",
-            border: `1px solid ${PALETTE.gold}`,
-            background: "linear-gradient(135deg, rgba(0,0,0,0.9), rgba(90,0,0,0.95))",
-            color: PALETTE.beige,
-            fontSize: "0.85rem",
-            fontWeight: 500,
-            cursor: "pointer",
-            boxShadow: "0 10px 30px rgba(0,0,0,0.8)",
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "0.4rem",
-          }}
-        >
-          <span>⟳</span>
-          <span>Reset</span>
-        </button>
-      </div>
-
-      {/* Filters */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))",
-          gap: "1rem",
-          marginBottom: "1.5rem",
-        }}
-      >
-        {/* Measure selector */}
-        <div
-          style={{
-            padding: "0.75rem",
-            borderRadius: "0.75rem",
-            background: "linear-gradient(145deg, rgba(0,0,0,0.95), rgba(90,0,0,0.9))",
-            border: `1px solid ${PALETTE.gold}`,
-          }}
-        >
-          <label style={{ display: "block", fontWeight: 600, marginBottom: "0.25rem", fontSize: "0.85rem" }}>
-            Measure
-          </label>
-          <select
-            value={selectedMeasure}
-            onChange={(e) => setSelectedMeasure(e.target.value)}
-            style={{
-              width: "100%",
-              padding: "0.4rem 0.6rem",
-              borderRadius: "0.5rem",
-              border: `1px solid ${PALETTE.gold}`,
-              backgroundColor: PALETTE.black,
-              color: PALETTE.beige,
-              fontSize: "0.9rem",
-            }}
-          >
-            <option value="Points">{MEASURE_LABELS.Points}</option>
-            <option value="Goal_Scored">{MEASURE_LABELS.Goal_Scored}</option>
-            <option value="Assists">{MEASURE_LABELS.Assists}</option>
-            <option value="Avg_Minutes">{MEASURE_LABELS.Avg_Minutes}</option>
-            <option value="CBI_Predictions">{MEASURE_LABELS.CBI_Predictions}</option>
-          </select>
-        </div>
-
-        {/* Player multi-select */}
-        <div
-          style={{
-            padding: "0.75rem",
-            borderRadius: "0.75rem",
-            background: "linear-gradient(145deg, rgba(0,0,0,0.95), rgba(90,0,0,0.9))",
-            border: `1px solid ${PALETTE.gold}`,
-          }}
-        >
-          <SearchableMultiSelect
-            label="Players"
-            options={playerOptions}
-            selectedValues={selectedPlayerNames}
-            onChange={setSelectedPlayerNames}
-            placeholder="Search players..."
-          />
-        </div>
-
-        {/* Team multi-select */}
-        <div
-          style={{
-            padding: "0.75rem",
-            borderRadius: "0.75rem",
-            background: "linear-gradient(145deg, rgba(0,0,0,0.95), rgba(90,0,0,0.9))",
-            border: `1px solid ${PALETTE.gold}`,
-          }}
-        >
-          <SearchableMultiSelect
-            label="Teams"
-            options={teamOptions}
-            selectedValues={selectedTeamCodes}
-            onChange={setSelectedTeamCodes}
-            placeholder="Search teams..."
-          />
-        </div>
-
-        {/* Position tiles */}
-        <div
-          style={{
-            padding: "0.75rem",
-            borderRadius: "0.75rem",
-            background: "linear-gradient(145deg, rgba(0,0,0,0.95), rgba(90,0,0,0.9))",
-            border: `1px solid ${PALETTE.gold}`,
-          }}
-        >
-          <label style={{ display: "block", fontWeight: 600, marginBottom: "0.25rem", fontSize: "0.85rem" }}>
-            Position
-          </label>
-
-          <div style={{ display: "flex", gap: "0.4rem", marginTop: "0.25rem", marginBottom: "0.4rem", flexWrap: "wrap" }}>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 w-full lg:w-auto">
+            <StatCard icon={Users} label="Players" value={String(filteredPlayerRows.length)} />
+            <StatCard
+              icon={currentMeasureMeta.icon}
+              label="Measure"
+              value={currentMeasureMeta.label.replace("Predicted ", "")}
+            />
+            <StatCard icon={PencilLine} label="Changes" value={String(displayAdjustments.length)} />
             <button
               type="button"
-              onClick={handleSelectAllPositions}
+              onClick={handleResetData}
+              className="rounded-2xl px-4 py-3 text-left transition"
               style={{
-                padding: "0.2rem 0.6rem",
-                borderRadius: "999px",
                 border: `1px solid ${PALETTE.gold}`,
-                background: "rgba(0,0,0,0.9)",
+                background: "linear-gradient(145deg, rgba(0,0,0,0.9), rgba(90,0,0,0.7))",
                 color: PALETTE.beige,
-                fontSize: "0.75rem",
-                cursor: "pointer",
               }}
             >
-              Select all
+              <div className="flex items-center gap-2 text-[11px] uppercase tracking-wide" style={{ color: "#e5e7eb" }}>
+                <RotateCcw size={14} />
+                Reset
+              </div>
+              <div className="mt-1 text-sm font-semibold">Reload model data</div>
             </button>
+          </div>
+        </header>
+
+        <GlassCard className="mb-6 p-4 sm:p-5 lg:p-6" style={{ position: "relative", zIndex: 30 }}>
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-2 text-sm font-semibold" style={{ color: PALETTE.gold }}>
+              <Filter size={16} />
+              Filters and controls
+            </div>
+
             <button
               type="button"
-              onClick={handleClearPositions}
+              onClick={() => setShowFilters((p) => !p)}
+              className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold"
               style={{
-                padding: "0.2rem 0.6rem",
-                borderRadius: "999px",
-                border: "1px solid #4b5563",
-                background: "rgba(0,0,0,0.9)",
-                color: "#e5e7eb",
-                fontSize: "0.75rem",
-                cursor: "pointer",
+                border: `1px solid ${PALETTE.gold}`,
+                background: "rgba(0,0,0,0.55)",
+                color: PALETTE.beige,
               }}
             >
-              Clear
+              {showFilters ? <EyeOff size={16} /> : <Eye size={16} />}
+              {showFilters ? "Hide filters" : "Show filters"}
             </button>
           </div>
 
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem", marginTop: "0.25rem" }}>
-            {allPositions.map((pos) => {
-              const active = selectedPositions.includes(pos);
-              return (
-                <button
-                  key={pos}
-                  type="button"
-                  onClick={() => {
-                    setSelectedPositions((prev) =>
-                      prev.includes(pos) ? prev.filter((p) => p !== pos) : [...prev, pos]
-                    );
-                  }}
+          {showFilters && (
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-6">
+              <FilterCard icon={currentMeasureMeta.icon} label="Measure">
+                <div className="mb-2 flex items-center gap-2 text-sm" style={{ color: PALETTE.gold }}>
+                  <CurrentMeasureIcon size={16} />
+                  {currentMeasureMeta.label}
+                </div>
+
+                <select
+                  value={selectedMeasure}
+                  onChange={(e) => setSelectedMeasure(e.target.value)}
+                  className="w-full rounded-2xl px-3 py-3 text-sm outline-none"
                   style={{
-                    padding: "0.25rem 0.6rem",
-                    borderRadius: "999px",
-                    border: `1px solid ${PALETTE.gold}`,
-                    backgroundColor: active ? PALETTE.gold : "rgba(0,0,0,0.9)",
-                    color: active ? PALETTE.black : PALETTE.beige,
-                    fontSize: "0.8rem",
-                    cursor: "pointer",
+                    border: `1px solid ${PALETTE.border}`,
+                    background: "rgba(0,0,0,0.76)",
+                    color: PALETTE.beige,
                   }}
                 >
-                  {pos}
-                </button>
-              );
-            })}
-          </div>
-        </div>
+                  <option value="Points">⭐ {MEASURE_LABELS.Points}</option>
+                  <option value="Goal_Scored">⚽ {MEASURE_LABELS.Goal_Scored}</option>
+                  <option value="Assists">🥾 {MEASURE_LABELS.Assists}</option>
+                  <option value="Avg_Minutes">🕒 {MEASURE_LABELS.Avg_Minutes}</option>
+                  <option value="CBI_Predictions">🛡️ {MEASURE_LABELS.CBI_Predictions}</option>
+                </select>
+              </FilterCard>
 
-        {/* Value slider */}
-        <div
-          style={{
-            padding: "0.75rem",
-            borderRadius: "0.75rem",
-            background: "linear-gradient(145deg, rgba(0,0,0,0.95), rgba(90,0,0,0.9))",
-            border: `1px solid ${PALETTE.gold}`,
-          }}
-        >
-          <label style={{ display: "block", fontWeight: 600, marginBottom: "0.25rem", fontSize: "0.85rem" }}>
-            Max value filter
-          </label>
+              <FilterCard icon={Users} label="Players">
+                <SearchableMultiSelect
+                  label="Players"
+                  options={playerOptions}
+                  selectedValues={selectedPlayerNames}
+                  onChange={setSelectedPlayerNames}
+                  placeholder="Search players..."
+                />
+              </FilterCard>
 
-          <input
-            type="range"
-            min={globalMinValue}
-            max={globalMaxValue || globalMinValue + 1}
-            step={(globalMaxValue - globalMinValue) / 100 || 1}
-            value={valueThreshold != null ? valueThreshold : globalMaxValue}
-            onChange={(e) => setValueThreshold(Number(e.target.value))}
-            style={{ width: "100%" }}
-          />
+              <FilterCard icon={Shield} label="Teams">
+                <SearchableMultiSelect
+                  label="Teams"
+                  options={teamOptions}
+                  selectedValues={selectedTeamCodes}
+                  onChange={setSelectedTeamCodes}
+                  placeholder="Search teams..."
+                />
+              </FilterCard>
 
-          <div style={{ fontSize: "0.8rem", marginTop: "0.25rem", color: "#d1c3a9" }}>
-            {(valueThreshold != null ? valueThreshold : globalMaxValue).toFixed(1)} (range{" "}
-            {globalMinValue.toFixed(1)} – {globalMaxValue.toFixed(1)})
-          </div>
-        </div>
-      </div>
+              <FilterCard icon={SlidersHorizontal} label="Position">
+                <div className="mb-3 flex flex-wrap gap-2">
+                  <PillButton
+                    active={selectedPositions.length === allPositions.length && allPositions.length > 0}
+                    onClick={() => setSelectedPositions(allPositions)}
+                  >
+                    Select all
+                  </PillButton>
+                  <PillButton active={selectedPositions.length === 0} onClick={() => setSelectedPositions([])}>
+                    Clear
+                  </PillButton>
+                </div>
 
-      {/* Changes made dropdown */}
-      <div style={{ marginBottom: "1.5rem" }}>
-        <details
-          style={{
-            borderRadius: "0.75rem",
-            border: `1px solid ${PALETTE.gold}`,
-            background: "linear-gradient(145deg, rgba(0,0,0,0.96), rgba(0,0,0,0.9))",
-            boxShadow: "0 14px 30px rgba(0,0,0,0.9)",
-          }}
-        >
-          <summary
-            style={{
-              listStyle: "none",
-              padding: "0.6rem 0.9rem",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              fontSize: "0.9rem",
-              fontWeight: 600,
-            }}
-          >
-            <span>
-              Changes made{" "}
-              <span style={{ marginLeft: "0.3rem", fontWeight: 400, fontSize: "0.8rem", color: "#e5e7eb" }}>
-                ({displayAdjustments.length})
-              </span>
-            </span>
-            <span style={{ fontSize: "1rem", opacity: 0.9 }}>▾</span>
-          </summary>
+                <div className="flex flex-wrap gap-2">
+                  {allPositions.map((pos) => (
+                    <PillButton
+                      key={pos}
+                      active={selectedPositions.includes(pos)}
+                      onClick={() =>
+                        setSelectedPositions((prev) =>
+                          prev.includes(pos) ? prev.filter((p) => p !== pos) : [...prev, pos]
+                        )
+                      }
+                    >
+                      {pos}
+                    </PillButton>
+                  ))}
+                </div>
+              </FilterCard>
 
-          <div style={{ padding: "0.6rem 0.9rem 0.8rem", fontSize: "0.8rem", maxHeight: 260, overflowY: "auto" }}>
-            {displayAdjustments.length === 0 ? (
-              <div style={{ color: "#9ca3af" }}>No manual adjustments yet.</div>
-            ) : (
-              <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "0.35rem" }}>
-                {displayAdjustments.map((a) => (
-                  <li
-                    key={a.id}
+              <FilterCard icon={DollarSign} label="Max value filter">
+                <input
+                  type="range"
+                  min={globalMinValue}
+                  max={globalMaxValue || globalMinValue + 1}
+                  step={(globalMaxValue - globalMinValue) / 100 || 1}
+                  value={valueThreshold != null ? valueThreshold : globalMaxValue}
+                  onChange={(e) => setValueThreshold(Number(e.target.value))}
+                  className="w-full"
+                />
+                <div
+                  className="mt-3 rounded-xl px-3 py-2 text-sm"
+                  style={{
+                    border: `1px solid ${PALETTE.border}`,
+                    background: "rgba(0,0,0,0.58)",
+                    color: "#d1c3a9",
+                  }}
+                >
+                  {(valueThreshold != null ? valueThreshold : globalMaxValue).toFixed(1)} · range{" "}
+                  {globalMinValue.toFixed(1)}–{globalMaxValue.toFixed(1)}
+                </div>
+              </FilterCard>
+
+              <FilterCard icon={CalendarRange} label="GW horizon for total">
+                <div className="grid grid-cols-2 gap-2">
+                  <select
+                    value={selectedGwStart ?? ""}
+                    onChange={(e) => setSelectedGwStart(Number(e.target.value))}
+                    className="w-full rounded-2xl px-3 py-3 text-sm outline-none"
                     style={{
-                      padding: "0.35rem 0.45rem",
-                      borderRadius: "0.5rem",
-                      backgroundColor: "#111827",
-                      border: "1px solid #1f2937",
+                      border: `1px solid ${PALETTE.border}`,
+                      background: "rgba(0,0,0,0.76)",
+                      color: PALETTE.beige,
                     }}
                   >
-                    <div style={{ fontWeight: 600, marginBottom: "0.1rem" }}>
-                      {a.playerName} ({a.webName})
-                    </div>
+                    {allGWs.map((gw) => (
+                      <option key={`start_${gw}`} value={gw}>
+                        From GW {gw}
+                      </option>
+                    ))}
+                  </select>
 
-                    <div>
-                      <span style={{ color: "#e5e7eb" }}>
+                  <select
+                    value={selectedGwEnd ?? ""}
+                    onChange={(e) => setSelectedGwEnd(Number(e.target.value))}
+                    className="w-full rounded-2xl px-3 py-3 text-sm outline-none"
+                    style={{
+                      border: `1px solid ${PALETTE.border}`,
+                      background: "rgba(0,0,0,0.76)",
+                      color: PALETTE.beige,
+                    }}
+                  >
+                    {allGWs.map((gw) => (
+                      <option key={`end_${gw}`} value={gw}>
+                        To GW {gw}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div
+                  className="mt-3 rounded-xl px-3 py-2 text-sm"
+                  style={{
+                    border: `1px solid ${PALETTE.border}`,
+                    background: "rgba(0,0,0,0.58)",
+                    color: "#d1c3a9",
+                  }}
+                >
+                  Total uses GW{" "}
+                  {Math.min(selectedGwStart ?? allGWs[0], selectedGwEnd ?? allGWs[allGWs.length - 1])}
+                  –{Math.max(selectedGwStart ?? allGWs[0], selectedGwEnd ?? allGWs[allGWs.length - 1])}
+                </div>
+              </FilterCard>
+            </div>
+          )}
+        </GlassCard>
+
+        <div className="mb-6">
+          <details
+            className="overflow-hidden rounded-[24px]"
+            style={{
+              border: `1px solid ${PALETTE.border}`,
+              background: "linear-gradient(145deg, rgba(0,0,0,0.95), rgba(0,0,0,0.82))",
+              boxShadow: "0 14px 30px rgba(0,0,0,0.55)",
+            }}
+          >
+            <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-4 text-sm font-semibold">
+              <span className="inline-flex items-center gap-2">
+                <PencilLine size={16} style={{ color: PALETTE.gold }} />
+                Changes made
+                <span
+                  className="rounded-full px-2 py-0.5 text-[11px]"
+                  style={{ background: "rgba(184,134,11,0.08)", color: PALETTE.gold }}
+                >
+                  {displayAdjustments.length}
+                </span>
+              </span>
+              <ChevronDown size={16} style={{ color: PALETTE.gold }} />
+            </summary>
+            <div className="max-h-[280px] overflow-y-auto px-4 pb-4 text-sm">
+              {displayAdjustments.length === 0 ? (
+                <div style={{ color: PALETTE.muted }}>No manual adjustments yet.</div>
+              ) : (
+                <div className="space-y-2">
+                  {displayAdjustments.map((a) => (
+                    <div
+                      key={a.id}
+                      className="rounded-2xl p-3"
+                      style={{
+                        border: `1px solid ${PALETTE.border}`,
+                        background: "rgba(255,255,255,0.02)",
+                      }}
+                    >
+                      <div className="font-semibold">
+                        {a.playerName} ({a.webName})
+                      </div>
+                      <div className="mt-1 text-sm" style={{ color: "#e5e7eb" }}>
                         {a.type === "Goal_share"
                           ? "Goal share"
                           : a.type === "Assist_share"
@@ -1510,471 +1567,463 @@ updatePlayerData(applyPlayerEdits);
                           ? "Defcon"
                           : a.type}
                         {a.gw != null ? ` · GW ${a.gw}` : ""}:{" "}
-                      </span>
-                      <span>
                         {formatAdjustmentValue(a, "oldValue")} →{" "}
-                        <span style={{ color: PALETTE.gold }}>{formatAdjustmentValue(a, "newValue")}</span>
-                      </span>
+                        <span style={{ color: PALETTE.gold }}>
+                          {formatAdjustmentValue(a, "newValue")}
+                        </span>
+                      </div>
                     </div>
-                  </li>
-                ))}
-              </ul>
-            )}
+                  ))}
+                </div>
+              )}
+            </div>
+          </details>
+        </div>
+
+        <GlassCard className="overflow-hidden" style={{ position: "relative", zIndex: 10 }}>
+          <div
+            className="flex items-center justify-between gap-3 border-b px-4 py-4 sm:px-5"
+            style={{ borderColor: PALETTE.border }}
+          >
+            <div>
+              <div className="inline-flex items-center gap-2 text-sm font-semibold" style={{ color: PALETTE.gold }}>
+                <Target size={16} />
+                Player projection table
+              </div>
+              <div className="mt-1 text-xs" style={{ color: PALETTE.muted }}>
+                Click a row to open the adjustment drawer for that player. Total reflects the selected GW horizon.
+              </div>
+            </div>
+            <div className="text-xs" style={{ color: PALETTE.muted }}>
+              {filteredPlayerRows.length} visible rows
+            </div>
           </div>
-        </details>
-      </div>
 
-      {/* Data table (NO mean column) */}
-      <div
-        style={{
-          overflowX: "auto",
-          borderRadius: "0.75rem",
-          border: `1px solid ${PALETTE.gold}`,
-          background: "linear-gradient(155deg, rgba(0,0,0,0.98), rgba(0,0,0,0.9))",
-          boxShadow: "0 18px 40px rgba(0,0,0,0.95)",
-        }}
-      >
-        <table style={{ borderCollapse: "collapse", width: "100%", minWidth: "750px", fontSize: "0.85rem" }}>
-          <thead>
-            <tr>
-              <th
-                style={{
-                  borderBottom: `1px solid ${PALETTE.gold}`,
-                  padding: "0.5rem",
-                  position: "sticky",
-                  left: 0,
-                  backgroundColor: "#111111",
-                  zIndex: 2,
-                  textAlign: "left",
-                  fontWeight: 600,
-                }}
-              >
-                Name
-              </th>
-              <th style={{ borderBottom: `1px solid ${PALETTE.gold}`, padding: "0.5rem", backgroundColor: "#111111", textAlign: "left", fontWeight: 600 }}>
-                Position
-              </th>
-              <th style={{ borderBottom: `1px solid ${PALETTE.gold}`, padding: "0.5rem", backgroundColor: "#111111", textAlign: "left", fontWeight: 600 }}>
-                Team
-              </th>
-              <th style={{ borderBottom: `1px solid ${PALETTE.gold}`, padding: "0.5rem", backgroundColor: "#111111", textAlign: "right", fontWeight: 600 }}>
-                Value
-              </th>
-
-              {allGWs.map((gw) => {
-                const isSorted = sortConfig.type === "gw" && sortConfig.gw === gw;
-                const arrow = isSorted && sortConfig.direction === "asc" ? "▲" : isSorted ? "▼" : "";
-                return (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[860px] border-collapse text-sm">
+              <thead>
+                <tr>
                   <th
-                    key={gw}
-                    onClick={() => handleSortByGW(gw)}
+                    className="sticky left-0 z-[2] px-4 py-3 text-left"
+                    style={{ background: "#111", borderBottom: `1px solid ${PALETTE.gold}` }}
+                  >
+                    Name
+                  </th>
+                  <th className="px-4 py-3 text-left" style={{ background: "#111", borderBottom: `1px solid ${PALETTE.gold}` }}>
+                    Position
+                  </th>
+                  <th className="px-4 py-3 text-left" style={{ background: "#111", borderBottom: `1px solid ${PALETTE.gold}` }}>
+                    Team
+                  </th>
+                  <th className="px-4 py-3 text-right" style={{ background: "#111", borderBottom: `1px solid ${PALETTE.gold}` }}>
+                    Value
+                  </th>
+
+                  {allGWs.map((gw) => {
+                    const isSorted = sortConfig.type === "gw" && sortConfig.gw === gw;
+                    return (
+                      <th
+                        key={gw}
+                        onClick={() => handleSortByGW(gw)}
+                        className="cursor-pointer px-4 py-3 text-right"
+                        style={{
+                          background: "#111",
+                          borderBottom: `1px solid ${PALETTE.gold}`,
+                          color: isSorted ? PALETTE.gold : PALETTE.beige,
+                        }}
+                      >
+                        <span className="inline-flex items-center gap-1">
+                          GW {gw}{" "}
+                          {isSorted ? (sortConfig.direction === "asc" ? "▲" : "▼") : <ArrowUpDown size={12} />}
+                        </span>
+                      </th>
+                    );
+                  })}
+
+                  <th
+                    onClick={handleSortByTotal}
+                    className="cursor-pointer px-4 py-3 text-right"
                     style={{
+                      background: "#111",
                       borderBottom: `1px solid ${PALETTE.gold}`,
-                      padding: "0.5rem",
-                      backgroundColor: "#111111",
-                      textAlign: "right",
-                      cursor: "pointer",
-                      whiteSpace: "nowrap",
-                      fontWeight: 600,
-                      color: isSorted ? PALETTE.gold : PALETTE.beige,
+                      color: sortConfig.type === "total" ? PALETTE.gold : PALETTE.beige,
                     }}
                   >
-                    GW {gw} {arrow && <span>{arrow}</span>}
+                    <span className="inline-flex items-center gap-1">
+                      Total{" "}
+                      {sortConfig.type === "total"
+                        ? sortConfig.direction === "asc"
+                          ? "▲"
+                          : "▼"
+                        : <ArrowUpDown size={12} />}
+                    </span>
                   </th>
-                );
-              })}
+                </tr>
+              </thead>
 
-              <th
-                onClick={handleSortByTotal}
-                style={{
-                  borderBottom: `1px solid ${PALETTE.gold}`,
-                  padding: "0.5rem",
-                  backgroundColor: "#111111",
-                  textAlign: "right",
-                  fontWeight: 600,
-                  cursor: "pointer",
-                  whiteSpace: "nowrap",
-                  color: sortConfig.type === "total" ? PALETTE.gold : PALETTE.beige,
-                }}
-              >
-                Total {sortConfig.type === "total" && (sortConfig.direction === "asc" ? "▲" : "▼")}
-              </th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {filteredPlayerRows.map((row, idx) => (
-              <tr
-                key={row.nameKey}
-                onClick={() => openPlayerModal(row.nameKey)}
-                style={{
-                  cursor: "pointer",
-                  backgroundColor: idx % 2 === 0 ? "#080808" : "#151515",
-                }}
-              >
-                <td
-                  style={{
-                    borderBottom: "1px solid #222222",
-                    padding: "0.5rem",
-                    position: "sticky",
-                    left: 0,
-                    backgroundColor: idx % 2 === 0 ? "#080808" : "#151515",
-                    zIndex: 1,
-                    fontWeight: 600,
-                  }}
-                >
-                  {row.displayName}
-                </td>
-
-                <td style={{ borderBottom: "1px solid #222222", padding: "0.5rem" }}>{row.position}</td>
-                <td style={{ borderBottom: "1px solid #222222", padding: "0.5rem" }}>{row.teamName}</td>
-
-                <td style={{ borderBottom: "1px solid #222222", padding: "0.5rem", textAlign: "right" }}>
-                  {row.value != null && !Number.isNaN(row.value) ? row.value.toFixed(1) : "-"}
-                </td>
-
-                {allGWs.map((gw) => (
-                  <td key={gw} style={{ borderBottom: "1px solid #222222", padding: "0.5rem", textAlign: "right" }}>
-                    {row.gwValues[gw] != null && !Number.isNaN(row.gwValues[gw])
-                      ? row.gwValues[gw].toFixed(2)
-                      : "0.00"}
-                  </td>
+              <tbody>
+                {filteredPlayerRows.map((row, idx) => (
+                  <tr
+                    key={row.nameKey}
+                    onClick={() => openPlayerModal(row.nameKey)}
+                    className="cursor-pointer transition"
+                    style={{ background: idx % 2 === 0 ? "#080808" : "#141414" }}
+                  >
+                    <td
+                      className="sticky left-0 z-[1] px-4 py-3 font-semibold"
+                      style={{
+                        background: idx % 2 === 0 ? "#080808" : "#141414",
+                        borderBottom: "1px solid #222",
+                      }}
+                    >
+                      {row.displayName}
+                    </td>
+                    <td className="px-4 py-3" style={{ borderBottom: "1px solid #222" }}>{row.position}</td>
+                    <td className="px-4 py-3" style={{ borderBottom: "1px solid #222" }}>{row.teamName}</td>
+                    <td className="px-4 py-3 text-right" style={{ borderBottom: "1px solid #222" }}>
+                      {row.value != null && !Number.isNaN(row.value) ? row.value.toFixed(1) : "-"}
+                    </td>
+                    {allGWs.map((gw) => (
+                      <td key={gw} className="px-4 py-3 text-right" style={{ borderBottom: "1px solid #222" }}>
+                        {row.gwValues[gw] != null && !Number.isNaN(row.gwValues[gw])
+                          ? row.gwValues[gw].toFixed(2)
+                          : "0.00"}
+                      </td>
+                    ))}
+                    <td
+                      className="px-4 py-3 text-right font-semibold"
+                      style={{ borderBottom: "1px solid #222", color: PALETTE.gold }}
+                    >
+                      {row.totalMeasure != null && !Number.isNaN(row.totalMeasure)
+                        ? row.totalMeasure.toFixed(2)
+                        : "0.00"}
+                    </td>
+                  </tr>
                 ))}
 
-                <td style={{ borderBottom: "1px solid #222222", padding: "0.5rem", textAlign: "right", fontWeight: 600, color: PALETTE.gold }}>
-                  {row.totalMeasure != null && !Number.isNaN(row.totalMeasure) ? row.totalMeasure.toFixed(2) : "0.00"}
-                </td>
-              </tr>
-            ))}
-
-            {filteredPlayerRows.length === 0 && (
-              <tr>
-                <td colSpan={5 + allGWs.length} style={{ padding: "1rem", textAlign: "center", color: "#d1c3a9" }}>
-                  No players match current filters.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Modal */}
-      {isModalOpen && activePlayerFirstRow && (
-        <div
-          onMouseMove={handleSvgMouseMove}
-          onMouseUp={handleSvgMouseUp}
-          onMouseLeave={handleSvgMouseUp}
-          onTouchMove={handleSvgTouchMove}
-          onTouchEnd={handleSvgTouchEnd}
-          onTouchCancel={handleSvgTouchEnd}
-          style={{
-            position: "fixed",
-            inset: 0,
-            backgroundColor: "rgba(0,0,0,0.85)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 1000,
-          }}
-        >
-          <div
-            style={{
-              background: `radial-gradient(circle at top, ${PALETTE.red}, ${PALETTE.black} 60%)`,
-              padding: "1rem 1.2rem",
-              borderRadius: "0.9rem",
-              width: "min(800px, 95vw)",
-              maxHeight: "90vh",
-              overflowY: "auto",
-              color: PALETTE.beige,
-              border: `1px solid ${PALETTE.gold}`,
-              boxShadow: "0 22px 50px rgba(0,0,0,0.95)",
-            }}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
-              <div>
-                <h2 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 600 }}>
-                  {activePlayerFirstRow.name} ({activePlayerFirstRow.web_name})
-                </h2>
-                <div style={{ fontSize: "0.8rem", color: "#d1c3a9", marginTop: "0.1rem" }}>
-                  {activePlayerFirstRow.position}
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={closeModal}
-                style={{
-                  border: "none",
-                  background: "transparent",
-                  fontSize: "1.3rem",
-                  cursor: "pointer",
-                  color: PALETTE.beige,
-                }}
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* Shares sliders */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(0, 1fr))", gap: "1rem", marginBottom: "1rem" }}>
-              <div style={{ padding: "0.6rem 0.75rem", borderRadius: "0.75rem", backgroundColor: "rgba(0,0,0,0.9)", border: `1px solid ${PALETTE.gold}` }}>
-                <label style={{ display: "block", fontWeight: 600, marginBottom: "0.25rem", fontSize: "0.85rem" }}>
-                  Goal Share
-                </label>
-                <input
-                  type="range"
-                  min={0}
-                  max={1}
-                  step={0.01}
-                  value={pendingGoalShare ?? 0}
-                  onChange={(e) => setPendingGoalShare(Number(e.target.value))}
-                  style={{ width: "100%", touchAction: "pan-y" }}
-                />
-                <div style={{ fontSize: "0.8rem", marginTop: "0.25rem", color: "#d1c3a9" }}>
-                  {(pendingGoalShare ?? 0).toFixed(2)}
-                </div>
-              </div>
-
-              <div style={{ padding: "0.6rem 0.75rem", borderRadius: "0.75rem", backgroundColor: "rgba(0,0,0,0.9)", border: `1px solid ${PALETTE.gold}` }}>
-                <label style={{ display: "block", fontWeight: 600, marginBottom: "0.25rem", fontSize: "0.85rem" }}>
-                  Assist Share
-                </label>
-                <input
-                  type="range"
-                  min={0}
-                  max={1}
-                  step={0.01}
-                  value={pendingAssistShare ?? 0}
-                  onChange={(e) => setPendingAssistShare(Number(e.target.value))}
-                  style={{ width: "100%", touchAction: "pan-y" }}
-                />
-                <div style={{ fontSize: "0.8rem", marginTop: "0.25rem", color: "#d1c3a9" }}>
-                  {(pendingAssistShare ?? 0).toFixed(2)}
-                </div>
-              </div>
-            </div>
-
-            {/* Defcon slider (0..1) */}
-            <div
-              style={{
-                marginBottom: "1rem",
-                padding: "0.6rem 0.75rem",
-                borderRadius: "0.75rem",
-                backgroundColor: "rgba(0,0,0,0.9)",
-                border: `1px solid ${PALETTE.gold}`,
-              }}
-            >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: "0.75rem" }}>
-                <h3 style={{ margin: 0, fontSize: "0.95rem" }}>Defcon%</h3>
-                <div style={{ fontSize: "0.8rem", color: "#d1c3a9" }}>
-                </div>
-              </div>
-
-              <div style={{ marginTop: "0.45rem" }}>
-                <input
-                  type="range"
-                  min={0}
-                  max={1}
-                  step={0.01}
-                  value={clamp01(defconAdjust01)}
-                  onChange={(e) => setDefconAdjust01(clamp01(Number(e.target.value)))}
-                  style={{ width: "100%" }}
-                />
-                <div style={{ marginTop: "0.25rem", fontSize: "0.8rem", color: "#d1c3a9" }}>
-                  <span>{clamp01(defconAdjust01).toFixed(2)*100}%</span>
-                </div>
-                <div style={{ marginTop: "0.35rem", fontSize: "0.78rem", color: "#d1c3a9" }}>
-
-                </div>
-              </div>
-            </div>
-
-            {/* Save button */}
-            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "0.75rem" }}>
-              <button
-                type="button"
-                onClick={handleSaveAndClose}
-                disabled={!hasPlayerChanges}
-                style={{
-                  padding: "0.4rem 0.9rem",
-                  borderRadius: "999px",
-                  border: `1px solid ${PALETTE.gold}`,
-                  background: "linear-gradient(135deg, rgba(0,0,0,0.9), rgba(90,0,0,0.95))",
-                  color: PALETTE.beige,
-                  fontSize: "0.85rem",
-                  fontWeight: 500,
-                  cursor: hasPlayerChanges ? "pointer" : "not-allowed",
-                  boxShadow: "0 10px 30px rgba(0,0,0,0.8)",
-                  opacity: hasPlayerChanges ? 1 : 0.5,
-                }}
-              >
-                Save changes
-              </button>
-            </div>
-
-            {/* Minutes chart */}
-            <div style={{ marginBottom: "1rem" }}>
-              <h3 style={{ marginTop: 0, marginBottom: "0.4rem", fontSize: "0.95rem" }}>
-                Predicted minutes per GW (drag dots to adjust)
-              </h3>
-
-              {chartDataMinutes.length === 0 ? (
-                <div style={{ fontSize: "0.85rem" }}>No minute data for this player.</div>
-              ) : (
-                <svg
-                  ref={svgRefMinutes}
-                  width="100%"
-                  height="280"
-                  viewBox="0 0 600 280"
-                  preserveAspectRatio="none"
-                  style={{
-                    border: `1px solid ${PALETTE.gold}`,
-                    borderRadius: "0.75rem",
-                    background: "#000000",
-                    touchAction: "none",
-                  }}
-                >
-                  {(() => {
-                    const padding = 20;
-                    const width = 600;
-                    const height = 280;
-
-                    const n = chartDataMinutes.length;
-                    const points = chartDataMinutes.map((d, i) => {
-                      const x =
-                        padding +
-                        (n === 1 ? (width - 2 * padding) / 2 : (i / (n - 1)) * (width - 2 * padding));
-                      const ratio = (d.minutes - MIN_MINUTES) / (MAX_MINUTES - MIN_MINUTES || 1);
-                      const y = height - padding - ratio * (height - 2 * padding);
-                      return { x, y, gw: d.GW, minutes: d.minutes };
-                    });
-
-                    const polyPoints = points.map((p) => `${p.x},${p.y}`).join(" ");
-
-                    return (
-                      <>
-                        <text x={padding} y={12} fontSize="10" fill="#d1c3a9">
-                          Minutes
-                        </text>
-                        <text x={width - padding} y={height - 5} textAnchor="end" fontSize="10" fill="#d1c3a9">
-                          GW
-                        </text>
-
-                        {points.map((p, idx) => (
-                          <g key={`tick-min-${p.gw}-${idx}`}>
-                            <line x1={p.x} y1={height - padding} x2={p.x} y2={height - padding + 4} stroke="#555555" strokeWidth="1" />
-                            <text x={p.x} y={height - 5} fontSize="9" textAnchor="middle" fill="#d1c3a9">
-                              {p.gw}
-                            </text>
-                          </g>
-                        ))}
-
-                        <polyline points={polyPoints} fill="none" stroke={PALETTE.gold} strokeWidth="2" />
-
-                        {points.map((p) => (
-                          <g key={`pt-min-${p.gw}`}>
-                            <circle
-                              cx={p.x}
-                              cy={p.y}
-                              r={12}
-                              fill={draggingGW === p.gw ? PALETTE.red : PALETTE.gold}
-                              stroke={PALETTE.black}
-                              strokeWidth="2"
-                              style={{ cursor: "ns-resize" }}
-                              onMouseDown={(e) => handleCircleMouseDown(p.gw, e)}
-                              onTouchStart={(e) => handleCircleTouchStart(p.gw, e)}
-                            />
-                            <text x={p.x} y={p.y - 12} fontSize="9" textAnchor="middle" fill={PALETTE.beige}>
-                              {Number(p.minutes).toFixed(0)}
-                            </text>
-                          </g>
-                        ))}
-                      </>
-                    );
-                  })()}
-                </svg>
-              )}
-            </div>
-
-            {/* Points chart */}
-            <div>
-              <h3 style={{ marginTop: 0, marginBottom: "0.4rem", fontSize: "0.95rem" }}>
-                Calculated Points
-              </h3>
-
-              {chartDataPoints.length === 0 ? (
-                <div style={{ fontSize: "0.85rem" }}>No point data for this player.</div>
-              ) : (
-                <svg
-                  ref={svgRefPoints}
-                  width="100%"
-                  height="250"
-                  viewBox="0 0 600 250"
-                  preserveAspectRatio="none"
-                  style={{
-                    border: `1px solid ${PALETTE.gold}`,
-                    borderRadius: "0.75rem",
-                    background: "#000000",
-                  }}
-                >
-                  {(() => {
-                    const padding = 20;
-                    const width = 600;
-                    const height = 250;
-
-                    const n = chartDataPoints.length;
-                    const vals = chartDataPoints.map((d) => d.points);
-                    const minP = vals.length > 0 ? Math.min(...vals) : 0;
-                    const maxP = vals.length > 0 ? Math.max(...vals) : 1;
-                    const range = maxP - minP || 1;
-
-                    const points = chartDataPoints.map((d, i) => {
-                      const x =
-                        padding +
-                        (n === 1 ? (width - 2 * padding) / 2 : (i / (n - 1)) * (width - 2 * padding));
-                      const ratio = (d.points - minP) / range;
-                      const y = height - padding - ratio * (height - 2 * padding);
-                      return { x, y, gw: d.GW, points: d.points };
-                    });
-
-                    const polyPoints = points.map((p) => `${p.x},${p.y}`).join(" ");
-
-                    return (
-                      <>
-                        <text x={padding} y={12} fontSize="10" fill="#d1c3a9">
-                          Points
-                        </text>
-                        <text x={width - padding} y={height - 5} textAnchor="end" fontSize="10" fill="#d1c3a9">
-                          GW
-                        </text>
-
-                        {points.map((p, idx) => (
-                          <g key={`tick-pts-${p.gw}-${idx}`}>
-                            <line x1={p.x} y1={height - padding} x2={p.x} y2={height - padding + 4} stroke="#555555" strokeWidth="1" />
-                            <text x={p.x} y={height - 5} fontSize="9" textAnchor="middle" fill="#d1c3a9">
-                              {p.gw}
-                            </text>
-                          </g>
-                        ))}
-
-                        <polyline points={polyPoints} fill="none" stroke={PALETTE.gold} strokeWidth="2" />
-
-                        {points.map((p) => (
-                          <g key={`pt-pts-${p.gw}`}>
-                            <circle cx={p.x} cy={p.y} r={6} fill={PALETTE.gold} stroke={PALETTE.black} strokeWidth="2" />
-                            <text x={p.x} y={p.y - 10} fontSize="9" textAnchor="middle" fill={PALETTE.beige}>
-                              {Number(p.points).toFixed(2)}
-                            </text>
-                          </g>
-                        ))}
-                      </>
-                    );
-                  })()}
-                </svg>
-              )}
-            </div>
+                {filteredPlayerRows.length === 0 && (
+                  <tr>
+                    <td colSpan={5 + allGWs.length} className="px-4 py-8 text-center" style={{ color: "#d1c3a9" }}>
+                      No players match the current filters.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
-        </div>
-      )}
+        </GlassCard>
+
+        {isModalOpen && activePlayerFirstRow && (
+          <div
+            onMouseMove={(e) => draggingGW && updateMinutesFromClientY(e.clientY)}
+            onMouseUp={() => {
+              setDraggingGW(null);
+              dragGWRef.current = null;
+            }}
+            onMouseLeave={() => {
+              setDraggingGW(null);
+              dragGWRef.current = null;
+            }}
+            onTouchMove={(e) =>
+              draggingGW && e.touches?.[0] && updateMinutesFromClientY(e.touches[0].clientY)
+            }
+            onTouchEnd={() => {
+              setDraggingGW(null);
+              dragGWRef.current = null;
+            }}
+            onTouchCancel={() => {
+              setDraggingGW(null);
+              dragGWRef.current = null;
+            }}
+            className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/85 p-4"
+          >
+            <GlassCard
+              className="max-h-[92vh] w-full max-w-5xl overflow-y-auto p-4 sm:p-6"
+              style={{ background: `radial-gradient(circle at top, ${PALETTE.red}, ${PALETTE.black} 60%)` }}
+            >
+              <div className="mb-5 flex items-start justify-between gap-4">
+                <div>
+                  <h2 className="m-0 text-xl font-semibold sm:text-2xl">
+                    {activePlayerFirstRow.name} ({activePlayerFirstRow.web_name})
+                  </h2>
+                  <div className="mt-1 text-sm" style={{ color: "#d1c3a9" }}>
+                    {activePlayerFirstRow.position}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  className="rounded-full p-2"
+                  style={{
+                    border: `1px solid ${PALETTE.border}`,
+                    background: "rgba(0,0,0,0.45)",
+                    color: PALETTE.beige,
+                  }}
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div className="mb-5 grid grid-cols-1 gap-4 lg:grid-cols-3">
+                <FilterCard icon={CircleDot} label="Goal Share">
+                  <input
+                    type="range"
+                    min={0}
+                    max={1}
+                    step={0.01}
+                    value={pendingGoalShare ?? 0}
+                    onChange={(e) => scheduleGoalShareChange(Number(e.target.value))}
+                    className="w-full"
+                  />
+                  <div className="mt-2 text-sm" style={{ color: "#d1c3a9" }}>
+                    {(pendingGoalShare ?? 0).toFixed(2)}
+                  </div>
+                </FilterCard>
+
+                <FilterCard icon={Footprints} label="Assist Share">
+                  <input
+                    type="range"
+                    min={0}
+                    max={1}
+                    step={0.01}
+                    value={pendingAssistShare ?? 0}
+                    onChange={(e) => scheduleAssistShareChange(Number(e.target.value))}
+                    className="w-full"
+                  />
+                  <div className="mt-2 text-sm" style={{ color: "#d1c3a9" }}>
+                    {(pendingAssistShare ?? 0).toFixed(2)}
+                  </div>
+                </FilterCard>
+
+                <FilterCard icon={Shield} label="Defcon %">
+                  <input
+                    type="range"
+                    min={0}
+                    max={1}
+                    step={0.01}
+                    value={clamp01(defconAdjust01)}
+                    onChange={(e) => scheduleDefconChange(Number(e.target.value))}
+                    className="w-full"
+                  />
+                  <div className="mt-2 text-sm" style={{ color: "#d1c3a9" }}>
+                    {Math.round(clamp01(defconAdjust01) * 100)}%
+                  </div>
+                </FilterCard>
+              </div>
+
+              <div className="mb-5 flex justify-end">
+                <button
+                  type="button"
+                  onClick={handleSaveAndClose}
+                  disabled={!hasPlayerChanges}
+                  className="inline-flex items-center gap-2 rounded-full px-4 py-3 font-semibold transition"
+                  style={{
+                    border: `1px solid ${PALETTE.gold}`,
+                    background: hasPlayerChanges
+                      ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)`
+                      : "rgba(0,0,0,0.5)",
+                    color: hasPlayerChanges ? "#000" : PALETTE.muted,
+                    cursor: hasPlayerChanges ? "pointer" : "not-allowed",
+                  }}
+                >
+                  <Save size={16} />
+                  Save changes
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
+                <div>
+                  <h3 className="mb-3 text-base font-semibold">Predicted minutes per GW</h3>
+                  <div className="mb-2 text-xs" style={{ color: PALETTE.muted }}>
+                    Drag the dots vertically to update minutes.
+                  </div>
+                  {chartDataMinutes.length === 0 ? (
+                    <div className="text-sm">No minute data for this player.</div>
+                  ) : (
+                    <svg
+                      ref={svgRefMinutes}
+                      width="100%"
+                      height="280"
+                      viewBox="0 0 600 280"
+                      preserveAspectRatio="none"
+                      className="rounded-2xl"
+                      style={{
+                        border: `1px solid ${PALETTE.gold}`,
+                        background: "#000",
+                        touchAction: "none",
+                      }}
+                    >
+                      {(() => {
+                        const padding = 20;
+                        const width = 600;
+                        const height = 280;
+                        const n = chartDataMinutes.length;
+
+                        const points = chartDataMinutes.map((d, i) => {
+                          const x =
+                            padding +
+                            (n === 1
+                              ? (width - 2 * padding) / 2
+                              : (i / (n - 1)) * (width - 2 * padding));
+                          const ratio = (d.minutes - MIN_MINUTES) / (MAX_MINUTES - MIN_MINUTES || 1);
+                          const y = height - padding - ratio * (height - 2 * padding);
+                          return { x, y, gw: d.GW, minutes: d.minutes };
+                        });
+
+                        return (
+                          <>
+                            <polyline
+                              points={points.map((p) => `${p.x},${p.y}`).join(" ")}
+                              fill="none"
+                              stroke={PALETTE.gold}
+                              strokeWidth="2"
+                            />
+                            {points.map((p) => (
+                              <g key={p.gw}>
+                                <line
+                                  x1={p.x}
+                                  y1={height - padding}
+                                  x2={p.x}
+                                  y2={height - padding + 4}
+                                  stroke="#555"
+                                  strokeWidth="1"
+                                />
+                                <text
+                                  x={p.x}
+                                  y={height - 5}
+                                  fontSize="9"
+                                  textAnchor="middle"
+                                  fill="#d1c3a9"
+                                >
+                                  {p.gw}
+                                </text>
+                                <circle
+                                  cx={p.x}
+                                  cy={p.y}
+                                  r={12}
+                                  fill={draggingGW === p.gw ? PALETTE.red : PALETTE.gold}
+                                  stroke={PALETTE.black}
+                                  strokeWidth="2"
+                                  style={{ cursor: "ns-resize" }}
+                                  onMouseDown={(e) => handleCircleMouseDown(p.gw, e)}
+                                  onTouchStart={(e) => handleCircleTouchStart(p.gw, e)}
+                                />
+                                <text
+                                  x={p.x}
+                                  y={p.y - 12}
+                                  fontSize="9"
+                                  textAnchor="middle"
+                                  fill={PALETTE.beige}
+                                >
+                                  {Number(p.minutes).toFixed(0)}
+                                </text>
+                              </g>
+                            ))}
+                          </>
+                        );
+                      })()}
+                    </svg>
+                  )}
+                </div>
+
+                <div>
+                  <h3 className="mb-3 text-base font-semibold">Calculated points</h3>
+                  <div className="mb-2 text-xs" style={{ color: PALETTE.muted }}>
+                    Projected points update live as you change minutes and shares.
+                  </div>
+                  {chartDataPoints.length === 0 ? (
+                    <div className="text-sm">No point data for this player.</div>
+                  ) : (
+                    <svg
+                      ref={svgRefPoints}
+                      width="100%"
+                      height="280"
+                      viewBox="0 0 600 280"
+                      preserveAspectRatio="none"
+                      className="rounded-2xl"
+                      style={{
+                        border: `1px solid ${PALETTE.gold}`,
+                        background: "#000",
+                      }}
+                    >
+                      {(() => {
+                        const padding = 20;
+                        const width = 600;
+                        const height = 280;
+                        const n = chartDataPoints.length;
+                        const vals = chartDataPoints.map((d) => d.points);
+                        const minP = vals.length > 0 ? Math.min(...vals) : 0;
+                        const maxP = vals.length > 0 ? Math.max(...vals) : 1;
+                        const range = maxP - minP || 1;
+
+                        const points = chartDataPoints.map((d, i) => {
+                          const x =
+                            padding +
+                            (n === 1
+                              ? (width - 2 * padding) / 2
+                              : (i / (n - 1)) * (width - 2 * padding));
+                          const ratio = (d.points - minP) / range;
+                          const y = height - padding - ratio * (height - 2 * padding);
+                          return { x, y, gw: d.GW, points: d.points };
+                        });
+
+                        return (
+                          <>
+                            <polyline
+                              points={points.map((p) => `${p.x},${p.y}`).join(" ")}
+                              fill="none"
+                              stroke={PALETTE.gold}
+                              strokeWidth="2"
+                            />
+                            {points.map((p) => (
+                              <g key={p.gw}>
+                                <line
+                                  x1={p.x}
+                                  y1={height - padding}
+                                  x2={p.x}
+                                  y2={height - padding + 4}
+                                  stroke="#555"
+                                  strokeWidth="1"
+                                />
+                                <text
+                                  x={p.x}
+                                  y={height - 5}
+                                  fontSize="9"
+                                  textAnchor="middle"
+                                  fill="#d1c3a9"
+                                >
+                                  {p.gw}
+                                </text>
+                                <circle
+                                  cx={p.x}
+                                  cy={p.y}
+                                  r={6}
+                                  fill={PALETTE.gold}
+                                  stroke={PALETTE.black}
+                                  strokeWidth="2"
+                                />
+                                <text
+                                  x={p.x}
+                                  y={p.y - 10}
+                                  fontSize="9"
+                                  textAnchor="middle"
+                                  fill={PALETTE.beige}
+                                >
+                                  {Number(p.points).toFixed(2)}
+                                </text>
+                              </g>
+                            ))}
+                          </>
+                        );
+                      })()}
+                    </svg>
+                  )}
+                </div>
+              </div>
+            </GlassCard>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
