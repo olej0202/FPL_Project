@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   X,
@@ -88,6 +88,9 @@ export default function MyTeamOptimize() {
   const [chipsOpen, setChipsOpen] = useState(!!bbRound || !!wildRound || !!freehitROund);
   const [loadingPhase, setLoadingPhase] = useState("idle");
   const [progress, setProgress] = useState(0);
+  const [controlsOpen, setControlsOpen] = useState(true);
+  const [savedOpen, setSavedOpen] = useState(true);
+  const pitchSectionRef = useRef(null);
 
   const hasStatisticalData = useMemo(() => {
     const arr = Playerdata?.current;
@@ -131,7 +134,7 @@ export default function MyTeamOptimize() {
       let rafId;
       let iv;
       const start = performance.now();
-      const duration = 4600;
+      const duration = 2600;
 
       const tick = (now) => {
         const elapsed = now - start;
@@ -361,6 +364,15 @@ export default function MyTeamOptimize() {
   const activeChipsCount = (bbRound ? 1 : 0) + (wildRound ? 1 : 0) + (freehitROund ? 1 : 0);
   const totalTransfers = plannerPayload.length;
 
+  useEffect(() => {
+    if (!loading && data && typeof window !== "undefined" && window.innerWidth < 640) {
+      const t = setTimeout(() => {
+        pitchSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 180);
+      return () => clearTimeout(t);
+    }
+  }, [loading, data]);
+
   if (loading) {
     return (
       <div
@@ -494,17 +506,16 @@ export default function MyTeamOptimize() {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full lg:w-auto">
-            <TopStat icon={Target} label="Predicted" value={totalPredPoints != null ? totalPredPoints.toFixed(2) : "—"} />
-            <TopStat icon={CalendarRange} label="Window" value={`GW ${minGW}-${maxGW}`} />
-            <TopStat icon={Zap} label="Transfers" value={String(totalTransfers)} />
-            <TopStat icon={Ban} label="Blocked" value={String(bannedPlayersData.length || 0)} />
-          </div>
+ 
         </header>
 
         <section className="mb-6 grid grid-cols-1 xl:grid-cols-[1.2fr_0.8fr] gap-6">
           <div className="glass-card rounded-[28px] p-4 sm:p-6">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <button
+              type="button"
+              onClick={() => setControlsOpen((v) => !v)}
+              className="gold-ring w-full flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between text-left rounded-2xl px-3 py-3" style={{ background: "rgba(0,0,0,0.7)", border: `1px solid ${PALETTE.border}` }}
+            >
               <div>
                 <div className="flex items-center gap-2 text-sm font-semibold" style={{ color: PALETTE.gold }}>
                   <SlidersHorizontal size={16} className="lucide-icon" />
@@ -514,6 +525,17 @@ export default function MyTeamOptimize() {
                   Tune your team ID, chips, model, and optimization profile.
                 </p>
               </div>
+
+              <div className="inline-flex items-center gap-2 self-start sm:self-center" style={{ color: PALETTE.muted }}>
+                <span className="text-xs">{controlsOpen ? "Minimize" : "Expand"}</span>
+                {controlsOpen ? <ChevronDown size={18} className="lucide-icon" /> : <ChevronRight size={18} className="lucide-icon" />}
+              </div>
+            </button>
+
+            {controlsOpen && (
+              <>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between mt-4">
+              <div className="hidden sm:block" />
 
               <button
                 onClick={handleOptimizeClick}
@@ -551,24 +573,7 @@ export default function MyTeamOptimize() {
                 />
               </FieldShell>
 
-              <FieldShell label="Hits" icon={Shield} className="min-w-0 md:col-span-1 xl:col-span-2">
-                {/* Hits box */}
-<div
-  className="h-11 min-w-0 rounded-2xl flex items-center justify-between px-1.5 gap-1.5"
-  style={{ backgroundColor: "rgba(0,0,0,0.8)", border: `1px solid ${PALETTE.border}` }}
->
-                  <IconButton ariaLabel="Decrease hits" onClick={() => setn_hits(Math.max(0, Number(n_hits || 0) - 1))} label="−" />
-                  <div className="flex min-w-0 flex-col items-center leading-none select-none px-0.5">
-  <span className="text-[9px] uppercase tracking-wide" style={{ color: PALETTE.muted }}>
-    Hits
-  </span>
-  <span className="text-[13px] sm:text-sm font-semibold tabular-nums">
-    {Number(n_hits || 0)}
-  </span>
-</div>
-                  <IconButton ariaLabel="Increase hits" onClick={() => setn_hits(Number(n_hits || 0) + 1)} label="+" />
-                </div>
-              </FieldShell>
+              
 
               <FieldShell label="Model" icon={Brain} className="min-w-0 md:col-span-2 xl:col-span-7">
                 <div className="grid grid-cols-2 gap-2">
@@ -596,6 +601,19 @@ export default function MyTeamOptimize() {
                 </button>
               </FieldShell>
             </div>
+            <FieldShell label="Force Hits" icon={Shield} className="min-w-0 md:col-span-1 xl:col-span-2 mt-3">
+                <div
+                  className="h-12 min-w-0 rounded-2xl flex items-center justify-between px-2 gap-2"
+                  style={{ backgroundColor: "rgba(0,0,0,0.8)", border: `1px solid ${PALETTE.border}` }}
+                >
+                  <IconButton ariaLabel="Decrease hits" onClick={() => setn_hits(Math.max(0, Number(n_hits || 0) - 1))} label="−" />
+                  <div className="flex flex-col items-center leading-none select-none">
+                    <span className="text-[10px] uppercase tracking-wide" style={{ color: PALETTE.muted }}>Count</span>
+                    <span className="text-sm font-semibold">{Number(n_hits || 0)}</span>
+                  </div>
+                  <IconButton ariaLabel="Increase hits" onClick={() => setn_hits(Number(n_hits || 0) + 1)} label="+" />
+                </div>
+              </FieldShell>
 
             <div className="mt-4 grid grid-cols-1 gap-4">
               <details
@@ -684,11 +702,9 @@ export default function MyTeamOptimize() {
                 <summary className="cursor-pointer select-none list-none flex items-center justify-between px-4 h-14">
                   <div className="flex items-center gap-2" style={{ color: PALETTE.gold }}>
                     <SlidersHorizontal size={16} className="lucide-icon" />
-                    <span className="font-semibold">Optimization profile</span>
+                    <span className="font-semibold">Optimization settings</span>
                   </div>
-                  <div className="text-[11px]" style={{ color: PALETTE.muted }}>
-                    {formatRiskLabel(risk)} · {formatValTransLabel(valtrans)}
-                  </div>
+    
                 </summary>
 
                 <div className="px-4 pb-4 grid grid-cols-1 gap-4">
@@ -730,10 +746,16 @@ export default function MyTeamOptimize() {
                 </div>
               </details>
             </div>
+            </>
+            )}
           </div>
 
           <div className="glass-card rounded-[28px] p-4 sm:p-6">
-            <div className="flex items-start justify-between gap-3">
+            <button
+              type="button"
+              onClick={() => setSavedOpen((v) => !v)}
+              className="gold-ring w-full flex items-start justify-between gap-3 text-left rounded-2xl px-3 py-3" style={{ background: "rgba(0,0,0,0.7)", border: `1px solid ${PALETTE.border}` }}
+            >
               <div>
                 <div className="flex items-center gap-2 text-sm font-semibold" style={{ color: PALETTE.gold }}>
                   <Save size={16} className="lucide-icon" />
@@ -743,8 +765,14 @@ export default function MyTeamOptimize() {
                   Save strong runs and reload them instantly.
                 </div>
               </div>
-            </div>
+              <div className="inline-flex items-center gap-2 self-start sm:self-center" style={{ color: PALETTE.muted }}>
+                <span className="text-xs">{savedOpen ? "Minimize" : "Expand"}</span>
+                {savedOpen ? <ChevronDown size={18} className="lucide-icon" /> : <ChevronRight size={18} className="lucide-icon" />}
+              </div>
+            </button>
 
+            {savedOpen && (
+            <>
             <div className="mt-4 rounded-[24px] p-4" style={{ border: `1px solid ${PALETTE.border}`, background: "rgba(0,0,0,0.55)" }}>
               <div className="flex items-center justify-between gap-3">
                 <div>
@@ -861,6 +889,8 @@ export default function MyTeamOptimize() {
                 </div>
               )}
             </div>
+            </>
+            )}
           </div>
         </section>
 
@@ -912,259 +942,193 @@ export default function MyTeamOptimize() {
           </section>
         )}
 
-{data && (
-  <section className="mb-6 grid grid-cols-1 xl:grid-cols-[0.92fr_1.08fr] gap-6 items-start">
-    <div className="glass-card rounded-[28px] p-4 sm:p-5">
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <div
-            className="text-sm font-semibold inline-flex items-center gap-2"
-            style={{ color: PALETTE.gold }}
-          >
-            <Trophy size={16} className="lucide-icon" />
-            Optimized XI
-          </div>
-          <div className="text-xs mt-1" style={{ color: PALETTE.muted }}>
-            Tap a player to open analytics. Tap the X icon to mark as unwanted.
-          </div>
-        </div>
-      </div>
-
-      <div
-        className="w-full max-w-[380px] sm:max-w-[420px] mx-auto aspect-[0.65/1] bg-no-repeat bg-cover bg-center rounded-[24px] px-1.5 sm:px-2 py-1 relative overflow-hidden"
-        style={{
-          backgroundImage: `url(${pitch})`,
-          border: `1px solid ${PALETTE.border}`,
-          boxShadow: "0 18px 40px rgba(0,0,0,0.55)",
-        }}
-      >
-        <div className="absolute inset-0 bg-gradient-to-b from-black/5 via-transparent to-black/10 pointer-events-none" />
-
-        <div className="relative flex flex-col justify-between h-[350px] sm:h-[450px] pt-1 space-y-0 w-full">
-          <PlayerRow
-            players={starters.filter((p) => p.position === "GKP")}
-            toggleBan={toggleBan}
-            bannedList={bannedList}
-            navigate={navigate}
-          />
-          <PlayerRow
-            players={starters.filter((p) => p.position === "DEF")}
-            toggleBan={toggleBan}
-            bannedList={bannedList}
-            navigate={navigate}
-          />
-          <PlayerRow
-            players={starters.filter((p) => p.position === "MID")}
-            toggleBan={toggleBan}
-            bannedList={bannedList}
-            navigate={navigate}
-          />
-          <PlayerRow
-            players={starters.filter((p) => p.position === "FWD")}
-            toggleBan={toggleBan}
-            bannedList={bannedList}
-            navigate={navigate}
-          />
-        </div>
-
-        {bench.length > 0 && (
-          <div className="absolute bottom-0 sm:bottom-0 left-0 right-0">
-
-            <PlayerRow
-              players={bench}
-              isBench
-              toggleBan={toggleBan}
-              bannedList={bannedList}
-              navigate={navigate}
-            />
-          </div>
-        )}
-      </div>
-
-      <div className="mt-4 flex flex-col items-center gap-3">
-        <button
-          type="button"
-          onClick={handleApplyToPlanner}
-          disabled={!plannerPayload.length}
-          className="gold-ring inline-flex items-center gap-2 font-semibold px-6 py-3 rounded-full transition shadow-lg"
-          style={{
-            border: `1px solid ${plannerPayload.length ? PALETTE.gold : "#374151"}`,
-            background: plannerPayload.length
-              ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)`
-              : "rgba(0,0,0,0.7)",
-            color: plannerPayload.length ? "#000" : PALETTE.muted,
-            cursor: plannerPayload.length ? "pointer" : "not-allowed",
-          }}
-        >
-          <Search size={18} className="lucide-icon" />
-          See transfers on My Team
-        </button>
-
-        {!plannerPayload.length && (
-          <div className="text-xs" style={{ color: PALETTE.muted }}>
-            Run an optimization with transfers first.
-          </div>
-        )}
-      </div>
-    </div>
-
-    <div className="glass-card rounded-[28px] p-4 sm:p-5">
-      <div className="flex items-end justify-between mb-4 gap-3">
-        <div>
-          <h2 className="text-xl sm:text-2xl font-bold inline-flex items-center gap-2">
-            <ArrowRight
-              size={20}
-              className="lucide-icon"
-              style={{ color: PALETTE.gold }}
-            />
-            Transfer plan
-          </h2>
-          <div className="text-xs mt-1" style={{ color: PALETTE.muted }}>
-            Recommended moves across your optimization window.
-          </div>
-        </div>
-        <div
-          className="text-[11px] px-3 py-1 rounded-full"
-          style={{
-            color: PALETTE.gold,
-            border: `1px solid rgba(184,134,11,0.35)`,
-            background: "rgba(184,134,11,0.08)",
-          }}
-        >
-          GW {minGW}–{maxGW}
-        </div>
-      </div>
-
-      {transfersWithFH.length > 0 ? (
-        <div className="space-y-4">
-          {transfersWithFH.map((grp) => {
-            const remainingIns = [...(grp.in || [])];
-            const pairs = (grp.out || []).map((outP) => {
-              const i = remainingIns.findIndex(
-                (inP) => inP.position === outP.position
-              );
-              return i !== -1
-                ? { outP, inP: remainingIns.splice(i, 1)[0] }
-                : { outP, inP: null };
-            });
-
-            remainingIns.forEach((inP) => pairs.push({ outP: null, inP }));
-
-            const realPairs = pairs.filter((x) => x.outP && x.inP);
-            if (realPairs.length === 0 && !grp.freehit) return null;
-
-            return (
-              <div
-                key={grp.GW}
-                className="rounded-[24px] overflow-hidden"
-                style={{
-                  border: `1px solid ${PALETTE.border}`,
-                  background: "rgba(0,0,0,0.48)",
-                  boxShadow: "0 14px 30px rgba(0,0,0,0.35)",
-                }}
-              >
-                <div
-                  className="px-4 py-3 flex items-center justify-between"
-                  style={{
-                    borderBottom: `1px solid ${PALETTE.border}`,
-                    background:
-                      "linear-gradient(135deg, rgba(184,134,11,0.14), rgba(0,0,0,0.5))",
-                  }}
-                >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="w-10 h-10 rounded-2xl flex items-center justify-center font-bold"
-                      style={{
-                        backgroundColor: "rgba(0,0,0,0.55)",
-                        border: `1px solid ${PALETTE.gold}`,
-                        color: PALETTE.gold,
-                      }}
-                    >
-                      {grp.GW}
-                    </div>
-                    <div>
-                      <div className="text-sm font-semibold">
-                        Gameweek {grp.GW}
-                      </div>
-                      <div
-                        className="text-[11px]"
-                        style={{ color: PALETTE.muted }}
-                      >
-                        {realPairs.length} transfer
-                        {realPairs.length === 1 ? "" : "s"}
-                      </div>
-                    </div>
+        {data && (
+          <section ref={pitchSectionRef} className="mb-6 grid grid-cols-1 xl:grid-cols-[0.92fr_1.08fr] gap-6 items-start">
+            <div className="glass-card rounded-[28px] p-4 sm:p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <div className="text-sm font-semibold inline-flex items-center gap-2" style={{ color: PALETTE.gold }}>
+                    <Trophy size={16} className="lucide-icon" />
+                    Optimized XI GW {minGW}
                   </div>
-
-                  {grp.freehit && (
-                    <span
-                      className="text-[11px] px-3 py-1 rounded-full font-semibold inline-flex items-center gap-1.5"
-                      style={{
-                        border: `1px solid ${PALETTE.gold}`,
-                        color: PALETTE.gold,
-                        backgroundColor: "rgba(0,0,0,0.6)",
-                      }}
-                    >
-                      <Zap size={12} className="lucide-icon" />
-                      Free Hit
-                    </span>
-                  )}
-                </div>
-
-                <div className="divide-y" style={{ borderColor: PALETTE.border }}>
-                  {realPairs.map(({ outP, inP }, idx) => (
-                    <TransferRow
-                      key={`${grp.GW}_${idx}`}
-                      outP={outP}
-                      inP={inP}
-                      PALETTE={PALETTE}
-                      navigate={navigate}
-                      toggleBan={toggleBan}
-                      bannedList={bannedList}
-                    />
-                  ))}
+                  <div className="text-xs mt-1" style={{ color: PALETTE.muted }}>
+                    Tap a player to open analytics. Tap the X icon to mark as unwanted.
+                  </div>
                 </div>
               </div>
-            );
-          })}
-        </div>
-      ) : (
-        <div
-          className="rounded-[24px] p-8 text-center"
-          style={{
-            border: `1px dashed ${PALETTE.border}`,
-            background: "rgba(0,0,0,0.28)",
-          }}
-        >
-          <ArrowRight
-            size={26}
-            className="lucide-icon mx-auto mb-2"
-            style={{ color: PALETTE.gold }}
-          />
-          <div className="text-sm font-semibold">No transfer plan yet</div>
-          <div className="text-xs mt-1" style={{ color: PALETTE.muted }}>
-            Run the optimizer to generate a recommended transfer timeline.
-          </div>
-        </div>
-      )}
-    </div>
-  </section>
-)}
 
-{!data && (
-  <section className="glass-card rounded-[28px] p-8 text-center">
-    <Sparkles
-      size={28}
-      className="lucide-icon mx-auto mb-3"
-      style={{ color: PALETTE.gold }}
+              <div className="mb-4 grid grid-cols-2 gap-3 max-w-[420px] mx-auto">
+                <TopStat icon={Target} label="Predicted" value={totalPredPoints != null ? totalPredPoints.toFixed(2) : "—"} />
+                <TopStat icon={CalendarRange} label="Window" value={`GW ${minGW}-${maxGW}`} />
+              </div>
+
+      <div
+  className="w-full max-w-[360px] sm:max-w-[420px] mx-auto aspect-[0.68/1] sm:aspect-[0.76/1] bg-no-repeat bg-cover bg-center rounded-[24px] px-1 sm:px-2 py-1 relative overflow-hidden"
+  style={{
+    backgroundImage: `url(${pitch})`,
+    border: `1px solid ${PALETTE.border}`,
+    boxShadow: "0 18px 40px rgba(0,0,0,0.55)",
+  }}
+>
+  <div className="absolute inset-0 bg-gradient-to-b from-black/5 via-transparent to-black/10 pointer-events-none" />
+
+  <div className="relative flex flex-col justify-between h-[340px] xs:h-[360px] sm:h-[450px] pt-1 pb-14 sm:pb-16 w-full">
+    <PlayerRow
+      players={starters.filter((p) => p.position === "GKP")}
+      toggleBan={toggleBan}
+      bannedList={bannedList}
+      navigate={navigate}
     />
-    <div className="text-lg font-semibold">Ready to optimize</div>
-    <div className="text-sm mt-2 max-w-xl mx-auto" style={{ color: PALETTE.muted }}>
-      Enter your team ID, choose your chip strategy, and run the optimizer to
-      see your XI and transfer plan.
+    <PlayerRow
+      players={starters.filter((p) => p.position === "DEF")}
+      toggleBan={toggleBan}
+      bannedList={bannedList}
+      navigate={navigate}
+    />
+    <PlayerRow
+      players={starters.filter((p) => p.position === "MID")}
+      toggleBan={toggleBan}
+      bannedList={bannedList}
+      navigate={navigate}
+    />
+    <PlayerRow
+      players={starters.filter((p) => p.position === "FWD")}
+      toggleBan={toggleBan}
+      bannedList={bannedList}
+      navigate={navigate}
+    />
+  </div>
+
+  {bench.length > 0 && (
+    <div className="absolute bottom-1 sm:bottom-2 left-0 right-0 px-1">
+      <PlayerRow
+        players={bench}
+        isBench
+        toggleBan={toggleBan}
+        bannedList={bannedList}
+        navigate={navigate}
+      />
     </div>
-  </section>
-)}
+  )}
+</div>
+              <div className="mt-4 flex flex-col items-center gap-3">
+                <button
+                  type="button"
+                  onClick={handleApplyToPlanner}
+                  disabled={!plannerPayload.length}
+                  className="gold-ring inline-flex items-center gap-2 font-semibold px-6 py-3 rounded-full transition shadow-lg"
+                  style={{
+                    border: `1px solid ${plannerPayload.length ? PALETTE.gold : "#374151"}`,
+                    background: plannerPayload.length ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)` : "rgba(0,0,0,0.7)",
+                    color: plannerPayload.length ? "#000" : PALETTE.muted,
+                    cursor: plannerPayload.length ? "pointer" : "not-allowed",
+                  }}
+                >
+                  <Search size={18} className="lucide-icon" />
+                  See transfers on My Team
+                </button>
+
+                {!plannerPayload.length && (
+                  <div className="text-xs" style={{ color: PALETTE.muted }}>
+                    Run an optimization with transfers first.
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="glass-card rounded-[28px] p-4 sm:p-5">
+              <div className="flex items-end justify-between mb-4 gap-3">
+                <div>
+                  <h2 className="text-xl sm:text-2xl font-bold inline-flex items-center gap-2">
+                    <ArrowRight size={20} className="lucide-icon" style={{ color: PALETTE.gold }} />
+                    Transfer plan
+                  </h2>
+                  <div className="text-xs mt-1" style={{ color: PALETTE.muted }}>
+                    Recommended moves across your optimization window.
+                  </div>
+                </div>
+                <div className="text-[11px] px-3 py-1 rounded-full" style={{ color: PALETTE.gold, border: `1px solid rgba(184,134,11,0.35)`, background: "rgba(184,134,11,0.08)" }}>
+                  GW {minGW}–{maxGW}
+                </div>
+              </div>
+
+              {transfersWithFH.length > 0 ? (
+                <div className="space-y-4">
+                  {transfersWithFH.map((grp) => {
+                    const remainingIns = [...(grp.in || [])];
+                    const pairs = (grp.out || []).map((outP) => {
+                      const i = remainingIns.findIndex((inP) => inP.position === outP.position);
+                      return i !== -1 ? { outP, inP: remainingIns.splice(i, 1)[0] } : { outP, inP: null };
+                    });
+                    remainingIns.forEach((inP) => pairs.push({ outP: null, inP }));
+
+                    const realPairs = pairs.filter((x) => x.outP && x.inP);
+                    if (realPairs.length === 0 && !grp.freehit) return null;
+
+                    return (
+                      <div
+                        key={grp.GW}
+                        className="rounded-[24px] overflow-hidden"
+                        style={{ border: `1px solid ${PALETTE.border}`, background: "rgba(0,0,0,0.48)", boxShadow: "0 14px 30px rgba(0,0,0,0.35)" }}
+                      >
+                        <div
+                          className="px-4 py-3 flex items-center justify-between"
+                          style={{ borderBottom: `1px solid ${PALETTE.border}`, background: "linear-gradient(135deg, rgba(184,134,11,0.14), rgba(0,0,0,0.5))" }}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div
+                              className="w-10 h-10 rounded-2xl flex items-center justify-center font-bold"
+                              style={{ backgroundColor: "rgba(0,0,0,0.55)", border: `1px solid ${PALETTE.gold}`, color: PALETTE.gold }}
+                            >
+                              {grp.GW}
+                            </div>
+                            <div>
+                              <div className="text-sm font-semibold">Gameweek {grp.GW}</div>
+                              <div className="text-[11px]" style={{ color: PALETTE.muted }}>
+                                {realPairs.length} transfer{realPairs.length === 1 ? "" : "s"}
+                              </div>
+                            </div>
+                          </div>
+
+                          {grp.freehit && (
+                            <span className="text-[11px] px-3 py-1 rounded-full font-semibold inline-flex items-center gap-1.5"
+                              style={{ border: `1px solid ${PALETTE.gold}`, color: PALETTE.gold, backgroundColor: "rgba(0,0,0,0.6)" }}
+                            >
+                              <Zap size={12} className="lucide-icon" />
+                              Free Hit
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="divide-y" style={{ borderColor: PALETTE.border }}>
+                          {realPairs.map(({ outP, inP }, idx) => (
+                            <TransferRow
+                              key={`${grp.GW}_${idx}`}
+                              outP={outP}
+                              inP={inP}
+                              PALETTE={PALETTE}
+                              navigate={navigate}
+                              toggleBan={toggleBan}
+                              bannedList={bannedList}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="rounded-[24px] p-8 text-center" style={{ border: `1px dashed ${PALETTE.border}`, background: "rgba(0,0,0,0.28)" }}>
+                  <ArrowRight size={26} className="lucide-icon mx-auto mb-2" style={{ color: PALETTE.gold }} />
+                  <div className="text-sm font-semibold">No transfer plan yet</div>
+                  <div className="text-xs mt-1" style={{ color: PALETTE.muted }}>
+                    Run the optimizer to generate a recommended transfer timeline.
+                  </div>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
 
         {!data && (
           <section className="glass-card rounded-[28px] p-8 text-center">
@@ -1329,12 +1293,8 @@ function IconButton({ ariaLabel, onClick, label }) {
       type="button"
       aria-label={ariaLabel}
       onClick={onClick}
-      className="gold-ring inline-flex shrink-0 items-center justify-center w-7 h-7 rounded-full text-xs leading-none"
-      style={{
-        border: `1px solid ${PALETTE.border}`,
-        backgroundColor: "rgba(0,0,0,0.8)",
-        color: PALETTE.gold,
-      }}
+      className="gold-ring inline-flex items-center justify-center w-8 h-8 rounded-full text-sm leading-none"
+      style={{ border: `1px solid ${PALETTE.border}`, backgroundColor: "rgba(0,0,0,0.8)", color: PALETTE.gold }}
     >
       {label}
     </button>
@@ -1371,44 +1331,67 @@ function PlayerRow({ players, isBench = false, toggleBan, bannedList, navigate }
     : players;
 
   return (
-    <div className="flex justify-center items-start gap-1 sm:gap-2 px-0.5 sm:px-1 text-center w-full min-w-0">
+    <div
+      className={`w-full min-w-0 flex justify-center items-start ${
+        isBench ? "gap-1" : "gap-1.5 sm:gap-2"
+      } px-0.5 text-center`}
+    >
       {sortedPlayers.map((p) => (
-        <div key={p.Name} className="relative min-w-0">
+        <div
+          key={p.Name}
+          className={`relative min-w-0 flex flex-col items-center ${
+            isBench ? "w-[58px] sm:w-[66px]" : "w-[60px] sm:w-[70px]"
+          }`}
+        >
           {p.Is_captain && (
-            <div className="absolute top-4 -left-1 bg-black/80 text-white font-bold text-[10px] rounded-full w-4 h-4 flex items-center justify-center shadow">
+            <div className="absolute top-[18px] left-[2px] bg-black/85 text-white font-bold text-[9px] rounded-full w-4 h-4 flex items-center justify-center shadow z-10">
               C
             </div>
           )}
 
-          <img
-            src={p.photo}
-            onError={(e) => {
-              e.currentTarget.onerror = null;
-              e.currentTarget.src = fallback;
-            }}
-            className="w-[44px] h-[56px] sm:w-[56px] sm:h-[72px] object-contain drop-shadow cursor-pointer hover:scale-[1.03] transition-transform"
-            onClick={() =>
-              navigate("/Player_Analytics/Individual", {
-                state: { selectedPlayer: p.Name },
-              })
-            }
-            alt={p.web_name}
-            role="button"
-          />
-
-          <button
-            onClick={() => toggleBan(p.Name)}
-            className="gold-ring absolute top-0.5 right-0 bg-black/70 p-0.5 rounded-full hover:bg-black/90"
-            aria-label={`Toggle unwanted for ${p.web_name}`}
-          >
-            <X
-              size={9}
-              className="lucide-icon"
-              style={{ color: bannedList.includes(p.Name) ? "#fb7185" : PALETTE.gold }}
+          <div className="relative">
+            <img
+              src={p.photo}
+              onError={(e) => {
+                e.currentTarget.onerror = null;
+                e.currentTarget.src = fallback;
+              }}
+              className={`object-contain drop-shadow cursor-pointer transition-transform hover:scale-[1.07] ${
+                isBench
+                  ? "w-[44px] h-[44px] sm:w-[52px] sm:h-[50px]"
+                  : "w-[45px] h-[55px] sm:w-[58px] sm:h-[62px]"
+              }`}
+              onClick={() =>
+                navigate("/Player_Analytics/Individual", {
+                  state: { selectedPlayer: p.Name },
+                })
+              }
+              alt={p.web_name}
+              role="button"
             />
-          </button>
 
-          <div className="mt-1 text-[10px] sm:text-xs leading-tight w-[48px] sm:w-[64px] truncate bg-gray-100/90 rounded-full text-black/95 px-1 py-0.5 mx-auto">
+            <button
+              onClick={() => toggleBan(p.Name)}
+              className="gold-ring absolute top-0 right-0 translate-x-[2px] -translate-y-[2px] bg-black/80 p-[3px] rounded-full hover:bg-black"
+              aria-label={`Toggle unwanted for ${p.web_name}`}
+            >
+              <X
+                size={8}
+                className="lucide-icon"
+                style={{
+                  color: bannedList.includes(p.Name) ? "#fb7185" : PALETTE.gold,
+                }}
+              />
+            </button>
+          </div>
+
+          <div
+            className={`mt-1 truncate rounded-full bg-gray-100/90 text-black/95 mx-auto ${
+              isBench
+                ? "w-[56px] sm:w-[64px] text-[9px] sm:text-[10px] px-1 py-[3px]"
+                : "w-[58px] sm:w-[68px] text-[9px] sm:text-[11px] px-1.5 py-[3px]"
+            }`}
+          >
             {p.web_name}
           </div>
         </div>

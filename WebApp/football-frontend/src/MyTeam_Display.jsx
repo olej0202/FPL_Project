@@ -6,11 +6,7 @@ import React, {
   useCallback,
   useRef,
 } from "react";
-import teamShort from "./utils/team_short"; // adjust path if needed
-import { useAdjustmentData } from "./Contexts/AdjustmentsContext";
-
 import { useLocation } from "react-router-dom";
-
 import {
   LineChart,
   Line,
@@ -31,7 +27,12 @@ import {
   ArrowLeftRight,
   MousePointerClick,
   Hand,
+  DollarSign,
+  Sparkles,
 } from "lucide-react";
+
+import teamShort from "./utils/team_short";
+import { useAdjustmentData } from "./Contexts/AdjustmentsContext";
 import { useMyteamData } from "./Contexts/MyTeamContext";
 import { useStatsData } from "./Contexts/StatsContext";
 import pitch from "./assets/Pitch3.png";
@@ -41,9 +42,37 @@ const PALETTE = {
   gold: "#B8860B",
   black: "#000000",
   beige: "#f7ead6",
+  card: "rgba(8,8,8,0.88)",
+  cardSoft: "rgba(18,18,18,0.78)",
 };
 
-// --- Opponent formatting helpers (teamShort mapping + DGW support) ---
+const pageBg = {
+  background: `radial-gradient(circle at top, ${PALETTE.red} 0%, #140404 28%, ${PALETTE.black} 62%, #000 100%)`,
+  color: PALETTE.beige,
+  fontFamily:
+    "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+};
+
+const glassCard = {
+  border: `1px solid rgba(184,134,11,0.35)`,
+  background: "linear-gradient(145deg, rgba(12,12,12,0.96), rgba(28,12,12,0.88))",
+  boxShadow:
+    "0 20px 45px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.03)",
+  backdropFilter: "blur(12px)",
+};
+
+const softCard = {
+  border: "1px solid rgba(255,255,255,0.08)",
+  background: "linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01))",
+  boxShadow: "0 10px 24px rgba(0,0,0,0.28)",
+};
+
+const inputStyle = {
+  border: "1px solid rgba(248,250,252,0.14)",
+  backgroundColor: "rgba(0,0,0,0.62)",
+  color: PALETTE.beige,
+};
+
 const normalizeTeamKey = (s) =>
   String(s || "")
     .trim()
@@ -53,32 +82,27 @@ const normalizeTeamKey = (s) =>
 const getTeamShort = (teamNameOrCode) => {
   if (!teamNameOrCode) return null;
 
-  // If it's already a short code like "ARS", keep it
   const raw = String(teamNameOrCode).trim();
   if (/^[A-Za-z]{2,4}$/.test(raw)) return raw.toUpperCase();
 
-  // Direct match (common case)
   if (teamShort?.[raw]) return String(teamShort[raw]).toUpperCase();
 
-  // Case-insensitive match against keys
   const target = normalizeTeamKey(raw);
   const key = Object.keys(teamShort || {}).find(
     (k) => normalizeTeamKey(k) === target
   );
-  if (key) return String(teamShort[key]).toUpperCase();
 
+  if (key) return String(teamShort[key]).toUpperCase();
   return null;
 };
 
-// Returns { opp1, opp2, display } where display is "OPP1" or "OPP1/OPP2"
 const formatOpponent = (opponentValue) => {
-  if (!opponentValue) return { opp1: "N/A", opp2: null, display: "N/A" };
+  if (!opponentValue) {
+    return { opp1: "N/A", opp2: null, display: "N/A" };
+  }
 
-  // If API ever gives an array for DGW
   const partsFromArray = Array.isArray(opponentValue) ? opponentValue : null;
 
-  // Otherwise parse a string that might contain 2 opponents
-  // Handles: "Team A / Team B", "Team A & Team B", "Team A, Team B", "Team A; Team B", "Team A and Team B"
   const partsFromString =
     partsFromArray ||
     String(opponentValue)
@@ -100,8 +124,6 @@ const formatOpponent = (opponentValue) => {
   };
 };
 
-// Compute default 11 starters given a squad and predictions
-// respecting: exactly 1 GKP, at least 3 DEF, 2 MID, 1 FWD
 function computeDefaultStartersIndices(squad, gw, playersData) {
   if (!Array.isArray(squad) || squad.length === 0) return [];
 
@@ -112,13 +134,19 @@ function computeDefaultStartersIndices(squad, gw, playersData) {
     const pts = prediction?.Points_prediction
       ? Number(prediction.Points_prediction)
       : 0;
-    return { idx, pos: player.position, pts };
+
+    return {
+      idx,
+      pos: player.position,
+      pts,
+    };
   });
 
   const byPos = { GKP: [], DEF: [], MID: [], FWD: [] };
   metadata.forEach((m) => {
     if (byPos[m.pos]) byPos[m.pos].push(m);
   });
+
   Object.values(byPos).forEach((arr) => arr.sort((a, b) => b.pts - a.pts));
 
   const chosen = new Set();
@@ -133,17 +161,15 @@ function computeDefaultStartersIndices(squad, gw, playersData) {
     }
   };
 
-  // Minimum formation
   pickFrom(byPos.GKP, 1);
   pickFrom(byPos.DEF, 3);
   pickFrom(byPos.MID, 2);
   pickFrom(byPos.FWD, 1);
 
-  // Count positions currently chosen
-  let gkp = 0,
-    def = 0,
-    mid = 0,
-    fwd = 0;
+  let gkp = 0;
+  let def = 0;
+  let mid = 0;
+  let fwd = 0;
 
   chosen.forEach((idx) => {
     const pos = metadata.find((m) => m.idx === idx)?.pos;
@@ -153,14 +179,14 @@ function computeDefaultStartersIndices(squad, gw, playersData) {
     else if (pos === "FWD") fwd++;
   });
 
-  // Fill remaining by highest predicted points, but never >1 GKP
   const remaining = metadata
     .filter((m) => !chosen.has(m.idx))
     .sort((a, b) => b.pts - a.pts);
 
   for (const m of remaining) {
     if (chosen.size >= maxStarters) break;
-    if (m.pos === "GKP" && gkp >= 1) continue; // only 1 GKP allowed
+    if (m.pos === "GKP" && gkp >= 1) continue;
+
     chosen.add(m.idx);
     if (m.pos === "GKP") gkp++;
     else if (m.pos === "DEF") def++;
@@ -175,19 +201,12 @@ export default function MyTeamOverview() {
   const { teamId, setTeamId, teamData, fetchMyTeam, teamLoading } =
     useMyteamData();
   const { fetchIfNeeded, PlayersData } = useStatsData();
-
   const { Playerdata, dataVersion } = useAdjustmentData();
-
-  // "ai" = current/default model (PlayersData Points_prediction)
-  // "statistical" = use Playerdata.current calc_points
-  const [modelType, setModelType] = useState("ai");
-
   const location = useLocation();
 
-  // ✅ transfer-apply control (prevents double-apply, but allows new applyId)
+  const [modelType, setModelType] = useState("ai");
   const appliedOptimizedRef = useRef(false);
   const lastApplyIdRef = useRef(null);
-
   const applyId = location.state?.applyId;
 
   const hasStatisticalData = useMemo(() => {
@@ -208,38 +227,28 @@ export default function MyTeamOverview() {
   const [showRankChart, setShowRankChart] = useState(false);
   const [showPredChart, setShowPredChart] = useState(false);
   const [currentGW, setCurrentGW] = useState(null);
-
   const [playersData, setPlayersData] = useState([]);
   const [playersLoading, setPlayersLoading] = useState(true);
 
-  // Per-GW 15-man squads
   const [gwSquads, setGwSquads] = useState({});
-  // Per-GW starter indices
   const [gwStarters, setGwStarters] = useState({});
 
-  // Transfer & money tracking
   const [bankByGw, setBankByGw] = useState({});
   const [freeTransfersByGw, setFreeTransfersByGw] = useState({});
   const [transferLog, setTransferLog] = useState([]);
 
-  // Drag / tap state
-  const [dragInfo, setDragInfo] = useState(null); // desktop drag
-  const [selectedBenchIndex, setSelectedBenchIndex] = useState(null); // mobile tap
+  const [dragInfo, setDragInfo] = useState(null);
+  const [selectedBenchIndex, setSelectedBenchIndex] = useState(null);
 
-  // Player profile overlay
   const [profilePlayer, setProfilePlayer] = useState(null);
   const [replacementMaxValue, setReplacementMaxValue] = useState(null);
   const [replacementSearch, setReplacementSearch] = useState("");
-
-  // NEW: smoother comparison UX inside overlay
   const [compareCandidate, setCompareCandidate] = useState(null);
 
-  // Keep localTeamId in sync with context teamId
   useEffect(() => {
     if (teamId) setLocalTeamId(teamId);
   }, [teamId]);
 
-  // ---------- HYDRATE STATE FROM LOCALSTORAGE ----------
   useEffect(() => {
     if (!teamId) return;
     if (typeof window === "undefined") return;
@@ -262,10 +271,7 @@ export default function MyTeamOverview() {
       if (parsed.bankByGw && typeof parsed.bankByGw === "object") {
         setBankByGw(parsed.bankByGw);
       }
-      if (
-        parsed.freeTransfersByGw &&
-        typeof parsed.freeTransfersByGw === "object"
-      ) {
+      if (parsed.freeTransfersByGw && typeof parsed.freeTransfersByGw === "object") {
         setFreeTransfersByGw(parsed.freeTransfersByGw);
       }
       if (Array.isArray(parsed.transferLog)) {
@@ -276,7 +282,6 @@ export default function MyTeamOverview() {
     }
   }, [teamId]);
 
-  // ---------- FETCH PLAYERS DATA ----------
   useEffect(() => {
     const loadPlayers = async () => {
       setPlayersLoading(true);
@@ -287,12 +292,13 @@ export default function MyTeamOverview() {
       } else {
         setPlayersData([]);
       }
+
       setPlayersLoading(false);
     };
+
     loadPlayers();
   }, [fetchIfNeeded, PlayersData]);
 
-  // ---------- FETCH TEAM DATA WHEN teamId CHANGES (NO LOOP) ----------
   useEffect(() => {
     if (teamId && !teamData) {
       fetchMyTeam();
@@ -300,20 +306,17 @@ export default function MyTeamOverview() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [teamId]);
 
-  // ---------- AVAILABLE GWs & CURRENT GW ----------
   const availableGWs = useMemo(() => {
     if (!playersData || playersData.length === 0) return [];
-    const gws = [
+    return [
       ...new Set(
         playersData
           .map((p) => Number(p.GW))
           .filter((gw) => Number.isFinite(gw))
       ),
     ].sort((a, b) => a - b);
-    return gws;
   }, [playersData]);
 
-  const minAvailableGW = availableGWs.length > 0 ? availableGWs[0] : null;
   const maxAvailableGW =
     availableGWs.length > 0 ? availableGWs[availableGWs.length - 1] : null;
 
@@ -323,7 +326,6 @@ export default function MyTeamOverview() {
     }
   }, [availableGWs, currentGW]);
 
-  // Ensure base squad for current GW
   useEffect(() => {
     if (!teamData || !Array.isArray(teamData)) return;
     if (currentGW == null) return;
@@ -350,11 +352,14 @@ export default function MyTeamOverview() {
     (gw) => {
       const squad = getSquadForGw(gw);
       if (!squad.length) return [];
+
       if (!playersData.length) {
         return squad.slice(0, 11).map((_, idx) => idx);
       }
+
       const stored = gwStarters[gw];
       if (stored && stored.length) return stored;
+
       return computeDefaultStartersIndices(squad, gw, playersData);
     },
     [getSquadForGw, playersData, gwStarters]
@@ -372,19 +377,16 @@ export default function MyTeamOverview() {
     [playersData]
   );
 
-  // ---------- CURRENT SQUAD ----------
   const currentSquad = useMemo(() => {
     if (currentGW == null || !teamData) return [];
     return getSquadForGw(currentGW);
   }, [currentGW, getSquadForGw, teamData]);
 
-  // To avoid suggested players already in squad
   const currentSquadNames = useMemo(
     () => new Set(currentSquad.map((p) => p.name)),
     [currentSquad]
   );
 
-  // ---------- RANK PROGRESS CHART ----------
   const rankChartData = useMemo(() => {
     if (!teamData || !teamData[0]?.rank_progress) return [];
     return teamData[0].rank_progress.map((rank, index) => ({
@@ -393,7 +395,6 @@ export default function MyTeamOverview() {
     }));
   }, [teamData]);
 
-  // ---------- BASIC TEAM INFO ----------
   const teamInfo = teamData?.[0] || {};
   const baseMoneyInBank = teamInfo.money_in_bank_m ?? 0;
   const baseFreeTransfers = (teamInfo.saved_transfers ?? 0) + 1;
@@ -407,7 +408,6 @@ export default function MyTeamOverview() {
     (playerName, gw) => {
       if (!playerName || gw == null) return 0;
 
-      // Statistical model: Playerdata.current calc_points per GW (do not sum DGW rows)
       if (modelType === "statistical" && hasStatisticalData) {
         const arr = Playerdata?.current;
         if (!Array.isArray(arr) || arr.length === 0) return 0;
@@ -415,25 +415,23 @@ export default function MyTeamOverview() {
         const rows = arr.filter(
           (p) => p?.name === playerName && Number(p.GW) === Number(gw)
         );
-        const first = rows[0]; // IMPORTANT: do not sum
+        const first = rows[0];
         const v = first?.calc_points;
+
         return v != null && Number.isFinite(Number(v)) ? Number(v) : 0;
       }
 
-      // Default model: PlayersData Points_prediction (do not sum DGW rows)
       const rows = playersData.filter(
         (p) => p?.name === playerName && Number(p.GW) === Number(gw)
       );
-      const first = rows[0]; // IMPORTANT: do not sum
+      const first = rows[0];
       const v = first?.Points_prediction;
+
       return v != null && Number.isFinite(Number(v)) ? Number(v) : 0;
     },
     [modelType, hasStatisticalData, Playerdata, playersData]
   );
 
-  // Make sure free transfers for current GW exist following the rule:
-  // FTs(gw0) = baseFreeTransfers
-  // FTs(gw)  = max(1, FTs(prevGw) + 1)
   useEffect(() => {
     if (!teamData || currentGW == null || !availableGWs.length) return;
 
@@ -442,8 +440,8 @@ export default function MyTeamOverview() {
 
       const sorted = availableGWs;
       const idx = sorted.indexOf(currentGW);
-      let val;
 
+      let val;
       if (idx <= 0) {
         val = baseFreeTransfers;
       } else {
@@ -464,27 +462,22 @@ export default function MyTeamOverview() {
       ? freeTransfersByGw[currentGW] ?? baseFreeTransfers
       : baseFreeTransfers;
 
-  // ---------- MERGE SQUAD WITH PREDICTIONS (per GW) ----------
   const playersWithPredictions = useMemo(() => {
-    if (!currentSquad || currentSquad.length === 0 || currentGW === null)
-      return [];
+    if (!currentSquad || currentSquad.length === 0 || currentGW === null) return [];
 
-    // Need at least one source of predictions depending on model
     const hasAi = Array.isArray(playersData) && playersData.length > 0;
     const hasStat = modelType === "statistical" && hasStatisticalData;
-
     if (!hasAi && !hasStat) return [];
 
     return currentSquad.map((player, squadIndex) => {
       const rows = (playersData || []).filter(
         (p) => p.name === player.name && Number(p.GW) === Number(currentGW)
       );
-      const prediction = rows[0];
 
+      const prediction = rows[0];
       const oppList = Array.from(
         new Set(rows.map((r) => r.opponent_name).filter(Boolean))
       );
-
       const oppFmt = formatOpponent(
         oppList.length ? oppList : prediction?.opponent_name || "N/A"
       );
@@ -494,8 +487,7 @@ export default function MyTeamOverview() {
         selectedPct = Number(prediction.selected) * 100;
       }
 
-      const photo =
-        prediction?.photo ?? prediction?.photo_url ?? player.photo ?? null;
+      const photo = prediction?.photo ?? prediction?.photo_url ?? player.photo ?? null;
 
       return {
         ...player,
@@ -509,7 +501,8 @@ export default function MyTeamOverview() {
         opponent_opp2: oppFmt.opp2,
         opponent_display: oppFmt.display,
         selected_pct: selectedPct,
-        model_value: prediction?.value != null ? Number(prediction.value) : null,
+        model_value:
+          prediction?.value != null ? Number(prediction.value) : null,
       };
     });
   }, [
@@ -521,7 +514,6 @@ export default function MyTeamOverview() {
     getPredPoints,
   ]);
 
-  // ---------- PREDICTED POINTS (XI only, per GW) ----------
   const gwPointsMap = useMemo(() => {
     if (!teamData || !availableGWs.length) return {};
 
@@ -532,6 +524,7 @@ export default function MyTeamOverview() {
         map[gw] = 0;
         return;
       }
+
       const startersIdx = getStarterIndicesForGw(gw);
       let sum = 0;
 
@@ -572,7 +565,13 @@ export default function MyTeamOverview() {
   const currentGwPoints =
     currentGW != null ? gwPointsMap[currentGW] || 0 : null;
 
-  // ---------- SWAP: BENCH -> FIELD (same team players) ----------
+  const transfersUsedThisGw = useMemo(() => {
+    if (currentGW == null) return 0;
+    return transferLog.filter((t) => Number(t.gw) === Number(currentGW)).length;
+  }, [transferLog, currentGW]);
+
+  const freeTransfersBeforeUse = currentFreeTransfers + transfersUsedThisGw;
+
   const handleBenchToFieldSwap = useCallback(
     (gw, benchIndex, starterIndex) => {
       const squad = getSquadForGw(gw);
@@ -581,19 +580,16 @@ export default function MyTeamOverview() {
       const currentStarterIndices = getStarterIndicesForGw(gw);
       const starterSet = new Set(currentStarterIndices);
 
-      if (!starterSet.has(starterIndex) || starterSet.has(benchIndex)) {
-        return;
-      }
+      if (!starterSet.has(starterIndex) || starterSet.has(benchIndex)) return;
 
       const newSet = new Set(starterSet);
       newSet.delete(starterIndex);
       newSet.add(benchIndex);
 
-      // Check formation constraints: exactly 1 GKP, min 3 DEF, 2 MID, 1 FWD
-      let gkp = 0,
-        def = 0,
-        mid = 0,
-        fwd = 0;
+      let gkp = 0;
+      let def = 0;
+      let mid = 0;
+      let fwd = 0;
 
       newSet.forEach((idx) => {
         const pos = squad[idx]?.position;
@@ -603,9 +599,7 @@ export default function MyTeamOverview() {
         else if (pos === "FWD") fwd++;
       });
 
-      if (gkp !== 1 || def < 3 || mid < 2 || fwd < 1) {
-        return;
-      }
+      if (gkp !== 1 || def < 3 || mid < 2 || fwd < 1) return;
 
       setGwStarters((prev) => ({
         ...prev,
@@ -615,7 +609,6 @@ export default function MyTeamOverview() {
     [getSquadForGw, getStarterIndicesForGw]
   );
 
-  // ---------- HELPER: RECOMPUTE STATE FROM TRANSFER LOG ----------
   const recomputeFromTransfers = useCallback(
     (transfers) => {
       if (!teamData || !Array.isArray(teamData) || !availableGWs.length) {
@@ -630,13 +623,11 @@ export default function MyTeamOverview() {
         (a, b) => a.gw - b.gw || a.createdAt - b.createdAt
       );
 
-      // Start squads from original teamData for all GWs
       const squads = {};
       availableGWs.forEach((gw) => {
         squads[gw] = teamData.map((p) => ({ ...p }));
       });
 
-      // Apply transfers to squads
       sortedTransfers.forEach((t) => {
         availableGWs.forEach((gw) => {
           if (gw < t.gw) return;
@@ -644,9 +635,9 @@ export default function MyTeamOverview() {
           if (!base || !base[t.squadIndex]) return;
 
           const template = base[t.squadIndex];
-
           const incomingPrice = t.incomingPrice;
-          const newRow = {
+
+          base[t.squadIndex] = {
             ...template,
             name: t.suggestion.name,
             web_name: t.suggestion.web_name,
@@ -670,12 +661,9 @@ export default function MyTeamOverview() {
                 : template.team_code,
             selling_price_m: incomingPrice,
           };
-
-          base[t.squadIndex] = newRow;
         });
       });
 
-      // Free transfers per GW following rule and subtracting transfers
       const freeTransfers = {};
       availableGWs.forEach((gw, idx) => {
         const prevGw = idx > 0 ? availableGWs[idx - 1] : null;
@@ -685,13 +673,12 @@ export default function MyTeamOverview() {
             : Math.max(1, (freeTransfers[prevGw] ?? baseFreeTransfers) + 1);
 
         const transfersInGw = sortedTransfers.filter((t) => t.gw === gw).length;
-
         freeTransfers[gw] = Math.max(0, baseFT - transfersInGw);
       });
 
-      // Bank per GW: baseMoneyInBank + sum of deltas up to that GW
       const bankByGwNew = {};
       let runningBank = baseMoneyInBank;
+
       availableGWs.forEach((gw) => {
         const transfersInGw = sortedTransfers.filter((t) => t.gw === gw);
         transfersInGw.forEach((t) => {
@@ -700,7 +687,11 @@ export default function MyTeamOverview() {
         bankByGwNew[gw] = runningBank;
       });
 
-      return { squads, bankByGw: bankByGwNew, freeTransfers };
+      return {
+        squads,
+        bankByGw: bankByGwNew,
+        freeTransfers,
+      };
     },
     [
       teamData,
@@ -713,27 +704,17 @@ export default function MyTeamOverview() {
     ]
   );
 
-  // ===========================================================================
-  // ✅ IMPORTANT: When navigating to this page WITH optimized transfers, we want:
-  //   - ignore old localStorage planner cache
-  //   - re-apply transfers exactly once per applyId
-  //   - only apply when teamData + playersData + availableGWs are ready
-  // ===========================================================================
-
-  // 1) If a NEW applyId arrives, clear planner cache + reset in-memory planner state
   useEffect(() => {
     if (!teamId) return;
     if (!applyId) return;
-
     if (lastApplyIdRef.current === applyId) return;
+
     lastApplyIdRef.current = applyId;
 
-    // clear persisted planner cache so stale state doesn't flash
     try {
       localStorage.removeItem(`myteam_planner_state_${teamId}`);
     } catch {}
 
-    // reset in-memory planner state
     setGwSquads({});
     setGwStarters({});
     setBankByGw({});
@@ -746,27 +727,20 @@ export default function MyTeamOverview() {
     setReplacementSearch("");
     setReplacementMaxValue(null);
 
-    // allow apply effect to run for this applyId
     appliedOptimizedRef.current = false;
-
-    // optional: refresh server data snapshot
     fetchMyTeam();
   }, [applyId, teamId, fetchMyTeam]);
 
-  // 2) Apply optimizedTransfers once (per applyId), when prerequisites are ready
   useEffect(() => {
     const incoming = location.state?.optimizedTransfers;
 
     if (!applyId) return;
     if (!incoming || !Array.isArray(incoming) || incoming.length === 0) return;
-
-    // wait for data readiness so incoming prices won't become 0
     if (!teamData || !Array.isArray(teamData) || teamData.length === 0) return;
     if (!playersData || playersData.length === 0) return;
     if (!availableGWs || availableGWs.length === 0) return;
-
-    // prevent double-apply on re-render for same applyId
     if (appliedOptimizedRef.current) return;
+
     appliedOptimizedRef.current = true;
 
     const newTransfers = [];
@@ -775,13 +749,11 @@ export default function MyTeamOverview() {
       const gw = Number(t.gw);
       if (!Number.isFinite(gw)) return;
 
-      // Find which squad slot is being replaced (by name match in that GW squad)
       const squadForGw = getSquadForGw(gw);
       const idx = squadForGw.findIndex((p) => p?.name === t.fromName);
       if (idx === -1) return;
 
       const template = squadForGw[idx];
-
       const sellingPrice =
         template?.selling_price_m != null
           ? Number(template.selling_price_m)
@@ -789,7 +761,6 @@ export default function MyTeamOverview() {
           ? Number(template.now_cost) / 10
           : 0;
 
-      // allow incoming payload to override price if you pass it from optimizer
       const incomingPrice =
         (t.toPrice != null ? Number(t.toPrice) : null) ??
         getPlayerPrice(t.toName, gw) ??
@@ -819,20 +790,21 @@ export default function MyTeamOverview() {
 
     if (newTransfers.length === 0) return;
 
-    // IMPORTANT: use functional update so we don't rely on stale transferLog
     setTransferLog((prev) => {
       const updatedTransfers = [...prev, ...newTransfers].sort(
         (a, b) => a.gw - b.gw || a.createdAt - b.createdAt
       );
 
-      const { squads, bankByGw: newBankByGw, freeTransfers } =
-        recomputeFromTransfers(updatedTransfers);
+      const {
+        squads,
+        bankByGw: newBankByGw,
+        freeTransfers,
+      } = recomputeFromTransfers(updatedTransfers);
 
       setGwSquads(squads);
       setBankByGw(newBankByGw);
       setFreeTransfersByGw(freeTransfers);
 
-      // jump planner to earliest GW in payload
       const minGw = Math.min(...newTransfers.map((x) => x.gw));
       if (Number.isFinite(minGw)) setCurrentGW(minGw);
 
@@ -849,7 +821,6 @@ export default function MyTeamOverview() {
     recomputeFromTransfers,
   ]);
 
-  // ---------- REPLACE WITH SUGGESTED PLAYER (PlayersData) ----------
   const handleReplaceWithSuggested = (suggestion) => {
     if (!profilePlayer || currentGW == null || !teamData) return;
     if (!availableGWs.length) return;
@@ -857,7 +828,6 @@ export default function MyTeamOverview() {
     const squadIndex = profilePlayer.squadIndex;
     if (squadIndex == null) return;
 
-    // Determine outgoing player row from current GW snapshot
     const currentBase = getSquadForGw(currentGW);
     const template =
       (currentBase && currentBase[squadIndex]) ||
@@ -881,7 +851,9 @@ export default function MyTeamOverview() {
         : 0;
 
     const newTransfer = {
-      id: Date.now().toString(36) + "-" + Math.random().toString(36).slice(2),
+      id: `${Date.now().toString(36)}-${Math.random()
+        .toString(36)
+        .slice(2)}`,
       gw: currentGW,
       squadIndex,
       fromName: template.web_name || template.name,
@@ -902,8 +874,11 @@ export default function MyTeamOverview() {
     };
 
     const updatedTransfers = [...transferLog, newTransfer];
-    const { squads, bankByGw: newBankByGw, freeTransfers } =
-      recomputeFromTransfers(updatedTransfers);
+    const {
+      squads,
+      bankByGw: newBankByGw,
+      freeTransfers,
+    } = recomputeFromTransfers(updatedTransfers);
 
     setTransferLog(updatedTransfers);
     setGwSquads(squads);
@@ -913,11 +888,13 @@ export default function MyTeamOverview() {
     setCompareCandidate(null);
   };
 
-  // ---------- UNDO TRANSFER ----------
   const handleUndoTransfer = (id) => {
     const updatedTransfers = transferLog.filter((t) => t.id !== id);
-    const { squads, bankByGw: newBankByGw, freeTransfers } =
-      recomputeFromTransfers(updatedTransfers);
+    const {
+      squads,
+      bankByGw: newBankByGw,
+      freeTransfers,
+    } = recomputeFromTransfers(updatedTransfers);
 
     setTransferLog(updatedTransfers);
     setGwSquads(squads);
@@ -925,7 +902,6 @@ export default function MyTeamOverview() {
     setFreeTransfersByGw(freeTransfers);
   };
 
-  // ---------- PERSIST STATE TO LOCALSTORAGE ----------
   useEffect(() => {
     if (!teamId) return;
     if (typeof window === "undefined") return;
@@ -957,14 +933,12 @@ export default function MyTeamOverview() {
     transferLog,
   ]);
 
-  // ---------- NAV + TEAM ID ----------
   const handleSetTeamId = () => {
     if (!localTeamId) {
       alert("Please enter a Team ID");
       return;
     }
 
-    // reset local GW state when switching / reloading team
     setGwSquads({});
     setGwStarters({});
     setCurrentGW(null);
@@ -977,12 +951,10 @@ export default function MyTeamOverview() {
     setReplacementSearch("");
     setReplacementMaxValue(null);
 
-    // also reset apply mechanism (manual load should not be blocked)
     appliedOptimizedRef.current = false;
     lastApplyIdRef.current = null;
 
     if (localTeamId !== teamId) {
-      // new team id → clear any cached planner state for that team
       if (typeof window !== "undefined") {
         try {
           localStorage.removeItem(`myteam_planner_state_${localTeamId}`);
@@ -990,10 +962,8 @@ export default function MyTeamOverview() {
           console.error("Failed to clear planner state:", err);
         }
       }
-      // effect will trigger fetch
       setTeamId(localTeamId);
     } else {
-      // same team id → manual refetch without touching teamId
       fetchMyTeam();
     }
   };
@@ -1018,10 +988,8 @@ export default function MyTeamOverview() {
     }
   };
 
-  // ---------- PROFILE META: total predicted points from currentGW → maxGW ----------
   const profileMeta = useMemo(() => {
-    if (!profilePlayer || currentGW == null || maxAvailableGW == null)
-      return null;
+    if (!profilePlayer || currentGW == null || maxAvailableGW == null) return null;
 
     const gwSet = new Set(
       availableGWs.filter((gw) => gw >= currentGW && gw <= maxAvailableGW)
@@ -1034,7 +1002,6 @@ export default function MyTeamOverview() {
       totalPred += getPredPoints(profilePlayer.name, gw);
     });
 
-    // keep your selection% logic from PlayersData if you want
     if (Array.isArray(playersData)) {
       for (const p of playersData) {
         if (p.name !== profilePlayer.name) continue;
@@ -1057,7 +1024,11 @@ export default function MyTeamOverview() {
     const nowCost =
       profilePlayer.now_cost != null ? Number(profilePlayer.now_cost) / 10 : null;
 
-    return { selPct, nowCost, totalPred };
+    return {
+      selPct,
+      nowCost,
+      totalPred,
+    };
   }, [
     profilePlayer,
     playersData,
@@ -1067,16 +1038,13 @@ export default function MyTeamOverview() {
     getPredPoints,
   ]);
 
-  // --- Pred points per GW for a player (do NOT sum multiple rows in same GW) ---
   const getGwPointsForPlayer = useCallback(
     (playerName) => {
       const map = {};
       if (!playerName) return map;
-
       availableGWs.forEach((gw) => {
         map[gw] = getPredPoints(playerName, gw);
       });
-
       return map;
     },
     [availableGWs, getPredPoints]
@@ -1088,7 +1056,6 @@ export default function MyTeamOverview() {
     const horizon = availableGWs.filter(
       (gw) => gw >= currentGW && gw <= maxAvailableGW
     );
-
     const curMap = getGwPointsForPlayer(profilePlayer.name);
     const candMap = compareCandidate?.name
       ? getGwPointsForPlayer(compareCandidate.name)
@@ -1108,7 +1075,6 @@ export default function MyTeamOverview() {
     getGwPointsForPlayer,
   ]);
 
-  // ---------- REPLACEMENTS ----------
   const replacementsMeta = useMemo(() => {
     if (
       !profilePlayer ||
@@ -1126,11 +1092,13 @@ export default function MyTeamOverview() {
     const samePosRows = playersData.filter(
       (p) => p.position === profilePlayer.position
     );
+
     if (!samePosRows.length) {
       return { minVal: 0, maxVal: 0, threshold: 0, list: [] };
     }
 
     const map = {};
+
     samePosRows.forEach((p) => {
       if (currentSquadNames.has(p.name) && p.name !== profilePlayer.name) return;
 
@@ -1164,8 +1132,9 @@ export default function MyTeamOverview() {
     });
 
     const aggregated = Object.values(map);
-    if (!aggregated.length)
+    if (!aggregated.length) {
       return { minVal: 0, maxVal: 0, threshold: 0, list: [] };
+    }
 
     const prices = aggregated.map((a) => a.price || 0);
     const minVal = Math.floor(Math.min(...prices));
@@ -1188,7 +1157,6 @@ export default function MyTeamOverview() {
     getPredPoints,
   ]);
 
-  // Initialize slider + reset search + compare when profilePlayer changes
   useEffect(() => {
     if (
       !profilePlayer ||
@@ -1200,12 +1168,12 @@ export default function MyTeamOverview() {
       setCompareCandidate(null);
       return;
     }
+
     setReplacementMaxValue(replacementsMeta.maxVal);
     setReplacementSearch("");
     setCompareCandidate(null);
   }, [profilePlayer, playersData, replacementsMeta.maxVal, replacementsMeta.minVal]);
 
-  // Derived: list actually shown in UI
   const displayReplacements = useMemo(() => {
     const base = replacementsMeta.list || [];
     if (!base.length) return [];
@@ -1234,20 +1202,20 @@ export default function MyTeamOverview() {
     setCompareCandidate(null);
   };
 
-  // ✅ Swap-mode hooks MUST be before early returns
   const selectedBenchPlayer = useMemo(() => {
     if (selectedBenchIndex == null) return null;
     return (
-      playersWithPredictions.find((p) => p.squadIndex === selectedBenchIndex) ||
-      null
+      playersWithPredictions.find((p) => p.squadIndex === selectedBenchIndex) || null
     );
   }, [selectedBenchIndex, playersWithPredictions]);
 
   const swapHintText = useMemo(() => {
-    if (dragInfo && dragInfo.type === "bench")
+    if (dragInfo && dragInfo.type === "bench") {
       return "Dragging bench player… drop on a starter to swap";
-    if (selectedBenchPlayer)
+    }
+    if (selectedBenchPlayer) {
       return `Swap mode: tap a starter to swap with ${selectedBenchPlayer.web_name}`;
+    }
     return null;
   }, [dragInfo, selectedBenchPlayer]);
 
@@ -1258,48 +1226,34 @@ export default function MyTeamOverview() {
     setDragInfo(null);
   }, []);
 
-  // ---------- EARLY RETURNS ----------
   if (!teamId) {
     return (
-      <div
-        className="min-h-screen flex items-center justify-center px-4"
-        style={{
-          background: `radial-gradient(circle at top, ${PALETTE.red} 0, ${PALETTE.black} 45%, #000000 100%)`,
-          color: PALETTE.beige,
-          fontFamily:
-            "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-        }}
-      >
+      <div className="min-h-screen flex items-center justify-center px-4" style={pageBg}>
         <div
-          className="w-full max-w-md rounded-2xl p-5 shadow-2xl"
-          style={{
-            border: `1px solid ${PALETTE.gold}`,
-            background:
-              "linear-gradient(145deg, rgba(0,0,0,0.96), rgba(0,0,0,0.9))",
-          }}
+          className="w-full max-w-md rounded-3xl p-5 sm:p-6 shadow-2xl"
+          style={glassCard}
         >
           <h1 className="text-xl sm:text-2xl font-bold mb-3 text-center">
             Enter Your Team ID
           </h1>
+
           <input
             type="number"
             value={localTeamId}
             onChange={(e) => setLocalTeamId(e.target.value)}
             placeholder="Team ID"
-            className="w-full h-10 px-3 rounded-md text-sm mb-3"
-            style={{
-              border: "1px solid rgba(248, 250, 252, 0.18)",
-              backgroundColor: "rgba(0,0,0,0.75)",
-              color: PALETTE.beige,
-            }}
+            className="w-full h-11 px-3 rounded-xl text-sm mb-3"
+            style={inputStyle}
           />
+
           <button
             onClick={handleSetTeamId}
-            className="w-full h-10 rounded-full font-semibold text-sm transition"
+            className="w-full h-11 rounded-full font-semibold text-sm transition"
             style={{
               border: `1px solid ${PALETTE.gold}`,
               background: `linear-gradient(135deg, ${PALETTE.gold}, #facc15)`,
-              color: "#000000",
+              color: "#000",
+              boxShadow: "0 10px 20px rgba(184,134,11,0.28)",
             }}
           >
             Load Team
@@ -1311,22 +1265,10 @@ export default function MyTeamOverview() {
 
   if (teamLoading || playersLoading) {
     return (
-      <div
-        className="min-h-screen flex items-center justify-center p-6"
-        style={{
-          background: `radial-gradient(circle at top, ${PALETTE.red}, ${PALETTE.black})`,
-          color: PALETTE.beige,
-          fontFamily:
-            "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-        }}
-      >
+      <div className="min-h-screen flex items-center justify-center p-6" style={pageBg}>
         <div
-          className="w-full max-w-md rounded-2xl p-5 shadow-2xl text-center text-sm"
-          style={{
-            border: `1px solid ${PALETTE.gold}`,
-            background:
-              "linear-gradient(145deg, rgba(0,0,0,0.96), rgba(0,0,0,0.9))",
-          }}
+          className="w-full max-w-md rounded-3xl p-5 shadow-2xl text-center text-sm"
+          style={glassCard}
         >
           Loading team and player predictions…
         </div>
@@ -1336,21 +1278,13 @@ export default function MyTeamOverview() {
 
   if (!teamData) {
     return (
-      <div
-        className="min-h-screen flex items-center justify-center p-6"
-        style={{
-          background: `radial-gradient(circle at top, ${PALETTE.red}, ${PALETTE.black})`,
-          color: PALETTE.beige,
-        }}
-      >
+      <div className="min-h-screen flex items-center justify-center p-6" style={pageBg}>
         <div className="text-xl text-center">No team data available</div>
       </div>
     );
   }
 
-  // ---------- SPLIT STARTERS / BENCH FOR CURRENT GW ----------
-  const startersIdx =
-    currentGW != null ? getStarterIndicesForGw(currentGW) : [];
+  const startersIdx = currentGW != null ? getStarterIndicesForGw(currentGW) : [];
   const startersIdxSet = new Set(startersIdx);
 
   const starters = playersWithPredictions.filter((p) =>
@@ -1363,12 +1297,15 @@ export default function MyTeamOverview() {
   const gkStarters = starters
     .filter((p) => p.position === "GKP")
     .sort((a, b) => a.squadIndex - b.squadIndex);
+
   const defStarters = starters
     .filter((p) => p.position === "DEF")
     .sort((a, b) => a.squadIndex - b.squadIndex);
+
   const midStarters = starters
     .filter((p) => p.position === "MID")
     .sort((a, b) => a.squadIndex - b.squadIndex);
+
   const fwdStarters = starters
     .filter((p) => p.position === "FWD")
     .sort((a, b) => a.squadIndex - b.squadIndex);
@@ -1377,48 +1314,51 @@ export default function MyTeamOverview() {
     (a, b) => a.gw - b.gw || a.createdAt - b.createdAt
   );
 
-  // ---------- MAIN LAYOUT ----------
   return (
-    <div
-      className="min-h-screen"
-      style={{
-        background: `radial-gradient(circle at top, ${PALETTE.red} 0, ${PALETTE.black} 45%, #000000 100%)`,
-        color: PALETTE.beige,
-        fontFamily:
-          "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-      }}
-    >
-      <div className="mx-auto max-w-6xl px-4 py-6 sm:py-10">
-        {/* Header */}
-        <header className="mb-6 sm:mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-              My Team Planner
+    <div className="min-h-screen" style={pageBg}>
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+        <header className="mb-6 sm:mb-8 flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4">
+          <div className="min-w-0">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 mb-3">
+              <Sparkles size={14} className="text-amber-300" />
+              <span className="text-[11px] uppercase tracking-[0.2em] text-gray-300">
+                My Team Planner
+              </span>
+            </div>
+
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight">
+              My Team Overview
             </h1>
 
+            <p className="text-sm mt-2 max-w-3xl" style={{ color: "#d1c3a9" }}>
+              Planning tool for your squad, make transfers, and see your squad each GW
+            </p>
+          </div>
+
+          <div className="w-full xl:w-auto flex flex-col lg:flex-row items-stretch lg:items-end gap-3">
             <div className="flex flex-col gap-1 w-full sm:w-[320px]">
               <label
                 className="text-[11px] uppercase tracking-wide"
                 style={{ color: "#e5e7eb" }}
               >
-                Model
+                Predicted Points Model
               </label>
 
-              <div className="flex items-center gap-2 h-9">
+              <div className="flex items-center gap-2 h-10">
                 <button
                   type="button"
                   onClick={() => setModelType("ai")}
-                  className="flex-1 inline-flex items-center justify-center px-3 py-1.5 rounded-md text-xs border transition"
+                  className="flex-1 inline-flex items-center justify-center px-3 py-2 rounded-xl text-xs border transition"
                   style={{
                     border:
                       modelType === "ai"
                         ? `1px solid ${PALETTE.gold}`
-                        : "1px solid rgba(248, 250, 252, 0.18)",
+                        : "1px solid rgba(248,250,252,0.18)",
                     background:
                       modelType === "ai"
                         ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)`
-                        : "rgba(0,0,0,0.75)",
-                    color: modelType === "ai" ? "#000000" : "#e5e7eb",
+                        : "rgba(0,0,0,0.72)",
+                    color: modelType === "ai" ? "#000" : "#e5e7eb",
                   }}
                 >
                   Default model
@@ -1426,24 +1366,26 @@ export default function MyTeamOverview() {
 
                 <button
                   type="button"
-                  onClick={() => hasStatisticalData && setModelType("statistical")}
+                  onClick={() =>
+                    hasStatisticalData && setModelType("statistical")
+                  }
                   disabled={!hasStatisticalData}
-                  className="flex-1 inline-flex items-center justify-center px-3 py-1.5 rounded-md text-xs border transition"
+                  className="flex-1 inline-flex items-center justify-center px-3 py-2 rounded-xl text-xs border transition"
                   style={{
                     border: !hasStatisticalData
                       ? "1px solid #4b5563"
                       : modelType === "statistical"
                       ? `1px solid ${PALETTE.gold}`
-                      : "1px solid rgba(248, 250, 252, 0.18)",
+                      : "1px solid rgba(248,250,252,0.18)",
                     background: !hasStatisticalData
-                      ? "rgba(0,0,0,0.5)"
+                      ? "rgba(0,0,0,0.45)"
                       : modelType === "statistical"
                       ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)`
-                      : "rgba(0,0,0,0.75)",
+                      : "rgba(0,0,0,0.72)",
                     color: !hasStatisticalData
                       ? "#6b7280"
                       : modelType === "statistical"
-                      ? "#000000"
+                      ? "#000"
                       : "#e5e7eb",
                     cursor: !hasStatisticalData ? "not-allowed" : "pointer",
                   }}
@@ -1459,316 +1401,213 @@ export default function MyTeamOverview() {
               )}
             </div>
 
-            <p className="text-xs sm:text-sm mt-1" style={{ color: "#d1c3a9" }}>
-              Swap bench ↔ starters (drag on desktop, tap-tap on mobile). Open
-              player profiles for replacements and quick compare.
-            </p>
-          </div>
+            <div className="flex items-end gap-2 w-full lg:w-auto">
+              <div className="flex-1 lg:flex-none">
+                <label
+                  className="text-[11px] uppercase tracking-wide block mb-1"
+                  style={{ color: "#e5e7eb" }}
+                >
+                  Team ID
+                </label>
+                <input
+                  type="number"
+                  value={localTeamId}
+                  onChange={(e) => setLocalTeamId(e.target.value)}
+                  className="w-full lg:w-[140px] h-10 px-3 rounded-xl text-xs"
+                  style={inputStyle}
+                />
+              </div>
 
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <label
-                className="text-[11px] uppercase tracking-wide"
-                style={{ color: "#e5e7eb" }}
-              >
-                Team ID
-              </label>
-              <input
-                type="number"
-                value={localTeamId}
-                onChange={(e) => setLocalTeamId(e.target.value)}
-                className="flex-1 sm:flex-none h-9 px-3 rounded-md text-xs"
+              <button
+                onClick={handleSetTeamId}
+                className="inline-flex items-center justify-center px-4 h-10 rounded-full text-xs font-semibold"
                 style={{
-                  border: "1px solid rgba(248, 250, 252, 0.18)",
-                  backgroundColor: "rgba(0,0,0,0.75)",
-                  color: PALETTE.beige,
-                  minWidth: "120px",
+                  border: `1px solid ${PALETTE.gold}`,
+                  background:
+                    "linear-gradient(135deg, rgba(184,134,11,0.92), #facc15)",
+                  color: "#000",
+                  boxShadow: "0 10px 20px rgba(184,134,11,0.25)",
                 }}
-              />
+              >
+                Load Team
+              </button>
             </div>
-            <button
-              onClick={handleSetTeamId}
-              className="inline-flex items-center justify-center px-3 h-9 rounded-full text-xs font-semibold"
-              style={{
-                border: `1px solid ${PALETTE.gold}`,
-                background:
-                  "linear-gradient(135deg, rgba(184,134,11,0.9), #facc15)",
-                color: "#000000",
-              }}
-            >
-              Load Team
-            </button>
           </div>
         </header>
 
-        {/* Top stats + charts */}
-        <section className="mb-8 grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
-          {/* Team Stats */}
-          <div
-            className="rounded-2xl p-4 sm:p-5"
-            style={{
-              border: `1px solid ${PALETTE.gold}`,
-              background:
-                "linear-gradient(145deg, rgba(0,0,0,0.96), rgba(90,0,0,0.9))",
-              boxShadow: "0 18px 40px rgba(0,0,0,0.9)",
-            }}
+        <section className="mb-6 grid grid-cols-1 xl:grid-cols-2 gap-4 lg:gap-5">
+          <ChartCard
+            title="Season Rank History"
+            open={showRankChart}
+            onToggle={() => setShowRankChart((v) => !v)}
           >
-            <h2 className="text-lg sm:text-xl font-semibold mb-4">
-              Team Stats
-            </h2>
-            <div className="grid grid-cols-2 gap-3 sm:gap-4">
-              <div className="rounded-lg p-3 sm:p-4 bg-black/40 border border-emerald-500/40">
-                <div className="text-[11px] uppercase tracking-wide text-gray-300 mb-1">
-                  Money in Bank
-                </div>
-                <div
-                  className="text-xl sm:text-2xl font-bold"
-                  style={{
-                    color: effectiveBankMoney < 0 ? "#f87171" : "#34d399",
-                  }}
-                >
-                  £{effectiveBankMoney.toFixed(1)}m
-                </div>
+            {showRankChart && rankChartData.length > 0 && (
+              <div style={{ height: 250 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={rankChartData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
+                    <XAxis dataKey="gw" stroke="#cbd5e1" />
+                    <YAxis reversed stroke="#cbd5e1" />
+                    <Tooltip />
+                    <Line
+                      type="monotone"
+                      dataKey="rank"
+                      stroke="#a78bfa"
+                      strokeWidth={2.5}
+                      dot={{ r: 3 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
               </div>
+            )}
 
-              <div className="rounded-lg p-3 sm:p-4 bg-black/40 border border-blue-500/40">
-                <div className="text-[11px] uppercase tracking-wide text-gray-300 mb-1">
-                  Free Transfers (GW {currentGW ?? "-"})
-                </div>
-                <div className="text-xl sm:text-2xl font-bold text-blue-400">
-                  {currentFreeTransfers}
-                </div>
+            {showRankChart && rankChartData.length === 0 && (
+              <div className="mt-3 text-xs text-gray-400">
+                No rank history available yet.
               </div>
+            )}
+          </ChartCard>
 
-              <div className="rounded-lg p-3 sm:p-4 bg-black/40 border border-purple-500/40 col-span-2 sm:col-span-1">
-                <div className="text-[11px] uppercase tracking-wide text-gray-300 mb-1">
-                  Total Predicted Points
-                </div>
-                <div className="text-xl sm:text-2xl font-bold text-purple-300">
-                  {totalPredictedPoints.toFixed(1)}
-                </div>
+          <ChartCard
+            title="Predicted Points by GW"
+            open={showPredChart}
+            onToggle={() => setShowPredChart((v) => !v)}
+          >
+            {showPredChart && predictedChartData.length > 0 && (
+              <div style={{ height: 250 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={predictedChartData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
+                    <XAxis dataKey="gw" stroke="#cbd5e1" />
+                    <YAxis
+                      domain={[40, "auto"]}
+                      tickFormatter={(v) => Number(v).toFixed(1)}
+                      stroke="#cbd5e1"
+                    />
+                    <Tooltip
+                      formatter={(value) => Number(value).toFixed(1)}
+                      labelFormatter={(label) => `GW ${label}`}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="points"
+                      stroke="#34d399"
+                      strokeWidth={2.5}
+                      dot={{ r: 3 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
               </div>
+            )}
 
-              <div className="rounded-lg p-3 sm:p-4 bg-black/40 border border-amber-500/40">
-                <div className="text-[11px] uppercase tracking-wide text-gray-300 mb-1">
-                  GW Predicted Points
-                </div>
-                <div className="text-xl sm:text-2xl font-bold text-amber-300">
-                  {currentGwPoints != null ? currentGwPoints.toFixed(1) : "-"}
-                </div>
+            {showPredChart && predictedChartData.length === 0 && (
+              <div className="mt-3 text-xs text-gray-400">
+                No prediction data available yet.
               </div>
-            </div>
-          </div>
-
-          {/* Charts */}
-          <div className="flex flex-col gap-4">
-            {/* Rank history */}
-            <div
-              className="rounded-2xl p-4 sm:p-5"
-              style={{
-                border: `1px solid ${PALETTE.gold}`,
-                background:
-                  "linear-gradient(145deg, rgba(0,0,0,0.96), rgba(0,0,0,0.9))",
-              }}
-            >
-              <button
-                onClick={() => setShowRankChart(!showRankChart)}
-                className="flex items-center justify-between w-full text-left rounded-md px-2 py-1"
-                style={{
-                  background: "rgba(15,23,42,0.9)",
-                  color: "#e5e7eb",
-                  border: "1px solid rgba(148,163,184,0.4)",
-                }}
-              >
-                <h2 className="text-sm sm:text-base font-semibold">
-                  Season Rank History
-                </h2>
-                {showRankChart ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-              </button>
-
-              {showRankChart && rankChartData.length > 0 && (
-                <div className="mt-4" style={{ height: "220px" }}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={rankChartData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="gw" />
-                      <YAxis reversed />
-                      <Tooltip />
-                      <Line
-                        type="monotone"
-                        dataKey="rank"
-                        stroke="#8b5cf6"
-                        strokeWidth={2}
-                        dot={{ r: 3 }}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              )}
-              {showRankChart && rankChartData.length === 0 && (
-                <div className="mt-3 text-xs text-gray-400">
-                  No rank history available yet.
-                </div>
-              )}
-            </div>
-
-            {/* Predicted points by GW */}
-            <div
-              className="rounded-2xl p-4 sm:p-5"
-              style={{
-                border: `1px solid ${PALETTE.gold}`,
-                background:
-                  "linear-gradient(145deg, rgba(0,0,0,0.96), rgba(0,0,0,0.9))",
-              }}
-            >
-              <button
-                onClick={() => setShowPredChart(!showPredChart)}
-                className="flex items-center justify-between w-full text-left rounded-md px-2 py-1"
-                style={{
-                  background: "rgba(15,23,42,0.9)",
-                  color: "#e5e7eb",
-                  border: "1px solid rgba(148,163,184,0.4)",
-                }}
-              >
-                <h2 className="text-sm sm:text-base font-semibold">
-                  Predicted Points by GW
-                </h2>
-                {showPredChart ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-              </button>
-
-              {showPredChart && predictedChartData.length > 0 && (
-                <div className="mt-4" style={{ height: "220px" }}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={predictedChartData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="gw" />
-                      <YAxis
-                        domain={[40, "auto"]}
-                        tickFormatter={(v) => Number(v).toFixed(1)}
-                      />
-                      <Tooltip
-                        formatter={(value) => Number(value).toFixed(1)}
-                        labelFormatter={(label) => `GW ${label}`}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="points"
-                        stroke="#10b981"
-                        strokeWidth={2}
-                        dot={{ r: 3 }}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              )}
-              {showPredChart && predictedChartData.length === 0 && (
-                <div className="mt-3 text-xs text-gray-400">
-                  No prediction data available yet.
-                </div>
-              )}
-            </div>
-          </div>
+            )}
+          </ChartCard>
         </section>
 
-        {/* GW Navigation + Pitch + Bench + Transfers */}
         <section
-          className="rounded-2xl p-4 sm:p-5 mb-10"
-          style={{
-            border: `1px solid ${PALETTE.gold}`,
-            background:
-              "linear-gradient(145deg, rgba(0,0,0,0.96), rgba(90,0,0,0.9))",
-            boxShadow: "0 18px 40px rgba(0,0,0,0.9)",
-          }}
+          className="rounded-3xl p-4 sm:p-5 lg:p-6 mb-10"
+          style={glassCard}
         >
-          {/* GW nav */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-            <div>
-              <h2 className="text-lg sm:text-xl font-semibold">
-                Squad for GW {currentGW ?? "-"}
-              </h2>
-
-              {/* inline “how to swap” cards */}
-              <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <div className="rounded-lg border border-white/10 bg-black/55 p-2.5 text-[11px] text-gray-200">
-                  <div className="flex items-center gap-2">
-                    <Hand size={14} className="text-amber-300" />
-                    <span className="font-semibold">Mobile</span>
-                  </div>
-                  <div className="text-gray-300 mt-0.5">
-                    Tap a{" "}
-                    <span className="text-amber-200 font-semibold">bench</span>{" "}
-                    player, then tap a{" "}
-                    <span className="text-amber-200 font-semibold">starter</span>{" "}
-                    to swap.
-                  </div>
-                </div>
-                <div className="rounded-lg border border-white/10 bg-black/55 p-2.5 text-[11px] text-gray-200">
-                  <div className="flex items-center gap-2">
-                    <MousePointerClick size={14} className="text-amber-300" />
-                    <span className="font-semibold">Desktop</span>
-                  </div>
-                  <div className="text-gray-300 mt-0.5">
-                    Drag a bench player and{" "}
-                    <span className="text-amber-200 font-semibold">
-                      drop on a starter
-                    </span>{" "}
-                    to swap.
-                  </div>
-                </div>
+          <div className="flex flex-col gap-5 mb-5">
+            <div className="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-4">
+              <div>
+                <h2 className="text-xl sm:text-2xl font-semibold">
+                  Squad for GW {currentGW ?? "-"}
+                </h2>
+                <p className="text-xs sm:text-sm mt-1 text-gray-300 max-w-2xl">
+                  Open player profiles for replacement
+                  comparison and transfers.
+                </p>
               </div>
 
-              <p className="text-[11px] mt-2" style={{ color: "#d1c3a9" }}>
-                Use the{" "}
-                <span className="inline-flex items-center gap-1">
-                  <Info size={12} /> icon
-                </span>{" "}
-                to open profile & compare replacements (hover a suggestion to
-                compare, click to transfer).
-              </p>
+              
             </div>
 
-            <div className="flex items-center gap-3">
-              <button
-                onClick={handlePrevGW}
-                disabled={
-                  currentGW === null || availableGWs.indexOf(currentGW) === 0
-                }
-                className="p-2 rounded-full text-sm disabled:opacity-40 disabled:cursor-not-allowed"
-                style={{
-                  border: `1px solid ${PALETTE.gold}`,
-                  backgroundColor: "rgba(0,0,0,0.8)",
-                  color: PALETTE.gold,
-                }}
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3">
+              <SquadMetricCard
+                icon={DollarSign}
+                label="Money in Bank"
+                value={`£${effectiveBankMoney.toFixed(1)}m`}
+                tone={effectiveBankMoney < 0 ? "red" : "green"}
+              />
+
+              <SquadMetricCard
+                icon={ArrowLeftRight}
+                label="Transfers"
+                value={`${transfersUsedThisGw} / ${freeTransfersBeforeUse}`}
+                subValue="used this week / free transfers before use"
+                tone="blue"
+              />
+
+              <SquadMetricCard
+                icon={Sparkles}
+                label="Predicted Points"
+                value={currentGwPoints != null ? currentGwPoints.toFixed(1) : "-"}
+                subValue={`GW ${currentGW ?? "-"}`}
+                tone="purple"
+              />
+
+
+              <div
+                className="rounded-2xl p-3 sm:p-4"
+                style={{ ...softCard, background: "rgba(0,0,0,0.44)" }}
               >
-                <ChevronLeft size={18} />
-              </button>
-              <span className="text-xs sm:text-sm font-medium text-gray-200">
-                {currentGW ? `Gameweek ${currentGW}` : "No GW selected"}
-              </span>
-              <button
-                onClick={handleNextGW}
-                disabled={
-                  currentGW === null ||
-                  availableGWs.indexOf(currentGW) === availableGWs.length - 1
-                }
-                className="p-2 rounded-full text-sm disabled:opacity-40 disabled:cursor-not-allowed"
-                style={{
-                  border: `1px solid ${PALETTE.gold}`,
-                  backgroundColor: "rgba(0,0,0,0.8)",
-                  color: PALETTE.gold,
-                }}
-              >
-                <ChevronRight size={18} />
-              </button>
+                <div className="flex items-center gap-2 mb-1">
+                  <MousePointerClick size={14} className="text-amber-300" />
+                  <div className="text-[11px] uppercase tracking-wide text-gray-300">
+                    Tip
+                  </div>
+                </div>
+                <div className="text-xs text-gray-200">
+                  Tap a bench player and switch with player on the pitch.
+                </div>
+              </div>
             </div>
           </div>
+          <div className="flex items-center gap-3 self-start mb-4">
+                <button
+                  onClick={handlePrevGW}
+                  disabled={currentGW === null || availableGWs.indexOf(currentGW) === 0}
+                  className="p-2.5 rounded-full text-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                  style={{
+                    border: `1px solid rgba(184,134,11,0.45)`,
+                    backgroundColor: "rgba(0,0,0,0.7)",
+                    color: PALETTE.gold,
+                  }}
+                >
+                  <ChevronLeft size={18} />
+                </button>
 
-          {/* Swap mode banner */}
+                <span className="text-xs sm:text-sm font-medium text-gray-200 min-w-[96px] text-center">
+                  {currentGW ? `Gameweek ${currentGW}` : "No GW selected"}
+                </span>
+
+                <button
+                  onClick={handleNextGW}
+                  disabled={
+                    currentGW === null ||
+                    availableGWs.indexOf(currentGW) === availableGWs.length - 1
+                  }
+                  className="p-2.5 rounded-full text-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                  style={{
+                    border: `1px solid rgba(184,134,11,0.45)`,
+                    backgroundColor: "rgba(0,0,0,0.7)",
+                    color: PALETTE.gold,
+                  }}
+                >
+                  <ChevronRight size={18} />
+                </button>
+              </div>
+
           {swapHintText && (
             <div className="mb-4">
               <div
-                className="rounded-xl border border-amber-400/40 bg-black/65 px-3 py-2 flex items-center justify-between gap-3"
-                style={{ boxShadow: "0 10px 24px rgba(0,0,0,0.55)" }}
+                className="rounded-2xl border border-amber-400/35 bg-black/60 px-3 py-2.5 flex items-center justify-between gap-3"
+                style={{ boxShadow: "0 10px 24px rgba(0,0,0,0.45)" }}
               >
                 <div className="flex items-center gap-2 min-w-0">
                   <ArrowLeftRight size={16} className="text-amber-300" />
@@ -1777,10 +1616,11 @@ export default function MyTeamOverview() {
                     <span className="text-gray-300">{swapHintText}</span>
                   </div>
                 </div>
+
                 <button
                   type="button"
                   onClick={clearSwapMode}
-                  className="shrink-0 inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-full border border-white/15 bg-black/70 hover:bg-black/90"
+                  className="shrink-0 inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-full border border-white/15 bg-black/70 hover:bg-black/90"
                 >
                   <X size={12} className="text-gray-300" />
                   <span className="text-gray-200">Cancel</span>
@@ -1789,13 +1629,15 @@ export default function MyTeamOverview() {
             </div>
           )}
 
-          {/* Pitch + Bench */}
-          <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 items-stretch">
-            {/* Pitch */}
-            <div className="flex-1 flex items-center justify-center">
+          <div className="flex flex-col xl:flex-row gap-6 xl:gap-8 items-stretch">
+            <div className="flex-1 flex items-center justify-center min-w-0">
               <div
-                className="w-full max-w-[430px] mx-auto aspect-[8/15] sm:aspect-[2/3.1] bg-no-repeat bg-cover bg-center border border-white/40 rounded-xl px-2 py-1"
-                style={{ backgroundImage: `url(${pitch})` }}
+                className="w-full max-w-[470px] mx-auto aspect-[8/15] sm:aspect-[2/3.1] bg-no-repeat bg-cover bg-center border rounded-2xl px-2 py-2"
+                style={{
+                  backgroundImage: `url(${pitch})`,
+                  borderColor: "rgba(255,255,255,0.3)",
+                  boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
+                }}
               >
                 <div className="flex flex-col h-full pt-1 pb-2 gap-8 justify-start">
                   <PitchRow
@@ -1818,6 +1660,7 @@ export default function MyTeamOverview() {
                     }}
                     openProfile={handleOpenProfile}
                   />
+
                   <PitchRow
                     players={defStarters}
                     label="DEF"
@@ -1838,6 +1681,7 @@ export default function MyTeamOverview() {
                     }}
                     openProfile={handleOpenProfile}
                   />
+
                   <PitchRow
                     players={midStarters}
                     label="MID"
@@ -1858,6 +1702,7 @@ export default function MyTeamOverview() {
                     }}
                     openProfile={handleOpenProfile}
                   />
+
                   <PitchRow
                     players={fwdStarters}
                     label="FWD"
@@ -1882,15 +1727,14 @@ export default function MyTeamOverview() {
               </div>
             </div>
 
-            {/* Bench */}
-            <div className="w-full lg:w-[260px]">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-semibold">Bench</h3>
+            <div className="w-full xl:w-[300px]">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-base font-semibold">Bench</h3>
                 {selectedBenchIndex != null && (
                   <button
                     type="button"
                     onClick={() => setSelectedBenchIndex(null)}
-                    className="text-[11px] px-2 py-1 rounded-full border border-white/15 bg-black/60 hover:bg-black/80"
+                    className="text-[11px] px-2.5 py-1 rounded-full border border-white/15 bg-black/60 hover:bg-black/80"
                   >
                     Clear selection
                   </button>
@@ -1898,9 +1742,7 @@ export default function MyTeamOverview() {
               </div>
 
               {bench.length === 0 ? (
-                <div className="text-xs text-gray-300">
-                  No bench players for this GW.
-                </div>
+                <div className="text-xs text-gray-300">No bench players for this GW.</div>
               ) : (
                 <div className="space-y-2">
                   {bench.map((player) => {
@@ -1909,25 +1751,27 @@ export default function MyTeamOverview() {
                       player.selected_pct != null
                         ? `${player.selected_pct.toFixed(1)}%`
                         : "–";
-
                     const costRaw =
                       player.now_cost != null ? Number(player.now_cost) : null;
                     const costDisplay =
                       costRaw != null && Number.isFinite(costRaw)
                         ? (costRaw / 10).toFixed(1)
                         : null;
-
                     const isSelected = selectedBenchIndex === player.squadIndex;
 
                     return (
                       <div
-                        key={player.name + player.squadIndex}
-                        className={`relative flex items-center gap-3 p-2.5 rounded-lg border transition
-                          ${
-                            isSelected
-                              ? "border-amber-400 bg-black/85"
-                              : "border-white/15 bg-black/60 hover:bg-black/70"
-                          }`}
+                        key={`${player.name}-${player.squadIndex}`}
+                        className={`relative flex items-center gap-3 p-3 rounded-2xl border transition ${
+                          isSelected
+                            ? "border-amber-400 bg-black/85"
+                            : "border-white/10 bg-black/55 hover:bg-black/70"
+                        }`}
+                        style={{
+                          boxShadow: isSelected
+                            ? "0 10px 24px rgba(245,158,11,0.08)"
+                            : "0 8px 18px rgba(0,0,0,0.2)",
+                        }}
                         draggable
                         onDragStart={() =>
                           setDragInfo({
@@ -1943,7 +1787,7 @@ export default function MyTeamOverview() {
                         }
                       >
                         {isSelected && (
-                          <div className="absolute inset-0 rounded-lg pointer-events-none ring-2 ring-amber-400/50" />
+                          <div className="absolute inset-0 rounded-2xl pointer-events-none ring-2 ring-amber-400/40" />
                         )}
 
                         <button
@@ -1952,7 +1796,7 @@ export default function MyTeamOverview() {
                             e.stopPropagation();
                             handleOpenProfile(player);
                           }}
-                          className="absolute top-1 right-1 p-1 rounded-full bg-black/70 hover:bg-black/90"
+                          className="absolute top-2 right-2 p-1 rounded-full bg-black/70 hover:bg-black/90"
                           title="Open profile"
                         >
                           <Info size={12} className="text-amber-300" />
@@ -1962,13 +1806,13 @@ export default function MyTeamOverview() {
                           <img
                             src={player.photo}
                             alt={player.web_name}
-                            className="w-10 h-10 rounded-full object-cover bg-gray-700 flex-shrink-0"
+                            className="w-11 h-11 rounded-full object-cover bg-gray-700 flex-shrink-0"
                             onError={(e) => {
                               e.currentTarget.src = "";
                             }}
                           />
                         ) : (
-                          <div className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-[10px] text-gray-500 flex-shrink-0" />
+                          <div className="w-11 h-11 rounded-full bg-gray-800 flex items-center justify-center text-[10px] text-gray-500 flex-shrink-0" />
                         )}
 
                         <div className="flex-1 min-w-0 pr-5">
@@ -1980,14 +1824,15 @@ export default function MyTeamOverview() {
                               {player.opponent_display || "N/A"}
                             </span>
                           </div>
+
                           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-gray-400 mt-0.5">
                             <span>
-                              {(player.team || player.team_code || "")} •{" "}
-                              {player.position}
+                              {player.team || player.team_code || ""} • {player.position}
                             </span>
                             <span>Sel {selectedText}</span>
                             {costDisplay && <span>£{costDisplay}m</span>}
                           </div>
+
                           {isSelected && (
                             <div className="mt-1 text-[10px] text-amber-200 flex items-center gap-1">
                               <ArrowLeftRight size={12} />
@@ -2005,6 +1850,7 @@ export default function MyTeamOverview() {
                       </div>
                     );
                   })}
+
                   <p className="text-[11px] text-gray-300 mt-1">
                     Tip: selecting a bench player highlights starters on the pitch.
                   </p>
@@ -2013,22 +1859,22 @@ export default function MyTeamOverview() {
             </div>
           </div>
 
-          {/* Transfer tracker under pitch */}
-          <div className="mt-6">
+          <div className="mt-7">
             <h3 className="text-sm font-semibold mb-2 flex items-center justify-between">
               Planned Transfers
               <span className="text-[10px] text-gray-300">
                 (click ✕ to undo)
               </span>
             </h3>
+
             {sortedTransferLog.length === 0 ? (
               <div className="text-xs text-gray-300">No planned transfers yet.</div>
             ) : (
-              <div className="space-y-1 text-xs">
+              <div className="space-y-2 text-xs">
                 {sortedTransferLog.map((t) => (
                   <div
                     key={t.id}
-                    className="flex items-center justify-between rounded-md border border-white/15 bg-black/70 px-2 py-1.5"
+                    className="flex items-center justify-between rounded-2xl border border-white/10 bg-black/55 px-3 py-2"
                   >
                     <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2">
                       <span className="font-semibold text-amber-200">
@@ -2042,6 +1888,7 @@ export default function MyTeamOverview() {
                         Bank Δ: {(t.sellingPrice - t.incomingPrice).toFixed(1)}m
                       </span>
                     </div>
+
                     <button
                       type="button"
                       onClick={() => handleUndoTransfer(t.id)}
@@ -2058,325 +1905,351 @@ export default function MyTeamOverview() {
         </section>
       </div>
 
-      {/* PLAYER PROFILE OVERLAY */}
       {profilePlayer && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center px-4">
+        <div className="fixed inset-0 z-50">
           <div
-            className="absolute inset-0 bg-black/60"
+            className="absolute inset-0 bg-black/75 backdrop-blur-[2px]"
             onClick={handleCloseProfile}
           />
-          <div
-            className="relative w-full max-w-4xl rounded-2xl p-4 sm:p-5 shadow-2xl"
-            style={{
-              border: `1px solid ${PALETTE.gold}`,
-              background:
-                "linear-gradient(145deg, rgba(0,0,0,0.96), rgba(0,0,0,0.92))",
-            }}
-          >
-            <button
-              className="absolute top-2 right-2 p-1 rounded-full bg-black/70 hover:bg-black/90"
-              onClick={handleCloseProfile}
-            >
-              <X size={14} className="text-gray-200" />
-            </button>
 
-            <div className="flex items-center gap-3 mb-3">
-              {profilePlayer.photo ? (
-                <img
-                  src={profilePlayer.photo}
-                  alt={profilePlayer.web_name}
-                  className="w-12 h-12 rounded-full object-cover bg-gray-800"
-                  onError={(e) => {
-                    e.currentTarget.src = "";
-                  }}
-                />
-              ) : (
-                <div className="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center text-sm font-semibold">
-                  {profilePlayer.web_name?.slice(0, 2).toUpperCase()}
-                </div>
-              )}
-              <div className="min-w-0">
-                <div className="text-sm uppercase tracking-wide text-gray-400">
-                  {profilePlayer.position}
-                </div>
-                <div className="text-lg font-bold truncate">
-                  {profilePlayer.web_name}
-                </div>
-                <div className="text-xs text-gray-400">
-                  {profilePlayer.team || profilePlayer.team_code || ""} • GW{" "}
-                  {currentGW}
-                </div>
-              </div>
-            </div>
+          <div className="absolute inset-0 overflow-y-auto">
+            <div className="min-h-full flex items-start sm:items-center justify-center px-3 py-4 sm:px-4 sm:py-8">
+              <div
+                className="relative w-full max-w-5xl rounded-3xl shadow-2xl overflow-hidden"
+                style={{
+                  ...glassCard,
+                  maxHeight: "min(92vh, 980px)",
+                }}
+              >
+                <div className="sticky top-0 z-20 flex items-center justify-between gap-3 px-4 sm:px-5 py-3 border-b border-white/10 bg-black/85 backdrop-blur-md">
+                  <div className="flex items-center gap-3 min-w-0">
+                    {profilePlayer.photo ? (
+                      <img
+                        src={profilePlayer.photo}
+                        alt={profilePlayer.web_name}
+                        className="w-11 h-11 rounded-full object-cover bg-gray-800"
+                        onError={(e) => {
+                          e.currentTarget.src = "";
+                        }}
+                      />
+                    ) : (
+                      <div className="w-11 h-11 rounded-full bg-gray-800 flex items-center justify-center text-sm font-semibold">
+                        {profilePlayer.web_name?.slice(0, 2).toUpperCase()}
+                      </div>
+                    )}
 
-            {/* Player stats */}
-            <div className="grid grid-cols-3 gap-2 text-xs mb-3">
-              <div className="rounded-lg bg-black/70 border border-white/10 p-2">
-                <div className="text-[10px] uppercase tracking-wide text-gray-400">
-                  Selected
-                </div>
-                <div className="text-sm font-semibold">
-                  {profileMeta?.selPct != null
-                    ? `${profileMeta.selPct.toFixed(1)}%`
-                    : "–"}
-                </div>
-              </div>
-              <div className="rounded-lg bg-black/70 border border-white/10 p-2">
-                <div className="text-[10px] uppercase tracking-wide text-gray-400">
-                  Team Price
-                </div>
-                <div className="text-sm font-semibold">
-                  {profileMeta?.nowCost != null
-                    ? `£${profileMeta.nowCost.toFixed(1)}m`
-                    : "–"}
-                </div>
-              </div>
-              <div className="rounded-lg bg-black/70 border border-white/10 p-2">
-                <div className="text-[10px] uppercase tracking-wide text-gray-400">
-                  Total Pred Pts
-                </div>
-                <div className="text-sm font-semibold">
-                  {profileMeta ? profileMeta.totalPred.toFixed(1) : "–"}
-                </div>
-                <div className="text-[9px] text-gray-500">
-                  GW {currentGW ?? "-"}–{maxAvailableGW ?? "-"}
-                </div>
-              </div>
-            </div>
+                    <div className="min-w-0">
+                      <div className="text-[11px] uppercase tracking-wide text-gray-400">
+                        {profilePlayer.position}
+                      </div>
+                      <div className="text-base sm:text-lg font-bold truncate">
+                        {profilePlayer.web_name}
+                      </div>
+                      <div className="text-xs text-gray-400">
+                        {profilePlayer.team || profilePlayer.team_code || ""} • GW{" "}
+                        {currentGW}
+                      </div>
+                    </div>
+                  </div>
 
-            {/* Compare panel */}
-            <div className="mb-3">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-[11px] uppercase tracking-wide text-gray-300">
-                  Compare
-                </span>
-                <span className="text-[11px] text-gray-400">
-                  Hover a suggestion to compare
-                </span>
-              </div>
+                  <button
+                    className="shrink-0 p-2 rounded-full bg-black/70 hover:bg-black/95 border border-white/10"
+                    onClick={handleCloseProfile}
+                    aria-label="Close profile"
+                  >
+                    <X size={16} className="text-gray-200" />
+                  </button>
+                </div>
 
-              <div className="rounded-xl border border-white/10 bg-black/60 p-2">
-                <div className="grid grid-cols-2 gap-2">
-                  <CompareCard
-                    title="Current"
-                    player={{
-                      web_name: profilePlayer.web_name,
-                      photo: profilePlayer.photo,
-                      price: profileMeta?.nowCost,
-                      selected_pct: profileMeta?.selPct,
-                      totalPoints: profileMeta?.totalPred,
-                    }}
-                    accent="amber"
-                  />
-                  <CompareCard
-                    title="Candidate"
-                    player={
-                      compareCandidate
-                        ? {
-                            web_name: compareCandidate.web_name,
-                            photo: compareCandidate.photo,
-                            price: compareCandidate.price,
-                            selected_pct: compareCandidate.selected_pct,
-                            totalPoints: compareCandidate.totalPoints,
-                          }
-                        : null
-                    }
-                    accent="emerald"
-                    placeholder="Hover a replacement"
-                  />
+                <div className="overflow-y-auto px-4 sm:px-5 py-4 sm:py-5 max-h-[calc(92vh-68px)]">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs mb-4">
+                    <div className="rounded-2xl bg-black/60 border border-white/10 p-3">
+                      <div className="text-[10px] uppercase tracking-wide text-gray-400">
+                        Selected
+                      </div>
+                      <div className="text-sm font-semibold mt-1">
+                        {profileMeta?.selPct != null
+                          ? `${profileMeta.selPct.toFixed(1)}%`
+                          : "–"}
+                      </div>
+                    </div>
 
-                  {/* Per-GW predicted points comparison chart */}
-                  <div className="col-span-2 mt-3 rounded-xl border border-white/10 bg-black/60 p-3">
+                    <div className="rounded-2xl bg-black/60 border border-white/10 p-3">
+                      <div className="text-[10px] uppercase tracking-wide text-gray-400">
+                        Team Price
+                      </div>
+                      <div className="text-sm font-semibold mt-1">
+                        {profileMeta?.nowCost != null
+                          ? `£${profileMeta.nowCost.toFixed(1)}m`
+                          : "–"}
+                      </div>
+                    </div>
+
+                    <div className="rounded-2xl bg-black/60 border border-white/10 p-3">
+                      <div className="text-[10px] uppercase tracking-wide text-gray-400">
+                        Total Pred Pts
+                      </div>
+                      <div className="text-sm font-semibold mt-1">
+                        {profileMeta ? profileMeta.totalPred.toFixed(1) : "–"}
+                      </div>
+                      <div className="text-[10px] text-gray-500 mt-0.5">
+                        GW {currentGW ?? "-"}–{maxAvailableGW ?? "-"}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mb-4">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-[11px] uppercase tracking-wide text-gray-300">
-                        Predicted points per GW
+                        Compare
                       </span>
                       <span className="text-[11px] text-gray-400">
-                        GW {currentGW ?? "-"}–{maxAvailableGW ?? "-"}
+                        Click a suggestion to compare
                       </span>
                     </div>
 
-                    {compareChartData.length === 0 ? (
-                      <div className="text-xs text-gray-400">
-                        No chart data available.
+                    <div className="rounded-2xl border border-white/10 bg-black/50 p-3">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        <CompareCard
+                          title="Current"
+                          player={{
+                            web_name: profilePlayer.web_name,
+                            photo: profilePlayer.photo,
+                            price: profileMeta?.nowCost,
+                            selected_pct: profileMeta?.selPct,
+                            totalPoints: profileMeta?.totalPred,
+                          }}
+                          accent="amber"
+                        />
+
+                        <CompareCard
+                          title="Candidate"
+                          player={
+                            compareCandidate
+                              ? {
+                                  web_name: compareCandidate.web_name,
+                                  photo: compareCandidate.photo,
+                                  price: compareCandidate.price,
+                                  selected_pct: compareCandidate.selected_pct,
+                                  totalPoints: compareCandidate.totalPoints,
+                                }
+                              : null
+                          }
+                          accent="emerald"
+                          placeholder="Choose a replacement below"
+                        />
+
+                        <div className="md:col-span-2 mt-2 rounded-2xl border border-white/10 bg-black/50 p-3">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-[11px] uppercase tracking-wide text-gray-300">
+                              Predicted points per GW
+                            </span>
+                            <span className="text-[11px] text-gray-400">
+                              GW {currentGW ?? "-"}–{maxAvailableGW ?? "-"}
+                            </span>
+                          </div>
+
+                          {compareChartData.length === 0 ? (
+                            <div className="text-xs text-gray-400">
+                              No chart data available.
+                            </div>
+                          ) : (
+                            <div style={{ height: 240 }}>
+                              <ResponsiveContainer width="100%" height="100%">
+                                <LineChart data={compareChartData}>
+                                  <CartesianGrid
+                                    strokeDasharray="3 3"
+                                    stroke="rgba(255,255,255,0.08)"
+                                  />
+                                  <XAxis dataKey="gw" stroke="#cbd5e1" />
+                                  <YAxis
+                                    tickFormatter={(v) => Number(v).toFixed(1)}
+                                    stroke="#cbd5e1"
+                                  />
+                                  <Tooltip
+                                    labelFormatter={(label) => `GW ${label}`}
+                                    formatter={(value, name) => [
+                                      Number(value).toFixed(1),
+                                      name,
+                                    ]}
+                                  />
+                                  <Legend />
+                                  <Line
+                                    type="monotone"
+                                    dataKey="current"
+                                    name={profilePlayer?.web_name || "Current"}
+                                    stroke="#f59e0b"
+                                    strokeWidth={2.5}
+                                    dot={{ r: 2 }}
+                                  />
+                                  {compareCandidate && (
+                                    <Line
+                                      type="monotone"
+                                      dataKey="candidate"
+                                      name={
+                                        compareCandidate?.web_name || "Candidate"
+                                      }
+                                      stroke="#10b981"
+                                      strokeWidth={2.5}
+                                      dot={{ r: 2 }}
+                                    />
+                                  )}
+                                </LineChart>
+                              </ResponsiveContainer>
+                            </div>
+                          )}
+
+                          {!compareCandidate && (
+                            <div className="mt-2 text-[11px] text-gray-400">
+                              Select a replacement below to compare.
+                            </div>
+                          )}
+                        </div>
                       </div>
+
+                      {compareCandidate && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleReplaceWithSuggested(compareCandidate)
+                          }
+                          className="mt-3 w-full inline-flex items-center justify-center gap-2 h-10 rounded-full text-xs font-semibold"
+                          style={{
+                            border: "1px solid rgba(16,185,129,0.45)",
+                            background:
+                              "linear-gradient(135deg, rgba(16,185,129,0.95), rgba(52,211,153,0.85))",
+                            color: "#04110b",
+                          }}
+                        >
+                          <ArrowLeftRight size={14} />
+                          Transfer in {compareCandidate.web_name}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="mb-2">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[11px] uppercase tracking-wide text-gray-300">
+                        Best replacements (same position)
+                      </span>
+
+                      {replacementsMeta.maxVal > replacementsMeta.minVal && (
+                        <span className="text-[11px] text-gray-300">
+                          Max £{(replacementMaxValue || 0).toFixed(1)}m
+                        </span>
+                      )}
+                    </div>
+
+                    {replacementsMeta.maxVal > replacementsMeta.minVal ? (
+                      <>
+                        <input
+                          type="range"
+                          min={replacementsMeta.minVal}
+                          max={replacementsMeta.maxVal}
+                          step="0.1"
+                          value={replacementMaxValue ?? replacementsMeta.maxVal}
+                          onChange={(e) =>
+                            setReplacementMaxValue(Number(e.target.value))
+                          }
+                          className="w-full mb-2"
+                        />
+
+                        <input
+                          type="text"
+                          value={replacementSearch}
+                          onChange={(e) => setReplacementSearch(e.target.value)}
+                          placeholder="Search name (e.g. Haaland, Salah...)"
+                          className="w-full text-xs px-3 py-2 rounded-xl bg-black/60 border border-white/10 text-gray-100 placeholder:text-gray-500"
+                        />
+                      </>
                     ) : (
-                      <div style={{ height: 240 }}>
-                        <ResponsiveContainer width="100%" height="100%">
-                          <LineChart data={compareChartData}>
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="gw" />
-                            <YAxis tickFormatter={(v) => Number(v).toFixed(1)} />
-                            <Tooltip
-                              labelFormatter={(label) => `GW ${label}`}
-                              formatter={(value, name) => [
-                                Number(value).toFixed(1),
-                                name,
-                              ]}
-                            />
-                            <Legend />
-
-                            <Line
-                              type="monotone"
-                              dataKey="current"
-                              name={profilePlayer?.web_name || "Current"}
-                              stroke="#f59e0b"
-                              strokeWidth={2}
-                              dot={{ r: 2 }}
-                            />
-
-                            {compareCandidate && (
-                              <Line
-                                type="monotone"
-                                dataKey="candidate"
-                                name={compareCandidate?.web_name || "Candidate"}
-                                stroke="#10b981"
-                                strokeWidth={2}
-                                dot={{ r: 2 }}
-                              />
-                            )}
-                          </LineChart>
-                        </ResponsiveContainer>
-                      </div>
-                    )}
-
-                    {!compareCandidate && (
-                      <div className="mt-2 text-[11px] text-gray-400">
-                        Click a replacement below to compare.
+                      <div className="text-[11px] text-gray-400 mb-1">
+                        No price data for this position.
                       </div>
                     )}
                   </div>
-                </div>
 
-                {compareCandidate && (
-                  <button
-                    type="button"
-                    onClick={() => handleReplaceWithSuggested(compareCandidate)}
-                    className="mt-2 w-full inline-flex items-center justify-center gap-2 h-9 rounded-full text-xs font-semibold"
-                    style={{
-                      border: "1px solid rgba(16,185,129,0.45)",
-                      background:
-                        "linear-gradient(135deg, rgba(16,185,129,0.95), rgba(52,211,153,0.85))",
-                      color: "#04110b",
-                    }}
-                  >
-                    <ArrowLeftRight size={14} />
-                    Transfer in {compareCandidate.web_name}
-                  </button>
-                )}
+                  <div className="mt-3 max-h-72 overflow-y-auto rounded-2xl border border-white/10 bg-black/50">
+                    {displayReplacements.length === 0 ? (
+                      <div className="p-3 text-xs text-gray-400">
+                        No replacement suggestions found within the selected value
+                        range or search.
+                      </div>
+                    ) : (
+                      <ul className="divide-y divide-white/5 text-xs">
+                        {displayReplacements.map((p) => {
+                          const oppShort = formatOpponent(p.opponent).display;
+                          const isCompared = compareCandidate?.name === p.name;
+
+                          return (
+                            <li
+                              key={`${p.id}-${p.name}`}
+                              className={`px-3 py-2.5 flex items-center justify-between gap-2 cursor-pointer transition ${
+                                isCompared
+                                  ? "bg-emerald-500/10"
+                                  : "hover:bg-white/5"
+                              }`}
+                              onClick={() => setCompareCandidate(p)}
+                              title="Click to compare"
+                            >
+                              <div className="flex items-center gap-2 min-w-0">
+                                {p.photo ? (
+                                  <img
+                                    src={p.photo}
+                                    alt={p.web_name}
+                                    className="w-9 h-9 rounded-full object-cover bg-gray-700 flex-shrink-0"
+                                    onError={(e) => {
+                                      e.currentTarget.src = "";
+                                    }}
+                                  />
+                                ) : (
+                                  <div className="w-9 h-9 rounded-full bg-gray-800 flex items-center justify-center text-[10px] text-gray-400 flex-shrink-0">
+                                    {p.web_name?.slice(0, 2).toUpperCase()}
+                                  </div>
+                                )}
+
+                                <div className="min-w-0">
+                                  <div className="font-semibold truncate max-w-[160px] flex items-center gap-2">
+                                    <span className="truncate">{p.web_name}</span>
+                                    {isCompared && (
+                                      <span className="text-[10px] px-1.5 py-0.5 rounded-full border border-emerald-400/40 bg-black/50 text-emerald-200">
+                                        comparing
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="text-[10px] text-gray-400">
+                                    £{p.price.toFixed(1)}m • {oppShort}
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="text-right">
+                                <div className="text-[10px] text-gray-400">
+                                  Total Pts
+                                </div>
+                                <div className="text-sm font-bold text-amber-300">
+                                  {p.totalPoints.toFixed(1)}
+                                </div>
+                                <div className="text-[10px] text-gray-400">
+                                  Sel{" "}
+                                  {p.selected_pct != null
+                                    ? `${p.selected_pct.toFixed(1)}%`
+                                    : "–"}
+                                </div>
+                              </div>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+                  </div>
+
+                  <div className="mt-2 text-[11px] text-gray-400">
+                    Tap a row to compare, then use the transfer button above.
+                  </div>
+                </div>
               </div>
-            </div>
-
-            {/* Slider + search + replacements */}
-            <div className="mb-2">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-[11px] uppercase tracking-wide text-gray-300">
-                  Best replacements (same position)
-                </span>
-                {replacementsMeta.maxVal > replacementsMeta.minVal && (
-                  <span className="text-[11px] text-gray-300">
-                    Max £{(replacementMaxValue || 0).toFixed(1)}m
-                  </span>
-                )}
-              </div>
-
-              {replacementsMeta.maxVal > replacementsMeta.minVal ? (
-                <>
-                  <input
-                    type="range"
-                    min={replacementsMeta.minVal}
-                    max={replacementsMeta.maxVal}
-                    step="0.1"
-                    value={replacementMaxValue ?? replacementsMeta.maxVal}
-                    onChange={(e) => setReplacementMaxValue(Number(e.target.value))}
-                    className="w-full mb-2"
-                  />
-                  <input
-                    type="text"
-                    value={replacementSearch}
-                    onChange={(e) => setReplacementSearch(e.target.value)}
-                    placeholder="Search name (e.g. Haaland, Salah...)"
-                    className="w-full text-xs px-2 py-1 rounded-md bg-black/60 border border-white/10 text-gray-100 placeholder:text-gray-500"
-                  />
-                </>
-              ) : (
-                <div className="text-[11px] text-gray-400 mb-1">
-                  No price data for this position.
-                </div>
-              )}
-            </div>
-
-            <div className="mt-2 max-h-60 overflow-y-auto rounded-lg border border-white/10 bg-black/60">
-              {displayReplacements.length === 0 ? (
-                <div className="p-3 text-xs text-gray-400">
-                  No replacement suggestions found within the selected value range
-                  or search.
-                </div>
-              ) : (
-                <ul className="divide-y divide-white/5 text-xs">
-                  {displayReplacements.map((p) => {
-                    const oppShort = formatOpponent(p.opponent).display;
-                    const isCompared = compareCandidate?.name === p.name;
-
-                    return (
-                      <li
-                        key={p.id + p.name}
-                        className={`px-3 py-2 flex items-center justify-between gap-2 cursor-pointer transition ${
-                          isCompared ? "bg-emerald-500/10" : "hover:bg-white/5"
-                        }`}
-                        onClick={() => setCompareCandidate(p)}
-                        title="Click to compare"
-                      >
-                        <div className="flex items-center gap-2 min-w-0">
-                          {p.photo ? (
-                            <img
-                              src={p.photo}
-                              alt={p.web_name}
-                              className="w-8 h-8 rounded-full object-cover bg-gray-700 flex-shrink-0"
-                              onError={(e) => {
-                                e.currentTarget.src = "";
-                              }}
-                            />
-                          ) : (
-                            <div className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center text-[10px] text-gray-400 flex-shrink-0">
-                              {p.web_name?.slice(0, 2).toUpperCase()}
-                            </div>
-                          )}
-                          <div className="min-w-0">
-                            <div className="font-semibold truncate max-w-[140px] flex items-center gap-2">
-                              <span className="truncate">{p.web_name}</span>
-                              {isCompared && (
-                                <span className="text-[10px] px-1.5 py-0.5 rounded-full border border-emerald-400/40 bg-black/50 text-emerald-200">
-                                  comparing
-                                </span>
-                              )}
-                            </div>
-                            <div className="text-[10px] text-gray-400">
-                              £{p.price.toFixed(1)}m • {oppShort}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-[10px] text-gray-400">Total Pts</div>
-                          <div className="text-sm font-bold text-amber-300">
-                            {p.totalPoints.toFixed(1)}
-                          </div>
-                          <div className="text-[10px] text-gray-400">
-                            Sel{" "}
-                            {p.selected_pct != null
-                              ? `${p.selected_pct.toFixed(1)}%`
-                              : "–"}
-                          </div>
-                        </div>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </div>
-
-            <div className="mt-2 text-[11px] text-gray-400">
-              Click a row to compare. Transfer using the button above.
             </div>
           </div>
         </div>
@@ -2385,7 +2258,95 @@ export default function MyTeamOverview() {
   );
 }
 
-// ---------- Pitch row (GKP / DEF / MID / FWD) ----------
+function ChartCard({ title, open, onToggle, children }) {
+  return (
+    <div className="rounded-3xl p-4 sm:p-5" style={glassCard}>
+      <button
+        onClick={onToggle}
+        className="flex items-center justify-between w-full text-left rounded-2xl px-3 py-2"
+        style={{
+          background: "rgba(15,23,42,0.64)",
+          color: "#e5e7eb",
+          border: "1px solid rgba(148,163,184,0.22)",
+        }}
+      >
+        <h2 className="text-sm sm:text-base font-semibold">{title}</h2>
+        {open ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+      </button>
+
+      {children}
+    </div>
+  );
+}
+
+function SquadMetricCard({
+  icon: Icon,
+  label,
+  value,
+  subValue,
+  tone = "gold",
+}) {
+  const toneMap = {
+    green: {
+      border: "rgba(52,211,153,0.3)",
+      value: "#34d399",
+      iconBg: "rgba(52,211,153,0.12)",
+    },
+    red: {
+      border: "rgba(248,113,113,0.3)",
+      value: "#f87171",
+      iconBg: "rgba(248,113,113,0.12)",
+    },
+    blue: {
+      border: "rgba(96,165,250,0.3)",
+      value: "#60a5fa",
+      iconBg: "rgba(96,165,250,0.12)",
+    },
+    purple: {
+      border: "rgba(196,181,253,0.3)",
+      value: "#c4b5fd",
+      iconBg: "rgba(196,181,253,0.12)",
+    },
+    gold: {
+      border: "rgba(251,191,36,0.3)",
+      value: "#fbbf24",
+      iconBg: "rgba(251,191,36,0.12)",
+    },
+  };
+
+  const colors = toneMap[tone] || toneMap.gold;
+
+  return (
+    <div
+      className="rounded-2xl p-3 sm:p-4"
+      style={{
+        ...softCard,
+        border: `1px solid ${colors.border}`,
+        background: "rgba(0,0,0,0.44)",
+      }}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="text-[11px] uppercase tracking-wide text-gray-300 mb-1">
+            {label}
+          </div>
+          <div className="text-lg sm:text-xl font-bold" style={{ color: colors.value }}>
+            {value}
+          </div>
+          {subValue && <div className="text-[10px] text-gray-400 mt-1">{subValue}</div>}
+        </div>
+
+        <div
+          className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+          style={{ background: colors.iconBg }}
+        >
+          <Icon size={16} style={{ color: colors.value }} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function PitchRow({
   players,
   label,
@@ -2399,23 +2360,21 @@ function PitchRow({
     <div className="flex justify-center gap-2 sm:gap-3 px-1">
       {players.map((player) => {
         const hasPhoto = !!player.photo;
-
         const selectedText =
           player.selected_pct != null ? `${player.selected_pct.toFixed(1)}%` : "–";
-
         const costRaw = player.now_cost != null ? Number(player.now_cost) : null;
         const costDisplay =
-          costRaw != null && Number.isFinite(costRaw) ? (costRaw / 10).toFixed(1) : null;
-
+          costRaw != null && Number.isFinite(costRaw)
+            ? (costRaw / 10).toFixed(1)
+            : null;
         const oppShort = player.opponent_display || "N/A";
-
         const droppable = dragInfo && dragInfo.type === "bench";
         const highlightAsTarget = swapModeActive || droppable;
 
         return (
           <div
-            key={player.name + player.squadIndex}
-            className="relative group flex flex-col items-center text-center text-[10px] sm:text-xs w-[68px] sm:w-[80px]"
+            key={`${player.name}-${player.squadIndex}`}
+            className="relative group flex flex-col items-center text-center text-[10px] sm:text-xs w-[70px] sm:w-[82px]"
             onClick={() => {
               if (onClickSwap) onClickSwap(player.squadIndex);
             }}
@@ -2428,20 +2387,18 @@ function PitchRow({
               onDrop(dragInfo.squadIndex, player.squadIndex);
             }}
           >
-            {/* Target highlight ring */}
             {highlightAsTarget && (
               <div
-                className="absolute inset-x-1 -top-1 bottom-0 rounded-xl pointer-events-none"
+                className="absolute inset-x-1 -top-1 bottom-0 rounded-2xl pointer-events-none"
                 style={{
-                  border: "1px dashed rgba(251,191,36,0.45)",
-                  boxShadow: "0 0 0 2px rgba(251,191,36,0.12)",
+                  border: "1px dashed rgba(251,191,36,0.4)",
+                  boxShadow: "0 0 0 2px rgba(251,191,36,0.08)",
                 }}
               />
             )}
 
-            {/* Drop hint */}
             {droppable && (
-              <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] px-2 py-0.5 rounded-full bg-black/80 border border-amber-300/30 text-amber-200">
+              <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] px-2 py-0.5 rounded-full bg-black/80 border border-amber-300/30 text-amber-200 whitespace-nowrap">
                 Drop to swap
               </div>
             )}
@@ -2458,15 +2415,15 @@ function PitchRow({
               <Info size={11} className="text-amber-300" />
             </button>
 
-            {/* Hover tooltip (desktop) */}
-            <div className="absolute -top-1 left-1/2 -translate-x-1/2 -translate-y-full z-20 hidden group-hover:flex flex-col items-center px-2 py-1 rounded-md bg-black/80 border border-white/20 shadow-lg">
+            <div className="absolute -top-1 left-1/2 -translate-x-1/2 -translate-y-full z-20 hidden group-hover:flex flex-col items-center px-2 py-1 rounded-md bg-black/85 border border-white/20 shadow-lg">
               <div className="text-[9px] text-gray-200">
                 {label} • Sel {selectedText}
               </div>
-              {costDisplay && <div className="text-[9px] text-gray-200">£{costDisplay}m</div>}
+              {costDisplay && (
+                <div className="text-[9px] text-gray-200">£{costDisplay}m</div>
+              )}
             </div>
 
-            {/* Avatar */}
             {hasPhoto ? (
               <img
                 src={player.photo}
@@ -2480,8 +2437,7 @@ function PitchRow({
               <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gray-800 shadow" />
             )}
 
-            {/* Main visible info */}
-            <div className="mt-1 font-semibold truncate max-w-[80px]">
+            <div className="mt-1 font-semibold truncate max-w-[82px]">
               {player.web_name}
             </div>
 
@@ -2500,7 +2456,6 @@ function PitchRow({
   );
 }
 
-// ---------- Compare Card ----------
 function CompareCard({ title, player, accent = "amber", placeholder = "—" }) {
   const ring =
     accent === "emerald" ? "border-emerald-400/30" : "border-amber-400/30";
@@ -2508,8 +2463,8 @@ function CompareCard({ title, player, accent = "amber", placeholder = "—" }) {
     accent === "emerald" ? "text-emerald-200" : "text-amber-200";
 
   return (
-    <div className={`rounded-xl border ${ring} bg-black/55 p-2 min-w-0`}>
-      <div className={`text-[10px] uppercase tracking-wide ${titleColor} mb-1`}>
+    <div className={`rounded-2xl border ${ring} bg-black/55 p-3 min-w-0`}>
+      <div className={`text-[10px] uppercase tracking-wide ${titleColor} mb-2`}>
         {title}
       </div>
 
@@ -2523,25 +2478,27 @@ function CompareCard({ title, player, accent = "amber", placeholder = "—" }) {
             <img
               src={player.photo}
               alt={player.web_name}
-              className="w-9 h-9 rounded-full object-cover bg-gray-800"
+              className="w-10 h-10 rounded-full object-cover bg-gray-800"
               onError={(e) => {
                 e.currentTarget.src = "";
               }}
             />
           ) : (
-            <div className="w-9 h-9 rounded-full bg-gray-800" />
+            <div className="w-10 h-10 rounded-full bg-gray-800" />
           )}
 
           <div className="min-w-0 flex-1">
             <div className="text-xs font-semibold truncate">{player.web_name}</div>
-            <div className="mt-1 grid grid-cols-3 gap-1 text-[10px] text-gray-300">
-              <div className="rounded-md bg-black/60 border border-white/10 px-1.5 py-1">
+
+            <div className="mt-2 grid grid-cols-3 gap-1 text-[10px] text-gray-300">
+              <div className="rounded-xl bg-black/60 border border-white/10 px-2 py-1.5">
                 <div className="text-[9px] text-gray-400">Price</div>
                 <div className="font-semibold">
                   {player.price != null ? `£${Number(player.price).toFixed(1)}m` : "–"}
                 </div>
               </div>
-              <div className="rounded-md bg-black/60 border border-white/10 px-1.5 py-1">
+
+              <div className="rounded-xl bg-black/60 border border-white/10 px-2 py-1.5">
                 <div className="text-[9px] text-gray-400">Sel</div>
                 <div className="font-semibold">
                   {player.selected_pct != null
@@ -2549,7 +2506,8 @@ function CompareCard({ title, player, accent = "amber", placeholder = "—" }) {
                     : "–"}
                 </div>
               </div>
-              <div className="rounded-md bg-black/60 border border-white/10 px-1.5 py-1">
+
+              <div className="rounded-xl bg-black/60 border border-white/10 px-2 py-1.5">
                 <div className="text-[9px] text-gray-400">Pts</div>
                 <div className="font-semibold">
                   {player.totalPoints != null

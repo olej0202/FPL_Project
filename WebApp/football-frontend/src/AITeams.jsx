@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
+import { Sparkles, Users, RefreshCw, Zap } from "lucide-react";
 
 export default function AITeams() {
     const navigate = useNavigate();
