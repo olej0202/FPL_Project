@@ -505,6 +505,21 @@ export default function MyTeamOptimize() {
               Build a cleaner transfer plan, compare AI vs statistical logic, and move the best recommendations straight into your planner.
             </p>
           </div>
+          <button
+                onClick={handleOptimizeClick}
+                disabled={!has_changed || !teamId}
+                className="gold-ring inline-flex items-center justify-center gap-2 font-semibold px-4 py-3 rounded-2xl transition-all"
+                style={{
+                  border: `1px solid ${has_changed && teamId ? PALETTE.gold : "#374151"}`,
+                  background: has_changed && teamId ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)` : "rgba(0,0,0,0.55)",
+                  color: has_changed && teamId ? "#000" : PALETTE.muted,
+                  cursor: has_changed && teamId ? "pointer" : "not-allowed",
+                  boxShadow: has_changed && teamId ? "0 14px 30px rgba(0,0,0,0.35)" : "none",
+                }}
+              >
+                <Wand2 size={17} className="lucide-icon" />
+                Optimize now
+              </button>
 
  
         </header>
@@ -537,21 +552,7 @@ export default function MyTeamOptimize() {
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between mt-4">
               <div className="hidden sm:block" />
 
-              <button
-                onClick={handleOptimizeClick}
-                disabled={!has_changed || !teamId}
-                className="gold-ring inline-flex items-center justify-center gap-2 font-semibold px-4 py-3 rounded-2xl transition-all"
-                style={{
-                  border: `1px solid ${has_changed && teamId ? PALETTE.gold : "#374151"}`,
-                  background: has_changed && teamId ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)` : "rgba(0,0,0,0.55)",
-                  color: has_changed && teamId ? "#000" : PALETTE.muted,
-                  cursor: has_changed && teamId ? "pointer" : "not-allowed",
-                  boxShadow: has_changed && teamId ? "0 14px 30px rgba(0,0,0,0.35)" : "none",
-                }}
-              >
-                <Wand2 size={17} className="lucide-icon" />
-                Optimize now
-              </button>
+              
             </div>
 
             <div className="mt-5 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-12 gap-3 items-start">

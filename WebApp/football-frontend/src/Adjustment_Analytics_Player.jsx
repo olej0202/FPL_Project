@@ -297,16 +297,22 @@ function SearchableMultiSelect({
 
       <div
         ref={panelRef}
-        className="overflow-hidden rounded-2xl transition-all duration-200 ease-out"
-        style={{
-          ...panelStyle,
-          opacity: isOpen ? 1 : 0,
-          transform: isOpen ? "translateY(0)" : "translateY(-6px)",
-          pointerEvents: isOpen ? "auto" : "none",
-          border: `1px solid ${PALETTE.gold}`,
-          background: "rgba(0,0,0,0.98)",
-          boxShadow: isOpen ? "0 18px 40px rgba(0,0,0,0.7)" : "none",
-        }}
+  className="overflow-hidden rounded-2xl transition-all duration-200 ease-out"
+  style={{
+    position: window.innerWidth < 768 ? "fixed" : "absolute",
+    left: window.innerWidth < 768 ? "12px" : "0px",
+    right: window.innerWidth < 768 ? "12px" : "0px",
+    top: window.innerWidth < 768 ? "0px" : "calc(100% + 8px)",
+    maxHeight: window.innerWidth < 768 ? "320px" : "280px",
+    zIndex: window.innerWidth < 768 ? 9999 : 200,
+    ...panelStyle,
+    opacity: isOpen ? 1 : 0,
+    transform: isOpen ? "translateY(0)" : "translateY(-6px)",
+    pointerEvents: isOpen ? "auto" : "none",
+    border: `1px solid ${PALETTE.gold}`,
+    background: "rgba(0,0,0,0.98)",
+    boxShadow: isOpen ? "0 18px 40px rgba(0,0,0,0.7)" : "none",
+  }}
       >
         <div className="p-3">
           <div className="relative">
@@ -1794,16 +1800,7 @@ export default function PlayerAdjustmentsPage() {
           >
             <div className="flex items-center gap-2">
               <span>Name</span>
-              <span
-                className="rounded-full px-2 py-0.5 text-[10px] font-semibold"
-                style={{
-                  background: "rgba(184,134,11,0.08)",
-                  color: PALETTE.gold,
-                  border: `1px solid rgba(184,134,11,0.24)`,
-                }}
-              >
-                Click row
-              </span>
+              
             </div>
           </th>
 
@@ -1910,7 +1907,7 @@ export default function PlayerAdjustmentsPage() {
                     style={{ color: PALETTE.gold }}
                   >
                     <MousePointerClick size={11} />
-                    Open adjustments
+                    Adjust Player
                   </div>
                 </div>
 
