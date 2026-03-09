@@ -1,4 +1,10 @@
-import React, { useEffect, useMemo, useState, useRef, useCallback } from "react";
+import React, {
+  useEffect,
+  useMemo,
+  useState,
+  useRef,
+  useCallback,
+} from "react";
 import {
   Search,
   RotateCcw,
@@ -40,7 +46,9 @@ const PALETTE = {
   danger: "#f87171",
 };
 
-const FILTERS_STORAGE_KEY = "player_adjustments_filters_v4";
+const FILTERS_STORAGE_KEY = "player_adjustments_filters_v7";
+const MIN_MINUTES = 0;
+const MAX_MINUTES = 90;
 
 const MEASURE_LABELS = {
   Points: "Predicted Points",
@@ -67,6 +75,17 @@ function getMeasureMeta(measure) {
     default:
       return { label: measure, icon: Activity, short: measure, emoji: "•" };
   }
+}
+
+function useDebouncedValue(value, delay = 180) {
+  const [debounced, setDebounced] = useState(value);
+
+  useEffect(() => {
+    const id = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(id);
+  }, [value, delay]);
+
+  return debounced;
 }
 
 function GlassCard({ children, className = "", style = {} }) {
@@ -168,9 +187,17 @@ function SearchableMultiSelect({
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [isMobile, setIsMobile] = useState(false);
   const triggerRef = useRef(null);
   const panelRef = useRef(null);
   const [panelStyle, setPanelStyle] = useState({});
+
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 768);
+    onResize();
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
   const filteredOptions = useMemo(() => {
     const term = search.toLowerCase();
@@ -181,16 +208,21 @@ function SearchableMultiSelect({
     });
   }, [options, search]);
 
-  const toggleValue = (value) => {
-    if (selectedValues.includes(value)) {
-      onChange(selectedValues.filter((v) => v !== value));
-    } else {
-      onChange([...selectedValues, value]);
-    }
-  };
+  const selectedSet = useMemo(() => new Set(selectedValues), [selectedValues]);
 
-  const handleSelectAll = () => onChange(options.map((o) => o.value));
-  const handleClearAll = () => onChange([]);
+  const toggleValue = useCallback(
+    (value) => {
+      if (selectedSet.has(value)) {
+        onChange(selectedValues.filter((v) => v !== value));
+      } else {
+        onChange([...selectedValues, value]);
+      }
+    },
+    [onChange, selectedSet, selectedValues]
+  );
+
+  const handleSelectAll = useCallback(() => onChange(options.map((o) => o.value)), [onChange, options]);
+  const handleClearAll = useCallback(() => onChange([]), [onChange]);
 
   const selectedLabel =
     selectedValues.length === 0 ? "All" : `${selectedValues.length} selected`;
@@ -202,9 +234,8 @@ function SearchableMultiSelect({
       if (!triggerRef.current) return;
 
       const rect = triggerRef.current.getBoundingClientRect();
-      const isSmall = window.innerWidth < 768;
 
-      if (isSmall) {
+      if (isMobile) {
         const left = 12;
         const right = 12;
         const top = rect.bottom + 8;
@@ -240,7 +271,7 @@ function SearchableMultiSelect({
       window.removeEventListener("resize", updatePosition);
       window.removeEventListener("scroll", updatePosition, true);
     };
-  }, [isOpen]);
+  }, [isOpen, isMobile]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -248,9 +279,7 @@ function SearchableMultiSelect({
     const onClickOutside = (e) => {
       const insideTrigger = triggerRef.current?.contains(e.target);
       const insidePanel = panelRef.current?.contains(e.target);
-      if (!insideTrigger && !insidePanel) {
-        setIsOpen(false);
-      }
+      if (!insideTrigger && !insidePanel) setIsOpen(false);
     };
 
     document.addEventListener("mousedown", onClickOutside);
@@ -297,12 +326,6 @@ function SearchableMultiSelect({
         ref={panelRef}
         className="overflow-hidden rounded-2xl transition-all duration-200 ease-out"
         style={{
-          position: window.innerWidth < 768 ? "fixed" : "absolute",
-          left: window.innerWidth < 768 ? "12px" : "0px",
-          right: window.innerWidth < 768 ? "12px" : "0px",
-          top: window.innerWidth < 768 ? "0px" : "calc(100% + 8px)",
-          maxHeight: window.innerWidth < 768 ? "320px" : "280px",
-          zIndex: window.innerWidth < 768 ? 9999 : 200,
           ...panelStyle,
           opacity: isOpen ? 1 : 0,
           transform: isOpen ? "translateY(0)" : "translateY(-6px)",
@@ -368,7 +391,7 @@ function SearchableMultiSelect({
             </div>
           ) : (
             filteredOptions.map((opt) => {
-              const checked = selectedValues.includes(opt.value);
+              const checked = selectedSet.has(opt.value);
               return (
                 <label
                   key={opt.value}
@@ -410,6 +433,124 @@ function TeamColorDot({ teamName }) {
   );
 }
 
+const PlayerRow = React.memo(function PlayerRow({
+  row,
+  idx,
+  allGWs,
+  onOpen,
+}) {
+  return (
+    <tr
+      onClick={() => onOpen(row.nameKey)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onOpen(row.nameKey);
+        }
+      }}
+      tabIndex={0}
+      role="button"
+      aria-label={`Open player adjustments for ${row.displayName}`}
+      className="group cursor-pointer transition-all duration-150 focus:outline-none"
+      style={{
+        background: idx % 2 === 0 ? "#080808" : "#141414",
+      }}
+    >
+      <td
+        className="sticky left-0 z-[1] px-4 py-3 font-semibold"
+        style={{
+          background: idx % 2 === 0 ? "#080808" : "#141414",
+          borderBottom: "1px solid #222",
+        }}
+      >
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <div className="truncate">{row.displayName}</div>
+            <div
+              className="mt-1 inline-flex items-center gap-1 text-[11px] opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus:opacity-100"
+              style={{ color: PALETTE.gold }}
+            >
+              <MousePointerClick size={11} />
+              Adjust Player
+            </div>
+          </div>
+
+          <div
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full opacity-0 transition-all duration-150 group-hover:translate-x-0 group-hover:opacity-100 group-focus:translate-x-0 group-focus:opacity-100"
+            style={{
+              border: `1px solid rgba(184,134,11,0.28)`,
+              background: "rgba(184,134,11,0.08)",
+              color: PALETTE.gold,
+              transform: "translateX(-4px)",
+            }}
+          >
+            <ChevronRight size={16} />
+          </div>
+        </div>
+      </td>
+
+      <td className="px-4 py-3" style={{ borderBottom: "1px solid #222" }}>
+        {row.position}
+      </td>
+
+      <td className="px-4 py-3" style={{ borderBottom: "1px solid #222" }}>
+        <div className="inline-flex items-center gap-2">
+          <TeamColorDot teamName={row.teamName} />
+          <span>{row.teamName}</span>
+        </div>
+      </td>
+
+      <td className="px-4 py-3 text-right" style={{ borderBottom: "1px solid #222" }}>
+        {row.value != null && !Number.isNaN(row.value) ? row.value.toFixed(1) : "-"}
+      </td>
+
+      {allGWs.map((gw) => {
+        const cell = row.gwMeasures[gw];
+        const displayValue = cell ? cell[row.selectedMeasure] : 0;
+        return (
+          <td key={gw} className="px-4 py-3 text-right" style={{ borderBottom: "1px solid #222" }}>
+            {displayValue != null && !Number.isNaN(displayValue)
+              ? Number(displayValue).toFixed(2)
+              : "0.00"}
+          </td>
+        );
+      })}
+
+      <td
+        className="px-4 py-3 text-right font-semibold"
+        style={{ borderBottom: "1px solid #222", color: PALETTE.gold }}
+      >
+        {row.totalMeasure != null && !Number.isNaN(row.totalMeasure)
+          ? row.totalMeasure.toFixed(2)
+          : "0.00"}
+      </td>
+    </tr>
+  );
+});
+
+function playersNeedCalcSync(currentRows, nextRows) {
+  if (!Array.isArray(currentRows) || !Array.isArray(nextRows)) return true;
+  if (currentRows.length !== nextRows.length) return true;
+
+  for (let i = 0; i < nextRows.length; i++) {
+    const a = currentRows[i];
+    const b = nextRows[i];
+    if (!a || !b) return true;
+
+    if (
+      Number(a.calc_points) !== Number(b.calc_points) ||
+      Number(a.calc_goals) !== Number(b.calc_goals) ||
+      Number(a.calc_assists) !== Number(b.calc_assists) ||
+      Number(a.calc_minutes) !== Number(b.calc_minutes) ||
+      Number(a.calc_cbi) !== Number(b.calc_cbi)
+    ) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 export default function PlayerAdjustmentsPage() {
   const {
     fetchIfNeeded,
@@ -428,11 +569,12 @@ export default function PlayerAdjustmentsPage() {
 
   const [playersState, setPlayersState] = useState(null);
   const [teamsState, setTeamsState] = useState(null);
-  const [hasHydratedFromContext, setHasHydratedFromContext] = useState(false);
   const [playerImageUrl, setPlayerImageUrl] = useState("");
 
   const [selectedMeasure, setSelectedMeasure] = useState("Points");
   const [playerNameFilter, setPlayerNameFilter] = useState("");
+  const debouncedPlayerNameFilter = useDebouncedValue(playerNameFilter, 180);
+
   const [selectedPlayerNames, setSelectedPlayerNames] = useState([]);
   const [selectedTeamCodes, setSelectedTeamCodes] = useState([]);
   const [selectedPositions, setSelectedPositions] = useState([]);
@@ -459,7 +601,6 @@ export default function PlayerAdjustmentsPage() {
   const [modalBaselineRows, setModalBaselineRows] = useState([]);
 
   const svgRefMinutes = useRef(null);
-  const svgRefPoints = useRef(null);
   const [draggingGW, setDraggingGW] = useState(null);
   const dragGWRef = useRef(null);
 
@@ -474,32 +615,107 @@ export default function PlayerAdjustmentsPage() {
     [changes, changesVersion]
   );
 
-  const MIN_MINUTES = 0;
-  const MAX_MINUTES = 90;
-
-  const getPlayerKey = (p) => p.name || `${p.web_name || "unknown"}_${p.Team || "NA"}`;
+  const getPlayerKey = useCallback(
+    (p) => p.name || `${p.web_name || "unknown"}_${p.Team || "NA"}`,
+    []
+  );
 
   useEffect(() => {
     fetchIfNeeded();
   }, [fetchIfNeeded]);
 
   useEffect(() => {
-    if (hasHydratedFromContext) return;
-    if (Teamdata?.current) setTeamsState([...Teamdata.current]);
-    if (Playerdata?.current) setPlayersState([...Playerdata.current]);
-    if (Teamdata?.current || Playerdata?.current) setHasHydratedFromContext(true);
-  }, [Teamdata, Playerdata, dataVersion, hasHydratedFromContext]);
+    if (!loading && Array.isArray(Teamdata?.current)) {
+      setTeamsState([...Teamdata.current]);
+    }
+  }, [Teamdata, teamVersion, loading]);
 
   useEffect(() => {
-    if (!Teamdata?.current) return;
-    setTeamsState([...Teamdata.current]);
-  }, [teamVersion, Teamdata]);
+    if (!loading && Array.isArray(Playerdata?.current)) {
+      setPlayersState([...Playerdata.current]);
+    }
+  }, [Playerdata, dataVersion, loading]);
 
   const isDataReady =
-    hasHydratedFromContext &&
+    !loading &&
     Array.isArray(playersState) &&
-    Array.isArray(teamsState) &&
-    !loading;
+    Array.isArray(teamsState);
+
+  const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) => {
+    if (!teamRow) {
+      return {
+        Goal_Scored: 0,
+        Assists: 0,
+        Points: 0,
+        Avg_Minutes: 0,
+        CBI_Predictions: 0,
+        _CBI01_Raw: 0,
+      };
+    }
+
+    const matchCount = Math.max(0, Number(teamRow.Matches) || 0);
+
+    const avgMinRaw = Number(playerRow.average_minutes) || 0;
+    const avgMin = Math.max(MIN_MINUTES, Math.min(MAX_MINUTES, avgMinRaw));
+
+    const goalShare = Number(playerRow.Goal_share) || 0;
+    const assistShare = Number(playerRow.Assist_share) || 0;
+
+    const penData = Number(playerRow.Pen_data) || 0;
+    const oppGoalThreat = Number(playerRow.Pos_Goal_Threat) || 0;
+    const oppAssistThreat = Number(playerRow.Pos_Assist_Threat) || 0;
+
+    const bps = Number(playerRow.BPS) || 0;
+    const defaultPoints = Number(playerRow.default_points) || 0;
+
+    const goalFactor = Number(playerRow.Goal_factor) || 0;
+    const assistFactor = Number(playerRow.Assist_factor) || 0;
+    const csFactor = Number(playerRow.CS_factor) || 0;
+
+    const xg = Number(teamRow.XG) || 0;
+    const cs = Number(teamRow.CS) || 0;
+
+    const minutesAdj = avgMin ? Math.min(1, avgMin / 80) : 0;
+    const csPerMatch = matchCount > 0 ? cs / matchCount : 0;
+    const csNonlinear =
+      csFactor > 1 ? ((30 - Math.min(30, csPerMatch * 100)) / -35) * matchCount : 0;
+
+    const goalScored =
+      ((goalShare * 0.9 + 0.1 * oppGoalThreat) * xg + penData * 0.8 * matchCount) *
+      minutesAdj;
+
+    const assists =
+      ((assistShare * 0.9 + 0.1 * oppAssistThreat) * xg) * minutesAdj;
+
+    const rawCbi01 = clamp01(Number(playerRow.CBI_Percent) || 0);
+
+    const cbi01 =
+      (typeof cbi01Override === "number" && Number.isFinite(cbi01Override)
+        ? clamp01(cbi01Override)
+        : rawCbi01) * minutesAdj;
+
+    const defconPointsTerm = cbi01 * minutesAdj * matchCount * 1.8;
+    const basePoints =
+      (defaultPoints + bps) * minutesAdj * matchCount + defconPointsTerm;
+
+    const points = Math.max(
+      0,
+      basePoints +
+        goalScored * goalFactor +
+        assists * assistFactor +
+        cs * csFactor * minutesAdj +
+        csNonlinear
+    );
+
+    return {
+      Goal_Scored: goalScored,
+      Assists: assists,
+      Points: points,
+      Avg_Minutes: avgMin * matchCount,
+      CBI_Predictions: cbi01,
+      _CBI01_Raw: rawCbi01,
+    };
+  }, []);
 
   const { teamLookup, teamNamesByCode } = useMemo(() => {
     const names = new Map();
@@ -558,8 +774,8 @@ export default function PlayerAdjustmentsPage() {
   const allGWs = useMemo(() => {
     if (!playersState) return [];
     const set = new Set();
-    playersState.forEach((p) => set.add(p.GW));
-    return Array.from(set).sort((a, b) => Number(a) - Number(b));
+    playersState.forEach((p) => set.add(Number(p.GW)));
+    return Array.from(set).sort((a, b) => a - b);
   }, [playersState]);
 
   const allPositions = useMemo(() => {
@@ -575,182 +791,88 @@ export default function PlayerAdjustmentsPage() {
     if (selectedGwEnd == null) setSelectedGwEnd(allGWs[allGWs.length - 1]);
   }, [allGWs, selectedGwStart, selectedGwEnd]);
 
-  const computeMeasures = useCallback(
-    (playerRow, teamRow, cbi01Override = null) => {
-      if (!teamRow) {
-        return {
-          Goal_Scored: 0,
-          Assists: 0,
-          Points: 0,
-          Avg_Minutes: 0,
-          CBI_Predictions: 0,
-          _CBI01_Raw: 0,
-        };
+  const playersByKey = useMemo(() => {
+    const map = new Map();
+    for (const row of playersState || []) {
+      const key = getPlayerKey(row);
+      if (!map.has(key)) map.set(key, []);
+      map.get(key).push(row);
+    }
+    for (const [, rows] of map) {
+      rows.sort((a, b) => Number(a.GW) - Number(b.GW));
+    }
+    return map;
+  }, [playersState, getPlayerKey]);
+
+  const playersWithCalcs = useMemo(() => {
+    if (!playersState?.length) return [];
+
+    const meanByPlayer = new Map();
+    const adjByPlayer = new Map();
+
+    for (const [nameKey, rowsForPlayer] of playersByKey.entries()) {
+      let rawSum = 0;
+      let rawCount = 0;
+
+      for (const row of rowsForPlayer) {
+        const teamRow = teamLookup.get(`${String(row.Team)}_${Number(row.GW)}`);
+        const base = computeMeasures(row, teamRow);
+        const raw01 = clamp01(Number(base._CBI01_Raw));
+        rawSum += raw01;
+        rawCount += 1;
       }
 
-      const matchCount = Math.max(0, Number(teamRow.Matches) || 0);
+      const meanRaw = rawCount ? rawSum / rawCount : 0;
+      meanByPlayer.set(nameKey, meanRaw);
 
-      const avgMinRaw = Number(playerRow.average_minutes) || 0;
-      const avgMin = Math.max(MIN_MINUTES, Math.min(MAX_MINUTES, avgMinRaw));
-
-      const goalShare = Number(playerRow.Goal_share) || 0;
-      const assistShare = Number(playerRow.Assist_share) || 0;
-
-      const penData = Number(playerRow.Pen_data) || 0;
-      const oppGoalThreat = Number(playerRow.Pos_Goal_Threat) || 0;
-      const oppAssistThreat = Number(playerRow.Pos_Assist_Threat) || 0;
-
-      const bps = Number(playerRow.BPS) || 0;
-      const defaultPoints = Number(playerRow.default_points) || 0;
-
-      const goalFactor = Number(playerRow.Goal_factor) || 0;
-      const assistFactor = Number(playerRow.Assist_factor) || 0;
-      const csFactor = Number(playerRow.CS_factor) || 0;
-
-      const xg = Number(teamRow.XG) || 0;
-      const cs = Number(teamRow.CS) || 0;
-
-      const minutesAdj = avgMin ? Math.min(1, avgMin / 80) : 0;
-      const csPerMatch = matchCount > 0 ? cs / matchCount : 0;
-      const csNonlinear =
-        csFactor > 1 ? ((30 - Math.min(30, csPerMatch * 100)) / -35) * matchCount : 0;
-
-      const goalScored =
-        ((goalShare * 0.9 + 0.1 * oppGoalThreat) * xg + penData * 0.8 * matchCount) *
-        minutesAdj;
-
-      const assists =
-        ((assistShare * 0.9 + 0.1 * oppAssistThreat) * xg) * minutesAdj;
-
-      const rawCbi01 = clamp01(Number(playerRow.CBI_Percent) || 0);
-
-      const cbi01 =
-        (typeof cbi01Override === "number" && Number.isFinite(cbi01Override)
-          ? clamp01(cbi01Override)
-          : rawCbi01) * minutesAdj;
-
-      const defconPointsTerm = cbi01 * minutesAdj * matchCount * 1.8;
-      const basePoints =
-        (defaultPoints + bps) * minutesAdj * matchCount + defconPointsTerm;
-
-      const points = Math.max(
-        0,
-        basePoints +
-          goalScored * goalFactor +
-          assists * assistFactor +
-          cs * csFactor * minutesAdj +
-          csNonlinear
+      const first = rowsForPlayer[0];
+      const storedAdj = Number(first?.defcon_adjust_01);
+      adjByPlayer.set(
+        nameKey,
+        Number.isFinite(storedAdj) ? clamp01(storedAdj) : clamp01(meanRaw)
       );
+    }
+
+    return playersState.map((row) => {
+      const key = getPlayerKey(row);
+      const teamRow = teamLookup.get(`${String(row.Team)}_${Number(row.GW)}`);
+      const meanRaw = meanByPlayer.get(key) ?? 0;
+      const newAdj = adjByPlayer.get(key) ?? clamp01(meanRaw);
+
+      const mRaw = computeMeasures(row, teamRow);
+      const raw01 = clamp01(Number(mRaw._CBI01_Raw));
+      const adjustedCbi01 = clamp01(raw01 - meanRaw + newAdj);
+      const measures = computeMeasures(row, teamRow, adjustedCbi01);
 
       return {
-        Goal_Scored: goalScored,
-        Assists: assists,
-        Points: points,
-        Avg_Minutes: avgMin * matchCount,
-        CBI_Predictions: cbi01,
-        _CBI01_Raw: rawCbi01,
+        ...row,
+        calc_points: measures.Points,
+        calc_goals: measures.Goal_Scored,
+        calc_assists: measures.Assists,
+        calc_minutes: measures.Avg_Minutes,
+        calc_cbi: measures.CBI_Predictions,
       };
-    },
-    []
-  );
+    });
+  }, [playersState, playersByKey, teamLookup, computeMeasures, getPlayerKey]);
 
   useEffect(() => {
     if (!isDataReady) return;
-    if (!playersState) return;
+    if (!Array.isArray(playersWithCalcs)) return;
+    if (!playersNeedCalcSync(Playerdata?.current, playersWithCalcs)) return;
 
-    const timeoutId = setTimeout(() => {
-      const groups = new Map();
-      for (let i = 0; i < playersState.length; i++) {
-        const row = playersState[i];
-        const key = getPlayerKey(row);
-        if (!groups.has(key)) groups.set(key, []);
-        groups.get(key).push(i);
-      }
-
-      const meanRawByKey = new Map();
-      const adjByKey = new Map();
-
-      groups.forEach((idxs, key) => {
-        let sum = 0;
-        let n = 0;
-
-        for (const idx of idxs) {
-          const row = playersState[idx];
-          const teamRow = teamLookup.get(`${String(row.Team)}_${Number(row.GW)}`);
-          const m = computeMeasures(row, teamRow);
-          const raw01 = clamp01(Number(m._CBI01_Raw));
-          sum += raw01;
-          n += 1;
-        }
-
-        const meanRaw = n ? sum / n : 0;
-        meanRawByKey.set(key, meanRaw);
-
-        const firstRow = playersState[idxs[0]];
-        const stored = Number(firstRow?.defcon_adjust_01);
-        const adj = Number.isFinite(stored) ? clamp01(stored) : clamp01(meanRaw);
-        adjByKey.set(key, adj);
-      });
-
-      const updated = playersState.map((row) => {
-        const key = getPlayerKey(row);
-        const teamRow = teamLookup.get(`${String(row.Team)}_${Number(row.GW)}`);
-
-        const mRaw = computeMeasures(row, teamRow);
-        const raw01 = clamp01(Number(mRaw._CBI01_Raw));
-
-        const meanRaw = meanRawByKey.get(key) ?? 0;
-        const newAdj = adjByKey.get(key) ?? clamp01(meanRaw);
-        const adjustedCbi01 = clamp01(raw01 - meanRaw + newAdj);
-
-        const measures = computeMeasures(row, teamRow, adjustedCbi01);
-
-        return {
-          ...row,
-          calc_points: measures.Points,
-          calc_goals: measures.Goal_Scored,
-          calc_assists: measures.Assists,
-          calc_minutes: measures.Avg_Minutes,
-          calc_cbi: measures.CBI_Predictions,
-        };
-      });
-
-      let changed = false;
-      for (let i = 0; i < updated.length; i++) {
-        const a = updated[i];
-        const b = playersState[i];
-        if (
-          !b ||
-          a.calc_points !== b.calc_points ||
-          a.calc_goals !== b.calc_goals ||
-          a.calc_assists !== b.calc_assists ||
-          a.calc_minutes !== b.calc_minutes ||
-          a.calc_cbi !== b.calc_cbi
-        ) {
-          changed = true;
-          break;
-        }
-      }
-
-      if (!changed) return;
-
-      updatePlayerData(() => updated);
-      setPlayersState(updated);
-    }, 150);
-
-    return () => clearTimeout(timeoutId);
-  }, [isDataReady, playersState, teamLookup, computeMeasures, updatePlayerData]);
+    updatePlayerData(() => playersWithCalcs);
+  }, [isDataReady, playersWithCalcs, Playerdata, updatePlayerData]);
 
   const {
-    playerTableRows,
+    playerTableRowsBase,
     globalMinValue,
     globalMaxValue,
     allTeamOptions,
     playerOptions,
   } = useMemo(() => {
-    if (!playersState || !teamsState) {
+    if (!playersWithCalcs || !teamsState) {
       return {
-        playerTableRows: [],
+        playerTableRowsBase: [],
         globalMinValue: 0,
         globalMaxValue: 150,
         allTeamOptions: [],
@@ -758,91 +880,57 @@ export default function PlayerAdjustmentsPage() {
       };
     }
 
-    const playerMap = new Map();
+    const grouped = new Map();
 
-    playersState.forEach((p) => {
-      const key = getPlayerKey(p);
-      if (!key) return;
+    for (const row of playersWithCalcs) {
+      const key = getPlayerKey(row);
+      if (!grouped.has(key)) grouped.set(key, []);
+      grouped.get(key).push(row);
+    }
 
-      const teamCode = String(p.Team);
-      const teamName = teamNamesByCode.get(teamCode) || "";
-      const displayName = p.web_name || p.name || key;
-
-      if (!playerMap.has(key)) {
-        playerMap.set(key, {
-          nameKey: key,
-          displayName,
-          name: p.name,
-          web_name: p.web_name,
-          position: p.position,
-          teamCode,
-          teamName,
-          value: Number(p.value) || 0,
-          rowsByGW: new Map(),
-          defcon_adjust_01: Number(p.defcon_adjust_01),
-        });
-      }
-
-      const entry = playerMap.get(key);
-      entry.rowsByGW.set(p.GW, p);
-
-      const stored = Number(p.defcon_adjust_01);
-      if (Number.isFinite(stored)) entry.defcon_adjust_01 = stored;
-    });
-
-    const tableRows = [];
+    const rows = [];
     let minValue = Infinity;
     let maxValue = -Infinity;
 
-    playerMap.forEach((entry) => {
-      const gwValues = {};
-      let totalMeasure = 0;
+    for (const [nameKey, rowsForPlayer] of grouped.entries()) {
+      const first = rowsForPlayer[0];
+      if (!first) continue;
 
-      const rawByGw = new Map();
-      let sum = 0;
-      let n = 0;
+      const teamCode = String(first.Team);
+      const teamName = teamNamesByCode.get(teamCode) || "";
+      const displayName = first.web_name || first.name || nameKey;
+      const value = Number(first.value) || 0;
 
-      allGWs.forEach((gw) => {
-        const playerRow = entry.rowsByGW.get(gw);
-        if (!playerRow) return;
-        const teamRow = teamLookup.get(`${entry.teamCode}_${gw}`);
-        const m = computeMeasures(playerRow, teamRow);
-        const raw01 = clamp01(Number(m._CBI01_Raw));
-        rawByGw.set(gw, raw01);
-        sum += raw01;
-        n += 1;
-      });
-
-      const meanRaw = n ? sum / n : 0;
-      const storedAdj = Number(entry.defcon_adjust_01);
-      const newAdj = Number.isFinite(storedAdj) ? clamp01(storedAdj) : clamp01(meanRaw);
-
-      allGWs.forEach((gw) => {
-        const playerRow = entry.rowsByGW.get(gw);
-        if (!playerRow) {
-          gwValues[gw] = null;
-          return;
-        }
-
-        const teamRow = teamLookup.get(`${entry.teamCode}_${gw}`);
-        const raw01 = rawByGw.get(gw) ?? 0;
-        const adjustedCbi01 = clamp01(raw01 - meanRaw + newAdj);
-
-        const measures = computeMeasures(playerRow, teamRow, adjustedCbi01);
-        const v = measures[selectedMeasure];
-        gwValues[gw] = v;
-
-        if (typeof v === "number" && !Number.isNaN(v)) totalMeasure += v;
-      });
-
-      const value = entry.value;
       if (!Number.isNaN(value)) {
         minValue = Math.min(minValue, value);
         maxValue = Math.max(maxValue, value);
       }
 
-      tableRows.push({ ...entry, gwValues, totalMeasure });
-    });
+      const gwMeasures = {};
+      for (const row of rowsForPlayer) {
+        const gw = Number(row.GW);
+        gwMeasures[gw] = {
+          Points: Number(row.calc_points) || 0,
+          Goal_Scored: Number(row.calc_goals) || 0,
+          Assists: Number(row.calc_assists) || 0,
+          Avg_Minutes: Number(row.calc_minutes) || 0,
+          CBI_Predictions: Number(row.calc_cbi) || 0,
+        };
+      }
+
+      rows.push({
+        nameKey,
+        displayName,
+        name: first.name,
+        web_name: first.web_name,
+        position: first.position,
+        teamCode,
+        teamName,
+        value,
+        gwMeasures,
+        defcon_adjust_01: Number(first.defcon_adjust_01),
+      });
+    }
 
     if (minValue === Infinity) minValue = 0;
     if (maxValue === -Infinity) maxValue = 150;
@@ -852,7 +940,7 @@ export default function PlayerAdjustmentsPage() {
       name,
     }));
 
-    const playerOptions = tableRows
+    const playerOptionsSorted = rows
       .map((row) => ({
         value: row.nameKey,
         label: row.displayName || row.web_name || row.nameKey,
@@ -860,13 +948,13 @@ export default function PlayerAdjustmentsPage() {
       .sort((a, b) => a.label.localeCompare(b.label));
 
     return {
-      playerTableRows: tableRows,
+      playerTableRowsBase: rows,
       globalMinValue: minValue,
       globalMaxValue: maxValue,
       allTeamOptions: teamOptions,
-      playerOptions,
+      playerOptions: playerOptionsSorted,
     };
-  }, [playersState, teamsState, allGWs, selectedMeasure, teamLookup, teamNamesByCode, computeMeasures]);
+  }, [playersWithCalcs, teamsState, getPlayerKey, teamNamesByCode]);
 
   useEffect(() => {
     if (globalMinValue != null && globalMaxValue != null && valueThreshold === null) {
@@ -896,6 +984,7 @@ export default function PlayerAdjustmentsPage() {
         if (parsed.sortConfig) setSortConfig(parsed.sortConfig);
       }
     } catch {
+      // ignore
     } finally {
       setFiltersHydrated(true);
     }
@@ -941,17 +1030,23 @@ export default function PlayerAdjustmentsPage() {
     const horizonMin = Math.min(horizonStart ?? 0, horizonEnd ?? 0);
     const horizonMax = Math.max(horizonStart ?? 0, horizonEnd ?? 0);
 
-    let rows = playerTableRows.map((row) => {
-      const totalMeasure = allGWs.reduce((sum, gw) => {
-        if (Number(gw) < horizonMin || Number(gw) > horizonMax) return sum;
-        const v = row.gwValues[gw];
-        return typeof v === "number" && !Number.isNaN(v) ? sum + v : sum;
-      }, 0);
-      return { ...row, totalMeasure };
+    let rows = playerTableRowsBase.map((row) => {
+      let totalMeasure = 0;
+      for (const gw of allGWs) {
+        if (gw < horizonMin || gw > horizonMax) continue;
+        const measures = row.gwMeasures[gw];
+        const value = measures ? measures[selectedMeasure] : 0;
+        if (typeof value === "number" && !Number.isNaN(value)) totalMeasure += value;
+      }
+      return {
+        ...row,
+        totalMeasure,
+        selectedMeasure,
+      };
     });
 
-    if (playerNameFilter.trim()) {
-      const term = playerNameFilter.trim().toLowerCase();
+    const term = debouncedPlayerNameFilter.trim().toLowerCase();
+    if (term) {
       rows = rows.filter((r) => {
         const display = (r.displayName || "").toLowerCase();
         const web = (r.web_name || "").toLowerCase();
@@ -981,11 +1076,11 @@ export default function PlayerAdjustmentsPage() {
     }
 
     if (sortConfig.type === "gw" && sortConfig.gw != null) {
-      const gwKey = sortConfig.gw;
+      const gwKey = Number(sortConfig.gw);
       const dir = sortConfig.direction;
       rows = [...rows].sort((a, b) => {
-        const va = typeof a.gwValues[gwKey] === "number" ? a.gwValues[gwKey] : -Infinity;
-        const vb = typeof b.gwValues[gwKey] === "number" ? b.gwValues[gwKey] : -Infinity;
+        const va = a.gwMeasures[gwKey]?.[selectedMeasure] ?? -Infinity;
+        const vb = b.gwMeasures[gwKey]?.[selectedMeasure] ?? -Infinity;
         return dir === "asc" ? va - vb : vb - va;
       });
     } else if (sortConfig.type === "total") {
@@ -999,8 +1094,10 @@ export default function PlayerAdjustmentsPage() {
 
     return rows;
   }, [
-    playerTableRows,
-    playerNameFilter,
+    playerTableRowsBase,
+    allGWs,
+    selectedMeasure,
+    debouncedPlayerNameFilter,
     selectedPlayerNames,
     selectedTeamCodes,
     selectedPositions,
@@ -1009,26 +1106,25 @@ export default function PlayerAdjustmentsPage() {
     sortConfig,
     selectedGwStart,
     selectedGwEnd,
-    allGWs,
   ]);
 
-  const handleSortByGW = (gw) => {
+  const handleSortByGW = useCallback((gw) => {
     setSortConfig((prev) => {
       if (prev.type === "gw" && prev.gw === gw) {
         return { type: "gw", gw, direction: prev.direction === "asc" ? "desc" : "asc" };
       }
       return { type: "gw", gw, direction: "desc" };
     });
-  };
+  }, []);
 
-  const handleSortByTotal = () => {
+  const handleSortByTotal = useCallback(() => {
     setSortConfig((prev) => {
       if (prev.type === "total") {
         return { type: "total", gw: null, direction: prev.direction === "asc" ? "desc" : "asc" };
       }
       return { type: "total", gw: null, direction: "desc" };
     });
-  };
+  }, []);
 
   const handleResetData = async () => {
     if (Teamdata) Teamdata.current = null;
@@ -1038,17 +1134,16 @@ export default function PlayerAdjustmentsPage() {
     setPlayersState(null);
     setSortConfig({ type: null, gw: null, direction: "desc" });
     updateChanges([]);
-    setHasHydratedFromContext(false);
 
     await fetchIfNeeded();
   };
 
-  const openPlayerModal = (nameKey) => {
+  const openPlayerModal = useCallback((nameKey) => {
     setActivePlayerKey(nameKey);
     setIsModalOpen(true);
-  };
+  }, []);
 
-  const closeModal = () => {
+  const closeModal = useCallback(() => {
     setIsModalOpen(false);
     setActivePlayerKey(null);
     setDraggingGW(null);
@@ -1057,14 +1152,14 @@ export default function PlayerAdjustmentsPage() {
     setPendingAssistShare(null);
     setMinutesDraft({});
     setModalBaselineRows([]);
-    setDefconAdjust01(0);
+    setDefconAdjust01(0.5);
     setDefconMean01(0);
-  };
+  }, []);
 
   const activePlayerFirstRow = modalBaselineRows.length > 0 ? modalBaselineRows[0] : null;
 
   useEffect(() => {
-    if (!isModalOpen || !activePlayerKey || !playersState) {
+    if (!isModalOpen || !activePlayerKey) {
       setModalBaselineRows([]);
       setPendingGoalShare(null);
       setPendingAssistShare(null);
@@ -1074,11 +1169,7 @@ export default function PlayerAdjustmentsPage() {
       return;
     }
 
-    const rows = playersState
-      .filter((p) => getPlayerKey(p) === activePlayerKey)
-      .sort((a, b) => Number(a.GW) - Number(b.GW))
-      .map((r) => ({ ...r }));
-
+    const rows = (playersByKey.get(activePlayerKey) || []).map((r) => ({ ...r }));
     setModalBaselineRows(rows);
 
     const first = rows[0];
@@ -1106,7 +1197,7 @@ export default function PlayerAdjustmentsPage() {
       const stored = Number(first.defcon_adjust_01);
       setDefconAdjust01(Number.isFinite(stored) ? clamp01(stored) : clamp01(mean));
     }
-  }, [isModalOpen, activePlayerKey, playersState, teamLookup, computeMeasures]);
+  }, [isModalOpen, activePlayerKey, playersByKey, teamLookup, computeMeasures]);
 
   const chartDataMinutes = useMemo(() => {
     if (!modalBaselineRows || modalBaselineRows.length === 0) return [];
@@ -1164,7 +1255,7 @@ export default function PlayerAdjustmentsPage() {
     computeMeasures,
   ]);
 
-  const logAdjustment = (entry) => {
+  const logAdjustment = useCallback((entry) => {
     updateChanges((prev) => [
       {
         id: `${Date.now()}_${Math.random().toString(36).slice(2)}`,
@@ -1173,14 +1264,14 @@ export default function PlayerAdjustmentsPage() {
       },
       ...(prev || []),
     ]);
-  };
+  }, [updateChanges]);
 
-  const formatAdjustmentValue = (a, field) => {
+  const formatAdjustmentValue = useCallback((a, field) => {
     const v = a[field];
     if (typeof v !== "number") return v;
     if (a.type === "Minutes") return v.toFixed(0);
     return v.toFixed(2);
-  };
+  }, []);
 
   const displayAdjustments = useMemo(() => {
     const map = new Map();
@@ -1239,7 +1330,7 @@ export default function PlayerAdjustmentsPage() {
     defconMean01,
   ]);
 
-  const handleSavePlayerChanges = () => {
+  const handleSavePlayerChanges = useCallback(() => {
     if (!activePlayerKey || !playersState || !activePlayerFirstRow || !hasPlayerChanges) return;
 
     const baselineRows = modalBaselineRows;
@@ -1310,52 +1401,63 @@ export default function PlayerAdjustmentsPage() {
 
     if (adjustmentsToLog.length === 0) return;
 
-    const applyPlayerEdits = (prev) => {
-      if (!prev) return prev;
-      return prev.map((p) => {
-        if (getPlayerKey(p) !== activePlayerKey) return p;
+    const nextPlayers = playersState.map((p) => {
+      if (getPlayerKey(p) !== activePlayerKey) return p;
 
-        const gw = p.GW;
-        const updated = { ...p };
+      const gw = p.GW;
+      const updated = { ...p };
 
-        updated.Goal_share = newGoal;
-        updated.Assist_share = newAssist;
+      updated.Goal_share = newGoal;
+      updated.Assist_share = newAssist;
 
-        if (minutesDraft[gw] != null) updated.average_minutes = minutesDraft[gw];
-        updated.defcon_adjust_01 = newDA;
+      if (minutesDraft[gw] != null) updated.average_minutes = minutesDraft[gw];
+      updated.defcon_adjust_01 = newDA;
 
-        return updated;
-      });
-    };
+      return updated;
+    });
 
-    setPlayersState(applyPlayerEdits);
-    updatePlayerData(applyPlayerEdits);
+    setPlayersState(nextPlayers);
+    updatePlayerData(() => nextPlayers);
     adjustmentsToLog.forEach(logAdjustment);
-  };
+  }, [
+    activePlayerKey,
+    playersState,
+    activePlayerFirstRow,
+    hasPlayerChanges,
+    modalBaselineRows,
+    pendingGoalShare,
+    pendingAssistShare,
+    minutesDraft,
+    defconAdjust01,
+    defconMean01,
+    getPlayerKey,
+    updatePlayerData,
+    logAdjustment,
+  ]);
 
-  const handleSaveAndClose = () => {
+  const handleSaveAndClose = useCallback(() => {
     handleSavePlayerChanges();
     closeModal();
-  };
+  }, [handleSavePlayerChanges, closeModal]);
 
-  const scheduleGoalShareChange = (value) => {
+  const scheduleGoalShareChange = useCallback((value) => {
     if (shareFrameRef.current) cancelAnimationFrame(shareFrameRef.current);
     shareFrameRef.current = requestAnimationFrame(() => setPendingGoalShare(value));
-  };
+  }, []);
 
-  const scheduleAssistShareChange = (value) => {
+  const scheduleAssistShareChange = useCallback((value) => {
     if (assistFrameRef.current) cancelAnimationFrame(assistFrameRef.current);
     assistFrameRef.current = requestAnimationFrame(() => setPendingAssistShare(value));
-  };
+  }, []);
 
-  const scheduleDefconChange = (value) => {
+  const scheduleDefconChange = useCallback((value) => {
     if (defconFrameRef.current) cancelAnimationFrame(defconFrameRef.current);
     defconFrameRef.current = requestAnimationFrame(() =>
       setDefconAdjust01(clamp01(value))
     );
-  };
+  }, []);
 
-  const updateMinutesFromClientY = (clientY) => {
+  const updateMinutesFromClientY = useCallback((clientY) => {
     if (!svgRefMinutes.current || !activePlayerKey || !draggingGW) return;
 
     const svgRect = svgRefMinutes.current.getBoundingClientRect();
@@ -1372,13 +1474,28 @@ export default function PlayerAdjustmentsPage() {
     minutesFrameRef.current = requestAnimationFrame(() => {
       setMinutesDraft((prev) => ({ ...prev, [dragGWRef.current]: rounded }));
     });
-  };
+  }, [activePlayerKey, draggingGW]);
 
-  const handleCircleMouseDown = (gw, e) => {
+  const handleCircleMouseDown = useCallback((gw, e) => {
     e.preventDefault();
     setDraggingGW(gw);
     dragGWRef.current = gw;
-  };
+  }, []);
+
+  const handleCircleTouchStart = useCallback((gw, e) => {
+    setDraggingGW(gw);
+    dragGWRef.current = gw;
+    if (e.touches?.[0]) updateMinutesFromClientY(e.touches[0].clientY);
+  }, [updateMinutesFromClientY]);
+
+  useEffect(() => {
+    return () => {
+      if (shareFrameRef.current) cancelAnimationFrame(shareFrameRef.current);
+      if (assistFrameRef.current) cancelAnimationFrame(assistFrameRef.current);
+      if (defconFrameRef.current) cancelAnimationFrame(defconFrameRef.current);
+      if (minutesFrameRef.current) cancelAnimationFrame(minutesFrameRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     if (!isModalOpen || !activePlayerFirstRow?.name) {
@@ -1395,12 +1512,6 @@ export default function PlayerAdjustmentsPage() {
       .then((url) => setPlayerImageUrl(url.trim()))
       .catch(() => setPlayerImageUrl(""));
   }, [isModalOpen, activePlayerFirstRow?.name]);
-
-  const handleCircleTouchStart = (gw, e) => {
-    setDraggingGW(gw);
-    dragGWRef.current = gw;
-    if (e.touches?.[0]) updateMinutesFromClientY(e.touches[0].clientY);
-  };
 
   const teamOptions = useMemo(
     () => allTeamOptions.map((t) => ({ value: String(t.code), label: t.name })),
@@ -1501,7 +1612,7 @@ export default function PlayerAdjustmentsPage() {
         </header>
 
         <GlassCard
-          className="mb-6 p-4 sm:p-5 lg:p-6 overflow-visible"
+          className="mb-6 p-4 sm:p-5 lg:p-6 overflow-visible hover:border-none"
           style={{
             position: "relative",
             zIndex: 30,
@@ -1511,10 +1622,8 @@ export default function PlayerAdjustmentsPage() {
           <button
             type="button"
             onClick={() => setShowFilters((p) => !p)}
-            className="w-full text-left"
-            style={{
-              background: "transparent",
-            }}
+            className="w-full text-left hover:border-none"
+            style={{ background: "transparent" }}
           >
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between hover:border-none">
               <div>
@@ -1525,7 +1634,7 @@ export default function PlayerAdjustmentsPage() {
                   <Filter size={16} />
                   Filters and controls
                 </div>
-                <div className="mt-1 text-xs" style={{ color: PALETTE.muted }}>
+                <div className="mt-1 text-xs hover:border-none" style={{ color: PALETTE.muted }}>
                   Filter players by player, team, position, value, and gameweek horizon.
                 </div>
               </div>
@@ -1788,7 +1897,7 @@ export default function PlayerAdjustmentsPage() {
                     onChange={(e) => setSelectedMeasure(e.target.value)}
                     className="rounded-xl text-xs font-semibold outline-none"
                     style={{
-                      background: "transparent",
+                      background: "black",
                       color: PALETTE.gold,
                       border: "none",
                       height: "32px",
@@ -1916,88 +2025,13 @@ export default function PlayerAdjustmentsPage() {
 
               <tbody>
                 {filteredPlayerRows.map((row, idx) => (
-                  <tr
+                  <PlayerRow
                     key={row.nameKey}
-                    onClick={() => openPlayerModal(row.nameKey)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        openPlayerModal(row.nameKey);
-                      }
-                    }}
-                    tabIndex={0}
-                    role="button"
-                    aria-label={`Open player adjustments for ${row.displayName}`}
-                    className="group cursor-pointer transition-all duration-150 focus:outline-none"
-                    style={{
-                      background: idx % 2 === 0 ? "#080808" : "#141414",
-                    }}
-                  >
-                    <td
-                      className="sticky left-0 z-[1] px-4 py-3 font-semibold"
-                      style={{
-                        background: idx % 2 === 0 ? "#080808" : "#141414",
-                        borderBottom: "1px solid #222",
-                      }}
-                    >
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="min-w-0">
-                          <div className="truncate">{row.displayName}</div>
-                          <div
-                            className="mt-1 inline-flex items-center gap-1 text-[11px] opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus:opacity-100"
-                            style={{ color: PALETTE.gold }}
-                          >
-                            <MousePointerClick size={11} />
-                            Adjust Player
-                          </div>
-                        </div>
-
-                        <div
-                          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full opacity-0 transition-all duration-150 group-hover:translate-x-0 group-hover:opacity-100 group-focus:translate-x-0 group-focus:opacity-100"
-                          style={{
-                            border: `1px solid rgba(184,134,11,0.28)`,
-                            background: "rgba(184,134,11,0.08)",
-                            color: PALETTE.gold,
-                            transform: "translateX(-4px)",
-                          }}
-                        >
-                          <ChevronRight size={16} />
-                        </div>
-                      </div>
-                    </td>
-
-                    <td className="px-4 py-3" style={{ borderBottom: "1px solid #222" }}>
-                      {row.position}
-                    </td>
-
-                    <td className="px-4 py-3" style={{ borderBottom: "1px solid #222" }}>
-                      <div className="inline-flex items-center gap-2">
-                        <TeamColorDot teamName={row.teamName} />
-                        <span>{row.teamName}</span>
-                      </div>
-                    </td>
-
-                    <td className="px-4 py-3 text-right" style={{ borderBottom: "1px solid #222" }}>
-                      {row.value != null && !Number.isNaN(row.value) ? row.value.toFixed(1) : "-"}
-                    </td>
-
-                    {allGWs.map((gw) => (
-                      <td key={gw} className="px-4 py-3 text-right" style={{ borderBottom: "1px solid #222" }}>
-                        {row.gwValues[gw] != null && !Number.isNaN(row.gwValues[gw])
-                          ? row.gwValues[gw].toFixed(2)
-                          : "0.00"}
-                      </td>
-                    ))}
-
-                    <td
-                      className="px-4 py-3 text-right font-semibold"
-                      style={{ borderBottom: "1px solid #222", color: PALETTE.gold }}
-                    >
-                      {row.totalMeasure != null && !Number.isNaN(row.totalMeasure)
-                        ? row.totalMeasure.toFixed(2)
-                        : "0.00"}
-                    </td>
-                  </tr>
+                    row={row}
+                    idx={idx}
+                    allGWs={allGWs}
+                    onOpen={openPlayerModal}
+                  />
                 ))}
 
                 {filteredPlayerRows.length === 0 && (
@@ -2117,7 +2151,7 @@ export default function PlayerAdjustmentsPage() {
                     style={{ accentColor: PALETTE.gold }}
                   />
                   <div className="mt-2 text-sm" style={{ color: "#d1c3a9" }}>
-                    {(pendingGoalShare ?? 0).toFixed(2) * 100}%
+                    {Math.round((pendingGoalShare ?? 0) * 100)}%
                   </div>
                 </FilterCard>
 
@@ -2133,7 +2167,7 @@ export default function PlayerAdjustmentsPage() {
                     style={{ accentColor: PALETTE.gold }}
                   />
                   <div className="mt-2 text-sm" style={{ color: "#d1c3a9" }}>
-                    {(pendingAssistShare ?? 0).toFixed(2) * 100}%
+                    {Math.round((pendingAssistShare ?? 0) * 100)}%
                   </div>
                 </FilterCard>
 
@@ -2278,7 +2312,6 @@ export default function PlayerAdjustmentsPage() {
                     <div className="text-sm">No point data for this player.</div>
                   ) : (
                     <svg
-                      ref={svgRefPoints}
                       width="100%"
                       height="280"
                       viewBox="0 0 600 280"

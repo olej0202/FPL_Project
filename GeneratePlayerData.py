@@ -282,7 +282,7 @@ def add_team_share_per90(
         "Rolling_adjusted_XG","rolling_Threat","Rolling_adjusted_XA",
         "Rolling_creativity","Rolling_adjusted_BPS","rolling_XG","rolling_XA","Share_of_XG","Share_of_XA", "rolling_Adjusted_XG_historic","rolling_Adjusted_XA_historic"
         ,"Threat_Mean","Creativity_Mean","rolling_Goal_min","rolling_Assist_min","Rolling_adjusted_XG_per90","Rolling_adjusted_XA_per90"
-        ,"Rolling_adjusted_Threat_per90","Rolling_adjusted_creativity_per90","Big_Chances","Big_Chances_Created","Rolling_adjusted_XA_per90_both","Rolling_adjusted_XG_per90_both"
+        ,"Rolling_adjusted_Threat_per90","Rolling_adjusted_creativity_per90","Big_Chances","Big_Chances_Created","Rolling_adjusted_XA_per90_both","Rolling_adjusted_XG_per90_both","Goal_Statistics","Assist_Statistics"
     ]
     
 
@@ -823,8 +823,8 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
         player_row["Team_Pen_Data"] = player_team_pen_data
         player_row["Pen_Number"] = pen_number
         player_row["player_risiko"] = player_risiko
-        player_row["Goal_Index"] = player_row["Understat_POSXG"] * player_risiko + (1 - player_risiko) * player_row["Rolling_adjusted_XG"]
-        player_row["Assist_Index"] = player_row["Understat_POSXA"] * player_risiko + (1 - player_risiko) * player_row["Rolling_adjusted_XA"]
+        player_row["Goal_Index"] = player_row["Understat_POSXG"] * player_risiko + (1 - player_risiko) * player_row["Goal_Statistics"]
+        player_row["Assist_Index"] = player_row["Understat_POSXA"] * player_risiko + (1 - player_risiko) * player_row["Assist_Statistics"]
         player_row["Player_code"] = player_code
 
         if len(clusters) < 2:

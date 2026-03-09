@@ -1410,13 +1410,13 @@ def main_Transform():
                     )
             player_df["Adjusted_Threat"] = np.where(
                     player_df["was_home"] == 1,  # Condition: if was_home is 1
-                    player_df["Threat"].clip(upper=90) / player_df["XGCA"],  # True: expected_goals / XGCA
-                    player_df["Threat"].clip(upper=90) / player_df["XGCH"]  # False: expected_goals / XGCh
+                    player_df["Threat"].clip(upper=150) / player_df["XGCA"],  # True: expected_goals / XGCA
+                    player_df["Threat"].clip(upper=150) / player_df["XGCH"]  # False: expected_goals / XGCh
                     )
             player_df["Adjusted_Creativity"] = np.where(
                     player_df["was_home"] == 1,  # Condition: if was_home is 1
-                    player_df["creativity"].clip(upper=80) / player_df["XGCA"],  # True: expected_goals / XGCA
-                    player_df["creativity"].clip(upper=80) / player_df["XGCH"]  # False: expected_goals / XGCh
+                    player_df["creativity"].clip(upper=150) / player_df["XGCA"],  # True: expected_goals / XGCA
+                    player_df["creativity"].clip(upper=150) / player_df["XGCH"]  # False: expected_goals / XGCh
                     )
             player_df["Rolling_adjusted_XA_form"]=player_df['Adjusted_XA'].ewm(span=15, adjust=False).var()
             player_df["Rolling_adjusted_XA"]=adjust_measure(player_df, 'expected_assists')
@@ -1447,33 +1447,33 @@ def main_Transform():
             player_df["Rolling_adjusted_XG_per90_short"] = (
                 player_df["Adjusted_XG"]
                     .clip(upper=1.2)
-                    .rolling(window=8, min_periods=1)
+                    .rolling(window=10, min_periods=1)
                     .sum()
                 /
                 player_df["minutes"]
                     .clip(lower=10)
-                    .rolling(window=8, min_periods=1)
+                    .rolling(window=10, min_periods=1)
                     .sum()
             ) * 90
             
             player_df["Rolling_adjusted_XA_per90_short"] = (
                 player_df["Adjusted_XA"]
                     .clip(upper=1.2)
-                    .rolling(window=8, min_periods=1)
+                    .rolling(window=10, min_periods=1)
                     .sum()
                 /
                 player_df["minutes"]
                     .clip(lower=10)
-                    .rolling(window=8, min_periods=1)
+                    .rolling(window=10, min_periods=1)
                     .sum()
             ) * 90
             
-            player_df["Rolling_adjusted_XA_per90_both"]=player_df["Rolling_adjusted_XA_per90_short"]*0.5+0.5*player_df["Rolling_adjusted_XA_per90"]
-            player_df["Rolling_adjusted_XG_per90_both"]=player_df["Rolling_adjusted_XG_per90_short"]*0.5+0.5*player_df["Rolling_adjusted_XG_per90"]
+            player_df["Rolling_adjusted_XA_per90_both"]=player_df["Rolling_adjusted_XA_per90_short"]*0.3+0.7*player_df["Rolling_adjusted_XA_per90"]
+            player_df["Rolling_adjusted_XG_per90_both"]=player_df["Rolling_adjusted_XG_per90_short"]*0.3+0.7*player_df["Rolling_adjusted_XG_per90"]
                
             player_df["Rolling_adjusted_Threat_per90"] = (
                 player_df["Adjusted_Threat"]
-                    .clip(upper=100)
+                    .clip(upper=150)
                     .rolling(window=30, min_periods=1)
                     .sum()
                 /
@@ -1491,8 +1491,35 @@ def main_Transform():
                     .clip(lower=10)
                     .rolling(window=30, min_periods=1)
                     .sum()
-            ) * 90    
+            ) * 90   
+            
+            player_df["Rolling_adjusted_Threat_per90_Short"] = (
+                player_df["Adjusted_Threat"]
+                    .clip(upper=150)
+                    .rolling(window=10, min_periods=1)
+                    .sum()
+                /
+                player_df["minutes"]
+                    .clip(lower=10)
+                    .rolling(window=10, min_periods=1)
+                    .sum()
+            ) * 90     
+            player_df["Rolling_adjusted_creativity_per90_Short"] = (
+                player_df["Adjusted_Creativity"]
+                    .rolling(window=10, min_periods=1)
+                    .sum()
+                /
+                player_df["minutes"]
+                    .clip(lower=10)
+                    .rolling(window=10, min_periods=1)
+                    .sum()
+            ) * 90   
+            
+            player_df["Goal_Statistics"]=player_df["Rolling_adjusted_XG_per90_both"]*0.6+0.0025*(player_df["Rolling_adjusted_Threat_per90"]*0.7+0.3*player_df["Rolling_adjusted_Threat_per90_Short"])+0.15*player_df["rolling_Goal_min"]
+            player_df["Assist_Statistics"]=player_df["Rolling_adjusted_XA_per90_both"]*0.65+0.0015*(player_df["Rolling_adjusted_creativity_per90"]*0.7+0.3*player_df["Rolling_adjusted_creativity_per90_Short"])+0.2*player_df["rolling_Assist_min"]
                
+            
+            
             player_df["Adjusted_BPS"] = np.where(
                     player_df["was_home"] == 1,  # Condition: if was_home is 1
                     player_df["bps"].clip(upper=50) / player_df["XGCA"],  # True: expected_goals / XGCA
