@@ -1568,7 +1568,34 @@ export default function MyTeamOverview() {
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-3 self-start mb-4">
+          
+
+          {swapHintText && (
+            <div className="mb-4">
+              <div
+                className="rounded-2xl border border-amber-400/35 bg-black/60 px-3 py-2.5 flex items-center justify-between gap-3"
+                style={{ boxShadow: "0 10px 24px rgba(0,0,0,0.45)" }}
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <ArrowLeftRight size={16} className="text-amber-300" />
+                  <div className="text-[12px] text-gray-100 truncate">
+                    <span className="font-semibold">Swap</span>{" "}
+                    <span className="text-gray-300">{swapHintText}</span>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={clearSwapMode}
+                  className="shrink-0 inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-full border border-white/15 bg-black/70 hover:bg-black/90"
+                >
+                  <X size={12} className="text-gray-300" />
+                  <span className="text-gray-200">Cancel</span>
+                </button>
+              </div>
+            </div>
+          )}
+          <div className="flex items-center gap-3 mb-4">
                 <button
                   onClick={handlePrevGW}
                   disabled={currentGW === null || availableGWs.indexOf(currentGW) === 0}
@@ -1602,34 +1629,10 @@ export default function MyTeamOverview() {
                   <ChevronRight size={18} />
                 </button>
               </div>
-
-          {swapHintText && (
-            <div className="mb-4">
-              <div
-                className="rounded-2xl border border-amber-400/35 bg-black/60 px-3 py-2.5 flex items-center justify-between gap-3"
-                style={{ boxShadow: "0 10px 24px rgba(0,0,0,0.45)" }}
-              >
-                <div className="flex items-center gap-2 min-w-0">
-                  <ArrowLeftRight size={16} className="text-amber-300" />
-                  <div className="text-[12px] text-gray-100 truncate">
-                    <span className="font-semibold">Swap</span>{" "}
-                    <span className="text-gray-300">{swapHintText}</span>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={clearSwapMode}
-                  className="shrink-0 inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-full border border-white/15 bg-black/70 hover:bg-black/90"
-                >
-                  <X size={12} className="text-gray-300" />
-                  <span className="text-gray-200">Cancel</span>
-                </button>
-              </div>
-            </div>
-          )}
+          
 
           <div className="flex flex-col xl:flex-row gap-6 xl:gap-8 items-stretch">
+            
             <div className="flex-1 flex items-center justify-center min-w-0">
               <div
                 className="w-full max-w-[470px] mx-auto aspect-[8/15] sm:aspect-[2/3.1] bg-no-repeat bg-cover bg-center border rounded-2xl px-2 py-2"
@@ -1639,7 +1642,9 @@ export default function MyTeamOverview() {
                   boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
                 }}
               >
+                
                 <div className="flex flex-col h-full pt-1 pb-2 gap-8 justify-start">
+                  
                   <PitchRow
                     players={gkStarters}
                     label="GKP"

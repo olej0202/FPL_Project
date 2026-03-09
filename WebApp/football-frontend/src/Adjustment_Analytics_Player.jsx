@@ -10,7 +10,6 @@ import {
   ChevronDown,
   ChevronRight,
   Sparkles,
-  BarChart3,
   PencilLine,
   X,
   Save,
@@ -41,7 +40,7 @@ const PALETTE = {
   danger: "#f87171",
 };
 
-const FILTERS_STORAGE_KEY = "player_adjustments_filters_v2";
+const FILTERS_STORAGE_KEY = "player_adjustments_filters_v4";
 
 const MEASURE_LABELS = {
   Points: "Predicted Points",
@@ -56,17 +55,17 @@ const clamp01 = (x) => Math.max(0, Math.min(1, Number.isFinite(x) ? x : 0));
 function getMeasureMeta(measure) {
   switch (measure) {
     case "Points":
-      return { label: MEASURE_LABELS.Points, icon: Star };
+      return { label: MEASURE_LABELS.Points, icon: Star, short: "Points", emoji: "⭐" };
     case "Goal_Scored":
-      return { label: MEASURE_LABELS.Goal_Scored, icon: CircleDot };
+      return { label: MEASURE_LABELS.Goal_Scored, icon: CircleDot, short: "Goals", emoji: "⚽" };
     case "Assists":
-      return { label: MEASURE_LABELS.Assists, icon: Footprints };
+      return { label: MEASURE_LABELS.Assists, icon: Footprints, short: "Assists", emoji: "🥾" };
     case "Avg_Minutes":
-      return { label: MEASURE_LABELS.Avg_Minutes, icon: Clock3 };
+      return { label: MEASURE_LABELS.Avg_Minutes, icon: Clock3, short: "Minutes", emoji: "🕒" };
     case "CBI_Predictions":
-      return { label: MEASURE_LABELS.CBI_Predictions, icon: Shield };
+      return { label: MEASURE_LABELS.CBI_Predictions, icon: Shield, short: "Defcon", emoji: "🛡️" };
     default:
-      return { label: measure, icon: Activity };
+      return { label: measure, icon: Activity, short: measure, emoji: "•" };
   }
 }
 
@@ -242,7 +241,6 @@ function SearchableMultiSelect({
       window.removeEventListener("scroll", updatePosition, true);
     };
   }, [isOpen]);
-  
 
   useEffect(() => {
     if (!isOpen) return;
@@ -297,22 +295,22 @@ function SearchableMultiSelect({
 
       <div
         ref={panelRef}
-  className="overflow-hidden rounded-2xl transition-all duration-200 ease-out"
-  style={{
-    position: window.innerWidth < 768 ? "fixed" : "absolute",
-    left: window.innerWidth < 768 ? "12px" : "0px",
-    right: window.innerWidth < 768 ? "12px" : "0px",
-    top: window.innerWidth < 768 ? "0px" : "calc(100% + 8px)",
-    maxHeight: window.innerWidth < 768 ? "320px" : "280px",
-    zIndex: window.innerWidth < 768 ? 9999 : 200,
-    ...panelStyle,
-    opacity: isOpen ? 1 : 0,
-    transform: isOpen ? "translateY(0)" : "translateY(-6px)",
-    pointerEvents: isOpen ? "auto" : "none",
-    border: `1px solid ${PALETTE.gold}`,
-    background: "rgba(0,0,0,0.98)",
-    boxShadow: isOpen ? "0 18px 40px rgba(0,0,0,0.7)" : "none",
-  }}
+        className="overflow-hidden rounded-2xl transition-all duration-200 ease-out"
+        style={{
+          position: window.innerWidth < 768 ? "fixed" : "absolute",
+          left: window.innerWidth < 768 ? "12px" : "0px",
+          right: window.innerWidth < 768 ? "12px" : "0px",
+          top: window.innerWidth < 768 ? "0px" : "calc(100% + 8px)",
+          maxHeight: window.innerWidth < 768 ? "320px" : "280px",
+          zIndex: window.innerWidth < 768 ? 9999 : 200,
+          ...panelStyle,
+          opacity: isOpen ? 1 : 0,
+          transform: isOpen ? "translateY(0)" : "translateY(-6px)",
+          pointerEvents: isOpen ? "auto" : "none",
+          border: `1px solid ${PALETTE.gold}`,
+          background: "rgba(0,0,0,0.98)",
+          boxShadow: isOpen ? "0 18px 40px rgba(0,0,0,0.7)" : "none",
+        }}
       >
         <div className="p-3">
           <div className="relative">
@@ -397,6 +395,21 @@ function SearchableMultiSelect({
     </div>
   );
 }
+
+function TeamColorDot({ teamName }) {
+  const color = teamColors?.[teamName] || "#6b7280";
+
+  return (
+    <span
+      className="inline-block h-2.5 w-2.5 rounded-full shrink-0"
+      style={{
+        backgroundColor: color,
+        boxShadow: `0 0 0 1px rgba(255,255,255,0.18), 0 0 10px ${color}33`,
+      }}
+    />
+  );
+}
+
 export default function PlayerAdjustmentsPage() {
   const {
     fetchIfNeeded,
@@ -419,6 +432,7 @@ export default function PlayerAdjustmentsPage() {
   const [playerImageUrl, setPlayerImageUrl] = useState("");
 
   const [selectedMeasure, setSelectedMeasure] = useState("Points");
+  const [playerNameFilter, setPlayerNameFilter] = useState("");
   const [selectedPlayerNames, setSelectedPlayerNames] = useState([]);
   const [selectedTeamCodes, setSelectedTeamCodes] = useState([]);
   const [selectedPositions, setSelectedPositions] = useState([]);
@@ -480,8 +494,6 @@ export default function PlayerAdjustmentsPage() {
     if (!Teamdata?.current) return;
     setTeamsState([...Teamdata.current]);
   }, [teamVersion, Teamdata]);
-
-
 
   const isDataReady =
     hasHydratedFromContext &&
@@ -729,13 +741,20 @@ export default function PlayerAdjustmentsPage() {
     return () => clearTimeout(timeoutId);
   }, [isDataReady, playersState, teamLookup, computeMeasures, updatePlayerData]);
 
-  const { playerTableRows, globalMinValue, globalMaxValue, allTeamOptions } = useMemo(() => {
+  const {
+    playerTableRows,
+    globalMinValue,
+    globalMaxValue,
+    allTeamOptions,
+    playerOptions,
+  } = useMemo(() => {
     if (!playersState || !teamsState) {
       return {
         playerTableRows: [],
         globalMinValue: 0,
         globalMaxValue: 150,
         allTeamOptions: [],
+        playerOptions: [],
       };
     }
 
@@ -833,11 +852,19 @@ export default function PlayerAdjustmentsPage() {
       name,
     }));
 
+    const playerOptions = tableRows
+      .map((row) => ({
+        value: row.nameKey,
+        label: row.displayName || row.web_name || row.nameKey,
+      }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+
     return {
       playerTableRows: tableRows,
       globalMinValue: minValue,
       globalMaxValue: maxValue,
       allTeamOptions: teamOptions,
+      playerOptions,
     };
   }, [playersState, teamsState, allGWs, selectedMeasure, teamLookup, teamNamesByCode, computeMeasures]);
 
@@ -856,6 +883,7 @@ export default function PlayerAdjustmentsPage() {
       if (stored) {
         const parsed = JSON.parse(stored);
         if (parsed.selectedMeasure) setSelectedMeasure(parsed.selectedMeasure);
+        if (typeof parsed.playerNameFilter === "string") setPlayerNameFilter(parsed.playerNameFilter);
         if (Array.isArray(parsed.selectedPlayerNames)) setSelectedPlayerNames(parsed.selectedPlayerNames);
         if (Array.isArray(parsed.selectedTeamCodes)) setSelectedTeamCodes(parsed.selectedTeamCodes);
         if (Array.isArray(parsed.selectedPositions)) setSelectedPositions(parsed.selectedPositions);
@@ -881,6 +909,7 @@ export default function PlayerAdjustmentsPage() {
       FILTERS_STORAGE_KEY,
       JSON.stringify({
         selectedMeasure,
+        playerNameFilter,
         selectedPlayerNames,
         selectedTeamCodes,
         selectedPositions,
@@ -895,6 +924,7 @@ export default function PlayerAdjustmentsPage() {
     isDataReady,
     filtersHydrated,
     selectedMeasure,
+    playerNameFilter,
     selectedPlayerNames,
     selectedTeamCodes,
     selectedPositions,
@@ -920,14 +950,26 @@ export default function PlayerAdjustmentsPage() {
       return { ...row, totalMeasure };
     });
 
+    if (playerNameFilter.trim()) {
+      const term = playerNameFilter.trim().toLowerCase();
+      rows = rows.filter((r) => {
+        const display = (r.displayName || "").toLowerCase();
+        const web = (r.web_name || "").toLowerCase();
+        const full = (r.name || "").toLowerCase();
+        return display.includes(term) || web.includes(term) || full.includes(term);
+      });
+    }
+
     if (selectedPlayerNames.length > 0) {
       const set = new Set(selectedPlayerNames);
       rows = rows.filter((r) => set.has(r.nameKey));
     }
+
     if (selectedTeamCodes.length > 0) {
       const set = new Set(selectedTeamCodes);
       rows = rows.filter((r) => set.has(r.teamCode));
     }
+
     if (selectedPositions.length > 0) {
       const set = new Set(selectedPositions);
       rows = rows.filter((r) => set.has(r.position));
@@ -958,6 +1000,7 @@ export default function PlayerAdjustmentsPage() {
     return rows;
   }, [
     playerTableRows,
+    playerNameFilter,
     selectedPlayerNames,
     selectedTeamCodes,
     selectedPositions,
@@ -1020,19 +1063,6 @@ export default function PlayerAdjustmentsPage() {
 
   const activePlayerFirstRow = modalBaselineRows.length > 0 ? modalBaselineRows[0] : null;
 
-  function TeamColorDot({ teamName }) {
-  const color = teamColors?.[teamName] || "#6b7280";
-
-  return (
-    <span
-      className="inline-block h-2.5 w-2.5 rounded-full shrink-0"
-      style={{
-        backgroundColor: color,
-        boxShadow: `0 0 0 1px rgba(255,255,255,0.18), 0 0 10px ${color}33`,
-      }}
-    />
-  );
-}
   useEffect(() => {
     if (!isModalOpen || !activePlayerKey || !playersState) {
       setModalBaselineRows([]);
@@ -1349,40 +1379,28 @@ export default function PlayerAdjustmentsPage() {
     setDraggingGW(gw);
     dragGWRef.current = gw;
   };
-    useEffect(() => {
-  if (!isModalOpen || !activePlayerFirstRow?.name) {
-    setPlayerImageUrl("");
-    return;
-  }
 
-  fetch(
-    `https://fpl-project-t5e9.onrender.com/Player_picture?player=${encodeURIComponent(
-      activePlayerFirstRow.name
-    )}`
-  )
-    .then((res) => res.text())
-    .then((url) => setPlayerImageUrl(url.trim()))
-    .catch(() => setPlayerImageUrl(""));
-}, [isModalOpen, activePlayerFirstRow?.name]);
+  useEffect(() => {
+    if (!isModalOpen || !activePlayerFirstRow?.name) {
+      setPlayerImageUrl("");
+      return;
+    }
+
+    fetch(
+      `https://fpl-project-t5e9.onrender.com/Player_picture?player=${encodeURIComponent(
+        activePlayerFirstRow.name
+      )}`
+    )
+      .then((res) => res.text())
+      .then((url) => setPlayerImageUrl(url.trim()))
+      .catch(() => setPlayerImageUrl(""));
+  }, [isModalOpen, activePlayerFirstRow?.name]);
 
   const handleCircleTouchStart = (gw, e) => {
     setDraggingGW(gw);
     dragGWRef.current = gw;
     if (e.touches?.[0]) updateMinutesFromClientY(e.touches[0].clientY);
   };
-
-  const playerDisplayByKey = useMemo(() => {
-    const m = new Map();
-    playerTableRows.forEach((r) => {
-      if (!m.has(r.nameKey)) m.set(r.nameKey, r.displayName || r.web_name || r.nameKey);
-    });
-    return m;
-  }, [playerTableRows]);
-
-  const playerOptions = useMemo(
-    () => Array.from(playerDisplayByKey.entries()).map(([key, label]) => ({ value: key, label })),
-    [playerDisplayByKey]
-  );
 
   const teamOptions = useMemo(
     () => allTeamOptions.map((t) => ({ value: String(t.code), label: t.name })),
@@ -1460,7 +1478,7 @@ export default function PlayerAdjustmentsPage() {
             <StatCard
               icon={currentMeasureMeta.icon}
               label="Measure"
-              value={currentMeasureMeta.label.replace("Predicted ", "")}
+              value={currentMeasureMeta.short}
             />
             <StatCard icon={PencilLine} label="Changes" value={String(displayAdjustments.length)} />
             <button
@@ -1482,220 +1500,196 @@ export default function PlayerAdjustmentsPage() {
           </div>
         </header>
 
-<GlassCard
-  className="mb-6 p-4 sm:p-5 lg:p-6 overflow-visible"
-  style={{
-    position: "relative",
-    zIndex: 30,
-    background: "#000",
-  }}
->
-  <button
-    type="button"
-    onClick={() => setShowFilters((p) => !p)}
-    className="w-full text-left"
-    style={{
-      background: "transparent",
-    }}
-  >
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between hover:border-none">
-      <div>
-        <div
-          className="flex items-center gap-2 text-sm font-semibold hover:border-none"
-          style={{ color: PALETTE.gold }}
-        >
-          <Filter size={16} />
-          Filters and controls
-        </div>
-        <div className="mt-1 text-xs" style={{ color: PALETTE.muted }}>
-          Filter players by measure, team, position, value, and gameweek horizon.
-        </div>
-      </div>
-
-      <div
-        className="inline-flex items-center gap-2 self-start rounded-full px-3 py-2 text-sm font-semibold sm:self-center"
-        style={{
-          border: `1px solid ${PALETTE.gold}`,
-          background: "rgba(0,0,0,0.45)",
-          color: PALETTE.beige,
-        }}
-      >
-        {showFilters ? <EyeOff size={16} /> : <Eye size={16} />}
-        {showFilters ? "Hide filters" : "Show filters"}
-        <ChevronDown
-          size={16}
+        <GlassCard
+          className="mb-6 p-4 sm:p-5 lg:p-6 overflow-visible"
           style={{
-            transform: showFilters ? "rotate(0deg)" : "rotate(-90deg)",
-            transition: "transform 180ms ease",
-          }}
-        />
-      </div>
-    </div>
-  </button>
-
-  <div
-    className="transition-all duration-300 ease-in-out overflow-visible"
-    style={{
-      maxHeight: showFilters ? "1400px" : "0px",
-      opacity: showFilters ? 1 : 0,
-      marginTop: showFilters ? "1rem" : "0",
-      pointerEvents: showFilters ? "auto" : "none",
-    }}
-  >
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3 overflow-visible">
-      <FilterCard icon={currentMeasureMeta.icon} label="Measure">
-        <div className="mb-2 flex items-center gap-2 text-sm" style={{ color: PALETTE.gold }}>
-          <CurrentMeasureIcon size={16} />
-          {currentMeasureMeta.label}
-        </div>
-
-        <select
-          value={selectedMeasure}
-          onChange={(e) => setSelectedMeasure(e.target.value)}
-          className="w-full rounded-2xl px-3 py-3 text-sm outline-none transition-colors"
-          style={{
-            border: `1px solid ${PALETTE.border}`,
-            background: "rgba(0,0,0,0.76)",
-            color: PALETTE.beige,
+            position: "relative",
+            zIndex: 30,
+            background: "#000",
           }}
         >
-          <option value="Points">⭐ {MEASURE_LABELS.Points}</option>
-          <option value="Goal_Scored">⚽ {MEASURE_LABELS.Goal_Scored}</option>
-          <option value="Assists">🥾 {MEASURE_LABELS.Assists}</option>
-          <option value="Avg_Minutes">🕒 {MEASURE_LABELS.Avg_Minutes}</option>
-          <option value="CBI_Predictions">🛡️ {MEASURE_LABELS.CBI_Predictions}</option>
-        </select>
-      </FilterCard>
-
-      <FilterCard icon={Users} label="Players">
-        <SearchableMultiSelect
-          label="Players"
-          options={playerOptions}
-          selectedValues={selectedPlayerNames}
-          onChange={setSelectedPlayerNames}
-          placeholder="Search players..."
-        />
-      </FilterCard>
-
-      <FilterCard icon={Shield} label="Teams">
-        <SearchableMultiSelect
-          label="Teams"
-          options={teamOptions}
-          selectedValues={selectedTeamCodes}
-          onChange={setSelectedTeamCodes}
-          placeholder="Search teams..."
-        />
-      </FilterCard>
-
-      <FilterCard icon={SlidersHorizontal} label="Position">
-        <div className="mb-3 flex flex-wrap gap-2">
-          <PillButton
-            active={selectedPositions.length === allPositions.length && allPositions.length > 0}
-            onClick={() => setSelectedPositions(allPositions)}
-          >
-            Select all
-          </PillButton>
-          <PillButton
-            active={selectedPositions.length === 0}
-            onClick={() => setSelectedPositions([])}
-          >
-            Clear
-          </PillButton>
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          {allPositions.map((pos) => (
-            <PillButton
-              key={pos}
-              active={selectedPositions.includes(pos)}
-              onClick={() =>
-                setSelectedPositions((prev) =>
-                  prev.includes(pos) ? prev.filter((p) => p !== pos) : [...prev, pos]
-                )
-              }
-            >
-              {pos}
-            </PillButton>
-          ))}
-        </div>
-      </FilterCard>
-
-      <FilterCard icon={DollarSign} label="Max value filter">
-        <input
-          type="range"
-          min={globalMinValue}
-          max={globalMaxValue || globalMinValue + 1}
-          step={(globalMaxValue - globalMinValue) / 100 || 1}
-          value={valueThreshold != null ? valueThreshold : globalMaxValue}
-          onChange={(e) => setValueThreshold(Number(e.target.value))}
-          className="w-full"
-        />
-        <div
-          className="mt-3 rounded-xl px-3 py-2 text-sm"
-          style={{
-            border: `1px solid ${PALETTE.border}`,
-            background: "rgba(0,0,0,0.58)",
-            color: "#d1c3a9",
-          }}
-        >
-          {(valueThreshold != null ? valueThreshold : globalMaxValue).toFixed(1)} · range{" "}
-          {globalMinValue.toFixed(1)}–{globalMaxValue.toFixed(1)}
-        </div>
-      </FilterCard>
-
-      <FilterCard icon={CalendarRange} label="GW horizon for total">
-        <div className="grid grid-cols-2 gap-2">
-          <select
-            value={selectedGwStart ?? ""}
-            onChange={(e) => setSelectedGwStart(Number(e.target.value))}
-            className="w-full rounded-2xl px-3 py-3 text-sm outline-none"
+          <button
+            type="button"
+            onClick={() => setShowFilters((p) => !p)}
+            className="w-full text-left"
             style={{
-              border: `1px solid ${PALETTE.border}`,
-              background: "rgba(0,0,0,0.76)",
-              color: PALETTE.beige,
+              background: "transparent",
             }}
           >
-            {allGWs.map((gw) => (
-              <option key={`start_${gw}`} value={gw}>
-                From GW {gw}
-              </option>
-            ))}
-          </select>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between hover:border-none">
+              <div>
+                <div
+                  className="flex items-center gap-2 text-sm font-semibold hover:border-none"
+                  style={{ color: PALETTE.gold }}
+                >
+                  <Filter size={16} />
+                  Filters and controls
+                </div>
+                <div className="mt-1 text-xs" style={{ color: PALETTE.muted }}>
+                  Filter players by player, team, position, value, and gameweek horizon.
+                </div>
+              </div>
 
-          <select
-            value={selectedGwEnd ?? ""}
-            onChange={(e) => setSelectedGwEnd(Number(e.target.value))}
-            className="w-full rounded-2xl px-3 py-3 text-sm outline-none"
+              <div
+                className="inline-flex items-center gap-2 self-start rounded-full px-3 py-2 text-sm font-semibold sm:self-center"
+                style={{
+                  border: `1px solid ${PALETTE.gold}`,
+                  background: "rgba(0,0,0,0.45)",
+                  color: PALETTE.beige,
+                }}
+              >
+                {showFilters ? <EyeOff size={16} /> : <Eye size={16} />}
+                {showFilters ? "Hide filters" : "Show filters"}
+                <ChevronDown
+                  size={16}
+                  style={{
+                    transform: showFilters ? "rotate(0deg)" : "rotate(-90deg)",
+                    transition: "transform 180ms ease",
+                  }}
+                />
+              </div>
+            </div>
+          </button>
+
+          <div
+            className="transition-all duration-300 ease-in-out overflow-visible"
             style={{
-              border: `1px solid ${PALETTE.border}`,
-              background: "rgba(0,0,0,0.76)",
-              color: PALETTE.beige,
+              maxHeight: showFilters ? "1400px" : "0px",
+              opacity: showFilters ? 1 : 0,
+              marginTop: showFilters ? "1rem" : "0",
+              pointerEvents: showFilters ? "auto" : "none",
             }}
           >
-            {allGWs.map((gw) => (
-              <option key={`end_${gw}`} value={gw}>
-                To GW {gw}
-              </option>
-            ))}
-          </select>
-        </div>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3 overflow-visible">
+              <FilterCard icon={Users} label="Players">
+                <SearchableMultiSelect
+                  label="Players"
+                  options={playerOptions}
+                  selectedValues={selectedPlayerNames}
+                  onChange={setSelectedPlayerNames}
+                  placeholder="Search players..."
+                />
+              </FilterCard>
 
-        <div
-          className="mt-3 rounded-xl px-3 py-2 text-sm"
-          style={{
-            border: `1px solid ${PALETTE.border}`,
-            background: "rgba(0,0,0,0.58)",
-            color: "#d1c3a9",
-          }}
-        >
-          Total uses GW{" "}
-          {Math.min(selectedGwStart ?? allGWs[0], selectedGwEnd ?? allGWs[allGWs.length - 1])}
-          –{Math.max(selectedGwStart ?? allGWs[0], selectedGwEnd ?? allGWs[allGWs.length - 1])}
-        </div>
-      </FilterCard>
-    </div>
-  </div>
-</GlassCard>
+              <FilterCard icon={Shield} label="Teams">
+                <SearchableMultiSelect
+                  label="Teams"
+                  options={teamOptions}
+                  selectedValues={selectedTeamCodes}
+                  onChange={setSelectedTeamCodes}
+                  placeholder="Search teams..."
+                />
+              </FilterCard>
+
+              <FilterCard icon={SlidersHorizontal} label="Position">
+                <div className="mb-3 flex flex-wrap gap-2">
+                  <PillButton
+                    active={selectedPositions.length === allPositions.length && allPositions.length > 0}
+                    onClick={() => setSelectedPositions(allPositions)}
+                  >
+                    Select all
+                  </PillButton>
+                  <PillButton
+                    active={selectedPositions.length === 0}
+                    onClick={() => setSelectedPositions([])}
+                  >
+                    Clear
+                  </PillButton>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  {allPositions.map((pos) => (
+                    <PillButton
+                      key={pos}
+                      active={selectedPositions.includes(pos)}
+                      onClick={() =>
+                        setSelectedPositions((prev) =>
+                          prev.includes(pos) ? prev.filter((p) => p !== pos) : [...prev, pos]
+                        )
+                      }
+                    >
+                      {pos}
+                    </PillButton>
+                  ))}
+                </div>
+              </FilterCard>
+
+              <FilterCard icon={DollarSign} label="Max value filter">
+                <input
+                  type="range"
+                  min={globalMinValue}
+                  max={globalMaxValue || globalMinValue + 1}
+                  step={(globalMaxValue - globalMinValue) / 100 || 1}
+                  value={valueThreshold != null ? valueThreshold : globalMaxValue}
+                  onChange={(e) => setValueThreshold(Number(e.target.value))}
+                  className="w-full"
+                />
+                <div
+                  className="mt-3 rounded-xl px-3 py-2 text-sm"
+                  style={{
+                    border: `1px solid ${PALETTE.border}`,
+                    background: "rgba(0,0,0,0.58)",
+                    color: "#d1c3a9",
+                  }}
+                >
+                  {(valueThreshold != null ? valueThreshold : globalMaxValue).toFixed(1)} · range{" "}
+                  {globalMinValue.toFixed(1)}–{globalMaxValue.toFixed(1)}
+                </div>
+              </FilterCard>
+
+              <FilterCard icon={CalendarRange} label="GW horizon for total">
+                <div className="grid grid-cols-2 gap-2">
+                  <select
+                    value={selectedGwStart ?? ""}
+                    onChange={(e) => setSelectedGwStart(Number(e.target.value))}
+                    className="w-full rounded-2xl px-3 py-3 text-sm outline-none"
+                    style={{
+                      border: `1px solid ${PALETTE.border}`,
+                      background: "rgba(0,0,0,0.76)",
+                      color: PALETTE.beige,
+                    }}
+                  >
+                    {allGWs.map((gw) => (
+                      <option key={`start_${gw}`} value={gw}>
+                        From GW {gw}
+                      </option>
+                    ))}
+                  </select>
+
+                  <select
+                    value={selectedGwEnd ?? ""}
+                    onChange={(e) => setSelectedGwEnd(Number(e.target.value))}
+                    className="w-full rounded-2xl px-3 py-3 text-sm outline-none"
+                    style={{
+                      border: `1px solid ${PALETTE.border}`,
+                      background: "rgba(0,0,0,0.76)",
+                      color: PALETTE.beige,
+                    }}
+                  >
+                    {allGWs.map((gw) => (
+                      <option key={`end_${gw}`} value={gw}>
+                        To GW {gw}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div
+                  className="mt-3 rounded-xl px-3 py-2 text-sm"
+                  style={{
+                    border: `1px solid ${PALETTE.border}`,
+                    background: "rgba(0,0,0,0.58)",
+                    color: "#d1c3a9",
+                  }}
+                >
+                  Total uses GW{" "}
+                  {Math.min(selectedGwStart ?? allGWs[0], selectedGwEnd ?? allGWs[allGWs.length - 1])}
+                  –{Math.max(selectedGwStart ?? allGWs[0], selectedGwEnd ?? allGWs[allGWs.length - 1])}
+                </div>
+              </FilterCard>
+            </div>
+          </div>
+        </GlassCard>
 
         <div className="mb-6">
           <details
@@ -1760,222 +1754,267 @@ export default function PlayerAdjustmentsPage() {
           </details>
         </div>
 
-<GlassCard className="overflow-visible" style={{ position: "relative", zIndex: 10 }}>
-  <div
-    className="border-b px-4 py-4 sm:px-5"
-    style={{ borderColor: PALETTE.border }}
-  >
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-      <div>
-        <div
-          className="inline-flex items-center gap-2 text-sm font-semibold"
-          style={{ color: PALETTE.gold }}
-        >
-          <Target size={16} />
-          Player projection table
-        </div>
-        <div className="mt-1 text-xs" style={{ color: PALETTE.muted }}>
-          Select any player row to open the adjustment drawer with minutes, shares, Defcon, and charts.
-        </div>
-      </div>
-
-      <div className="flex flex-col items-start gap-2 sm:items-end">
-        <ClickHintPill />
-        <div className="text-xs" style={{ color: PALETTE.muted }}>
-          {filteredPlayerRows.length} visible rows
-        </div>
-      </div>
-    </div>
-
-
-  </div>
-
-  <div className="overflow-x-auto">
-    <table className="w-full min-w-[920px] border-collapse text-sm">
-      <thead>
-        <tr>
-          <th
-            className="sticky left-0 z-[2] px-4 py-3 text-left"
-            style={{ background: "#111", borderBottom: `1px solid ${PALETTE.gold}` }}
+        <GlassCard className="overflow-visible" style={{ position: "relative", zIndex: 10 }}>
+          <div
+            className="border-b px-4 py-4 sm:px-5"
+            style={{ borderColor: PALETTE.border }}
           >
-            <div className="flex items-center gap-2">
-              <span>Name</span>
-              
-            </div>
-          </th>
-
-          <th
-            className="px-4 py-3 text-left"
-            style={{ background: "#111", borderBottom: `1px solid ${PALETTE.gold}` }}
-          >
-            Position
-          </th>
-
-          <th
-            className="px-4 py-3 text-left"
-            style={{ background: "#111", borderBottom: `1px solid ${PALETTE.gold}` }}
-          >
-            Team
-          </th>
-
-          <th
-            className="px-4 py-3 text-right"
-            style={{ background: "#111", borderBottom: `1px solid ${PALETTE.gold}` }}
-          >
-            Value
-          </th>
-
-          {allGWs.map((gw) => {
-            const isSorted = sortConfig.type === "gw" && sortConfig.gw === gw;
-            return (
-              <th
-                key={gw}
-                onClick={() => handleSortByGW(gw)}
-                className="cursor-pointer px-4 py-3 text-right"
-                style={{
-                  background: "#111",
-                  borderBottom: `1px solid ${PALETTE.gold}`,
-                  color: isSorted ? PALETTE.gold : PALETTE.beige,
-                }}
-              >
-                <span className="inline-flex items-center gap-1">
-                  GW {gw}
-                  {isSorted ? (
-                    sortConfig.direction === "asc" ? "▲" : "▼"
-                  ) : (
-                    <ArrowUpDown size={12} />
-                  )}
-                </span>
-              </th>
-            );
-          })}
-
-          <th
-            onClick={handleSortByTotal}
-            className="cursor-pointer px-4 py-3 text-right"
-            style={{
-              background: "#111",
-              borderBottom: `1px solid ${PALETTE.gold}`,
-              color: sortConfig.type === "total" ? PALETTE.gold : PALETTE.beige,
-            }}
-          >
-            <span className="inline-flex items-center gap-1">
-              Total{" "}
-              {sortConfig.type === "total" ? (
-                sortConfig.direction === "asc" ? "▲" : "▼"
-              ) : (
-                <ArrowUpDown size={12} />
-              )}
-            </span>
-          </th>
-
-
-        </tr>
-      </thead>
-
-      <tbody>
-        {filteredPlayerRows.map((row, idx) => (
-          <tr
-            key={row.nameKey}
-            onClick={() => openPlayerModal(row.nameKey)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                openPlayerModal(row.nameKey);
-              }
-            }}
-            tabIndex={0}
-            role="button"
-            aria-label={`Open player adjustments for ${row.displayName}`}
-            className="group cursor-pointer transition-all duration-150 focus:outline-none"
-            style={{
-              background: idx % 2 === 0 ? "#080808" : "#141414",
-            }}
-          >
-            <td
-              className="sticky left-0 z-[1] px-4 py-3 font-semibold"
-              style={{
-                background: idx % 2 === 0 ? "#080808" : "#141414",
-                borderBottom: "1px solid #222",
-              }}
-            >
-              <div className="flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="truncate">{row.displayName}</div>
-                  <div
-                    className="mt-1 inline-flex items-center gap-1 text-[11px] opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus:opacity-100"
-                    style={{ color: PALETTE.gold }}
-                  >
-                    <MousePointerClick size={11} />
-                    Adjust Player
-                  </div>
-                </div>
-
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div>
                 <div
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full opacity-0 transition-all duration-150 group-hover:translate-x-0 group-hover:opacity-100 group-focus:translate-x-0 group-focus:opacity-100"
-                  style={{
-                    border: `1px solid rgba(184,134,11,0.28)`,
-                    background: "rgba(184,134,11,0.08)",
-                    color: PALETTE.gold,
-                    transform: "translateX(-4px)",
-                  }}
+                  className="inline-flex items-center gap-2 text-sm font-semibold"
+                  style={{ color: PALETTE.gold }}
                 >
-                  <ChevronRight size={16} />
+                  <Target size={16} />
+                  Player projection table
+                </div>
+                <div className="mt-1 text-xs" style={{ color: PALETTE.muted }}>
+                  Select any player row to open the adjustment drawer with minutes, shares, Defcon, and charts.
                 </div>
               </div>
-            </td>
 
-            <td className="px-4 py-3" style={{ borderBottom: "1px solid #222" }}>
-              {row.position}
-            </td>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center lg:justify-end">
+                <div
+                  className="flex items-center gap-2 rounded-xl px-2"
+                  style={{
+                    border: `1px solid ${PALETTE.border}`,
+                    background: "rgba(0,0,0,0.78)",
+                    height: "36px",
+                  }}
+                >
+                  <CurrentMeasureIcon size={14} style={{ color: PALETTE.gold }} />
+                  <select
+                    value={selectedMeasure}
+                    onChange={(e) => setSelectedMeasure(e.target.value)}
+                    className="rounded-xl text-xs font-semibold outline-none"
+                    style={{
+                      background: "transparent",
+                      color: PALETTE.gold,
+                      border: "none",
+                      height: "32px",
+                      minWidth: "120px",
+                    }}
+                  >
+                    <option value="Points"> Points</option>
+                    <option value="Goal_Scored">Goals</option>
+                    <option value="Assists"> Assists</option>
+                    <option value="Avg_Minutes">Minutes</option>
+                    <option value="CBI_Predictions"> Defcon %</option>
+                  </select>
+                </div>
 
-            <td className="px-4 py-3" style={{ borderBottom: "1px solid #222" }}>
-  <div className="inline-flex items-center gap-2">
-    <TeamColorDot teamName={row.teamName} />
-    <span>{row.teamName}</span>
-  </div>
-</td>
+                <div className="relative min-w-[220px]">
+                  <Search
+                    size={14}
+                    className="absolute left-3 top-1/2 -translate-y-1/2"
+                    style={{ color: PALETTE.muted }}
+                  />
+                  <input
+                    type="text"
+                    value={playerNameFilter}
+                    onChange={(e) => setPlayerNameFilter(e.target.value)}
+                    placeholder="Type player name..."
+                    className="w-full rounded-xl py-2 pl-9 pr-3 text-xs outline-none"
+                    style={{
+                      border: `1px solid ${PALETTE.border}`,
+                      background: "rgba(0,0,0,0.78)",
+                      color: PALETTE.beige,
+                      height: "36px",
+                    }}
+                  />
+                </div>
 
-            <td className="px-4 py-3 text-right" style={{ borderBottom: "1px solid #222" }}>
-              {row.value != null && !Number.isNaN(row.value) ? row.value.toFixed(1) : "-"}
-            </td>
+                <div className="flex items-center gap-3">
+                  <ClickHintPill />
+                  <div className="text-xs whitespace-nowrap" style={{ color: PALETTE.muted }}>
+                    {filteredPlayerRows.length} visible rows
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
 
-            {allGWs.map((gw) => (
-              <td key={gw} className="px-4 py-3 text-right" style={{ borderBottom: "1px solid #222" }}>
-                {row.gwValues[gw] != null && !Number.isNaN(row.gwValues[gw])
-                  ? row.gwValues[gw].toFixed(2)
-                  : "0.00"}
-              </td>
-            ))}
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[920px] border-collapse text-sm">
+              <thead>
+                <tr>
+                  <th
+                    className="sticky left-0 z-[2] px-4 py-3 text-left"
+                    style={{ background: "#111", borderBottom: `1px solid ${PALETTE.gold}` }}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span>Name</span>
+                    </div>
+                  </th>
 
-            <td
-              className="px-4 py-3 text-right font-semibold"
-              style={{ borderBottom: "1px solid #222", color: PALETTE.gold }}
-            >
-              {row.totalMeasure != null && !Number.isNaN(row.totalMeasure)
-                ? row.totalMeasure.toFixed(2)
-                : "0.00"}
-            </td>
+                  <th
+                    className="px-4 py-3 text-left"
+                    style={{ background: "#111", borderBottom: `1px solid ${PALETTE.gold}` }}
+                  >
+                    Position
+                  </th>
 
-     
-          </tr>
-        ))}
+                  <th
+                    className="px-4 py-3 text-left"
+                    style={{ background: "#111", borderBottom: `1px solid ${PALETTE.gold}` }}
+                  >
+                    Team
+                  </th>
 
-        {filteredPlayerRows.length === 0 && (
-          <tr>
-            <td
-              colSpan={6 + allGWs.length}
-              className="px-4 py-8 text-center"
-              style={{ color: "#d1c3a9" }}
-            >
-              No players match the current filters.
-            </td>
-          </tr>
-        )}
-      </tbody>
-    </table>
-  </div>
-</GlassCard>
+                  <th
+                    className="px-4 py-3 text-right"
+                    style={{ background: "#111", borderBottom: `1px solid ${PALETTE.gold}` }}
+                  >
+                    Value
+                  </th>
+
+                  {allGWs.map((gw) => {
+                    const isSorted = sortConfig.type === "gw" && sortConfig.gw === gw;
+                    return (
+                      <th
+                        key={gw}
+                        onClick={() => handleSortByGW(gw)}
+                        className="cursor-pointer px-4 py-3 text-right"
+                        style={{
+                          background: "#111",
+                          borderBottom: `1px solid ${PALETTE.gold}`,
+                          color: isSorted ? PALETTE.gold : PALETTE.beige,
+                        }}
+                      >
+                        <span className="inline-flex items-center gap-1">
+                          GW {gw}
+                          {isSorted ? (
+                            sortConfig.direction === "asc" ? "▲" : "▼"
+                          ) : (
+                            <ArrowUpDown size={12} />
+                          )}
+                        </span>
+                      </th>
+                    );
+                  })}
+
+                  <th
+                    onClick={handleSortByTotal}
+                    className="cursor-pointer px-4 py-3 text-right"
+                    style={{
+                      background: "#111",
+                      borderBottom: `1px solid ${PALETTE.gold}`,
+                      color: sortConfig.type === "total" ? PALETTE.gold : PALETTE.beige,
+                    }}
+                  >
+                    <span className="inline-flex items-center gap-1">
+                      Total{" "}
+                      {sortConfig.type === "total" ? (
+                        sortConfig.direction === "asc" ? "▲" : "▼"
+                      ) : (
+                        <ArrowUpDown size={12} />
+                      )}
+                    </span>
+                  </th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {filteredPlayerRows.map((row, idx) => (
+                  <tr
+                    key={row.nameKey}
+                    onClick={() => openPlayerModal(row.nameKey)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        openPlayerModal(row.nameKey);
+                      }
+                    }}
+                    tabIndex={0}
+                    role="button"
+                    aria-label={`Open player adjustments for ${row.displayName}`}
+                    className="group cursor-pointer transition-all duration-150 focus:outline-none"
+                    style={{
+                      background: idx % 2 === 0 ? "#080808" : "#141414",
+                    }}
+                  >
+                    <td
+                      className="sticky left-0 z-[1] px-4 py-3 font-semibold"
+                      style={{
+                        background: idx % 2 === 0 ? "#080808" : "#141414",
+                        borderBottom: "1px solid #222",
+                      }}
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="truncate">{row.displayName}</div>
+                          <div
+                            className="mt-1 inline-flex items-center gap-1 text-[11px] opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus:opacity-100"
+                            style={{ color: PALETTE.gold }}
+                          >
+                            <MousePointerClick size={11} />
+                            Adjust Player
+                          </div>
+                        </div>
+
+                        <div
+                          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full opacity-0 transition-all duration-150 group-hover:translate-x-0 group-hover:opacity-100 group-focus:translate-x-0 group-focus:opacity-100"
+                          style={{
+                            border: `1px solid rgba(184,134,11,0.28)`,
+                            background: "rgba(184,134,11,0.08)",
+                            color: PALETTE.gold,
+                            transform: "translateX(-4px)",
+                          }}
+                        >
+                          <ChevronRight size={16} />
+                        </div>
+                      </div>
+                    </td>
+
+                    <td className="px-4 py-3" style={{ borderBottom: "1px solid #222" }}>
+                      {row.position}
+                    </td>
+
+                    <td className="px-4 py-3" style={{ borderBottom: "1px solid #222" }}>
+                      <div className="inline-flex items-center gap-2">
+                        <TeamColorDot teamName={row.teamName} />
+                        <span>{row.teamName}</span>
+                      </div>
+                    </td>
+
+                    <td className="px-4 py-3 text-right" style={{ borderBottom: "1px solid #222" }}>
+                      {row.value != null && !Number.isNaN(row.value) ? row.value.toFixed(1) : "-"}
+                    </td>
+
+                    {allGWs.map((gw) => (
+                      <td key={gw} className="px-4 py-3 text-right" style={{ borderBottom: "1px solid #222" }}>
+                        {row.gwValues[gw] != null && !Number.isNaN(row.gwValues[gw])
+                          ? row.gwValues[gw].toFixed(2)
+                          : "0.00"}
+                      </td>
+                    ))}
+
+                    <td
+                      className="px-4 py-3 text-right font-semibold"
+                      style={{ borderBottom: "1px solid #222", color: PALETTE.gold }}
+                    >
+                      {row.totalMeasure != null && !Number.isNaN(row.totalMeasure)
+                        ? row.totalMeasure.toFixed(2)
+                        : "0.00"}
+                    </td>
+                  </tr>
+                ))}
+
+                {filteredPlayerRows.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={6 + allGWs.length}
+                      className="px-4 py-8 text-center"
+                      style={{ color: "#d1c3a9" }}
+                    >
+                      No players match the current filters.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </GlassCard>
 
         {isModalOpen && activePlayerFirstRow && (
           <div
@@ -2007,50 +2046,50 @@ export default function PlayerAdjustmentsPage() {
             >
               <div className="mb-5 flex items-start justify-between gap-4">
                 <div className="flex items-center gap-4 min-w-0">
-  <div className="relative shrink-0">
-    <img
-      src={playerImageUrl}
-      alt={activePlayerFirstRow.web_name || activePlayerFirstRow.name}
-      onError={(e) => {
-        e.currentTarget.onerror = null;
-        e.currentTarget.src =
-          "https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_3-110.webp";
-      }}
-      className="h-16 w-16 rounded-full object-cover border"
-      style={{
-        borderColor: "rgba(255,255,255,0.14)",
-        background: "rgba(255,255,255,0.04)",
-      }}
-    />
-    <span
-      className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-black"
-      style={{
-        backgroundColor: teamColors?.[
-          teamNamesByCode.get(String(activePlayerFirstRow.Team)) || ""
-        ] || "#6b7280",
-      }}
-    />
-  </div>
+                  <div className="relative shrink-0">
+                    <img
+                      src={playerImageUrl}
+                      alt={activePlayerFirstRow.web_name || activePlayerFirstRow.name}
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src =
+                          "https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_3-110.webp";
+                      }}
+                      className="h-16 w-16 rounded-full object-cover border"
+                      style={{
+                        borderColor: "rgba(255,255,255,0.14)",
+                        background: "rgba(255,255,255,0.04)",
+                      }}
+                    />
+                    <span
+                      className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-black"
+                      style={{
+                        backgroundColor: teamColors?.[
+                          teamNamesByCode.get(String(activePlayerFirstRow.Team)) || ""
+                        ] || "#6b7280",
+                      }}
+                    />
+                  </div>
 
-  <div className="min-w-0">
-    <h2 className="m-0 text-xl font-semibold sm:text-2xl truncate">
-      {activePlayerFirstRow.name} ({activePlayerFirstRow.web_name})
-    </h2>
-    <div
-      className="mt-1 flex items-center gap-2 text-sm"
-      style={{ color: "#d1c3a9" }}
-    >
-      <span>{activePlayerFirstRow.position}</span>
-      <span style={{ color: "#6b7280" }}>•</span>
-      <TeamColorDot
-        teamName={teamNamesByCode.get(String(activePlayerFirstRow.Team)) || ""}
-      />
-      <span>
-        {teamNamesByCode.get(String(activePlayerFirstRow.Team)) || ""}
-      </span>
-    </div>
-  </div>
-</div>
+                  <div className="min-w-0">
+                    <h2 className="m-0 text-xl font-semibold sm:text-2xl truncate">
+                      {activePlayerFirstRow.name} ({activePlayerFirstRow.web_name})
+                    </h2>
+                    <div
+                      className="mt-1 flex items-center gap-2 text-sm"
+                      style={{ color: "#d1c3a9" }}
+                    >
+                      <span>{activePlayerFirstRow.position}</span>
+                      <span style={{ color: "#6b7280" }}>•</span>
+                      <TeamColorDot
+                        teamName={teamNamesByCode.get(String(activePlayerFirstRow.Team)) || ""}
+                      />
+                      <span>
+                        {teamNamesByCode.get(String(activePlayerFirstRow.Team)) || ""}
+                      </span>
+                    </div>
+                  </div>
+                </div>
                 <button
                   type="button"
                   onClick={closeModal}
@@ -2078,23 +2117,23 @@ export default function PlayerAdjustmentsPage() {
                     style={{ accentColor: PALETTE.gold }}
                   />
                   <div className="mt-2 text-sm" style={{ color: "#d1c3a9" }}>
-                    {(pendingGoalShare ?? 0).toFixed(2)}
+                    {(pendingGoalShare ?? 0).toFixed(2) * 100}%
                   </div>
                 </FilterCard>
 
                 <FilterCard icon={Footprints} label="Assist Share">
-                 <input
-  type="range"
-  min={0}
-  max={1}
-  step={0.01}
-  value={pendingAssistShare ?? 0}
-  onChange={(e) => scheduleAssistShareChange(Number(e.target.value))}
-  className="w-full"
-  style={{ accentColor: PALETTE.gold }}
-/>
+                  <input
+                    type="range"
+                    min={0}
+                    max={1}
+                    step={0.01}
+                    value={pendingAssistShare ?? 0}
+                    onChange={(e) => scheduleAssistShareChange(Number(e.target.value))}
+                    className="w-full"
+                    style={{ accentColor: PALETTE.gold }}
+                  />
                   <div className="mt-2 text-sm" style={{ color: "#d1c3a9" }}>
-                    {(pendingAssistShare ?? 0).toFixed(2)}
+                    {(pendingAssistShare ?? 0).toFixed(2) * 100}%
                   </div>
                 </FilterCard>
 
