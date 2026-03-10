@@ -4,6 +4,7 @@ import React, {
   useState,
   useRef,
   useCallback,
+  useLayoutEffect,
 } from "react";
 import {
   Search,
@@ -188,6 +189,7 @@ function SearchableMultiSelect({
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [isMobile, setIsMobile] = useState(false);
+  const [panelReady, setPanelReady] = useState(false);
   const triggerRef = useRef(null);
   const panelRef = useRef(null);
   const [panelStyle, setPanelStyle] = useState({});
@@ -227,51 +229,62 @@ function SearchableMultiSelect({
   const selectedLabel =
     selectedValues.length === 0 ? "All" : `${selectedValues.length} selected`;
 
+  const updatePosition = useCallback(() => {
+    if (!triggerRef.current) return;
+
+    const rect = triggerRef.current.getBoundingClientRect();
+    const gap = 8;
+
+    if (isMobile) {
+      const viewportPadding = 12;
+      const top = rect.bottom + gap;
+      const availableHeight = window.innerHeight - top - viewportPadding;
+
+      setPanelStyle({
+        position: "fixed",
+        left: `${viewportPadding}px`,
+        right: `${viewportPadding}px`,
+        top: `${Math.max(viewportPadding, top)}px`,
+        width: "auto",
+        maxHeight: `${Math.max(160, Math.min(320, availableHeight))}px`,
+        zIndex: 120,
+      });
+    } else {
+      setPanelStyle({
+        position: "absolute",
+        left: "0px",
+        top: `calc(100% + ${gap}px)`,
+        width: `${rect.width}px`,
+        maxHeight: "280px",
+        zIndex: 120,
+      });
+    }
+
+    setPanelReady(true);
+  }, [isMobile]);
+
+  useLayoutEffect(() => {
+    if (!isOpen) {
+      setPanelReady(false);
+      return;
+    }
+
+    updatePosition();
+  }, [isOpen, updatePosition]);
+
   useEffect(() => {
     if (!isOpen) return;
 
-    const updatePosition = () => {
-      if (!triggerRef.current) return;
+    const handleViewportChange = () => updatePosition();
 
-      const rect = triggerRef.current.getBoundingClientRect();
-
-      if (isMobile) {
-        const left = 12;
-        const right = 12;
-        const top = rect.bottom + 8;
-        const maxHeight = Math.min(320, window.innerHeight - top - 12);
-
-        setPanelStyle({
-          position: "fixed",
-          left: `${left}px`,
-          right: `${right}px`,
-          top: `${top}px`,
-          width: "auto",
-          maxHeight: `${maxHeight}px`,
-          zIndex: 9999,
-        });
-      } else {
-        setPanelStyle({
-          position: "absolute",
-          left: "0px",
-          right: "0px",
-          top: "calc(100% + 8px)",
-          width: "auto",
-          maxHeight: "280px",
-          zIndex: 200,
-        });
-      }
-    };
-
-    updatePosition();
-    window.addEventListener("resize", updatePosition);
-    window.addEventListener("scroll", updatePosition, true);
+    window.addEventListener("resize", handleViewportChange);
+    window.addEventListener("scroll", handleViewportChange, true);
 
     return () => {
-      window.removeEventListener("resize", updatePosition);
-      window.removeEventListener("scroll", updatePosition, true);
+      window.removeEventListener("resize", handleViewportChange);
+      window.removeEventListener("scroll", handleViewportChange, true);
     };
-  }, [isOpen, isMobile]);
+  }, [isOpen, updatePosition]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -279,7 +292,9 @@ function SearchableMultiSelect({
     const onClickOutside = (e) => {
       const insideTrigger = triggerRef.current?.contains(e.target);
       const insidePanel = panelRef.current?.contains(e.target);
-      if (!insideTrigger && !insidePanel) setIsOpen(false);
+      if (!insideTrigger && !insidePanel) {
+        setIsOpen(false);
+      }
     };
 
     document.addEventListener("mousedown", onClickOutside);
@@ -300,7 +315,10 @@ function SearchableMultiSelect({
       <button
         ref={triggerRef}
         type="button"
-        onClick={() => setIsOpen((p) => !p)}
+        onClick={() => {
+          if (!isOpen) setPanelReady(false);
+          setIsOpen((p) => !p);
+        }}
         className="w-full rounded-2xl px-3 py-3 text-left text-sm transition-all duration-200"
         style={{
           border: `1px solid ${isOpen ? PALETTE.gold : PALETTE.border}`,
@@ -322,99 +340,102 @@ function SearchableMultiSelect({
         </span>
       </button>
 
-      <div
-        ref={panelRef}
-        className="overflow-hidden rounded-2xl transition-all duration-200 ease-out"
-        style={{
-          ...panelStyle,
-          opacity: isOpen ? 1 : 0,
-          transform: isOpen ? "translateY(0)" : "translateY(-6px)",
-          pointerEvents: isOpen ? "auto" : "none",
-          border: `1px solid ${PALETTE.gold}`,
-          background: "rgba(0,0,0,0.98)",
-          boxShadow: isOpen ? "0 18px 40px rgba(0,0,0,0.7)" : "none",
-        }}
-      >
-        <div className="p-3">
-          <div className="relative">
-            <Search
-              size={14}
-              className="absolute left-3 top-1/2 -translate-y-1/2"
-              style={{ color: PALETTE.muted }}
-            />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder={placeholder}
-              className="w-full rounded-xl py-2 pl-9 pr-3 text-sm outline-none"
-              style={{
-                border: `1px solid ${PALETTE.border}`,
-                background: "#050505",
-                color: PALETTE.beige,
-              }}
-            />
-          </div>
-
-          <div className="mt-3 flex gap-2">
-            <button
-              type="button"
-              onClick={handleSelectAll}
-              className="flex-1 rounded-full px-3 py-2 text-xs font-semibold"
-              style={{
-                border: `1px solid ${PALETTE.gold}`,
-                background: "rgba(184,134,11,0.08)",
-                color: PALETTE.beige,
-              }}
-            >
-              Select all
-            </button>
-            <button
-              type="button"
-              onClick={handleClearAll}
-              className="flex-1 rounded-full px-3 py-2 text-xs font-semibold"
-              style={{
-                border: `1px solid ${PALETTE.border}`,
-                background: "rgba(0,0,0,0.75)",
-                color: "#e5e7eb",
-              }}
-            >
-              Clear
-            </button>
-          </div>
-        </div>
-
-        <div className="max-h-[180px] overflow-auto px-2 pb-3 text-sm">
-          {filteredOptions.length === 0 ? (
-            <div className="px-3 py-2" style={{ color: PALETTE.muted }}>
-              No matches
+      {isOpen && (
+        <div
+          ref={panelRef}
+          className="overflow-hidden rounded-2xl"
+          style={{
+            ...panelStyle,
+            visibility: panelReady ? "visible" : "hidden",
+            opacity: panelReady ? 1 : 0,
+            transform: panelReady ? "translateY(0)" : "translateY(-4px)",
+            transition: "opacity 160ms ease, transform 160ms ease",
+            border: `1px solid ${PALETTE.gold}`,
+            background: "rgba(0,0,0,0.98)",
+            boxShadow: "0 18px 40px rgba(0,0,0,0.7)",
+          }}
+        >
+          <div className="p-3">
+            <div className="relative">
+              <Search
+                size={14}
+                className="absolute left-3 top-1/2 -translate-y-1/2"
+                style={{ color: PALETTE.muted }}
+              />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder={placeholder}
+                className="w-full rounded-xl py-2 pl-9 pr-3 text-sm outline-none"
+                style={{
+                  border: `1px solid ${PALETTE.border}`,
+                  background: "#050505",
+                  color: PALETTE.beige,
+                }}
+              />
             </div>
-          ) : (
-            filteredOptions.map((opt) => {
-              const checked = selectedSet.has(opt.value);
-              return (
-                <label
-                  key={opt.value}
-                  className="flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2 transition-colors"
-                  style={{
-                    background: checked ? "rgba(184,134,11,0.14)" : "transparent",
-                    color: PALETTE.beige,
-                  }}
-                  onMouseDown={(e) => e.preventDefault()}
-                >
-                  <input
-                    type="checkbox"
-                    checked={checked}
-                    onChange={() => toggleValue(opt.value)}
-                    style={{ accentColor: PALETTE.gold }}
-                  />
-                  <span className="truncate">{opt.label}</span>
-                </label>
-              );
-            })
-          )}
+
+            <div className="mt-3 flex gap-2">
+              <button
+                type="button"
+                onClick={handleSelectAll}
+                className="flex-1 rounded-full px-3 py-2 text-xs font-semibold"
+                style={{
+                  border: `1px solid ${PALETTE.gold}`,
+                  background: "rgba(184,134,11,0.08)",
+                  color: PALETTE.beige,
+                }}
+              >
+                Select all
+              </button>
+              <button
+                type="button"
+                onClick={handleClearAll}
+                className="flex-1 rounded-full px-3 py-2 text-xs font-semibold"
+                style={{
+                  border: `1px solid ${PALETTE.border}`,
+                  background: "rgba(0,0,0,0.75)",
+                  color: "#e5e7eb",
+                }}
+              >
+                Clear
+              </button>
+            </div>
+          </div>
+
+          <div className="max-h-[180px] overflow-auto px-2 pb-3 text-sm">
+            {filteredOptions.length === 0 ? (
+              <div className="px-3 py-2" style={{ color: PALETTE.muted }}>
+                No matches
+              </div>
+            ) : (
+              filteredOptions.map((opt) => {
+                const checked = selectedSet.has(opt.value);
+                return (
+                  <label
+                    key={opt.value}
+                    className="flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2 transition-colors"
+                    style={{
+                      background: checked ? "rgba(184,134,11,0.14)" : "transparent",
+                      color: PALETTE.beige,
+                    }}
+                    onMouseDown={(e) => e.preventDefault()}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => toggleValue(opt.value)}
+                      style={{ accentColor: PALETTE.gold }}
+                    />
+                    <span className="truncate">{opt.label}</span>
+                  </label>
+                );
+              })
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
@@ -1611,194 +1632,189 @@ export default function PlayerAdjustmentsPage() {
           </div>
         </header>
 
-        <GlassCard
-          className="mb-6 p-4 sm:p-5 lg:p-6 overflow-visible hover:border-none"
-          style={{
-            position: "relative",
-            zIndex: 30,
-            background: "#000",
-          }}
+<div className="mb-6">
+  <details
+    open={showFilters}
+    onToggle={(e) => setShowFilters(e.currentTarget.open)}
+    className="overflow-visible rounded-[28px]"
+    style={{
+      position: "relative",
+      zIndex: 30,
+      border: `1px solid ${PALETTE.border}`,
+      background: "#000",
+      boxShadow: "0 18px 50px rgba(0,0,0,0.45)",
+      backdropFilter: "blur(12px)",
+    }}
+  >
+    <summary
+      className="flex cursor-pointer list-none items-center justify-between px-4 py-4 sm:px-5 lg:px-6 text-left"
+      style={{ outline: "none" }}
+    >
+      <div className="flex flex-col gap-1">
+        <div
+          className="flex items-center gap-2 text-sm font-semibold"
+          style={{ color: PALETTE.gold }}
         >
-          <button
-            type="button"
-            onClick={() => setShowFilters((p) => !p)}
-            className="w-full text-left hover:border-none"
-            style={{ background: "transparent" }}
-          >
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between hover:border-none">
-              <div>
-                <div
-                  className="flex items-center gap-2 text-sm font-semibold hover:border-none"
-                  style={{ color: PALETTE.gold }}
-                >
-                  <Filter size={16} />
-                  Filters and controls
-                </div>
-                <div className="mt-1 text-xs hover:border-none" style={{ color: PALETTE.muted }}>
-                  Filter players by player, team, position, value, and gameweek horizon.
-                </div>
-              </div>
+          <Filter size={16} />
+          Filters and controls
+        </div>
+        <div className="text-xs" style={{ color: PALETTE.muted }}>
+          Filter players by player, team, position, value, and gameweek horizon.
+        </div>
+      </div>
 
-              <div
-                className="inline-flex items-center gap-2 self-start rounded-full px-3 py-2 text-sm font-semibold sm:self-center"
-                style={{
-                  border: `1px solid ${PALETTE.gold}`,
-                  background: "rgba(0,0,0,0.45)",
-                  color: PALETTE.beige,
-                }}
+      <div
+        className="inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm font-semibold"
+        style={{
+          border: `1px solid ${PALETTE.gold}`,
+          background: "rgba(0,0,0,0.45)",
+          color: PALETTE.beige,
+        }}
+      >
+        {showFilters ? <EyeOff size={16} /> : <Eye size={16} />}
+        {showFilters ? "Hide filters" : "Show filters"}
+        <ChevronDown
+          size={16}
+          style={{
+            transform: showFilters ? "rotate(0deg)" : "rotate(-90deg)",
+            transition: "transform 180ms ease",
+          }}
+        />
+      </div>
+    </summary>
+
+    <div className="px-4 pb-4 sm:px-5 sm:pb-5 lg:px-6 lg:pb-6 overflow-visible">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3 overflow-visible">
+        <FilterCard icon={Users} label="Players">
+          <SearchableMultiSelect
+            label="Players"
+            options={playerOptions}
+            selectedValues={selectedPlayerNames}
+            onChange={setSelectedPlayerNames}
+            placeholder="Search players..."
+          />
+        </FilterCard>
+
+        <FilterCard icon={Shield} label="Teams">
+          <SearchableMultiSelect
+            label="Teams"
+            options={teamOptions}
+            selectedValues={selectedTeamCodes}
+            onChange={setSelectedTeamCodes}
+            placeholder="Search teams..."
+          />
+        </FilterCard>
+
+        <FilterCard icon={SlidersHorizontal} label="Position">
+          <div className="mb-3 flex flex-wrap gap-2">
+            <PillButton
+              active={selectedPositions.length === allPositions.length && allPositions.length > 0}
+              onClick={() => setSelectedPositions(allPositions)}
+            >
+              Select all
+            </PillButton>
+            <PillButton
+              active={selectedPositions.length === 0}
+              onClick={() => setSelectedPositions([])}
+            >
+              Clear
+            </PillButton>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {allPositions.map((pos) => (
+              <PillButton
+                key={pos}
+                active={selectedPositions.includes(pos)}
+                onClick={() =>
+                  setSelectedPositions((prev) =>
+                    prev.includes(pos) ? prev.filter((p) => p !== pos) : [...prev, pos]
+                  )
+                }
               >
-                {showFilters ? <EyeOff size={16} /> : <Eye size={16} />}
-                {showFilters ? "Hide filters" : "Show filters"}
-                <ChevronDown
-                  size={16}
-                  style={{
-                    transform: showFilters ? "rotate(0deg)" : "rotate(-90deg)",
-                    transition: "transform 180ms ease",
-                  }}
-                />
-              </div>
-            </div>
-          </button>
+                {pos}
+              </PillButton>
+            ))}
+          </div>
+        </FilterCard>
 
+        <FilterCard icon={DollarSign} label="Max value filter">
+          <input
+            type="range"
+            min={globalMinValue}
+            max={globalMaxValue || globalMinValue + 1}
+            step={(globalMaxValue - globalMinValue) / 100 || 1}
+            value={valueThreshold != null ? valueThreshold : globalMaxValue}
+            onChange={(e) => setValueThreshold(Number(e.target.value))}
+            className="w-full"
+          />
           <div
-            className="transition-all duration-300 ease-in-out overflow-visible"
+            className="mt-3 rounded-xl px-3 py-2 text-sm"
             style={{
-              maxHeight: showFilters ? "1400px" : "0px",
-              opacity: showFilters ? 1 : 0,
-              marginTop: showFilters ? "1rem" : "0",
-              pointerEvents: showFilters ? "auto" : "none",
+              border: `1px solid ${PALETTE.border}`,
+              background: "rgba(0,0,0,0.58)",
+              color: "#d1c3a9",
             }}
           >
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3 overflow-visible">
-              <FilterCard icon={Users} label="Players">
-                <SearchableMultiSelect
-                  label="Players"
-                  options={playerOptions}
-                  selectedValues={selectedPlayerNames}
-                  onChange={setSelectedPlayerNames}
-                  placeholder="Search players..."
-                />
-              </FilterCard>
-
-              <FilterCard icon={Shield} label="Teams">
-                <SearchableMultiSelect
-                  label="Teams"
-                  options={teamOptions}
-                  selectedValues={selectedTeamCodes}
-                  onChange={setSelectedTeamCodes}
-                  placeholder="Search teams..."
-                />
-              </FilterCard>
-
-              <FilterCard icon={SlidersHorizontal} label="Position">
-                <div className="mb-3 flex flex-wrap gap-2">
-                  <PillButton
-                    active={selectedPositions.length === allPositions.length && allPositions.length > 0}
-                    onClick={() => setSelectedPositions(allPositions)}
-                  >
-                    Select all
-                  </PillButton>
-                  <PillButton
-                    active={selectedPositions.length === 0}
-                    onClick={() => setSelectedPositions([])}
-                  >
-                    Clear
-                  </PillButton>
-                </div>
-
-                <div className="flex flex-wrap gap-2">
-                  {allPositions.map((pos) => (
-                    <PillButton
-                      key={pos}
-                      active={selectedPositions.includes(pos)}
-                      onClick={() =>
-                        setSelectedPositions((prev) =>
-                          prev.includes(pos) ? prev.filter((p) => p !== pos) : [...prev, pos]
-                        )
-                      }
-                    >
-                      {pos}
-                    </PillButton>
-                  ))}
-                </div>
-              </FilterCard>
-
-              <FilterCard icon={DollarSign} label="Max value filter">
-                <input
-                  type="range"
-                  min={globalMinValue}
-                  max={globalMaxValue || globalMinValue + 1}
-                  step={(globalMaxValue - globalMinValue) / 100 || 1}
-                  value={valueThreshold != null ? valueThreshold : globalMaxValue}
-                  onChange={(e) => setValueThreshold(Number(e.target.value))}
-                  className="w-full"
-                />
-                <div
-                  className="mt-3 rounded-xl px-3 py-2 text-sm"
-                  style={{
-                    border: `1px solid ${PALETTE.border}`,
-                    background: "rgba(0,0,0,0.58)",
-                    color: "#d1c3a9",
-                  }}
-                >
-                  {(valueThreshold != null ? valueThreshold : globalMaxValue).toFixed(1)} · range{" "}
-                  {globalMinValue.toFixed(1)}–{globalMaxValue.toFixed(1)}
-                </div>
-              </FilterCard>
-
-              <FilterCard icon={CalendarRange} label="GW horizon for total">
-                <div className="grid grid-cols-2 gap-2">
-                  <select
-                    value={selectedGwStart ?? ""}
-                    onChange={(e) => setSelectedGwStart(Number(e.target.value))}
-                    className="w-full rounded-2xl px-3 py-3 text-sm outline-none"
-                    style={{
-                      border: `1px solid ${PALETTE.border}`,
-                      background: "rgba(0,0,0,0.76)",
-                      color: PALETTE.beige,
-                    }}
-                  >
-                    {allGWs.map((gw) => (
-                      <option key={`start_${gw}`} value={gw}>
-                        From GW {gw}
-                      </option>
-                    ))}
-                  </select>
-
-                  <select
-                    value={selectedGwEnd ?? ""}
-                    onChange={(e) => setSelectedGwEnd(Number(e.target.value))}
-                    className="w-full rounded-2xl px-3 py-3 text-sm outline-none"
-                    style={{
-                      border: `1px solid ${PALETTE.border}`,
-                      background: "rgba(0,0,0,0.76)",
-                      color: PALETTE.beige,
-                    }}
-                  >
-                    {allGWs.map((gw) => (
-                      <option key={`end_${gw}`} value={gw}>
-                        To GW {gw}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div
-                  className="mt-3 rounded-xl px-3 py-2 text-sm"
-                  style={{
-                    border: `1px solid ${PALETTE.border}`,
-                    background: "rgba(0,0,0,0.58)",
-                    color: "#d1c3a9",
-                  }}
-                >
-                  Total uses GW{" "}
-                  {Math.min(selectedGwStart ?? allGWs[0], selectedGwEnd ?? allGWs[allGWs.length - 1])}
-                  –{Math.max(selectedGwStart ?? allGWs[0], selectedGwEnd ?? allGWs[allGWs.length - 1])}
-                </div>
-              </FilterCard>
-            </div>
+            {(valueThreshold != null ? valueThreshold : globalMaxValue).toFixed(1)} · range{" "}
+            {globalMinValue.toFixed(1)}–{globalMaxValue.toFixed(1)}
           </div>
-        </GlassCard>
+        </FilterCard>
+
+        <FilterCard icon={CalendarRange} label="GW horizon for total">
+          <div className="grid grid-cols-2 gap-2">
+            <select
+              value={selectedGwStart ?? ""}
+              onChange={(e) => setSelectedGwStart(Number(e.target.value))}
+              className="w-full rounded-2xl px-3 py-3 text-sm outline-none"
+              style={{
+                border: `1px solid ${PALETTE.border}`,
+                background: "rgba(0,0,0,0.76)",
+                color: PALETTE.beige,
+              }}
+            >
+              {allGWs.map((gw) => (
+                <option key={`start_${gw}`} value={gw}>
+                  From GW {gw}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={selectedGwEnd ?? ""}
+              onChange={(e) => setSelectedGwEnd(Number(e.target.value))}
+              className="w-full rounded-2xl px-3 py-3 text-sm outline-none"
+              style={{
+                border: `1px solid ${PALETTE.border}`,
+                background: "rgba(0,0,0,0.76)",
+                color: PALETTE.beige,
+              }}
+            >
+              {allGWs.map((gw) => (
+                <option key={`end_${gw}`} value={gw}>
+                  To GW {gw}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div
+            className="mt-3 rounded-xl px-3 py-2 text-sm"
+            style={{
+              border: `1px solid ${PALETTE.border}`,
+              background: "rgba(0,0,0,0.58)",
+              color: "#d1c3a9",
+            }}
+          >
+            Total uses GW{" "}
+            {Math.min(selectedGwStart ?? allGWs[0], selectedGwEnd ?? allGWs[allGWs.length - 1])}
+            –{Math.max(selectedGwStart ?? allGWs[0], selectedGwEnd ?? allGWs[allGWs.length - 1])}
+          </div>
+        </FilterCard>
+      </div>
+    </div>
+  </details>
+</div>
 
         <div className="mb-6">
           <details
