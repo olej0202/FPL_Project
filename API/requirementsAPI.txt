@@ -4,3 +4,5 @@ uvicorn
 pandas
 pulp
 requests
+pyomo
+highspy

@@ -252,7 +252,7 @@ def optimize_my_team(
     points_std = points_std.fillna(points_std.median()).to_numpy(dtype=float)
     points_risk = pd.to_numeric(data["Risk_share_avg"], errors="coerce")
     points_risk = points_risk.fillna(points_risk.median()).to_numpy(dtype=float)
-    points_risk = np.clip(points_std, 0, 0.8)
+    points_risk = np.clip(points_risk, 0, 0.8)
     points_std = np.clip(points_std, 0, 3.5)
 
     # robust scale std to 0..1
