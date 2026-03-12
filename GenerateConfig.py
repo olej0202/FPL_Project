@@ -25,7 +25,7 @@ Spurs,6
 ,Ipswich,40"""
 
 
-Manual_team_offensive_adjustments = {17:1.1,31:0.95,2:0.95,91:0.95}
+Manual_team_offensive_adjustments = {2:0.95,91:0.95}
     
     
     
@@ -64,6 +64,7 @@ Manual_min=[
         {"name": "Anton_Stach", "type": "const",   "GW": "any", "value": 90},
         {"name": "Dango_Ouattara", "type": "const",   "GW": "any", "value": 90},
         {"name": "Marcus_Tavernier", "type": "const",   "GW": "any", "value": 90},
+        {"name": "Florian_Wirtz", "type": "const",   "GW": "any", "value": 80},
     ]
         
 
@@ -76,22 +77,23 @@ fixtures_config = {
             {"gw": 31, "probability": 0},
         ],
         "2562226":[
-            {"gw": 34, "probability": 0.37},
-            {"gw": 33, "probability": 0.63},
+            {"gw": 34, "probability": 0.15},
+            {"gw": 33, "probability": 0.85},
             
         ],
         "2562227":[
-            {"gw": 34, "probability": 0.6},
-            {"gw": 33, "probability": 0.4},
+            {"gw": 34, "probability": 0.2},
+            {"gw": 33, "probability": 0.8},
             
         ],
         "2562230":[
-            {"gw": 34, "probability": 0.7},
-            {"gw": 33, "probability": 0.3},
-            
+            {"gw": 34, "probability": 0.65},
+            {"gw": 33, "probability": 0.35},
+        ],
+        "2562228":[
+            {"gw": 34, "probability": 0.4},
+            {"gw": 33, "probability": 0.6},
         ]
-
-
     }
 
 min_id=46805

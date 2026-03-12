@@ -705,7 +705,87 @@ def optimize_my_team(
     return pd.DataFrame(records)
 
 
+
+
+from collections import defaultdict
+
+
+def count_transferred_in_by_gw(
+    df: pd.DataFrame,
+    counts: dict[str, dict[str, int]],
+) -> None:
+    """
+    Update nested dict:
+    counts[gw][player_name] += 1
+    for rows where status == 'transferred_in'
+    """
+    if df is None or df.empty:
+        return
+
+    transferred_in = df[df["status"] == "transferred_in"].copy()
+    if transferred_in.empty:
+        return
+
+    transferred_in["GW"] = transferred_in["GW"].astype(str)
+    transferred_in["Name"] = transferred_in["Name"].astype(str)
+
+    for _, row in transferred_in.iterrows():
+        gw = row["GW"]
+        name = row["Name"]
+        counts[gw][name] += 1
+        
 if __name__ == "__main__":
-    optimize_my_team(wildcard_round=32)
-    
-    
+    from collections import defaultdict
+
+    transfer_in_counts = defaultdict(lambda: defaultdict(int))
+    all_results = []
+    failed_team_ids = []
+
+    for team_id in range(1, 150):
+        print(f"\n{'=' * 80}")
+        print(f"Running optimization for team_id={team_id}")
+        print(f"{'=' * 80}")
+
+        try:
+            result_df = optimize_my_team(
+                team_id=team_id,
+            )
+
+            if result_df is not None and not result_df.empty:
+                temp = result_df.copy()
+                temp["team_id"] = team_id
+                all_results.append(temp)
+
+                count_transferred_in_by_gw(temp, transfer_in_counts)
+            else:
+                print(f"No feasible result for team_id={team_id}")
+                failed_team_ids.append(team_id)
+
+        except Exception as e:
+            print(f"Failed for team_id={team_id}: {e}")
+            failed_team_ids.append(team_id)
+
+    transfer_in_counts = {
+        gw: dict(player_counts)
+        for gw, player_counts in transfer_in_counts.items()
+    }
+
+    export_rows = []
+    for gw, player_counts in transfer_in_counts.items():
+        for player_name, count in player_counts.items():
+            export_rows.append({
+                "player": player_name,
+                "GW": gw,
+                "TransferedIN": count,
+            })
+
+    dOptimizedtransfer = pd.DataFrame(export_rows)
+
+    if not dOptimizedtransfer.empty:
+        dOptimizedtransfer = dOptimizedtransfer.sort_values(
+            by=["GW", "TransferedIN", "player"],
+            ascending=[True, False, True]
+        )
+
+    dOptimizedtransfer.to_csv("Optimizedtransfer.csv", index=False)
+    print("\nSaved: dOptimizedtransfer.csv")

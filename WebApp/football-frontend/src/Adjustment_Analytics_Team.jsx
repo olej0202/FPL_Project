@@ -460,9 +460,9 @@ function recomputeMetrics(rows) {
 
 function TeamScatterPlot({ teamPoints, onTeamDrag }) {
   const minX = 0.6;
-  const maxX = 2.5;
+  const maxX = 2.2;
   const minY = 0.6;
-  const maxY = 2.5;
+  const maxY = 2.2;
 
   const isSmall = useMediaQuery("(max-width: 640px)");
 
