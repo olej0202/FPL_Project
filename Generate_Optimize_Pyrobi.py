@@ -134,6 +134,7 @@ def prefilter_players_by_horizon_points(
         removed["horizon_sum"] = removed[horizon_cols].sum(axis=1)
         print(f"Prefilter removed {len(removed)} players")
     print(filtered)
+    print(filtered.columns)
 
     return filtered
 
@@ -228,6 +229,22 @@ def optimize_my_team(
         gw_list=GW_list,
         min_points_per_gw=1.0,
     )
+    
+    # Verify all team_df names are still present after filtering
+    team_names = set(team_df["name"].astype(str).str.strip())
+    filtered_names = set(data["name"].astype(str).str.strip())
+
+    missing_names = sorted(team_names - filtered_names)
+
+    if missing_names:
+        print("ERROR: These team_df players are missing after filtering:")
+        for name in missing_names:
+            print(f" - {name}")
+        raise ValueError(
+            f"{len(missing_names)} initial squad players are missing after filtering: {missing_names}"
+        )
+    else:
+        print("All team_df names are present in the filtered player list.")
 
 
     players = data["name"].astype(str).tolist()

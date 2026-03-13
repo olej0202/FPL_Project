@@ -239,10 +239,10 @@ def get_my_team_optimize(
             risk_factor=risk,
             transval=transval
         )
-    except ValueError as e:
-        # e.g. if team_id not found or invalid params
-        raise HTTPException(status_code=400, detail=str("Team not found"))
-
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
     return df.to_dict(orient="records")
 
 
