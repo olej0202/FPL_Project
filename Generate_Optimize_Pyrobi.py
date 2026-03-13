@@ -166,7 +166,8 @@ def optimize_my_team(
     Last_GW = get_last_completed_gw(current_fixture_path)
 
     start = max(Last_GW + 1, 1)
-    cutoff = start + 4
+    cutoff = min(start + 5, 38)   # ensure we never go past GW38
+
     GW_list = ["0"] + [str(i) for i in range(start, cutoff + 1)]
     GW_list = [str(gw) for gw in GW_list]
     print("GW_list:", GW_list)
