@@ -271,7 +271,7 @@ def optimize_my_team(
     positions = data["position"].tolist()
     teams = data["team_code"].tolist()
     selected = pd.to_numeric(data["selected"], errors="coerce").fillna(0.0).to_numpy()
-    predicted_points = data[GW_list].to_numpy(dtype=float)
+    predicted_points = data[GW_list].to_numpy(dtype=float).copy()
 
     # ---------------- Risk adjustment ----------------
     risk_float = float(risk_factor) if risk_factor is not None else 0.0
