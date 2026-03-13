@@ -1589,8 +1589,51 @@ def main_Transform():
             
             player_df["rolling_Adjusted_XG_historic"] = player_df['Adjusted_XG'].rolling(window=25, min_periods=1).mean()
             player_df["rolling_Adjusted_XA_historic"] = player_df['Adjusted_XA'].rolling(window=25, min_periods=1).mean()
-            player_df["Share_of_XG"]=player_df['expected_goals'].rolling(window=20, min_periods=1).sum()/player_df["Team_XG"].rolling(window=20, min_periods=1).sum()
-            player_df["Share_of_XA"]=player_df['expected_assists'].rolling(window=20, min_periods=1).sum()/player_df["Team_XA"].rolling(window=20, min_periods=1).sum()
+            player_df["Share_of_XG"] = (
+                (player_df["expected_goals"]
+                    .rolling(window=20, min_periods=1)
+                    .sum()
+                /
+                player_df["minutes"]
+                    .clip(lower=10)
+                    .rolling(window=20, min_periods=1)
+                    .sum()
+            ) * 90*20)/   player_df["Team_XG"].rolling(window=20, min_periods=1).sum()
+            
+            player_df["Share_of_XA"] = (
+                (player_df["expected_assists"]
+                    .rolling(window=20, min_periods=1)
+                    .sum()
+                /
+                player_df["minutes"]
+                    .clip(lower=10)
+                    .rolling(window=20, min_periods=1)
+                    .sum()
+            ) * 90*20)/   player_df["Team_XA"].rolling(window=20, min_periods=1).sum()
+            
+            
+            player_df["Share_of_XG_Short"] = (
+                (player_df["expected_goals"]
+                    .rolling(window=8, min_periods=1)
+                    .sum()
+                /
+                player_df["minutes"]
+                    .clip(lower=10)
+                    .rolling(window=8, min_periods=1)
+                    .sum()
+            ) * 90*8)/   player_df["Team_XG"].rolling(window=8, min_periods=1).sum()
+            
+            player_df["Share_of_XA_Short"] = (
+                (player_df["expected_assists"]
+                    .rolling(window=8, min_periods=1)
+                    .sum()
+                /
+                player_df["minutes"]
+                    .clip(lower=10)
+                    .rolling(window=8, min_periods=1)
+                    .sum()
+            ) * 90*8)/   player_df["Team_XA"].rolling(window=8, min_periods=1).sum()
+            
             player_df['defcon_adjusted'] = np.where(player_df['position'].eq('DEF'),player_df['defcon'].clip(upper=14),player_df['defcon'].clip(upper=16))
             player_df["defcon_adjusted_min"] = (player_df["defcon_adjusted"] / player_df["minutes"].clip(lower=10)) * 90
 
