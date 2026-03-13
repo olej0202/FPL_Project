@@ -86,55 +86,6 @@ def safe_value(x):
 # ============================================================
 # Main optimizer
 # ============================================================
-def prefilter_players_by_horizon_points(
-    data: pd.DataFrame,
-    team_df: pd.DataFrame,
-    gw_list: list[str],
-    min_points_per_gw: float = 1.0,
-) -> pd.DataFrame:
-    """
-    Keep all players in the initial squad.
-    For all other players, keep only those with:
-        sum(predicted points over horizon) >= len(horizon) * min_points_per_gw
-
-    Notes:
-    - Uses gw_list[1:] as the real future horizon, so GW '0' is excluded.
-    - Assumes data has column 'name' and GW columns in gw_list.
-    - Assumes team_df has column 'name'.
-    """
-    df = data.copy()
-    df["name"] = df["name"].astype(str)
-
-    team_names = set(team_df["name"].astype(str).tolist())
-
-    # Exclude GW "0" from horizon filtering
-    horizon_cols = [gw for gw in gw_list if gw != "0"]
-
-    if len(horizon_cols) == 0:
-        return df
-
-    # Make sure horizon cols are numeric
-    for col in horizon_cols:
-        df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0.0)
-
-    horizon_threshold = len(horizon_cols) * float(min_points_per_gw)
-    horizon_sum = df[horizon_cols].sum(axis=1)
-
-    keep_mask = df["name"].isin(team_names) | (horizon_sum >= horizon_threshold)
-
-    filtered = df.loc[keep_mask].copy()
-
-    print(
-        f"Prefilter: kept {len(filtered)} of {len(df)} players "
-        f"(threshold={horizon_threshold:.2f} over {len(horizon_cols)} GWs)"
-    )
-
-    removed = df.loc[~keep_mask, ["name"] + horizon_cols].copy()
-    if not removed.empty:
-        removed["horizon_sum"] = removed[horizon_cols].sum(axis=1)
-        print(f"Prefilter removed {len(removed)} players")
-
-    return filtered
 
 def optimize_my_team(
     team_id: int = 46805,
@@ -212,7 +163,6 @@ def optimize_my_team(
         data[col] = np.where(banned_mask, 0.0, data[col])
 
     # ---------------- Team / budget ----------------
-    # ---------------- Team / budget ----------------
     if is_first:
         initial_saved = 1
         team_df = pd.read_csv("Free_hit_team.csv")
@@ -222,14 +172,6 @@ def optimize_my_team(
         team_df = build_team_dataframe(team_id)
         initial_saved = int(team_df["saved_transfers"].values[0])
         money_in_bank_init = float(team_df["money_in_bank_m"].values[0])
-
-    # ---------------- Prefilter players ----------------
-    data = prefilter_players_by_horizon_points(
-        data=data,
-        team_df=team_df,
-        gw_list=GW_list,
-        min_points_per_gw=1.0,
-    )
 
     players = data["name"].astype(str).tolist()
     costs = data["value"].astype(float).tolist()
@@ -793,9 +735,7 @@ def count_transferred_in_by_gw(
         counts[gw][name] += 1
         
 if __name__ == "__main__":
-    from collections import defaultdict
 
-    transfer_in_counts = defaultdict(lambda: defaultdict(int))
     all_results = []
     failed_team_ids = []
 
@@ -810,11 +750,36 @@ if __name__ == "__main__":
             )
 
             if result_df is not None and not result_df.empty:
-                temp = result_df.copy()
-                temp["team_id"] = team_id
-                all_results.append(temp)
 
-                count_transferred_in_by_gw(temp, transfer_in_counts)
+                temp = result_df.copy()
+
+                # keep only transfer rows
+                temp = temp[temp["status"].isin(["transferred_in","transferred_out"])]
+
+                # pivot transfers per GW
+                for gw in temp["GW"].unique():
+
+                    gw_df = temp[temp["GW"] == gw]
+
+                    ins = gw_df[gw_df["status"] == "transferred_in"]
+                    outs = gw_df[gw_df["status"] == "transferred_out"]
+
+                    n = max(len(ins), len(outs))
+
+                    for i in range(n):
+
+                        in_row = ins.iloc[i] if i < len(ins) else None
+                        out_row = outs.iloc[i] if i < len(outs) else None
+
+                        all_results.append({
+                            "team_id": team_id,
+                            "GW": gw,
+                            "transfer_out_Player": None if out_row is None else out_row["Name"],
+                            "transfer_out_web_name": None if out_row is None else out_row["web_name"],
+                            "transfer_in_Player": None if in_row is None else in_row["Name"],
+                            "transfer_in_web_name": None if in_row is None else in_row["web_name"],
+                        })
+
             else:
                 print(f"No feasible result for team_id={team_id}")
                 failed_team_ids.append(team_id)
@@ -823,27 +788,15 @@ if __name__ == "__main__":
             print(f"Failed for team_id={team_id}: {e}")
             failed_team_ids.append(team_id)
 
-    transfer_in_counts = {
-        gw: dict(player_counts)
-        for gw, player_counts in transfer_in_counts.items()
-    }
+    # build dataframe
+    transfer_df = pd.DataFrame(all_results)
 
-    export_rows = []
-    for gw, player_counts in transfer_in_counts.items():
-        for player_name, count in player_counts.items():
-            export_rows.append({
-                "player": player_name,
-                "GW": gw,
-                "TransferedIN": count,
-            })
-
-    dOptimizedtransfer = pd.DataFrame(export_rows)
-
-    if not dOptimizedtransfer.empty:
-        dOptimizedtransfer = dOptimizedtransfer.sort_values(
-            by=["GW", "TransferedIN", "player"],
-            ascending=[True, False, True]
+    if not transfer_df.empty:
+        transfer_df = transfer_df.sort_values(
+            by=["GW","team_id"],
+            ascending=[True,True]
         )
 
-    dOptimizedtransfer.to_csv("Optimizedtransfer.csv", index=False)
-    print("\nSaved: dOptimizedtransfer.csv")
+    transfer_df.to_csv("Optimizedtransfer.csv", index=False)
+
+    print("\nSaved: Optimizedtransfer.csv")
