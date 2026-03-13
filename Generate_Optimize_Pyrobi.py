@@ -337,10 +337,7 @@ def optimize_my_team(
 
     risk_score[gk_indices] = 0.0
 
-    # keep your GK penalty
-    for i in gk_indices:
-        for t in range(optimize_range):
-            predicted_points[i][t] *= 0.8
+
 
     teams_set = set(teams)
     team_to_indices = {
