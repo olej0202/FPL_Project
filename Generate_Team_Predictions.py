@@ -124,23 +124,37 @@ def GenerateTeamPredictions1(fixture_path, current_team_path,horizon):
     X_test = test_df[features]
     y_test = test_df[target]
 
-
+    params = {
+        "objective": "reg:quantileerror",
+        "quantile_alpha": 0.75,     # 0.25 or 0.75
+        "eval_metric": "quantile",
+        "tree_method": "hist",
+        "grow_policy": "lossguide",
+        "max_depth": 4,
+        "eta": 0.1,
+        "lambda": 2,
+        "gamma": 0.1,
+        "min_child_weight": 8,
+    }
+    num_rounds = 120
+    dtrain = xgb.DMatrix(X_train, label=y_train,enable_categorical=True)
+    model_xg_75 = xgb.train(params, dtrain, num_rounds)
     
     params = {
-            'max_depth': 5,
-            'eta': 0.1,
-            'objective': 'reg:squarederror',  # Use 'reg:squarederror' for regression
-            'eval_metric': 'rmse',             # Use 'rmse' (root mean squared error) for evaluation
-            'tree_method':'hist',
-            'grow_policy': 'lossguide',
-            'lambda': 2, 
-            'gamma':0.1,
-            'min_child_weight': 6
-        }
-
-    num_rounds = 60
+        "objective": "reg:quantileerror",
+        "quantile_alpha": 0.5,     # 0.25 or 0.75
+        "eval_metric": "quantile",
+        "tree_method": "hist",
+        "grow_policy": "lossguide",
+        "max_depth": 4,
+        "eta": 0.1,
+        "lambda": 2,
+        "gamma": 0.1,
+        "min_child_weight": 8,
+    }
+    num_rounds = 120
     dtrain = xgb.DMatrix(X_train, label=y_train,enable_categorical=True)
-    model_xg = xgb.train(params, dtrain, num_rounds)
+    model_xg_50= xgb.train(params, dtrain, num_rounds)
     #SVR
     model_xg=SVR(kernel='rbf', C=0.1, epsilon=0.1,gamma=0.1)
     model_xg.fit(X_train, y_train)
@@ -317,6 +331,10 @@ def GenerateTeamPredictions1(fixture_path, current_team_path,horizon):
 
     xg = model_xg.predict(new_input_XG)
     xg2 = model_xg.predict(new_input_XG2)
+    xg_25H=model_xg_50.predict(XG1)
+    xg_25A=model_xg_50.predict(XG2)
+    xg_75H=model_xg_75.predict(XG1)
+    xg_75A=model_xg_75.predict(XG2)
 
     
     
@@ -387,9 +405,9 @@ def GenerateTeamPredictions1(fixture_path, current_team_path,horizon):
     result_df["away_goals"]=((xgc+xg2)/2)*0.7+0.3*stat_XG_AWAY
     result_df["Clean_Sheet_home"]=css1
     result_df["Clean_Sheet_away"]=css2
-    result_df["test_XG"]=stat_XG_HOME
-    result_df["test_cluster"]=stat_XG_AWAY
-    result_df["test_opp_XGC"]=css2
+    result_df["test_XG"]=xg_25H
+    result_df["test_cluster"]=xg_75H
+    result_df["test_opp_XGC"]=xg_75A
     result_df.to_csv("Team_prediction_visual1.csv")
 
     home_df=result_df[["fixture_code", "GW", "pred"]].copy()
