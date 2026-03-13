@@ -32,7 +32,7 @@ def GenerateTeamPredictions1(fixture_path, current_team_path,horizon):
 
     team_df["Cluster"]=kmeans.predict(team_df[["XG_avg","XGC_avg"]].values)
 
-    opponent_df = team_df[["code", "XGA", "XGCA", "XGH", "XGCH", "kickoff_time", "XG_slope", "XGC_slope","XG_avg","XGC_avg","Cluster","Rolling_Threat","Rolling_Threat_Against","roll10_xpts","roll10_deep","roll10_deep_allowed"]].copy()
+    opponent_df = team_df[["code", "XGA", "XGCA", "XGH", "XGCH", "kickoff_time", "XG_slope", "XGC_slope","XG_avg","XGC_avg","Cluster","Rolling_Threat","Rolling_Threat_Against","roll10_xpts","roll10_deep","roll10_deep_allowed","Elo_Rating"]].copy()
 
     pred_df = pd.merge(team_df, opponent_df, 
                    left_on=['opponent', 'kickoff_time'], 
@@ -86,6 +86,8 @@ def GenerateTeamPredictions1(fixture_path, current_team_path,horizon):
     Model_pred["Opposition_TreatAgainst"] = pred_df["Rolling_Threat_Against_opp"]
     Model_pred["Own_Treat"] = pred_df["Rolling_Threat_team"]
     Model_pred["Own_TreatAgainst"] = pred_df["Rolling_Threat_Against_team"]
+    Model_pred["Own_Elo_Rating"] = pred_df["Elo_Rating_team"]
+    Model_pred["Opposition_Elo_Rating"] = pred_df["Elo_Rating_opp"]
 
 
     Model_pred["Own_Cluster"] = pred_df["Cluster_team"]
@@ -115,7 +117,7 @@ def GenerateTeamPredictions1(fixture_path, current_team_path,horizon):
 
 
     # Define Features and Target
-    features = ['Own_XG','Opposition_XGC','Own_XG_slope','Opponent_XGC_slope','Own_XG_avg','Opposition_XGC_avg','Own_Cluster','Opposition_Cluster','Own_Treat','Opposition_TreatAgainst','Opposition_XPTS',"Own_DEEP",'Own_XPTS']
+    features = ['Own_XG','Opposition_XGC','Own_XG_slope','Opponent_XGC_slope','Own_XG_avg','Opposition_XGC_avg','Own_Cluster','Opposition_Cluster','Own_Treat','Opposition_TreatAgainst','Opposition_XPTS',"Own_DEEP",'Own_XPTS','Own_Elo_Rating','Opposition_Elo_Rating']
     #features = ['Own_XG', 'Own_XGC', 'Opposition_XG', 'Opposition_XGC'] # Exclude target and date
     target = 'XG'
 
@@ -130,7 +132,7 @@ def GenerateTeamPredictions1(fixture_path, current_team_path,horizon):
         "eval_metric": "quantile",
         "tree_method": "hist",
         "grow_policy": "lossguide",
-        "max_depth": 4,
+        "max_depth": 5,
         "eta": 0.1,
         "lambda": 2,
         "gamma": 0.1,
@@ -146,7 +148,7 @@ def GenerateTeamPredictions1(fixture_path, current_team_path,horizon):
         "eval_metric": "quantile",
         "tree_method": "hist",
         "grow_policy": "lossguide",
-        "max_depth": 4,
+        "max_depth": 5,
         "eta": 0.1,
         "lambda": 2,
         "gamma": 0.1,
@@ -172,7 +174,7 @@ def GenerateTeamPredictions1(fixture_path, current_team_path,horizon):
 
 
     # Define Features and Target
-    features = ['Own_XGC', 'Opposition_XG','Own_XGC_slope','Opponent_XG_slope','Opposition_XG_avg','Own_XGC_avg','Own_Cluster','Opposition_Cluster','Opposition_Treat','Own_TreatAgainst','Opposition_XPTS',"Opposition_DEEP"]
+    features = ['Own_XGC', 'Opposition_XG','Own_XGC_slope','Opponent_XG_slope','Opposition_XG_avg','Own_XGC_avg','Own_Cluster','Opposition_Cluster','Opposition_Treat','Own_TreatAgainst','Opposition_XPTS',"Opposition_DEEP",'Own_Elo_Rating','Opposition_Elo_Rating']
     #features = ['Own_XGC', 'Opposition_XG','Own_XGC_slope','Opponent_XG_slope','Opposition_XG_avg','Own_XGC_avg','Own_Cluster','Opposition_Cluster']
 
     #features = ['Own_XG', 'Own_XGC', 'Opposition_XG', 'Opposition_XGC']# Exclude target and date
@@ -233,7 +235,7 @@ def GenerateTeamPredictions1(fixture_path, current_team_path,horizon):
         )
     team_code_data=pd.read_csv(current_team_path)[["name","code","id"]]
 
-    team_data=pd.read_csv("Team_data_newest3.csv")[["code","XGA","XGCA","XGH","XGCH","XG_slope","XGC_slope","XG_avg","XGC_avg","Rolling_Threat","Rolling_Threat_Against","roll10_xpts","roll10_deep"]]
+    team_data=pd.read_csv("Team_data_newest3.csv")[["code","XGA","XGCA","XGH","XGCH","XG_slope","XGC_slope","XG_avg","XGC_avg","Rolling_Threat","Rolling_Threat_Against","roll10_xpts","roll10_deep","Elo_Rating"]]
     team_data["Cluster"]=kmeans.predict(team_data[["XG_avg","XGC_avg"]].values)
     cluster_data=pd.read_csv("Team_cluster_data.csv")[["code_team","Cluster_opp","Cluster_XG","Cluster_XGC","Cluster_CS"]]
 
@@ -257,8 +259,9 @@ def GenerateTeamPredictions1(fixture_path, current_team_path,horizon):
     predict_data["team_h"]=df_merged["code_y"].values
     predict_data["team_a_name"]=df_merged["name_x"].values
     predict_data["team_h_name"]=df_merged["name_y"].values
-    df_merged = predict_data.merge(team_data[["code","XGA","XGCA","XG_slope","XGC_slope","XG_avg","XGC_avg","Cluster","Rolling_Threat","Rolling_Threat_Against","roll10_xpts","roll10_deep"]], left_on='team_a', right_on='code', how='left')  # Left join to keep all rows from df2
-    df_merged = df_merged.merge(team_data[["code","XGH","XGCH","XG_slope","XGC_slope","XG_avg","XGC_avg","Cluster","Rolling_Threat","Rolling_Threat_Against","roll10_xpts","roll10_deep"]], left_on='team_h', right_on='code', how='left')  # Left join to keep all rows from df2
+
+    df_merged = predict_data.merge(team_data[["code","XGA","XGCA","XG_slope","XGC_slope","XG_avg","XGC_avg","Cluster","Rolling_Threat","Rolling_Threat_Against","roll10_xpts","roll10_deep","Elo_Rating"]], left_on='team_a', right_on='code', how='left')  # Left join to keep all rows from df2
+    df_merged = df_merged.merge(team_data[["code","XGH","XGCH","XG_slope","XGC_slope","XG_avg","XGC_avg","Cluster","Rolling_Threat","Rolling_Threat_Against","roll10_xpts","roll10_deep","Elo_Rating"]], left_on='team_h', right_on='code', how='left')  # Left join to keep all rows from df2
     df_merged = df_merged.merge(cluster_data, left_on=['code_x', 'Cluster_y'], right_on=['code_team', 'Cluster_opp'], how='left')  # Left join to keep all rows from df2
     df_merged = df_merged.rename(columns={
         'Cluster_XG': 'Cluster_XG_y',
@@ -286,8 +289,8 @@ def GenerateTeamPredictions1(fixture_path, current_team_path,horizon):
 
 
 
-    features = ['Own_XG','Opposition_XGC','Own_XG_slope','Opponent_XGC_slope','Own_XG_avg','Opposition_XGC_avg','Own_Cluster','Opposition_Cluster','Own_Treat','Opposition_TreatAgainst','Opposition_XPTS',"Own_DEEP",'Own_XPTS']
-
+    features = ['Own_XG','Opposition_XGC','Own_XG_slope','Opponent_XGC_slope','Own_XG_avg','Opposition_XGC_avg','Own_Cluster','Opposition_Cluster','Own_Treat','Opposition_TreatAgainst','Opposition_XPTS',"Own_DEEP",'Own_XPTS','Own_Elo_Rating','Opposition_Elo_Rating']
+    
     new_input_XG = pd.DataFrame()
     new_input_XG["Own_XG"]=df_merged["XGH"]
     new_input_XG["Opposition_XGC"]=df_merged["XGCA"]
@@ -302,6 +305,9 @@ def GenerateTeamPredictions1(fixture_path, current_team_path,horizon):
     new_input_XG['Opposition_XPTS']=df_merged["roll10_xpts_x"]
     new_input_XG['Own_DEEP']=df_merged["roll10_deep_y"]
     new_input_XG['Own_XPTS']=df_merged["roll10_xpts_y"]
+    new_input_XG['Own_Elo_Rating']=df_merged["Elo_Rating_y"]
+    new_input_XG['Opposition_Elo_Rating']=df_merged["Elo_Rating_x"]
+    
     
 
 
@@ -321,7 +327,8 @@ def GenerateTeamPredictions1(fixture_path, current_team_path,horizon):
     new_input_XG2['Opposition_XPTS']=df_merged["roll10_xpts_y"]
     new_input_XG2['Own_DEEP']=df_merged["roll10_deep_x"]
     new_input_XG2['Own_XPTS']=df_merged["roll10_xpts_x"]
-
+    new_input_XG2['Own_Elo_Rating']=df_merged["Elo_Rating_x"]
+    new_input_XG2['Opposition_Elo_Rating']=df_merged["Elo_Rating_y"]
 
 
     new_input_XG.to_csv("teams_preds_test.csv")
@@ -340,7 +347,7 @@ def GenerateTeamPredictions1(fixture_path, current_team_path,horizon):
     
 
 
-    features = ['Own_XGC', 'Opposition_XG','Own_XGC_slope','Opponent_XG_slope','Opposition_XG_avg','Own_XGC_avg','Own_Cluster','Opposition_Cluster','Opposition_Treat','Own_TreatAgainst','Opposition_XPTS',"Opposition_DEEP"]
+    features = ['Own_XGC', 'Opposition_XG','Own_XGC_slope','Opponent_XG_slope','Opposition_XG_avg','Own_XGC_avg','Own_Cluster','Opposition_Cluster','Opposition_Treat','Own_TreatAgainst','Opposition_XPTS',"Opposition_DEEP",'Own_Elo_Rating','Opposition_Elo_Rating']
     new_input_XGC = pd.DataFrame()
     new_input_XGC["Own_XGC"]=df_merged["XGCH"]
     new_input_XGC["Opposition_XG"]=df_merged["XGA"]
@@ -354,7 +361,10 @@ def GenerateTeamPredictions1(fixture_path, current_team_path,horizon):
     new_input_XGC['Own_TreatAgainst']=df_merged["Rolling_Threat_Against_y"]
     new_input_XGC['Opposition_XPTS']=df_merged["roll10_xpts_x"]
     new_input_XGC['Opposition_DEEP']=df_merged["roll10_deep_x"]
+    new_input_XGC['Own_Elo_Rating']=df_merged["Elo_Rating_y"]
+    new_input_XGC['Opposition_Elo_Rating']=df_merged["Elo_Rating_x"]    
     
+
     new_input_XGC.to_csv("teams_preds_test2.csv")
 
 
@@ -371,7 +381,8 @@ def GenerateTeamPredictions1(fixture_path, current_team_path,horizon):
     new_input_XGC2['Own_TreatAgainst']=df_merged["Rolling_Threat_Against_x"]
     new_input_XGC2['Opposition_XPTS']=df_merged["roll10_xpts_y"]
     new_input_XGC2['Opposition_DEEP']=df_merged["roll10_deep_y"]
-
+    new_input_XGC2['Own_Elo_Rating']=df_merged["Elo_Rating_x"]
+    new_input_XGC2['Opposition_Elo_Rating']=df_merged["Elo_Rating_y"] 
 
     XGC1= xgb.DMatrix(new_input_XGC)
     XGC2= xgb.DMatrix(new_input_XGC2)
@@ -401,13 +412,13 @@ def GenerateTeamPredictions1(fixture_path, current_team_path,horizon):
     result_df["away_team"]=df_merged["team_a_name"]
     result_df["home_code"]=df_merged["team_h"]
     result_df["away_code"]=df_merged["team_a"]
-    result_df["home_goals"]=((xg+xgc2)/2)*0.7+0.3*stat_XG_HOME
-    result_df["away_goals"]=((xgc+xg2)/2)*0.7+0.3*stat_XG_AWAY
+    result_df["home_goals"]=((xg+xgc2)/2)*0.6+0.4*xg_25H
+    result_df["away_goals"]=((xgc+xg2)/2)*0.6+0.4*xg_25A
     result_df["Clean_Sheet_home"]=css1
     result_df["Clean_Sheet_away"]=css2
     result_df["test_XG"]=xg_25H
     result_df["test_cluster"]=xg_75H
-    result_df["test_opp_XGC"]=xg_75A
+    result_df["test_opp_XGC"]=xg_25A
     result_df.to_csv("Team_prediction_visual1.csv")
 
     home_df=result_df[["fixture_code", "GW", "pred"]].copy()

@@ -123,7 +123,7 @@ def Main_Orchestration():
     #Predict data
     Data_Predictions(current_fixture_path,current_team_path, n_points_in_future,time_list)
     
-    #Data_Generation(ownership,budget,GW_list_wildcard,GW_list_freehit,current_player_path,current_team_path,current_season_path )
+    Data_Generation(ownership,budget,GW_list_wildcard,GW_list_freehit,current_player_path,current_team_path,current_season_path )
     
     #Specials(ownership,budget,GW_list_wildcard,current_player_path )
     

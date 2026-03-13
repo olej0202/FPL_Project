@@ -86,6 +86,56 @@ def safe_value(x):
 # ============================================================
 # Main optimizer
 # ============================================================
+def prefilter_players_by_horizon_points(
+    data: pd.DataFrame,
+    team_df: pd.DataFrame,
+    gw_list: list[str],
+    min_points_per_gw: float = 1.0,
+) -> pd.DataFrame:
+    """
+    Keep all players in the initial squad.
+    For all other players, keep only those with:
+        sum(predicted points over horizon) >= len(horizon) * min_points_per_gw
+
+    Notes:
+    - Uses gw_list[1:] as the real future horizon, so GW '0' is excluded.
+    - Assumes data has column 'name' and GW columns in gw_list.
+    - Assumes team_df has column 'name'.
+    """
+    df = data.copy()
+    df["name"] = df["name"].astype(str)
+
+    team_names = set(team_df["name"].astype(str).tolist())
+
+    # Exclude GW "0" from horizon filtering
+    horizon_cols = [gw for gw in gw_list if gw != "0"]
+
+    if len(horizon_cols) == 0:
+        return df
+
+    # Make sure horizon cols are numeric
+    for col in horizon_cols:
+        df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0.0)
+
+    horizon_threshold = len(horizon_cols) * float(min_points_per_gw)
+    horizon_sum = df[horizon_cols].sum(axis=1)
+
+    keep_mask = df["name"].isin(team_names) | (horizon_sum >= horizon_threshold)
+
+    filtered = df.loc[keep_mask].copy()
+
+    print(
+        f"Prefilter: kept {len(filtered)} of {len(df)} players "
+        f"(threshold={horizon_threshold:.2f} over {len(horizon_cols)} GWs)"
+    )
+
+    removed = df.loc[~keep_mask, ["name"] + horizon_cols].copy()
+    if not removed.empty:
+        removed["horizon_sum"] = removed[horizon_cols].sum(axis=1)
+        print(f"Prefilter removed {len(removed)} players")
+    print(filtered)
+
+    return filtered
 
 def optimize_my_team(
     team_id: int = 46805,
@@ -172,6 +222,13 @@ def optimize_my_team(
         team_df = build_team_dataframe(team_id)
         initial_saved = int(team_df["saved_transfers"].values[0])
         money_in_bank_init = float(team_df["money_in_bank_m"].values[0])
+    data = prefilter_players_by_horizon_points(
+        data=data,
+        team_df=team_df,
+        gw_list=GW_list,
+        min_points_per_gw=1.0,
+    )
+
 
     players = data["name"].astype(str).tolist()
     costs = data["value"].astype(float).tolist()
@@ -739,7 +796,7 @@ if __name__ == "__main__":
     all_results = []
     failed_team_ids = []
     
-    for team_id in range(1, 150):
+    for team_id in range(1, 2):
         print(f"\n{'=' * 80}")
         print(f"Running optimization for team_id={team_id}")
         print(f"{'=' * 80}")
