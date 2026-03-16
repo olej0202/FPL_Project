@@ -811,7 +811,7 @@ if __name__ == "__main__":
     all_results = []
     failed_team_ids = []
     
-    for team_id in range(1, 2):
+    for team_id in range(1, 200):
         print(f"\n{'=' * 80}")
         print(f"Running optimization for team_id={team_id}")
         print(f"{'=' * 80}")
@@ -829,23 +829,30 @@ if __name__ == "__main__":
                 temp = temp[temp["status"].isin(["transferred_in","transferred_out"])]
 
                 # pivot transfers per GW
-                for gw in temp["GW"].unique():
-
-                    gw_df = temp[temp["GW"] == gw]
-
-                    ins = gw_df[gw_df["status"] == "transferred_in"]
-                    outs = gw_df[gw_df["status"] == "transferred_out"]
-
+            # pivot transfers per GW, matched by position
+            for gw in temp["GW"].unique():
+            
+                gw_df = temp[temp["GW"] == gw].copy()
+            
+                # positions appearing in either in or out
+                positions_in_gw = sorted(gw_df["position"].dropna().unique())
+            
+                for pos in positions_in_gw:
+                    pos_df = gw_df[gw_df["position"] == pos]
+            
+                    ins = pos_df[pos_df["status"] == "transferred_in"].reset_index(drop=True)
+                    outs = pos_df[pos_df["status"] == "transferred_out"].reset_index(drop=True)
+            
                     n = max(len(ins), len(outs))
-
+            
                     for i in range(n):
-
                         in_row = ins.iloc[i] if i < len(ins) else None
                         out_row = outs.iloc[i] if i < len(outs) else None
-
+            
                         all_results.append({
                             "team_id": team_id,
                             "GW": gw,
+                            "position": pos,
                             "transfer_out_Player": None if out_row is None else out_row["Name"],
                             "transfer_out_web_name": None if out_row is None else out_row["web_name"],
                             "transfer_in_Player": None if in_row is None else in_row["Name"],

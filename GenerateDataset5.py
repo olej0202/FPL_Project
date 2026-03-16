@@ -1484,6 +1484,7 @@ def main_Transform():
             ) * 90     
             player_df["Rolling_adjusted_creativity_per90"] = (
                 player_df["Adjusted_Creativity"]
+                    .clip(upper=150)
                     .rolling(window=30, min_periods=1)
                     .sum()
                 /
@@ -1506,6 +1507,7 @@ def main_Transform():
             ) * 90     
             player_df["Rolling_adjusted_creativity_per90_Short"] = (
                 player_df["Adjusted_Creativity"]
+                    .clip(upper=150)
                     .rolling(window=10, min_periods=1)
                     .sum()
                 /
