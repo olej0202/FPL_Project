@@ -419,7 +419,7 @@ def Player_adjustements(current_player_path):
         (df["Goal_Statistics_share"] * 0.3 + df["Rolling_adjusted_Threat_per90_share"]*0.15)
         * risk_adj_minutes_factor
         + (df["Big_Chances"] / 3) * 0.1
-        + (df["Goal_Statistics"]) * 0.15
+        + (df["Rolling_adjusted_XG"]) * 0.15
         + (df["Share_of_XG"]*0.7+0.3*df["Share_of_XG_Short"]) * 0.3
     )
 
@@ -435,7 +435,7 @@ def Player_adjustements(current_player_path):
         (df["Assist_Statistics_share"] * 0.3 + df["Rolling_adjusted_creativity_per90_share"]*0.15)
         * risk_adj_minutes_factor
         + (df["Big_Chances_Created"] / 3) * 0.1
-        + (df["Assist_Statistics"]) * 0.15
+        + (df["Rolling_adjusted_XA"]) * 0.15
         + (df["Share_of_XA"]*0.7+0.3*df["Share_of_XA_Short"]) * 0.3
     )
 

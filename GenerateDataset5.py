@@ -606,16 +606,16 @@ def Generate_team_data():
         new_team['XG_avg']=new_team['XG'].rolling(window=20, min_periods=1).mean()
         new_team['XGC_avg']=new_team['XGC'].rolling(window=20, min_periods=1).mean()
         
-        new_team['Rolling_Threat']=new_team['Threat'].ewm(span=20, adjust=False).mean()
-        new_team['Rolling_Threat_Against']=new_team['Threat_against'].ewm(span=20, adjust=False).mean()
+        new_team['Rolling_Threat']=new_team['Threat'].rolling(window=20, min_periods=1).mean()
+        new_team['Rolling_Threat_Against']=new_team['Threat_against'].rolling(window=20, min_periods=1).mean()
         new_team['Rolling_Defcon_against']=new_team['Defcon_against'].where(new_team['Defcon_against'] > 0).rolling(30, min_periods=1).mean()
         
         new_team['XG_slope']=new_team['XG_avg'].rolling(window=6, min_periods=1).apply(rolling_slope, raw=True)
         new_team['XGC_slope']=new_team['XGC_avg'].rolling(window=6, min_periods=1).apply(rolling_slope, raw=True)
         new_team["Rolling_Threat"]=new_team["Rolling_Threat"]/100
         new_team["Rolling_Threat_Against"]=new_team["Rolling_Threat_Against"]/100
-        new_team["Rolling_XG"]=new_team['XG'].ewm(span=15, adjust=False).mean()
-        new_team["Rolling_XGC"]=new_team['XGC'].ewm(span=15, adjust=False).mean()
+        new_team["Rolling_XG"]=new_team['XG'].ewm(span=20, adjust=False).mean()
+        new_team["Rolling_XGC"]=new_team['XGC'].ewm(span=20, adjust=False).mean()
         
         newest_data = pd.concat([newest_data, new_team.iloc[[-1]]], axis=0, ignore_index=True)
         new_team["XGCH"]=new_team["XGCH"].shift(1, fill_value=1.5)
