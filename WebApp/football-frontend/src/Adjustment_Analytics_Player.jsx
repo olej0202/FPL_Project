@@ -699,7 +699,7 @@ export default function PlayerAdjustmentsPage() {
     const minutesAdj = avgMin ? Math.min(1, avgMin / 80) : 0;
     const csPerMatch = matchCount > 0 ? cs / matchCount : 0;
     const csNonlinear =
-      csFactor > 1 ? ((30 - Math.min(30, csPerMatch * 100)) / -35) * matchCount : 0;
+      csFactor > 1 ? ((30 - Math.min(30, csPerMatch * 100)) / -15) * matchCount : 0;
 
     const goalScored =
       ((goalShare * 0.9 + 0.1 * oppGoalThreat) * xg + penData * 0.8 * matchCount) *
