@@ -47,7 +47,7 @@ def Data_Extraction(season,is_new_season,has_been_error):
 
 
 def Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos,Understat_path,Understat_shots_path):
-    #main_Transform()
+    main_Transform()
     Generate_Understat_dataset(current_player_path,run_player_pos)
     Generate_Shots_data(Understat_path,Understat_shots_path,current_player_path,current_team_path)
     team_data(current_team_path)
@@ -91,7 +91,7 @@ def Get_times(current_fixture_path,n_points_in_future):
 def Main_Orchestration():
     season=25
     is_new_season=0
-    has_been_error=0
+    has_been_error=1
     n_points_in_future=8
     budget=101
     ownership=0.9
@@ -114,11 +114,11 @@ def Main_Orchestration():
     
     
     #EXTARCT DATA
-    #Data_Extraction(season,is_new_season,has_been_error)
+    Data_Extraction(season,is_new_season,has_been_error)
     
     
     #Transform data
-    #Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos,Understat_path,Understat_shots_path)
+    Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos,Understat_path,Understat_shots_path)
     
     #Predict data
     Data_Predictions(current_fixture_path,current_team_path, n_points_in_future,time_list)

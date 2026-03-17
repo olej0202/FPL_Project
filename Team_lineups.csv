@@ -35,12 +35,12 @@
 33,Brentford,Caoimhin Kelleher,GK,4,5,80.0
 34,Brentford,Dango Ouattara,RW,5,5,100.0
 35,Brentford,Jordan Henderson,DM,3,5,60.0
-36,Brentford,Kevin Schade,LW,2,5,40.0
-37,Brentford,Mathias Jensen,DM,5,5,100.0
-38,Brentford,Michael Kayode,DR,4,5,80.0
-39,Brentford,Mikkel Damsgaard,AMC,2,5,40.0
-40,Brentford,Nathan Collins,CB,1,5,20.0
-41,Brentford,Rico Henry,DL,5,5,100.0
+36,Brentford,Keane Lewis-Potter,DL,3,5,60.0
+37,Brentford,Kevin Schade,LW,3,5,60.0
+38,Brentford,Mathias Jensen,MC,5,5,100.0
+39,Brentford,Michael Kayode,DR,4,5,80.0
+40,Brentford,Mikkel Damsgaard,MC,3,5,60.0
+41,Brentford,Nathan Collins,CB,2,5,40.0
 42,Brentford,Sepp van den Berg,CB,5,5,100.0
 43,Brentford,Thiago,FW,5,5,100.0
 44,Brighton,Bart Verbruggen,GK,5,5,100.0
@@ -264,13 +264,13 @@
 262,West Ham,Tomas Soucek,MC,5,5,100.0
 263,West Ham,Valentín Castellanos,FW,5,5,100.0
 264,Wolves,Adam Armstrong,FW,5,5,100.0
-265,Wolves,André,MC,4,5,80.0
-266,Wolves,Angel Gomes,AMC,3,5,60.0
-267,Wolves,David Møller Wolfe,DL,1,5,20.0
-268,Wolves,Jackson Tchatchoua,DR,4,5,80.0
+265,Wolves,André,MC,5,5,100.0
+266,Wolves,Hugo Bueno,DL,4,5,80.0
+267,Wolves,Jackson Tchatchoua,DR,5,5,100.0
+268,Wolves,Jean-Ricner Bellegarde,AMC,4,5,80.0
 269,Wolves,José Sá,GK,5,5,100.0
 270,Wolves,João Gomes,MC,3,5,60.0
 271,Wolves,Ladislav Krejcí,CB,4,5,80.0
-272,Wolves,Mateus Mané,MC,5,5,100.0
-273,Wolves,Matt Doherty,CB,1,5,20.0
-274,Wolves,Santiago Bueno,CB,5,5,100.0
+272,Wolves,Mateus Mané,AMC,5,5,100.0
+273,Wolves,Santiago Bueno,CB,5,5,100.0
+274,Wolves,Yerson Mosquera,CB,4,5,80.0

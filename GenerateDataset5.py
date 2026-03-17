@@ -492,11 +492,11 @@ def Generate_team_data():
                 if(XGC1==0):
                     XGCS.append(GC.values[k])
                 else:
-                    XGCS.append((GC.values[k]*0.2+XGC1*0.8))
+                    XGCS.append((GC.values[k]*0.3+XGC1*0.7))
                 if(XG1==0):
                     XGs.append(GS.values[k])
                 else:
-                    XGs.append((GS.values[k]*0.2+XG1*0.8))
+                    XGs.append((GS.values[k]*0.3+XG1*0.7))
                     
                 if(XG1==0):
                     XG2s.append(GS.values[k])
