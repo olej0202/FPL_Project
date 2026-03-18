@@ -582,10 +582,10 @@ def Generate_team_data():
         team_data=full_team_data[full_team_data["name"]==team]
         away_team=team_data[team_data["was_home"]==False]
         home_team=team_data[team_data["was_home"]==True]
-        home_team['XGH']=np.clip(home_team['XG'], None, clip_val).rolling(window=10, min_periods=1).mean()
-        home_team['XGCH']=np.clip(home_team['XGC'], None, clip_val).rolling(window=10, min_periods=1).mean()
-        away_team['XGA']=np.clip(away_team['XG'], None, clip_val).rolling(window=10, min_periods=1).mean()
-        away_team['XGCA']=np.clip(away_team['XGC'], None, clip_val).rolling(window=10, min_periods=1).mean()
+        home_team['XGH']=np.clip(home_team['XG'], None, clip_val).rolling(window=15, min_periods=1).mean()
+        home_team['XGCH']=np.clip(home_team['XGC'], None, clip_val).rolling(window=15, min_periods=1).mean()
+        away_team['XGA']=np.clip(away_team['XG'], None, clip_val).rolling(window=15, min_periods=1).mean()
+        away_team['XGCA']=np.clip(away_team['XGC'], None, clip_val).rolling(window=15, min_periods=1).mean()
         
         home_team["XG_DEF"]=home_team['XG_DEF'].ewm(span=8, adjust=False).mean()
         home_team["XG_MID"]=home_team['XG_MID'].ewm(span=8, adjust=False).mean()
@@ -979,9 +979,9 @@ def team_transformed2():
     global_avg_xgc = float(team_df["XGC_avg"].mean())
 
     # params
-    k_off_1, k_def_1 = 0.08, 0.08
-    k_off_2, k_def_2 = 0.12, 0.12
-    min_val = 1.1
+    k_off_1, k_def_1 = 0.065, 0.065
+    k_off_2, k_def_2 = 0.1, 0.1
+    min_val = 0.9
     OBS_LO, OBS_HI = 0.5, 3.2
     error_split = 0.5
 
@@ -1018,7 +1018,7 @@ def team_transformed2():
 
     new_team_df = pd.read_csv("Team_data_transformed.csv").iloc[:, 1:].copy()
     new_team_df_newest = pd.read_csv("Team_data_newest.csv").iloc[:, 1:].copy()
-    overall_weight = 0.4
+    overall_weight = 0.25
 
     team_transformed_df = pd.DataFrame()
     team_transformed_df_newest = pd.DataFrame()
