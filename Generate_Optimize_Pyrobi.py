@@ -650,17 +650,32 @@ def optimize_my_team(
 
     def compute_points_only_objective():
         total = 0.0
+
         for t in T:
             if use_freehit and t == fh_t:
                 for i in I:
-                    total += safe_value(m.fh_y[i]) * float(predicted_points[i][t])
-                    total += safe_value(m.fh_c[i]) * float(predicted_points[i][t])
-                    total += safe_value(m.fh_bench[i]) * 0.1 * float(predicted_points[i][t])
+                    pts = float(predicted_points[i][t])
+
+                    total += safe_value(m.fh_y[i]) * pts
+                    total += safe_value(m.fh_c[i]) * pts
+
+                    # Bench Boost on Free Hit week:
+                    # add the remaining 0.9 so bench gets full 1.0x points
+                    if bench_points_gw in T and t == bench_points_gw:
+                        total += safe_value(m.fh_bench[i]) * 0.9 * pts
             else:
                 for i in I:
-                    total += safe_value(m.y[i, t]) * float(predicted_points[i][t])
-                    total += safe_value(m.c[i, t]) * float(predicted_points[i][t])
-                    total += safe_value(m.bench[i, t]) * 0.1 * float(predicted_points[i][t])
+                    pts = float(predicted_points[i][t])
+
+                    total += safe_value(m.y[i, t]) * pts
+                    total += safe_value(m.c[i, t]) * pts
+                    total += safe_value(m.bench[i, t]) * 0.1 * pts
+
+                    # Bench Boost on normal week:
+                    # add the remaining 0.9 so bench gets full 1.0x points
+                    if bench_points_gw in T and t == bench_points_gw:
+                        total += safe_value(m.bench[i, t])  * pts
+
         return total
 
     # Debug squad per GW
