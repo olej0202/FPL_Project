@@ -31,6 +31,7 @@ import {
   EyeOff,
   CalendarRange,
   MousePointerClick,
+  HandFist,
 } from "lucide-react";
 import { useAdjustmentData, fixtureIdFromRow } from "./Contexts/AdjustmentsContext";
 import teamColors from "./utils/team_colors";
