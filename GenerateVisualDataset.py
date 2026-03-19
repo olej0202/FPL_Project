@@ -485,9 +485,18 @@ def Player_adjustements(current_player_path):
 
     bps_scaled = np.maximum(4, df["Rolling_adjusted_BPS"]*0.4+df["Rolling_adjusted_BPS_2"]*0.6) 
     df["BPS"]=bps_scaled*0.015-np.minimum(0.4, df["Rolling_cards"]) 
-    # Final columns (including the new ones)
-    final_cols =["name","position", "GW", "Team","average_minutes","Goal_share", "Assist_share", "Pen_data","CBI_Percent","BPS","Pos_Goal_Threat","Pos_Assist_Threat"]
-    
+    df["Save_Pred"] = np.where(
+        df["position"] == "GKP",
+        np.minimum(df["Team_Rolling_Saves"] * (df["Opp_Saves_Against"] / 2.7), 5),
+        0
+    )
+
+    # Final columns
+    final_cols = [
+        "name", "position", "GW", "Team", "average_minutes",
+        "Goal_share", "Assist_share", "Pen_data", "CBI_Percent",
+        "BPS", "Save_Pred", "Pos_Goal_Threat", "Pos_Assist_Threat"
+    ]
 
     df = df[final_cols]
 

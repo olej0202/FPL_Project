@@ -60,6 +60,7 @@ def next_opp(team, n_future, fixtures,kmeans,team_code,current_teams,position):
     GW=[]
     opp_code=[]
     defcons=[]
+    saves=[]
     goal_pos=[]
     ass_pos=[]
     kl=0
@@ -109,6 +110,7 @@ def next_opp(team, n_future, fixtures,kmeans,team_code,current_teams,position):
         XGC_FWD.append(next_opp_newest_row["XG_FORWARD"])
         XGC_MID.append(next_opp_newest_row["XG_MID"])
         defcons.append(next_opp_newest_row["Rolling_Defcon_against"])
+        saves.append(next_opp_newest_row["Rolling_Saves_Against"])
         if position in ["GK", "GKP"]:
             goal_pos.append(0)
             ass_pos.append(0)
@@ -122,7 +124,7 @@ def next_opp(team, n_future, fixtures,kmeans,team_code,current_teams,position):
     print(position)
     print(goal_pos)
 
-    return clusters,home,n_matches,XGH,XGCH,XGA,XGCA,XGC_DEF,XGC_FWD,XGC_MID,own_XG,GW,played_XGC,played_XG,opp_code,defcons,goal_pos,ass_pos,fix_ids,fix_percent
+    return clusters,home,n_matches,XGH,XGCH,XGA,XGCA,XGC_DEF,XGC_FWD,XGC_MID,own_XG,GW,played_XGC,played_XG,opp_code,defcons,saves,goal_pos,ass_pos,fix_ids,fix_percent
 
 import pandas as pd
 from datetime import datetime
@@ -774,7 +776,7 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
         )
 
         # Use main_pos for next_opp so you don't have to change that function
-        clusters, home, n_matches, XGH, XGCH, XGA, XGCA, XGC_DEF, XGC_FWD, XGC_MID, own_XG, GW, played_XGC, played_XG, opp_code, defcons, goal_pos, ass_pos, fix_ids, fix_percent = next_opp(
+        clusters, home, n_matches, XGH, XGCH, XGA, XGCA, XGC_DEF, XGC_FWD, XGC_MID, own_XG, GW, played_XGC, played_XG, opp_code, defcons,saves, goal_pos, ass_pos, fix_ids, fix_percent = next_opp(
             team_id, time_list, fixture_data, kmeans, team_code, current_teams, main_pos
         )
 
@@ -852,6 +854,7 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
             player_row["Average_OverAssist"] = overassist
             player_row["average_minutes"] = float(mins_lookup.loc[(name, gw_i), "average_minutes"]) if (name, gw_i) in mins_lookup.index else 1.0
             player_row["Opp_defcon"] = defcons[i]
+            player_row["Opp_Saves_Against"] = saves[i]
             player_row["fix_id"] = fix_ids[i]
             player_row["fix_percentage"] = fix_percent[i]
             player_row["Big_Chances"] = big_chances
