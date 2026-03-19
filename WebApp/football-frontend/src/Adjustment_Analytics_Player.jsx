@@ -31,7 +31,7 @@ import {
   EyeOff,
   CalendarRange,
   MousePointerClick,
-  HandFist,
+  Hand,
 } from "lucide-react";
 import { useAdjustmentData, fixtureIdFromRow } from "./Contexts/AdjustmentsContext";
 import teamColors from "./utils/team_colors";
@@ -58,6 +58,7 @@ const MEASURE_LABELS = {
   Assists: "Predicted Assists",
   Avg_Minutes: "Predicted Minutes",
   CBI_Predictions: "Predicted Defcon",
+  Save_Pred: "Predicted Saves",
 };
 
 const clamp01 = (x) => Math.max(0, Math.min(1, Number.isFinite(x) ? x : 0));
@@ -74,6 +75,8 @@ function getMeasureMeta(measure) {
       return { label: MEASURE_LABELS.Avg_Minutes, icon: Clock3, short: "Minutes", emoji: "🕒" };
     case "CBI_Predictions":
       return { label: MEASURE_LABELS.CBI_Predictions, icon: Shield, short: "Defcon", emoji: "🛡️" };
+    case "Save_Pred":
+      return { label: MEASURE_LABELS.Save_Pred, icon: Hand, short: "Saves", emoji: "🧤" };
     default:
       return { label: measure, icon: Activity, short: measure, emoji: "•" };
   }
@@ -564,7 +567,8 @@ function playersNeedCalcSync(currentRows, nextRows) {
       Number(a.calc_goals) !== Number(b.calc_goals) ||
       Number(a.calc_assists) !== Number(b.calc_assists) ||
       Number(a.calc_minutes) !== Number(b.calc_minutes) ||
-      Number(a.calc_cbi) !== Number(b.calc_cbi)
+      Number(a.calc_cbi) !== Number(b.calc_cbi) ||
+      Number(a.calc_saves) !== Number(b.calc_saves)
     ) {
       return true;
     }
@@ -572,7 +576,6 @@ function playersNeedCalcSync(currentRows, nextRows) {
 
   return false;
 }
-
 export default function PlayerAdjustmentsPage() {
   const {
     fetchIfNeeded,
@@ -663,81 +666,89 @@ export default function PlayerAdjustmentsPage() {
     Array.isArray(playersState) &&
     Array.isArray(teamsState);
 
-  const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) => {
-    if (!teamRow) {
-      return {
-        Goal_Scored: 0,
-        Assists: 0,
-        Points: 0,
-        Avg_Minutes: 0,
-        CBI_Predictions: 0,
-        _CBI01_Raw: 0,
-      };
-    }
-
-    const matchCount = Math.max(0, Number(teamRow.Matches) || 0);
-
-    const avgMinRaw = Number(playerRow.average_minutes) || 0;
-    const avgMin = Math.max(MIN_MINUTES, Math.min(MAX_MINUTES, avgMinRaw));
-
-    const goalShare = Number(playerRow.Goal_share) || 0;
-    const assistShare = Number(playerRow.Assist_share) || 0;
-
-    const penData = Number(playerRow.Pen_data) || 0;
-    const oppGoalThreat = Number(playerRow.Pos_Goal_Threat) || 0;
-    const oppAssistThreat = Number(playerRow.Pos_Assist_Threat) || 0;
-
-    const bps = Number(playerRow.BPS) || 0;
-    const defaultPoints = Number(playerRow.default_points) || 0;
-
-    const goalFactor = Number(playerRow.Goal_factor) || 0;
-    const assistFactor = Number(playerRow.Assist_factor) || 0;
-    const csFactor = Number(playerRow.CS_factor) || 0;
-
-    const xg = Number(teamRow.XG) || 0;
-    const cs = Number(teamRow.CS) || 0;
-
-    const minutesAdj = avgMin ? Math.min(1, avgMin / 80) : 0;
-    const csPerMatch = matchCount > 0 ? cs / matchCount : 0;
-    const csNonlinear =
-      csFactor > 1 ? ((30 - Math.min(30, csPerMatch * 100)) / -15) * matchCount : 0;
-
-    const goalScored =
-      ((goalShare * 0.9 + 0.1 * oppGoalThreat) * xg + penData * 0.8 * matchCount) *
-      minutesAdj;
-
-    const assists =
-      ((assistShare * 0.9 + 0.1 * oppAssistThreat) * xg) * minutesAdj;
-
-    const rawCbi01 = clamp01(Number(playerRow.CBI_Percent) || 0);
-
-    const cbi01 =
-      (typeof cbi01Override === "number" && Number.isFinite(cbi01Override)
-        ? clamp01(cbi01Override)
-        : rawCbi01) * minutesAdj;
-
-    const defconPointsTerm = cbi01 * minutesAdj * matchCount * 1.8;
-    const basePoints =
-      (defaultPoints + bps) * minutesAdj * matchCount + defconPointsTerm;
-
-    const points = Math.max(
-      0,
-      basePoints +
-        goalScored * goalFactor +
-        assists * assistFactor +
-        cs * csFactor * minutesAdj +
-        csNonlinear
-    );
-
+const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) => {
+  if (!teamRow) {
     return {
-      Goal_Scored: goalScored,
-      Assists: assists,
-      Points: points,
-      Avg_Minutes: avgMin * matchCount,
-      CBI_Predictions: cbi01,
-      _CBI01_Raw: rawCbi01,
+      Goal_Scored: 0,
+      Assists: 0,
+      Save_Pred: 0,
+      Points: 0,
+      Avg_Minutes: 0,
+      CBI_Predictions: 0,
+      _CBI01_Raw: 0,
     };
-  }, []);
+  }
+
+  const matchCount = Math.max(0, Number(teamRow.Matches) || 0);
+
+  const avgMinRaw = Number(playerRow.average_minutes) || 0;
+  const avgMin = Math.max(MIN_MINUTES, Math.min(MAX_MINUTES, avgMinRaw));
+
+  const goalShare = Number(playerRow.Goal_share) || 0;
+  const assistShare = Number(playerRow.Assist_share) || 0;
+  const savePredRaw = Number(playerRow.Save_Pred) || 0;
+
+  const penData = Number(playerRow.Pen_data) || 0;
+  const oppGoalThreat = Number(playerRow.Pos_Goal_Threat) || 0;
+  const oppAssistThreat = Number(playerRow.Pos_Assist_Threat) || 0;
+
+  const bps = Number(playerRow.BPS) || 0;
+  const defaultPoints = Number(playerRow.default_points) || 0;
+
+  const goalFactor = Number(playerRow.Goal_factor) || 0;
+  const assistFactor = Number(playerRow.Assist_factor) || 0;
+  const csFactor = Number(playerRow.CS_factor) || 0;
+
+  const xg = Number(teamRow.XG) || 0;
+  const cs = Number(teamRow.CS) || 0;
+
+  const minutesAdj = avgMin ? Math.min(1, avgMin / 80) : 0;
+  const csPerMatch = matchCount > 0 ? cs / matchCount : 0;
+  const csNonlinear =
+    csFactor > 1 ? ((30 - Math.min(30, csPerMatch * 100)) / -15) * matchCount : 0;
+
+  const goalScored =
+    ((goalShare * 0.9 + 0.1 * oppGoalThreat) * xg + penData * 0.8 * matchCount) *
+    minutesAdj;
+
+  const assists =
+    ((assistShare * 0.9 + 0.1 * oppAssistThreat) * xg) * minutesAdj;
+
+  const rawCbi01 = clamp01(Number(playerRow.CBI_Percent) || 0);
+
+  const cbi01 =
+    (typeof cbi01Override === "number" && Number.isFinite(cbi01Override)
+      ? clamp01(cbi01Override)
+      : rawCbi01) * minutesAdj;
+
+  const defconPointsTerm = cbi01 * minutesAdj * matchCount * 1.8;
+
+  // new
+  const savePred = savePredRaw * minutesAdj * matchCount;
+
+  const basePoints =
+    (defaultPoints + bps) * minutesAdj * matchCount + defconPointsTerm;
+
+  const points = Math.max(
+    0,
+    basePoints +
+      goalScored * goalFactor +
+      assists * assistFactor +
+      cs * csFactor * minutesAdj +
+      csNonlinear +
+      savePred/3
+  );
+
+  return {
+    Goal_Scored: goalScored,
+    Assists: assists,
+    Save_Pred: savePred,
+    Points: points,
+    Avg_Minutes: avgMin * matchCount,
+    CBI_Predictions: cbi01,
+    _CBI01_Raw: rawCbi01,
+  };
+}, []);
 
   const { teamLookup, teamNamesByCode } = useMemo(() => {
     const names = new Map();
@@ -867,13 +878,14 @@ export default function PlayerAdjustmentsPage() {
       const measures = computeMeasures(row, teamRow, adjustedCbi01);
 
       return {
-        ...row,
-        calc_points: measures.Points,
-        calc_goals: measures.Goal_Scored,
-        calc_assists: measures.Assists,
-        calc_minutes: measures.Avg_Minutes,
-        calc_cbi: measures.CBI_Predictions,
-      };
+  ...row,
+  calc_points: measures.Points,
+  calc_goals: measures.Goal_Scored,
+  calc_assists: measures.Assists,
+  calc_saves: measures.Save_Pred,
+  calc_minutes: measures.Avg_Minutes,
+  calc_cbi: measures.CBI_Predictions,
+};
     });
   }, [playersState, playersByKey, teamLookup, computeMeasures, getPlayerKey]);
 
@@ -932,12 +944,13 @@ export default function PlayerAdjustmentsPage() {
       for (const row of rowsForPlayer) {
         const gw = Number(row.GW);
         gwMeasures[gw] = {
-          Points: Number(row.calc_points) || 0,
-          Goal_Scored: Number(row.calc_goals) || 0,
-          Assists: Number(row.calc_assists) || 0,
-          Avg_Minutes: Number(row.calc_minutes) || 0,
-          CBI_Predictions: Number(row.calc_cbi) || 0,
-        };
+  Points: Number(row.calc_points) || 0,
+  Goal_Scored: Number(row.calc_goals) || 0,
+  Assists: Number(row.calc_assists) || 0,
+  Save_Pred: Number(row.calc_saves) || 0,
+  Avg_Minutes: Number(row.calc_minutes) || 0,
+  CBI_Predictions: Number(row.calc_cbi) || 0,
+};
       }
 
       rows.push({
@@ -1910,23 +1923,24 @@ export default function PlayerAdjustmentsPage() {
                 >
                   <CurrentMeasureIcon size={14} style={{ color: PALETTE.gold }} />
                   <select
-                    value={selectedMeasure}
-                    onChange={(e) => setSelectedMeasure(e.target.value)}
-                    className="rounded-xl text-xs font-semibold outline-none"
-                    style={{
-                      background: "black",
-                      color: PALETTE.gold,
-                      border: "none",
-                      height: "32px",
-                      minWidth: "120px",
-                    }}
-                  >
-                    <option value="Points"> Points</option>
-                    <option value="Goal_Scored">Goals</option>
-                    <option value="Assists"> Assists</option>
-                    <option value="Avg_Minutes">Minutes</option>
-                    <option value="CBI_Predictions"> Defcon %</option>
-                  </select>
+  value={selectedMeasure}
+  onChange={(e) => setSelectedMeasure(e.target.value)}
+  className="rounded-xl text-xs font-semibold outline-none"
+  style={{
+    background: "black",
+    color: PALETTE.gold,
+    border: "none",
+    height: "32px",
+    minWidth: "120px",
+  }}
+>
+  <option value="Points"> Points</option>
+  <option value="Goal_Scored">Goals</option>
+  <option value="Assists"> Assists</option>
+  <option value="Save_Pred"> Saves</option>
+  <option value="Avg_Minutes">Minutes</option>
+  <option value="CBI_Predictions"> Defcon %</option>
+</select>
                 </div>
 
                 <div className="relative min-w-[220px]">

@@ -395,10 +395,10 @@ function recomputeMetrics(rows) {
     const ownXGC = Number(r.own_XGC_avg ?? 0);
     const oppXG = Number(r.opponent_XG_avg ?? 0);
     const oppXGC = Number(r.opponent_XGC_avg ?? 0);
-    const ownAttE = Number(r.own_H_Att_E ?? 0) * 0.8;
-    const oppDefE = Number(r.opponent_H_def_E ?? 0) * 0.8;
-    const ownDEFE = Number(r.own_H_def_E ?? 0) * 0.8;
-    const oppATTE = Number(r.opponent_H_Att_E ?? 0) * 0.8;
+    const ownAttE = Number(r.own_H_Att_E ?? 0) * 0.6;
+    const oppDefE = Number(r.opponent_H_def_E ?? 0) * 0.6;
+    const ownDEFE = Number(r.own_H_def_E ?? 0) * 0.6;
+    const oppATTE = Number(r.opponent_H_Att_E ?? 0) * 0.6;
 
     const base_own_XG_avg = r.base_own_XG_avg != null ? r.base_own_XG_avg : ownXG;
     const base_own_XGC_avg = r.base_own_XGC_avg != null ? r.base_own_XGC_avg : ownXGC;
