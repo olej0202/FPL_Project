@@ -490,7 +490,8 @@ export default function MyTeamOptimize() {
       <div className="mx-auto max-w-7xl px-4 py-6 sm:py-8 lg:py-10">
         <header className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full px-3 py-1 mb-3 text-[11px] uppercase tracking-[0.18em]"
+            <div
+              className="inline-flex items-center gap-2 rounded-full px-3 py-1 mb-3 text-[11px] uppercase tracking-[0.18em]"
               style={{
                 color: PALETTE.gold,
                 border: `1px solid rgba(184,134,11,0.35)`,
@@ -500,28 +501,32 @@ export default function MyTeamOptimize() {
               <Sparkles size={14} className="lucide-icon" />
               Optimization Workspace
             </div>
-            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">Optimize My Team</h1>
+            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight" style={{ color: PALETTE.text }}>
+              Optimize My Team
+            </h1>
             <p className="text-sm mt-2 max-w-2xl" style={{ color: "#d1c3a9" }}>
               Build a cleaner transfer plan, compare AI vs statistical logic, and move the best recommendations straight into your planner.
             </p>
           </div>
           <button
-                onClick={handleOptimizeClick}
-                disabled={!has_changed || !teamId}
-                className="gold-ring inline-flex items-center justify-center gap-2 font-semibold px-4 py-3 rounded-2xl transition-all"
-                style={{
-                  border: `1px solid ${has_changed && teamId ? PALETTE.gold : "#374151"}`,
-                  background: has_changed && teamId ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)` : "rgba(0,0,0,0.55)",
-                  color: has_changed && teamId ? "#000" : PALETTE.muted,
-                  cursor: has_changed && teamId ? "pointer" : "not-allowed",
-                  boxShadow: has_changed && teamId ? "0 14px 30px rgba(0,0,0,0.35)" : "none",
-                }}
-              >
-                <Wand2 size={17} className="lucide-icon" />
-                Optimize now
-              </button>
+            onClick={handleOptimizeClick}
+            disabled={!has_changed || !teamId}
+            className="green-ring inline-flex items-center justify-center gap-2 font-semibold px-4 py-3 rounded-2xl transition-all"
+            style={{
+              border: `1px solid ${has_changed && teamId ? PALETTE.gold : "#374151"}`,
+              background: has_changed && teamId
+                ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)`
+                : "rgba(0,0,0,0.55)",
+              color: has_changed && teamId ? "#000": PALETTE.muted,
+              cursor: has_changed && teamId ? "pointer" : "not-allowed",
+              boxShadow: has_changed && teamId ? "0 14px 30px rgba(0,0,0,0.35" : "none",
+            }}
+          >
 
- 
+
+            <Wand2 size={17} className="lucide-icon" />
+            Optimize now
+          </button>
         </header>
 
         <section className="mb-6 grid grid-cols-1 xl:grid-cols-[1.2fr_0.8fr] gap-6">
@@ -552,7 +557,6 @@ export default function MyTeamOptimize() {
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between mt-4">
               <div className="hidden sm:block" />
 
-              
             </div>
 
             <div className="mt-5 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-12 gap-3 items-start">

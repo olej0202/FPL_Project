@@ -1250,7 +1250,7 @@ if __name__ == "__main__":
     CHIP_COST_WILDCARD = 18.0
     CHIP_COST_FREE_HIT = 8.0
     CHIP_COST_BENCH_BOOST = 8.0
-    CHIP_COST_TRIPLE_CAPTAIN = 5.0
+    CHIP_COST_TRIPLE_CAPTAIN = 8.0
     WILDCARD_FUTURE_GW_VALUE = 1.0
 
     for team_id in range(7025308, 7025309):

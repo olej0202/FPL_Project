@@ -50,7 +50,7 @@ Andrés_García,A.García,Andrés García,100.0,name-strict,Andrés García,['DR
 Lamare_Bogarde,Bogarde,Lamare Bogarde,100.0,name-strict,Lamare Bogarde,"['DR', 'DM']","[0.5, 0.5]",1
 Lino_da Cruz Sousa,Sousa,Unknown for understat,,no-match,,['SUB'],[1.0],1
 Yasin_Özcan,Yasin,Yasin Ayari,90.0,web_name-relaxed,Yasin Ayari,"['DM', 'MC']","[0.6666666666666666, 0.3333333333333333]",1
-Morgan_Rogers,Rogers,Morgan Rogers,100.0,name-strict,Morgan Rogers,"['AMC', 'LW']","[0.9, 0.1]",1
+Morgan_Rogers,Rogers,Morgan Rogers,100.0,name-strict,Morgan Rogers,"['AMC', 'LW']","[0.5, 0.5]",1
 Youri_Tielemans,Tielemans,Youri Tielemans,100.0,name-strict,Youri Tielemans,"['DM', 'AMC', 'MC']","[0.5555555555555556, 0.3333333333333333, 0.1111111111111111]",1
 Leon_Bailey,Bailey,Leon Bailey,100.0,name-strict,Leon Bailey,['RW'],[1.0],1
 Emiliano_Buendía Stati,Buendía,Emiliano Buendía,95.0,name-strict,Emiliano Buendía,['LW'],[1.0],1

@@ -1117,22 +1117,22 @@ def team_transformed2():
         selected_team_df["XGA"] = ((
             (1 - overall_weight) * np.array(off_away_hist[team][:-1]) +
             overall_weight * selected_team_df["XGA"]
-        ) * 0.8 + 0.2 * selected_team_df["Rolling_Threat"])*0.8+0.2*np.array(off_neutral_hist[team][:-1])
+        ) * 0.7 + 0.3 * selected_team_df["Rolling_Threat"])*0.99+0*np.array(off_neutral_hist[team][:-1])
 
         selected_team_df["XGCA"] = ((
             (1 - overall_weight) * np.array(def_away_hist[team][:-1]) +
             overall_weight * selected_team_df["XGCA"]
-        ) * 0.8 + 0.2 * selected_team_df["Rolling_Threat_Against"])*0.8+0.2*np.array(def_neutral_hist[team][:-1])
+        ) * 0.7 + 0.3 * selected_team_df["Rolling_Threat_Against"])*0.99+0*np.array(def_neutral_hist[team][:-1])
 
         selected_team_df["XGH"] = ((
             (1 - overall_weight) * np.array(off_home_hist[team][:-1]) +
             overall_weight * selected_team_df["XGH"]
-        ) * 0.8 + 0.2 * selected_team_df["Rolling_Threat"])*0.8+0.2*np.array(off_neutral_hist[team][:-1])
+        ) * 0.7 + 0.3 * selected_team_df["Rolling_Threat"])*0.99+0*np.array(off_neutral_hist[team][:-1])
 
         selected_team_df["XGCH"] = ((
             (1 - overall_weight) * np.array(def_home_hist[team][:-1]) +
             overall_weight * selected_team_df["XGCH"]
-        ) * 0.8 + 0.2 * selected_team_df["Rolling_Threat_Against"])*0.8+0.2*np.array(def_neutral_hist[team][:-1])
+        ) * 0.7 + 0.3 * selected_team_df["Rolling_Threat_Against"])*0.99+0*np.array(def_neutral_hist[team][:-1])
 
 
         selected_team_df["XG_avg"] = selected_team_df["XGH"] * 0.5 + selected_team_df["XGA"] * 0.5
@@ -1151,22 +1151,22 @@ def team_transformed2():
         newest_selected_team_df["XGA"] = ((
             off_away_hist[team][-1] * (1 - overall_weight) +
             overall_weight * newest_selected_team_df["XGA"]
-        ) * 0.8 + 0.2 * newest_selected_team_df["Rolling_Threat"])*0.8+0.2*off_neutral_hist[team][-1] 
+        ) * 0.7 + 0.3 * newest_selected_team_df["Rolling_Threat"])*0.99+0*off_neutral_hist[team][-1] 
 
         newest_selected_team_df["XGCA"] = ((
             def_away_hist[team][-1] * (1 - overall_weight) +
             overall_weight * newest_selected_team_df["XGCA"]
-        ) * 0.8 + 0.2 * newest_selected_team_df["Rolling_Threat_Against"])*0.8+0.2*def_neutral_hist[team][-1] 
+        ) * 0.7 + 0.3 * newest_selected_team_df["Rolling_Threat_Against"])*0.99+0.0*def_neutral_hist[team][-1] 
 
         newest_selected_team_df["XGH"] = ((
             off_home_hist[team][-1] * (1 - overall_weight) +
             overall_weight * newest_selected_team_df["XGH"]
-        ) * 0.8 + 0.2 * newest_selected_team_df["Rolling_Threat"])*0.8+0.2*off_neutral_hist[team][-1] 
+        ) * 0.7 + 0.3 * newest_selected_team_df["Rolling_Threat"])*0.99+0.0*off_neutral_hist[team][-1] 
 
         newest_selected_team_df["XGCH"] = ((
             def_home_hist[team][-1] * (1 - overall_weight) +
             overall_weight * newest_selected_team_df["XGCH"]
-        ) * 0.8 + 0.2 * newest_selected_team_df["Rolling_Threat_Against"])*0.8+0.2*def_neutral_hist[team][-1] 
+        ) * 0.7 + 0.3 * newest_selected_team_df["Rolling_Threat_Against"])*0.99+0*def_neutral_hist[team][-1] 
 
 
         newest_selected_team_df["XG_avg"] = newest_selected_team_df["XGH"] * 0.5 + newest_selected_team_df["XGA"] * 0.5
