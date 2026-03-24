@@ -721,7 +721,7 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
       ? clamp01(cbi01Override)
       : rawCbi01) * minutesAdj;
 
-  const defconPointsTerm = cbi01 * minutesAdj * matchCount * 1.8;
+  const defconPointsTerm = cbi01 * minutesAdj * matchCount * 2;
 
   // new
   const savePred = savePredRaw * minutesAdj * matchCount;

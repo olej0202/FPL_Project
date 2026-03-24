@@ -1249,7 +1249,7 @@ if __name__ == "__main__":
 
     CHIP_COST_WILDCARD = 18.0
     CHIP_COST_FREE_HIT = 8.0
-    CHIP_COST_BENCH_BOOST = 8.0
+    CHIP_COST_BENCH_BOOST = 10.0
     CHIP_COST_TRIPLE_CAPTAIN = 8.0
     WILDCARD_FUTURE_GW_VALUE = 1.0
 
@@ -1269,11 +1269,12 @@ if __name__ == "__main__":
                 wildcard_future_gw_value=WILDCARD_FUTURE_GW_VALUE,
                 time_limit=52000,
                 mip_gap=0.01,
-                horizon_weeks=6,
-                force_wildcard_gw= 32,
+                horizon_weeks=7,
+                force_wildcard_gw= None,
                 force_free_hit_gw= None,
                 force_bench_boost_gw= None,
                 force_triple_captain_gw = None,
+                allow_triple_captain=False
             )
 
             if result_df is not None and not result_df.empty:
