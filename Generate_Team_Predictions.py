@@ -132,13 +132,13 @@ def GenerateTeamPredictions1(fixture_path, current_team_path,horizon):
         "eval_metric": "quantile",
         "tree_method": "hist",
         "grow_policy": "lossguide",
-        "max_depth": 5,
+        "max_depth": 4,
         "eta": 0.1,
         "lambda": 2,
         "gamma": 0.1,
-        "min_child_weight": 8,
+        "min_child_weight": 6,
     }
-    num_rounds = 120
+    num_rounds = 200
     dtrain = xgb.DMatrix(X_train, label=y_train,enable_categorical=True)
     model_xg_75 = xgb.train(params, dtrain, num_rounds)
     
@@ -148,13 +148,13 @@ def GenerateTeamPredictions1(fixture_path, current_team_path,horizon):
         "eval_metric": "quantile",
         "tree_method": "hist",
         "grow_policy": "lossguide",
-        "max_depth": 5,
+        "max_depth": 4,
         "eta": 0.1,
         "lambda": 2,
         "gamma": 0.1,
-        "min_child_weight": 8,
+        "min_child_weight": 6,
     }
-    num_rounds = 120
+    num_rounds = 200
     dtrain = xgb.DMatrix(X_train, label=y_train,enable_categorical=True)
     model_xg_50= xgb.train(params, dtrain, num_rounds)
     #SVR
@@ -590,9 +590,9 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
         eval_metric="mlogloss",
         tree_method="hist",
         grow_policy="lossguide",
-        max_depth=5,
+        max_depth=4,
         learning_rate=0.01,
-        n_estimators=200,
+        n_estimators=150,
         reg_lambda=1.0,
         min_child_weight=6,
         enable_categorical=True
@@ -637,9 +637,9 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
         eval_metric="mlogloss",
         tree_method="hist",
         grow_policy="lossguide",
-        max_depth=5,
+        max_depth=4,
         learning_rate=0.01,
-        n_estimators=200,
+        n_estimators=150,
         reg_lambda=1.0,
         min_child_weight=6,
         enable_categorical=True
@@ -1002,7 +1002,7 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
 
     home_df=result_df[["GW", "pred"]]
     home_df["team_name"]=result_df["home_team"]
-    home_df["team_code"]=result_df["home_code"]
+    home_df["team_code"]=result_df["home_codSe"]
     home_df["XG"]=result_df["home_goals"]
     home_df["XGC"]=result_df["away_goals"]
     home_df["CS"]=result_df["Clean_Sheet_home"]

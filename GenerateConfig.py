@@ -58,11 +58,10 @@ Manual_min=[
         {"name": "Matheus_Santos Carneiro Da Cunha", "type": "const",   "GW": "any", "value": 75},
         
         {"name": "Tammy_Abraham", "type": "const",   "GW": "any", "value": 60},
-        {"name": "Bukayo_Saka", "type": "const",   "GW": "any", "value": 80},
-        {"name": "Florian_Wirtz", "type": "const",   "GW": "any", "value": 80},
+        {"name": "Florian_Wirtz", "type": "const",   "GW": "any", "value": 75},
         {"name": "Joachim_Andersen", "type": "const",   "GW": "any", "value": 80},
+        {"name": "Melker_Ellborg", "type": "adjust_from",   "GW": "34", "value": 0},
     ]
-        
 
 
 NEW_TEAMS=[]
@@ -89,6 +88,14 @@ fixtures_config = {
         "2562228":[
             {"gw": 34, "probability": 0.4},
             {"gw": 33, "probability": 0.6},
+        ],
+        "2562201":[
+            {"gw": 36, "probability": 0.8},
+            {"gw": 38, "probability": 0.2},
+        ],
+        "2562225":[
+            {"gw": 34, "probability": 0.8},
+            {"gw": 33, "probability": 0.2},
         ]
     }
 
