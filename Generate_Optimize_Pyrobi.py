@@ -826,7 +826,7 @@ if __name__ == "__main__":
     all_results = []
     failed_team_ids = []
     
-    for team_id in range(1, 200):
+    for team_id in range(1, 100):
         print(f"\n{'=' * 80}")
         print(f"Running optimization for team_id={team_id}")
         print(f"{'=' * 80}")
