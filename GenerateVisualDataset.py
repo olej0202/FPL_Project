@@ -477,7 +477,7 @@ def Player_adjustements(current_player_path):
     )
 
     cbi_scaled = max_score * base * penalty_factor
-    cbi_opp=1+(df["Opp_defcon"]-75)/60
+    cbi_opp=np.minimum(1.1,1+(df["Opp_defcon"]-78)/30)
 
     df["CBI_Percent"] = (
         df["defcon_avg_hit_rate"] * 0.35+df["defcon_avg_hit_rate_T0"] * 0.3+df["defcon_avg_hit_rate_T1"] * 0.15+df["defcon_avg_hit_rate_T2"] * 0.1+df["defcon_avg_hit_rate_T3"] * 0.1
