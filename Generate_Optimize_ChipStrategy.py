@@ -1252,8 +1252,9 @@ if __name__ == "__main__":
     CHIP_COST_BENCH_BOOST = 10.0
     CHIP_COST_TRIPLE_CAPTAIN = 8.0
     WILDCARD_FUTURE_GW_VALUE = 1.0
+    team_ids=[46805]
 
-    for team_id in range(7025308, 7025309):
+    for team_id in team_ids:
         print(f"\n{'=' * 80}")
         print(f"Running optimization for team_id={team_id}")
         print(f"{'=' * 80}")

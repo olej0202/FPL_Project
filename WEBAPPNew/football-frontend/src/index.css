@@ -1,0 +1,104 @@
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: "Manrope", "Segoe UI", sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color: #334155;
+  background-color: #f3f8f6;
+  color-scheme: light;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  min-width: 320px;
+  background: radial-gradient(circle at 15% 0%, #fcfffe 0%, #f3f8f6 55%, #edf4f1 100%);
+  color: #334155;
+}
+
+.bg-app-gradient {
+  background:
+    radial-gradient(circle at 12% -5%, rgba(118, 175, 160, 0.2) 0%, rgba(118, 175, 160, 0) 40%),
+    radial-gradient(circle at 100% 0%, rgba(128, 185, 224, 0.14) 0%, rgba(128, 185, 224, 0) 36%),
+    linear-gradient(180deg, #fbfefd 0%, #eef5f2 100%);
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: "Sora", "Manrope", sans-serif;
+  letter-spacing: -0.01em;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+}
+
+button:focus,
+button:focus-visible {
+  outline: 2px solid rgba(118, 175, 160, 0.45);
+  outline-offset: 2px;
+}
+
+.recharts-bar-rectangle:focus {
+  outline: none;
+}
+
+.recharts-tooltip-wrapper {
+  background-color: transparent !important;
+}
+
+.nav-card {
+  width: 10rem;
+  height: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 0.5rem;
+  border: 1px solid #76afa0;
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+  color: #2f6f62;
+  background: #ffffff;
+}
+
+.nav-card.active {
+  background-color: #76afa0;
+  color: #ffffff;
+}
+
+.nav-card:hover {
+  background-color: #e6efea;
+  color: #2f6f62;
+}
+
+.nav-card.active:hover {
+  background-color: #6ea596;
+  color: #ffffff;
+}
+

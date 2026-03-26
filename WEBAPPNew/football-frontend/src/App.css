@@ -1,0 +1,113 @@
+/* Remove the old #root layout from Vite template */
+
+/* Logo stuff (if still used somewhere) */
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
+
+/* Prevent bar outline highlight and background on click */
+.recharts-bar-rectangle:focus {
+  outline: none;
+}
+
+.recharts-tooltip-wrapper {
+  background-color: transparent !important;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ===========================
+   GLOBAL BACKGROUND
+   =========================== */
+
+/* If you want the whole page black (good for your app) */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  background: #334155;         /* unified slate dark */
+  color: #f8fafc;              /* default text */
+  font-family: system-ui, Arial, sans-serif;
+}
+
+/* Let React root fill the viewport width */
+#root {
+  min-height: 100%;
+}
+
+/* Content wrapper elements — optional if you use these classes */
+.main-wrapper,
+.content-wrapper,
+.container,
+.page-body {
+  background: transparent;
+}
+
+/* ===========================
+   MOBILE TWEAK (optional)
+   If you want DIFFERENT background on mobile
+   =========================== */
+/*
+@media (max-width: 768px) {
+  body,
+  #root {
+    background-color: #334155;
+    color: #ffffff;
+  }
+}
+*/
+
+/* ===========================
+   OPTIONAL — Auto Dark Mode
+   (You probably don't need this since you're already dark)
+   =========================== */
+/*
+@media (max-width: 768px) and (prefers-color-scheme: dark) {
+  body,
+  .main-wrapper,
+  .content-wrapper,
+  .container {
+    background-color: #0f0f0f !important;
+    color: #eaeaea !important;
+  }
+}
+*/
+

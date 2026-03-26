@@ -33,17 +33,18 @@ import {
   MousePointerClick,
   Hand,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useAdjustmentData, fixtureIdFromRow } from "./Contexts/AdjustmentsContext";
 import teamColors from "./utils/team_colors";
 
 const PALETTE = {
-  red: "#5A0000",
-  gold: "#B8860B",
-  goldSoft: "#D4A72C",
-  black: "#000000",
-  beige: "#f7ead6",
-  border: "rgba(248, 250, 252, 0.14)",
-  muted: "#9ca3af",
+  red: "#f8fafc",
+  gold: "#76AFA0",
+  goldSoft: "#A7D0C4",
+  black: "#e2e8f0",
+  beige: "#1e293b",
+  border: "rgba(148,163,184,0.35)",
+  muted: "#64748b",
   success: "#86efac",
   danger: "#f87171",
 };
@@ -99,8 +100,8 @@ function GlassCard({ children, className = "", style = {} }) {
       className={`rounded-[28px] border ${className}`}
       style={{
         borderColor: PALETTE.border,
-        background: "linear-gradient(145deg, rgba(0,0,0,0.9), rgba(17,17,17,0.72))",
-        boxShadow: "0 18px 50px rgba(0,0,0,0.45)",
+        background: "linear-gradient(145deg, rgba(255,255,255,0.98), rgba(241,245,249,0.95))",
+        boxShadow: "0 14px 30px rgba(15,23,42,0.08)",
         backdropFilter: "blur(12px)",
         ...style,
       }}
@@ -110,14 +111,14 @@ function GlassCard({ children, className = "", style = {} }) {
   );
 }
 
-function StatCard({ icon: Icon, label, value }) {
+function StatCard({ icon, label, value }) {
   return (
     <div
       className="rounded-2xl px-4 py-3"
-      style={{ border: `1px solid ${PALETTE.border}`, background: "rgba(0,0,0,0.45)" }}
+      style={{ border: `1px solid ${PALETTE.border}`, background: "rgba(248,250,252,0.96)" }}
     >
       <div className="flex items-center gap-2 text-[11px] uppercase tracking-wide" style={{ color: PALETTE.muted }}>
-        <Icon size={14} />
+        {icon ? React.createElement(icon, { size: 14 }) : null}
         {label}
       </div>
       <div className="mt-1 text-lg font-bold" style={{ color: PALETTE.gold }}>
@@ -132,8 +133,8 @@ function ClickHintPill() {
     <div
       className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[11px] font-semibold"
       style={{
-        border: `1px solid rgba(184,134,11,0.35)`,
-        background: "rgba(184,134,11,0.08)",
+        border: `1px solid rgba(95,143,123,0.35)`,
+        background: "rgba(95,143,123,0.08)",
         color: PALETTE.gold,
       }}
     >
@@ -143,20 +144,20 @@ function ClickHintPill() {
   );
 }
 
-function FilterCard({ icon: Icon, label, children }) {
+function FilterCard({ icon, label, children }) {
   return (
     <div
       className="rounded-2xl p-4 overflow-visible min-w-0"
       style={{
         border: `1px solid ${PALETTE.border}`,
-        background: "linear-gradient(145deg, rgba(0,0,0,0.94), rgba(90,0,0,0.18))",
+        background: "linear-gradient(145deg, rgba(255,255,255,0.96), rgba(236,253,245,0.85))",
       }}
     >
       <label
         className="mb-2 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wide"
-        style={{ color: "#e5e7eb" }}
+        style={{ color: "#475569" }}
       >
-        <Icon size={13} style={{ color: PALETTE.gold }} />
+        {icon ? React.createElement(icon, { size: 13, style: { color: PALETTE.gold } }) : null}
         {label}
       </label>
       {children}
@@ -173,9 +174,9 @@ function PillButton({ active, onClick, children }) {
       style={{
         border: `1px solid ${active ? PALETTE.gold : PALETTE.border}`,
         background: active
-          ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)`
-          : "rgba(0,0,0,0.72)",
-        color: active ? "#000" : PALETTE.beige,
+          ? `linear-gradient(135deg, ${PALETTE.gold}, #8FBCA9)`
+          : "#f8fafc",
+        color: active ? "#1e293b" : PALETTE.beige,
       }}
     >
       {children}
@@ -326,9 +327,9 @@ function SearchableMultiSelect({
         className="w-full rounded-2xl px-3 py-3 text-left text-sm transition-all duration-200"
         style={{
           border: `1px solid ${isOpen ? PALETTE.gold : PALETTE.border}`,
-          background: "rgba(0,0,0,0.75)",
+          background: "#f8fafc",
           color: PALETTE.beige,
-          boxShadow: isOpen ? "0 0 0 1px rgba(184,134,11,0.18)" : "none",
+          boxShadow: isOpen ? "0 0 0 1px rgba(95,143,123,0.18)" : "none",
         }}
       >
         <span className="flex items-center justify-between gap-3">
@@ -355,8 +356,8 @@ function SearchableMultiSelect({
             transform: panelReady ? "translateY(0)" : "translateY(-4px)",
             transition: "opacity 160ms ease, transform 160ms ease",
             border: `1px solid ${PALETTE.gold}`,
-            background: "rgba(0,0,0,0.98)",
-            boxShadow: "0 18px 40px rgba(0,0,0,0.7)",
+            background: "#ffffff",
+            boxShadow: "0 14px 30px rgba(15,23,42,0.12)",
           }}
         >
           <div className="p-3">
@@ -374,7 +375,7 @@ function SearchableMultiSelect({
                 className="w-full rounded-xl py-2 pl-9 pr-3 text-sm outline-none"
                 style={{
                   border: `1px solid ${PALETTE.border}`,
-                  background: "#050505",
+                  background: "#ffffff",
                   color: PALETTE.beige,
                 }}
               />
@@ -387,7 +388,7 @@ function SearchableMultiSelect({
                 className="flex-1 rounded-full px-3 py-2 text-xs font-semibold"
                 style={{
                   border: `1px solid ${PALETTE.gold}`,
-                  background: "rgba(184,134,11,0.08)",
+                  background: "rgba(95,143,123,0.08)",
                   color: PALETTE.beige,
                 }}
               >
@@ -399,8 +400,8 @@ function SearchableMultiSelect({
                 className="flex-1 rounded-full px-3 py-2 text-xs font-semibold"
                 style={{
                   border: `1px solid ${PALETTE.border}`,
-                  background: "rgba(0,0,0,0.75)",
-                  color: "#e5e7eb",
+                  background: "#f8fafc",
+                  color: "#475569",
                 }}
               >
                 Clear
@@ -421,7 +422,7 @@ function SearchableMultiSelect({
                     key={opt.value}
                     className="flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2 transition-colors"
                     style={{
-                      background: checked ? "rgba(184,134,11,0.14)" : "transparent",
+                      background: checked ? "rgba(95,143,123,0.14)" : "transparent",
                       color: PALETTE.beige,
                     }}
                     onMouseDown={(e) => e.preventDefault()}
@@ -478,14 +479,14 @@ const PlayerRow = React.memo(function PlayerRow({
       aria-label={`Open player adjustments for ${row.displayName}`}
       className="group cursor-pointer transition-all duration-150 focus:outline-none"
       style={{
-        background: idx % 2 === 0 ? "#080808" : "#141414",
+        background: idx % 2 === 0 ? "#ffffff" : "#f8fafc",
       }}
     >
       <td
         className="sticky left-0 z-[1] px-4 py-3 font-semibold"
         style={{
-          background: idx % 2 === 0 ? "#080808" : "#141414",
-          borderBottom: "1px solid #222",
+          background: idx % 2 === 0 ? "#ffffff" : "#f8fafc",
+          borderBottom: "1px solid #e2e8f0",
         }}
       >
         <div className="flex items-center justify-between gap-3">
@@ -503,8 +504,8 @@ const PlayerRow = React.memo(function PlayerRow({
           <div
             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full opacity-0 transition-all duration-150 group-hover:translate-x-0 group-hover:opacity-100 group-focus:translate-x-0 group-focus:opacity-100"
             style={{
-              border: `1px solid rgba(184,134,11,0.28)`,
-              background: "rgba(184,134,11,0.08)",
+              border: `1px solid rgba(95,143,123,0.28)`,
+              background: "rgba(95,143,123,0.08)",
               color: PALETTE.gold,
               transform: "translateX(-4px)",
             }}
@@ -514,18 +515,18 @@ const PlayerRow = React.memo(function PlayerRow({
         </div>
       </td>
 
-      <td className="px-4 py-3" style={{ borderBottom: "1px solid #222" }}>
+      <td className="px-4 py-3" style={{ borderBottom: "1px solid #e2e8f0" }}>
         {row.position}
       </td>
 
-      <td className="px-4 py-3" style={{ borderBottom: "1px solid #222" }}>
+      <td className="px-4 py-3" style={{ borderBottom: "1px solid #e2e8f0" }}>
         <div className="inline-flex items-center gap-2">
           <TeamColorDot teamName={row.teamName} />
           <span>{row.teamName}</span>
         </div>
       </td>
 
-      <td className="px-4 py-3 text-right" style={{ borderBottom: "1px solid #222" }}>
+      <td className="px-4 py-3 text-right" style={{ borderBottom: "1px solid #e2e8f0" }}>
         {row.value != null && !Number.isNaN(row.value) ? row.value.toFixed(1) : "-"}
       </td>
 
@@ -533,7 +534,7 @@ const PlayerRow = React.memo(function PlayerRow({
         const cell = row.gwMeasures[gw];
         const displayValue = cell ? cell[row.selectedMeasure] : 0;
         return (
-          <td key={gw} className="px-4 py-3 text-right" style={{ borderBottom: "1px solid #222" }}>
+          <td key={gw} className="px-4 py-3 text-right" style={{ borderBottom: "1px solid #e2e8f0" }}>
             {displayValue != null && !Number.isNaN(displayValue)
               ? Number(displayValue).toFixed(2)
               : "0.00"}
@@ -543,7 +544,7 @@ const PlayerRow = React.memo(function PlayerRow({
 
       <td
         className="px-4 py-3 text-right font-semibold"
-        style={{ borderBottom: "1px solid #222", color: PALETTE.gold }}
+        style={{ borderBottom: "1px solid #e2e8f0", color: PALETTE.gold }}
       >
         {row.totalMeasure != null && !Number.isNaN(row.totalMeasure)
           ? row.totalMeasure.toFixed(2)
@@ -577,6 +578,7 @@ function playersNeedCalcSync(currentRows, nextRows) {
   return false;
 }
 export default function PlayerAdjustmentsPage() {
+  const navigate = useNavigate();
   const {
     fetchIfNeeded,
     loading,
@@ -1173,6 +1175,11 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
     await fetchIfNeeded();
   };
 
+  const handleOpenStatisticalOptimizer = useCallback(async () => {
+    await fetchIfNeeded();
+    navigate("/My_Team", { state: { preferModel: "statistical" } });
+  }, [fetchIfNeeded, navigate]);
+
   const openPlayerModal = useCallback((nameKey) => {
     setActivePlayerKey(nameKey);
     setIsModalOpen(true);
@@ -1570,8 +1577,8 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
             <div
               className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl"
               style={{
-                background: "rgba(184,134,11,0.12)",
-                border: `1px solid rgba(184,134,11,0.35)`,
+                background: "rgba(95,143,123,0.12)",
+                border: `1px solid rgba(95,143,123,0.35)`,
               }}
             >
               <Sparkles size={24} style={{ color: PALETTE.gold }} />
@@ -1590,7 +1597,7 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
     <div
       className="min-h-screen"
       style={{
-        background: `radial-gradient(circle at top, ${PALETTE.red} 0, ${PALETTE.black} 45%, #000 100%)`,
+        background: `radial-gradient(circle at top, ${PALETTE.red} 0, ${PALETTE.black} 45%, #e2e8f0 100%)`,
         color: PALETTE.beige,
         fontFamily:
           "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
@@ -1603,8 +1610,8 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
               className="mb-3 inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] uppercase tracking-[0.18em]"
               style={{
                 color: PALETTE.gold,
-                border: `1px solid rgba(184,134,11,0.35)`,
-                background: "rgba(184,134,11,0.08)",
+                border: `1px solid rgba(95,143,123,0.35)`,
+                background: "rgba(95,143,123,0.08)",
               }}
             >
               <Sparkles size={14} />
@@ -1613,13 +1620,13 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
             <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
               Player Adjustment Tool
             </h1>
-            <p className="mt-2 max-w-2xl text-sm" style={{ color: "#d1c3a9" }}>
+            <p className="mt-2 max-w-2xl text-sm" style={{ color: "#64748b" }}>
               Filter your player pool, inspect projected outputs by gameweek, and fine-tune
               shares, minutes, and Defcon with a cleaner workflow.
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 w-full lg:w-auto">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-5 w-full lg:w-auto">
             <StatCard icon={Users} label="Players" value={String(filteredPlayerRows.length)} />
             <StatCard
               icon={currentMeasureMeta.icon}
@@ -1629,15 +1636,31 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
             <StatCard icon={PencilLine} label="Changes" value={String(displayAdjustments.length)} />
             <button
               type="button"
+              onClick={handleOpenStatisticalOptimizer}
+              className="rounded-2xl px-4 py-3 text-left transition"
+              style={{
+                border: `1px solid ${PALETTE.gold}`,
+                background: "linear-gradient(145deg, rgba(236,253,245,0.95), rgba(248,250,252,0.95))",
+                color: PALETTE.beige,
+              }}
+            >
+              <div className="flex items-center gap-2 text-[11px] uppercase tracking-wide" style={{ color: "#475569" }}>
+                <Target size={14} />
+                Optimizer
+              </div>
+              <div className="mt-1 text-sm font-semibold">Use Statistical Model</div>
+            </button>
+            <button
+              type="button"
               onClick={handleResetData}
               className="rounded-2xl px-4 py-3 text-left transition"
               style={{
                 border: `1px solid ${PALETTE.gold}`,
-                background: "linear-gradient(145deg, rgba(0,0,0,0.9), rgba(90,0,0,0.7))",
+                background: "linear-gradient(145deg, rgba(236,253,245,0.95), rgba(248,250,252,0.95))",
                 color: PALETTE.beige,
               }}
             >
-              <div className="flex items-center gap-2 text-[11px] uppercase tracking-wide" style={{ color: "#e5e7eb" }}>
+              <div className="flex items-center gap-2 text-[11px] uppercase tracking-wide" style={{ color: "#475569" }}>
                 <RotateCcw size={14} />
                 Reset
               </div>
@@ -1655,8 +1678,8 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
       position: "relative",
       zIndex: 30,
       border: `1px solid ${PALETTE.border}`,
-      background: "#000",
-      boxShadow: "0 18px 50px rgba(0,0,0,0.45)",
+      background: "#ffffff",
+      boxShadow: "0 14px 30px rgba(15,23,42,0.08)",
       backdropFilter: "blur(12px)",
     }}
   >
@@ -1681,7 +1704,7 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
         className="inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm font-semibold"
         style={{
           border: `1px solid ${PALETTE.gold}`,
-          background: "rgba(0,0,0,0.45)",
+          background: "rgba(248,250,252,0.95)",
           color: PALETTE.beige,
         }}
       >
@@ -1766,8 +1789,8 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
             className="mt-3 rounded-xl px-3 py-2 text-sm"
             style={{
               border: `1px solid ${PALETTE.border}`,
-              background: "rgba(0,0,0,0.58)",
-              color: "#d1c3a9",
+              background: "rgba(248,250,252,0.95)",
+              color: "#64748b",
             }}
           >
             {(valueThreshold != null ? valueThreshold : globalMaxValue).toFixed(1)} · range{" "}
@@ -1783,7 +1806,7 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
               className="w-full rounded-2xl px-3 py-3 text-sm outline-none"
               style={{
                 border: `1px solid ${PALETTE.border}`,
-                background: "rgba(0,0,0,0.76)",
+                background: "#f8fafc",
                 color: PALETTE.beige,
               }}
             >
@@ -1800,7 +1823,7 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
               className="w-full rounded-2xl px-3 py-3 text-sm outline-none"
               style={{
                 border: `1px solid ${PALETTE.border}`,
-                background: "rgba(0,0,0,0.76)",
+                background: "#f8fafc",
                 color: PALETTE.beige,
               }}
             >
@@ -1816,8 +1839,8 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
             className="mt-3 rounded-xl px-3 py-2 text-sm"
             style={{
               border: `1px solid ${PALETTE.border}`,
-              background: "rgba(0,0,0,0.58)",
-              color: "#d1c3a9",
+              background: "rgba(248,250,252,0.95)",
+              color: "#64748b",
             }}
           >
             Total uses GW{" "}
@@ -1835,8 +1858,8 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
             className="overflow-visible rounded-[24px]"
             style={{
               border: `1px solid ${PALETTE.border}`,
-              background: "linear-gradient(145deg, rgba(0,0,0,0.95), rgba(0,0,0,0.82))",
-              boxShadow: "0 14px 30px rgba(0,0,0,0.55)",
+              background: "linear-gradient(145deg, rgba(255,255,255,0.98), rgba(241,245,249,0.95))",
+              boxShadow: "0 12px 24px rgba(15,23,42,0.12)",
             }}
           >
             <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-4 text-sm font-semibold">
@@ -1845,7 +1868,7 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
                 Changes made
                 <span
                   className="rounded-full px-2 py-0.5 text-[11px]"
-                  style={{ background: "rgba(184,134,11,0.08)", color: PALETTE.gold }}
+                  style={{ background: "rgba(95,143,123,0.08)", color: PALETTE.gold }}
                 >
                   {displayAdjustments.length}
                 </span>
@@ -1869,7 +1892,7 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
                       <div className="font-semibold">
                         {a.playerName} ({a.webName})
                       </div>
-                      <div className="mt-1 text-sm" style={{ color: "#e5e7eb" }}>
+                      <div className="mt-1 text-sm" style={{ color: "#475569" }}>
                         {a.type === "Goal_share"
                           ? "Goal share"
                           : a.type === "Assist_share"
@@ -1917,7 +1940,7 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
                   className="flex items-center gap-2 rounded-xl px-2"
                   style={{
                     border: `1px solid ${PALETTE.border}`,
-                    background: "rgba(0,0,0,0.78)",
+                    background: "#f8fafc",
                     height: "36px",
                   }}
                 >
@@ -1927,7 +1950,7 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
   onChange={(e) => setSelectedMeasure(e.target.value)}
   className="rounded-xl text-xs font-semibold outline-none"
   style={{
-    background: "black",
+    background: "#ffffff",
     color: PALETTE.gold,
     border: "none",
     height: "32px",
@@ -1957,7 +1980,7 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
                     className="w-full rounded-xl py-2 pl-9 pr-3 text-xs outline-none"
                     style={{
                       border: `1px solid ${PALETTE.border}`,
-                      background: "rgba(0,0,0,0.78)",
+                      background: "#f8fafc",
                       color: PALETTE.beige,
                       height: "36px",
                     }}
@@ -1980,7 +2003,7 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
                 <tr>
                   <th
                     className="sticky left-0 z-[2] px-4 py-3 text-left"
-                    style={{ background: "#111", borderBottom: `1px solid ${PALETTE.gold}` }}
+                    style={{ background: "#ffffff", borderBottom: `1px solid ${PALETTE.gold}` }}
                   >
                     <div className="flex items-center gap-2">
                       <span>Name</span>
@@ -1989,21 +2012,21 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
 
                   <th
                     className="px-4 py-3 text-left"
-                    style={{ background: "#111", borderBottom: `1px solid ${PALETTE.gold}` }}
+                    style={{ background: "#ffffff", borderBottom: `1px solid ${PALETTE.gold}` }}
                   >
                     Position
                   </th>
 
                   <th
                     className="px-4 py-3 text-left"
-                    style={{ background: "#111", borderBottom: `1px solid ${PALETTE.gold}` }}
+                    style={{ background: "#ffffff", borderBottom: `1px solid ${PALETTE.gold}` }}
                   >
                     Team
                   </th>
 
                   <th
                     className="px-4 py-3 text-right"
-                    style={{ background: "#111", borderBottom: `1px solid ${PALETTE.gold}` }}
+                    style={{ background: "#ffffff", borderBottom: `1px solid ${PALETTE.gold}` }}
                   >
                     Value
                   </th>
@@ -2016,7 +2039,7 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
                         onClick={() => handleSortByGW(gw)}
                         className="cursor-pointer px-4 py-3 text-right"
                         style={{
-                          background: "#111",
+                          background: "#ffffff",
                           borderBottom: `1px solid ${PALETTE.gold}`,
                           color: isSorted ? PALETTE.gold : PALETTE.beige,
                         }}
@@ -2037,7 +2060,7 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
                     onClick={handleSortByTotal}
                     className="cursor-pointer px-4 py-3 text-right"
                     style={{
-                      background: "#111",
+                      background: "#ffffff",
                       borderBottom: `1px solid ${PALETTE.gold}`,
                       color: sortConfig.type === "total" ? PALETTE.gold : PALETTE.beige,
                     }}
@@ -2070,7 +2093,7 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
                     <td
                       colSpan={6 + allGWs.length}
                       className="px-4 py-8 text-center"
-                      style={{ color: "#d1c3a9" }}
+                      style={{ color: "#64748b" }}
                     >
                       No players match the current filters.
                     </td>
@@ -2103,7 +2126,7 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
               setDraggingGW(null);
               dragGWRef.current = null;
             }}
-            className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/85 p-4"
+            className="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-700/85 p-4"
           >
             <GlassCard
               className="max-h-[92vh] w-full max-w-5xl overflow-y-auto p-4 sm:p-6"
@@ -2142,7 +2165,7 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
                     </h2>
                     <div
                       className="mt-1 flex items-center gap-2 text-sm"
-                      style={{ color: "#d1c3a9" }}
+                      style={{ color: "#64748b" }}
                     >
                       <span>{activePlayerFirstRow.position}</span>
                       <span style={{ color: "#6b7280" }}>•</span>
@@ -2161,7 +2184,7 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
                   className="rounded-full p-2"
                   style={{
                     border: `1px solid ${PALETTE.border}`,
-                    background: "rgba(0,0,0,0.45)",
+                    background: "rgba(248,250,252,0.95)",
                     color: PALETTE.beige,
                   }}
                 >
@@ -2181,7 +2204,7 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
                     className="w-full"
                     style={{ accentColor: PALETTE.gold }}
                   />
-                  <div className="mt-2 text-sm" style={{ color: "#d1c3a9" }}>
+                  <div className="mt-2 text-sm" style={{ color: "#64748b" }}>
                     {Math.round((pendingGoalShare ?? 0) * 100)}%
                   </div>
                 </FilterCard>
@@ -2197,7 +2220,7 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
                     className="w-full"
                     style={{ accentColor: PALETTE.gold }}
                   />
-                  <div className="mt-2 text-sm" style={{ color: "#d1c3a9" }}>
+                  <div className="mt-2 text-sm" style={{ color: "#64748b" }}>
                     {Math.round((pendingAssistShare ?? 0) * 100)}%
                   </div>
                 </FilterCard>
@@ -2213,7 +2236,7 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
                     className="w-full"
                     style={{ accentColor: PALETTE.gold }}
                   />
-                  <div className="mt-2 text-sm" style={{ color: "#d1c3a9" }}>
+                  <div className="mt-2 text-sm" style={{ color: "#64748b" }}>
                     {Math.round(clamp01(defconAdjust01) * 100)}%
                   </div>
                 </FilterCard>
@@ -2228,9 +2251,9 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
                   style={{
                     border: `1px solid ${PALETTE.gold}`,
                     background: hasPlayerChanges
-                      ? `linear-gradient(135deg, ${PALETTE.gold}, #facc15)`
-                      : "rgba(0,0,0,0.5)",
-                    color: hasPlayerChanges ? "#000" : PALETTE.muted,
+                      ? `linear-gradient(135deg, ${PALETTE.gold}, #8FBCA9)`
+                      : "#e2e8f0",
+                    color: hasPlayerChanges ? "#1e293b" : PALETTE.muted,
                     cursor: hasPlayerChanges ? "pointer" : "not-allowed",
                   }}
                 >
@@ -2257,7 +2280,7 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
                       className="rounded-2xl"
                       style={{
                         border: `1px solid ${PALETTE.gold}`,
-                        background: "#000",
+                        background: "#ffffff",
                         touchAction: "none",
                       }}
                     >
@@ -2301,7 +2324,7 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
                                   y={height - 5}
                                   fontSize="9"
                                   textAnchor="middle"
-                                  fill="#d1c3a9"
+                                  fill="#64748b"
                                 >
                                   {p.gw}
                                 </text>
@@ -2350,7 +2373,7 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
                       className="rounded-2xl"
                       style={{
                         border: `1px solid ${PALETTE.gold}`,
-                        background: "#000",
+                        background: "#ffffff",
                       }}
                     >
                       {(() => {
@@ -2397,7 +2420,7 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
                                   y={height - 5}
                                   fontSize="9"
                                   textAnchor="middle"
-                                  fill="#d1c3a9"
+                                  fill="#64748b"
                                 >
                                   {p.gw}
                                 </text>
@@ -2434,3 +2457,6 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
     </div>
   );
 }
+
+
+

@@ -12,10 +12,10 @@ import teamLogos from "./utils/team_logos";
 import { useAdjustmentData, fixtureIdFromRow } from "./Contexts/AdjustmentsContext";
 
 const PALETTE = {
-  red: "#5A0000",
-  gold: "#B8860B",
-  black: "#000000",
-  beige: "#f7ead6",
+  red: "#f8fafc",
+  gold: "#76AFA0",
+  black: "#e2e8f0",
+  beige: "#1e293b",
 };
 
 const normalizeName = (s) => String(s ?? "").trim().toLowerCase();
@@ -313,7 +313,7 @@ function TeamAdjustmentsPage() {
       style={{
         padding: "1.5rem",
         minHeight: "100vh",
-        background: `radial-gradient(circle at top, ${PALETTE.red} 0, ${PALETTE.black} 45%, #000000 100%)`,
+        background: `radial-gradient(circle at top, ${PALETTE.red} 0, ${PALETTE.black} 45%, #e2e8f0 100%)`,
         color: PALETTE.beige,
         fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
       }}
@@ -341,7 +341,7 @@ function TeamAdjustmentsPage() {
               style={{
                 marginTop: "0.25rem",
                 fontSize: "0.85rem",
-                color: "#d1c3a9",
+                color: "#64748b",
                 maxWidth: "640px",
               }}
             >
@@ -356,12 +356,12 @@ function TeamAdjustmentsPage() {
               padding: "0.45rem 0.9rem",
               borderRadius: "999px",
               border: `1px solid ${PALETTE.gold}`,
-              background: "linear-gradient(135deg, rgba(0,0,0,0.9), rgba(90,0,0,0.95))",
+              background: "linear-gradient(135deg, rgba(236,253,245,0.95), rgba(248,250,252,0.95))",
               color: PALETTE.beige,
               cursor: "pointer",
               fontSize: "0.85rem",
               fontWeight: 500,
-              boxShadow: "0 10px 30px rgba(0,0,0,0.8)",
+              boxShadow: "0 10px 24px rgba(15,23,42,0.12)",
               display: "inline-flex",
               alignItems: "center",
               gap: "0.4rem",
@@ -474,30 +474,30 @@ function TeamScatterPlot({ teamPoints, onTeamDrag }) {
       style={{
         width: "100%",
         height: chartHeight,
-        background: "linear-gradient(145deg, rgba(0,0,0,0.98), rgba(90,0,0,0.85))",
+        background: "linear-gradient(145deg, rgba(255,255,255,0.98), rgba(236,253,245,0.85))",
         borderRadius: 12,
         padding: isSmall ? "10px 6px 10px 0" : "8px 4px 8px 0",
         border: `1px solid ${PALETTE.gold}`,
-        boxShadow: "0 18px 40px rgba(0,0,0,0.9)",
+        boxShadow: "0 14px 30px rgba(15,23,42,0.12)",
         touchAction: "none",
       }}
     >
       <ResponsiveContainer width="100%" height="100%">
         <ScatterChart margin={{ top: 10, right: 20, bottom: 30, left: 10 }}>
-          <CartesianGrid stroke="#333" strokeDasharray="3 3" />
+          <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" />
           <XAxis
             type="number"
             dataKey="own_XG_avg"
             name="Offensive"
             domain={[minX, maxX]}
-            tick={{ fill: PALETTE.beige, fontSize: 10 }}
+            tick={{ fill: "#64748b", fontSize: 10 }}
             axisLine={{ stroke: "#666" }}
             tickLine={{ stroke: "#666" }}
             label={{
               value: "Offensive",
               position: "insideBottom",
               offset: -5,
-              fill: PALETTE.beige,
+              fill: "#64748b",
               fontSize: 11,
             }}
           />
@@ -506,14 +506,14 @@ function TeamScatterPlot({ teamPoints, onTeamDrag }) {
             dataKey="own_XGC_avg"
             name="Defensive"
             domain={[minY, maxY]}
-            tick={{ fill: PALETTE.beige, fontSize: 10 }}
+            tick={{ fill: "#64748b", fontSize: 10 }}
             axisLine={{ stroke: "#666" }}
             tickLine={{ stroke: "#666" }}
             label={{
               value: "Defensive",
               angle: -90,
               position: "insideLeft",
-              fill: PALETTE.beige,
+              fill: "#64748b",
               fontSize: 11,
             }}
           />
@@ -525,13 +525,13 @@ function TeamScatterPlot({ teamPoints, onTeamDrag }) {
               return (
                 <div
                   style={{
-                    background: "#111",
+                    background: "#ffffff",
                     color: PALETTE.beige,
                     padding: "6px 8px",
                     borderRadius: 6,
                     fontSize: 12,
                     border: `1px solid ${PALETTE.gold}`,
-                    boxShadow: "0 10px 25px rgba(0,0,0,0.9)",
+                    boxShadow: "0 10px 20px rgba(15,23,42,0.12)",
                   }}
                 >
                   <div style={{ fontWeight: 600 }}>{p.team_name}</div>
@@ -728,7 +728,7 @@ function DraggableDot({ cx = 0, cy = 0, payload, xAxis, yAxis, bounds, onTeamDra
           <line x1={0} y1={crosshair.y1 - crosshair.y} x2={0} y2={crosshair.y2 - crosshair.y} stroke="#666" strokeDasharray="4 4" strokeWidth={1} />
           <circle r={3.5} fill={PALETTE.gold} />
           <g transform="translate(14,-14)">
-            <rect x={0} y={-18} rx={6} ry={6} width={150} height={34} fill="#111" stroke={PALETTE.gold} strokeWidth={1} opacity={0.95} />
+            <rect x={0} y={-18} rx={6} ry={6} width={150} height={34} fill="#ffffff" stroke={PALETTE.gold} strokeWidth={1} opacity={0.95} />
             <text x={8} y={-4} fontSize={11} fill={PALETTE.beige}>
               Off: {live.xVal.toFixed(2)} | Def: {live.yVal.toFixed(2)}
             </text>
@@ -854,9 +854,8 @@ function FixturesTable({ tableData }) {
         borderRadius: 12,
         border: `1px solid ${PALETTE.gold}`,
         overflowX: "auto",
-        background:
-          "linear-gradient(155deg, rgba(0,0,0,0.98), rgba(0,0,0,0.9))",
-        boxShadow: "0 18px 40px rgba(0,0,0,0.95)",
+        background: "#ffffff",
+        boxShadow: "0 14px 28px rgba(15,23,42,0.12)",
       }}
     >
       {/* Sort buttons + horizon slider */}
@@ -868,10 +867,10 @@ function FixturesTable({ tableData }) {
           alignItems: "center",
           borderBottom: `1px solid ${PALETTE.gold}`,
           background:
-            "linear-gradient(145deg, rgba(0,0,0,0.95), rgba(90,0,0,0.9))",
+            "linear-gradient(145deg, rgba(255,255,255,0.98), rgba(236,253,245,0.88))",
         }}
       >
-        <span style={{ fontSize: 12, color: "#d1c3a9" }}>Sort teams by:</span>
+        <span style={{ fontSize: 12, color: "#64748b" }}>Sort teams by:</span>
 
         <button
           onClick={() => setSortConfig({ key: "default", dir: "desc", gw: null })}
@@ -901,7 +900,7 @@ function FixturesTable({ tableData }) {
             gap: 10,
           }}
         >
-          <span style={{ fontSize: 12, color: "#d1c3a9", whiteSpace: "nowrap" }}>
+          <span style={{ fontSize: 12, color: "#64748b", whiteSpace: "nowrap" }}>
             GW horizon: <b style={{ color: PALETTE.beige }}>{gwHorizon}</b>
           </span>
 
@@ -915,7 +914,7 @@ function FixturesTable({ tableData }) {
             style={{ width: 180 }}
           />
 
-          <span style={{ fontSize: 12, color: "#d1c3a9", whiteSpace: "nowrap" }}>
+          <span style={{ fontSize: 12, color: "#64748b", whiteSpace: "nowrap" }}>
             / {gws.length}
           </span>
         </div>
@@ -949,14 +948,14 @@ function FixturesTable({ tableData }) {
                 left: 0,
                 zIndex: 10,
                 width: COL_TEAM,
-                background: "#111111",
+                background: "#ffffff",
                 backgroundClip: "padding-box",
                 borderBottom: `1px solid ${PALETTE.gold}`,
                 padding: "8px 10px",
                 textAlign: "left",
                 fontWeight: 700,
                 fontSize: 12,
-                boxShadow: "2px 0 0 rgba(0,0,0,0.75)", // ✅ hard edge after sticky cols
+                boxShadow: "2px 0 0 rgba(148,163,184,0.35)", // ✅ hard edge after sticky cols
               }}
             >
               Team
@@ -970,7 +969,7 @@ function FixturesTable({ tableData }) {
                   borderBottom: `1px solid ${PALETTE.gold}`,
                   padding: "8px 10px",
                   textAlign: "center",
-                  backgroundColor: "#111111",
+                  backgroundColor: "#ffffff",
                   fontWeight: 700,
                   fontSize: 12,
                   cursor: "pointer",
@@ -991,7 +990,7 @@ function FixturesTable({ tableData }) {
                 borderBottom: `1px solid ${PALETTE.gold}`,
                 padding: "8px 10px",
                 textAlign: "center",
-                backgroundColor: "#111111",
+                backgroundColor: "#ffffff",
                 fontWeight: 700,
                 fontSize: 12,
                 cursor: "pointer",
@@ -1007,7 +1006,7 @@ function FixturesTable({ tableData }) {
         <tbody>
           {sortedTeams.map((team, rowIdx) => {
             const totals = totalsByTeamVisible[team] || { totalXG: 0, avgCS: 0 };
-            const rowBg = rowIdx % 2 === 0 ? "#080808" : "#151515";
+            const rowBg = rowIdx % 2 === 0 ? "#ffffff" : "#f8fafc";
             const logoUrl = teamLogos[team];
 
             return (
@@ -1020,11 +1019,11 @@ function FixturesTable({ tableData }) {
                     left: 0,
                     zIndex: 9,
                     width: COL_TEAM,
-                    borderBottom: "1px solid #222222",
+                    borderBottom: "1px solid #e2e8f0",
                     padding: "6px 10px",
                     background: rowBg, // ✅ opaque
                     backgroundClip: "padding-box",
-                    boxShadow: "2px 0 0 rgba(0,0,0,0.75)", // ✅ no bleed edge
+                    boxShadow: "2px 0 0 rgba(148,163,184,0.35)", // ✅ no bleed edge
                   }}
                 >
                   <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
@@ -1037,7 +1036,7 @@ function FixturesTable({ tableData }) {
                           width: 24,
                           borderRadius: "999px",
                           objectFit: "contain",
-                          backgroundColor: "#000",
+                          backgroundColor: "#ffffff",
                           border: `1px solid ${PALETTE.gold}`,
                           flex: "0 0 auto",
                         }}
@@ -1074,7 +1073,7 @@ function FixturesTable({ tableData }) {
                       <td
                         key={gw}
                         style={{
-                          borderBottom: "1px solid #222222",
+                          borderBottom: "1px solid #e2e8f0",
                           padding: "6px 10px",
                           textAlign: "center",
                           color: "#6b7280",
@@ -1095,16 +1094,16 @@ function FixturesTable({ tableData }) {
                     .map((e) => `${e.opp} (${Math.round(e.p * 100)}%) ${e.hav}`)
                     .join(" • ");
 
-                  let bg = "#1f2933";
-                  if (xgVal > 1.7) bg = "rgba(22,163,74,0.45)";
-                  else if (xgVal < 1.1) bg = "rgba(220,38,38,0.45)";
-                  else bg = "rgba(202,138,4,0.45)";
+                  let bg = "#ffffff";
+                  if (xgVal > 1.7) bg = "#dcfce7";
+                  else if (xgVal < 1.1) bg = "#fee2e2";
+                  else bg = "#fef3c7";
 
                   return (
                     <td
                       key={gw}
                       style={{
-                        borderBottom: "1px solid #222222",
+                        borderBottom: "1px solid #e2e8f0",
                         padding: "6px 10px",
                         textAlign: "center",
                       }}
@@ -1147,7 +1146,7 @@ function FixturesTable({ tableData }) {
                 {/* ✅ totals now based on horizon */}
                 <td
                   style={{
-                    borderBottom: "1px solid #222222",
+                    borderBottom: "1px solid #e2e8f0",
                     padding: "6px 10px",
                     textAlign: "center",
                     fontWeight: 600,
@@ -1156,7 +1155,7 @@ function FixturesTable({ tableData }) {
                 >
                   <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
                     <span>Total Goals: {totals.totalXG.toFixed(2)}</span>
-                    <span style={{ fontSize: 11, color: "#d1c3a9" }}>
+                    <span style={{ fontSize: 11, color: "#64748b" }}>
                       Avg Clean Sheets: {(totals.avgCS * 100).toFixed(1)}%
                     </span>
                   </div>
@@ -1175,7 +1174,7 @@ function sortButtonStyle(active) {
     padding: "4px 10px",
     borderRadius: 999,
     border: active ? `1px solid ${PALETTE.gold}` : "1px solid #4b5563",
-    background: active ? "rgba(184,134,11,0.2)" : "rgba(0,0,0,0.9)",
+    background: active ? "rgba(118,175,160,0.18)" : "#f8fafc",
     cursor: "pointer",
     fontSize: 12,
     fontWeight: active ? 700 : 500,
@@ -1187,3 +1186,8 @@ function sortButtonStyle(active) {
 }
 
 export default TeamAdjustmentsPage;
+
+
+
+
+
