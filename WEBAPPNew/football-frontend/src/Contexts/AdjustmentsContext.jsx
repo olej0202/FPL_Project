@@ -301,10 +301,200 @@ const buildFixturesFromTeamRows = (teamRows, fixturesConfig) => {
   return Array.from(byId.values());
 };
 
+const playerGroupKey = (p) => p?.name || `${p?.web_name || "unknown"}_${p?.Team || "NA"}`;
+
+const buildProjectedTeamLookup = (teamRows, fixtures) => {
+  const lookup = new Map();
+  const optionsById = new Map();
+
+  for (const fx of fixtures || []) {
+    optionsById.set(
+      fx.id,
+      (fx.options || []).map((o) => ({ gw: Number(o.gw), p: Number(o.p) }))
+    );
+  }
+
+  const add = (teamCode, gw, xg, cs, matches) => {
+    const key = `${String(teamCode)}_${Number(gw)}`;
+    const prev = lookup.get(key);
+    const prevXG = prev ? Number(prev.XG) || 0 : 0;
+    const prevCS = prev ? Number(prev.CS) || 0 : 0;
+    const prevM = prev ? Number(prev.Matches) || 0 : 0;
+
+    lookup.set(key, {
+      team_code: teamCode,
+      GW: Number(gw),
+      XG: prevXG + (Number(xg) || 0),
+      CS: prevCS + (Number(cs) || 0),
+      Matches: prevM + (Number(matches) || 0),
+    });
+  };
+
+  for (const row of teamRows || []) {
+    const code = row?.team_code ?? row?.team ?? row?.Team;
+    const gw0 = Number(row?.GW);
+    if (code == null || !Number.isFinite(gw0)) continue;
+
+    const rowXG = Number(row?.XG) || 0;
+    const rowCS = Number(row?.CS) || 0;
+
+    const id = fixtureIdFromRow({ ...row, Opponent_team: row?.Opponent_team });
+    const dist =
+      optionsById.get(id)?.length ? optionsById.get(id) : [{ gw: gw0, p: 1 }];
+
+    for (const o of dist) {
+      const gw = Number(o.gw);
+      const p = Number(o.p);
+      if (!Number.isFinite(gw) || !Number.isFinite(p) || p <= 0) continue;
+      add(code, gw, p * rowXG, p * rowCS, p);
+    }
+  }
+
+  return lookup;
+};
+
+const computeAlignedMeasures = (playerRow, teamRow, cbi01Override = null) => {
+  if (!teamRow) {
+    return {
+      Goal_Scored: 0,
+      Assists: 0,
+      Save_Pred: 0,
+      Points: 0,
+      Avg_Minutes: 0,
+      CBI_Predictions: 0,
+      _CBI01_Raw: 0,
+    };
+  }
+
+  const matchCount = Math.max(0, Number(teamRow.Matches) || 0);
+  const avgMinRaw = Number(playerRow.average_minutes) || 0;
+  const avgMin = Math.max(0, Math.min(90, avgMinRaw));
+
+  const goalShare = Number(playerRow.Goal_share) || 0;
+  const assistShare = Number(playerRow.Assist_share) || 0;
+  const savePredRaw = Number(playerRow.Save_Pred) || 0;
+
+  const penData = Number(playerRow.Pen_data) || 0;
+  const oppGoalThreat = Number(playerRow.Pos_Goal_Threat) || 0;
+  const oppAssistThreat = Number(playerRow.Pos_Assist_Threat) || 0;
+
+  const bps = Number(playerRow.BPS) || 0;
+  const defaultPoints = Number(playerRow.default_points) || 0;
+
+  const goalFactor = Number(playerRow.Goal_factor) || 0;
+  const assistFactor = Number(playerRow.Assist_factor) || 0;
+  const csFactor = Number(playerRow.CS_factor) || 0;
+
+  const xg = Number(teamRow.XG) || 0;
+  const cs = Number(teamRow.CS) || 0;
+
+  const minutesAdj = avgMin ? Math.min(1, avgMin / 80) : 0;
+  const csPerMatch = matchCount > 0 ? cs / matchCount : 0;
+  const csNonlinear =
+    csFactor > 1 ? ((30 - Math.min(30, csPerMatch * 100)) / -15) * matchCount : 0;
+
+  const goalScored =
+    ((goalShare * 0.9 + 0.1 * oppGoalThreat) * xg + penData * 0.5 * matchCount) *
+    minutesAdj;
+  const assists = ((assistShare * 0.9 + 0.1 * oppAssistThreat) * xg) * minutesAdj;
+
+  const rawCbi01 = clamp01(Number(playerRow.CBI_Percent) || 0);
+  const cbi01 =
+    (typeof cbi01Override === "number" && Number.isFinite(cbi01Override)
+      ? clamp01(cbi01Override)
+      : rawCbi01) * minutesAdj;
+
+  const defconPointsTerm = cbi01 * minutesAdj * matchCount * 2;
+  const savePred = savePredRaw * minutesAdj * matchCount;
+  const basePoints =
+    (defaultPoints + bps) * minutesAdj * matchCount + defconPointsTerm;
+
+  const points = Math.max(
+    0,
+    basePoints +
+      goalScored * goalFactor +
+      assists * assistFactor +
+      cs * csFactor * minutesAdj +
+      csNonlinear +
+      savePred / 3
+  );
+
+  return {
+    Goal_Scored: goalScored,
+    Assists: assists,
+    Save_Pred: savePred,
+    Points: points,
+    Avg_Minutes: avgMin * matchCount,
+    CBI_Predictions: cbi01,
+    _CBI01_Raw: rawCbi01,
+  };
+};
+
+const buildStablePlayerCalcs = (playerRows, teamRows, fixtures) => {
+  if (!Array.isArray(playerRows)) return [];
+
+  const teamLookup = buildProjectedTeamLookup(teamRows, fixtures);
+  const grouped = new Map();
+
+  for (const row of playerRows) {
+    const key = playerGroupKey(row);
+    if (!grouped.has(key)) grouped.set(key, []);
+    grouped.get(key).push(row);
+  }
+
+  const meanByPlayer = new Map();
+  const adjByPlayer = new Map();
+
+  for (const [nameKey, rowsForPlayer] of grouped.entries()) {
+    let rawSum = 0;
+    let rawCount = 0;
+
+    for (const row of rowsForPlayer) {
+      const teamRow = teamLookup.get(`${String(row.Team)}_${Number(row.GW)}`);
+      const base = computeAlignedMeasures(row, teamRow);
+      rawSum += clamp01(Number(base._CBI01_Raw));
+      rawCount += 1;
+    }
+
+    const meanRaw = rawCount ? rawSum / rawCount : 0;
+    meanByPlayer.set(nameKey, meanRaw);
+
+    const first = rowsForPlayer[0];
+    const storedAdj = Number(first?.defcon_adjust_01);
+    adjByPlayer.set(
+      nameKey,
+      Number.isFinite(storedAdj) ? clamp01(storedAdj) : clamp01(meanRaw)
+    );
+  }
+
+  return playerRows.map((row) => {
+    const key = playerGroupKey(row);
+    const teamRow = teamLookup.get(`${String(row.Team)}_${Number(row.GW)}`);
+    const meanRaw = meanByPlayer.get(key) ?? 0;
+    const newAdj = adjByPlayer.get(key) ?? clamp01(meanRaw);
+
+    const raw = computeAlignedMeasures(row, teamRow);
+    const adjustedCbi01 = clamp01(clamp01(Number(raw._CBI01_Raw)) - meanRaw + newAdj);
+    const measures = computeAlignedMeasures(row, teamRow, adjustedCbi01);
+
+    return {
+      ...row,
+      calc_points: measures.Points,
+      calc_goals: measures.Goal_Scored,
+      calc_assists: measures.Assists,
+      calc_saves: measures.Save_Pred,
+      calc_minutes: measures.Avg_Minutes,
+      calc_cbi: measures.CBI_Predictions,
+      defcon_adjust_01: newAdj,
+    };
+  });
+};
+
 export function AdjustmentDataProvider({ children }) {
   const TeamRef = useRef(null);
   const PlayerRef = useRef(null);
   const ChangesRef = useRef([]);
+  const fetchInFlightRef = useRef(null);
 
   // NEW: fixtures ref
   const FixturesRef = useRef(null);
@@ -324,41 +514,53 @@ export function AdjustmentDataProvider({ children }) {
 
   const fetchIfNeeded = useCallback(async () => {
     if (TeamRef.current && PlayerRef.current) return;
+    if (fetchInFlightRef.current) return fetchInFlightRef.current;
 
-    setLoading(true);
-    try {
-      const [TeamRes, PlayerRes, FixturesConfigRes] = await Promise.all([
-        fetch("https://fpl-project-t5e9.onrender.com/Team_result_adjust").then(
-          (res) => res.json()
-        ),
-        fetch("https://fpl-project-t5e9.onrender.com/Player_result_adjust").then(
-          (res) => res.json()
-        ),
-        fetch("https://fpl-project-t5e9.onrender.com/fixtures_config").then(
-          (res) => res.json()
-        ),
-      ]);
+    const request = (async () => {
+      setLoading(true);
+      try {
+        const [TeamRes, PlayerRes, FixturesConfigRes] = await Promise.all([
+          fetch("https://fpl-project-t5e9.onrender.com/Team_result_adjust").then(
+            (res) => res.json()
+          ),
+          fetch("https://fpl-project-t5e9.onrender.com/Player_result_adjust").then(
+            (res) => res.json()
+          ),
+          fetch("https://fpl-project-t5e9.onrender.com/fixtures_config").then(
+            (res) => res.json()
+          ),
+        ]);
 
-      TeamRef.current = TeamRes;
-      PlayerRef.current = bootstrapPlayerCalcs(PlayerRes, TeamRes);
-      FixturesConfigRef.current = FixturesConfigRes;
+        TeamRef.current = TeamRes;
+        FixturesConfigRef.current = FixturesConfigRes;
 
-      // init fixtures if missing
-      if (!FixturesRef.current) {
-        FixturesRef.current = buildFixturesFromTeamRows(
+        const nextFixtures = buildFixturesFromTeamRows(
           TeamRes,
-          FixturesConfigRef.current
+          FixturesConfigRes
         );
-        setFixturesVersion((v) => v + 1);
-      }
+        if (!FixturesRef.current) {
+          FixturesRef.current = nextFixtures;
+          setFixturesVersion((v) => v + 1);
+        }
 
-      setDataVersion((v) => v + 1);
-      setTeamVersion((v) => v + 1);
-    } catch (err) {
-      console.error("Failed fetching adjustment data:", err);
-    } finally {
-      setLoading(false);
-    }
+        PlayerRef.current = buildStablePlayerCalcs(
+          PlayerRes,
+          TeamRes,
+          FixturesRef.current || nextFixtures
+        );
+
+        setDataVersion((v) => v + 1);
+        setTeamVersion((v) => v + 1);
+      } catch (err) {
+        console.error("Failed fetching adjustment data:", err);
+      } finally {
+        fetchInFlightRef.current = null;
+        setLoading(false);
+      }
+    })();
+
+    fetchInFlightRef.current = request;
+    return request;
   }, []);
 
   const forceRefetch = useCallback(async () => {
@@ -366,6 +568,7 @@ export function AdjustmentDataProvider({ children }) {
     PlayerRef.current = null;
     FixturesRef.current = null;
     FixturesConfigRef.current = null;
+    fetchInFlightRef.current = null;
 
     setDataVersion((v) => v + 1);
     setTeamVersion((v) => v + 1);
@@ -469,7 +672,7 @@ export function AdjustmentDataProvider({ children }) {
     [updateFixture]
   );
 
-  // Prefetch statistical data at app start so optimizer can use it immediately.
+  // Keep statistical model available without requiring a manual first navigation.
   useEffect(() => {
     fetchIfNeeded();
   }, [fetchIfNeeded]);

@@ -79,7 +79,7 @@ export default function MyTeamOptimize() {
     loadOptimization,
   } = useMyteamData();
 
-  const { Playerdata, dataVersion, fetchIfNeeded } = useAdjustmentData();
+  const { Playerdata, dataVersion } = useAdjustmentData();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -129,10 +129,6 @@ export default function MyTeamOptimize() {
       setModelType("ai");
     }
   }, [modelType, hasStatisticalData]);
-
-  useEffect(() => {
-    fetchIfNeeded();
-  }, [fetchIfNeeded]);
 
   useEffect(() => {
     const shouldPreferStat = location.state?.preferModel === "statistical";

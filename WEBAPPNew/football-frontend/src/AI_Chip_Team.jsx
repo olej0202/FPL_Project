@@ -41,7 +41,7 @@ function buildTransferGroups(rows) {
 export default function AIChipTeam() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { fetchIfNeeded, freeHitData, wildcardData, loading } = useAITeamData();
+  const { fetchIfNeeded, freeHitData, wildcardData, loading, dataVersion } = useAITeamData();
 
   const mode = searchParams.get("mode") === "freehit" ? "freehit" : "wildcard";
 
@@ -50,8 +50,8 @@ export default function AIChipTeam() {
   }, [fetchIfNeeded]);
 
   const rows = useMemo(
-    () => (mode === "freehit" ? freeHitData.current || [] : wildcardData.current || []),
-    [mode, freeHitData, wildcardData]
+    () => (mode === "freehit" ? freeHitData?.current || [] : wildcardData?.current || []),
+    [mode, freeHitData, wildcardData, dataVersion]
   );
 
   const { minGW, playingPlayers, benchPlayers, transfers } = useMemo(() => {

@@ -134,14 +134,25 @@ function resolveFixtureForPlayer(p, fixtureMap) {
 
 export default function WeeklyReview() {
   const navigate = useNavigate();
-  const { fetchIfNeeded: fetchStatsIfNeeded, loading: statsLoading, PlayersData } = useStatsData();
+  const {
+    fetchIfNeeded: fetchStatsIfNeeded,
+    loading: statsLoading,
+    PlayersData,
+    dataVersion: statsVersion,
+  } = useStatsData();
   const {
     fetchIfNeeded: fetchOtherIfNeeded,
     loading: otherLoading,
     FixtureData,
     SeasonData,
+    dataVersion: otherVersion,
   } = useOtherData();
-  const { fetchIfNeeded: fetchAiIfNeeded, loading: aiLoading, freeHitData } = useAITeamData();
+  const {
+    fetchIfNeeded: fetchAiIfNeeded,
+    loading: aiLoading,
+    freeHitData,
+    dataVersion: aiVersion,
+  } = useAITeamData();
 
   useEffect(() => {
     (async () => {
@@ -154,13 +165,13 @@ export default function WeeklyReview() {
     const gws = fixtureRows.map((r) => toNum(r?.GW, null)).filter((gw) => isValidGW(gw));
     if (!gws.length) return null;
     return Math.min(...gws);
-  }, [FixtureData]);
+  }, [FixtureData, otherVersion]);
 
   const upcomingFixtures = useMemo(() => {
     if (!isValidGW(upcomingGW)) return [];
     const fixtureRows = Array.isArray(FixtureData?.current) ? FixtureData.current : [];
     return fixtureRows.filter((r) => toNum(r?.GW, null) === upcomingGW);
-  }, [FixtureData, upcomingGW]);
+  }, [FixtureData, otherVersion, upcomingGW]);
 
   const fixtureLookup = useMemo(
     () => buildFixtureLookup(upcomingFixtures, upcomingGW),
@@ -188,7 +199,7 @@ export default function WeeklyReview() {
         reasons: summarizeCaptainReason(c.row, fixture),
       };
     });
-  }, [PlayersData, upcomingGW, fixtureLookup]);
+  }, [PlayersData, statsVersion, upcomingGW, fixtureLookup]);
 
   const bestAttackingFixtures = useMemo(() => {
     return [...upcomingFixtures]
@@ -259,7 +270,7 @@ export default function WeeklyReview() {
       .slice(0, 8);
 
     return { gw, underRows, overRows };
-  }, [SeasonData]);
+  }, [SeasonData, otherVersion]);
 
   const freeHitLineup = useMemo(() => {
     const freeHitRows = Array.isArray(freeHitData?.current) ? freeHitData.current : [];
@@ -273,7 +284,7 @@ export default function WeeklyReview() {
     const playing = forGW.filter((r) => statusNorm(r?.status) === "playing");
 
     return { gw: targetGW, playing };
-  }, [freeHitData, upcomingGW]);
+  }, [freeHitData, aiVersion, upcomingGW]);
 
   const loading = statsLoading || otherLoading || aiLoading;
 

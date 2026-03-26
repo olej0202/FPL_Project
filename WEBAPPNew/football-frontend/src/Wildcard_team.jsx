@@ -6,7 +6,7 @@ import { ArrowRight } from "lucide-react";
 
 
 export default function WildcardTeam() {
-  const { fetchIfNeeded, wildcardData, loading } = useAITeamData();
+  const { fetchIfNeeded, wildcardData, loading, dataVersion } = useAITeamData();
   const [minGW, setMinGW] = useState(null);
   const [teamPlayers, setTeamPlayers] = useState([]);
   const [benchPlayers, setBenchPlayers] = useState([]);
@@ -16,32 +16,49 @@ export default function WildcardTeam() {
 
 
   useEffect(() => {
-    fetchIfNeeded().then(() => {
-      const data = wildcardData.current || [];
+    let active = true;
+    (async () => {
+      await fetchIfNeeded();
+      if (!active) return;
 
-      const gwList = data.map(p => Number(p.GW)).filter(gw => !isNaN(gw));
-      const minGW = Math.min(...gwList);
-      setMinGW(minGW);
+      const data = Array.isArray(wildcardData.current) ? wildcardData.current : [];
+      const gwList = data.map((p) => Number(p.GW)).filter((gw) => Number.isFinite(gw));
+      if (gwList.length === 0) {
+        setMinGW(null);
+        setTeamPlayers([]);
+        setBenchPlayers([]);
+        setTransfers([]);
+        return;
+      }
 
-      // Filter team players for minGW
-      const team = data.filter(p => p.GW === minGW);
-      setTeamPlayers(team.filter(p => p.status === "playing"));
-      setBenchPlayers(team.filter(p => p.status === "benched"));
+      const earliestGW = Math.min(...gwList);
+      setMinGW(earliestGW);
+
+      // Filter team players for earliest GW
+      const team = data.filter((p) => Number(p.GW) === earliestGW);
+      setTeamPlayers(team.filter((p) => p.status === "playing"));
+      setBenchPlayers(team.filter((p) => p.status === "benched" || p.status === "bench"));
 
       // Group transfers by GW
-      const transfers = data.filter(p => ["transferred_in", "transferred_out"].includes(p.status));
+      const transfers = data.filter((p) =>
+        ["transferred_in", "transferred_out"].includes(p.status)
+      );
       const groupedTransfers = Object.values(
         transfers.reduce((acc, curr) => {
-          const gw = curr.GW;
-          const name = curr.Name;
+          const gw = Number(curr.GW);
+          if (!Number.isFinite(gw)) return acc;
           if (!acc[gw]) acc[gw] = { GW: gw, in: [], out: [] };
           acc[gw][curr.status === "transferred_in" ? "in" : "out"].push(curr);
           return acc;
         }, {})
       );
       setTransfers(groupedTransfers);
-    });
-  }, []);
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [fetchIfNeeded, wildcardData, dataVersion]);
 
   if (loading) return <div className="text-white">Loading...</div>;
 
