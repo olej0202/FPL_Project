@@ -607,7 +607,7 @@ const { xDomain, yDomain } = useMemo(() => {
                     labelFormatter={(l) => l}
                     contentStyle={{ backgroundColor: "#ffffff", border: "1px solid #cbd5e1", color: "#1e293b" }}
                   />
-                  <Bar dataKey="Value" fill="#b8870bc9">
+                  <Bar dataKey="Value" fill="#76AFA0">
                     <LabelList dataKey="Value" position="right" formatter={(v) => Number(v).toFixed(1)} fill="#334155" />
                   </Bar>
                 </BarChart>

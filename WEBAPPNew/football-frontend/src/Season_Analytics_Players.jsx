@@ -504,7 +504,7 @@ const CustomTooltip = ({ active, payload }) => {
                       color: "#1e293b",
                     }}
                   />
-                  <Bar dataKey="Value" fill="#b8870bc9">
+                  <Bar dataKey="Value" fill="#76AFA0">
                     <LabelList
                       dataKey="Value"
                       position="inside"

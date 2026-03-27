@@ -158,7 +158,7 @@ export default function Team_Predictions() {
   const scoreHighlightClass = (g) => {
     const val = Number(g);
     if (!Number.isFinite(val)) return "";
-    if (val >= 1.8) return "text-emerald-700 font-semibold";
+    if (val >= 1.7) return "text-emerald-700 font-semibold";
     if (val <= 1.1) return "text-red-600 font-semibold";
     return "text-slate-700";
   };
