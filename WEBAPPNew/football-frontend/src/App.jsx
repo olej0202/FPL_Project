@@ -39,6 +39,7 @@ import AdjustmentAnalytics from "./Adjustment_Analytics";
 import TeamAdjustmentsPage from "./Adjustment_Analytics_Team";
 import PlayerAdjustmentsPage from "./Adjustment_Analytics_Player";
 import FixturesPage from "./Adjustement_Analytics_Fixtures";
+import AdjustmentSimulatorPage from "./Adjustment_Analytics_Simulator";
 import AITeams from "./AITeams";
 import MyTeamOverview from "./MyTeam_Display";
 import CurrentlyUnavailable from "./components/CurrentlyUnavailable";
@@ -483,6 +484,14 @@ export default function App() {
                   "statisticalModelFixtures",
                   <FixturesPage />,
                   "Statistical Model Fixture Adjustment"
+                )}
+              />
+              <Route
+                path="Adjustment_Simulator"
+                element={routeElement(
+                  "statisticalModelSimulator",
+                  <AdjustmentSimulatorPage />,
+                  "Statistical Model Simulator"
                 )}
               />
             </Route>

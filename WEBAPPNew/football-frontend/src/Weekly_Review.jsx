@@ -4,6 +4,7 @@ import {
   CalendarRange,
   Crown,
   Shield,
+  Sparkles,
   TrendingDown,
   TrendingUp,
   Trophy,
@@ -27,6 +28,27 @@ const norm = (v) => String(v ?? "").trim().toLowerCase();
 
 const statusNorm = (s) => String(s ?? "").trim().toLowerCase();
 
+const teamKeyVariants = (value) => {
+  const base = String(value ?? "").trim();
+  if (!base) return [];
+  const variants = new Set([norm(base)]);
+  const asNum = Number(base);
+  if (Number.isFinite(asNum)) {
+    variants.add(norm(String(asNum)));
+    variants.add(norm(String(Math.trunc(asNum))));
+  }
+  return Array.from(variants).filter(Boolean);
+};
+
+const hasMeaningfulText = (v) => {
+  const s = String(v ?? "").trim();
+  if (!s) return false;
+  const lowered = s.toLowerCase();
+  return lowered !== "0" && lowered !== "unknown" && lowered !== "unknown team" && lowered !== "null" && lowered !== "nan";
+};
+
+const isLikelyTeamName = (v) => hasMeaningfulText(v) && /[a-z]/i.test(String(v));
+
 const firstText = (...vals) => {
   for (const v of vals) {
     const s = String(v ?? "").trim();
@@ -46,6 +68,17 @@ const firstFinite = (...vals) => {
 const isValidDisplayName = (name) => {
   const s = String(name ?? "").trim();
   return s !== "" && s !== "0";
+};
+
+const ownershipPercent = (row) => {
+  const raw = firstFinite(
+    row?.selected_pct,
+    row?.selected_by_percent,
+    row?.ownership,
+    row?.selected
+  );
+  if (!Number.isFinite(raw)) return null;
+  return raw <= 1 ? raw * 100 : raw;
 };
 
 function formatHAV(home) {
@@ -72,6 +105,85 @@ function buildFixtureLookup(fixtures, gw) {
     }
   }
   return map;
+}
+
+function buildTeamNameLookups(fixtures, teamRows) {
+  const global = new Map();
+  const byGw = new Map();
+
+  const add = (name, key, gw = null) => {
+    if (!isLikelyTeamName(name)) return;
+    const variants = teamKeyVariants(key);
+    if (!variants.length) return;
+
+    for (const nk of variants) {
+      if (!global.has(nk)) global.set(nk, name);
+      if (!isValidGW(gw)) continue;
+
+      if (!byGw.has(gw)) byGw.set(gw, new Map());
+      const gwMap = byGw.get(gw);
+      if (!gwMap.has(nk)) gwMap.set(nk, name);
+    }
+  };
+
+  for (const row of fixtures || []) {
+    const gw = toNum(row?.GW, null);
+    const teamName = firstText(row?.team_name, row?.name, row?.Team, row?.team);
+    const keys = [
+      teamName,
+      row?.team_name,
+      row?.name,
+      row?.Team,
+      row?.team,
+      row?.team_code,
+      row?.team_id,
+      row?.code,
+      row?.id,
+    ];
+    for (const key of keys) add(teamName, key, gw);
+  }
+
+  for (const row of teamRows || []) {
+    const gw = toNum(row?.GW, null);
+    const teamName = firstText(row?.team_name, row?.name, row?.Team, row?.team, row?.full_name);
+    const keys = [
+      teamName,
+      row?.team_name,
+      row?.name,
+      row?.Team,
+      row?.team,
+      row?.team_code,
+      row?.team_id,
+      row?.code,
+      row?.id,
+    ];
+    for (const key of keys) add(teamName, key, gw);
+  }
+
+  return { global, byGw };
+}
+
+function resolvePlayerTeamName(row, lookups) {
+  const gw = toNum(row?.GW, null);
+  const gwMap = isValidGW(gw) ? lookups?.byGw?.get(gw) : null;
+  const keys = [row?.team_name, row?.Team, row?.team, row?.team_code, row?.team_id, row?.code];
+
+  for (const key of keys) {
+    const variants = teamKeyVariants(key);
+    for (const nk of variants) {
+      if (gwMap?.has(nk)) return gwMap.get(nk);
+    }
+  }
+
+  for (const key of keys) {
+    const variants = teamKeyVariants(key);
+    for (const nk of variants) {
+      if (lookups?.global?.has(nk)) return lookups.global.get(nk);
+    }
+  }
+
+  const direct = firstText(row?.team_name, row?.Team, row?.team);
+  return isLikelyTeamName(direct) ? direct : "";
 }
 
 function summarizeCaptainReason(captain, fixtureRow) {
@@ -138,6 +250,7 @@ export default function WeeklyReview() {
     fetchIfNeeded: fetchStatsIfNeeded,
     loading: statsLoading,
     PlayersData,
+    TeamData,
     dataVersion: statsVersion,
   } = useStatsData();
   const {
@@ -178,6 +291,12 @@ export default function WeeklyReview() {
     [upcomingFixtures, upcomingGW]
   );
 
+  const teamNameLookups = useMemo(() => {
+    const fixtureRows = Array.isArray(FixtureData?.current) ? FixtureData.current : [];
+    const teamRows = Array.isArray(TeamData?.current) ? TeamData.current : [];
+    return buildTeamNameLookups(fixtureRows, teamRows);
+  }, [FixtureData, TeamData, otherVersion, statsVersion]);
+
   const captainPicks = useMemo(() => {
     if (!isValidGW(upcomingGW)) return [];
     const playerRows = Array.isArray(PlayersData?.current) ? PlayersData.current : [];
@@ -200,6 +319,149 @@ export default function WeeklyReview() {
       };
     });
   }, [PlayersData, statsVersion, upcomingGW, fixtureLookup]);
+
+  const differentialInsight = useMemo(() => {
+    const playerRows = Array.isArray(PlayersData?.current) ? PlayersData.current : [];
+    if (!playerRows.length || !isValidGW(upcomingGW)) {
+      return { gws: [], rows: [] };
+    }
+
+    const horizonGWs = Array.from(
+      new Set(
+        playerRows
+          .map((r) => toNum(r?.GW, null))
+          .filter((gw) => isValidGW(gw) && gw >= upcomingGW)
+      )
+    )
+      .sort((a, b) => a - b)
+      .slice(0, 5);
+
+    if (!horizonGWs.length) return { gws: [], rows: [] };
+
+    const gwSet = new Set(horizonGWs);
+    const minRowsRequired = Math.min(3, horizonGWs.length);
+    const ownershipCap = 15;
+
+    const buckets = new Map();
+    for (const row of playerRows) {
+      const gw = toNum(row?.GW, null);
+      if (!gwSet.has(gw)) continue;
+
+      const display = playerName(row);
+      if (!isValidDisplayName(display)) continue;
+
+      const key = norm(firstText(row?.Name, row?.name, row?.web_name, display));
+      if (!key) continue;
+
+      const points = firstFinite(row?.Points_prediction, row?.calc_points, null);
+      if (!Number.isFinite(points)) continue;
+
+      const resolvedTeamName = resolvePlayerTeamName(row, teamNameLookups);
+      const fallbackTeamKey =
+        teamKeyVariants(firstText(row?.team_name, row?.Team, row?.team, row?.team_code, row?.team_id, row?.code))[0] || "";
+
+      const current = buckets.get(key) || {
+        key,
+        name: display,
+        sourceName: firstText(row?.Name, row?.name, row?.web_name, display),
+        team: resolvedTeamName,
+        teamKey: norm(resolvedTeamName) || fallbackTeamKey,
+        photo: row?.photo || fallbackPlayerUrl,
+        ownership: null,
+        total: 0,
+        byGw: new Map(),
+        opponents: new Set(),
+      };
+
+      const own = ownershipPercent(row);
+      if (Number.isFinite(own)) {
+        current.ownership = Number.isFinite(current.ownership)
+          ? Math.min(current.ownership, own)
+          : own;
+      }
+
+      if (resolvedTeamName && (!current.team || !isLikelyTeamName(current.team))) {
+        current.team = resolvedTeamName;
+      }
+      if (!current.teamKey) {
+        current.teamKey = norm(current.team) || fallbackTeamKey;
+      }
+
+      current.total += points;
+      current.byGw.set(gw, points);
+
+      const opp = firstText(row?.opponent_name, row?.Opponent_team, row?.opponent);
+      if (opp) current.opponents.add(opp);
+
+      buckets.set(key, current);
+    }
+
+    const allPlayers = Array.from(buckets.values()).map((p) => ({
+      ...p,
+      team: isLikelyTeamName(p.team) ? p.team : "",
+      avg: p.total / p.byGw.size,
+      opponentsText: Array.from(p.opponents).slice(0, 3).join(" / "),
+    }));
+
+    const sortRank = (arr) =>
+      [...arr].sort((a, b) => {
+        if (b.total !== a.total) return b.total - a.total;
+        const ao = Number.isFinite(a.ownership) ? a.ownership : 999;
+        const bo = Number.isFinite(b.ownership) ? b.ownership : 999;
+        if (ao !== bo) return ao - bo;
+        return a.name.localeCompare(b.name);
+      });
+
+    const rankedStrict = sortRank(
+      allPlayers.filter(
+        (p) =>
+          Number.isFinite(p.ownership) &&
+          p.ownership <= ownershipCap &&
+          p.byGw.size >= minRowsRequired
+      )
+    );
+
+    const rankedFallbackOwned = sortRank(
+      allPlayers.filter(
+        (p) =>
+          Number.isFinite(p.ownership) &&
+          p.ownership <= 25 &&
+          p.byGw.size >= Math.max(2, minRowsRequired - 1)
+      )
+    );
+
+    const rankedFallbackAny = sortRank(
+      allPlayers.filter(
+        (p) =>
+          p.byGw.size >= Math.max(1, minRowsRequired - 1)
+      )
+    );
+
+    const rows = [];
+    const selectedKeys = new Set();
+    const perTeamCount = new Map();
+
+    const pushFrom = (arr) => {
+      for (const p of arr) {
+        if (rows.length >= 5) return;
+        if (selectedKeys.has(p.key)) continue;
+        const teamKey = p.teamKey || norm(p.team);
+        if (teamKey) {
+          const used = perTeamCount.get(teamKey) || 0;
+          if (used >= 2) continue;
+          perTeamCount.set(teamKey, used + 1);
+        }
+        rows.push(p);
+        selectedKeys.add(p.key);
+      }
+    };
+
+    pushFrom(rankedStrict);
+    if (rows.length < 5) pushFrom(rankedFallbackOwned);
+    if (rows.length < 5) pushFrom(rankedFallbackAny);
+
+    return { gws: horizonGWs, rows };
+  }, [PlayersData, statsVersion, upcomingGW, teamNameLookups]);
 
   const bestAttackingFixtures = useMemo(() => {
     return [...upcomingFixtures]
@@ -490,6 +752,85 @@ export default function WeeklyReview() {
                 <div className="text-sm text-slate-500">No free-hit lineup available.</div>
               )}
             </div>
+          </section>
+
+          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+              <div className="flex items-center gap-2">
+                <Sparkles size={18} className="text-violet-600" />
+                <h2 className="text-lg font-semibold">Differentials</h2>
+              </div>
+              <div className="text-xs text-slate-600 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1">
+                {differentialInsight.gws.length
+                  ? `Next ${differentialInsight.gws.length} GW(s): ${differentialInsight.gws[0]}-${differentialInsight.gws[differentialInsight.gws.length - 1]}`
+                  : "No future GW horizon"}
+              </div>
+            </div>
+
+            <p className="text-sm text-slate-600 mb-3">
+              Primarily low-owned players (up to 15% ownership) with strong projected points across up to the next 5 upcoming GWs.
+              If fewer than 5 match, it fills with the next best options. Max 2 players per team.
+            </p>
+
+            {differentialInsight.rows.length ? (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                {differentialInsight.rows.map((r, idx) => (
+                  <button
+                    key={`${r.key}_${idx}`}
+                    type="button"
+                    onClick={() =>
+                      navigate("/Player_Analytics/Individual", {
+                        state: { selectedPlayer: r.sourceName },
+                      })
+                    }
+                    className="w-full text-left rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 transition p-3"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="h-6 min-w-6 px-2 rounded-full bg-violet-100 text-violet-700 text-xs font-bold inline-flex items-center justify-center">
+                        #{idx + 1}
+                      </div>
+                      <img
+                        src={r.photo}
+                        alt={r.name}
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = fallbackPlayerUrl;
+                        }}
+                        className="h-10 w-10 rounded-full object-cover border border-slate-200"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="font-semibold truncate">{r.name}</div>
+                        <div className="text-xs text-slate-500 truncate">
+                          {r.team || "Unknown team"}
+                          {r.opponentsText ? ` · vs ${r.opponentsText}` : ""}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-[11px] text-slate-500">Own</div>
+                        <div className="text-sm font-semibold text-violet-700">
+                          {r.ownership.toFixed(1)}%
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
+                      <div className="rounded-lg border border-slate-200 bg-white px-2 py-1.5">
+                        <div className="text-slate-500">Total Projection</div>
+                        <div className="font-semibold text-slate-800">{r.total.toFixed(2)} pts</div>
+                      </div>
+                      <div className="rounded-lg border border-slate-200 bg-white px-2 py-1.5">
+                        <div className="text-slate-500">Avg / GW</div>
+                        <div className="font-semibold text-slate-800">{r.avg.toFixed(2)} pts</div>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="text-sm text-slate-500">
+                No differential candidates found for the upcoming horizon.
+              </div>
+            )}
           </section>
         </>
       )}

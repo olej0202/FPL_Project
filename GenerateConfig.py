@@ -61,6 +61,8 @@ Manual_min=[
         {"name": "Melker_Ellborg", "type": "adjust_from",   "GW": "34", "value": 0},
         {"name": "Robert_Sánchez", "type": "const",   "GW": "any", "value": 70},
         {"name": "Piero_Hincapié", "type": "const",   "GW": "any", "value": 70},
+        {"name": "Jurriën_Timber", "type": "const",   "GW": "any", "value": 90},
+        {"name": "Gabriel_dos Santos Magalhães", "type": "const",   "GW": "any", "value": 90},
     ]
 
 
@@ -99,6 +101,7 @@ fixtures_config = {
         ]
     }
 
+min_id=46805
 min_id=46805
 
 ai_id=7025308

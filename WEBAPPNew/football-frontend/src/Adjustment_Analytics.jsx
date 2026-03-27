@@ -1,6 +1,6 @@
 import React from "react";
 import { NavLink, Outlet } from "react-router-dom";
-import { CalendarDays, User, Users } from "lucide-react";
+import { CalendarDays, PlayCircle, User, Users } from "lucide-react";
 
 const tabClass = ({ isActive }) =>
   [
@@ -27,6 +27,11 @@ export default function AdjustmentAnalytics() {
         <NavLink to="Adjustment_Fixture" className={tabClass}>
           <CalendarDays size={16} />
           Fixtures
+        </NavLink>
+
+        <NavLink to="Adjustment_Simulator" className={tabClass}>
+          <PlayCircle size={16} />
+          Simulator
         </NavLink>
       </div>
 

@@ -26,6 +26,7 @@ export const SITE_AVAILABILITY = {
   statisticalModelTeams: true,
   statisticalModelPlayers: true,
   statisticalModelFixtures: true,
+  statisticalModelSimulator: true,
 
   news: true,
 };
