@@ -126,6 +126,162 @@ const formatOpponent = (opponentValue) => {
   };
 };
 
+const toFiniteNumber = (...values) => {
+  for (const v of values) {
+    const n = Number(v);
+    if (Number.isFinite(n)) return n;
+  }
+  return null;
+};
+
+const getTeamNameFromStrengthRow = (row) => {
+  const raw = row?.name ?? row?.team_name ?? row?.Team ?? row?.team ?? row?.full_name;
+  return raw ? String(raw).trim() : null;
+};
+
+const getRawTeamStrength = (row) => {
+  const attack = toFiniteNumber(
+    row?.XG_avg,
+    row?.XG,
+    row?.xg,
+    row?.XGH,
+    row?.attack_strength
+  );
+  const defense = toFiniteNumber(
+    row?.XGC_avg,
+    row?.XGC,
+    row?.xgc,
+    row?.XGCH,
+    row?.defence_strength,
+    row?.defense_strength
+  );
+
+  if (!Number.isFinite(attack) && !Number.isFinite(defense)) return null;
+  const a = Number.isFinite(attack) ? attack : 1.25;
+  const d = Number.isFinite(defense) ? defense : 1.25;
+  return a - 0.45 * d;
+};
+
+const buildOpponentStrengthLookup = (rows) => {
+  if (!Array.isArray(rows) || rows.length === 0) return new Map();
+
+  const grouped = new Map();
+
+  rows.forEach((row) => {
+    const teamName = getTeamNameFromStrengthRow(row);
+    const rawStrength = getRawTeamStrength(row);
+    if (!teamName || !Number.isFinite(rawStrength)) return;
+
+    const key = normalizeTeamKey(teamName);
+    const current = grouped.get(key);
+    if (!current) {
+      grouped.set(key, { teamName, sum: rawStrength, count: 1 });
+      return;
+    }
+
+    grouped.set(key, {
+      teamName: current.teamName,
+      sum: current.sum + rawStrength,
+      count: current.count + 1,
+    });
+  });
+
+  if (!grouped.size) return new Map();
+
+  const averages = Array.from(grouped.values()).map((v) => ({
+    teamName: v.teamName,
+    strength: v.sum / Math.max(1, v.count),
+  }));
+
+  const values = averages.map((v) => v.strength);
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const span = Math.max(1e-6, max - min);
+
+  const lookup = new Map();
+  averages.forEach(({ teamName, strength }) => {
+    const normalized = (strength - min) / span; // 0 = weakest, 1 = strongest
+    const nameKey = normalizeTeamKey(teamName);
+    lookup.set(nameKey, normalized);
+
+    const shortCode = getTeamShort(teamName);
+    if (shortCode) lookup.set(normalizeTeamKey(shortCode), normalized);
+  });
+
+  return lookup;
+};
+
+const opponentStrengthTone = (strength) => {
+  if (!Number.isFinite(strength)) {
+    return {
+      label: "Unknown",
+      badgeBg: "rgba(248,250,252,0.96)",
+      badgeBorder: "rgba(148,163,184,0.45)",
+      badgeText: "#334155",
+      metaText: "#64748b",
+    };
+  }
+
+  if (strength >= 0.67) {
+    return {
+      label: "Hard",
+      badgeBg: "rgba(254,242,242,0.96)",
+      badgeBorder: "rgba(248,113,113,0.5)",
+      badgeText: "#b91c1c",
+      metaText: "#991b1b",
+    };
+  }
+
+  if (strength >= 0.4) {
+    return {
+      label: "Medium",
+      badgeBg: "rgba(255,251,235,0.96)",
+      badgeBorder: "rgba(245,158,11,0.45)",
+      badgeText: "#92400e",
+      metaText: "#a16207",
+    };
+  }
+
+  return {
+    label: "Favorable",
+    badgeBg: "rgba(236,253,245,0.96)",
+    badgeBorder: "rgba(52,211,153,0.5)",
+    badgeText: "#166534",
+    metaText: "#047857",
+  };
+};
+
+const splitOpponentParts = (value) =>
+  String(value || "")
+    .split(/\s*(\/|&|,|;|\band\b|\bAND\b)\s*/g)
+    .filter((x) => x && !/^(\/|&|,|;|and|AND)$/i.test(x))
+    .map((x) => x.trim())
+    .filter(Boolean);
+
+const lookupStrengthForOpponent = (lookup, opponentValue) => {
+  if (!(lookup instanceof Map) || lookup.size === 0 || !opponentValue) return null;
+
+  const candidates = splitOpponentParts(opponentValue);
+  if (!candidates.length) candidates.push(String(opponentValue));
+
+  const scores = candidates
+    .map((cand) => {
+      const key = normalizeTeamKey(cand);
+      if (lookup.has(key)) return lookup.get(key);
+
+      const short = getTeamShort(cand);
+      if (short) {
+        const shortKey = normalizeTeamKey(short);
+        if (lookup.has(shortKey)) return lookup.get(shortKey);
+      }
+      return null;
+    })
+    .filter((v) => Number.isFinite(v));
+
+  if (!scores.length) return null;
+  return Math.max(...scores);
+};
+
 function computeDefaultStartersIndices(squad, gw, playersData) {
   if (!Array.isArray(squad) || squad.length === 0) return [];
 
@@ -202,7 +358,7 @@ function computeDefaultStartersIndices(squad, gw, playersData) {
 export default function MyTeamOverview() {
   const { teamId, setTeamId, teamData, fetchMyTeam, teamLoading } =
     useMyteamData();
-  const { fetchIfNeeded, PlayersData } = useStatsData();
+  const { fetchIfNeeded, PlayersData, TeamData } = useStatsData();
   const { Playerdata, dataVersion } = useAdjustmentData();
   const location = useLocation();
 
@@ -464,6 +620,11 @@ export default function MyTeamOverview() {
       ? freeTransfersByGw[currentGW] ?? baseFreeTransfers
       : baseFreeTransfers;
 
+  const opponentStrengthLookup = useMemo(() => {
+    const teamRows = Array.isArray(TeamData?.current) ? TeamData.current : [];
+    return buildOpponentStrengthLookup(teamRows);
+  }, [TeamData?.current]);
+
   const playersWithPredictions = useMemo(() => {
     if (!currentSquad || currentSquad.length === 0 || currentGW === null) return [];
 
@@ -483,6 +644,19 @@ export default function MyTeamOverview() {
       const oppFmt = formatOpponent(
         oppList.length ? oppList : prediction?.opponent_name || "N/A"
       );
+      const strengthCandidates = [
+        ...oppList,
+        prediction?.opponent_name,
+        oppFmt.opp1,
+        oppFmt.opp2,
+      ].filter(Boolean);
+      const strengthValues = strengthCandidates
+        .map((cand) => lookupStrengthForOpponent(opponentStrengthLookup, cand))
+        .filter((v) => Number.isFinite(v));
+      const opponentStrength = strengthValues.length
+        ? Math.max(...strengthValues)
+        : null;
+      const opponentTone = opponentStrengthTone(opponentStrength);
 
       let selectedPct = player.selected_pct;
       if (selectedPct == null && prediction?.selected != null) {
@@ -502,6 +676,8 @@ export default function MyTeamOverview() {
         opponent_opp1: oppFmt.opp1,
         opponent_opp2: oppFmt.opp2,
         opponent_display: oppFmt.display,
+        opponent_strength: opponentStrength,
+        opponent_tone: opponentTone,
         selected_pct: selectedPct,
         model_value:
           prediction?.value != null ? Number(prediction.value) : null,
@@ -514,6 +690,7 @@ export default function MyTeamOverview() {
     modelType,
     hasStatisticalData,
     getPredPoints,
+    opponentStrengthLookup,
   ]);
 
   const gwPointsMap = useMemo(() => {
@@ -1637,7 +1814,7 @@ export default function MyTeamOverview() {
             
             <div className="flex-1 flex items-center justify-center min-w-0">
               <div
-                className="w-full max-w-[470px] mx-auto aspect-[8/15] sm:aspect-[2/3.1] bg-no-repeat bg-cover bg-center border rounded-2xl px-2 py-2"
+                className="w-full max-w-[470px] mx-auto aspect-[0.5/1] sm:aspect-[2/3.1] bg-no-repeat bg-cover bg-center border rounded-2xl px-2 py-2"
                 style={{
                   backgroundImage: `url(${pitch})`,
                   borderColor: "rgba(148,163,184,0.45)",
@@ -1645,7 +1822,7 @@ export default function MyTeamOverview() {
                 }}
               >
                 
-                <div className="flex flex-col h-full pt-1 pb-2 gap-8 justify-start">
+                <div className="flex flex-col h-full pt-1 pb-2 gap-9 sm:gap-8 justify-start">
                   
                   <PitchRow
                     players={gkStarters}
@@ -1764,6 +1941,10 @@ export default function MyTeamOverview() {
                       costRaw != null && Number.isFinite(costRaw)
                         ? (costRaw / 10).toFixed(1)
                         : null;
+                    const oppShort = player.opponent_display || "N/A";
+                    const oppFull = player.opponent_raw || oppShort;
+                    const oppTone =
+                      player.opponent_tone || opponentStrengthTone(player.opponent_strength);
                     const isSelected = selectedBenchIndex === player.squadIndex;
 
                     return (
@@ -1828,10 +2009,15 @@ export default function MyTeamOverview() {
                               {player.web_name}
                             </span>
                             <span
-                              className="text-[11px] font-semibold text-slate-800 bg-slate-100 border border-slate-300 rounded-full px-2 py-0.5 whitespace-nowrap"
-                              title={player.opponent_raw || player.opponent_display || "N/A"}
+                              className="text-[11px] font-semibold rounded-full px-2 py-0.5 max-w-[130px] truncate"
+                              style={{
+                                background: oppTone.badgeBg,
+                                border: `1px solid ${oppTone.badgeBorder}`,
+                                color: oppTone.badgeText,
+                              }}
+                              title={oppFull}
                             >
-                              {player.opponent_display || "N/A"}
+                              {oppFull}
                             </span>
                           </div>
 
@@ -2379,13 +2565,16 @@ function PitchRow({
             : null;
         const oppShort = player.opponent_display || "N/A";
         const oppFull = player.opponent_raw || oppShort;
+        const oppTone =
+          player.opponent_tone || opponentStrengthTone(player.opponent_strength);
+        const oppDisplay = oppFull || oppShort || "N/A";
         const droppable = dragInfo && dragInfo.type === "bench";
         const highlightAsTarget = swapModeActive || droppable;
 
         return (
           <div
             key={`${player.name}-${player.squadIndex}`}
-            className="relative group flex flex-col items-center text-center text-[10px] sm:text-xs w-[70px] sm:w-[82px]"
+            className="relative group flex flex-col items-center text-center text-[10px] sm:text-xs w-[76px] sm:w-[94px]"
             onClick={() => {
               if (onClickSwap) onClickSwap(player.squadIndex);
             }}
@@ -2448,16 +2637,23 @@ function PitchRow({
               <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gray-800 shadow" />
             )}
 
-            <div className="mt-1 font-semibold truncate max-w-[82px]">
+            <div className="mt-1 font-semibold truncate max-w-[92px]">
               {player.web_name}
             </div>
 
-            <div className="mt-0.5 flex flex-col items-center gap-0.5">
+            <div className="mt-0.5 flex flex-col items-center gap-0.5 w-full">
               <div
-                className="px-2 py-0.5 rounded-full border border-slate-300 bg-white text-[10px] font-semibold text-slate-800 leading-tight"
+                className="px-2 py-0.5 rounded-full border text-[9px] sm:text-[10px] font-semibold leading-tight max-w-full"
+                style={{
+                  background: oppTone.badgeBg,
+                  borderColor: oppTone.badgeBorder,
+                  color: oppTone.badgeText,
+                }}
                 title={oppFull}
               >
-                {oppShort}
+                <span className="block truncate max-w-[70px] sm:max-w-[86px]">
+                  {oppDisplay}
+                </span>
               </div>
               <div className="px-1.5 py-0.5 rounded-full bg-gray-900/90 text-[9px] font-bold text-amber-300">
                 {player.points_prediction.toFixed(1)} pts

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   X,
@@ -29,6 +29,8 @@ import {
 import pitch from "./assets/Pitch4.png";
 import { useMyteamData } from "./Contexts/MyTeamContext";
 import { useAdjustmentData } from "./Contexts/AdjustmentsContext";
+import { useStatsData } from "./Contexts/StatsContext";
+import teamShort from "./utils/team_short";
 
 const PALETTE = {
   red: "#f8fafc",
@@ -47,6 +49,187 @@ const PALETTE = {
 
 const isValidGW = (gw) =>
   Number.isInteger(gw) && gw >= 1 && gw <= 38;
+
+const normalizeTeamKey = (s) =>
+  String(s || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ");
+
+const normalizePlayerKey = (s) =>
+  String(s || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ");
+
+const playerGwKey = (name, gw) => `${normalizePlayerKey(name)}__${Number(gw)}`;
+const teamGwKey = (team, gw) => `${normalizeTeamKey(team)}__${Number(gw)}`;
+
+const getTeamShort = (teamNameOrCode) => {
+  if (!teamNameOrCode) return null;
+  const raw = String(teamNameOrCode).trim();
+  if (/^[A-Za-z]{2,4}$/.test(raw)) return raw.toUpperCase();
+  if (teamShort?.[raw]) return String(teamShort[raw]).toUpperCase();
+
+  const target = normalizeTeamKey(raw);
+  const key = Object.keys(teamShort || {}).find((k) => normalizeTeamKey(k) === target);
+  return key ? String(teamShort[key]).toUpperCase() : null;
+};
+
+const formatOpponent = (opponentValue) => {
+  if (!opponentValue) return { opp1: "N/A", opp2: null, display: "N/A" };
+
+  const parts = (
+    Array.isArray(opponentValue)
+      ? opponentValue
+      : String(opponentValue).split(/\s*(\/|&|,|;|\band\b|\bAND\b)\s*/g)
+  )
+    .filter((x) => x && !/^(\/|&|,|;|and|AND)$/i.test(x))
+    .map((x) => String(x).trim())
+    .filter(Boolean);
+
+  const oppA = parts[0] ?? null;
+  const oppB = parts[1] ?? null;
+  const shortA = getTeamShort(oppA) || (oppA ? String(oppA) : "N/A");
+  const shortB = oppB ? getTeamShort(oppB) || String(oppB) : null;
+
+  return {
+    opp1: shortA,
+    opp2: shortB || null,
+    display: shortB ? `${shortA}/${shortB}` : shortA,
+  };
+};
+
+const toFiniteNumber = (...values) => {
+  for (const v of values) {
+    const n = Number(v);
+    if (Number.isFinite(n)) return n;
+  }
+  return null;
+};
+
+const getTeamNameFromStrengthRow = (row) => {
+  const raw = row?.name ?? row?.team_name ?? row?.Team ?? row?.team ?? row?.full_name;
+  return raw ? String(raw).trim() : null;
+};
+
+const getRawTeamStrength = (row) => {
+  const attack = toFiniteNumber(row?.XG_avg, row?.XG, row?.xg, row?.XGH, row?.attack_strength);
+  const defense = toFiniteNumber(
+    row?.XGC_avg,
+    row?.XGC,
+    row?.xgc,
+    row?.XGCH,
+    row?.defence_strength,
+    row?.defense_strength
+  );
+
+  if (!Number.isFinite(attack) && !Number.isFinite(defense)) return null;
+  const a = Number.isFinite(attack) ? attack : 1.25;
+  const d = Number.isFinite(defense) ? defense : 1.25;
+  return a - 0.45 * d;
+};
+
+const buildOpponentStrengthLookup = (rows) => {
+  if (!Array.isArray(rows) || rows.length === 0) return new Map();
+
+  const grouped = new Map();
+  rows.forEach((row) => {
+    const teamName = getTeamNameFromStrengthRow(row);
+    const rawStrength = getRawTeamStrength(row);
+    if (!teamName || !Number.isFinite(rawStrength)) return;
+
+    const key = normalizeTeamKey(teamName);
+    const cur = grouped.get(key);
+    if (!cur) grouped.set(key, { teamName, sum: rawStrength, count: 1 });
+    else grouped.set(key, { teamName: cur.teamName, sum: cur.sum + rawStrength, count: cur.count + 1 });
+  });
+
+  if (!grouped.size) return new Map();
+
+  const values = Array.from(grouped.values()).map((v) => v.sum / Math.max(1, v.count));
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const span = Math.max(1e-6, max - min);
+
+  const lookup = new Map();
+  Array.from(grouped.values()).forEach((v) => {
+    const strength = v.sum / Math.max(1, v.count);
+    const normalized = (strength - min) / span;
+    lookup.set(normalizeTeamKey(v.teamName), normalized);
+
+    const shortCode = getTeamShort(v.teamName);
+    if (shortCode) lookup.set(normalizeTeamKey(shortCode), normalized);
+  });
+
+  return lookup;
+};
+
+const splitOpponentParts = (value) =>
+  String(value || "")
+    .split(/\s*(\/|&|,|;|\band\b|\bAND\b)\s*/g)
+    .filter((x) => x && !/^(\/|&|,|;|and|AND)$/i.test(x))
+    .map((x) => x.trim())
+    .filter(Boolean);
+
+const lookupStrengthForOpponent = (lookup, opponentValue) => {
+  if (!(lookup instanceof Map) || lookup.size === 0 || !opponentValue) return null;
+  const candidates = splitOpponentParts(opponentValue);
+  if (!candidates.length) candidates.push(String(opponentValue));
+
+  const scores = candidates
+    .map((cand) => {
+      const key = normalizeTeamKey(cand);
+      if (lookup.has(key)) return lookup.get(key);
+      const short = getTeamShort(cand);
+      if (short) {
+        const shortKey = normalizeTeamKey(short);
+        if (lookup.has(shortKey)) return lookup.get(shortKey);
+      }
+      return null;
+    })
+    .filter((v) => Number.isFinite(v));
+
+  if (!scores.length) return null;
+  return Math.max(...scores);
+};
+
+const opponentStrengthTone = (strength) => {
+  if (!Number.isFinite(strength)) {
+    return {
+      label: "Unknown",
+      badgeBg: "rgba(248,250,252,0.96)",
+      badgeBorder: "rgba(148,163,184,0.45)",
+      badgeText: "#334155",
+      metaText: "#64748b",
+    };
+  }
+  if (strength >= 0.67) {
+    return {
+      label: "Hard",
+      badgeBg: "rgba(254,242,242,0.96)",
+      badgeBorder: "rgba(248,113,113,0.5)",
+      badgeText: "#b91c1c",
+      metaText: "#991b1b",
+    };
+  }
+  if (strength >= 0.4) {
+    return {
+      label: "Medium",
+      badgeBg: "rgba(255,251,235,0.96)",
+      badgeBorder: "rgba(245,158,11,0.45)",
+      badgeText: "#92400e",
+      metaText: "#a16207",
+    };
+  }
+  return {
+    label: "Favorable",
+    badgeBg: "rgba(236,253,245,0.96)",
+    badgeBorder: "rgba(52,211,153,0.5)",
+    badgeText: "#166534",
+    metaText: "#047857",
+  };
+};
 
 export default function MyTeamOptimize() {
   const {
@@ -79,7 +262,8 @@ export default function MyTeamOptimize() {
     loadOptimization,
   } = useMyteamData();
 
-  const { Playerdata, dataVersion } = useAdjustmentData();
+  const { Playerdata, Teamdata, dataVersion } = useAdjustmentData();
+  const { fetchIfNeeded: fetchStatsIfNeeded, TeamData, PlayersData } = useStatsData();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -101,6 +285,10 @@ export default function MyTeamOptimize() {
   const pitchSectionRef = useRef(null);
   const preferredModelAppliedRef = useRef(false);
 
+  useEffect(() => {
+    fetchStatsIfNeeded();
+  }, [fetchStatsIfNeeded]);
+
   const hasStatisticalData = useMemo(() => {
     const arr = Playerdata?.current;
     if (!Array.isArray(arr) || arr.length === 0) return false;
@@ -109,6 +297,126 @@ export default function MyTeamOptimize() {
 
   const clampRisk = (v) => Math.max(-1, Math.min(1, v));
   const clampValTrans = (v) => Math.max(0, Math.min(1, v));
+
+  const opponentStrengthLookup = useMemo(() => {
+    const rows = Array.isArray(TeamData?.current) ? TeamData.current : [];
+    return buildOpponentStrengthLookup(rows);
+  }, [TeamData?.current]);
+
+  const opponentByPlayerGw = useMemo(() => {
+    const map = new Map();
+    const addRows = (rows) => {
+      if (!Array.isArray(rows)) return;
+      rows.forEach((r) => {
+        const gw = Number(r?.GW);
+        if (!Number.isFinite(gw)) return;
+
+        const playerName = r?.name ?? r?.Name ?? r?.web_name;
+        if (!playerName) return;
+
+        const opp =
+          r?.opponent_name ??
+          r?.Opponent_team ??
+          r?.opponent ??
+          r?.Opponent ??
+          r?.opponent_team;
+        if (!opp) return;
+
+        const key = playerGwKey(playerName, gw);
+        const parts = splitOpponentParts(opp);
+        const bucket = map.get(key) || new Set();
+        if (parts.length) parts.forEach((p) => bucket.add(p));
+        else bucket.add(String(opp));
+        map.set(key, bucket);
+      });
+    };
+
+    addRows(Playerdata?.current);
+    addRows(PlayersData?.current);
+
+    const out = new Map();
+    map.forEach((set, key) => {
+      const values = Array.from(set).filter(Boolean);
+      if (values.length) out.set(key, values.join(" / "));
+    });
+
+    return out;
+  }, [Playerdata, PlayersData, dataVersion]);
+
+  const opponentByTeamGw = useMemo(() => {
+    const out = new Map();
+    const rows = Array.isArray(Teamdata?.current) ? Teamdata.current : [];
+
+    rows.forEach((r) => {
+      const gw = Number(r?.GW);
+      if (!Number.isFinite(gw)) return;
+
+      const teamName = r?.team_name ?? r?.Team ?? r?.team;
+      const teamCode = r?.team_code ?? r?.team_id ?? r?.code;
+      const opp = r?.Opponent_team ?? r?.opponent_team ?? r?.opponent ?? r?.Opponent;
+      if ((!teamName && teamCode == null) || !opp) return;
+
+      const candidates = [];
+      if (teamName) {
+        candidates.push(teamName);
+        const short = getTeamShort(teamName);
+        if (short) candidates.push(short);
+      }
+      if (teamCode != null) candidates.push(String(teamCode));
+
+      candidates.forEach((cand) => {
+        out.set(teamGwKey(cand, gw), String(opp));
+      });
+    });
+
+    return out;
+  }, [Teamdata, dataVersion]);
+
+  const getOpponentMeta = useCallback(
+    (row) => {
+      const rawFromRow =
+        row?.opponent_name ??
+        row?.Opponent_team ??
+        row?.opponent ??
+        row?.Opponent ??
+        row?.opp_team ??
+        row?.fixture_opponent;
+
+      const fallbackFromPlayerGw = opponentByPlayerGw.get(
+        playerGwKey(row?.Name ?? row?.name ?? row?.web_name, row?.GW)
+      );
+      const fallbackFromTeamGw = opponentByTeamGw.get(
+        teamGwKey(
+          row?.Team ??
+            row?.team_name ??
+            row?.team_code ??
+            row?.team_id ??
+            row?.team ??
+            row?.code,
+          row?.GW
+        )
+      );
+
+      const rawOpponent = rawFromRow || fallbackFromPlayerGw || fallbackFromTeamGw || "N/A";
+      const formatted = formatOpponent(rawOpponent);
+      const display = formatted.display || "N/A";
+      const full = Array.isArray(rawOpponent)
+        ? rawOpponent.join(" / ")
+        : String(rawOpponent || display);
+
+      const strength = lookupStrengthForOpponent(
+        opponentStrengthLookup,
+        full || display
+      );
+
+      return {
+        display,
+        full: full || display,
+        tone: opponentStrengthTone(strength),
+      };
+    },
+    [opponentStrengthLookup, opponentByPlayerGw, opponentByTeamGw]
+  );
 
   const formatRiskLabel = (v) => {
     const n = Number(v);
@@ -1091,7 +1399,7 @@ export default function MyTeamOptimize() {
               </div>
 
       <div
-  className="w-full max-w-[360px] sm:max-w-[420px] mx-auto aspect-[0.68/1] sm:aspect-[0.76/1] bg-no-repeat bg-cover bg-center rounded-[24px] px-1 sm:px-2 py-1 relative overflow-hidden"
+  className="w-full max-w-[430px] sm:max-w-[560px] mx-auto bg-no-repeat bg-cover bg-center rounded-[24px] px-1 sm:px-2 py-1 relative overflow-hidden min-h-[760px] sm:min-h-[900px] lg:min-h-[960px]"
   style={{
     backgroundImage: `url(${pitch})`,
     border: `1px solid ${PALETTE.border}`,
@@ -1100,44 +1408,73 @@ export default function MyTeamOptimize() {
 >
   <div className="absolute inset-0 bg-gradient-to-b from-slate-100/40 via-transparent to-slate-200/50 pointer-events-none" />
 
-  <div className="relative flex flex-col justify-between h-[340px] xs:h-[360px] sm:h-[450px] pt-1 pb-14 sm:pb-16 w-full">
-    <PlayerRow
-      players={starters.filter((p) => p.position === "GKP")}
-      toggleBan={toggleBan}
-      bannedList={bannedList}
-      navigate={navigate}
-    />
-    <PlayerRow
-      players={starters.filter((p) => p.position === "DEF")}
-      toggleBan={toggleBan}
-      bannedList={bannedList}
-      navigate={navigate}
-    />
-    <PlayerRow
-      players={starters.filter((p) => p.position === "MID")}
-      toggleBan={toggleBan}
-      bannedList={bannedList}
-      navigate={navigate}
-    />
-    <PlayerRow
-      players={starters.filter((p) => p.position === "FWD")}
-      toggleBan={toggleBan}
-      bannedList={bannedList}
-      navigate={navigate}
-    />
-  </div>
+  <div className="relative h-full min-h-[740px] sm:min-h-[880px] lg:min-h-[940px] w-full px-1 sm:px-2 pt-2 pb-2">
+    <div
+      className="grid h-full"
+      style={{
+        gridTemplateRows: bench.length > 0 ? "1fr auto" : "1fr",
+        rowGap: "clamp(10px, 2vh, 20px)",
+      }}
+    >
+      <div
+        className="grid content-between"
+        style={{
+          gridTemplateRows: "repeat(4, minmax(0, 1fr))",
+          rowGap: "clamp(18px, 3vh, 34px)",
+        }}
+      >
+        <div className="flex items-center justify-center min-h-[112px] sm:min-h-[132px]">
+          <PlayerRow
+            players={starters.filter((p) => p.position === "GKP")}
+            toggleBan={toggleBan}
+            bannedList={bannedList}
+            navigate={navigate}
+            getOpponentMeta={getOpponentMeta}
+          />
+        </div>
+        <div className="flex items-center justify-center min-h-[112px] sm:min-h-[132px]">
+          <PlayerRow
+            players={starters.filter((p) => p.position === "DEF")}
+            toggleBan={toggleBan}
+            bannedList={bannedList}
+            navigate={navigate}
+            getOpponentMeta={getOpponentMeta}
+          />
+        </div>
+        <div className="flex items-center justify-center min-h-[112px] sm:min-h-[132px]">
+          <PlayerRow
+            players={starters.filter((p) => p.position === "MID")}
+            toggleBan={toggleBan}
+            bannedList={bannedList}
+            navigate={navigate}
+            getOpponentMeta={getOpponentMeta}
+          />
+        </div>
+        <div className="flex items-center justify-center min-h-[112px] sm:min-h-[132px]">
+          <PlayerRow
+            players={starters.filter((p) => p.position === "FWD")}
+            toggleBan={toggleBan}
+            bannedList={bannedList}
+            navigate={navigate}
+            getOpponentMeta={getOpponentMeta}
+          />
+        </div>
+      </div>
 
-  {bench.length > 0 && (
-    <div className="absolute bottom-1 sm:bottom-2 left-0 right-0 px-1">
-      <PlayerRow
-        players={bench}
-        isBench
-        toggleBan={toggleBan}
-        bannedList={bannedList}
-        navigate={navigate}
-      />
+      {bench.length > 0 && (
+        <div className="border-t border-slate-300/20 pt-20 pb-1 min-h-[100px] sm:min-h-[146px] bg-white/1 rounded-xl mt-20">
+          <PlayerRow
+            players={bench}
+            isBench
+            toggleBan={toggleBan}
+            bannedList={bannedList}
+            navigate={navigate}
+            getOpponentMeta={getOpponentMeta}
+          />
+        </div>
+      )}
     </div>
-  )}
+  </div>
 </div>
               <div className="mt-4 flex flex-col items-center gap-3">
                 <button
@@ -1446,7 +1783,14 @@ function MiniPill({ active, onClick, children }) {
   );
 }
 
-function PlayerRow({ players, isBench = false, toggleBan, bannedList, navigate }) {
+function PlayerRow({
+  players,
+  isBench = false,
+  toggleBan,
+  bannedList,
+  navigate,
+  getOpponentMeta,
+}) {
   const fallback =
     "https://d2kq0urxkarztv.cloudfront.net/51812cad594df29a1a0003f0/661303/upload-643ff5d9-840e-4bbb-b099-07c26ef505c9.png?w=578";
 
@@ -1459,20 +1803,38 @@ function PlayerRow({ players, isBench = false, toggleBan, bannedList, navigate }
     : players;
 
   return (
-    <div
-      className={`w-full min-w-0 flex justify-center items-start ${
-        isBench ? "gap-1" : "gap-1.5 sm:gap-2"
-      } px-0.5 text-center`}
-    >
+    <div className="w-full min-w-0 px-0.5">
+      {(() => {
+        const dynamicGap = isBench
+          ? "clamp(2px, 0.7vw, 8px)"
+          : sortedPlayers.length >= 5
+          ? "clamp(2px, 0.9vw, 9px)"
+          : "clamp(4px, 1.2vw, 12px)";
+        return (
+      <div
+        className="grid items-start justify-items-center"
+        style={{
+          gridTemplateColumns: `repeat(${Math.max(1, sortedPlayers.length)}, minmax(0, 1fr))`,
+          columnGap: dynamicGap,
+        }}
+      >
       {sortedPlayers.map((p) => (
         <div
           key={p.Name}
-          className={`relative min-w-0 flex flex-col items-center ${
-            isBench ? "w-[58px] sm:w-[66px]" : "w-[60px] sm:w-[70px]"
+          className={`relative min-w-0 w-full flex flex-col items-center ${
+            isBench ? "max-w-[62px] sm:max-w-[74px]" : "max-w-[68px] sm:max-w-[82px]"
           }`}
         >
+          {(() => {
+            const oppMeta =
+              typeof getOpponentMeta === "function"
+                ? getOpponentMeta(p)
+                : { display: "N/A", full: "N/A", tone: opponentStrengthTone(null) };
+
+            return (
+              <>
           {p.Is_captain && (
-            <div className="absolute top-[18px] left-[2px] bg-emerald-700 text-white font-bold text-[9px] rounded-full w-4 h-4 flex items-center justify-center shadow z-10">
+            <div className="absolute top-[12px] left-[2px] bg-emerald-700 text-white font-bold text-[8px] rounded-full w-3.5 h-3.5 flex items-center justify-center shadow z-10">
               C
             </div>
           )}
@@ -1486,8 +1848,8 @@ function PlayerRow({ players, isBench = false, toggleBan, bannedList, navigate }
               }}
               className={`object-contain drop-shadow cursor-pointer transition-transform hover:scale-[1.07] ${
                 isBench
-                  ? "w-[44px] h-[44px] sm:w-[52px] sm:h-[50px]"
-                  : "w-[45px] h-[55px] sm:w-[58px] sm:h-[62px]"
+                  ? "w-[46px] h-[48px] sm:w-[56px] sm:h-[58px]"
+                  : "w-[50px] h-[58px] sm:w-[64px] sm:h-[70px]"
               }`}
               onClick={() =>
                 navigate("/Player_Analytics/Individual", {
@@ -1500,7 +1862,7 @@ function PlayerRow({ players, isBench = false, toggleBan, bannedList, navigate }
 
             <button
               onClick={() => toggleBan(p.Name)}
-              className="gold-ring absolute top-0 right-0 translate-x-[2px] -translate-y-[2px] bg-white p-[3px] rounded-full border border-slate-200 hover:bg-slate-50"
+              className="gold-ring absolute top-0 right-0 bg-white p-[3px] rounded-full border border-slate-200 hover:bg-slate-50"
               aria-label={`Toggle unwanted for ${p.web_name}`}
             >
               <X
@@ -1514,16 +1876,39 @@ function PlayerRow({ players, isBench = false, toggleBan, bannedList, navigate }
           </div>
 
           <div
-            className={`mt-1 truncate rounded-full bg-gray-100/90 text-slate-800 mx-auto ${
+            className={`mt-1 truncate rounded-full bg-gray-100/90 text-slate-800 mx-auto text-center ${
               isBench
-                ? "w-[56px] sm:w-[64px] text-[9px] sm:text-[10px] px-1 py-[3px]"
-                : "w-[58px] sm:w-[68px] text-[9px] sm:text-[11px] px-1.5 py-[3px]"
+                ? "w-[60px] sm:w-[72px] text-[9px] sm:text-[10px] px-1 py-[3px]"
+                : "w-[64px] sm:w-[78px] text-[9px] sm:text-[11px] px-1.5 py-[3px]"
             }`}
           >
             {p.web_name}
           </div>
+
+          <div
+            className={`mt-0.5 truncate rounded-full mx-auto border px-1.5 py-[2px] font-semibold text-center ${
+              isBench
+                ? "w-[60px] sm:w-[72px] text-[8px] sm:text-[9px]"
+                : "w-[64px] sm:w-[78px] text-[8px] sm:text-[9px]"
+            }`}
+            style={{
+              background: oppMeta.tone.badgeBg,
+              borderColor: oppMeta.tone.badgeBorder,
+              color: oppMeta.tone.badgeText,
+            }}
+            title={oppMeta.full}
+          >
+            {oppMeta.display}
+          </div>
+
+              </>
+            );
+          })()}
         </div>
       ))}
+      </div>
+        );
+      })()}
     </div>
   );
 }
