@@ -31,6 +31,7 @@ import PlayerAnalyticsIndividual from "./Player_Analytics_individual";
 import NewsBlog from "./News";
 import TeamPredictionsFuture from "./Fixture_Ticker";
 import WeeklyReview from "./Weekly_Review";
+import PersonalAnalysis from "./Personal_Analysis";
 import SeasonAnalytics from "./SeasonAnalysis";
 import PlayerMeasureAveragesChart_TEAMS from "./Season_Analyticss_Teams";
 import PlayerMeasureAveragesChart_Player from "./Season_Analytics_Players";
@@ -40,6 +41,8 @@ import PlayerAdjustmentsPage from "./Adjustment_Analytics_Player";
 import FixturesPage from "./Adjustement_Analytics_Fixtures";
 import AITeams from "./AITeams";
 import MyTeamOverview from "./MyTeam_Display";
+import CurrentlyUnavailable from "./components/CurrentlyUnavailable";
+import { isSiteAvailable } from "./config/siteAvailability";
 
 import logo from "./assets/FPL_analytics_logo.png";
 import "./index.css";
@@ -59,6 +62,7 @@ export default function App() {
       { to: "/Season_Analysis", label: "Season Analytics" },
       { to: "/TeamPredictionsFuture", label: "Fixture Analytics" },
       { to: "/Weekly_Review", label: "Weekly Review" },
+      { to: "/Personal_Analysis", label: "Personal Analysis" },
     ],
     []
   );
@@ -124,6 +128,9 @@ export default function App() {
         ? "border-sky-200 bg-sky-50 text-sky-800"
         : "border-slate-300 text-slate-700 hover:bg-sky-50 hover:border-sky-200 hover:text-sky-700",
     ].join(" ");
+
+  const routeElement = (siteKey, element, title) =>
+    isSiteAvailable(siteKey) ? element : <CurrentlyUnavailable title={title} />;
 
   return (
     <div className="min-h-screen bg-app-gradient text-slate-800">
@@ -327,45 +334,163 @@ export default function App() {
       <main className="mx-auto max-w-7xl px-2 pb-6 pt-4 sm:px-4">
         <section className="rounded-2xl border border-slate-200 bg-white p-2 shadow-sm sm:p-3">
           <Routes>
-            <Route path="/Team_Analytics" element={<Team_Analytics />}>
-              <Route index element={<Team_Analytics_Rankings />} />
-              <Route path="Team_Individual" element={<Team_Analytics_Individual />} />
-              <Route path="Team_Rankings" element={<Team_Analytics_Rankings />} />
-              <Route path="Team_Analysis" element={<Team_Analytics_Analysis />} />
+            <Route
+              path="/Team_Analytics"
+              element={routeElement("teamAnalyticsShell", <Team_Analytics />, "Team Analytics")}
+            >
+              <Route
+                index
+                element={routeElement(
+                  "teamAnalyticsRankings",
+                  <Team_Analytics_Rankings />,
+                  "Team Analytics Rankings"
+                )}
+              />
+              <Route
+                path="Team_Individual"
+                element={routeElement(
+                  "teamAnalyticsIndividual",
+                  <Team_Analytics_Individual />,
+                  "Team Analytics Individual"
+                )}
+              />
+              <Route
+                path="Team_Rankings"
+                element={routeElement(
+                  "teamAnalyticsRankings",
+                  <Team_Analytics_Rankings />,
+                  "Team Analytics Rankings"
+                )}
+              />
+              <Route
+                path="Team_Analysis"
+                element={routeElement(
+                  "teamAnalyticsAnalysis",
+                  <Team_Analytics_Analysis />,
+                  "Team Analytics Analysis"
+                )}
+              />
             </Route>
 
-            <Route path="/Score_Predictions" element={<Team_Predictions />} />
-            <Route path="/Weekly_Review" element={<WeeklyReview />} />
+            <Route
+              path="/Score_Predictions"
+              element={routeElement("scorePredictions", <Team_Predictions />, "Score Predictions")}
+            />
+            <Route
+              path="/Weekly_Review"
+              element={routeElement("weeklyReview", <WeeklyReview />, "Weekly Review")}
+            />
+            <Route
+              path="/Personal_Analysis"
+              element={routeElement("personalAnalysis", <PersonalAnalysis />, "Personal Analysis")}
+            />
 
-            <Route path="/" element={<AITeams />}>
+            <Route
+              path="/"
+              element={routeElement("aiTeamsShell", <AITeams />, "AI Teams")}
+            >
               <Route path="FreeHitTeam" element={<Navigate to="/Chip_Team?mode=freehit" replace />} />
-              <Route path="Team_Overview" element={<MyTeamOverview />} />
+              <Route
+                path="Team_Overview"
+                element={routeElement("aiTeamsOverview", <MyTeamOverview />, "Team Overview")}
+              />
               <Route path="Wildcard_Team" element={<Navigate to="/Chip_Team?mode=wildcard" replace />} />
-              <Route path="Chip_Team" element={<AIChipTeam />} />
-              <Route path="My_Team" element={<MyTeam />} />
+              <Route
+                path="Chip_Team"
+                element={routeElement("aiTeamsChip", <AIChipTeam />, "AI Teams")}
+              />
+              <Route
+                path="My_Team"
+                element={routeElement("aiTeamsOptimize", <MyTeam />, "Optimize My Team")}
+              />
             </Route>
 
-            <Route path="/Player_Analytics" element={<Player_analytics />}>
-              <Route path="Rankings" element={<Player_analytics_rankings />} />
-              <Route path="Individual" element={<PlayerAnalyticsIndividual />} />
+            <Route
+              path="/Player_Analytics"
+              element={routeElement("playerAnalyticsShell", <Player_analytics />, "Player Analytics")}
+            >
+              <Route
+                path="Rankings"
+                element={routeElement(
+                  "playerAnalyticsRankings",
+                  <Player_analytics_rankings />,
+                  "Player Analytics Rankings"
+                )}
+              />
+              <Route
+                path="Individual"
+                element={routeElement(
+                  "playerAnalyticsIndividual",
+                  <PlayerAnalyticsIndividual />,
+                  "Player Analytics Individual"
+                )}
+              />
             </Route>
 
-            <Route path="/News" element={<NewsBlog />} />
+            <Route path="/News" element={routeElement("news", <NewsBlog />, "PL News")} />
 
-            <Route path="/Season_Analysis" element={<SeasonAnalytics />}>
+            <Route
+              path="/Season_Analysis"
+              element={routeElement("seasonAnalyticsShell", <SeasonAnalytics />, "Season Analysis")}
+            >
               <Route index element={<Navigate to="Season_Players" replace />} />
-              <Route path="Season_Teams" element={<PlayerMeasureAveragesChart_TEAMS />} />
-              <Route path="Season_Players" element={<PlayerMeasureAveragesChart_Player />} />
+              <Route
+                path="Season_Teams"
+                element={routeElement(
+                  "seasonAnalyticsTeams",
+                  <PlayerMeasureAveragesChart_TEAMS />,
+                  "Season Analytics Teams"
+                )}
+              />
+              <Route
+                path="Season_Players"
+                element={routeElement(
+                  "seasonAnalyticsPlayers",
+                  <PlayerMeasureAveragesChart_Player />,
+                  "Season Analytics Players"
+                )}
+              />
             </Route>
 
-            <Route path="/Adjustment_Analysis" element={<AdjustmentAnalytics />}>
+            <Route
+              path="/Adjustment_Analysis"
+              element={routeElement(
+                "statisticalModelShell",
+                <AdjustmentAnalytics />,
+                "Statistical Model"
+              )}
+            >
               <Route index element={<Navigate to="Adjustment_Player" replace />} />
-              <Route path="Adjustment_Teams" element={<TeamAdjustmentsPage />} />
-              <Route path="Adjustment_Player" element={<PlayerAdjustmentsPage />} />
-              <Route path="Adjustment_Fixture" element={<FixturesPage />} />
+              <Route
+                path="Adjustment_Teams"
+                element={routeElement(
+                  "statisticalModelTeams",
+                  <TeamAdjustmentsPage />,
+                  "Statistical Model Team Adjustment"
+                )}
+              />
+              <Route
+                path="Adjustment_Player"
+                element={routeElement(
+                  "statisticalModelPlayers",
+                  <PlayerAdjustmentsPage />,
+                  "Statistical Model Player Adjustment"
+                )}
+              />
+              <Route
+                path="Adjustment_Fixture"
+                element={routeElement(
+                  "statisticalModelFixtures",
+                  <FixturesPage />,
+                  "Statistical Model Fixture Adjustment"
+                )}
+              />
             </Route>
 
-            <Route path="/TeamPredictionsFuture" element={<TeamPredictionsFuture />} />
+            <Route
+              path="/TeamPredictionsFuture"
+              element={routeElement("fixtureAnalytics", <TeamPredictionsFuture />, "Fixture Analytics")}
+            />
           </Routes>
         </section>
       </main>

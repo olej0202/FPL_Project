@@ -376,7 +376,14 @@ export default function PlayerAnalyticsIndividual() {
       backgroundColor: "#ffffff",
       border: "1px solid #cbd5e1",
     }),
+    menuPortal: (base) => ({
+      ...base,
+      zIndex: 9999,
+    }),
   };
+
+  const selectPortalTarget =
+    typeof document !== "undefined" ? document.body : null;
 
   // Fixtures from context
   const playerFixtures = useMemo(() => {
@@ -508,6 +515,8 @@ export default function PlayerAnalyticsIndividual() {
                 null
               }
               styles={selectStyles}
+              menuPortalTarget={selectPortalTarget}
+              menuPosition="fixed"
               placeholder="Select or search player..."
             />
           </div>
@@ -736,6 +745,8 @@ export default function PlayerAnalyticsIndividual() {
                 ) || null
               }
               styles={selectStyles}
+              menuPortalTarget={selectPortalTarget}
+              menuPosition="fixed"
               placeholder="Compare with..."
             />
           </div>
@@ -830,7 +841,7 @@ export default function PlayerAnalyticsIndividual() {
             border: "1px solid #cbd5e1",
             background: "#ffffff",
             boxShadow: "0 12px 28px rgba(15,23,42,0.08)",
-            overflow: "hidden",
+            overflow: "visible",
           }}
         >
           <button
@@ -867,6 +878,8 @@ export default function PlayerAnalyticsIndividual() {
                     onChange={(o) => setSelectedMetric(o.value)}
                     placeholder="Metric..."
                     styles={selectStyles}
+                    menuPortalTarget={selectPortalTarget}
+                    menuPosition="fixed"
                   />
                 </div>
                 <div className="w-full">
@@ -881,6 +894,8 @@ export default function PlayerAnalyticsIndividual() {
                     isClearable
                     placeholder="Select Season(s)..."
                     styles={selectStyles}
+                    menuPortalTarget={selectPortalTarget}
+                    menuPosition="fixed"
                   />
                 </div>
                 <div className="w-full">
@@ -897,6 +912,8 @@ export default function PlayerAnalyticsIndividual() {
                     isClearable
                     placeholder="Select Opponent(s)..."
                     styles={selectStyles}
+                    menuPortalTarget={selectPortalTarget}
+                    menuPosition="fixed"
                   />
                 </div>
               </div>
