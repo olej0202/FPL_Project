@@ -18,7 +18,43 @@ const PALETTE = {
   beige: "#1e293b",
 };
 
+// Quick rollback switch for GW-specific adjustment mode.
+const ENABLE_GW_ADJUST = true;
+
 const normalizeName = (s) => String(s ?? "").trim().toLowerCase();
+
+const applyTeamStrengthAdjustments = (rows, teamName, newXg, newXgc, scope = "all", gw = null) => {
+  const target = normalizeName(teamName);
+  const useGwScope = scope === "gw" && Number.isFinite(Number(gw));
+  const targetGw = Number(gw);
+
+  return rows.map((r) => {
+    const clone = { ...r };
+    const ownName = normalizeName(clone.team_name);
+    const oppName = normalizeName(clone.opponent_team);
+    const rowGw = Number(clone.GW);
+
+    const gwMatch = !useGwScope || rowGw === targetGw;
+
+    const base_own_XG_avg =
+      clone.base_own_XG_avg != null ? clone.base_own_XG_avg : clone.own_XG_avg;
+    const base_own_XGC_avg =
+      clone.base_own_XGC_avg != null ? clone.base_own_XGC_avg : clone.own_XGC_avg;
+
+    if (gwMatch && ownName === target) {
+      clone.own_XG_avg = newXg;
+      clone.own_XGC_avg = newXgc;
+    }
+
+    if (gwMatch && oppName === target) {
+      clone.opponent_XG_avg = newXg;
+      clone.opponent_XGC_avg = newXgc;
+    }
+
+    return { ...clone, base_own_XG_avg, base_own_XGC_avg };
+  });
+};
+
   function useMediaQuery(query) {
   const [matches, setMatches] = useState(() =>
     typeof window !== "undefined" ? window.matchMedia(query).matches : false
@@ -49,6 +85,8 @@ function TeamAdjustmentsPage() {
 
   const [data, setData] = useState([]);
   const [resetting, setResetting] = useState(false);
+  const [adjustScope, setAdjustScope] = useState("all"); // 'all' | 'gw'
+  const [selectedGW, setSelectedGW] = useState(null);
 
   // --- Helper to (re)initialize from context data ---
   const initializeFromContext = (raw) => {
@@ -93,25 +131,44 @@ function TeamAdjustmentsPage() {
 
   // Unique team points for scatter (read baseline from data rows)
   const teamPoints = useMemo(() => {
-    const byTeam = new Map();
-
+    const grouped = new Map();
     for (const r of data) {
-      if (!byTeam.has(r.team_name)) {
-        const origX = r.base_own_XG_avg != null ? r.base_own_XG_avg : r.own_XG_avg;
-        const origY = r.base_own_XGC_avg != null ? r.base_own_XGC_avg : r.own_XGC_avg;
-
-        byTeam.set(r.team_name, {
-          team_name: r.team_name,
-          own_XG_avg: r.own_XG_avg,
-          own_XGC_avg: r.own_XGC_avg,
-          orig_XG_avg: origX,
-          orig_XGC_avg: origY,
-          logo: teamLogos[r.team_name] || null,
-        });
-      }
+      if (!grouped.has(r.team_name)) grouped.set(r.team_name, []);
+      grouped.get(r.team_name).push(r);
     }
-    return Array.from(byTeam.values());
-  }, [data]);
+
+    const useGwScope =
+      ENABLE_GW_ADJUST &&
+      adjustScope === "gw" &&
+      Number.isFinite(Number(selectedGW));
+    const targetGw = Number(selectedGW);
+
+    const out = [];
+    for (const [teamName, rows] of grouped.entries()) {
+      const chosen =
+        useGwScope && rows.some((r) => Number(r.GW) === targetGw)
+          ? rows.find((r) => Number(r.GW) === targetGw)
+          : rows[0];
+
+      if (!chosen) continue;
+
+      const origX =
+        chosen.base_own_XG_avg != null ? chosen.base_own_XG_avg : chosen.own_XG_avg;
+      const origY =
+        chosen.base_own_XGC_avg != null ? chosen.base_own_XGC_avg : chosen.own_XGC_avg;
+
+      out.push({
+        team_name: teamName,
+        own_XG_avg: chosen.own_XG_avg,
+        own_XGC_avg: chosen.own_XGC_avg,
+        orig_XG_avg: origX,
+        orig_XGC_avg: origY,
+        logo: teamLogos[teamName] || null,
+      });
+    }
+
+    return out;
+  }, [data, adjustScope, selectedGW]);
 
   // Table data: gws, teams, rowMap, totals per team
   const tableData = useMemo(() => {
@@ -146,7 +203,9 @@ function TeamAdjustmentsPage() {
         if (Number.isFinite(gw)) gwSet.add(gw);
       }
     }
-    const gws = Array.from(gwSet).sort((a, b) => a - b);
+    const gws = Array.from(gwSet)
+      .filter((gw) => Number.isFinite(gw) && gw >= 1 && gw <= 38)
+      .sort((a, b) => a - b);
 
     const key = (team, gw) => `${team}__${gw}`;
 
@@ -233,35 +292,42 @@ function TeamAdjustmentsPage() {
 
   // When user drags a team in the scatter
   const handleTeamDrag = (teamName, newXg, newXgc) => {
+    const useGwScope =
+      ENABLE_GW_ADJUST &&
+      adjustScope === "gw" &&
+      Number.isFinite(Number(selectedGW));
+
+    if (ENABLE_GW_ADJUST && adjustScope === "gw" && !useGwScope) return;
+
     setData((prev) => {
-      const target = normalizeName(teamName);
-
-      const updated = prev.map((r) => {
-        const clone = { ...r };
-        const ownName = normalizeName(clone.team_name);
-        const oppName = normalizeName(clone.opponent_team);
-
-        const base_own_XG_avg = clone.base_own_XG_avg != null ? clone.base_own_XG_avg : clone.own_XG_avg;
-        const base_own_XGC_avg = clone.base_own_XGC_avg != null ? clone.base_own_XGC_avg : clone.own_XGC_avg;
-
-        if (ownName === target) {
-          clone.own_XG_avg = newXg;
-          clone.own_XGC_avg = newXgc;
-        }
-
-        if (oppName === target) {
-          clone.opponent_XG_avg = newXg;
-          clone.opponent_XGC_avg = newXgc;
-        }
-
-        return { ...clone, base_own_XG_avg, base_own_XGC_avg };
-      });
+      const updated = applyTeamStrengthAdjustments(
+        prev,
+        teamName,
+        newXg,
+        newXgc,
+        useGwScope ? "gw" : "all",
+        useGwScope ? Number(selectedGW) : null
+      );
 
       const withMetrics = recomputeMetrics(updated);
       updateTeamData(withMetrics);
       return withMetrics;
     });
   };
+
+  useEffect(() => {
+    const gws = tableData?.gws || [];
+    if (!gws.length) {
+      setSelectedGW(null);
+      return;
+    }
+
+    setSelectedGW((prev) => {
+      const prevNum = Number(prev);
+      if (Number.isFinite(prevNum) && gws.includes(prevNum)) return prevNum;
+      return gws[0];
+    });
+  }, [tableData?.gws]);
 
   // Reset button: refetch and reset
   const handleReset = async () => {
@@ -345,8 +411,8 @@ function TeamAdjustmentsPage() {
                 maxWidth: "640px",
               }}
             >
-              Drag a team in the scatter plot to adjust its <b>Offensive</b> and <b>Defensive</b> strength. All fixtures
-              update automatically for that team and its opponents.
+              Drag a team in the scatter plot to adjust its <b>Offensive</b> and <b>Defensive</b> strength. Use
+              <b> Adjustment Scope</b> and <b> GW selector</b> to update the full horizon or a single GW.
             </p>
           </div>
 
@@ -373,6 +439,91 @@ function TeamAdjustmentsPage() {
         </div>
       </header>
 
+      {ENABLE_GW_ADJUST && (
+        <section
+          style={{
+            marginBottom: "1rem",
+            borderRadius: 14,
+            border: "1px solid #d5dee9",
+            background: "#ffffff",
+            padding: "10px 14px",
+            boxShadow: "0 10px 22px rgba(15,23,42,0.06)",
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "center",
+            gap: 10,
+          }}
+        >
+          <span style={{ fontSize: 12, color: "#64748b", fontWeight: 600 }}>Adjustment Scope</span>
+          <div style={{ display: "inline-flex", border: "1px solid #cbd5e1", borderRadius: 999, overflow: "hidden" }}>
+            <button
+              type="button"
+              onClick={() => setAdjustScope("all")}
+              style={{
+                padding: "5px 10px",
+                fontSize: 12,
+                border: "none",
+                background: adjustScope === "all" ? "rgba(61,120,108,0.16)" : "#f8fafc",
+                color: adjustScope === "all" ? "#1f5f55" : "#334155",
+                cursor: "pointer",
+                fontWeight: 600,
+              }}
+            >
+              All GWs
+            </button>
+            <button
+              type="button"
+              onClick={() => setAdjustScope("gw")}
+              style={{
+                padding: "5px 10px",
+                fontSize: 12,
+                border: "none",
+                borderLeft: "1px solid #cbd5e1",
+                background: adjustScope === "gw" ? "rgba(61,120,108,0.16)" : "#f8fafc",
+                color: adjustScope === "gw" ? "#1f5f55" : "#334155",
+                cursor: "pointer",
+                fontWeight: 600,
+              }}
+            >
+              Selected GW
+            </button>
+          </div>
+
+          {adjustScope === "gw" && (
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 12, color: "#64748b", fontWeight: 600 }}>GW</span>
+              <select
+                value={selectedGW ?? ""}
+                onChange={(e) => setSelectedGW(Number(e.target.value))}
+                style={{
+                  border: "1px solid #cbd5e1",
+                  borderRadius: 8,
+                  background: "#f8fafc",
+                  color: "#1e293b",
+                  fontSize: 12,
+                  padding: "4px 8px",
+                  outline: "none",
+                }}
+              >
+                {tableData.gws.map((gw) => (
+                  <option key={gw} value={gw}>
+                    GW {gw}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <span style={{ fontSize: 12, color: "#64748b", flex: 1, minWidth: 240 }}>
+            {adjustScope === "all"
+              ? "Drag any team to update full-horizon strength (current behavior)."
+              : Number.isFinite(Number(selectedGW))
+              ? `Active target: GW ${selectedGW}. Drag any team in scatter to adjust only this GW.`
+              : "Select a GW above, then drag a team in scatter."}
+          </span>
+        </section>
+      )}
+
       <section style={{ marginTop: "0.5rem", marginBottom: "1.75rem" }}>
         <TeamScatterPlot teamPoints={teamPoints} onTeamDrag={handleTeamDrag} />
       </section>
@@ -381,7 +532,10 @@ function TeamAdjustmentsPage() {
         <h2 style={{ marginBottom: "0.75rem", fontSize: "1rem", fontWeight: 600 }}>
           Fixture Table (XG &amp; CS per GW)
         </h2>
-        <FixturesTable tableData={tableData} />
+        <FixturesTable
+          tableData={tableData}
+          selectedGW={adjustScope === "gw" ? selectedGW : null}
+        />
       </section>
     </div>
   );
@@ -755,7 +909,7 @@ function DraggableDot({ cx = 0, cy = 0, payload, xAxis, yAxis, bounds, onTeamDra
 
 /* ========== Fixture table (UPDATED: horizon slider + sticky opaque columns) ========== */
 
-function FixturesTable({ tableData }) {
+function FixturesTable({ tableData, selectedGW = null }) {
   const { gws, teams, cellMap } = tableData;
 
   // ---------- FIXED column widths (must match sticky offsets) ----------
@@ -782,6 +936,9 @@ function FixturesTable({ tableData }) {
     Number.isFinite(val) ? `${(val * 100).toFixed(1)}%` : "-";
   const formatXG = (val) =>
     Number.isFinite(val) ? val.toFixed(2) : "-";
+  const toNumber = (v) => Number(v);
+  const isSelectedGW = (gw) =>
+    Number.isFinite(toNumber(selectedGW)) && toNumber(selectedGW) === toNumber(gw);
 
   // ✅ totals based ONLY on the selected horizon
   const totalsByTeamVisible = useMemo(() => {
@@ -851,11 +1008,11 @@ function FixturesTable({ tableData }) {
   return (
     <div
       style={{
-        borderRadius: 12,
-        border: `1px solid ${PALETTE.gold}`,
+        borderRadius: 14,
+        border: "1px solid #d5dee9",
         overflowX: "auto",
         background: "#ffffff",
-        boxShadow: "0 14px 28px rgba(15,23,42,0.12)",
+        boxShadow: "0 12px 24px rgba(15,23,42,0.08)",
       }}
     >
       {/* Sort buttons + horizon slider */}
@@ -865,9 +1022,9 @@ function FixturesTable({ tableData }) {
           display: "flex",
           gap: 10,
           alignItems: "center",
-          borderBottom: `1px solid ${PALETTE.gold}`,
+          borderBottom: "1px solid #d5dee9",
           background:
-            "linear-gradient(145deg, rgba(255,255,255,0.98), rgba(236,253,245,0.88))",
+            "linear-gradient(145deg, rgba(255,255,255,0.98), rgba(241,245,249,0.9))",
         }}
       >
         <span style={{ fontSize: 12, color: "#64748b" }}>Sort teams by:</span>
@@ -950,12 +1107,12 @@ function FixturesTable({ tableData }) {
                 width: COL_TEAM,
                 background: "#ffffff",
                 backgroundClip: "padding-box",
-                borderBottom: `1px solid ${PALETTE.gold}`,
+                borderBottom: "1px solid #d5dee9",
                 padding: "8px 10px",
                 textAlign: "left",
                 fontWeight: 700,
                 fontSize: 12,
-                boxShadow: "2px 0 0 rgba(148,163,184,0.35)", // ✅ hard edge after sticky cols
+                boxShadow: "2px 0 0 rgba(148,163,184,0.2)", // ✅ hard edge after sticky cols
               }}
             >
               Team
@@ -966,17 +1123,17 @@ function FixturesTable({ tableData }) {
                 key={gw}
                 onClick={() => toggleSort("gwXG", gw)}
                 style={{
-                  borderBottom: `1px solid ${PALETTE.gold}`,
+                  borderBottom: "1px solid #d5dee9",
                   padding: "8px 10px",
                   textAlign: "center",
-                  backgroundColor: "#ffffff",
+                  backgroundColor: isSelectedGW(gw) ? "#eff6ff" : "#ffffff",
                   fontWeight: 700,
                   fontSize: 12,
                   cursor: "pointer",
                   userSelect: "none",
                   color:
                     sortConfig.key === "gwXG" && sortConfig.gw === gw
-                      ? PALETTE.gold
+                      ? "#1f5f55"
                       : PALETTE.beige,
                 }}
               >
@@ -987,7 +1144,7 @@ function FixturesTable({ tableData }) {
             <th
               onClick={() => toggleSort("totalXG", null)}
               style={{
-                borderBottom: `1px solid ${PALETTE.gold}`,
+                borderBottom: "1px solid #d5dee9",
                 padding: "8px 10px",
                 textAlign: "center",
                 backgroundColor: "#ffffff",
@@ -995,7 +1152,7 @@ function FixturesTable({ tableData }) {
                 fontSize: 12,
                 cursor: "pointer",
                 userSelect: "none",
-                color: sortConfig.key === "totalXG" ? PALETTE.gold : PALETTE.beige,
+                color: sortConfig.key === "totalXG" ? "#1f5f55" : PALETTE.beige,
               }}
             >
               Total (horizon) {headerArrow("totalXG", null)}
@@ -1006,7 +1163,7 @@ function FixturesTable({ tableData }) {
         <tbody>
           {sortedTeams.map((team, rowIdx) => {
             const totals = totalsByTeamVisible[team] || { totalXG: 0, avgCS: 0 };
-            const rowBg = rowIdx % 2 === 0 ? "#ffffff" : "#f8fafc";
+            const rowBg = rowIdx % 2 === 0 ? "#ffffff" : "#fbfdff";
             const logoUrl = teamLogos[team];
 
             return (
@@ -1023,7 +1180,7 @@ function FixturesTable({ tableData }) {
                     padding: "6px 10px",
                     background: rowBg, // ✅ opaque
                     backgroundClip: "padding-box",
-                    boxShadow: "2px 0 0 rgba(148,163,184,0.35)", // ✅ no bleed edge
+                    boxShadow: "2px 0 0 rgba(148,163,184,0.2)", // ✅ no bleed edge
                   }}
                 >
                   <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
@@ -1037,7 +1194,7 @@ function FixturesTable({ tableData }) {
                           borderRadius: "999px",
                           objectFit: "contain",
                           backgroundColor: "#ffffff",
-                          border: `1px solid ${PALETTE.gold}`,
+                          border: "1px solid #c7d8d2",
                           flex: "0 0 auto",
                         }}
                       />
@@ -1048,7 +1205,7 @@ function FixturesTable({ tableData }) {
                           width: 24,
                           borderRadius: "999px",
                           background: "#27272a",
-                          border: `1px solid ${PALETTE.gold}`,
+                          border: "1px solid #c7d8d2",
                           flex: "0 0 auto",
                         }}
                       />
@@ -1094,10 +1251,21 @@ function FixturesTable({ tableData }) {
                     .map((e) => `${e.opp} (${Math.round(e.p * 100)}%) ${e.hav}`)
                     .join(" • ");
 
-                  let bg = "#ffffff";
-                  if (xgVal > 1.7) bg = "#dcfce7";
-                  else if (xgVal < 1.1) bg = "#fee2e2";
-                  else bg = "#fef3c7";
+                  let bg = "#f8fafc";
+                  let borderColor = "#d9e2ec";
+                  if (xgVal > 1.7) {
+                    bg = "#edfdf4";
+                    borderColor = "#bbf7d0";
+                  } else if (xgVal < 1.1) {
+                    bg = "#fff1f2";
+                    borderColor = "#fecdd3";
+                  } else {
+                    bg = "#fffbeb";
+                    borderColor = "#fde68a";
+                  }
+
+                  const lowScore = xgVal < 1.1;
+                  const lowCS = csVal < 0.3;
 
                   return (
                     <td
@@ -1106,16 +1274,21 @@ function FixturesTable({ tableData }) {
                         borderBottom: "1px solid #e2e8f0",
                         padding: "6px 10px",
                         textAlign: "center",
+                        backgroundColor: isSelectedGW(gw) ? "#f8fbff" : rowBg,
                       }}
                     >
                       <div
                         style={{
-                          borderRadius: 8,
-                          padding: "4px 6px",
+                          borderRadius: 10,
+                          padding: "5px 7px",
                           background: bg,
+                          border: isSelectedGW(gw)
+                            ? "1px solid #93c5fd"
+                            : `1px solid ${borderColor}`,
                           display: "flex",
                           flexDirection: "column",
-                          gap: 2,
+                          gap: 3,
+                          transition: "background-color 120ms ease, border-color 120ms ease",
                         }}
                       >
                         <span
@@ -1131,11 +1304,11 @@ function FixturesTable({ tableData }) {
                           {oppSummary || "—"}
                         </span>
 
-                        <span style={{ fontSize: 11, color: PALETTE.beige }}>
+                        <span style={{ fontSize: 11, color: lowScore ? "#b91c1c" : "#1e293b" }}>
                           Goals: {formatXG(xgVal)}
                         </span>
 
-                        <span style={{ fontSize: 11, color: PALETTE.beige }}>
+                        <span style={{ fontSize: 11, color: lowCS ? "#b91c1c" : "#1e293b" }}>
                           CS Odds: {formatCS(csVal)}
                         </span>
                       </div>
@@ -1150,7 +1323,7 @@ function FixturesTable({ tableData }) {
                     padding: "6px 10px",
                     textAlign: "center",
                     fontWeight: 600,
-                    color: PALETTE.gold,
+                    color: "#1f5f55",
                   }}
                 >
                   <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
@@ -1173,12 +1346,12 @@ function sortButtonStyle(active) {
   return {
     padding: "4px 10px",
     borderRadius: 999,
-    border: active ? `1px solid ${PALETTE.gold}` : "1px solid #4b5563",
-    background: active ? "rgba(118,175,160,0.18)" : "#f8fafc",
+    border: active ? "1px solid #9fc7bf" : "1px solid #cbd5e1",
+    background: active ? "rgba(61,120,108,0.12)" : "#f8fafc",
     cursor: "pointer",
     fontSize: 12,
     fontWeight: active ? 700 : 500,
-    color: PALETTE.beige,
+    color: active ? "#1f5f55" : "#334155",
     display: "inline-flex",
     alignItems: "center",
     gap: 4,
