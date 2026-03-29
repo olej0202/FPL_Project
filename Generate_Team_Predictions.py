@@ -1802,9 +1802,107 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
     
     team_pred1[["XG","XGC"]]=team_pred1[["XG","XGC"]]*0.3+team_pred2[["XG","XGC"]]*0.7
     team_pred1[["CS"]]=team_pred1[["CS"]]*0.4+team_pred2[["CS"]]*0.6
+
+    # Blend in simulator outcomes:
+    # final = 0.7 * original_prediction + 0.3 * simulated_result for XG and CS.
+    sim_path = "SImulator/match_outcomes_score_predictions.csv"
+    sim_df = None
+    try:
+        sim_df = pd.read_csv(sim_path)
+    except Exception as e:
+        print(f"[GenerateTeamPredictions] Simulator file not used ({sim_path}): {e}")
+
     team_pred1["Win_Percent"]=team_results["win_Percent"]
     team_pred1["Draw_percent"]=team_results["Draw_percent"]
     team_pred1["Loss_percent"]=team_results["Loss_percent"]
+
+    if sim_df is not None and not sim_df.empty:
+        required_sim_cols = [
+            "fixture_code",
+            "avg_home_goals",
+            "avg_away_goals",
+            "home_clean_sheet_pct",
+            "away_clean_sheet_pct",
+            "home_win_pct",
+            "draw_pct",
+            "away_win_pct",
+        ]
+        if all(c in sim_df.columns for c in required_sim_cols):
+            sim_use = sim_df[required_sim_cols].copy()
+            sim_use = sim_use.rename(
+                columns={
+                    "avg_home_goals": "sim_home_goals",
+                    "avg_away_goals": "sim_away_goals",
+                    "home_clean_sheet_pct": "sim_home_cs_pct",
+                    "away_clean_sheet_pct": "sim_away_cs_pct",
+                    "home_win_pct": "sim_home_win_pct",
+                    "draw_pct": "sim_draw_pct",
+                    "away_win_pct": "sim_away_win_pct",
+                }
+            )
+            sim_use["fixture_code"] = pd.to_numeric(sim_use["fixture_code"], errors="coerce")
+
+            team_pred1["fixture_code"] = pd.to_numeric(team_pred1["fixture_code"], errors="coerce")
+            team_pred1 = team_pred1.merge(sim_use, on="fixture_code", how="left")
+
+            is_home = team_pred1["Home"].astype(str).str.upper().str[0].eq("H")
+            sim_xg = pd.Series(
+                np.where(is_home, team_pred1["sim_home_goals"], team_pred1["sim_away_goals"]),
+                index=team_pred1.index,
+            )
+            sim_cs = pd.Series(
+                np.where(is_home, team_pred1["sim_home_cs_pct"], team_pred1["sim_away_cs_pct"]),
+                index=team_pred1.index,
+            ) / 100.0
+
+            xg_orig = pd.to_numeric(team_pred1["XG"], errors="coerce")
+            cs_orig = pd.to_numeric(team_pred1["CS"], errors="coerce")
+
+            team_pred1["XG"] = np.where(
+                sim_xg.notna(),
+                xg_orig * 0.7 + sim_xg * 0.3,
+                xg_orig,
+            )
+            team_pred1["CS"] = np.where(
+                sim_cs.notna(),
+                cs_orig * 0.7 + sim_cs * 0.3,
+                cs_orig,
+            )
+
+            sim_win = pd.Series(
+                np.where(is_home, team_pred1["sim_home_win_pct"], team_pred1["sim_away_win_pct"]),
+                index=team_pred1.index,
+            )
+            sim_draw = pd.to_numeric(team_pred1["sim_draw_pct"], errors="coerce")
+            sim_loss = pd.Series(
+                np.where(is_home, team_pred1["sim_away_win_pct"], team_pred1["sim_home_win_pct"]),
+                index=team_pred1.index,
+            )
+
+            # team_results are already percentages [0..100]
+            team_win = pd.to_numeric(team_results["win_Percent"], errors="coerce")
+            team_draw = pd.to_numeric(team_results["Draw_percent"], errors="coerce")
+            team_loss = pd.to_numeric(team_results["Loss_percent"], errors="coerce")
+
+            team_pred1["Win_Percent"] = np.where(sim_win.notna(), team_win * 0.7 + sim_win * 0.3, team_win)
+            team_pred1["Draw_percent"] = np.where(sim_draw.notna(), team_draw * 0.7 + sim_draw * 0.3, team_draw)
+            team_pred1["Loss_percent"] = np.where(sim_loss.notna(), team_loss * 0.7 + sim_loss * 0.3, team_loss)
+
+            drop_cols = [
+                "sim_home_goals",
+                "sim_away_goals",
+                "sim_home_cs_pct",
+                "sim_away_cs_pct",
+                "sim_home_win_pct",
+                "sim_draw_pct",
+                "sim_away_win_pct",
+            ]
+            team_pred1 = team_pred1.drop(columns=[c for c in drop_cols if c in team_pred1.columns])
+        else:
+            print(
+                "[GenerateTeamPredictions] Simulator file found but missing required columns. "
+                f"Expected: {required_sim_cols}"
+            )
 
     
     team_pred1.to_csv("Team_prediction.csv")
@@ -1819,6 +1917,70 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
     team_pred_visual1["Away_Win"]=team_results_visual["Away_win_Percent"]
     team_pred_visual1["Draw"]=team_results_visual["Draw_percent"]
 
+    # Apply the same 0.7/0.3 blend with simulator match outcomes for visual outputs.
+    if sim_df is not None and not sim_df.empty:
+        required_sim_cols = [
+            "fixture_code",
+            "avg_home_goals",
+            "avg_away_goals",
+            "home_clean_sheet_pct",
+            "away_clean_sheet_pct",
+            "home_win_pct",
+            "draw_pct",
+            "away_win_pct",
+        ]
+        if all(c in sim_df.columns for c in required_sim_cols):
+            sim_use = sim_df[required_sim_cols].copy()
+            sim_use = sim_use.rename(
+                columns={
+                    "avg_home_goals": "sim_home_goals",
+                    "avg_away_goals": "sim_away_goals",
+                    "home_clean_sheet_pct": "sim_home_cs_pct",
+                    "away_clean_sheet_pct": "sim_away_cs_pct",
+                    "home_win_pct": "sim_home_win_pct",
+                    "draw_pct": "sim_draw_pct",
+                    "away_win_pct": "sim_away_win_pct",
+                }
+            )
+            sim_use["fixture_code"] = pd.to_numeric(sim_use["fixture_code"], errors="coerce")
+            team_pred_visual1["fixture_code"] = pd.to_numeric(team_pred_visual1["fixture_code"], errors="coerce")
+            team_pred_visual1 = team_pred_visual1.merge(sim_use, on="fixture_code", how="left")
+
+            hg = pd.to_numeric(team_pred_visual1["home_goals"], errors="coerce")
+            ag = pd.to_numeric(team_pred_visual1["away_goals"], errors="coerce")
+            hcs = pd.to_numeric(team_pred_visual1["Clean_Sheet_home"], errors="coerce")
+            acs = pd.to_numeric(team_pred_visual1["Clean_Sheet_away"], errors="coerce")
+            sim_hg = pd.to_numeric(team_pred_visual1["sim_home_goals"], errors="coerce")
+            sim_ag = pd.to_numeric(team_pred_visual1["sim_away_goals"], errors="coerce")
+            sim_hcs = pd.to_numeric(team_pred_visual1["sim_home_cs_pct"], errors="coerce") / 100.0
+            sim_acs = pd.to_numeric(team_pred_visual1["sim_away_cs_pct"], errors="coerce") / 100.0
+
+            team_pred_visual1["home_goals"] = np.where(sim_hg.notna(), hg * 0.7 + sim_hg * 0.3, hg)
+            team_pred_visual1["away_goals"] = np.where(sim_ag.notna(), ag * 0.7 + sim_ag * 0.3, ag)
+            team_pred_visual1["Clean_Sheet_home"] = np.where(sim_hcs.notna(), hcs * 0.7 + sim_hcs * 0.3, hcs)
+            team_pred_visual1["Clean_Sheet_away"] = np.where(sim_acs.notna(), acs * 0.7 + sim_acs * 0.3, acs)
+
+            hw = pd.to_numeric(team_pred_visual1["Home_Win"], errors="coerce")
+            aw = pd.to_numeric(team_pred_visual1["Away_Win"], errors="coerce")
+            dw = pd.to_numeric(team_pred_visual1["Draw"], errors="coerce")
+            sim_hw = pd.to_numeric(team_pred_visual1["sim_home_win_pct"], errors="coerce")
+            sim_aw = pd.to_numeric(team_pred_visual1["sim_away_win_pct"], errors="coerce")
+            sim_dw = pd.to_numeric(team_pred_visual1["sim_draw_pct"], errors="coerce")
+
+            team_pred_visual1["Home_Win"] = np.where(sim_hw.notna(), hw * 0.7 + sim_hw * 0.3, hw)
+            team_pred_visual1["Away_Win"] = np.where(sim_aw.notna(), aw * 0.7 + sim_aw * 0.3, aw)
+            team_pred_visual1["Draw"] = np.where(sim_dw.notna(), dw * 0.7 + sim_dw * 0.3, dw)
+
+            drop_cols = [
+                "sim_home_goals",
+                "sim_away_goals",
+                "sim_home_cs_pct",
+                "sim_away_cs_pct",
+                "sim_home_win_pct",
+                "sim_draw_pct",
+                "sim_away_win_pct",
+            ]
+            team_pred_visual1 = team_pred_visual1.drop(columns=[c for c in drop_cols if c in team_pred_visual1.columns])
     team_pred_visual1.to_csv("Team_prediction_visual.csv")
     
     build_current_table_from_fixtures(fixture_path, current_team_path)
