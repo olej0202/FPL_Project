@@ -13,6 +13,8 @@ from Generate_Optimize_wildcardshocks import wildcard_optimize_team_shocks
 from GenerateXmins import GetXmins
 from GenerateConfig import Manual_min
 from GenerateDataset_Understat_Shots import Generate_Shots_data
+from GenerateSimulater import run_simulator as RunCoreSimulator
+from GenerateMatchSimulations import run_detailed_simulator as RunDetailedMatchSimulator
 
 
 
@@ -20,6 +22,7 @@ import pandas as pd
 import torch
 import torch.nn as nn
 from datetime import datetime
+from pathlib import Path
 
 from torch.utils.data import TensorDataset, DataLoader
 class DeepNN(nn.Module):
@@ -55,7 +58,49 @@ def Data_Transformation(n_points_in_future, current_fixture_path,current_player_
     GeneratePlayerData(time_list, current_fixture_path,current_player_path,current_team_path)
 
     
-def Data_Predictions(current_fixture_path,current_team_path, n_points_in_future,time_list):
+def Data_Predictions(current_fixture_path,current_player_path,current_team_path, n_points_in_future,time_list):
+    # Run both simulation engines first
+    sim_output_dir = Path("SImulator")
+    sim_output_dir.mkdir(parents=True, exist_ok=True)
+
+    fixture_path = Path(current_fixture_path)
+    team_path = Path(current_team_path)
+    player_path = Path(current_player_path)
+    team_history_path = Path("Team_data_transformed2.csv")
+    player_prediction_path = Path("Player_Prediction_set.csv")
+    player_history_path = Path("ML_training2.csv")
+
+    print("Running core match/player simulator...")
+    RunCoreSimulator(
+        fixture_path=fixture_path,
+        current_teams_path=team_path,
+        current_players_path=player_path,
+        team_history_path=team_history_path,
+        player_prediction_path=player_prediction_path,
+        player_history_path=player_history_path,
+        output_match_path=sim_output_dir / "match_outcomes_score_predictions.csv",
+        output_player_path=sim_output_dir / "player_outcomes_per_gw.csv",
+        simulations=5000,
+        seed=42,
+        horizon_gws=n_points_in_future,
+    )
+
+    print("Running detailed attack-turn simulator...")
+    RunDetailedMatchSimulator(
+        fixture_path=fixture_path,
+        current_teams_path=team_path,
+        current_players_path=player_path,
+        team_history_path=team_history_path,
+        player_prediction_path=player_prediction_path,
+        player_history_path=player_history_path,
+        output_match_path=sim_output_dir / "match_outcomes_score_predictions_detailed.csv",
+        output_player_path=sim_output_dir / "player_outcomes_per_gw_detailed.csv",
+        sample_match_path=sim_output_dir / "sample_detailed_match.txt",
+        simulations=3000,
+        seed=42,
+        horizon_gws=n_points_in_future,
+    )
+
     GenerateTeamPredictions( current_fixture_path,current_team_path, n_points_in_future)
     Make_Predictions()
     Generate_point_predictions(time_list)
@@ -121,7 +166,7 @@ def Main_Orchestration():
     Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos,Understat_path,Understat_shots_path)
     
     #Predict data
-    Data_Predictions(current_fixture_path,current_team_path, n_points_in_future,time_list)
+    Data_Predictions(current_fixture_path,current_player_path,current_team_path, n_points_in_future,time_list)
     
     Data_Generation(ownership,budget,GW_list_wildcard,GW_list_freehit,current_player_path,current_team_path,current_season_path )
     
