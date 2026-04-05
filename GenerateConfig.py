@@ -69,39 +69,36 @@ Manual_min=[
 NEW_TEAMS=[]
 NEW_TEAMS_NAME=[]
 fixtures_config = {
-        "2562201": [
-            {"gw": 38, "probability": 1},
-            {"gw": 31, "probability": 0},
-        ],
+        
         "2562226":[
-            {"gw": 34, "probability": 0.15},
-            {"gw": 33, "probability": 0.85},
+            {"gw": 34, "probability": 1.0},
+            {"gw": 33, "probability": 0.0},
             
         ],
         "2562227":[
-            {"gw": 34, "probability": 0.2},
-            {"gw": 33, "probability": 0.8},
+            {"gw": 34, "probability": 0},
+            {"gw": 33, "probability": 1},
             
         ],
-        "2562230":[
-            {"gw": 34, "probability": 0.65},
-            {"gw": 33, "probability": 0.35},
-        ],
+
         "2562228":[
-            {"gw": 34, "probability": 0.4},
-            {"gw": 33, "probability": 0.6},
+            {"gw": 34, "probability": 0},
+            {"gw": 33, "probability": 1},
         ],
         "2562201":[
             {"gw": 36, "probability": 0.8},
             {"gw": 38, "probability": 0.2},
         ],
         "2562225":[
-            {"gw": 34, "probability": 0.8},
-            {"gw": 33, "probability": 0.2},
-        ]
+            {"gw": 34, "probability": 0.5},
+            {"gw": 33, "probability": 0.5},
+        ],
+        "2562233":[
+            {"gw": 34, "probability": 0.5},
+            {"gw": 33, "probability": 0.5},
+        ] #Westham vs Everton
     }
 
-min_id=46805
 min_id=46805
 
 ai_id=7025308
