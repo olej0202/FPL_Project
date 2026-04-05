@@ -63,6 +63,7 @@ Manual_min=[
         {"name": "Piero_Hincapié", "type": "const",   "GW": "any", "value": 70},
         {"name": "Jurriën_Timber", "type": "const",   "GW": "any", "value": 90},
         {"name": "Gabriel_dos Santos Magalhães", "type": "const",   "GW": "any", "value": 90},
+        {"name": "Anton_Stach", "type": "const",   "GW": "any", "value": 70},
     ]
 
 
@@ -90,13 +91,9 @@ fixtures_config = {
             {"gw": 38, "probability": 0.2},
         ],
         "2562225":[
-            {"gw": 34, "probability": 0.5},
-            {"gw": 33, "probability": 0.5},
-        ],
-        "2562233":[
-            {"gw": 34, "probability": 0.5},
-            {"gw": 33, "probability": 0.5},
-        ] #Westham vs Everton
+            {"gw": 34, "probability": 0},
+            {"gw": 33, "probability": 1},
+        ]
     }
 
 min_id=46805
