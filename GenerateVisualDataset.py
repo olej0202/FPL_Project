@@ -427,7 +427,7 @@ def Player_adjustements(current_player_path):
             
         * (1 - df["player_risiko"])
         + df["player_risiko"] * df["Understat_POSXG_Share"]
-    )
+    )   
     
     df["Pos_Goal_Threat"]=df["Opp_Goal_Threat_Pos"]
     df["Pos_Assist_Threat"]=df["Opp_Assist_Threat_Pos"]

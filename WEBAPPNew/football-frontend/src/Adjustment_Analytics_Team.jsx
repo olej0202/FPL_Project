@@ -567,7 +567,6 @@ function recomputeMetrics(rows) {
       const B = oppXGC + oppDefE;
       xg = Math.exp(0.5 * (-3.15 + 1.485 * A + 1.503 * B - 0.174 * A * B));
     }
-
     let csProb;
 
     if (r.Home === "H") {

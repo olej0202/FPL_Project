@@ -618,6 +618,9 @@ export default function PlayerAdjustmentsPage() {
 
   const [activePlayerKey, setActivePlayerKey] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalChartMetric, setModalChartMetric] = useState("points");
+  const [comparisonSearch, setComparisonSearch] = useState("");
+  const [comparisonPlayerKey, setComparisonPlayerKey] = useState(null);
 
   const [pendingGoalShare, setPendingGoalShare] = useState(null);
   const [pendingAssistShare, setPendingAssistShare] = useState(null);
@@ -993,6 +996,115 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
     };
   }, [playersWithCalcs, teamsState, getPlayerKey, teamNamesByCode]);
 
+  const playerSummaryByKey = useMemo(() => {
+    const map = new Map();
+    for (const row of playerTableRowsBase) {
+      map.set(row.nameKey, row);
+    }
+    return map;
+  }, [playerTableRowsBase]);
+
+  const comparisonSearchResults = useMemo(() => {
+    if (!isModalOpen) return [];
+    const term = comparisonSearch.trim().toLowerCase();
+    if (!term) return [];
+
+    return playerTableRowsBase
+      .filter((row) => {
+        if (!row?.nameKey || row.nameKey === activePlayerKey) return false;
+        const display = String(row.displayName || "").toLowerCase();
+        const web = String(row.web_name || "").toLowerCase();
+        const full = String(row.name || "").toLowerCase();
+        return display.includes(term) || web.includes(term) || full.includes(term);
+      })
+      .slice(0, 8);
+  }, [isModalOpen, comparisonSearch, playerTableRowsBase, activePlayerKey]);
+
+  const comparisonSummary = useMemo(() => {
+    if (!comparisonPlayerKey) return null;
+    return playerSummaryByKey.get(comparisonPlayerKey) || null;
+  }, [comparisonPlayerKey, playerSummaryByKey]);
+
+  const comparisonBaselineRows = useMemo(() => {
+    if (!isModalOpen || !comparisonPlayerKey) return [];
+    return (playersByKey.get(comparisonPlayerKey) || []).map((r) => ({ ...r }));
+  }, [isModalOpen, comparisonPlayerKey, playersByKey]);
+
+  const comparisonChartDataMinutes = useMemo(() => {
+    if (!comparisonBaselineRows.length) return [];
+    return comparisonBaselineRows.map((row) => ({
+      GW: row.GW,
+      minutes: Math.max(
+        MIN_MINUTES,
+        Math.min(MAX_MINUTES, Number(row.average_minutes) || 0)
+      ),
+    }));
+  }, [comparisonBaselineRows]);
+
+  const comparisonDefconAdjust01 = useMemo(() => {
+    if (!comparisonBaselineRows.length) return null;
+
+    const stored = Number(comparisonBaselineRows[0]?.defcon_adjust_01);
+    if (Number.isFinite(stored)) return clamp01(stored);
+
+    const rawVals = comparisonBaselineRows.map((row) => {
+      const teamRow = teamLookup.get(`${String(row.Team)}_${row.GW}`);
+      const m = computeMeasures(row, teamRow);
+      return clamp01(Number(m._CBI01_Raw));
+    });
+
+    if (!rawVals.length) return null;
+    return rawVals.reduce((sum, v) => sum + v, 0) / rawVals.length;
+  }, [comparisonBaselineRows, teamLookup, computeMeasures]);
+
+  const comparisonChartDataPoints = useMemo(() => {
+    if (!comparisonBaselineRows.length) return [];
+
+    const rawSeries = comparisonBaselineRows.map((row) => {
+      const teamRow = teamLookup.get(`${String(row.Team)}_${row.GW}`);
+      const measures = computeMeasures(row, teamRow);
+      const raw01 = clamp01(Number(measures._CBI01_Raw));
+      return { GW: row.GW, raw01, teamRow, row };
+    });
+
+    const meanRaw = rawSeries.length
+      ? rawSeries.reduce((sum, entry) => sum + entry.raw01, 0) / rawSeries.length
+      : 0;
+
+    const targetAdj = comparisonDefconAdjust01 != null
+      ? clamp01(comparisonDefconAdjust01)
+      : clamp01(meanRaw);
+
+    return rawSeries.map(({ GW, raw01, teamRow, row }) => {
+      const adjusted01 = clamp01(raw01 - meanRaw + targetAdj);
+      const measures = computeMeasures(row, teamRow, adjusted01);
+      return {
+        GW,
+        points: measures.Points,
+        goals: measures.Goal_Scored,
+        assists: measures.Assists,
+        saves: measures.Save_Pred,
+        defcon: measures.CBI_Predictions,
+      };
+    });
+  }, [comparisonBaselineRows, teamLookup, computeMeasures, comparisonDefconAdjust01]);
+
+  const comparisonMinutesByGw = useMemo(() => {
+    const map = new Map();
+    comparisonChartDataMinutes.forEach((row) => {
+      map.set(Number(row.GW), Number(row.minutes) || 0);
+    });
+    return map;
+  }, [comparisonChartDataMinutes]);
+
+  const comparisonPointsByGw = useMemo(() => {
+    const map = new Map();
+    comparisonChartDataPoints.forEach((row) => {
+      map.set(Number(row.GW), Number(row[modalChartMetric]) || 0);
+    });
+    return map;
+  }, [comparisonChartDataPoints, modalChartMetric]);
+
   useEffect(() => {
     if (globalMinValue != null && globalMaxValue != null && valueThreshold === null) {
       setValueThreshold(globalMaxValue);
@@ -1188,6 +1300,9 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
   const closeModal = useCallback(() => {
     setIsModalOpen(false);
     setActivePlayerKey(null);
+    setModalChartMetric("points");
+    setComparisonSearch("");
+    setComparisonPlayerKey(null);
     setDraggingGW(null);
     dragGWRef.current = null;
     setPendingGoalShare(null);
@@ -1199,10 +1314,14 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
   }, []);
 
   const activePlayerFirstRow = modalBaselineRows.length > 0 ? modalBaselineRows[0] : null;
+  const comparisonFirstRow = comparisonBaselineRows.length > 0 ? comparisonBaselineRows[0] : null;
 
   useEffect(() => {
     if (!isModalOpen || !activePlayerKey) {
       setModalBaselineRows([]);
+      setModalChartMetric("points");
+      setComparisonSearch("");
+      setComparisonPlayerKey(null);
       setPendingGoalShare(null);
       setPendingAssistShare(null);
       setMinutesDraft({});
@@ -1284,6 +1403,10 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
       return {
         GW,
         points: measures.Points,
+        goals: measures.Goal_Scored,
+        assists: measures.Assists,
+        saves: measures.Save_Pred,
+        minutes: measures.Avg_Minutes,
         defcon: measures.CBI_Predictions,
       };
     });
@@ -1296,6 +1419,47 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
     defconAdjust01,
     computeMeasures,
   ]);
+
+  const modalMetricMeta = useMemo(() => {
+    switch (modalChartMetric) {
+      case "goals":
+        return {
+          label: "Goals",
+          emptyText: "No goal data for this player.",
+          helper: "Projected goals update live as you change minutes and shares.",
+          format: (v) => Number(v).toFixed(2),
+        };
+      case "assists":
+        return {
+          label: "Assists",
+          emptyText: "No assist data for this player.",
+          helper: "Projected assists update live as you change minutes and shares.",
+          format: (v) => Number(v).toFixed(2),
+        };
+      case "saves":
+        return {
+          label: "Saves",
+          emptyText: "No save data for this player.",
+          helper: "Projected saves update live as you change minutes and shares.",
+          format: (v) => Number(v).toFixed(2),
+        };
+      case "defcon":
+        return {
+          label: "Defcon",
+          emptyText: "No Defcon data for this player.",
+          helper: "Projected Defcon updates live as you change minutes and shares.",
+          format: (v) => `${Math.round((Number(v) || 0) * 100)}%`,
+        };
+      case "points":
+      default:
+        return {
+          label: "Points",
+          emptyText: "No point data for this player.",
+          helper: "Projected points update live as you change minutes and shares.",
+          format: (v) => Number(v).toFixed(2),
+        };
+    }
+  }, [modalChartMetric]);
 
   const logAdjustment = useCallback((entry) => {
     updateChanges((prev) => [
@@ -2192,52 +2356,236 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
                 </button>
               </div>
 
+              <div
+                className="mb-5 rounded-2xl p-4"
+                style={{
+                  border: `1px solid ${PALETTE.border}`,
+                  background: "rgba(255,255,255,0.96)",
+                }}
+              >
+                <div className="mb-2 flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <div
+                      className="text-xs font-semibold uppercase tracking-wide"
+                      style={{ color: PALETTE.gold }}
+                    >
+                      Comparison Player
+                    </div>
+                    <div className="text-xs" style={{ color: PALETTE.muted }}>
+                      Search and add one read-only player. Grey overlays show comparison values.
+                    </div>
+                  </div>
+
+                  {comparisonSummary ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setComparisonPlayerKey(null);
+                        setComparisonSearch("");
+                      }}
+                      className="rounded-full px-3 py-1 text-xs font-semibold"
+                      style={{
+                        border: `1px solid ${PALETTE.border}`,
+                        background: "#f8fafc",
+                        color: PALETTE.beige,
+                      }}
+                    >
+                      Clear
+                    </button>
+                  ) : null}
+                </div>
+
+                <div className="relative">
+                  <Search
+                    size={14}
+                    className="absolute left-3 top-1/2 -translate-y-1/2"
+                    style={{ color: PALETTE.muted }}
+                  />
+                  <input
+                    type="text"
+                    value={comparisonSearch}
+                    onChange={(e) => setComparisonSearch(e.target.value)}
+                    placeholder={
+                      comparisonSummary
+                        ? "Search to replace comparison..."
+                        : "Search player to compare..."
+                    }
+                    className="w-full rounded-xl py-2 pl-9 pr-3 text-sm outline-none"
+                    style={{
+                      border: `1px solid ${PALETTE.border}`,
+                      background: "#f8fafc",
+                      color: PALETTE.beige,
+                    }}
+                  />
+
+                  {comparisonSearch.trim().length > 0 && (
+                    <div
+                      className="absolute left-0 right-0 top-[calc(100%+6px)] z-20 max-h-56 overflow-y-auto rounded-xl"
+                      style={{
+                        border: `1px solid ${PALETTE.border}`,
+                        background: "#ffffff",
+                        boxShadow: "0 12px 24px rgba(15,23,42,0.12)",
+                      }}
+                    >
+                      {comparisonSearchResults.length === 0 ? (
+                        <div className="px-3 py-2 text-sm" style={{ color: PALETTE.muted }}>
+                          No matching players.
+                        </div>
+                      ) : (
+                        comparisonSearchResults.map((option) => (
+                          <button
+                            key={option.nameKey}
+                            type="button"
+                            onClick={() => {
+                              setComparisonPlayerKey(option.nameKey);
+                              setComparisonSearch("");
+                            }}
+                            className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm"
+                            style={{
+                              borderBottom: `1px solid ${PALETTE.border}`,
+                              color: PALETTE.beige,
+                              background: "#ffffff",
+                            }}
+                          >
+                            <span className="truncate">{option.displayName}</span>
+                            <span
+                              className="inline-flex items-center gap-1 text-xs"
+                              style={{ color: PALETTE.muted }}
+                            >
+                              <TeamColorDot teamName={option.teamName} />
+                              {option.teamName}
+                            </span>
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {comparisonSummary ? (
+                  <div
+                    className="mt-3 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs"
+                    style={{
+                      border: `1px solid ${PALETTE.border}`,
+                      background: "rgba(148,163,184,0.12)",
+                      color: "#475569",
+                    }}
+                  >
+                    <TeamColorDot teamName={comparisonSummary.teamName || ""} />
+                    Comparing with {comparisonSummary.displayName}
+                  </div>
+                ) : null}
+              </div>
+
               <div className="mb-5 grid grid-cols-1 gap-4 lg:grid-cols-3">
                 <FilterCard icon={CircleDot} label="Goal Share">
-                  <input
-                    type="range"
-                    min={0}
-                    max={1}
-                    step={0.01}
-                    value={pendingGoalShare ?? 0}
-                    onChange={(e) => scheduleGoalShareChange(Number(e.target.value))}
-                    className="w-full"
-                    style={{ accentColor: PALETTE.gold }}
-                  />
-                  <div className="mt-2 text-sm" style={{ color: "#64748b" }}>
-                    {Math.round((pendingGoalShare ?? 0) * 100)}%
+                  <div className="relative">
+                    <input
+                      type="range"
+                      min={0}
+                      max={1}
+                      step={0.01}
+                      value={pendingGoalShare ?? 0}
+                      onChange={(e) => scheduleGoalShareChange(Number(e.target.value))}
+                      className="w-full"
+                      style={{ accentColor: PALETTE.gold }}
+                    />
+                    {comparisonFirstRow ? (
+                      <div
+                        className="pointer-events-none absolute top-[46%] h-4 w-4 -translate-y-1/2 rounded-full border-2"
+                        style={{
+                          left: `calc(${Math.max(
+                            0,
+                            Math.min(100, (Number(comparisonFirstRow.Goal_share) || 0) * 100)
+                          )}% - 8px)`,
+                          background: "#cbd5e1",
+                          borderColor: "#64748b",
+                        }}
+                        title="Comparison player"
+                      />
+                    ) : null}
+                  </div>
+                  <div className="mt-2 flex items-center justify-between text-sm" style={{ color: "#64748b" }}>
+                    <span>{Math.round((pendingGoalShare ?? 0) * 100)}%</span>
+                    {comparisonFirstRow ? (
+                      <span style={{ color: "#94a3b8" }}>
+                        Compare {Math.round((Number(comparisonFirstRow.Goal_share) || 0) * 100)}%
+                      </span>
+                    ) : null}
                   </div>
                 </FilterCard>
 
                 <FilterCard icon={Footprints} label="Assist Share">
-                  <input
-                    type="range"
-                    min={0}
-                    max={1}
-                    step={0.01}
-                    value={pendingAssistShare ?? 0}
-                    onChange={(e) => scheduleAssistShareChange(Number(e.target.value))}
-                    className="w-full"
-                    style={{ accentColor: PALETTE.gold }}
-                  />
-                  <div className="mt-2 text-sm" style={{ color: "#64748b" }}>
-                    {Math.round((pendingAssistShare ?? 0) * 100)}%
+                  <div className="relative">
+                    <input
+                      type="range"
+                      min={0}
+                      max={1}
+                      step={0.01}
+                      value={pendingAssistShare ?? 0}
+                      onChange={(e) => scheduleAssistShareChange(Number(e.target.value))}
+                      className="w-full"
+                      style={{ accentColor: PALETTE.gold }}
+                    />
+                    {comparisonFirstRow ? (
+                      <div
+                        className="pointer-events-none absolute top-[46%] h-4 w-4 -translate-y-1/2 rounded-full border-2"
+                        style={{
+                          left: `calc(${Math.max(
+                            0,
+                            Math.min(100, (Number(comparisonFirstRow.Assist_share) || 0) * 100)
+                          )}% - 8px)`,
+                          background: "#cbd5e1",
+                          borderColor: "#64748b",
+                        }}
+                        title="Comparison player"
+                      />
+                    ) : null}
+                  </div>
+                  <div className="mt-2 flex items-center justify-between text-sm" style={{ color: "#64748b" }}>
+                    <span>{Math.round((pendingAssistShare ?? 0) * 100)}%</span>
+                    {comparisonFirstRow ? (
+                      <span style={{ color: "#94a3b8" }}>
+                        Compare {Math.round((Number(comparisonFirstRow.Assist_share) || 0) * 100)}%
+                      </span>
+                    ) : null}
                   </div>
                 </FilterCard>
 
                 <FilterCard icon={Shield} label="Defcon %">
-                  <input
-                    type="range"
-                    min={0}
-                    max={1}
-                    step={0.01}
-                    value={clamp01(defconAdjust01)}
-                    onChange={(e) => scheduleDefconChange(Number(e.target.value))}
-                    className="w-full"
-                    style={{ accentColor: PALETTE.gold }}
-                  />
-                  <div className="mt-2 text-sm" style={{ color: "#64748b" }}>
-                    {Math.round(clamp01(defconAdjust01) * 100)}%
+                  <div className="relative">
+                    <input
+                      type="range"
+                      min={0}
+                      max={1}
+                      step={0.01}
+                      value={clamp01(defconAdjust01)}
+                      onChange={(e) => scheduleDefconChange(Number(e.target.value))}
+                      className="w-full"
+                      style={{ accentColor: PALETTE.gold }}
+                    />
+                    {comparisonDefconAdjust01 != null ? (
+                      <div
+                        className="pointer-events-none absolute top-[46%] h-4 w-4 -translate-y-1/2 rounded-full border-2"
+                        style={{
+                          left: `calc(${Math.max(
+                            0,
+                            Math.min(100, clamp01(comparisonDefconAdjust01) * 100)
+                          )}% - 8px)`,
+                          background: "#cbd5e1",
+                          borderColor: "#64748b",
+                        }}
+                        title="Comparison player"
+                      />
+                    ) : null}
+                  </div>
+                  <div className="mt-2 flex items-center justify-between text-sm" style={{ color: "#64748b" }}>
+                    <span>{Math.round(clamp01(defconAdjust01) * 100)}%</span>
+                    {comparisonDefconAdjust01 != null ? (
+                      <span style={{ color: "#94a3b8" }}>
+                        Compare {Math.round(clamp01(comparisonDefconAdjust01) * 100)}%
+                      </span>
+                    ) : null}
                   </div>
                 </FilterCard>
               </div>
@@ -2301,8 +2649,30 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
                           return { x, y, gw: d.GW, minutes: d.minutes };
                         });
 
+                        const comparisonPoints = points
+                          .map((p) => {
+                            const compareMinutes = comparisonMinutesByGw.get(Number(p.gw));
+                            if (!Number.isFinite(compareMinutes)) return null;
+                            const ratio =
+                              (compareMinutes - MIN_MINUTES) /
+                              (MAX_MINUTES - MIN_MINUTES || 1);
+                            const y = height - padding - ratio * (height - 2 * padding);
+                            return { ...p, compareMinutes, y };
+                          })
+                          .filter(Boolean);
+
                         return (
                           <>
+                            {comparisonPoints.length > 0 ? (
+                              <polyline
+                                points={comparisonPoints.map((p) => `${p.x},${p.y}`).join(" ")}
+                                fill="none"
+                                stroke="#94a3b8"
+                                strokeWidth="2"
+                                strokeDasharray="5 4"
+                                opacity="0.8"
+                              />
+                            ) : null}
                             <polyline
                               points={points.map((p) => `${p.x},${p.y}`).join(" ")}
                               fill="none"
@@ -2328,6 +2698,22 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
                                 >
                                   {p.gw}
                                 </text>
+                                {Number.isFinite(comparisonMinutesByGw.get(Number(p.gw))) ? (
+                                  <circle
+                                    cx={p.x}
+                                    cy={
+                                      height -
+                                      padding -
+                                      ((comparisonMinutesByGw.get(Number(p.gw)) - MIN_MINUTES) /
+                                        (MAX_MINUTES - MIN_MINUTES || 1)) *
+                                        (height - 2 * padding)
+                                    }
+                                    r={7}
+                                    fill="#cbd5e1"
+                                    stroke="#94a3b8"
+                                    strokeWidth="1.5"
+                                  />
+                                ) : null}
                                 <circle
                                   cx={p.x}
                                   cy={p.y}
@@ -2358,12 +2744,32 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
                 </div>
 
                 <div>
-                  <h3 className="mb-3 text-base font-semibold">Calculated points</h3>
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <h3 className="text-base font-semibold">
+                      Calculated {modalMetricMeta.label}
+                    </h3>
+                    <select
+                      value={modalChartMetric}
+                      onChange={(e) => setModalChartMetric(e.target.value)}
+                      className="rounded-xl px-2 py-1 text-xs font-semibold outline-none"
+                      style={{
+                        border: `1px solid ${PALETTE.border}`,
+                        background: "#f8fafc",
+                        color: PALETTE.beige,
+                      }}
+                    >
+                      <option value="points">Points</option>
+                      <option value="goals">Goals</option>
+                      <option value="assists">Assists</option>
+                      <option value="saves">Saves</option>
+                      <option value="defcon">Defcon</option>
+                    </select>
+                  </div>
                   <div className="mb-2 text-xs" style={{ color: PALETTE.muted }}>
-                    Projected points update live as you change minutes and shares.
+                    {modalMetricMeta.helper}
                   </div>
                   {chartDataPoints.length === 0 ? (
-                    <div className="text-sm">No point data for this player.</div>
+                    <div className="text-sm">{modalMetricMeta.emptyText}</div>
                   ) : (
                     <svg
                       width="100%"
@@ -2381,7 +2787,10 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
                         const width = 600;
                         const height = 280;
                         const n = chartDataPoints.length;
-                        const vals = chartDataPoints.map((d) => d.points);
+                        const vals = [
+                          ...chartDataPoints.map((d) => Number(d[modalChartMetric]) || 0),
+                          ...comparisonChartDataPoints.map((d) => Number(d[modalChartMetric]) || 0),
+                        ];
                         const minP = vals.length > 0 ? Math.min(...vals) : 0;
                         const maxP = vals.length > 0 ? Math.max(...vals) : 1;
                         const range = maxP - minP || 1;
@@ -2392,13 +2801,34 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
                             (n === 1
                               ? (width - 2 * padding) / 2
                               : (i / (n - 1)) * (width - 2 * padding));
-                          const ratio = (d.points - minP) / range;
+                          const value = Number(d[modalChartMetric]) || 0;
+                          const ratio = (value - minP) / range;
                           const y = height - padding - ratio * (height - 2 * padding);
-                          return { x, y, gw: d.GW, points: d.points };
+                          return { x, y, gw: d.GW, value };
                         });
+
+                        const comparisonPoints = points
+                          .map((p) => {
+                            const comparePoints = comparisonPointsByGw.get(Number(p.gw));
+                            if (!Number.isFinite(comparePoints)) return null;
+                            const ratio = (comparePoints - minP) / range;
+                            const y = height - padding - ratio * (height - 2 * padding);
+                            return { ...p, comparePoints, y };
+                          })
+                          .filter(Boolean);
 
                         return (
                           <>
+                            {comparisonPoints.length > 0 ? (
+                              <polyline
+                                points={comparisonPoints.map((p) => `${p.x},${p.y}`).join(" ")}
+                                fill="none"
+                                stroke="#94a3b8"
+                                strokeWidth="2"
+                                strokeDasharray="5 4"
+                                opacity="0.85"
+                              />
+                            ) : null}
                             <polyline
                               points={points.map((p) => `${p.x},${p.y}`).join(" ")}
                               fill="none"
@@ -2424,6 +2854,21 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
                                 >
                                   {p.gw}
                                 </text>
+                                {Number.isFinite(comparisonPointsByGw.get(Number(p.gw))) ? (
+                                  <circle
+                                    cx={p.x}
+                                    cy={
+                                      height -
+                                      padding -
+                                      ((comparisonPointsByGw.get(Number(p.gw)) - minP) / range) *
+                                        (height - 2 * padding)
+                                    }
+                                    r={4}
+                                    fill="#cbd5e1"
+                                    stroke="#94a3b8"
+                                    strokeWidth="1.5"
+                                  />
+                                ) : null}
                                 <circle
                                   cx={p.x}
                                   cy={p.y}
@@ -2439,7 +2884,7 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
                                   textAnchor="middle"
                                   fill={PALETTE.beige}
                                 >
-                                  {Number(p.points).toFixed(2)}
+                                  {modalMetricMeta.format(p.value)}
                                 </text>
                               </g>
                             ))}
@@ -2450,6 +2895,7 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
                   )}
                 </div>
               </div>
+
             </GlassCard>
           </div>
         )}

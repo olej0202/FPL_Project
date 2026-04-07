@@ -1060,9 +1060,9 @@ def team_transformed2():
     global_avg_xgc = float(team_df["XGC_avg"].mean())
 
     # params
-    k_off_1, k_def_1 = 0.065, 0.065
-    k_off_2, k_def_2 = 0.1, 0.1
-    min_val = 1
+    k_off_1, k_def_1 = 0.08, 0.08
+    k_off_2, k_def_2 = 0.15, 0.15
+    min_val = 0.8
     OBS_LO, OBS_HI = 0.5, 3.5
     error_split = 0.5
 
