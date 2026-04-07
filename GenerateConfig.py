@@ -45,7 +45,6 @@ Manual_Player_Adjustments={
 Manual_Player_Risk={
         "Alexander_Isak":0.6,
         "Yoane_Wissa":0.8,
-        "Antoine_Semenyo":0.5,     
         "Tammy_Abraham":0.8,
         "Jørgen_Strand Larsen":0.7,        
 }
@@ -61,9 +60,10 @@ Manual_min=[
         {"name": "Melker_Ellborg", "type": "adjust_from",   "GW": "34", "value": 0},
         {"name": "Robert_Sánchez", "type": "const",   "GW": "any", "value": 70},
         {"name": "Piero_Hincapié", "type": "const",   "GW": "any", "value": 70},
-        {"name": "Jurriën_Timber", "type": "const",   "GW": "any", "value": 90},
         {"name": "Gabriel_dos Santos Magalhães", "type": "const",   "GW": "any", "value": 90},
-        {"name": "Anton_Stach", "type": "const",   "GW": "any", "value": 70},
+        {"name": "Mitoma_Kaoru", "type": "const",   "GW": "any", "value": 70},
+        {"name": "Robert_Sánchez", "type": "const",   "GW": "any", "value": 70},
+
     ]
 
 

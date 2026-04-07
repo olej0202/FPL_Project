@@ -150,7 +150,7 @@ def _add_rolling_features(
     df["pct_ge60_5"] = (
         df.groupby(id_col)["minutes"]
         .shift(1)
-        .ge(60)
+        .ge(58)
         .rolling(window=5, min_periods=1)
         .mean()
         .reset_index(level=0, drop=True)
@@ -159,7 +159,7 @@ def _add_rolling_features(
     df["pct_ge60_l20"] = (
         df.groupby(id_col)["minutes"]
         .shift(1)
-        .ge(60)
+        .ge(58)
         .rolling(window=lookback, min_periods=1)
         .mean()
         .reset_index(level=0, drop=True)
@@ -216,8 +216,8 @@ def _time_split_masks(df: pd.DataFrame, time_col: str = "kickoff_time", quantile
 
 def _train_xgb_binary(X_train: pd.DataFrame, y_train: pd.Series) -> XGBClassifier:
     model = XGBClassifier(
-        n_estimators=200,
-        max_depth=4,
+        n_estimators=150,
+        max_depth=5,
         learning_rate=0.05,
         reg_lambda=1.0,
         objective="binary:logistic",
