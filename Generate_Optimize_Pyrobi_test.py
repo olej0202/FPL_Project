@@ -351,11 +351,15 @@ def optimize_my_team(
 
     m.I = pyo.Set(initialize=I)
     m.T = pyo.Set(initialize=T)
+    m.BS = pyo.Set(initialize=[0, 1, 2, 3])  # bench slots: 0=GK2, 1/2/3=outfield bench order
     m.DEF = pyo.Set(initialize=def_indices)
     m.GK = pyo.Set(initialize=gk_indices)
     m.MID = pyo.Set(initialize=mid_indices)
     m.FWD = pyo.Set(initialize=fwd_indices)
     m.OUT = pyo.Set(initialize=outfield_indices)
+
+    bench_slot_weights = {0: 0.04, 1: 0.10, 2: 0.05, 3: 0.02}
+    bench_slot_bb_extra = {s: 1.0 - w for s, w in bench_slot_weights.items()}
 
     cost_dict = {i: float(costs[i]) for i in I}
     sell_dict = {i: float(list1[i]) for i in I}
@@ -372,6 +376,7 @@ def optimize_my_team(
     # Real squad vars
     m.x = pyo.Var(m.I, m.T, domain=pyo.Binary)
     m.bench = pyo.Var(m.I, m.T, domain=pyo.Binary)
+    m.bench_slot = pyo.Var(m.I, m.T, m.BS, domain=pyo.Binary)
     m.c = pyo.Var(m.I, m.T, domain=pyo.Binary)
     m.y = pyo.Var(m.I, m.T, domain=pyo.Binary)
 
@@ -387,6 +392,7 @@ def optimize_my_team(
     if use_freehit:
         m.fh_x = pyo.Var(m.I, domain=pyo.Binary)
         m.fh_bench = pyo.Var(m.I, domain=pyo.Binary)
+        m.fh_bench_slot = pyo.Var(m.I, m.BS, domain=pyo.Binary)
         m.fh_y = pyo.Var(m.I, domain=pyo.Binary)
         m.fh_c = pyo.Var(m.I, domain=pyo.Binary)
         m.fh_in = pyo.Var(m.I, domain=pyo.Binary)
@@ -405,14 +411,22 @@ def optimize_my_team(
     for t in T:
         if use_freehit and t == fh_t:
             points_expr += sum(
-                (m.fh_y[i] + m.fh_c[i] + 0.1 * m.fh_bench[i]) * m.pred[i, t]
+                (m.fh_y[i] + m.fh_c[i]) * m.pred[i, t]
                 for i in I
+            )
+            points_expr += sum(
+                bench_slot_weights[s] * m.fh_bench_slot[i, s] * m.pred[i, t]
+                for i in I for s in m.BS
             )
             risk_expr += sum(m.fh_x[i] * m.risk[i] for i in I)
         else:
             points_expr += sum(
-                (m.y[i, t] + m.c[i, t] + 0.1 * m.bench[i, t]) * m.pred[i, t]
+                (m.y[i, t] + m.c[i, t]) * m.pred[i, t]
                 for i in I
+            )
+            points_expr += sum(
+                bench_slot_weights[s] * m.bench_slot[i, t, s] * m.pred[i, t]
+                for i in I for s in m.BS
             )
             risk_expr += sum(m.y[i, t] * m.risk[i] for i in I)
 
@@ -426,9 +440,15 @@ def optimize_my_team(
     bench_boost_expr = 0
     if bench_points_gw in T:
         if use_freehit and bench_points_gw == fh_t:
-            bench_boost_expr += sum(m.fh_bench[i] * m.pred[i, bench_points_gw] for i in I)
+            bench_boost_expr += sum(
+                bench_slot_bb_extra[s] * m.fh_bench_slot[i, s] * m.pred[i, bench_points_gw]
+                for i in I for s in m.BS
+            )
         else:
-            bench_boost_expr += sum(m.bench[i, bench_points_gw] * m.pred[i, bench_points_gw] for i in I)
+            bench_boost_expr += sum(
+                bench_slot_bb_extra[s] * m.bench_slot[i, bench_points_gw, s] * m.pred[i, bench_points_gw]
+                for i in I for s in m.BS
+            )
 
     base_obj_expr = points_expr + transfer_penalty_expr + hit_penalty_expr + bench_boost_expr
 
@@ -500,10 +520,15 @@ def optimize_my_team(
             m.lineup_con.add(sum(m.fh_y[i] for i in m.FWD) >= 1)
             m.lineup_con.add(sum(m.fh_y[i] for i in m.FWD) <= 3)
 
-            m.lineup_con.add(sum(m.fh_bench[i] for i in m.GK) == 1)
-            m.lineup_con.add(sum(m.fh_bench[i] for i in m.OUT) == 3)
+            # Bench slots: 0 is GK2, 1/2/3 are outfield bench order.
+            m.lineup_con.add(sum(m.fh_bench_slot[i, 0] for i in m.GK) == 1)
+            m.lineup_con.add(sum(m.fh_bench_slot[i, 0] for i in m.OUT) == 0)
+            for s in [1, 2, 3]:
+                m.lineup_con.add(sum(m.fh_bench_slot[i, s] for i in m.OUT) == 1)
+                m.lineup_con.add(sum(m.fh_bench_slot[i, s] for i in m.GK) == 0)
 
             for i in I:
+                m.lineup_con.add(sum(m.fh_bench_slot[i, s] for s in m.BS) == m.fh_bench[i])
                 m.lineup_con.add(m.fh_bench[i] <= m.fh_x[i])
                 m.lineup_con.add(m.fh_y[i] <= m.fh_x[i])
                 m.lineup_con.add(m.fh_y[i] <= 1 - m.fh_bench[i])
@@ -523,10 +548,15 @@ def optimize_my_team(
         m.lineup_con.add(sum(m.y[i, t] for i in m.FWD) >= 1)
         m.lineup_con.add(sum(m.y[i, t] for i in m.FWD) <= 3)
 
-        m.lineup_con.add(sum(m.bench[i, t] for i in m.GK) == 1)
-        m.lineup_con.add(sum(m.bench[i, t] for i in m.OUT) == 3)
+        # Bench slots: 0 is GK2, 1/2/3 are outfield bench order.
+        m.lineup_con.add(sum(m.bench_slot[i, t, 0] for i in m.GK) == 1)
+        m.lineup_con.add(sum(m.bench_slot[i, t, 0] for i in m.OUT) == 0)
+        for s in [1, 2, 3]:
+            m.lineup_con.add(sum(m.bench_slot[i, t, s] for i in m.OUT) == 1)
+            m.lineup_con.add(sum(m.bench_slot[i, t, s] for i in m.GK) == 0)
 
         for i in I:
+            m.lineup_con.add(sum(m.bench_slot[i, t, s] for s in m.BS) == m.bench[i, t])
             m.lineup_con.add(m.bench[i, t] <= m.x[i, t])
             m.lineup_con.add(m.y[i, t] <= m.x[i, t])
             m.lineup_con.add(m.y[i, t] <= 1 - m.bench[i, t])
@@ -675,22 +705,23 @@ def optimize_my_team(
                     pts = float(predicted_points[i][t])
                     total += safe_value(m.fh_y[i]) * pts
                     total += safe_value(m.fh_c[i]) * pts
+                    for s in m.BS:
+                        total += bench_slot_weights[int(s)] * safe_value(m.fh_bench_slot[i, s]) * pts
 
-                    # Bench Boost on Free Hit week:
-                    # add the remaining 0.9 so bench gets full 1.0x points
                     if bench_points_gw in T and t == bench_points_gw:
-                        total += safe_value(m.fh_bench[i]) * 0.9 * pts
+                        for s in m.BS:
+                            total += bench_slot_bb_extra[int(s)] * safe_value(m.fh_bench_slot[i, s]) * pts
             else:
                 for i in I:
                     pts = float(predicted_points[i][t])
                     total += safe_value(m.y[i, t]) * pts
                     total += safe_value(m.c[i, t]) * pts
-                    total += safe_value(m.bench[i, t]) * 0.1 * pts
+                    for s in m.BS:
+                        total += bench_slot_weights[int(s)] * safe_value(m.bench_slot[i, t, s]) * pts
 
-                    # Bench Boost on normal week:
-                    # add the remaining 0.9 so bench gets full 1.0x points
                     if bench_points_gw in T and t == bench_points_gw:
-                        total += safe_value(m.bench[i, t]) * pts
+                        for s in m.BS:
+                            total += bench_slot_bb_extra[int(s)] * safe_value(m.bench_slot[i, t, s]) * pts
 
         return float(total - n_hits * 4 * 0.8)
 
@@ -733,17 +764,21 @@ def optimize_my_team(
                     pts = float(predicted_points[i][t])
                     gw_points += safe_value(m.fh_y[i]) * pts
                     gw_points += safe_value(m.fh_c[i]) * pts
-                    gw_points += safe_value(m.fh_bench[i]) * 0.1 * pts
+                    for s in m.BS:
+                        gw_points += bench_slot_weights[int(s)] * safe_value(m.fh_bench_slot[i, s]) * pts
                     if bench_points_gw in T and t == bench_points_gw:
-                        gw_points += safe_value(m.fh_bench[i]) * pts
+                        for s in m.BS:
+                            gw_points += bench_slot_bb_extra[int(s)] * safe_value(m.fh_bench_slot[i, s]) * pts
             else:
                 for i in I:
                     pts = float(predicted_points[i][t])
                     gw_points += safe_value(m.y[i, t]) * pts
                     gw_points += safe_value(m.c[i, t]) * pts
-                    gw_points += safe_value(m.bench[i, t]) * 0.1 * pts
+                    for s in m.BS:
+                        gw_points += bench_slot_weights[int(s)] * safe_value(m.bench_slot[i, t, s]) * pts
                     if bench_points_gw in T and t == bench_points_gw:
-                        gw_points += safe_value(m.bench[i, t]) * pts
+                        for s in m.BS:
+                            gw_points += bench_slot_bb_extra[int(s)] * safe_value(m.bench_slot[i, t, s]) * pts
 
             total += weight * gw_points
         return float(total)
@@ -753,6 +788,7 @@ def optimize_my_team(
             "x": {},
             "y": {},
             "bench": {},
+            "bench_slot": {},
             "c": {},
             "transfer_in": {},
             "transfer_out": {},
@@ -762,6 +798,8 @@ def optimize_my_team(
                 sol["x"][(i, t)] = int(round(safe_value(m.x[i, t])))
                 sol["y"][(i, t)] = int(round(safe_value(m.y[i, t])))
                 sol["bench"][(i, t)] = int(round(safe_value(m.bench[i, t])))
+                for s in m.BS:
+                    sol["bench_slot"][(i, t, int(s))] = int(round(safe_value(m.bench_slot[i, t, s])))
                 sol["c"][(i, t)] = int(round(safe_value(m.c[i, t])))
                 sol["transfer_in"][(i, t)] = int(round(safe_value(m.transfer_in[i, t])))
                 sol["transfer_out"][(i, t)] = int(round(safe_value(m.transfer_out[i, t])))
@@ -770,6 +808,7 @@ def optimize_my_team(
             sol["fh_x"] = {}
             sol["fh_y"] = {}
             sol["fh_bench"] = {}
+            sol["fh_bench_slot"] = {}
             sol["fh_c"] = {}
             sol["fh_in"] = {}
             sol["fh_out"] = {}
@@ -777,6 +816,8 @@ def optimize_my_team(
                 sol["fh_x"][i] = int(round(safe_value(m.fh_x[i])))
                 sol["fh_y"][i] = int(round(safe_value(m.fh_y[i])))
                 sol["fh_bench"][i] = int(round(safe_value(m.fh_bench[i])))
+                for s in m.BS:
+                    sol["fh_bench_slot"][(i, int(s))] = int(round(safe_value(m.fh_bench_slot[i, s])))
                 sol["fh_c"][i] = int(round(safe_value(m.fh_c[i])))
                 sol["fh_in"][i] = int(round(safe_value(m.fh_in[i])))
                 sol["fh_out"][i] = int(round(safe_value(m.fh_out[i])))
@@ -793,6 +834,9 @@ def optimize_my_team(
         for (i, t), val in sol.get("bench", {}).items():
             if i in I and t in T:
                 m.bench[i, t].value = val
+        for (i, t, s), val in sol.get("bench_slot", {}).items():
+            if i in I and t in T and s in m.BS:
+                m.bench_slot[i, t, s].value = val
         for (i, t), val in sol.get("c", {}).items():
             if i in I and t in T:
                 m.c[i, t].value = val
@@ -813,6 +857,9 @@ def optimize_my_team(
             for i, val in sol.get("fh_bench", {}).items():
                 if i in I:
                     m.fh_bench[i].value = val
+            for (i, s), val in sol.get("fh_bench_slot", {}).items():
+                if i in I and s in m.BS:
+                    m.fh_bench_slot[i, s].value = val
             for i, val in sol.get("fh_c", {}).items():
                 if i in I:
                     m.fh_c[i].value = val
