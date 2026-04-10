@@ -823,6 +823,9 @@ def Generate_point_predictions(GW_list):
     stat_card= Get_rows("STAT", "cards").sort_values(by=["GW", "opp_stat"])
     
     stat_saves=Get_rows("STAT", "Saves").sort_values(by=["GW", "opp_stat"])
+    
+    
+    simulation=pd.read_csv("SImulator\simtest_player_outcomes_upcoming.csv").sort_values(by=["event", "fixture_code"])
 
 
 
@@ -864,6 +867,8 @@ def Generate_point_predictions(GW_list):
         
         stat_saves_player= stat_saves[stat_saves["Name"]==player].sort_values(by=["GW", "opp_stat"])
         
+        simulation_player=simulation[simulation["player_name"]==player].sort_values(by=["event", "fixture_code"])
+
 
         overscore=max(0.9,player_data["Average_Overscore"].values[0])
         overscore=min(1.1,overscore)
@@ -887,9 +892,11 @@ def Generate_point_predictions(GW_list):
         saves=[]
 
         for i in range(len(player_data)):
+
             try:
                 goals.append((((xgb_goals_player["75"].values[i]*0.5+0.5*xgb_goals_player["25"].values[i])*0.2
-                         +stat_goals_player["pred"].values[i]*0.8
+                         +simulation_player["expected_goals"].values[i]*0.3
+                         +stat_goals_player["pred"].values[i]*0.5
                          +DNN_goals_player["pred"].values[i]*0.0
                          +CLUSTER_goals_player["pred"].values[i]*0.0))*overscore)
             except:
@@ -897,10 +904,11 @@ def Generate_point_predictions(GW_list):
 
             try:
 
-                assist.append((((xgb_assist_player["75"].values[i]*0.5+0.5*xgb_assist_player["25"].values[i])*0.15
-                                    +stat_assist_player["pred"].values[i]*0.75
+                assist.append((((xgb_assist_player["75"].values[i]*0.5+0.5*xgb_assist_player["25"].values[i])*0.2
+                                    +simulation_player["expected_assists"].values[i]*0.3
+                                    +stat_assist_player["pred"].values[i]*0.5
                                     +DNN_assist_player["pred"].values[i]*0
-                                    +historic_Assist*0.1
+                                    +historic_Assist*0
                                     +CLUSTER_assist_player["pred"].values[i]*0.0))*overassist)
             except:
                 assist.append(0)
