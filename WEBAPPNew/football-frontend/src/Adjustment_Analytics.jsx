@@ -33,6 +33,7 @@ export default function AdjustmentAnalytics() {
           <PlayCircle size={16} />
           Simulator
         </NavLink>
+
       </div>
 
       <Outlet />
