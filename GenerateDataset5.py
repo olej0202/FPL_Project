@@ -761,6 +761,7 @@ def _run_one_pass(
     def_rating_neutral_history = {t: [def_rating_neutral[t]] for t in teams}
     
     xg_pred_history = {t: [off_rating_neutral[t]] for t in teams}
+    xgc_pred_history= {t: [off_rating_neutral[t]] for t in teams}
 
     # ELO
     elo_rating = {t: 1000.0 for t in teams}
@@ -872,7 +873,7 @@ def _run_one_pass(
         def_rating_neutral_history[team].append(def_rating_neutral[team])
         
         xg_pred_history[team].append(exp_xg_n)
-
+        xgc_pred_history[team].append(exp_xgc_n)
         # split updates (home/away)
         if was_home == 1:
             team_off_h = off_rating_home[team]
@@ -1026,7 +1027,8 @@ def _run_one_pass(
         "elo_debug": elo_debug_rows,
         "err_xg": error_xg,
         "err_xgc": error_xgc,
-        "xg_preds": xg_pred_history
+        "xg_preds": xg_pred_history,
+        "xgc_preds":xgc_pred_history
     }
 
 
@@ -1095,6 +1097,7 @@ def team_transformed2():
     def_neutral_hist = _avg_histories(run1["def_neutral_hist"], run2["def_neutral_hist"], teams)
     
     xg_preds=_avg_histories(run1["xg_preds"], run2["xg_preds"], teams)
+    xgc_preds=_avg_histories(run1["xgc_preds"], run2["xgc_preds"], teams)
 
     elo_hist = _avg_histories(run1["elo_hist"], run2["elo_hist"], teams)
 
@@ -1156,6 +1159,8 @@ def team_transformed2():
         selected_team_df["Elo_Rating"] = elo_hist[team][:-1]
         selected_team_df["XG_pred"]=xg_preds[team][:-1]
         selected_team_df["XG_pred_rolling_error"] = ((selected_team_df["XG_pred"] - selected_team_df["XG"]).clip(lower=-0.5, upper=0.5).rolling(20, min_periods=10).mean().fillna(0))
+        selected_team_df["XGC_pred"]=xgc_preds[team][:-1]
+        selected_team_df["XGC_pred_rolling_error"] = ((selected_team_df["XGC_pred"] - selected_team_df["XGC"]).clip(lower=-0.5, upper=0.5).rolling(20, min_periods=10).mean().fillna(0))
         
 
         team_transformed_df = pd.concat([team_transformed_df, selected_team_df], ignore_index=True)
@@ -1192,6 +1197,7 @@ def team_transformed2():
         newest_selected_team_df["XGC_neutral_slope"] = slope_df["XGC_neutral_slope"].values[-1]   # NEW
         newest_selected_team_df["Elo_Rating"] = elo_hist[team][-1]
         newest_selected_team_df["XG_pred_rolling_error"] = selected_team_df["XG_pred_rolling_error"].iloc[-1]
+        newest_selected_team_df["XGC_pred_rolling_error"] = selected_team_df["XGC_pred_rolling_error"].iloc[-1]
 
         team_transformed_df_newest = pd.concat([team_transformed_df_newest, newest_selected_team_df], ignore_index=True)
 

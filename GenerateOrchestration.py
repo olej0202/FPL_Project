@@ -15,6 +15,10 @@ from GenerateConfig import Manual_min
 from GenerateDataset_Understat_Shots import Generate_Shots_data
 from GenerateSimulater import run_simulator as RunCoreSimulator
 from GenerateMatchSimulations import run_detailed_simulator as RunDetailedMatchSimulator
+from Generate_Full_Simulator import (
+    SimulationControlConfig as FullSimulatorControlConfig,
+    run_simulator_control as run_simulator_control,
+)
 
 
 
@@ -50,7 +54,7 @@ def Data_Extraction(season,is_new_season,has_been_error):
 
 
 def Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos,Understat_path,Understat_shots_path):
-    #main_Transform()
+    main_Transform()
     Generate_Understat_dataset(current_player_path,run_player_pos)
     Generate_Shots_data(Understat_path,Understat_shots_path,current_player_path,current_team_path)
     team_data(current_team_path)
@@ -69,6 +73,20 @@ def Data_Predictions(current_fixture_path,current_player_path,current_team_path,
     team_history_path = Path("Team_data_transformed2.csv")
     player_prediction_path = Path("Player_Prediction_set.csv")
     player_history_path = Path("ML_training2.csv")
+
+    # Trigger full simulator parameter optimization with all read paths passed in.
+    full_sim_control = FullSimulatorControlConfig(
+        team_history_path=team_history_path,
+        fixtures_path="Fantasy_season_Fixtures_EXPANDED.csv",
+        current_teams_path=team_path,
+        player_prediction_path=player_prediction_path,
+        player_history_path=player_history_path,
+        optimization_output_path=sim_output_dir / "simtest_parameter_search.csv",
+        optimization_best_output_path=sim_output_dir / "simtest_parameter_best.csv",
+        write_outputs=True,
+    )
+    print("Running full simulator parameter optimization...")
+    run_simulator_control(control_cfg=full_sim_control)
 
     print("Running core match/player simulator...")
     RunCoreSimulator(
@@ -163,10 +181,10 @@ def Main_Orchestration():
     
     
     #Transform data
-    #Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos,Understat_path,Understat_shots_path)
+    Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos,Understat_path,Understat_shots_path)
     
     #Predict data
-    #Data_Predictions(current_fixture_path,current_player_path,current_team_path, n_points_in_future,time_list)
+    Data_Predictions(current_fixture_path,current_player_path,current_team_path, n_points_in_future,time_list)
     
     Data_Generation(ownership,budget,GW_list_wildcard,GW_list_freehit,current_player_path,current_team_path,current_season_path )
     

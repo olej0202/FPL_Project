@@ -737,7 +737,7 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     fixture_data=pd.read_csv(fixture_path)[["event","team_a","team_h","finished"]]
     team_code_data=pd.read_csv(current_team_path)[["name","code","id"]]
 
-    team_data=pd.read_csv("Team_data_newest3.csv")[["code","XGA","XGCA","XGH","XGCH","XG_slope","XGC_slope","XG_avg","XGC_avg","Rolling_Threat","Rolling_Threat_Against","roll10_xpts","roll10_deep","Rolling_XG","Rolling_XGC","XG_pred_rolling_error"]]
+    team_data=pd.read_csv("Team_data_newest3.csv")[["code","XGA","XGCA","XGH","XGCH","XG_slope","XGC_slope","XG_avg","XGC_avg","Rolling_Threat","Rolling_Threat_Against","roll10_xpts","roll10_deep","Rolling_XG","Rolling_XGC","XG_pred_rolling_error","XGC_pred_rolling_error"]]
     team_data["Cluster"]=kmeans.predict(team_data[["XG_avg","XGC_avg"]].values)
     cluster_data=pd.read_csv("Team_cluster_data.csv")[["code_team","Cluster_opp","Cluster_XG","Cluster_XGC","Cluster_CS"]]
 
@@ -761,8 +761,8 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     predict_data["team_h"]=df_merged["code_y"].values
     predict_data["team_a_name"]=df_merged["name_x"].values
     predict_data["team_h_name"]=df_merged["name_y"].values
-    df_merged = predict_data.merge(team_data[["code","XGA","XGCA","XG_slope","XGC_slope","XG_avg","XGC_avg","Cluster","Rolling_Threat","Rolling_Threat_Against","roll10_xpts","roll10_deep","Rolling_XG","Rolling_XGC","XG_pred_rolling_error"]], left_on='team_a', right_on='code', how='left')  # Left join to keep all rows from df2
-    df_merged = df_merged.merge(team_data[["code","XGH","XGCH","XG_slope","XGC_slope","XG_avg","XGC_avg","Cluster","Rolling_Threat","Rolling_Threat_Against","roll10_xpts","roll10_deep","Rolling_XG","Rolling_XGC","XG_pred_rolling_error"]], left_on='team_h', right_on='code', how='left')  # Left join to keep all rows from df2
+    df_merged = predict_data.merge(team_data[["code","XGA","XGCA","XG_slope","XGC_slope","XG_avg","XGC_avg","Cluster","Rolling_Threat","Rolling_Threat_Against","roll10_xpts","roll10_deep","Rolling_XG","Rolling_XGC","XG_pred_rolling_error","XGC_pred_rolling_error"]], left_on='team_a', right_on='code', how='left')  # Left join to keep all rows from df2
+    df_merged = df_merged.merge(team_data[["code","XGH","XGCH","XG_slope","XGC_slope","XG_avg","XGC_avg","Cluster","Rolling_Threat","Rolling_Threat_Against","roll10_xpts","roll10_deep","Rolling_XG","Rolling_XGC","XG_pred_rolling_error","XGC_pred_rolling_error"]], left_on='team_h', right_on='code', how='left')  # Left join to keep all rows from df2
     df_merged = df_merged.merge(cluster_data, left_on=['code_x', 'Cluster_y'], right_on=['code_team', 'Cluster_opp'], how='left')  # Left join to keep all rows from df2
     df_merged = df_merged.rename(columns={
         'Cluster_XG': 'Cluster_XG_y',
@@ -844,7 +844,7 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     xg = proba1 @ weights
     
     new_input_XG["off_fac"]=new_input_XG["Own_XG"]*0.7+0.3*new_input_XG["Own_XG_avg"]-0.5*df_merged["XG_pred_rolling_error_y"]
-    new_input_XG["def_fac"]=new_input_XG["Opposition_XGC"]*0.7+0.3*new_input_XG["Opposition_XGC_avg"]
+    new_input_XG["def_fac"]=new_input_XG["Opposition_XGC"]*0.7+0.3*new_input_XG["Opposition_XGC_avg"]-0.5*df_merged["XGC_pred_rolling_error_x"]
     
          
     eta = (
@@ -858,7 +858,7 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     xg_stat_h = np.exp(0.5 * eta)
     
     new_input_XG2["off_fac"]=new_input_XG2["Own_XG"]*0.7+0.3*new_input_XG2["Own_XG_avg"]-0.5*df_merged["XG_pred_rolling_error_x"]
-    new_input_XG2["def_fac"]=new_input_XG2["Opposition_XGC"]*0.7+0.3*new_input_XG2["Opposition_XGC_avg"]
+    new_input_XG2["def_fac"]=new_input_XG2["Opposition_XGC"]*0.7+0.3*new_input_XG2["Opposition_XGC_avg"]-0.5*df_merged["XGC_pred_rolling_error_y"]
     eta2 = (-3.15
         + 1.485 * new_input_XG2["off_fac"]
         + 1.503 * new_input_XG2["def_fac"]
@@ -894,7 +894,7 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     css_stat_home = np.exp(
         -np.exp(
             -1.56
-            + 0.746 * new_input_XGC["Own_XGC"]
+            + 0.746 * (new_input_XGC["Own_XGC"]-0.5*df_merged["XGC_pred_rolling_error_y"])
             + 0.73 * (new_input_XGC["Opposition_XG"]+-0.5*df_merged["XG_pred_rolling_error_x"])
             - 0.079 * new_input_XGC["Own_XGC"] * new_input_XGC["Opposition_XG"]
         )
