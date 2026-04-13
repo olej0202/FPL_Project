@@ -503,11 +503,11 @@ def Generate_team_data():
                 if(XGC1==0):
                     XGCS.append(GC.values[k])
                 else:
-                    XGCS.append((GC.values[k]*0.3+XGC1*0.7))
+                    XGCS.append((GC.values[k]*0.2+XGC1*0.8))
                 if(XG1==0):
                     XGs.append(GS.values[k])
                 else:
-                    XGs.append((GS.values[k]*0.2+XG1*0.5+0.003*Threat.values[k]))
+                    XGs.append((GS.values[k]*0.15+XG1*0.65+0.002*Threat.values[k]))
                     
                 if(XG1==0):
                     XG2s.append(GS.values[k])
@@ -576,7 +576,7 @@ def Generate_team_data():
             New_team_df["ict_index"]=ict_index.values
             
             New_team_df["Threat_against"]=Threatagainst['threat'].values
-            New_team_df["XGC"]=New_team_df["XGC"]*0.7+0.003*New_team_df["Threat_against"]
+            New_team_df["XGC"]=New_team_df["XGC"]*0.8+0.002*New_team_df["Threat_against"]
             New_team_df["Defcon_against"]=Defconagainst['defensive_contribution'].values
             New_team_df["Defcon_against"]=New_team_df['Defcon_against'].clip(lower=0, upper=100)
             New_team_df["Saves_against"]=Savesagainst['saves'].values
