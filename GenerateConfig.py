@@ -50,7 +50,6 @@ Manual_Player_Risk={
 }
 
 Manual_min=[
-        {"name": "Jean-Philippe_Mateta", "type": "const",   "GW": "any", "value": 0},
         #Afcon
         {"name": "Amad_Diallo", "type": "const",   "GW": "any", "value": 75},
         {"name": "Viktor_Gyökeres", "type": "const",   "GW": "any", "value": 75},

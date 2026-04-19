@@ -351,9 +351,75 @@ def get_league_and_player_data(
     shots_df.to_csv(f"Raw_Data_{season}/Understat_data_shots.csv")
 
 
+import pandas as pd
+import numpy as np
+from pathlib import Path
+
+class FootballDataLoader:
+    """
+    Historical football match data loader.
+    Source: football-data.co.uk
+    """
+
+    BASE_URL = "https://www.football-data.co.uk/mmz4281"
+
+    LEAGUES = {
+        "E0": "Premier League",
+    }
+
+    COLUMNS_TO_KEEP = [
+        "Date", "HomeTeam", "AwayTeam",
+        "FTHG", "FTAG", "FTR",       # Final score and result
+        "HTHG", "HTAG", "HTR",       # Half-time score
+        "HS", "AS",                   # Shots
+        "HST", "AST",                 # Shots on target
+        "HF", "AF",                   # Fouls
+        "HC", "AC",                   # Corners
+        "HY", "AY",                   # Yellow cards
+        "HR", "AR",                   # Red cards
+        "B365H", "B365D", "B365A",   # Bet365 odds
+    ]
+
+    def __init__(self, seasons: list[str], leagues: list[str] = None):
+        self.seasons = seasons  # format: ["2324", "2223", "2122"]
+        self.leagues = leagues or list(self.LEAGUES.keys())
+
+    def load_season(self, league: str, season: str) -> pd.DataFrame:
+        """Load data for a single season and league."""
+        url = f"{self.BASE_URL}/{season}/{league}.csv"
+        try:
+            df = pd.read_csv(url, encoding="utf-8", on_bad_lines="skip")
+            available_cols = [c for c in self.COLUMNS_TO_KEEP if c in df.columns]
+            #df = df[available_cols].dropna(subset=["HomeTeam", "AwayTeam", "FTR"])
+            df["League"] = self.LEAGUES.get(league, league)
+            df["Season"] = season
+            return df
+        except Exception as e:
+            print(f"Error loading {league}/{season}: {e}")
+            return pd.DataFrame()
+
+    def load_all(self,season_path) -> pd.DataFrame:
+        """Load all data for specified leagues and seasons."""
+        frames = []
+        for league in self.leagues:
+            for season in self.seasons:
+                df = self.load_season(league, season)
+                if not df.empty:
+                    frames.append(df)
+                    print(f"  ✓ {self.LEAGUES.get(league)}, season {season}: "
+                          f"{len(df)} matches")
+        result = pd.concat(frames, ignore_index=True)
+        result.to_csv(f"Raw_Data_{season_path}/TeamBetting.csv")
+
+
 def main_Extract_Understat(season):
     #FullLoad(season)
-    get_league_and_player_data("EPL", season)
-    Add_index(season)
+    #get_league_and_player_data("EPL", season)
+    #Add_index(season)
+    loader = FootballDataLoader(
+        seasons=["2526","2425", "2324", "2223", "2122", "2021"],
+        leagues=["E0"]  # EPL, La Liga, Bundesliga
+    )
+    loader.load_all(season)
 if __name__ == "__main__":
     main_Extract_Understat(25)     
