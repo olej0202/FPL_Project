@@ -2787,6 +2787,7 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
                         const width = 600;
                         const height = 280;
                         const n = chartDataPoints.length;
+                        const innerWidth = width - 2 * padding;
                         const vals = [
                           ...chartDataPoints.map((d) => Number(d[modalChartMetric]) || 0),
                           ...comparisonChartDataPoints.map((d) => Number(d[modalChartMetric]) || 0),
@@ -2794,97 +2795,133 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
                         const minP = vals.length > 0 ? Math.min(...vals) : 0;
                         const maxP = vals.length > 0 ? Math.max(...vals) : 1;
                         const range = maxP - minP || 1;
+                        const yFromValue = (value) => {
+                          const ratio = ((Number(value) || 0) - minP) / range;
+                          return height - padding - ratio * (height - 2 * padding);
+                        };
+                        const zeroY = yFromValue(0);
+                        const hasComparisonSeries = comparisonChartDataPoints.length > 0;
+                        const slotWidth = n > 0 ? innerWidth / n : innerWidth;
+                        const groupWidth = slotWidth * 0.74;
+                        const barGap = hasComparisonSeries ? groupWidth * 0.12 : 0;
+                        const barWidth = hasComparisonSeries
+                          ? (groupWidth - barGap) / 2
+                          : groupWidth * 0.72;
 
-                        const points = chartDataPoints.map((d, i) => {
-                          const x =
-                            padding +
-                            (n === 1
-                              ? (width - 2 * padding) / 2
-                              : (i / (n - 1)) * (width - 2 * padding));
+                        const bars = chartDataPoints.map((d, i) => {
+                          const gw = Number(d.GW);
                           const value = Number(d[modalChartMetric]) || 0;
-                          const ratio = (value - minP) / range;
-                          const y = height - padding - ratio * (height - 2 * padding);
-                          return { x, y, gw: d.GW, value };
-                        });
+                          const compareValue = Number(comparisonPointsByGw.get(gw));
+                          const hasCompare = Number.isFinite(compareValue);
+                          const groupX = padding + i * slotWidth + (slotWidth - groupWidth) / 2;
 
-                        const comparisonPoints = points
-                          .map((p) => {
-                            const comparePoints = comparisonPointsByGw.get(Number(p.gw));
-                            if (!Number.isFinite(comparePoints)) return null;
-                            const ratio = (comparePoints - minP) / range;
-                            const y = height - padding - ratio * (height - 2 * padding);
-                            return { ...p, comparePoints, y };
-                          })
-                          .filter(Boolean);
+                          const mainTopY = Math.min(yFromValue(value), zeroY);
+                          const mainBottomY = Math.max(yFromValue(value), zeroY);
+                          const mainX = hasComparisonSeries
+                            ? groupX
+                            : groupX + (groupWidth - barWidth) / 2;
+
+                          const compareTopY = hasCompare
+                            ? Math.min(yFromValue(compareValue), zeroY)
+                            : null;
+                          const compareBottomY = hasCompare
+                            ? Math.max(yFromValue(compareValue), zeroY)
+                            : null;
+                          const compareX = groupX + barWidth + barGap;
+
+                          return {
+                            gw,
+                            value,
+                            xLabel: groupX + groupWidth / 2,
+                            main: {
+                              x: mainX,
+                              y: mainTopY,
+                              height: Math.max(1, mainBottomY - mainTopY),
+                            },
+                            compare: hasCompare
+                              ? {
+                                  value: compareValue,
+                                  x: compareX,
+                                  y: compareTopY,
+                                  height: Math.max(1, compareBottomY - compareTopY),
+                                }
+                              : null,
+                          };
+                        });
 
                         return (
                           <>
-                            {comparisonPoints.length > 0 ? (
-                              <polyline
-                                points={comparisonPoints.map((p) => `${p.x},${p.y}`).join(" ")}
-                                fill="none"
-                                stroke="#94a3b8"
-                                strokeWidth="2"
-                                strokeDasharray="5 4"
-                                opacity="0.85"
+                            {minP < 0 && maxP > 0 ? (
+                              <line
+                                x1={padding}
+                                y1={zeroY}
+                                x2={width - padding}
+                                y2={zeroY}
+                                stroke="#cbd5e1"
+                                strokeWidth="1"
+                                strokeDasharray="4 3"
                               />
                             ) : null}
-                            <polyline
-                              points={points.map((p) => `${p.x},${p.y}`).join(" ")}
-                              fill="none"
-                              stroke={PALETTE.gold}
-                              strokeWidth="2"
-                            />
-                            {points.map((p) => (
-                              <g key={p.gw}>
+                            {bars.map((b) => (
+                              <g key={b.gw}>
+                                {b.compare ? (
+                                  <rect
+                                    x={b.compare.x}
+                                    y={b.compare.y}
+                                    width={barWidth}
+                                    height={b.compare.height}
+                                    rx={3}
+                                    fill="#cbd5e1"
+                                    stroke="#94a3b8"
+                                    strokeWidth="1"
+                                  />
+                                ) : null}
+                                <rect
+                                  x={b.main.x}
+                                  y={b.main.y}
+                                  width={barWidth}
+                                  height={b.main.height}
+                                  rx={3}
+                                  fill={PALETTE.gold}
+                                  stroke={PALETTE.black}
+                                  strokeWidth="1"
+                                />
                                 <line
-                                  x1={p.x}
+                                  x1={b.xLabel}
                                   y1={height - padding}
-                                  x2={p.x}
+                                  x2={b.xLabel}
                                   y2={height - padding + 4}
                                   stroke="#555"
                                   strokeWidth="1"
                                 />
                                 <text
-                                  x={p.x}
+                                  x={b.xLabel}
                                   y={height - 5}
                                   fontSize="9"
                                   textAnchor="middle"
                                   fill="#64748b"
                                 >
-                                  {p.gw}
+                                  {b.gw}
                                 </text>
-                                {Number.isFinite(comparisonPointsByGw.get(Number(p.gw))) ? (
-                                  <circle
-                                    cx={p.x}
-                                    cy={
-                                      height -
-                                      padding -
-                                      ((comparisonPointsByGw.get(Number(p.gw)) - minP) / range) *
-                                        (height - 2 * padding)
-                                    }
-                                    r={4}
-                                    fill="#cbd5e1"
-                                    stroke="#94a3b8"
-                                    strokeWidth="1.5"
-                                  />
+                                {b.compare ? (
+                                  <text
+                                    x={b.compare.x + barWidth / 2}
+                                    y={b.compare.value >= 0 ? b.compare.y - 6 : b.compare.y + b.compare.height + 10}
+                                    fontSize="9"
+                                    textAnchor="middle"
+                                    fill="#64748b"
+                                  >
+                                    {modalMetricMeta.format(b.compare.value)}
+                                  </text>
                                 ) : null}
-                                <circle
-                                  cx={p.x}
-                                  cy={p.y}
-                                  r={6}
-                                  fill={PALETTE.gold}
-                                  stroke={PALETTE.black}
-                                  strokeWidth="2"
-                                />
                                 <text
-                                  x={p.x}
-                                  y={p.y - 10}
+                                  x={b.main.x + barWidth / 2}
+                                  y={b.value >= 0 ? b.main.y - 6 : b.main.y + b.main.height + 10}
                                   fontSize="9"
                                   textAnchor="middle"
                                   fill={PALETTE.beige}
                                 >
-                                  {modalMetricMeta.format(p.value)}
+                                  {modalMetricMeta.format(b.value)}
                                 </text>
                               </g>
                             ))}
