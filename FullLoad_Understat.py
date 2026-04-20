@@ -414,12 +414,12 @@ class FootballDataLoader:
 
 def main_Extract_Understat(season):
     #FullLoad(season)
-    #get_league_and_player_data("EPL", season)
-    #Add_index(season)
+    get_league_and_player_data("EPL", season)
+    Add_index(season)
     loader = FootballDataLoader(
         seasons=["2526","2425", "2324", "2223", "2122", "2021"],
         leagues=["E0"]  # EPL, La Liga, Bundesliga
     )
-    loader.load_all(season)
+    #loader.load_all(season)
 if __name__ == "__main__":
     main_Extract_Understat(25)     
