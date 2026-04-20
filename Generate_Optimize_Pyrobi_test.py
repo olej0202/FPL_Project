@@ -1,4 +1,4 @@
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, Callable
 import numpy as np
 import pandas as pd
 import pyomo.environ as pyo
@@ -164,12 +164,27 @@ def optimize_my_team(
     multi_solution_warmstart: bool = True,
     solution_decay: float = 0.92,
     min_solution_distance: int = 1,
+    force_in_list: Optional[list[str]] = None,
+    on_solution: Optional[Callable[[int, list[dict[str, Any]]], None]] = None,
 ) -> pd.DataFrame:
 
     if banned_list is None:
         banned_list = []
+    if force_in_list is None:
+        force_in_list = []
     if GW_list is None:
         GW_list = ["0", "8", "9", "10", "11", "12", "13", "14"]
+
+    force_in_list = [str(name).strip() for name in force_in_list if str(name).strip()]
+    banned_norm = {str(name).strip().lower() for name in banned_list if str(name).strip()}
+    conflicting_force_ban = sorted(
+        {name for name in force_in_list if name.lower() in banned_norm}
+    )
+    if conflicting_force_ban:
+        raise ValueError(
+            "Players cannot be both banned and forced in: "
+            + ", ".join(conflicting_force_ban)
+        )
 
     current_fixture_path = "Raw_Data_25/Fantasy_season_2025_Fixtures.csv"
     Last_GW = get_last_completed_gw(current_fixture_path)
@@ -259,6 +274,32 @@ def optimize_my_team(
 
     players = data["name"].astype(str).tolist()
     costs = data["value"].astype(float).tolist()
+
+    name_to_player_idx: dict[str, int] = {}
+    for idx, player_name in enumerate(players):
+        key = player_name.strip().lower()
+        if key and key not in name_to_player_idx:
+            name_to_player_idx[key] = idx
+
+    forced_transfer_indices: list[int] = []
+    missing_forced_players: list[str] = []
+    seen_forced = set()
+    for forced_name in force_in_list:
+        key = forced_name.strip().lower()
+        if not key or key in seen_forced:
+            continue
+        seen_forced.add(key)
+        idx = name_to_player_idx.get(key)
+        if idx is None:
+            missing_forced_players.append(forced_name)
+            continue
+        forced_transfer_indices.append(idx)
+
+    if missing_forced_players:
+        raise ValueError(
+            "Forced transfer-in player(s) not found in optimization set: "
+            + ", ".join(missing_forced_players)
+        )
 
     initial_squad = []
     for t in range(len(team_df)):
@@ -630,6 +671,28 @@ def optimize_my_team(
     for i in I:
         m.transfer_con.add(m.transfer_in[i, 0] == 0)
         m.transfer_con.add(m.transfer_out[i, 0] == 0)
+
+    # ---------------- Forced transfer-ins ----------------
+    if forced_transfer_indices:
+        transferable_gws = [
+            t for t in T
+            if t > 0 and not (use_freehit and t == fh_t)
+        ]
+        if not transferable_gws:
+            raise ValueError("No valid gameweeks available for forced transfer-ins.")
+
+        initial_squad_set = set(initial_squad)
+        m.forced_transfer_in_con = pyo.ConstraintList()
+        for i in forced_transfer_indices:
+            if i in initial_squad_set:
+                # If already owned, keep at least one valid future-week presence.
+                m.forced_transfer_in_con.add(
+                    sum(m.x[i, t] for t in transferable_gws) >= 1
+                )
+            else:
+                m.forced_transfer_in_con.add(
+                    sum(m.transfer_in[i, t] for t in transferable_gws) >= 1
+                )
 
     # ---------------- Saved transfers ----------------
     m.saved_con = pyo.ConstraintList()
@@ -1019,6 +1082,11 @@ def optimize_my_team(
             f"weighted_sum={solution_weighted_sum:.3f}"
         )
         all_records.extend(solution_rows)
+        if on_solution is not None:
+            try:
+                on_solution(solution_no, [dict(row) for row in solution_rows])
+            except Exception as cb_exc:
+                print(f"on_solution callback failed at solution {solution_no}: {cb_exc}")
 
     def solve_model_with_optional_warmstart() -> Any:
         solve_kwargs: Dict[str, Any] = {"tee": True}
@@ -1113,7 +1181,7 @@ def optimize_my_team(
 
 if __name__ == "__main__":
     TEAM_ID = 46805
-    N_SOLUTIONS = 1
+    N_SOLUTIONS = 3
     OUTPUT_PATH = "_test_optimization.csv"
 
     out_df = optimize_my_team(

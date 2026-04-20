@@ -16,6 +16,9 @@ from typing import List, Optional, Literal
 from pydantic import BaseModel
 from fastapi.responses import JSONResponse
 from GenerateConfig import fixtures_config
+from queue import Queue
+from threading import Thread
+import traceback
 
 
 class PlayerInput(BaseModel):
@@ -32,12 +35,14 @@ class OptimizeRequest(BaseModel):
 
     # keep same semantics / defaults as current endpoint
     banned_list: List[str] = []
+    force_in_list: List[str] = []
     bb_round: int = 40
     wildcard_round: int = 40
     freehit_round: int = 40
     n_hits: int = 0
     risk:float=0.0
     transval:float=0.5
+    stream: bool = False
 
     # which engine to use
     model_type: Literal["ai", "statistical"] = "ai"
@@ -46,6 +51,7 @@ class OptimizeRequest(BaseModel):
     players: Optional[List[PlayerInput]] = None
     
 app = FastAPI()
+OPTIMIZER_N_SOLUTIONS = 3
 
 # Allow frontend to access backend
 app.add_middleware(
@@ -151,6 +157,107 @@ def get_fixtures_config():
     # fixtures_config imported from GenerateConfig
     return JSONResponse(content=fixtures_config)
 
+
+def _build_optimize_kwargs(
+    *,
+    team_id: int,
+    banned_list: Optional[List[str]] = None,
+    force_in_list: Optional[List[str]] = None,
+    bb_round: int = 40,
+    wildcard_round: int = 40,
+    freehit_round: int = 40,
+    n_hits: int = 0,
+    risk: float = 0.0,
+    transval: float = 0.5,
+    players_df: Optional[pd.DataFrame] = None,
+    on_solution=None,
+):
+    return dict(
+        team_id=team_id,
+        banned_list=banned_list or [],
+        force_in_list=force_in_list or [],
+        bb_round=bb_round,
+        wildcard_round=wildcard_round,
+        free_hit_round=freehit_round,
+        Last_GW=4,
+        GW_list=["0", "5", "6", "7", "8", "9"],
+        n_hits=n_hits,
+        current_player_path="Raw_Data_25/current_players.csv",
+        players_override=players_df,
+        risk_factor=risk,
+        transval=transval,
+        n_solutions=OPTIMIZER_N_SOLUTIONS,
+        on_solution=on_solution,
+    )
+
+
+def _sse_event(event: str, payload: dict) -> str:
+    return f"event: {event}\ndata: {json.dumps(payload)}\n\n"
+
+
+def _stream_optimization(opt_kwargs: dict) -> StreamingResponse:
+    events: Queue = Queue()
+
+    def _worker():
+        solutions_found = {"count": 0}
+
+        def _on_solution(solution_no: int, rows: List[dict]):
+            solutions_found["count"] = max(
+                int(solutions_found["count"]),
+                int(solution_no),
+            )
+            events.put(
+                (
+                    "solution",
+                    {
+                        "solution": int(solution_no),
+                        "rows": rows,
+                        "n_solutions": OPTIMIZER_N_SOLUTIONS,
+                    },
+                )
+            )
+
+        try:
+            solve_kwargs = dict(opt_kwargs)
+            solve_kwargs["on_solution"] = _on_solution
+            optimize_my_team(**solve_kwargs)
+            events.put(
+                (
+                    "done",
+                    {
+                        "n_solutions": OPTIMIZER_N_SOLUTIONS,
+                        "solutions_found": int(solutions_found["count"]),
+                    },
+                )
+            )
+        except ValueError as e:
+            events.put(("error", {"status": 400, "detail": str(e)}))
+        except Exception as e:
+            traceback.print_exc()
+            events.put(("error", {"status": 500, "detail": str(e)}))
+        finally:
+            events.put(("__end__", {}))
+
+    Thread(target=_worker, daemon=True).start()
+
+    def _generator():
+        yield _sse_event("meta", {"n_solutions": OPTIMIZER_N_SOLUTIONS})
+        while True:
+            event, payload = events.get()
+            if event == "__end__":
+                break
+            yield _sse_event(event, payload)
+
+    return StreamingResponse(
+        _generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "Access-Control-Allow-Origin": "*",
+        },
+    )
+
 @app.get("/Team_Predictions")
 def get_data():
     df = load_and_transform("Team_Predictions")
@@ -182,38 +289,43 @@ def post_my_team_optimize(req: OptimizeRequest):
         # turn list[PlayerInput] -> DataFrame
         players_df = pd.DataFrame([p.dict() for p in req.players])
 
+    optimize_kwargs = _build_optimize_kwargs(
+        team_id=req.team_id,
+        banned_list=req.banned_list,
+        force_in_list=req.force_in_list,
+        bb_round=req.bb_round,
+        wildcard_round=req.wildcard_round,
+        freehit_round=req.freehit_round,
+        n_hits=req.n_hits,
+        risk=req.risk,
+        transval=req.transval,
+        players_df=players_df,
+    )
+
+    if req.stream:
+        return _stream_optimization(optimize_kwargs)
+
     try:
-      
-        df = optimize_my_team(
-            team_id=req.team_id,
-            banned_list=req.banned_list,
-            bb_round=req.bb_round,
-            wildcard_round=req.wildcard_round,
-            free_hit_round=req.freehit_round,
-            Last_GW=4,
-            GW_list=["0", "5", "6", "7", "8", "9"],
-            n_hits=req.n_hits,
-            current_player_path="Raw_Data_25/current_players.csv",
-            players_override=players_df,
-            risk_factor=req.risk,
-            transval=req.transval
-        )
-
-    except ValueError:
-        raise HTTPException(status_code=400, detail="Team not found")
-
-    return df.to_dict(orient="records")
+        df = optimize_my_team(**optimize_kwargs)
+        return df.to_dict(orient="records")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/My_Team_Optimize")
 def get_my_team_optimize(
     team_id: int,
     banned_list: Optional[List[str]]        = Query(None, title="Player IDs to ban", alias="banned_list"),
+    force_in_list: Optional[List[str]]      = Query(None, title="Player names to force in", alias="force_in_list"),
     bb_round:     Optional[int]             = Query(40, title="Bench Boost round"),
     wildcard_round: Optional[int]           = Query(40, title="Wildcard round"),
     freehit_round: Optional[int]           = Query(40, title="freehit round"),
     n_hits:Optional[int]                   = Query(0, title="n_hits"),
     risk:Optional[float]                   = Query(0.0, title="risk"),
     transval:Optional[float]                   = Query(0.5, title="transval"),
+    stream: bool = Query(False, title="Stream optimization results"),
 ):
     """
     Optimize a team given:
@@ -225,22 +337,26 @@ def get_my_team_optimize(
     - GW_list (optional list of Gameweeks)
     - current_player_path (optional path override)
     """
+    optimize_kwargs = _build_optimize_kwargs(
+        team_id=team_id,
+        banned_list=banned_list or [],
+        force_in_list=force_in_list or [],
+        bb_round=bb_round,
+        wildcard_round=wildcard_round,
+        freehit_round=freehit_round,
+        n_hits=n_hits,
+        risk=risk,
+        transval=transval,
+    )
+
+    if stream:
+        return _stream_optimization(optimize_kwargs)
+
     try:
-        df = optimize_my_team(
-            team_id=team_id,
-            banned_list=banned_list or [],
-            bb_round=bb_round,
-            wildcard_round=wildcard_round,
-            free_hit_round=freehit_round,
-            Last_GW=4,
-            GW_list=["0","5","6","7","8","9"],
-            n_hits=n_hits,
-            current_player_path="Raw_Data_25/current_players.csv",
-            risk_factor=risk,
-            transval=transval
-        )
+        df = optimize_my_team(**optimize_kwargs)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
     return df.to_dict(orient="records")

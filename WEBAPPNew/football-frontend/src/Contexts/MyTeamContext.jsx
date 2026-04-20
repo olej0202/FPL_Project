@@ -12,6 +12,8 @@ export const useMyteamData = () => useContext(MyTeamDataContext);
 
 // LocalStorage key
 const SAVED_OPT_KEY = "myteam_saved_optimizations_v1";
+const OPTIMIZATION_SOLUTIONS = 3;
+const API_BASE_URL = "https://fpl-project-t5e9.onrender.com";
 
 function safeJsonParse(str, fallback) {
   try {
@@ -26,7 +28,7 @@ function safeJsonParse(str, fallback) {
  * Merge helper so banned players UI does NOT visually empty if a new run
  * doesn't contain the banned player rows in the returned json.
  */
-function mergeBannedPlayersData(prev, next) {
+function mergePlayersData(prev, next) {
   const map = new Map();
 
   (Array.isArray(prev) ? prev : []).forEach((p) => {
@@ -40,6 +42,33 @@ function mergeBannedPlayersData(prev, next) {
   return Array.from(map.values());
 }
 
+function mergeRowsBySolution(prevRows, incomingRows) {
+  const incoming = Array.isArray(incomingRows) ? incomingRows : [];
+  if (!incoming.length) return Array.isArray(prevRows) ? prevRows : [];
+
+  const solutionNo = Number(incoming[0]?.solution);
+  if (!Number.isFinite(solutionNo)) {
+    return incoming;
+  }
+
+  const base = Array.isArray(prevRows) ? prevRows : [];
+  const filtered = base.filter((row) => Number(row?.solution || 1) !== solutionNo);
+  return [...filtered, ...incoming];
+}
+
+function derivePlayersFromRows(rows, ids) {
+  if (!Array.isArray(rows) || !Array.isArray(ids) || !ids.length) return [];
+
+  return ids
+    .map((sid) => {
+      const key = sid?.toString();
+      const p = rows.find((row) => row?.Name?.toString() === key);
+      if (!p) return null;
+      return { Name: p.Name, web_name: p.web_name, photo: p.photo };
+    })
+    .filter(Boolean);
+}
+
 export function MyTeamDataContextProvider({ children }) {
   const [teamId, setTeamId] = useState("");
   const [bbRound, setBbRound] = useState("");
@@ -48,6 +77,8 @@ export function MyTeamDataContextProvider({ children }) {
 
   const [bannedList, setBannedList] = useState([]);
   const [bannedPlayersData, setBannedPlayersData] = useState([]);
+  const [lockedInList, setLockedInList] = useState([]);
+  const [lockedPlayersData, setLockedPlayersData] = useState([]);
 
   const [data, setData] = useState(null);
   const [teamData, setTeamData] = useState(null);
@@ -60,6 +91,11 @@ export function MyTeamDataContextProvider({ children }) {
   const [n_hits, setn_hits] = useState("");
   const [risk, setRisk] = useState(0);
   const [valtrans, setValtrans] = useState(0.5);
+  const [optimizationProgress, setOptimizationProgress] = useState({
+    expectedSolutions: OPTIMIZATION_SOLUTIONS,
+    receivedSolutions: 0,
+    streaming: false,
+  });
 
   // ----------------------------
   // Saved optimizations
@@ -121,15 +157,16 @@ export function MyTeamDataContextProvider({ children }) {
     const loadedData = result.data ?? null;
 
     const savedBannedPlayers = result.bannedPlayersData;
-    if (Array.isArray(savedBannedPlayers) && savedBannedPlayers.length) {
-      setBannedPlayersData(savedBannedPlayers);
-    }
+    setBannedPlayersData(Array.isArray(savedBannedPlayers) ? savedBannedPlayers : []);
+    const savedLockedPlayers = result.lockedPlayersData;
+    setLockedPlayersData(Array.isArray(savedLockedPlayers) ? savedLockedPlayers : []);
 
     setTeamId(params.teamId ?? "");
     setBbRound(params.bbRound ?? "");
     setWildRound(params.wildRound ?? "");
     setfreehitROund(params.freehitROund ?? "");
     setBannedList(Array.isArray(params.bannedList) ? params.bannedList : []);
+    setLockedInList(Array.isArray(params.lockedInList) ? params.lockedInList : []);
     setn_hits(
       params.n_hits === 0 || params.n_hits ? String(params.n_hits) : ""
     );
@@ -153,13 +190,22 @@ export function MyTeamDataContextProvider({ children }) {
         .filter(Boolean);
 
       // IMPORTANT: merge, do not wipe
-      setBannedPlayersData((prev) => mergeBannedPlayersData(prev, derived));
+      setBannedPlayersData((prev) => mergePlayersData(prev, derived));
+
+      const ll = Array.isArray(params.lockedInList) ? params.lockedInList : [];
+      const derivedLocked = derivePlayersFromRows(loadedData, ll);
+      setLockedPlayersData((prev) => mergePlayersData(prev, derivedLocked));
     } else {
       setData(null);
       // keep bannedPlayersData (do not wipe) because bannedList still exists
       // only wipe if you want a hard reset - we avoid that to prevent "visual empty"
     }
 
+    setOptimizationProgress({
+      expectedSolutions: OPTIMIZATION_SOLUTIONS,
+      receivedSolutions: 0,
+      streaming: false,
+    });
     setLoading(false);
     sethas_changed(false);
   };
@@ -175,7 +221,7 @@ export function MyTeamDataContextProvider({ children }) {
 
     setTeamLoading(true);
     try {
-      const url = `https://fpl-project-t5e9.onrender.com/Get_My_Team?team_id=${teamId}`;
+      const url = `${API_BASE_URL}/Get_My_Team?team_id=${teamId}`;
       const resp = await fetch(url);
       if (!resp.ok) throw new Error(await resp.text());
       const json = await resp.json();
@@ -198,8 +244,137 @@ export function MyTeamDataContextProvider({ children }) {
 
     if (!teamId) return alert("Team ID is required");
     setLoading(true);
+    setData(null);
+    setOptimizationProgress({
+      expectedSolutions: OPTIMIZATION_SOLUTIONS,
+      receivedSolutions: 0,
+      streaming: true,
+    });
 
     try {
+      const consumeStreamResponse = async (resp) => {
+        if (!resp.body || typeof resp.body.getReader !== "function") {
+          const fallbackJson = await resp.json();
+          setData(fallbackJson);
+
+          const derivedBanned = derivePlayersFromRows(fallbackJson, bannedList);
+          setBannedPlayersData((prev) => mergePlayersData(prev, derivedBanned));
+
+          const derivedLocked = derivePlayersFromRows(fallbackJson, lockedInList);
+          setLockedPlayersData((prev) => mergePlayersData(prev, derivedLocked));
+
+          setOptimizationProgress({
+            expectedSolutions: OPTIMIZATION_SOLUTIONS,
+            receivedSolutions: OPTIMIZATION_SOLUTIONS,
+            streaming: false,
+          });
+          return;
+        }
+
+        const reader = resp.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+        let hasShownFirstSolution = false;
+
+        const processEvent = (rawEvent) => {
+          const lines = String(rawEvent || "")
+            .split(/\r?\n/)
+            .filter(Boolean);
+          if (!lines.length) return;
+
+          let eventType = "message";
+          const dataLines = [];
+
+          lines.forEach((line) => {
+            if (line.startsWith("event:")) {
+              eventType = line.slice(6).trim();
+            } else if (line.startsWith("data:")) {
+              dataLines.push(line.slice(5).trim());
+            }
+          });
+
+          if (!dataLines.length) return;
+
+          let payload = null;
+          try {
+            payload = JSON.parse(dataLines.join("\n"));
+          } catch (e) {
+            console.warn("Failed to parse optimization stream event:", e);
+            return;
+          }
+
+          if (eventType === "meta") {
+            const expected = Number(payload?.n_solutions) || OPTIMIZATION_SOLUTIONS;
+            setOptimizationProgress((prev) => ({
+              ...prev,
+              expectedSolutions: expected,
+            }));
+            return;
+          }
+
+          if (eventType === "solution") {
+            const solutionNo = Number(payload?.solution);
+            const rows = Array.isArray(payload?.rows) ? payload.rows : [];
+            if (!rows.length) return;
+
+            setData((prev) => mergeRowsBySolution(prev, rows));
+
+            const derivedBanned = derivePlayersFromRows(rows, bannedList);
+            if (derivedBanned.length) {
+              setBannedPlayersData((prev) => mergePlayersData(prev, derivedBanned));
+            }
+
+            const derivedLocked = derivePlayersFromRows(rows, lockedInList);
+            if (derivedLocked.length) {
+              setLockedPlayersData((prev) => mergePlayersData(prev, derivedLocked));
+            }
+
+            if (Number.isFinite(solutionNo)) {
+              setOptimizationProgress((prev) => ({
+                ...prev,
+                receivedSolutions: Math.max(prev.receivedSolutions, solutionNo),
+              }));
+            }
+
+            if (!hasShownFirstSolution) {
+              hasShownFirstSolution = true;
+              setLoading(false);
+            }
+            return;
+          }
+
+          if (eventType === "error") {
+            throw new Error(payload?.detail || "Optimization stream failed.");
+          }
+
+          if (eventType === "done") {
+            setOptimizationProgress((prev) => ({
+              ...prev,
+              streaming: false,
+              receivedSolutions: Math.max(
+                prev.receivedSolutions,
+                Number(payload?.solutions_found) ||
+                  Number(payload?.n_solutions) ||
+                  prev.receivedSolutions
+              ),
+            }));
+          }
+        };
+
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const events = buffer.split("\n\n");
+          buffer = events.pop() || "";
+          events.forEach(processEvent);
+        }
+
+        if (buffer.trim()) processEvent(buffer);
+        if (!hasShownFirstSolution) setLoading(false);
+      };
+
       // --------- AI model: GET query params ---------
       if (!useStatisticalModel) {
         const params = new URLSearchParams({ team_id: teamId });
@@ -208,31 +383,17 @@ export function MyTeamDataContextProvider({ children }) {
         if (wildRound) params.append("wildcard_round", wildRound);
         if (freehitROund) params.append("freehit_round", freehitROund);
         (bannedList || []).forEach((id) => params.append("banned_list", id));
+        (lockedInList || []).forEach((id) => params.append("force_in_list", id));
         if (n_hits) params.append("n_hits", n_hits);
 
         params.append("risk", String(Number(risk) || 0));
         params.append("transval", String(Number(valtrans) || 0));
+        params.append("stream", "true");
 
-        const url = `https://fpl-project-t5e9.onrender.com/My_Team_Optimize?${params.toString()}`;
+        const url = `${API_BASE_URL}/My_Team_Optimize?${params.toString()}`;
         const resp = await fetch(url);
         if (!resp.ok) throw new Error(await resp.text());
-        const json = await resp.json();
-        setData(json);
-
-        // IMPORTANT: merge derived chips so UI doesn't empty
-        if (Array.isArray(bannedList) && bannedList.length) {
-          const derived = bannedList
-            .map((sid) => {
-              const p = json?.find(
-                (row) => row?.Name?.toString() === sid?.toString()
-              );
-              if (!p) return null;
-              return { Name: p.Name, web_name: p.web_name, photo: p.photo };
-            })
-            .filter(Boolean);
-
-          setBannedPlayersData((prev) => mergeBannedPlayersData(prev, derived));
-        }
+        await consumeStreamResponse(resp);
 
         return;
       }
@@ -256,6 +417,7 @@ export function MyTeamDataContextProvider({ children }) {
       const body = {
         team_id: Number(teamId),
         banned_list: bannedList,
+        force_in_list: lockedInList,
         bb_round: bbRound ? Number(bbRound) : 40,
         wildcard_round: wildRound ? Number(wildRound) : 40,
         freehit_round: freehitROund ? Number(freehitROund) : 40,
@@ -264,10 +426,11 @@ export function MyTeamDataContextProvider({ children }) {
         players: slimPlayers,
         risk: Number(risk) || 0,
         transval: Number(valtrans) || 0.5,
+        stream: true,
       };
 
       const resp = await fetch(
-        "https://fpl-project-t5e9.onrender.com/My_Team_Optimize",
+        `${API_BASE_URL}/My_Team_Optimize`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -276,28 +439,14 @@ export function MyTeamDataContextProvider({ children }) {
       );
 
       if (!resp.ok) throw new Error(await resp.text());
-      const json = await resp.json();
-      setData(json);
-
-      // IMPORTANT: merge derived chips so UI doesn't empty
-      if (Array.isArray(bannedList) && bannedList.length) {
-        const derived = bannedList
-          .map((sid) => {
-            const p = json?.find(
-              (row) => row?.Name?.toString() === sid?.toString()
-            );
-            if (!p) return null;
-            return { Name: p.Name, web_name: p.web_name, photo: p.photo };
-          })
-          .filter(Boolean);
-
-        setBannedPlayersData((prev) => mergeBannedPlayersData(prev, derived));
-      }
+      await consumeStreamResponse(resp);
     } catch (err) {
       console.error(err);
       alert("Error: " + err.message);
+      setOptimizationProgress((prev) => ({ ...prev, streaming: false }));
     } finally {
       setLoading(false);
+      setOptimizationProgress((prev) => ({ ...prev, streaming: false }));
     }
   };
 
@@ -308,11 +457,23 @@ export function MyTeamDataContextProvider({ children }) {
    */
   const toggleBan = (id) => {
     const sid = id.toString();
+    const isAddingBan = !(Array.isArray(bannedList) ? bannedList : []).includes(sid);
 
     setBannedList((prev) => {
       const arr = Array.isArray(prev) ? prev : [];
       return arr.includes(sid) ? arr.filter((x) => x !== sid) : [...arr, sid];
     });
+
+    if (isAddingBan) {
+      setLockedInList((prev) =>
+        (Array.isArray(prev) ? prev : []).filter((x) => x !== sid)
+      );
+      setLockedPlayersData((prev) =>
+        (Array.isArray(prev) ? prev : []).filter(
+          (p) => p?.Name?.toString() !== sid
+        )
+      );
+    }
 
     setBannedPlayersData((prev) => {
       const arr = Array.isArray(prev) ? prev : [];
@@ -325,7 +486,7 @@ export function MyTeamDataContextProvider({ children }) {
       const player = data?.find((p) => p?.Name?.toString() === sid);
       if (!player) return arr;
 
-      return mergeBannedPlayersData(arr, [
+      return mergePlayersData(arr, [
         { Name: player.Name, web_name: player.web_name, photo: player.photo },
       ]);
     });
@@ -337,6 +498,60 @@ export function MyTeamDataContextProvider({ children }) {
       (Array.isArray(prev) ? prev : []).filter((x) => x !== sid)
     );
     setBannedPlayersData((prev) =>
+      (Array.isArray(prev) ? prev : []).filter(
+        (p) => p?.Name?.toString() !== sid
+      )
+    );
+  };
+
+  const toggleLockIn = (id, playerMeta = null) => {
+    const sid = id?.toString();
+    if (!sid) return;
+    const isAddingLock = !(Array.isArray(lockedInList) ? lockedInList : []).includes(sid);
+
+    setLockedInList((prev) => {
+      const arr = Array.isArray(prev) ? prev : [];
+      return arr.includes(sid) ? arr.filter((x) => x !== sid) : [...arr, sid];
+    });
+
+    if (isAddingLock) {
+      setBannedList((prev) =>
+        (Array.isArray(prev) ? prev : []).filter((x) => x !== sid)
+      );
+      setBannedPlayersData((prev) =>
+        (Array.isArray(prev) ? prev : []).filter(
+          (p) => p?.Name?.toString() !== sid
+        )
+      );
+    }
+
+    setLockedPlayersData((prev) => {
+      const arr = Array.isArray(prev) ? prev : [];
+      const exists = arr.some((p) => p?.Name?.toString() === sid);
+      if (exists) return arr.filter((p) => p?.Name?.toString() !== sid);
+
+      const fromMeta = playerMeta?.Name ? playerMeta : null;
+      const fromData = data?.find((p) => p?.Name?.toString() === sid);
+      const player = fromMeta || fromData;
+      if (!player) return arr;
+
+      return mergePlayersData(arr, [
+        {
+          Name: player.Name,
+          web_name: player.web_name,
+          photo: player.photo,
+        },
+      ]);
+    });
+  };
+
+  const removeLockIn = (id) => {
+    const sid = id?.toString();
+    if (!sid) return;
+    setLockedInList((prev) =>
+      (Array.isArray(prev) ? prev : []).filter((x) => x !== sid)
+    );
+    setLockedPlayersData((prev) =>
       (Array.isArray(prev) ? prev : []).filter(
         (p) => p?.Name?.toString() !== sid
       )
@@ -358,18 +573,23 @@ export function MyTeamDataContextProvider({ children }) {
 
         bannedList,
         bannedPlayersData,
+        lockedInList,
+        lockedPlayersData,
 
         data,
         teamData,
 
         loading,
         teamLoading,
+        optimizationProgress,
 
         fetchTeam,
         fetchMyTeam,
 
         toggleBan,
         removeBan,
+        toggleLockIn,
+        removeLockIn,
 
         has_changed,
         sethas_changed,

@@ -240,16 +240,21 @@ export default function MyTeamOptimize() {
     wildRound,
     setWildRound,
     bannedList,
+    lockedInList,
     freehitROund,
     setfreehitROund,
     data,
     loading,
+    optimizationProgress,
     fetchTeam,
     toggleBan,
     removeBan,
+    toggleLockIn,
+    removeLockIn,
     has_changed,
     sethas_changed,
     bannedPlayersData,
+    lockedPlayersData,
     n_hits,
     setn_hits,
     risk,
@@ -282,6 +287,8 @@ export default function MyTeamOptimize() {
   const [controlsOpen, setControlsOpen] = useState(true);
   const [savedOpen, setSavedOpen] = useState(true);
   const [selectedGW, setSelectedGW] = useState(null);
+  const [selectedSolution, setSelectedSolution] = useState(1);
+  const [lockSearch, setLockSearch] = useState("");
   const pitchSectionRef = useRef(null);
   const preferredModelAppliedRef = useRef(false);
 
@@ -451,7 +458,7 @@ export default function MyTeamOptimize() {
   useEffect(() => {
     sethas_changed(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [teamId, bbRound, wildRound, bannedList, freehitROund, n_hits, modelType, risk, valtrans]);
+  }, [teamId, bbRound, wildRound, bannedList, lockedInList, freehitROund, n_hits, modelType, risk, valtrans]);
 
   useEffect(() => {
     if (loading) {
@@ -495,17 +502,116 @@ export default function MyTeamOptimize() {
     return () => clearTimeout(t);
   }, [loading]);
 
-  const availableGWs = useMemo(() => {
+  const solutionNumbers = useMemo(() => {
     if (!Array.isArray(data) || data.length === 0) return [];
-
     return Array.from(
       new Set(
         data
+          .map((row) => Number(row?.solution || 1))
+          .filter((n) => Number.isFinite(n))
+      )
+    ).sort((a, b) => a - b);
+  }, [data]);
+
+  useEffect(() => {
+    if (!solutionNumbers.length) {
+      setSelectedSolution(1);
+      return;
+    }
+    setSelectedSolution((prev) =>
+      solutionNumbers.includes(prev) ? prev : solutionNumbers[0]
+    );
+  }, [solutionNumbers]);
+
+  const expectedSolutions = Math.max(
+    1,
+    Number(optimizationProgress?.expectedSolutions) || 3
+  );
+  const solutionSlots = useMemo(
+    () => Array.from({ length: expectedSolutions }, (_, idx) => idx + 1),
+    [expectedSolutions]
+  );
+
+  const activeSolutionData = useMemo(() => {
+    if (!Array.isArray(data) || data.length === 0) return [];
+    const fallbackSolution = Number(data?.[0]?.solution || 1);
+    const targetSolution = solutionNumbers.includes(selectedSolution)
+      ? selectedSolution
+      : solutionNumbers[0] ?? fallbackSolution;
+    return data.filter(
+      (row) => Number(row?.solution || 1) === Number(targetSolution)
+    );
+  }, [data, selectedSolution, solutionNumbers]);
+
+  const lockCandidates = useMemo(() => {
+    const fallbackPhoto =
+      "https://d2kq0urxkarztv.cloudfront.net/51812cad594df29a1a0003f0/661303/upload-643ff5d9-840e-4bbb-b099-07c26ef505c9.png?w=578";
+    const map = new Map();
+
+    const addRow = (row) => {
+      const name = row?.name ?? row?.Name;
+      if (!name) return;
+      const key = String(name);
+      const web_name = row?.web_name ?? key;
+      const code = row?.code;
+      const computedPhoto = code
+        ? `https://resources.premierleague.com/premierleague25/photos/players/500x500/${code}.png`
+        : null;
+      const photo = row?.photo || computedPhoto || fallbackPhoto;
+
+      const existing = map.get(key);
+      if (!existing) {
+        map.set(key, { Name: key, web_name, photo });
+        return;
+      }
+
+      if (
+        existing.photo === fallbackPhoto &&
+        photo &&
+        photo !== fallbackPhoto
+      ) {
+        map.set(key, { ...existing, photo });
+      }
+    };
+
+    [PlayersData?.current, Playerdata?.current, data].forEach((rows) => {
+      if (!Array.isArray(rows)) return;
+      rows.forEach(addRow);
+    });
+
+    return Array.from(map.values()).sort((a, b) =>
+      String(a.web_name).localeCompare(String(b.web_name))
+    );
+  }, [PlayersData, Playerdata, data]);
+
+  const filteredLockCandidates = useMemo(() => {
+    const q = String(lockSearch || "").trim().toLowerCase();
+    const lockedSet = new Set((lockedInList || []).map((x) => String(x)));
+    return lockCandidates
+      .filter((p) => !lockedSet.has(String(p.Name)))
+      .filter((p) => {
+        if (!q) return true;
+        return (
+          String(p.Name).toLowerCase().includes(q) ||
+          String(p.web_name || "").toLowerCase().includes(q)
+        );
+      })
+      .slice(0, 8);
+  }, [lockCandidates, lockSearch, lockedInList]);
+
+  const availableGWs = useMemo(() => {
+    if (!Array.isArray(activeSolutionData) || activeSolutionData.length === 0) {
+      return [];
+    }
+
+    return Array.from(
+      new Set(
+        activeSolutionData
           .map((p) => Number(p.GW))
           .filter((n) => isValidGW(n))
       )
     ).sort((a, b) => a - b);
-  }, [data]);
+  }, [activeSolutionData]);
 
   useEffect(() => {
     if (!availableGWs.length) {
@@ -534,17 +640,17 @@ export default function MyTeamOptimize() {
   let transfers = [];
   let gwData = [];
 
-  if (data) {
+  if (activeSolutionData.length) {
     if (availableGWs.length) {
       minGW = availableGWs[0];
       maxGW = availableGWs[availableGWs.length - 1];
     }
 
-    gwData = data.filter((p) => Number(p.GW) === activeGW);
+    gwData = activeSolutionData.filter((p) => Number(p.GW) === activeGW);
     starters = gwData.filter((p) => p.status === "playing");
     bench = gwData.filter((p) => p.status === "benched");
 
-    const moves = data.filter((p) => {
+    const moves = activeSolutionData.filter((p) => {
       const gw = Number(p.GW);
       return ["transferred_in", "transferred_out"].includes(p.status) && isValidGW(gw);
     });
@@ -560,11 +666,11 @@ export default function MyTeamOptimize() {
   }
 
   let totalPredPoints = null;
-  if (data) {
+  if (activeSolutionData.length) {
     const objRow =
-      data.find((p) => p.Name === "Obj Value") ||
+      activeSolutionData.find((p) => p.Name === "Obj Value") ||
       gwData.find((p) => p.Name === "Obj Value") ||
-      data.find((p) => p.Name === "__TOTAL_OBJECTIVE__");
+      activeSolutionData.find((p) => p.Name === "__TOTAL_OBJECTIVE__");
 
     if (objRow) {
       const asNum = objRow.objective != null ? Number(objRow.objective) : Number(objRow.status);
@@ -575,7 +681,7 @@ export default function MyTeamOptimize() {
   const toNum = (v) => Number(v);
   let transfersWithFH = transfers;
 
-  if (data && Number.isFinite(minGW) && Number.isFinite(maxGW)) {
+  if (activeSolutionData.length && Number.isFinite(minGW) && Number.isFinite(maxGW)) {
     const fhGW = Number(freehitROund);
     const fhActive = isValidGW(fhGW) && fhGW >= minGW && fhGW <= maxGW;
 
@@ -596,7 +702,7 @@ export default function MyTeamOptimize() {
   }
 
   const plannerPayload = useMemo(() => {
-    if (!data || transfersWithFH.length === 0) return [];
+    if (!activeSolutionData.length || transfersWithFH.length === 0) return [];
 
     const realGroups = transfersWithFH.filter((g) => (g.in && g.in.length) || (g.out && g.out.length));
 
@@ -622,7 +728,7 @@ export default function MyTeamOptimize() {
           toPhoto: inP.photo,
         }));
     });
-  }, [data, transfersWithFH]);
+  }, [activeSolutionData, transfersWithFH]);
 
   const getStatisticalPlayersPayload = () => {
     if (!hasStatisticalData) return null;
@@ -638,6 +744,7 @@ export default function MyTeamOptimize() {
   const handleOptimizeClick = () => {
     const useStatistical = modelType === "statistical" && hasStatisticalData;
     const playersPayload = useStatistical ? getStatisticalPlayersPayload() : null;
+    setSelectedSolution(1);
 
     fetchTeam({
       useStatisticalModel: useStatistical,
@@ -690,14 +797,17 @@ export default function MyTeamOptimize() {
           wildRound: wildRound || "",
           freehitROund: freehitROund || "",
           bannedList: Array.isArray(bannedList) ? bannedList : [],
+          lockedInList: Array.isArray(lockedInList) ? lockedInList : [],
           n_hits: Number(n_hits || 0),
           risk: Number(risk || 0),
           valtrans: Number(valtrans || 0.5),
           modelType,
+          selectedSolution: Number(selectedSolution || 1),
         },
         result: {
           data,
           bannedPlayersData: Array.isArray(bannedPlayersData) ? bannedPlayersData : [],
+          lockedPlayersData: Array.isArray(lockedPlayersData) ? lockedPlayersData : [],
         },
       },
     };
@@ -728,7 +838,7 @@ export default function MyTeamOptimize() {
   const totalTransfers = plannerPayload.length;
 
   useEffect(() => {
-    if (!loading && data && typeof window !== "undefined" && window.innerWidth < 640) {
+    if (!loading && Array.isArray(data) && data.length > 0 && typeof window !== "undefined" && window.innerWidth < 640) {
       const t = setTimeout(() => {
         pitchSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 180);
@@ -1262,6 +1372,89 @@ export default function MyTeamOptimize() {
           </div>
         </section>
 
+        <section className="mb-6 glass-card rounded-[28px] p-4 sm:p-5">
+          <div className="flex items-start justify-between gap-3 mb-3">
+            <div>
+              <h2 className="text-lg font-semibold inline-flex items-center gap-2">
+                <Lock size={18} className="lucide-icon" style={{ color: PALETTE.gold }} />
+                Locked transfer-ins
+              </h2>
+              <div className="text-xs mt-1" style={{ color: PALETTE.muted }}>
+                Add players here to force them into the optimization transfer plan.
+              </div>
+            </div>
+            <div className="text-[11px] px-3 py-1 rounded-full" style={{ color: PALETTE.gold, border: `1px solid rgba(95,143,123,0.35)`, background: "rgba(95,143,123,0.08)" }}>
+              {lockedPlayersData.length} locked
+            </div>
+          </div>
+
+          <div className="relative mb-3">
+            <Search size={14} className="lucide-icon absolute left-3 top-1/2 -translate-y-1/2" style={{ color: PALETTE.muted }} />
+            <input
+              value={lockSearch}
+              onChange={(e) => setLockSearch(e.target.value)}
+              placeholder="Search players to lock in"
+              className="gold-ring w-full h-11 pl-9 pr-3 rounded-2xl text-sm outline-none"
+              style={{ border: `1px solid ${PALETTE.border}`, backgroundColor: "rgba(248,250,252,0.94)", color: PALETTE.beige }}
+            />
+          </div>
+
+          {filteredLockCandidates.length > 0 && (
+            <div className="mb-3 flex flex-wrap gap-2">
+              {filteredLockCandidates.map((p) => (
+                <button
+                  key={p.Name}
+                  type="button"
+                  onClick={() => {
+                    toggleLockIn(p.Name, p);
+                    setLockSearch("");
+                  }}
+                  className="gold-ring inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold transition"
+                  style={{ border: `1px solid ${PALETTE.border}`, background: "rgba(248,250,252,0.9)", color: PALETTE.beige }}
+                >
+                  <Lock size={12} className="lucide-icon" style={{ color: PALETTE.gold }} />
+                  {p.web_name}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {lockedPlayersData.length > 0 ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+              {lockedPlayersData.map((player) => (
+                <div
+                  key={player.Name}
+                  className="relative flex items-center gap-2 px-2 py-2 rounded-full text-sm transition"
+                  style={{ backgroundColor: "rgba(95,143,123,0.12)", border: "1px solid rgba(95,143,123,0.35)", color: PALETTE.gold }}
+                >
+                  <img
+                    src={player.photo}
+                    alt={player.web_name}
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = "https://d2kq0urxkarztv.cloudfront.net/51812cad594df29a1a0003f0/661303/upload-643ff5d9-840e-4bbb-b099-07c26ef505c9.png?w=578";
+                    }}
+                    className="w-8 h-8 rounded-full object-cover"
+                  />
+                  <span className="truncate max-w-[8rem]">{player.web_name}</span>
+                  <button
+                    onClick={() => removeLockIn(player.Name)}
+                    className="gold-ring absolute -top-1 -right-1 rounded-full p-1"
+                    style={{ backgroundColor: "rgba(248,250,252,0.94)", color: PALETTE.beige }}
+                    aria-label={`Remove ${player.web_name} from locked list`}
+                  >
+                    <X size={12} className="lucide-icon" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-xs" style={{ color: PALETTE.muted }}>
+              No locked players yet. Search and add players to force them as transfer-ins.
+            </div>
+          )}
+        </section>
+
         {bannedPlayersData.length > 0 && (
           <section className="mb-6 glass-card rounded-[28px] p-4 sm:p-5">
             <div className="flex items-center justify-between mb-3 gap-3">
@@ -1310,18 +1503,60 @@ export default function MyTeamOptimize() {
           </section>
         )}
 
-        {data && (
+        {Array.isArray(data) && data.length > 0 && (
           <section ref={pitchSectionRef} className="mb-6 grid grid-cols-1 xl:grid-cols-[0.92fr_1.08fr] gap-6 items-start">
             <div className="glass-card rounded-[28px] p-4 sm:p-5">
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <div className="text-sm font-semibold inline-flex items-center gap-2" style={{ color: PALETTE.gold }}>
                     <Trophy size={16} className="lucide-icon" />
-                    Optimized XI GW {activeGW ?? minGW}
+                    Optimized XI - Solution {selectedSolution}
                   </div>
                   <div className="text-xs mt-1" style={{ color: PALETTE.muted }}>
-                    Tap a player to open analytics. Tap the X icon to mark as unwanted.
+                    Tap a player to open analytics. Use X to ban and the lock list above to force transfer-ins.
                   </div>
+                </div>
+              </div>
+
+              <div className="mb-4 rounded-2xl p-3" style={{ border: `1px solid ${PALETTE.border}`, background: "rgba(248,250,252,0.82)" }}>
+                <div className="flex items-center justify-between gap-2">
+                  <div className="text-xs font-semibold" style={{ color: PALETTE.gold }}>
+                    Solution set
+                  </div>
+                  <div className="text-[11px]" style={{ color: PALETTE.muted }}>
+                    {optimizationProgress?.streaming
+                      ? `Loading ${solutionNumbers.length}/${expectedSolutions}`
+                      : `${solutionNumbers.length}/${expectedSolutions} ready`}
+                  </div>
+                </div>
+                <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
+                  {solutionSlots.map((sol) => {
+                    const ready = solutionNumbers.includes(sol);
+                    const active = selectedSolution === sol;
+                    return (
+                      <button
+                        key={sol}
+                        type="button"
+                        onClick={() => ready && setSelectedSolution(sol)}
+                        disabled={!ready}
+                        className="gold-ring shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-300"
+                        style={{
+                          border: `1px solid ${active ? PALETTE.gold : PALETTE.border}`,
+                          background: active
+                            ? `linear-gradient(135deg, ${PALETTE.gold}, ${PALETTE.goldSoft})`
+                            : ready
+                            ? "rgba(248,250,252,0.92)"
+                            : "rgba(226,232,240,0.65)",
+                          color: active ? "#0f172a" : ready ? PALETTE.beige : PALETTE.muted,
+                          cursor: ready ? "pointer" : "not-allowed",
+                          transform: ready ? "translateY(0)" : "translateY(1px)",
+                          opacity: ready ? 1 : 0.7,
+                        }}
+                      >
+                        Solution {sol}{ready ? "" : " ..."}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -1595,7 +1830,7 @@ export default function MyTeamOptimize() {
           </section>
         )}
 
-        {!data && (
+        {(!Array.isArray(data) || data.length === 0) && (
           <section className="glass-card rounded-[28px] p-8 text-center">
             <Sparkles size={28} className="lucide-icon mx-auto mb-3" style={{ color: PALETTE.gold }} />
             <div className="text-lg font-semibold">Ready to optimize</div>
