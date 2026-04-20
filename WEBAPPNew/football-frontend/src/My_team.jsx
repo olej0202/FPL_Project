@@ -286,6 +286,7 @@ export default function MyTeamOptimize() {
   const [progress, setProgress] = useState(0);
   const [controlsOpen, setControlsOpen] = useState(true);
   const [savedOpen, setSavedOpen] = useState(true);
+  const [locksOpen, setLocksOpen] = useState(true);
   const [selectedGW, setSelectedGW] = useState(null);
   const [selectedSolution, setSelectedSolution] = useState(1);
   const [lockSearch, setLockSearch] = useState("");
@@ -1373,7 +1374,12 @@ export default function MyTeamOptimize() {
         </section>
 
         <section className="mb-6 glass-card rounded-[28px] p-4 sm:p-5">
-          <div className="flex items-start justify-between gap-3 mb-3">
+          <button
+            type="button"
+            onClick={() => setLocksOpen((v) => !v)}
+            className="gold-ring w-full flex items-start justify-between gap-3 text-left rounded-2xl px-3 py-3"
+            style={{ background: "rgba(248,250,252,0.9)", border: `1px solid ${PALETTE.border}` }}
+          >
             <div>
               <h2 className="text-lg font-semibold inline-flex items-center gap-2">
                 <Lock size={18} className="lucide-icon" style={{ color: PALETTE.gold }} />
@@ -1383,74 +1389,82 @@ export default function MyTeamOptimize() {
                 Add players here to force them into the optimization transfer plan.
               </div>
             </div>
-            <div className="text-[11px] px-3 py-1 rounded-full" style={{ color: PALETTE.gold, border: `1px solid rgba(95,143,123,0.35)`, background: "rgba(95,143,123,0.08)" }}>
-              {lockedPlayersData.length} locked
+            <div className="inline-flex items-center gap-2 self-start sm:self-center" style={{ color: PALETTE.muted }}>
+              <span className="text-[11px] px-3 py-1 rounded-full" style={{ color: PALETTE.gold, border: `1px solid rgba(95,143,123,0.35)`, background: "rgba(95,143,123,0.08)" }}>
+                {lockedPlayersData.length} locked
+              </span>
+              <span className="text-xs">{locksOpen ? "Minimize" : "Expand"}</span>
+              {locksOpen ? <ChevronDown size={18} className="lucide-icon" /> : <ChevronRight size={18} className="lucide-icon" />}
             </div>
-          </div>
+          </button>
 
-          <div className="relative mb-3">
-            <Search size={14} className="lucide-icon absolute left-3 top-1/2 -translate-y-1/2" style={{ color: PALETTE.muted }} />
-            <input
-              value={lockSearch}
-              onChange={(e) => setLockSearch(e.target.value)}
-              placeholder="Search players to lock in"
-              className="gold-ring w-full h-11 pl-9 pr-3 rounded-2xl text-sm outline-none"
-              style={{ border: `1px solid ${PALETTE.border}`, backgroundColor: "rgba(248,250,252,0.94)", color: PALETTE.beige }}
-            />
-          </div>
+          {locksOpen && (
+            <div className="mt-3">
+              <div className="relative mb-3">
+                <Search size={14} className="lucide-icon absolute left-3 top-1/2 -translate-y-1/2" style={{ color: PALETTE.muted }} />
+                <input
+                  value={lockSearch}
+                  onChange={(e) => setLockSearch(e.target.value)}
+                  placeholder="Search players to lock in"
+                  className="gold-ring w-full h-11 pl-9 pr-3 rounded-2xl text-sm outline-none"
+                  style={{ border: `1px solid ${PALETTE.border}`, backgroundColor: "rgba(248,250,252,0.94)", color: PALETTE.beige }}
+                />
+              </div>
 
-          {filteredLockCandidates.length > 0 && (
-            <div className="mb-3 flex flex-wrap gap-2">
-              {filteredLockCandidates.map((p) => (
-                <button
-                  key={p.Name}
-                  type="button"
-                  onClick={() => {
-                    toggleLockIn(p.Name, p);
-                    setLockSearch("");
-                  }}
-                  className="gold-ring inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold transition"
-                  style={{ border: `1px solid ${PALETTE.border}`, background: "rgba(248,250,252,0.9)", color: PALETTE.beige }}
-                >
-                  <Lock size={12} className="lucide-icon" style={{ color: PALETTE.gold }} />
-                  {p.web_name}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {lockedPlayersData.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
-              {lockedPlayersData.map((player) => (
-                <div
-                  key={player.Name}
-                  className="relative flex items-center gap-2 px-2 py-2 rounded-full text-sm transition"
-                  style={{ backgroundColor: "rgba(95,143,123,0.12)", border: "1px solid rgba(95,143,123,0.35)", color: PALETTE.gold }}
-                >
-                  <img
-                    src={player.photo}
-                    alt={player.web_name}
-                    onError={(e) => {
-                      e.currentTarget.onerror = null;
-                      e.currentTarget.src = "https://d2kq0urxkarztv.cloudfront.net/51812cad594df29a1a0003f0/661303/upload-643ff5d9-840e-4bbb-b099-07c26ef505c9.png?w=578";
-                    }}
-                    className="w-8 h-8 rounded-full object-cover"
-                  />
-                  <span className="truncate max-w-[8rem]">{player.web_name}</span>
-                  <button
-                    onClick={() => removeLockIn(player.Name)}
-                    className="gold-ring absolute -top-1 -right-1 rounded-full p-1"
-                    style={{ backgroundColor: "rgba(248,250,252,0.94)", color: PALETTE.beige }}
-                    aria-label={`Remove ${player.web_name} from locked list`}
-                  >
-                    <X size={12} className="lucide-icon" />
-                  </button>
+              {filteredLockCandidates.length > 0 && (
+                <div className="mb-3 flex flex-wrap gap-2">
+                  {filteredLockCandidates.map((p) => (
+                    <button
+                      key={p.Name}
+                      type="button"
+                      onClick={() => {
+                        toggleLockIn(p.Name, p);
+                        setLockSearch("");
+                      }}
+                      className="gold-ring inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold transition"
+                      style={{ border: `1px solid ${PALETTE.border}`, background: "rgba(248,250,252,0.9)", color: PALETTE.beige }}
+                    >
+                      <Lock size={12} className="lucide-icon" style={{ color: PALETTE.gold }} />
+                      {p.web_name}
+                    </button>
+                  ))}
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-xs" style={{ color: PALETTE.muted }}>
-              No locked players yet. Search and add players to force them as transfer-ins.
+              )}
+
+              {lockedPlayersData.length > 0 ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+                  {lockedPlayersData.map((player) => (
+                    <div
+                      key={player.Name}
+                      className="relative flex items-center gap-2 px-2 py-2 rounded-full text-sm transition"
+                      style={{ backgroundColor: "rgba(95,143,123,0.12)", border: "1px solid rgba(95,143,123,0.35)", color: PALETTE.gold }}
+                    >
+                      <img
+                        src={player.photo}
+                        alt={player.web_name}
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = "https://d2kq0urxkarztv.cloudfront.net/51812cad594df29a1a0003f0/661303/upload-643ff5d9-840e-4bbb-b099-07c26ef505c9.png?w=578";
+                        }}
+                        className="w-8 h-8 rounded-full object-cover"
+                      />
+                      <span className="truncate max-w-[8rem]">{player.web_name}</span>
+                      <button
+                        onClick={() => removeLockIn(player.Name)}
+                        className="gold-ring absolute -top-1 -right-1 rounded-full p-1"
+                        style={{ backgroundColor: "rgba(248,250,252,0.94)", color: PALETTE.beige }}
+                        aria-label={`Remove ${player.web_name} from locked list`}
+                      >
+                        <X size={12} className="lucide-icon" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-xs" style={{ color: PALETTE.muted }}>
+                  No locked players yet. Search and add players to force them as transfer-ins.
+                </div>
+              )}
             </div>
           )}
         </section>

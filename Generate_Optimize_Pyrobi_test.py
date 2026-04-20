@@ -96,6 +96,7 @@ def prefilter_players_by_horizon_points(
     team_df: pd.DataFrame,
     gw_list: list[str],
     min_points_per_gw: float = 1.0,
+    forced_keep_names: Optional[list[str]] = None,
 ) -> pd.DataFrame:
     """
     Keep all players in the initial squad.
@@ -111,6 +112,13 @@ def prefilter_players_by_horizon_points(
     df["name"] = df["name"].astype(str)
 
     team_names = set(team_df["name"].astype(str).tolist())
+    forced_keep_names = forced_keep_names or []
+    forced_keep_norm = {
+        str(name).strip().lower()
+        for name in forced_keep_names
+        if str(name).strip()
+    }
+    name_norm = df["name"].astype(str).str.strip().str.lower()
 
     # Exclude GW "0" from horizon filtering
     horizon_cols = [gw for gw in gw_list if gw != "0"]
@@ -125,7 +133,11 @@ def prefilter_players_by_horizon_points(
     horizon_threshold = len(horizon_cols) * float(min_points_per_gw)
     horizon_sum = df[horizon_cols].sum(axis=1)
 
-    keep_mask = df["name"].isin(team_names) | (horizon_sum >= horizon_threshold)
+    keep_mask = (
+        df["name"].isin(team_names)
+        | name_norm.isin(forced_keep_norm)
+        | (horizon_sum >= horizon_threshold)
+    )
 
     filtered = df.loc[keep_mask].copy()
 
@@ -163,7 +175,7 @@ def optimize_my_team(
     n_solutions: int = 1,
     multi_solution_warmstart: bool = True,
     solution_decay: float = 0.92,
-    min_solution_distance: int = 1,
+    min_solution_distance: int = 12,
     force_in_list: Optional[list[str]] = None,
     on_solution: Optional[Callable[[int, list[dict[str, Any]]], None]] = None,
 ) -> pd.DataFrame:
@@ -253,6 +265,7 @@ def optimize_my_team(
         team_df=team_df,
         gw_list=GW_list,
         min_points_per_gw=1.0,
+        forced_keep_names=force_in_list,
     )
     
     # Verify all team_df names are still present after filtering
@@ -674,25 +687,30 @@ def optimize_my_team(
 
     # ---------------- Forced transfer-ins ----------------
     if forced_transfer_indices:
-        transferable_gws = [
-            t for t in T
-            if t > 0 and not (use_freehit and t == fh_t)
-        ]
-        if not transferable_gws:
-            raise ValueError("No valid gameweeks available for forced transfer-ins.")
+        live_gws = [t for t in T if t > 0]
+        if not live_gws:
+            raise ValueError("No future gameweeks available for forced transfer-ins.")
+        first_live_t = min(live_gws)
+        next_week_is_freehit = bool(use_freehit and fh_t == first_live_t)
 
         initial_squad_set = set(initial_squad)
         m.forced_transfer_in_con = pyo.ConstraintList()
         for i in forced_transfer_indices:
-            if i in initial_squad_set:
-                # If already owned, keep at least one valid future-week presence.
+            if next_week_is_freehit:
+                # If next GW is Free Hit, lock player into the free-hit squad for that GW.
                 m.forced_transfer_in_con.add(
-                    sum(m.x[i, t] for t in transferable_gws) >= 1
+                    m.fh_x[i] == 1
                 )
             else:
+                # Otherwise, lock player into first live GW squad.
                 m.forced_transfer_in_con.add(
-                    sum(m.transfer_in[i, t] for t in transferable_gws) >= 1
+                    m.x[i, first_live_t] == 1
                 )
+                # If not currently owned, force explicit transfer-in in first live GW.
+                if i not in initial_squad_set:
+                    m.forced_transfer_in_con.add(
+                        m.transfer_in[i, first_live_t] == 1
+                    )
 
     # ---------------- Saved transfers ----------------
     m.saved_con = pyo.ConstraintList()
@@ -799,7 +817,7 @@ def optimize_my_team(
 
     def extract_binary_pattern_terms() -> list[tuple[Any, int]]:
         terms: list[tuple[Any, int]] = []
-        # Diversity cut based only on playing XI decisions.
+        # Diversity cut based on playing XI plus transfer decisions.
         # We exclude t=0 since it is fixed/current state.
         for i in I:
             for t in T:
@@ -809,6 +827,7 @@ def optimize_my_team(
                     terms.append((m.fh_y[i], int(round(safe_value(m.fh_y[i])))))
                 else:
                     terms.append((m.y[i, t], int(round(safe_value(m.y[i, t])))))
+                    terms.append((m.transfer_in[i, t], int(round(safe_value(m.transfer_in[i, t])))))
         return terms
 
     def compute_weighted_decay_expected_points() -> float:
@@ -1168,8 +1187,12 @@ def optimize_my_team(
         last_incumbent = capture_solution_values()
 
         binary_terms = extract_binary_pattern_terms()
-        required_distance = max(1, int(min_solution_distance), len(GW_list))
-        print(f"Applying playing-XI diversity cut: required_distance={required_distance}")
+        min_distance_floor = 2 * max(1, len(GW_list) - 1)
+        required_distance = max(1, int(min_solution_distance), min_distance_floor)
+        print(
+            "Applying diversity cut "
+            f"(lineup + transfers): required_distance={required_distance}"
+        )
         m.no_good_cuts.add(
             sum((1 - var) if val == 1 else var for var, val in binary_terms) >= required_distance
         )
