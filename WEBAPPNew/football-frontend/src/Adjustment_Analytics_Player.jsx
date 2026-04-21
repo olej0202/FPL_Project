@@ -33,7 +33,6 @@ import {
   MousePointerClick,
   Hand,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import { useAdjustmentData, fixtureIdFromRow } from "./Contexts/AdjustmentsContext";
 import teamColors from "./utils/team_colors";
 
@@ -107,23 +106,6 @@ function GlassCard({ children, className = "", style = {} }) {
       }}
     >
       {children}
-    </div>
-  );
-}
-
-function StatCard({ icon, label, value }) {
-  return (
-    <div
-      className="rounded-2xl px-4 py-3"
-      style={{ border: `1px solid ${PALETTE.border}`, background: "rgba(248,250,252,0.96)" }}
-    >
-      <div className="flex items-center gap-2 text-[11px] uppercase tracking-wide" style={{ color: PALETTE.muted }}>
-        {icon ? React.createElement(icon, { size: 14 }) : null}
-        {label}
-      </div>
-      <div className="mt-1 text-lg font-bold" style={{ color: PALETTE.gold }}>
-        {value}
-      </div>
     </div>
   );
 }
@@ -252,7 +234,7 @@ function SearchableMultiSelect({
         top: `${Math.max(viewportPadding, top)}px`,
         width: "auto",
         maxHeight: `${Math.max(160, Math.min(320, availableHeight))}px`,
-        zIndex: 120,
+        zIndex: 30,
       });
     } else {
       setPanelStyle({
@@ -261,7 +243,7 @@ function SearchableMultiSelect({
         top: `calc(100% + ${gap}px)`,
         width: `${rect.width}px`,
         maxHeight: "280px",
-        zIndex: 120,
+        zIndex: 30,
       });
     }
 
@@ -578,7 +560,6 @@ function playersNeedCalcSync(currentRows, nextRows) {
   return false;
 }
 export default function PlayerAdjustmentsPage() {
-  const navigate = useNavigate();
   const {
     fetchIfNeeded,
     loading,
@@ -606,7 +587,7 @@ export default function PlayerAdjustmentsPage() {
   const [selectedTeamCodes, setSelectedTeamCodes] = useState([]);
   const [selectedPositions, setSelectedPositions] = useState([]);
   const [valueThreshold, setValueThreshold] = useState(null);
-  const [showFilters, setShowFilters] = useState(true);
+  const [showFilters, setShowFilters] = useState(false);
   const [selectedGwStart, setSelectedGwStart] = useState(null);
   const [selectedGwEnd, setSelectedGwEnd] = useState(null);
 
@@ -1060,12 +1041,14 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
   const comparisonChartDataPoints = useMemo(() => {
     if (!comparisonBaselineRows.length) return [];
 
-    const rawSeries = comparisonBaselineRows.map((row) => {
-      const teamRow = teamLookup.get(`${String(row.Team)}_${row.GW}`);
-      const measures = computeMeasures(row, teamRow);
-      const raw01 = clamp01(Number(measures._CBI01_Raw));
-      return { GW: row.GW, raw01, teamRow, row };
-    });
+    const rawSeries = comparisonBaselineRows
+      .filter((row) => Number.isFinite(Number(row?.GW)) && Number(row.GW) <= 38)
+      .map((row) => {
+        const teamRow = teamLookup.get(`${String(row.Team)}_${row.GW}`);
+        const measures = computeMeasures(row, teamRow);
+        const raw01 = clamp01(Number(measures._CBI01_Raw));
+        return { GW: row.GW, raw01, teamRow, row };
+      });
 
     const meanRaw = rawSeries.length
       ? rawSeries.reduce((sum, entry) => sum + entry.raw01, 0) / rawSeries.length
@@ -1127,7 +1110,6 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
         if (typeof parsed.valueThreshold === "number" && !Number.isNaN(parsed.valueThreshold)) {
           setValueThreshold(parsed.valueThreshold);
         }
-        if (typeof parsed.showFilters === "boolean") setShowFilters(parsed.showFilters);
         if (parsed.selectedGwStart != null) setSelectedGwStart(parsed.selectedGwStart);
         if (parsed.selectedGwEnd != null) setSelectedGwEnd(parsed.selectedGwEnd);
         if (parsed.sortConfig) setSortConfig(parsed.sortConfig);
@@ -1152,7 +1134,6 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
         selectedTeamCodes,
         selectedPositions,
         valueThreshold,
-        showFilters,
         selectedGwStart,
         selectedGwEnd,
         sortConfig,
@@ -1167,7 +1148,6 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
     selectedTeamCodes,
     selectedPositions,
     valueThreshold,
-    showFilters,
     selectedGwStart,
     selectedGwEnd,
     sortConfig,
@@ -1287,11 +1267,6 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
     await fetchIfNeeded();
   };
 
-  const handleOpenStatisticalOptimizer = useCallback(async () => {
-    await fetchIfNeeded();
-    navigate("/My_Team", { state: { preferModel: "statistical" } });
-  }, [fetchIfNeeded, navigate]);
-
   const openPlayerModal = useCallback((nameKey) => {
     setActivePlayerKey(nameKey);
     setIsModalOpen(true);
@@ -1375,20 +1350,22 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
   const chartDataPoints = useMemo(() => {
     if (!modalBaselineRows || modalBaselineRows.length === 0) return [];
 
-    const rawSeries = modalBaselineRows.map((row) => {
-      const teamRow = teamLookup.get(`${String(row.Team)}_${row.GW}`);
+    const rawSeries = modalBaselineRows
+      .filter((row) => Number.isFinite(Number(row?.GW)) && Number(row.GW) <= 38)
+      .map((row) => {
+        const teamRow = teamLookup.get(`${String(row.Team)}_${row.GW}`);
 
-      const effectiveRow = {
-        ...row,
-        average_minutes: minutesDraft[row.GW] ?? row.average_minutes,
-        Goal_share: pendingGoalShare != null ? pendingGoalShare : row.Goal_share,
-        Assist_share: pendingAssistShare != null ? pendingAssistShare : row.Assist_share,
-      };
+        const effectiveRow = {
+          ...row,
+          average_minutes: minutesDraft[row.GW] ?? row.average_minutes,
+          Goal_share: pendingGoalShare != null ? pendingGoalShare : row.Goal_share,
+          Assist_share: pendingAssistShare != null ? pendingAssistShare : row.Assist_share,
+        };
 
-      const m = computeMeasures(effectiveRow, teamRow);
-      const raw01 = clamp01(Number(m._CBI01_Raw));
-      return { GW: row.GW, raw01, teamRow, effectiveRow };
-    });
+        const m = computeMeasures(effectiveRow, teamRow);
+        const raw01 = clamp01(Number(m._CBI01_Raw));
+        return { GW: row.GW, raw01, teamRow, effectiveRow };
+      });
 
     const meanRaw = rawSeries.length
       ? rawSeries.reduce((s, x) => s + x.raw01, 0) / rawSeries.length
@@ -1790,34 +1767,11 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-5 w-full lg:w-auto">
-            <StatCard icon={Users} label="Players" value={String(filteredPlayerRows.length)} />
-            <StatCard
-              icon={currentMeasureMeta.icon}
-              label="Measure"
-              value={currentMeasureMeta.short}
-            />
-            <StatCard icon={PencilLine} label="Changes" value={String(displayAdjustments.length)} />
-            <button
-              type="button"
-              onClick={handleOpenStatisticalOptimizer}
-              className="rounded-2xl px-4 py-3 text-left transition"
-              style={{
-                border: `1px solid ${PALETTE.gold}`,
-                background: "linear-gradient(145deg, rgba(236,253,245,0.95), rgba(248,250,252,0.95))",
-                color: PALETTE.beige,
-              }}
-            >
-              <div className="flex items-center gap-2 text-[11px] uppercase tracking-wide" style={{ color: "#475569" }}>
-                <Target size={14} />
-                Optimizer
-              </div>
-              <div className="mt-1 text-sm font-semibold">Use Statistical Model</div>
-            </button>
+          <div className="w-full sm:w-auto">
             <button
               type="button"
               onClick={handleResetData}
-              className="rounded-2xl px-4 py-3 text-left transition"
+              className="w-full rounded-2xl px-4 py-3 text-left transition sm:w-[240px]"
               style={{
                 border: `1px solid ${PALETTE.gold}`,
                 background: "linear-gradient(145deg, rgba(236,253,245,0.95), rgba(248,250,252,0.95))",
@@ -1837,10 +1791,10 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
   <details
     open={showFilters}
     onToggle={(e) => setShowFilters(e.currentTarget.open)}
-    className="overflow-visible rounded-[28px]"
+    className="overflow-visible rounded-[28px] transition-all duration-300"
     style={{
       position: "relative",
-      zIndex: 30,
+      zIndex: 1,
       border: `1px solid ${PALETTE.border}`,
       background: "#ffffff",
       boxShadow: "0 14px 30px rgba(15,23,42,0.08)",
@@ -2940,6 +2894,3 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
     </div>
   );
 }
-
-
-

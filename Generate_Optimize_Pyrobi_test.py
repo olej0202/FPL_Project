@@ -817,7 +817,7 @@ def optimize_my_team(
 
     def extract_binary_pattern_terms(max_t: Optional[int] = None) -> list[tuple[Any, int]]:
         terms: list[tuple[Any, int]] = []
-        # Diversity cut based on playing XI plus transfer decisions.
+        # Diversity cut based only on playing XI (bench players excluded).
         # We exclude t=0 since it is fixed/current state.
         horizon_max_t = optimize_range - 1
         if max_t is not None:
@@ -829,11 +829,8 @@ def optimize_my_team(
                     continue
                 if use_freehit and t == fh_t:
                     terms.append((m.fh_y[i], int(round(safe_value(m.fh_y[i])))))
-                    terms.append((m.fh_in[i], int(round(safe_value(m.fh_in[i])))))
                 else:
                     terms.append((m.y[i, t], int(round(safe_value(m.y[i, t])))))
-                    terms.append((m.transfer_in[i, t], int(round(safe_value(m.transfer_in[i, t])))))
-                    terms.append((m.transfer_out[i, t], int(round(safe_value(m.transfer_out[i, t])))))
         return terms
 
     def extract_single_gw_pattern_terms(t: int) -> list[tuple[Any, int]]:
@@ -843,17 +840,9 @@ def optimize_my_team(
 
         for i in I:
             if use_freehit and t == fh_t:
-                terms.append((m.fh_x[i], int(round(safe_value(m.fh_x[i])))))
                 terms.append((m.fh_y[i], int(round(safe_value(m.fh_y[i])))))
-                terms.append((m.fh_c[i], int(round(safe_value(m.fh_c[i])))))
-                terms.append((m.fh_in[i], int(round(safe_value(m.fh_in[i])))))
-                terms.append((m.fh_out[i], int(round(safe_value(m.fh_out[i])))))
             else:
-                terms.append((m.x[i, t], int(round(safe_value(m.x[i, t])))))
                 terms.append((m.y[i, t], int(round(safe_value(m.y[i, t])))))
-                terms.append((m.c[i, t], int(round(safe_value(m.c[i, t])))))
-                terms.append((m.transfer_in[i, t], int(round(safe_value(m.transfer_in[i, t])))))
-                terms.append((m.transfer_out[i, t], int(round(safe_value(m.transfer_out[i, t])))))
         return terms
 
     def compute_weighted_decay_expected_points() -> float:
@@ -1217,9 +1206,10 @@ def optimize_my_team(
         binary_terms = extract_binary_pattern_terms()
         min_distance_floor = 2 * total_future_gws
         required_distance = max(1, int(min_solution_distance), min_distance_floor)
+        required_distance = min(required_distance, len(binary_terms))
         print(
             "Applying diversity cut "
-            f"(lineup + transfers): required_distance={required_distance}"
+            f"(playing XI only): required_distance={required_distance}"
         )
         m.no_good_cuts.add(
             sum((1 - var) if val == 1 else var for var, val in binary_terms) >= required_distance
