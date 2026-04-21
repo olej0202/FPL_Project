@@ -97,7 +97,7 @@ export default function App() {
       type: "link",
       to: "/Adjustment_Analysis",
       icon: BarChart2,
-      label: "Statistical Model",
+      label: "Prediction Model",
     },
     {
       type: "group",

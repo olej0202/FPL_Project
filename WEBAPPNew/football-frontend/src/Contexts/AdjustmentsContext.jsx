@@ -59,6 +59,19 @@ const firstFinite = (...vals) => {
   }
   return null;
 };
+const parseOptional01 = (value) => {
+  if (value == null) return null;
+  if (typeof value === "string" && value.trim() === "") return null;
+  const n = Number(value);
+  return Number.isFinite(n) ? clamp01(n) : null;
+};
+const scaleRawCbiByAdjustedMean = (raw01, sourceMean01, adjustedMean01) => {
+  const raw = clamp01(raw01);
+  const sourceMean = clamp01(sourceMean01);
+  const adjustedMean = clamp01(adjustedMean01);
+  if (sourceMean > 1e-9) return clamp01(raw * (adjustedMean / sourceMean));
+  return adjustedMean;
+};
 
 const teamGwKey = (teamCode, gw) => `${normalizeName(teamCode)}__${toNum(gw, -1)}`;
 
@@ -159,7 +172,7 @@ const computeMeasuresForBootstrap = (playerRow, teamRow) => {
     minutesAdj;
   const assists = ((assistShare * 0.9 + 0.1 * oppAssistThreat) * xg) * minutesAdj;
 
-  const rawCbi01 = clamp01(firstFinite(playerRow?.CBI_Percent, 0) ?? 0);
+  const rawCbi01 = clamp01(firstFinite(playerRow?.CBI_Predictions, playerRow?.CBI_Percent, 0) ?? 0);
   const cbi01 = rawCbi01 * minutesAdj;
   const defconPointsTerm = cbi01 * minutesAdj * matchCount * 2;
   const savePred = savePredRaw * minutesAdj * matchCount;
@@ -225,7 +238,7 @@ const bootstrapPlayerCalcs = (rows, teamRows) => {
       0
     );
     const calc_minutes = firstFinite(row?.calc_minutes, measures.Avg_Minutes, 0);
-    const cbiRaw = firstFinite(row?.CBI_Percent, row?.CBI_Predictions, 0);
+    const cbiRaw = firstFinite(row?.CBI_Predictions, row?.CBI_Percent, 0);
     const calc_cbi = firstFinite(
       row?.calc_cbi,
       measures.CBI_Predictions,
@@ -233,7 +246,7 @@ const bootstrapPlayerCalcs = (rows, teamRows) => {
       cbiRaw,
       0
     );
-    const defcon_adjust_01 = firstFinite(row?.defcon_adjust_01, cbiRaw, 0);
+    const defcon_adjust_01 = parseOptional01(row?.defcon_adjust_01);
 
     return {
       ...row,
@@ -398,7 +411,7 @@ const computeAlignedMeasures = (playerRow, teamRow, cbi01Override = null) => {
     minutesAdj;
   const assists = ((assistShare * 0.9 + 0.1 * oppAssistThreat) * xg) * minutesAdj;
 
-  const rawCbi01 = clamp01(Number(playerRow.CBI_Percent) || 0);
+  const rawCbi01 = clamp01(firstFinite(playerRow?.CBI_Predictions, playerRow?.CBI_Percent, 0) ?? 0);
   const cbi01 =
     (typeof cbi01Override === "number" && Number.isFinite(cbi01Override)
       ? clamp01(cbi01Override)
@@ -449,7 +462,13 @@ const buildStablePlayerCalcs = (playerRows, teamRows, fixtures) => {
     let rawSum = 0;
     let rawCount = 0;
 
-    for (const row of rowsForPlayer) {
+    const baselineRows = rowsForPlayer.filter((row) => {
+      const gw = Number(row?.GW);
+      return Number.isFinite(gw) && gw >= 1 && gw <= 38;
+    });
+    const rowsForMean = baselineRows.length > 0 ? baselineRows : rowsForPlayer;
+
+    for (const row of rowsForMean) {
       const teamRow = teamLookup.get(`${String(row.Team)}_${Number(row.GW)}`);
       const base = computeAlignedMeasures(row, teamRow);
       rawSum += clamp01(Number(base._CBI01_Raw));
@@ -460,10 +479,10 @@ const buildStablePlayerCalcs = (playerRows, teamRows, fixtures) => {
     meanByPlayer.set(nameKey, meanRaw);
 
     const first = rowsForPlayer[0];
-    const storedAdj = Number(first?.defcon_adjust_01);
+    const storedAdj = parseOptional01(first?.defcon_adjust_01);
     adjByPlayer.set(
       nameKey,
-      Number.isFinite(storedAdj) ? clamp01(storedAdj) : clamp01(meanRaw)
+      storedAdj != null ? storedAdj : clamp01(meanRaw)
     );
   }
 
@@ -474,7 +493,11 @@ const buildStablePlayerCalcs = (playerRows, teamRows, fixtures) => {
     const newAdj = adjByPlayer.get(key) ?? clamp01(meanRaw);
 
     const raw = computeAlignedMeasures(row, teamRow);
-    const adjustedCbi01 = clamp01(clamp01(Number(raw._CBI01_Raw)) - meanRaw + newAdj);
+    const adjustedCbi01 = scaleRawCbiByAdjustedMean(
+      clamp01(Number(raw._CBI01_Raw)),
+      meanRaw,
+      newAdj
+    );
     const measures = computeAlignedMeasures(row, teamRow, adjustedCbi01);
 
     return {

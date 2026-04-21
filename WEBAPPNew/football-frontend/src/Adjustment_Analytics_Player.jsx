@@ -62,6 +62,26 @@ const MEASURE_LABELS = {
 };
 
 const clamp01 = (x) => Math.max(0, Math.min(1, Number.isFinite(x) ? x : 0));
+const firstFinite = (...vals) => {
+  for (const v of vals) {
+    const n = Number(v);
+    if (Number.isFinite(n)) return n;
+  }
+  return null;
+};
+const parseOptional01 = (value) => {
+  if (value == null) return null;
+  if (typeof value === "string" && value.trim() === "") return null;
+  const n = Number(value);
+  return Number.isFinite(n) ? clamp01(n) : null;
+};
+const scaleRawCbiByAdjustedMean = (raw01, sourceMean01, adjustedMean01) => {
+  const raw = clamp01(raw01);
+  const sourceMean = clamp01(sourceMean01);
+  const adjustedMean = clamp01(adjustedMean01);
+  if (sourceMean > 1e-9) return clamp01(raw * (adjustedMean / sourceMean));
+  return adjustedMean;
+};
 
 function getMeasureMeta(measure) {
   switch (measure) {
@@ -701,7 +721,7 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
   const assists =
     ((assistShare * 0.9 + 0.1 * oppAssistThreat) * xg) * minutesAdj;
 
-  const rawCbi01 = clamp01(Number(playerRow.CBI_Percent) || 0);
+  const rawCbi01 = clamp01(firstFinite(playerRow.CBI_Predictions, playerRow.CBI_Percent, 0));
 
   const cbi01 =
     (typeof cbi01Override === "number" && Number.isFinite(cbi01Override)
@@ -843,7 +863,13 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
       let rawSum = 0;
       let rawCount = 0;
 
-      for (const row of rowsForPlayer) {
+      const baselineRows = rowsForPlayer.filter((row) => {
+        const gw = Number(row?.GW);
+        return Number.isFinite(gw) && gw >= 1 && gw <= 38;
+      });
+      const rowsForMean = baselineRows.length > 0 ? baselineRows : rowsForPlayer;
+
+      for (const row of rowsForMean) {
         const teamRow = teamLookup.get(`${String(row.Team)}_${Number(row.GW)}`);
         const base = computeMeasures(row, teamRow);
         const raw01 = clamp01(Number(base._CBI01_Raw));
@@ -855,10 +881,10 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
       meanByPlayer.set(nameKey, meanRaw);
 
       const first = rowsForPlayer[0];
-      const storedAdj = Number(first?.defcon_adjust_01);
+      const storedAdj = parseOptional01(first?.defcon_adjust_01);
       adjByPlayer.set(
         nameKey,
-        Number.isFinite(storedAdj) ? clamp01(storedAdj) : clamp01(meanRaw)
+        storedAdj != null ? storedAdj : clamp01(meanRaw)
       );
     }
 
@@ -870,7 +896,7 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
 
       const mRaw = computeMeasures(row, teamRow);
       const raw01 = clamp01(Number(mRaw._CBI01_Raw));
-      const adjustedCbi01 = clamp01(raw01 - meanRaw + newAdj);
+      const adjustedCbi01 = scaleRawCbiByAdjustedMean(raw01, meanRaw, newAdj);
       const measures = computeMeasures(row, teamRow, adjustedCbi01);
 
       return {
@@ -959,7 +985,7 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
         teamName,
         value,
         gwMeasures,
-        defcon_adjust_01: Number(first.defcon_adjust_01),
+        defcon_adjust_01: parseOptional01(first.defcon_adjust_01),
       });
     }
 
@@ -1035,10 +1061,16 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
   const comparisonDefconAdjust01 = useMemo(() => {
     if (!comparisonBaselineRows.length) return null;
 
-    const stored = Number(comparisonBaselineRows[0]?.defcon_adjust_01);
-    if (Number.isFinite(stored)) return clamp01(stored);
+    const stored = parseOptional01(comparisonBaselineRows[0]?.defcon_adjust_01);
+    if (stored != null) return stored;
 
-    const rawVals = comparisonBaselineRows.map((row) => {
+    const baselineRows = comparisonBaselineRows.filter((row) => {
+      const gw = Number(row?.GW);
+      return Number.isFinite(gw) && gw >= 1 && gw <= 38;
+    });
+    const rowsForMean = baselineRows.length > 0 ? baselineRows : comparisonBaselineRows;
+
+    const rawVals = rowsForMean.map((row) => {
       const teamRow = teamLookup.get(`${String(row.Team)}_${row.GW}`);
       const m = computeMeasures(row, teamRow);
       return clamp01(Number(m._CBI01_Raw));
@@ -1069,7 +1101,7 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
       : clamp01(meanRaw);
 
     return rawSeries.map(({ GW, raw01, teamRow, row }) => {
-      const adjusted01 = clamp01(raw01 - meanRaw + targetAdj);
+      const adjusted01 = scaleRawCbiByAdjustedMean(raw01, meanRaw, targetAdj);
       const measures = computeMeasures(row, teamRow, adjusted01);
       return {
         GW,
@@ -1359,7 +1391,13 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
       });
       setMinutesDraft(draft);
 
-      const rawVals = rows.map((row) => {
+      const baselineRows = rows.filter((row) => {
+        const gw = Number(row?.GW);
+        return Number.isFinite(gw) && gw >= 1 && gw <= 38;
+      });
+      const rowsForMean = baselineRows.length > 0 ? baselineRows : rows;
+
+      const rawVals = rowsForMean.map((row) => {
         const teamRow = teamLookup.get(`${String(row.Team)}_${row.GW}`);
         const m = computeMeasures(row, teamRow);
         return clamp01(Number(m._CBI01_Raw));
@@ -1367,8 +1405,8 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
       const mean = rawVals.length ? rawVals.reduce((a, b) => a + b, 0) / rawVals.length : 0;
       setDefconMean01(mean);
 
-      const stored = Number(first.defcon_adjust_01);
-      setDefconAdjust01(Number.isFinite(stored) ? clamp01(stored) : clamp01(mean));
+      const stored = parseOptional01(first.defcon_adjust_01);
+      setDefconAdjust01(stored != null ? stored : clamp01(mean));
     }
   }, [isModalOpen, activePlayerKey, playersByKey, teamLookup, computeMeasures]);
 
@@ -1411,7 +1449,7 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
     const newAdj = clamp01(Number(defconAdjust01));
 
     return rawSeries.map(({ GW, raw01, teamRow, effectiveRow }) => {
-      const adjusted01 = clamp01(raw01 - meanRaw + newAdj);
+      const adjusted01 = scaleRawCbiByAdjustedMean(raw01, meanRaw, newAdj);
       const measures = computeMeasures(effectiveRow, teamRow, adjusted01);
 
       return {
@@ -1535,8 +1573,8 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
       }
     }
 
-    const oldStored = Number(activePlayerFirstRow.defcon_adjust_01);
-    const baseline = Number.isFinite(oldStored) ? clamp01(oldStored) : clamp01(defconMean01);
+    const oldStored = parseOptional01(activePlayerFirstRow.defcon_adjust_01);
+    const baseline = oldStored != null ? oldStored : clamp01(defconMean01);
     if (clamp01(defconAdjust01) !== baseline) return true;
 
     return false;
@@ -1605,8 +1643,8 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
       }
     });
 
-    const oldDA = Number(activePlayerFirstRow.defcon_adjust_01);
-    const baselineDA = Number.isFinite(oldDA) ? clamp01(oldDA) : clamp01(defconMean01);
+    const oldDA = parseOptional01(activePlayerFirstRow.defcon_adjust_01);
+    const baselineDA = oldDA != null ? oldDA : clamp01(defconMean01);
     const newDA = clamp01(Number(defconAdjust01));
     if (newDA !== baselineDA) {
       adjustmentsToLog.push({

@@ -107,6 +107,22 @@ const toFiniteNumber = (...values) => {
   }
   return null;
 };
+const isUnknownOpponent = (value) => {
+  if (value == null) return true;
+  const s = String(value).trim();
+  if (!s) return true;
+  return /^(n\/?a|na|none|null|unknown|-)$/i.test(s);
+};
+const cleanOpponentValue = (value) => (isUnknownOpponent(value) ? null : value);
+const getRowPredictedPoints = (row) =>
+  toFiniteNumber(
+    row?.Points,
+    row?.calc_points,
+    row?.predicted_points,
+    row?.Predicted_points,
+    row?.point_prediction,
+    row?.Point_prediction
+  );
 
 const getTeamNameFromStrengthRow = (row) => {
   const raw = row?.name ?? row?.team_name ?? row?.Team ?? row?.team ?? row?.full_name;
@@ -323,28 +339,46 @@ export default function MyTeamOptimize() {
         const gw = Number(r?.GW);
         if (!Number.isFinite(gw)) return;
 
-        const playerName = r?.name ?? r?.Name ?? r?.web_name;
-        if (!playerName) return;
+        const playerKeys = Array.from(
+          new Set(
+            [
+              r?.name,
+              r?.Name,
+              r?.web_name,
+              r?.player_name,
+              r?.full_name,
+              r?.id,
+              r?.element,
+            ]
+              .filter((v) => v != null && String(v).trim() !== "")
+              .map((v) => String(v))
+          )
+        );
+        if (!playerKeys.length) return;
 
-        const opp =
+        const opp = cleanOpponentValue(
           r?.opponent_name ??
           r?.Opponent_team ??
           r?.opponent ??
           r?.Opponent ??
-          r?.opponent_team;
+          r?.opponent_team
+        );
         if (!opp) return;
 
-        const key = playerGwKey(playerName, gw);
         const parts = splitOpponentParts(opp);
-        const bucket = map.get(key) || new Set();
-        if (parts.length) parts.forEach((p) => bucket.add(p));
-        else bucket.add(String(opp));
-        map.set(key, bucket);
+        playerKeys.forEach((playerName) => {
+          const key = playerGwKey(playerName, gw);
+          const bucket = map.get(key) || new Set();
+          if (parts.length) parts.forEach((p) => bucket.add(p));
+          else bucket.add(String(opp));
+          map.set(key, bucket);
+        });
       });
     };
 
     addRows(Playerdata?.current);
     addRows(PlayersData?.current);
+    addRows(data);
 
     const out = new Map();
     map.forEach((set, key) => {
@@ -353,61 +387,94 @@ export default function MyTeamOptimize() {
     });
 
     return out;
-  }, [Playerdata, PlayersData, dataVersion]);
+  }, [Playerdata, PlayersData, data, dataVersion]);
 
   const opponentByTeamGw = useMemo(() => {
     const out = new Map();
-    const rows = Array.isArray(Teamdata?.current) ? Teamdata.current : [];
+    const addRows = (rows) => {
+      if (!Array.isArray(rows)) return;
+      rows.forEach((r) => {
+        const gw = Number(r?.GW);
+        if (!Number.isFinite(gw)) return;
 
-    rows.forEach((r) => {
-      const gw = Number(r?.GW);
-      if (!Number.isFinite(gw)) return;
+        const teamName = r?.team_name ?? r?.Team ?? r?.team;
+        const teamCode = r?.team_code ?? r?.team_id ?? r?.code;
+        const opp = cleanOpponentValue(
+          r?.Opponent_team ?? r?.opponent_team ?? r?.opponent ?? r?.Opponent
+        );
+        if ((!teamName && teamCode == null) || !opp) return;
 
-      const teamName = r?.team_name ?? r?.Team ?? r?.team;
-      const teamCode = r?.team_code ?? r?.team_id ?? r?.code;
-      const opp = r?.Opponent_team ?? r?.opponent_team ?? r?.opponent ?? r?.Opponent;
-      if ((!teamName && teamCode == null) || !opp) return;
+        const candidates = [];
+        if (teamName) {
+          candidates.push(teamName);
+          const short = getTeamShort(teamName);
+          if (short) candidates.push(short);
+        }
+        if (teamCode != null) candidates.push(String(teamCode));
 
-      const candidates = [];
-      if (teamName) {
-        candidates.push(teamName);
-        const short = getTeamShort(teamName);
-        if (short) candidates.push(short);
-      }
-      if (teamCode != null) candidates.push(String(teamCode));
-
-      candidates.forEach((cand) => {
-        out.set(teamGwKey(cand, gw), String(opp));
+        candidates.forEach((cand) => {
+          out.set(teamGwKey(cand, gw), String(opp));
+        });
       });
-    });
+    };
+
+    addRows(Teamdata?.current);
+    addRows(TeamData?.current);
 
     return out;
-  }, [Teamdata, dataVersion]);
+  }, [Teamdata, TeamData, dataVersion]);
 
   const getOpponentMeta = useCallback(
     (row) => {
-      const rawFromRow =
+      const rawFromRow = cleanOpponentValue(
         row?.opponent_name ??
         row?.Opponent_team ??
         row?.opponent ??
         row?.Opponent ??
         row?.opp_team ??
-        row?.fixture_opponent;
+        row?.fixture_opponent
+      );
 
-      const fallbackFromPlayerGw = opponentByPlayerGw.get(
-        playerGwKey(row?.Name ?? row?.name ?? row?.web_name, row?.GW)
-      );
-      const fallbackFromTeamGw = opponentByTeamGw.get(
-        teamGwKey(
-          row?.Team ??
-            row?.team_name ??
-            row?.team_code ??
-            row?.team_id ??
-            row?.team ??
-            row?.code,
-          row?.GW
-        )
-      );
+      const playerCandidates = [
+        row?.Name,
+        row?.name,
+        row?.web_name,
+        row?.player_name,
+        row?.full_name,
+        row?.id,
+        row?.element,
+      ]
+        .filter((v) => v != null && String(v).trim() !== "")
+        .map((v) => String(v));
+
+      let fallbackFromPlayerGw = null;
+      for (const playerCand of playerCandidates) {
+        const hit = opponentByPlayerGw.get(playerGwKey(playerCand, row?.GW));
+        if (hit) {
+          fallbackFromPlayerGw = hit;
+          break;
+        }
+      }
+
+      const teamCandidates = [
+        row?.Team,
+        row?.team_name,
+        row?.team_code,
+        row?.team_id,
+        row?.team,
+        row?.code,
+      ].filter((v) => v != null && String(v).trim() !== "");
+      const shortTeam = getTeamShort(row?.team_name ?? row?.team ?? row?.Team);
+      if (shortTeam) teamCandidates.push(shortTeam);
+
+      let fallbackFromTeamGw = null;
+      for (const teamCand of teamCandidates) {
+        const hit = opponentByTeamGw.get(teamGwKey(teamCand, row?.GW));
+        if (hit) {
+          fallbackFromTeamGw = hit;
+          break;
+        }
+      }
 
       const rawOpponent = rawFromRow || fallbackFromPlayerGw || fallbackFromTeamGw || "N/A";
       const formatted = formatOpponent(rawOpponent);
@@ -692,6 +759,40 @@ export default function MyTeamOptimize() {
       totalPredPoints = Number.isFinite(asNum) ? asNum : null;
     }
   }
+
+  const activeGwPredPoints = (() => {
+    if (!gwData.length) return null;
+    const isPlayerRow = (row) => {
+      const n = String(row?.Name ?? row?.name ?? "").trim();
+      return n !== "Obj Value" && n !== "__TOTAL_OBJECTIVE__";
+    };
+
+    const playingRows = gwData.filter((r) => r?.status === "playing" && isPlayerRow(r));
+    const pointRows = playingRows.length
+      ? playingRows
+      : gwData.filter((r) => (r?.status === "playing" || r?.status === "benched") && isPlayerRow(r));
+
+    let sum = 0;
+    let count = 0;
+    pointRows.forEach((row) => {
+      const pts = getRowPredictedPoints(row);
+      if (Number.isFinite(pts)) {
+        sum += pts;
+        count += 1;
+      }
+    });
+    return count > 0 ? sum : null;
+  })();
+
+  const pitchPredictedLabel = Number.isFinite(activeGW)
+    ? `Predicted GW ${activeGW}`
+    : "Predicted";
+  const pitchPredictedValue =
+    activeGwPredPoints != null
+      ? activeGwPredPoints.toFixed(2)
+      : totalPredPoints != null
+      ? totalPredPoints.toFixed(2)
+      : "-";
 
   const toNum = (v) => Number(v);
   let transfersWithFH = transfers;
@@ -1637,7 +1738,7 @@ export default function MyTeamOptimize() {
               )}
 
               <div className="mb-4 grid grid-cols-2 gap-3 max-w-[420px] mx-auto">
-                <TopStat icon={Target} label="Predicted" value={totalPredPoints != null ? totalPredPoints.toFixed(2) : "—"} />
+                <TopStat icon={Target} label={pitchPredictedLabel} value={pitchPredictedValue} />
                 <TopStat icon={CalendarRange} label="Window" value={`GW ${minGW}-${maxGW}`} />
               </div>
 

@@ -1798,10 +1798,47 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
     
     team_pred1=pd.read_csv("Team_prediction1.csv")
     team_pred2=pd.read_csv("Team_prediction2.csv")
-    team_results=pd.read_csv("Team_prediction_results2.csv")
-    
-    team_pred1[["XG","XGC"]]=team_pred1[["XG","XGC"]]*0.3+team_pred2[["XG","XGC"]]*0.7
-    team_pred1[["CS"]]=team_pred1[["CS"]]*0.4+team_pred2[["CS"]]*0.6
+    team_results2=pd.read_csv("Team_prediction_results2.csv")
+
+    # Prefer model-3 outputs when available (triggered from orchestration), else fall back to model-2.
+    team_results_path = "Team_prediction_results2.csv"
+    try:
+        team_pred3 = pd.read_csv("Team_prediction3.csv")
+        team_results = pd.read_csv("Team_prediction_results3.csv")
+        team_results_path = "Team_prediction_results3.csv"
+        print("[GenerateTeamPredictions] Using model-3 files for totals blend.")
+    except Exception as e:
+        team_pred3 = team_pred2.copy()
+        team_results = team_results2.copy()
+        print(f"[GenerateTeamPredictions] Model-3 files not used, fallback to model-2: {e}")
+
+    if "win_Percent" not in team_results.columns and "Win_Percent" in team_results.columns:
+        team_results["win_Percent"] = team_results["Win_Percent"]
+    if "Win_Percent" not in team_results.columns and "win_Percent" in team_results.columns:
+        team_results["Win_Percent"] = team_results["win_Percent"]
+
+    pred_keys = ["GW", "pred", "team_code", "Opponent_team", "Home"]
+    if all(k in team_pred1.columns for k in pred_keys) and all(k in team_pred3.columns for k in pred_keys):
+        team_pred3_small = team_pred3[pred_keys + ["XG", "XGC", "CS"]].copy().rename(
+            columns={"XG": "XG_m3", "XGC": "XGC_m3", "CS": "CS_m3"}
+        )
+        team_pred1 = team_pred1.merge(team_pred3_small, on=pred_keys, how="left")
+        team_pred1["XG"] = team_pred2["XG"] * 0.3+team_pred1["XG"] * 0.2 + team_pred1["XG_m3"].fillna(team_pred1["XG"]) * 0.5
+        team_pred1["XGC"] = team_pred1["XGC"] * 0.3 + team_pred1["XGC_m3"].fillna(team_pred1["XGC"]) * 0.7
+        team_pred1["CS"] = team_pred2["CS"] * 0.4+team_pred1["CS"] * 0.2 + team_pred1["CS_m3"].fillna(team_pred1["CS"]) * 0.4
+        team_pred1 = team_pred1.drop(columns=["XG_m3", "XGC_m3", "CS_m3"])
+    else:
+        team_pred1 = team_pred1.reset_index(drop=True)
+        team_pred3 = team_pred3.reset_index(drop=True)
+        min_len = min(len(team_pred1), len(team_pred3))
+        team_pred1.loc[: min_len - 1, ["XG", "XGC"]] = (
+            team_pred1.loc[: min_len - 1, ["XG", "XGC"]].values * 0.3
+            + team_pred3.loc[: min_len - 1, ["XG", "XGC"]].values * 0.7
+        )
+        team_pred1.loc[: min_len - 1, ["CS"]] = (
+            team_pred1.loc[: min_len - 1, ["CS"]].values * 0.4
+            + team_pred3.loc[: min_len - 1, ["CS"]].values * 0.6
+        )
 
     # Blend in simulator outcomes:
     # final = 0.7 * original_prediction + 0.3 * simulated_result for XG and CS.
@@ -1812,9 +1849,17 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
     except Exception as e:
         print(f"[GenerateTeamPredictions] Simulator file not used ({sim_path}): {e}")
 
-    team_pred1["Win_Percent"]=team_results["win_Percent"]
-    team_pred1["Draw_percent"]=team_results["Draw_percent"]
-    team_pred1["Loss_percent"]=team_results["Loss_percent"]
+    if all(k in team_pred1.columns for k in pred_keys) and all(k in team_results.columns for k in pred_keys):
+        team_res_small = team_results[pred_keys + ["win_Percent", "Draw_percent", "Loss_percent"]].copy()
+        team_pred1 = team_pred1.merge(team_res_small, on=pred_keys, how="left")
+        team_pred1["Win_Percent"] = pd.to_numeric(team_pred1["win_Percent"], errors="coerce").fillna(0)
+        team_pred1["Draw_percent"] = pd.to_numeric(team_pred1["Draw_percent"], errors="coerce").fillna(0)
+        team_pred1["Loss_percent"] = pd.to_numeric(team_pred1["Loss_percent"], errors="coerce").fillna(0)
+    else:
+        team_pred1["Win_Percent"] = pd.to_numeric(team_results["win_Percent"], errors="coerce").fillna(0)
+        team_pred1["Draw_percent"] = pd.to_numeric(team_results["Draw_percent"], errors="coerce").fillna(0)
+        team_pred1["Loss_percent"] = pd.to_numeric(team_results["Loss_percent"], errors="coerce").fillna(0)
+    team_pred1 = team_pred1.drop(columns=[c for c in ["win_Percent"] if c in team_pred1.columns])
 
     if sim_df is not None and not sim_df.empty:
         required_sim_cols = [
@@ -1879,10 +1924,10 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
                 index=team_pred1.index,
             )
 
-            # team_results are already percentages [0..100]
-            team_win = pd.to_numeric(team_results["win_Percent"], errors="coerce")
-            team_draw = pd.to_numeric(team_results["Draw_percent"], errors="coerce")
-            team_loss = pd.to_numeric(team_results["Loss_percent"], errors="coerce")
+            # Use already aligned totals columns on team_pred1.
+            team_win = pd.to_numeric(team_pred1["Win_Percent"], errors="coerce")
+            team_draw = pd.to_numeric(team_pred1["Draw_percent"], errors="coerce")
+            team_loss = pd.to_numeric(team_pred1["Loss_percent"], errors="coerce")
 
             team_pred1["Win_Percent"] = np.where(sim_win.notna(), team_win * 0.7 + sim_win * 0.3, team_win)
             team_pred1["Draw_percent"] = np.where(sim_draw.notna(), team_draw * 0.7 + sim_draw * 0.3, team_draw)
@@ -1909,13 +1954,99 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
     
     team_pred_visual1=pd.read_csv("Team_prediction_visual1.csv")
     team_pred_visual2=pd.read_csv("Team_prediction_visual2.csv")
-    team_results_visual=pd.read_csv("Team_prediction_visual_results2.csv")
-    
-    team_pred_visual1[["home_goals","away_goals"]]=team_pred_visual1[["home_goals","away_goals"]]*0.3+team_pred_visual2[["home_goals","away_goals"]]*0.7
-    team_pred_visual1[["Clean_Sheet_home","Clean_Sheet_away"]]=team_pred_visual1[["Clean_Sheet_home","Clean_Sheet_away"]]*0.4+team_pred_visual2[["Clean_Sheet_home","Clean_Sheet_away"]]*0.6
-    team_pred_visual1["Home_Win"]=team_results_visual["Home_win_Percent"]
-    team_pred_visual1["Away_Win"]=team_results_visual["Away_win_Percent"]
-    team_pred_visual1["Draw"]=team_results_visual["Draw_percent"]
+    try:
+        team_pred_visual3 = pd.read_csv("Team_prediction_visual3.csv")
+        try:
+            team_results_visual = pd.read_csv("Team_prediction_visual_results3.csv")
+        except Exception:
+            team_results_visual = pd.DataFrame(
+                {
+                    "GW": team_pred_visual3["GW"],
+                    "pred": team_pred_visual3["pred"],
+                    "home_team": team_pred_visual3["home_team"],
+                    "away_team": team_pred_visual3["away_team"],
+                    "home_code": team_pred_visual3["home_code"],
+                    "away_code": team_pred_visual3["away_code"],
+                    "Home_win_Percent": team_pred_visual3["Home_Win"],
+                    "Away_win_Percent": team_pred_visual3["Away_Win"],
+                    "Draw_percent": team_pred_visual3["Draw"],
+                }
+            )
+        print("[GenerateTeamPredictions] Using model-3 visual files for totals blend.")
+    except Exception as e:
+        team_pred_visual3 = team_pred_visual2.copy()
+        team_results_visual = pd.read_csv("Team_prediction_visual_results2.csv")
+        print(f"[GenerateTeamPredictions] Model-3 visual files not used, fallback to model-2: {e}")
+
+    vis_keys = ["GW", "pred", "home_code", "away_code", "home_team", "away_team"]
+    if all(k in team_pred_visual1.columns for k in vis_keys) and all(k in team_pred_visual3.columns for k in vis_keys):
+        v3_small = team_pred_visual3[
+            vis_keys + ["home_goals", "away_goals", "Clean_Sheet_home", "Clean_Sheet_away"]
+        ].copy().rename(
+            columns={
+                "home_goals": "home_goals_m3",
+                "away_goals": "away_goals_m3",
+                "Clean_Sheet_home": "Clean_Sheet_home_m3",
+                "Clean_Sheet_away": "Clean_Sheet_away_m3",
+            }
+        )
+        team_pred_visual1 = team_pred_visual1.merge(v3_small, on=vis_keys, how="left")
+        team_pred_visual1["home_goals"] = (
+            team_pred_visual1["home_goals"] * 0.3
+            + team_pred_visual1["home_goals_m3"].fillna(team_pred_visual1["home_goals"]) * 0.7
+        )
+        team_pred_visual1["away_goals"] = (
+            team_pred_visual1["away_goals"] * 0.3
+            + team_pred_visual1["away_goals_m3"].fillna(team_pred_visual1["away_goals"]) * 0.7
+        )
+        team_pred_visual1["Clean_Sheet_home"] = (
+            team_pred_visual1["Clean_Sheet_home"] * 0.4
+            + team_pred_visual1["Clean_Sheet_home_m3"].fillna(team_pred_visual1["Clean_Sheet_home"]) * 0.6
+        )
+        team_pred_visual1["Clean_Sheet_away"] = (
+            team_pred_visual1["Clean_Sheet_away"] * 0.4
+            + team_pred_visual1["Clean_Sheet_away_m3"].fillna(team_pred_visual1["Clean_Sheet_away"]) * 0.6
+        )
+        team_pred_visual1 = team_pred_visual1.drop(
+            columns=["home_goals_m3", "away_goals_m3", "Clean_Sheet_home_m3", "Clean_Sheet_away_m3"]
+        )
+    else:
+        team_pred_visual1 = team_pred_visual1.reset_index(drop=True)
+        team_pred_visual3 = team_pred_visual3.reset_index(drop=True)
+        min_len = min(len(team_pred_visual1), len(team_pred_visual3))
+        team_pred_visual1.loc[: min_len - 1, ["home_goals", "away_goals"]] = (
+            team_pred_visual1.loc[: min_len - 1, ["home_goals", "away_goals"]].values * 0.3
+            + team_pred_visual3.loc[: min_len - 1, ["home_goals", "away_goals"]].values * 0.7
+        )
+        team_pred_visual1.loc[: min_len - 1, ["Clean_Sheet_home", "Clean_Sheet_away"]] = (
+            team_pred_visual1.loc[: min_len - 1, ["Clean_Sheet_home", "Clean_Sheet_away"]].values * 0.4
+            + team_pred_visual3.loc[: min_len - 1, ["Clean_Sheet_home", "Clean_Sheet_away"]].values * 0.6
+        )
+
+    if all(k in team_pred_visual1.columns for k in vis_keys) and all(k in team_results_visual.columns for k in vis_keys):
+        rv_small = team_results_visual[vis_keys + ["Home_win_Percent", "Away_win_Percent", "Draw_percent"]].copy()
+        team_pred_visual1 = team_pred_visual1.merge(rv_small, on=vis_keys, how="left")
+        team_pred_visual1["Home_Win"] = pd.to_numeric(team_pred_visual1["Home_win_Percent"], errors="coerce").fillna(0)
+        team_pred_visual1["Away_Win"] = pd.to_numeric(team_pred_visual1["Away_win_Percent"], errors="coerce").fillna(0)
+        team_pred_visual1["Draw"] = pd.to_numeric(team_pred_visual1["Draw_percent"], errors="coerce").fillna(0)
+    else:
+        team_pred_visual1["Home_Win"] = pd.to_numeric(team_results_visual["Home_win_Percent"], errors="coerce").fillna(0)
+        team_pred_visual1["Away_Win"] = pd.to_numeric(team_results_visual["Away_win_Percent"], errors="coerce").fillna(0)
+        team_pred_visual1["Draw"] = pd.to_numeric(team_results_visual["Draw_percent"], errors="coerce").fillna(0)
+    team_pred_visual1 = team_pred_visual1.drop(
+        columns=[
+            c
+            for c in [
+                "Home_win_Percent",
+                "Away_win_Percent",
+                "Draw_percent",
+                "Home_win_Percent2",
+                "Away_win_Percent2",
+                "Draw_percent2",
+            ]
+            if c in team_pred_visual1.columns
+        ]
+    )
 
     # Apply the same 0.7/0.3 blend with simulator match outcomes for visual outputs.
     if sim_df is not None and not sim_df.empty:
@@ -1986,11 +2117,11 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
     build_current_table_from_fixtures(fixture_path, current_team_path)
     predicted_table = build_predicted_table(
         table_df=pd.read_csv("Current_Table_Standings.csv"),
-        prediction_path="Team_prediction_results2.csv"
+        prediction_path=team_results_path
     )
     build_predicted_table_with_gw(
         table_df=pd.read_csv("Current_Table_Standings.csv"),
-        prediction_path="Team_prediction_results2.csv"
+        prediction_path=team_results_path
     )
     
 #d
