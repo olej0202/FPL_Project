@@ -587,12 +587,13 @@ export default function PlayerAdjustmentsPage() {
   const [selectedTeamCodes, setSelectedTeamCodes] = useState([]);
   const [selectedPositions, setSelectedPositions] = useState([]);
   const [valueThreshold, setValueThreshold] = useState(null);
+  const [valueThresholdDraft, setValueThresholdDraft] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
   const [selectedGwStart, setSelectedGwStart] = useState(null);
   const [selectedGwEnd, setSelectedGwEnd] = useState(null);
 
   const [sortConfig, setSortConfig] = useState({
-    type: null,
+    type: "total",
     gw: null,
     direction: "desc",
   });
@@ -793,7 +794,12 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
   const allGWs = useMemo(() => {
     if (!playersState) return [];
     const set = new Set();
-    playersState.forEach((p) => set.add(Number(p.GW)));
+    playersState.forEach((p) => {
+      const gw = Number(p.GW);
+      if (Number.isFinite(gw) && gw >= 1 && gw <= 38) {
+        set.add(gw);
+      }
+    });
     return Array.from(set).sort((a, b) => a - b);
   }, [playersState]);
 
@@ -806,8 +812,12 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
 
   useEffect(() => {
     if (!allGWs.length) return;
-    if (selectedGwStart == null) setSelectedGwStart(allGWs[0]);
-    if (selectedGwEnd == null) setSelectedGwEnd(allGWs[allGWs.length - 1]);
+    if (selectedGwStart == null || !allGWs.includes(Number(selectedGwStart))) {
+      setSelectedGwStart(allGWs[0]);
+    }
+    if (selectedGwEnd == null || !allGWs.includes(Number(selectedGwEnd))) {
+      setSelectedGwEnd(allGWs[allGWs.length - 1]);
+    }
   }, [allGWs, selectedGwStart, selectedGwEnd]);
 
   const playersByKey = useMemo(() => {
@@ -1091,8 +1101,14 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
   useEffect(() => {
     if (globalMinValue != null && globalMaxValue != null && valueThreshold === null) {
       setValueThreshold(globalMaxValue);
+      setValueThresholdDraft(globalMaxValue);
     }
   }, [globalMinValue, globalMaxValue, valueThreshold]);
+
+  useEffect(() => {
+    if (valueThreshold == null) return;
+    setValueThresholdDraft(valueThreshold);
+  }, [valueThreshold]);
 
   useEffect(() => {
     if (!isDataReady || filtersHydrated) return;
@@ -1109,10 +1125,18 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
         if (Array.isArray(parsed.selectedPositions)) setSelectedPositions(parsed.selectedPositions);
         if (typeof parsed.valueThreshold === "number" && !Number.isNaN(parsed.valueThreshold)) {
           setValueThreshold(parsed.valueThreshold);
+          setValueThresholdDraft(parsed.valueThreshold);
         }
         if (parsed.selectedGwStart != null) setSelectedGwStart(parsed.selectedGwStart);
         if (parsed.selectedGwEnd != null) setSelectedGwEnd(parsed.selectedGwEnd);
-        if (parsed.sortConfig) setSortConfig(parsed.sortConfig);
+        if (parsed.sortConfig) {
+          const parsedType = parsed.sortConfig.type;
+          if (parsedType === "gw" || parsedType === "total") {
+            setSortConfig(parsed.sortConfig);
+          } else {
+            setSortConfig({ type: "total", gw: null, direction: "desc" });
+          }
+        }
       }
     } catch {
       // ignore
@@ -1255,13 +1279,26 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
     });
   }, []);
 
+  const handleValueThresholdCommit = useCallback(() => {
+    const fallback = valueThreshold != null ? Number(valueThreshold) : Number(globalMaxValue);
+    const candidate = valueThresholdDraft != null ? Number(valueThresholdDraft) : fallback;
+    if (!Number.isFinite(candidate)) return;
+
+    const min = Number.isFinite(Number(globalMinValue)) ? Number(globalMinValue) : candidate;
+    const max = Number.isFinite(Number(globalMaxValue)) ? Number(globalMaxValue) : candidate;
+    const clamped = Math.max(min, Math.min(max, candidate));
+
+    setValueThreshold(clamped);
+    setValueThresholdDraft(clamped);
+  }, [valueThreshold, valueThresholdDraft, globalMinValue, globalMaxValue]);
+
   const handleResetData = async () => {
     if (Teamdata) Teamdata.current = null;
     if (Playerdata) Playerdata.current = null;
 
     setTeamsState(null);
     setPlayersState(null);
-    setSortConfig({ type: null, gw: null, direction: "desc" });
+    setSortConfig({ type: "total", gw: null, direction: "desc" });
     updateChanges([]);
 
     await fetchIfNeeded();
@@ -1899,20 +1936,36 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
             min={globalMinValue}
             max={globalMaxValue || globalMinValue + 1}
             step={(globalMaxValue - globalMinValue) / 100 || 1}
-            value={valueThreshold != null ? valueThreshold : globalMaxValue}
-            onChange={(e) => setValueThreshold(Number(e.target.value))}
+            value={
+              valueThresholdDraft != null
+                ? valueThresholdDraft
+                : valueThreshold != null
+                ? valueThreshold
+                : globalMaxValue
+            }
+            onChange={(e) => setValueThresholdDraft(Number(e.target.value))}
+            onMouseUp={handleValueThresholdCommit}
+            onTouchEnd={handleValueThresholdCommit}
+            onBlur={handleValueThresholdCommit}
             className="w-full"
+            style={{ accentColor: PALETTE.gold }}
           />
           <div
             className="mt-3 rounded-xl px-3 py-2 text-sm"
             style={{
-              border: `1px solid ${PALETTE.border}`,
-              background: "rgba(248,250,252,0.95)",
-              color: "#64748b",
+              border: `1px solid rgba(118,175,160,0.38)`,
+              background: "rgba(118,175,160,0.10)",
+              color: PALETTE.gold,
             }}
           >
-            {(valueThreshold != null ? valueThreshold : globalMaxValue).toFixed(1)} · range{" "}
-            {globalMinValue.toFixed(1)}–{globalMaxValue.toFixed(1)}
+                        {(
+              valueThresholdDraft != null
+                ? valueThresholdDraft
+                : valueThreshold != null
+                ? valueThreshold
+                : globalMaxValue
+            ).toFixed(1)} - range{" "}
+            {globalMinValue.toFixed(1)}-{globalMaxValue.toFixed(1)}
           </div>
         </FilterCard>
 
@@ -2894,3 +2947,4 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
     </div>
   );
 }
+

@@ -1527,7 +1527,7 @@ export default function MyTeamOptimize() {
               </div>
 
               <div className="mb-4 rounded-2xl p-3" style={{ border: `1px solid ${PALETTE.border}`, background: "rgba(248,250,252,0.82)" }}>
-                <div className="flex items-center justify-between gap-2">
+                <div className="flex flex-col items-center justify-center gap-1 text-center">
                   <div className="text-xs font-semibold" style={{ color: PALETTE.gold }}>
                     Solution set
                   </div>
@@ -1537,7 +1537,7 @@ export default function MyTeamOptimize() {
                       : `${solutionNumbers.length}/${expectedSolutions} ready`}
                   </div>
                 </div>
-                <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
+                <div className="mt-2 flex justify-center gap-2 overflow-x-auto pb-1">
                   {solutionSlots.map((sol) => {
                     const ready = solutionNumbers.includes(sol);
                     const active = selectedSolution === sol;
@@ -1611,7 +1611,7 @@ export default function MyTeamOptimize() {
                     </button>
                   </div>
 
-                  <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
+                  <div className="mt-2 flex justify-center gap-2 overflow-x-auto pb-1">
                     {availableGWs.map((gw) => {
                       const isActive = gw === activeGW;
                       return (
@@ -1848,7 +1848,7 @@ export default function MyTeamOptimize() {
           </section>
         )}
 
-        <div className="sticky bottom-3 sm:bottom-4 z-[120] mt-6 flex justify-end">
+        <div className="sticky bottom-24 sm:bottom-28 z-[120] mt-6 flex justify-end">
           <button
             onClick={handleOptimizeClick}
             disabled={!has_changed || !teamId}
