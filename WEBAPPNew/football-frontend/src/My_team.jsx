@@ -267,7 +267,7 @@ export default function MyTeamOptimize() {
     loadOptimization,
   } = useMyteamData();
 
-  const { Playerdata, Teamdata, dataVersion } = useAdjustmentData();
+  const { Playerdata, Teamdata, dataVersion, fetchIfNeeded: fetchAdjustmentIfNeeded } = useAdjustmentData();
   const { fetchIfNeeded: fetchStatsIfNeeded, TeamData, PlayersData } = useStatsData();
   const navigate = useNavigate();
   const location = useLocation();
@@ -281,12 +281,12 @@ export default function MyTeamOptimize() {
   const [showBbInput, setShowBbInput] = useState(!!bbRound);
   const [showWildInput, setShowWildInput] = useState(!!wildRound);
   const [showfreehitInput, setshowfreehitInput] = useState(!!freehitROund);
-  const [chipsOpen, setChipsOpen] = useState(!!bbRound || !!wildRound || !!freehitROund);
+  const [chipsOpen, setChipsOpen] = useState(false);
   const [loadingPhase, setLoadingPhase] = useState("idle");
   const [progress, setProgress] = useState(0);
-  const [controlsOpen, setControlsOpen] = useState(true);
-  const [savedOpen, setSavedOpen] = useState(true);
-  const [locksOpen, setLocksOpen] = useState(true);
+  const [controlsOpen, setControlsOpen] = useState(false);
+  const [savedOpen, setSavedOpen] = useState(false);
+  const [locksOpen, setLocksOpen] = useState(false);
   const [selectedGW, setSelectedGW] = useState(null);
   const [selectedSolution, setSelectedSolution] = useState(1);
   const [lockSearch, setLockSearch] = useState("");
@@ -296,6 +296,10 @@ export default function MyTeamOptimize() {
   useEffect(() => {
     fetchStatsIfNeeded();
   }, [fetchStatsIfNeeded]);
+
+  useEffect(() => {
+    fetchAdjustmentIfNeeded();
+  }, [fetchAdjustmentIfNeeded]);
 
   const hasStatisticalData = useMemo(() => {
     const arr = Playerdata?.current;
@@ -550,10 +554,20 @@ export default function MyTeamOptimize() {
     const map = new Map();
 
     const addRow = (row) => {
-      const name = row?.name ?? row?.Name;
+      const name =
+        row?.name ??
+        row?.Name ??
+        row?.player_name ??
+        row?.full_name ??
+        row?.web_name;
       if (!name) return;
       const key = String(name);
-      const web_name = row?.web_name ?? key;
+      const web_name =
+        row?.web_name ??
+        row?.name ??
+        row?.Name ??
+        row?.player_name ??
+        key;
       const code = row?.code;
       const computedPhoto = code
         ? `https://resources.premierleague.com/premierleague25/photos/players/500x500/${code}.png`
@@ -923,6 +937,11 @@ export default function MyTeamOptimize() {
           display: block;
           flex-shrink: 0;
         }
+        @media (max-width: 640px) {
+          input, select, textarea {
+            font-size: 16px !important;
+          }
+        }
         summary::-webkit-details-marker { display: none; }
         .glass-card {
           border: 1px solid ${PALETTE.border};
@@ -982,25 +1001,25 @@ export default function MyTeamOptimize() {
               Build a cleaner transfer plan, compare AI vs statistical logic, and move the best recommendations straight into your planner.
             </p>
           </div>
-          <button
-            onClick={handleOptimizeClick}
-            disabled={!has_changed || !teamId}
-            className="green-ring inline-flex items-center justify-center gap-2 font-semibold px-4 py-3 rounded-2xl transition-all"
-            style={{
-              border: `1px solid ${has_changed && teamId ? PALETTE.gold : PALETTE.border}`,
-              background: has_changed && teamId
-                ? `linear-gradient(135deg, ${PALETTE.gold}, ${PALETTE.goldSoft})`
-                : "rgba(248,250,252,0.9)",
-              color: has_changed && teamId ? "#0f172a" : PALETTE.muted,
-              cursor: has_changed && teamId ? "pointer" : "not-allowed",
-              boxShadow: has_changed && teamId ? "0 12px 24px rgba(15,23,42,0.12)" : "none",
-            }}
-          >
-
-
-            <Wand2 size={17} className="lucide-icon" />
-            Optimize now
-          </button>
+          <div className="w-full sm:w-[280px] glass-card rounded-2xl p-3">
+            <FieldShell label="Team ID" icon={Users}>
+              <input
+                id="team-id-top"
+                type="number"
+                inputMode="numeric"
+                placeholder="Required"
+                value={teamId}
+                onChange={(e) => setTeamId(e.target.value)}
+                className="gold-ring w-full h-12 px-3 rounded-2xl text-base sm:text-sm outline-none"
+                style={{
+                  fontSize: 16,
+                  border: `1px solid ${PALETTE.border}`,
+                  backgroundColor: "rgba(248,250,252,0.92)",
+                  color: PALETTE.beige,
+                }}
+              />
+            </FieldShell>
+          </div>
         </header>
 
         <section className="mb-6 grid grid-cols-1 xl:grid-cols-[1.2fr_0.8fr] gap-6">
@@ -1028,33 +1047,8 @@ export default function MyTeamOptimize() {
 
             {controlsOpen && (
               <>
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between mt-4">
-              <div className="hidden sm:block" />
-
-            </div>
-
             <div className="mt-5 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-12 gap-3 items-start">
-              <FieldShell label="Team ID" icon={Users} className="min-w-0 md:col-span-1 xl:col-span-3">
-                <input
-                  id="team-id"
-                  type="number"
-                  inputMode="numeric"
-                  placeholder="Required"
-                  value={teamId}
-                  onChange={(e) => setTeamId(e.target.value)}
-                  className="gold-ring w-full h-12 px-3 rounded-2xl text-base sm:text-sm outline-none"
-                  style={{
-                    fontSize: 16,
-                    border: `1px solid ${PALETTE.border}`,
-                    backgroundColor: "rgba(248,250,252,0.92)",
-                    color: PALETTE.beige,
-                  }}
-                />
-              </FieldShell>
-
-              
-
-              <FieldShell label="Model" icon={Brain} className="min-w-0 md:col-span-2 xl:col-span-7">
+              <FieldShell label="Model" icon={Brain} className="min-w-0 md:col-span-2 xl:col-span-10">
                 <div className="grid grid-cols-2 gap-2">
                   <ModelButton active={modelType === "ai"} onClick={() => setModelType("ai")} icon={Sparkles}>
                     AI model
@@ -1853,6 +1847,26 @@ export default function MyTeamOptimize() {
             </div>
           </section>
         )}
+
+        <div className="sticky bottom-3 sm:bottom-4 z-[120] mt-6 flex justify-end">
+          <button
+            onClick={handleOptimizeClick}
+            disabled={!has_changed || !teamId}
+            className="green-ring inline-flex items-center justify-center gap-2 font-semibold px-4 py-3 rounded-2xl transition-all"
+            style={{
+              border: `1px solid ${has_changed && teamId ? PALETTE.gold : PALETTE.border}`,
+              background: has_changed && teamId
+                ? `linear-gradient(135deg, ${PALETTE.gold}, ${PALETTE.goldSoft})`
+                : "rgba(248,250,252,0.95)",
+              color: has_changed && teamId ? "#0f172a" : PALETTE.muted,
+              cursor: has_changed && teamId ? "pointer" : "not-allowed",
+              boxShadow: has_changed && teamId ? "0 12px 24px rgba(15,23,42,0.18)" : "none",
+            }}
+          >
+            <Wand2 size={17} className="lucide-icon" />
+            Optimize now
+          </button>
+        </div>
       </div>
     </div>
   );

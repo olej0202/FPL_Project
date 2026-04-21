@@ -54,14 +54,12 @@ Manual_min=[
         {"name": "Amad_Diallo", "type": "const",   "GW": "any", "value": 75},
         {"name": "Viktor_Gyökeres", "type": "const",   "GW": "any", "value": 75},
         {"name": "Matheus_Santos Carneiro Da Cunha", "type": "const",   "GW": "any", "value": 75},
-        {"name": "Melker_Ellborg", "type": "adjust_from",   "GW": "34", "value": 0},
-        {"name": "Robert_Sánchez", "type": "const",   "GW": "any", "value": 70},
+        {"name": "Melker_Ellborg", "type": "const",   "GW": "any", "value": 0},
         {"name": "Piero_Hincapié", "type": "const",   "GW": "any", "value": 70},
-        {"name": "Gabriel_dos Santos Magalhães", "type": "const",   "GW": "any", "value": 90},
         {"name": "Mitoma_Kaoru", "type": "const",   "GW": "any", "value": 70},
         {"name": "Brian_Brobbey", "type": "const",   "GW": "any", "value": 80},
         {"name": "Bruno_Guimarães Rodriguez Moura", "type": "const",   "GW": "any", "value": 80},
-        {"name": "Chris_Wood", "type": "const",   "GW": "any", "value": 25},
+        {"name": "Chris_Wood", "type": "const",   "GW": "any", "value": 70},
 
     ]
 
@@ -86,8 +84,8 @@ fixtures_config = {
             {"gw": 33, "probability": 1},
         ],
         "2562201":[
-            {"gw": 36, "probability": 0.8},
-            {"gw": 38, "probability": 0.2},
+            {"gw": 36, "probability": 0.9},
+            {"gw": 38, "probability": 0.1},
         ],
         "2562225":[
             {"gw": 34, "probability": 0},

@@ -815,19 +815,45 @@ def optimize_my_team(
                 total_risk += sum(safe_value(m.y[i, t]) * float(risk_score[i]) for i in I)
         return float(total_risk)
 
-    def extract_binary_pattern_terms() -> list[tuple[Any, int]]:
+    def extract_binary_pattern_terms(max_t: Optional[int] = None) -> list[tuple[Any, int]]:
         terms: list[tuple[Any, int]] = []
         # Diversity cut based on playing XI plus transfer decisions.
         # We exclude t=0 since it is fixed/current state.
+        horizon_max_t = optimize_range - 1
+        if max_t is not None:
+            horizon_max_t = max(1, min(int(max_t), horizon_max_t))
+
         for i in I:
             for t in T:
-                if t == 0:
+                if t == 0 or t > horizon_max_t:
                     continue
                 if use_freehit and t == fh_t:
                     terms.append((m.fh_y[i], int(round(safe_value(m.fh_y[i])))))
+                    terms.append((m.fh_in[i], int(round(safe_value(m.fh_in[i])))))
                 else:
                     terms.append((m.y[i, t], int(round(safe_value(m.y[i, t])))))
                     terms.append((m.transfer_in[i, t], int(round(safe_value(m.transfer_in[i, t])))))
+                    terms.append((m.transfer_out[i, t], int(round(safe_value(m.transfer_out[i, t])))))
+        return terms
+
+    def extract_single_gw_pattern_terms(t: int) -> list[tuple[Any, int]]:
+        terms: list[tuple[Any, int]] = []
+        if t not in T or t == 0:
+            return terms
+
+        for i in I:
+            if use_freehit and t == fh_t:
+                terms.append((m.fh_x[i], int(round(safe_value(m.fh_x[i])))))
+                terms.append((m.fh_y[i], int(round(safe_value(m.fh_y[i])))))
+                terms.append((m.fh_c[i], int(round(safe_value(m.fh_c[i])))))
+                terms.append((m.fh_in[i], int(round(safe_value(m.fh_in[i])))))
+                terms.append((m.fh_out[i], int(round(safe_value(m.fh_out[i])))))
+            else:
+                terms.append((m.x[i, t], int(round(safe_value(m.x[i, t])))))
+                terms.append((m.y[i, t], int(round(safe_value(m.y[i, t])))))
+                terms.append((m.c[i, t], int(round(safe_value(m.c[i, t])))))
+                terms.append((m.transfer_in[i, t], int(round(safe_value(m.transfer_in[i, t])))))
+                terms.append((m.transfer_out[i, t], int(round(safe_value(m.transfer_out[i, t])))))
         return terms
 
     def compute_weighted_decay_expected_points() -> float:
@@ -1037,7 +1063,8 @@ def optimize_my_team(
                     })
 
         # Playing / benched / captain
-        for t in range(1, optimize_range - 1):
+        # Include the full future horizon so the final GW has a pitch lineup.
+        for t in range(1, optimize_range):
             gw = GW_list[t]
             if use_freehit and t == fh_t:
                 for i in I:
@@ -1186,8 +1213,9 @@ def optimize_my_team(
         append_solution_records(solution_no)
         last_incumbent = capture_solution_values()
 
+        total_future_gws = max(1, len(GW_list) - 1)
         binary_terms = extract_binary_pattern_terms()
-        min_distance_floor = 2 * max(1, len(GW_list) - 1)
+        min_distance_floor = 2 * total_future_gws
         required_distance = max(1, int(min_solution_distance), min_distance_floor)
         print(
             "Applying diversity cut "
@@ -1197,7 +1225,49 @@ def optimize_my_team(
             sum((1 - var) if val == 1 else var for var, val in binary_terms) >= required_distance
         )
 
-        for t in range(1, optimize_range - 1):
+        # Force near-term diversity:
+        # GW+1: >=1 difference, GW+1..2: >=2, ... up to 4 GWs (if available).
+        near_term_depth = min(4, total_future_gws)
+        for depth in range(1, near_term_depth + 1):
+            depth_terms = extract_binary_pattern_terms(max_t=depth)
+            if not depth_terms:
+                continue
+            depth_required_distance = min(depth, len(depth_terms))
+            print(
+                "Applying near-term diversity cut "
+                f"(GW+1..GW+{depth}): required_distance={depth_required_distance}"
+            )
+            m.no_good_cuts.add(
+                sum((1 - var) if val == 1 else var for var, val in depth_terms)
+                >= depth_required_distance
+            )
+
+        # If a chip GW is present, force that GW to differ by at least 3.
+        chip_gw_rels: list[int] = []
+        if use_freehit and fh_t is not None and fh_t in T and fh_t > 0:
+            chip_gw_rels.append(int(fh_t))
+        if (
+            wildcard_round_rel is not None
+            and wildcard_round_rel in T
+            and wildcard_round_rel > 0
+        ):
+            chip_gw_rels.append(int(wildcard_round_rel))
+
+        for chip_t in sorted(set(chip_gw_rels)):
+            chip_terms = extract_single_gw_pattern_terms(chip_t)
+            if not chip_terms:
+                continue
+            chip_required_distance = min(3, len(chip_terms))
+            print(
+                "Applying chip-week diversity cut "
+                f"(t={chip_t}, abs_gw={GW_list[chip_t]}): required_distance={chip_required_distance}"
+            )
+            m.no_good_cuts.add(
+                sum((1 - var) if val == 1 else var for var, val in chip_terms)
+                >= chip_required_distance
+            )
+
+        for t in range(1, optimize_range):
             print("HIT", t, safe_value(m.hit[t]))
 
     return pd.DataFrame(all_records)
