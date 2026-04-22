@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useRef } from "react";
+import React, { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import {
   ScatterChart,
   Scatter,
@@ -81,6 +81,7 @@ function TeamAdjustmentsPage() {
     forceRefetch,
     Fixtures,
     fixturesVersion,
+    trackAdjustmentChanges,
   } = useAdjustmentData();
 
   const [data, setData] = useState([]);
@@ -291,7 +292,7 @@ function TeamAdjustmentsPage() {
   }, [data, Fixtures, fixturesVersion]);
 
   // When user drags a team in the scatter
-  const handleTeamDrag = (teamName, newXg, newXgc) => {
+  const handleTeamDrag = useCallback((teamName, newXg, newXgc) => {
     const useGwScope =
       ENABLE_GW_ADJUST &&
       adjustScope === "gw" &&
@@ -299,21 +300,50 @@ function TeamAdjustmentsPage() {
 
     if (ENABLE_GW_ADJUST && adjustScope === "gw" && !useGwScope) return;
 
-    setData((prev) => {
-      const updated = applyTeamStrengthAdjustments(
-        prev,
-        teamName,
-        newXg,
-        newXgc,
-        useGwScope ? "gw" : "all",
-        useGwScope ? Number(selectedGW) : null
-      );
-
-      const withMetrics = recomputeMetrics(updated);
-      updateTeamData(withMetrics);
-      return withMetrics;
+    const rows = Array.isArray(data) ? data : [];
+    const target = normalizeName(teamName);
+    const relevantRows = rows.filter((r) => {
+      const ownName = normalizeName(r.team_name);
+      if (ownName !== target) return false;
+      if (!useGwScope) return true;
+      return Number(r.GW) === Number(selectedGW);
     });
-  };
+
+    const avgOf = (arr, field) => {
+      if (!arr.length) return null;
+      const sum = arr.reduce((acc, r) => acc + (Number.isFinite(Number(r[field])) ? Number(r[field]) : 0), 0);
+      return sum / arr.length;
+    };
+
+    const oldXg = avgOf(relevantRows, "own_XG_avg");
+    const oldXgc = avgOf(relevantRows, "own_XGC_avg");
+
+    const updated = applyTeamStrengthAdjustments(
+      rows,
+      teamName,
+      newXg,
+      newXgc,
+      useGwScope ? "gw" : "all",
+      useGwScope ? Number(selectedGW) : null
+    );
+
+    const withMetrics = recomputeMetrics(updated);
+    setData(withMetrics);
+    updateTeamData(withMetrics);
+
+    trackAdjustmentChanges?.("team", [
+      {
+        type: "Team_strength",
+        teamName,
+        scope: useGwScope ? "gw" : "all",
+        gw: useGwScope ? Number(selectedGW) : null,
+        oldValue: oldXg,
+        newValue: Number(newXg),
+        oldDefValue: oldXgc,
+        newDefValue: Number(newXgc),
+      },
+    ]);
+  }, [adjustScope, data, selectedGW, trackAdjustmentChanges, updateTeamData]);
 
   useEffect(() => {
     const gws = tableData?.gws || [];

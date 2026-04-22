@@ -78,6 +78,20 @@ class PageActivityRequest(BaseModel):
     guest_id: Optional[str] = None
 
 
+class AdjustmentChangeRequest(BaseModel):
+    source: str
+    changes: List[dict] = []
+    guest_id: Optional[str] = None
+
+
+class SavedOptimizationUpsertRequest(BaseModel):
+    optimization_id: str
+    name: str
+    created_at: Optional[int] = None
+    snapshot: dict
+    guest_id: Optional[str] = None
+
+
 app = FastAPI()
 OPTIMIZER_N_SOLUTIONS = 3
 RECENT_TEAM_IDS_LIMIT = int(os.getenv("RECENT_TEAM_IDS_LIMIT", "30"))
@@ -168,6 +182,12 @@ def _init_auth_tables():
             )
             cur.execute(
                 """
+                ALTER TABLE app_optimization_events
+                ADD COLUMN IF NOT EXISTS predicted_points_solution1 DOUBLE PRECISION;
+                """
+            )
+            cur.execute(
+                """
                 CREATE INDEX IF NOT EXISTS idx_app_optimization_events_created
                 ON app_optimization_events (created_at DESC);
                 """
@@ -191,6 +211,66 @@ def _init_auth_tables():
                 """
                 CREATE INDEX IF NOT EXISTS idx_app_page_activity_events_created
                 ON app_page_activity_events (created_at DESC);
+                """
+            )
+            cur.execute(
+                """
+                CREATE TABLE IF NOT EXISTS app_adjustment_events (
+                    id BIGSERIAL PRIMARY KEY,
+                    provider TEXT NOT NULL,
+                    user_id BIGINT REFERENCES app_users(id) ON DELETE SET NULL,
+                    guest_id TEXT,
+                    source TEXT NOT NULL,
+                    change_type TEXT,
+                    entity_key TEXT,
+                    gw INTEGER,
+                    old_value DOUBLE PRECISION,
+                    new_value DOUBLE PRECISION,
+                    details_json JSONB NOT NULL DEFAULT '{}'::jsonb,
+                    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                );
+                """
+            )
+            cur.execute(
+                """
+                CREATE INDEX IF NOT EXISTS idx_app_adjustment_events_created
+                ON app_adjustment_events (created_at DESC);
+                """
+            )
+            cur.execute(
+                """
+                CREATE TABLE IF NOT EXISTS app_saved_optimizations (
+                    id BIGSERIAL PRIMARY KEY,
+                    provider TEXT NOT NULL,
+                    user_id BIGINT REFERENCES app_users(id) ON DELETE SET NULL,
+                    guest_id TEXT,
+                    optimization_id TEXT NOT NULL,
+                    name TEXT NOT NULL,
+                    created_at_client BIGINT,
+                    snapshot_json JSONB NOT NULL DEFAULT '{}'::jsonb,
+                    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                );
+                """
+            )
+            cur.execute(
+                """
+                CREATE UNIQUE INDEX IF NOT EXISTS uq_app_saved_opts_google
+                ON app_saved_optimizations (provider, user_id, optimization_id)
+                WHERE provider = 'google';
+                """
+            )
+            cur.execute(
+                """
+                CREATE UNIQUE INDEX IF NOT EXISTS uq_app_saved_opts_guest
+                ON app_saved_optimizations (provider, guest_id, optimization_id)
+                WHERE provider = 'guest';
+                """
+            )
+            cur.execute(
+                """
+                CREATE INDEX IF NOT EXISTS idx_app_saved_optimizations_created
+                ON app_saved_optimizations (created_at DESC);
                 """
             )
         conn.commit()
@@ -356,7 +436,7 @@ def _track_optimization_event(
     model_type: str,
     settings: Optional[Dict[str, Any]] = None,
     guest_id_hint: Optional[str] = None,
-):
+) -> Optional[int]:
     actor = _resolve_actor(request, guest_id_hint=guest_id_hint)
     conn = _connect_db()
     try:
@@ -367,6 +447,7 @@ def _track_optimization_event(
                     provider, user_id, guest_id, team_id, model_type, settings_json
                 )
                 VALUES (%s, %s, %s, %s, %s, %s::jsonb)
+                RETURNING id
                 """,
                 (
                     actor["provider"],
@@ -377,9 +458,75 @@ def _track_optimization_event(
                     json.dumps(settings or {}),
                 ),
             )
+            row = cur.fetchone()
+        conn.commit()
+        return int(row[0]) if row and row[0] is not None else None
+    finally:
+        conn.close()
+
+
+def _update_optimization_event_predicted_points(
+    optimization_event_id: Optional[int],
+    predicted_points_solution1: Optional[float],
+):
+    if optimization_event_id is None:
+        return
+    if predicted_points_solution1 is None:
+        return
+    points = float(predicted_points_solution1)
+    conn = _connect_db()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                UPDATE app_optimization_events
+                SET predicted_points_solution1 = %s
+                WHERE id = %s
+                """,
+                (points, int(optimization_event_id)),
+            )
         conn.commit()
     finally:
         conn.close()
+
+
+def _extract_solution1_predicted_points(rows: List[dict]) -> Optional[float]:
+    if not isinstance(rows, list) or len(rows) == 0:
+        return None
+
+    def _finite(v):
+        try:
+            n = float(v)
+            return n if np.isfinite(n) else None
+        except Exception:
+            return None
+
+    preferred_keys = [
+        "solution_TotalExpectedPoints",
+        "solution_total_expected_points",
+        "solution_totalexpectedpoints",
+        "solution_weighted_sum",
+    ]
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        for key in preferred_keys:
+            if key in row:
+                n = _finite(row.get(key))
+                if n is not None:
+                    return n
+
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        name = str(row.get("Name", "")).strip().lower()
+        if name not in {"objective", "summary", "total"}:
+            continue
+        n = _finite(row.get("status"))
+        if n is not None:
+            return n
+
+    return None
 
 
 def _track_page_activity_event(
@@ -422,6 +569,230 @@ def _track_page_activity_event(
                     ended_at,
                 ),
             )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def _track_adjustment_events(
+    request: Request,
+    *,
+    source: str,
+    changes: List[dict],
+    guest_id_hint: Optional[str] = None,
+):
+    if not isinstance(changes, list) or len(changes) == 0:
+        return
+
+    actor = _resolve_actor(request, guest_id_hint=guest_id_hint)
+    source_value = str(source or "").strip().lower() or "unknown"
+    rows_to_insert = []
+
+    for change in changes[:1000]:
+        if not isinstance(change, dict):
+            continue
+        change_type = str(change.get("type") or change.get("change_type") or "").strip() or None
+        entity_key = str(
+            change.get("playerKey")
+            or change.get("teamName")
+            or change.get("entity_key")
+            or change.get("webName")
+            or ""
+        ).strip() or None
+        gw_value = change.get("gw")
+        gw_num = int(gw_value) if gw_value is not None and str(gw_value).strip() != "" and str(gw_value).lstrip("-").isdigit() else None
+        old_value = change.get("oldValue")
+        new_value = change.get("newValue")
+        old_num = float(old_value) if isinstance(old_value, (int, float)) else None
+        new_num = float(new_value) if isinstance(new_value, (int, float)) else None
+
+        rows_to_insert.append(
+            (
+                actor["provider"],
+                actor["user_id"],
+                actor["guest_id"],
+                source_value,
+                change_type,
+                entity_key,
+                gw_num,
+                old_num,
+                new_num,
+                json.dumps(change),
+            )
+        )
+
+    if not rows_to_insert:
+        return
+
+    conn = _connect_db()
+    try:
+        with conn.cursor() as cur:
+            cur.executemany(
+                """
+                INSERT INTO app_adjustment_events (
+                    provider, user_id, guest_id, source, change_type, entity_key, gw, old_value, new_value, details_json
+                )
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s::jsonb)
+                """,
+                rows_to_insert,
+            )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def _saved_opt_actor_key(actor: Dict[str, Any]):
+    provider = actor.get("provider") or "guest"
+    user_id = actor.get("user_id")
+    guest_id = actor.get("guest_id")
+    if provider == "google" and user_id is not None:
+        return provider, int(user_id), None
+    return "guest", None, str(guest_id or "Guest")
+
+
+def _upsert_saved_optimization(
+    request: Request,
+    *,
+    optimization_id: str,
+    name: str,
+    snapshot: dict,
+    created_at_client: Optional[int] = None,
+    guest_id_hint: Optional[str] = None,
+):
+    actor = _resolve_actor(request, guest_id_hint=guest_id_hint)
+    provider, user_id, guest_id = _saved_opt_actor_key(actor)
+    opt_id = str(optimization_id or "").strip()
+    if not opt_id:
+        raise HTTPException(status_code=400, detail="optimization_id is required.")
+    opt_name = str(name or "").strip()
+    if not opt_name:
+        raise HTTPException(status_code=400, detail="name is required.")
+
+    conn = _connect_db()
+    try:
+        with conn.cursor() as cur:
+            common_values = (
+                provider,
+                user_id,
+                guest_id,
+                opt_id,
+                opt_name,
+                int(created_at_client) if created_at_client is not None else None,
+                json.dumps(snapshot or {}),
+            )
+            if provider == "google" and user_id is not None:
+                cur.execute(
+                    """
+                    INSERT INTO app_saved_optimizations (
+                        provider, user_id, guest_id, optimization_id, name, created_at_client, snapshot_json, created_at, updated_at
+                    )
+                    VALUES (%s, %s, %s, %s, %s, %s, %s::jsonb, NOW(), NOW())
+                    ON CONFLICT (provider, user_id, optimization_id) WHERE provider = 'google'
+                    DO UPDATE SET
+                        name = EXCLUDED.name,
+                        created_at_client = EXCLUDED.created_at_client,
+                        snapshot_json = EXCLUDED.snapshot_json,
+                        updated_at = NOW()
+                    """,
+                    common_values,
+                )
+            else:
+                cur.execute(
+                    """
+                    INSERT INTO app_saved_optimizations (
+                        provider, user_id, guest_id, optimization_id, name, created_at_client, snapshot_json, created_at, updated_at
+                    )
+                    VALUES (%s, %s, %s, %s, %s, %s, %s::jsonb, NOW(), NOW())
+                    ON CONFLICT (provider, guest_id, optimization_id) WHERE provider = 'guest'
+                    DO UPDATE SET
+                        name = EXCLUDED.name,
+                        created_at_client = EXCLUDED.created_at_client,
+                        snapshot_json = EXCLUDED.snapshot_json,
+                        updated_at = NOW()
+                    """,
+                    common_values,
+                )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def _list_saved_optimizations(
+    request: Request,
+    *,
+    guest_id_hint: Optional[str] = None,
+) -> List[dict]:
+    actor = _resolve_actor(request, guest_id_hint=guest_id_hint)
+    provider, user_id, guest_id = _saved_opt_actor_key(actor)
+    conn = _connect_db()
+    try:
+        with conn.cursor() as cur:
+            if provider == "google" and user_id is not None:
+                cur.execute(
+                    """
+                    SELECT optimization_id, name, created_at_client, snapshot_json
+                    FROM app_saved_optimizations
+                    WHERE provider = 'google' AND user_id = %s
+                    ORDER BY COALESCE(created_at_client, 0) DESC, updated_at DESC
+                    """,
+                    (user_id,),
+                )
+            else:
+                cur.execute(
+                    """
+                    SELECT optimization_id, name, created_at_client, snapshot_json
+                    FROM app_saved_optimizations
+                    WHERE provider = 'guest' AND guest_id = %s
+                    ORDER BY COALESCE(created_at_client, 0) DESC, updated_at DESC
+                    """,
+                    (guest_id,),
+                )
+            rows = cur.fetchall() or []
+            out = []
+            for r in rows:
+                out.append(
+                    {
+                        "id": r[0],
+                        "name": r[1],
+                        "createdAt": int(r[2]) if r[2] is not None else None,
+                        "snapshot": r[3] if isinstance(r[3], dict) else {},
+                    }
+                )
+            return out
+    finally:
+        conn.close()
+
+
+def _delete_saved_optimization(
+    request: Request,
+    *,
+    optimization_id: str,
+    guest_id_hint: Optional[str] = None,
+):
+    actor = _resolve_actor(request, guest_id_hint=guest_id_hint)
+    provider, user_id, guest_id = _saved_opt_actor_key(actor)
+    opt_id = str(optimization_id or "").strip()
+    if not opt_id:
+        return
+    conn = _connect_db()
+    try:
+        with conn.cursor() as cur:
+            if provider == "google" and user_id is not None:
+                cur.execute(
+                    """
+                    DELETE FROM app_saved_optimizations
+                    WHERE provider = 'google' AND user_id = %s AND optimization_id = %s
+                    """,
+                    (user_id, opt_id),
+                )
+            else:
+                cur.execute(
+                    """
+                    DELETE FROM app_saved_optimizations
+                    WHERE provider = 'guest' AND guest_id = %s AND optimization_id = %s
+                    """,
+                    (guest_id, opt_id),
+                )
         conn.commit()
     finally:
         conn.close()
@@ -750,6 +1121,48 @@ def analytics_page_activity(req: PageActivityRequest, request: Request):
     return {"ok": True}
 
 
+@app.post("/analytics/adjustment-change")
+def analytics_adjustment_change(req: AdjustmentChangeRequest, request: Request):
+    _track_adjustment_events(
+        request,
+        source=req.source,
+        changes=req.changes or [],
+        guest_id_hint=req.guest_id,
+    )
+    return {"ok": True}
+
+
+@app.get("/user/saved-optimizations")
+def user_saved_optimizations(
+    request: Request,
+    guest_id: Optional[str] = Query(None, title="Guest id for guest-mode reads"),
+):
+    return {"saved_optimizations": _list_saved_optimizations(request, guest_id_hint=guest_id)}
+
+
+@app.post("/user/saved-optimizations")
+def user_saved_optimizations_upsert(req: SavedOptimizationUpsertRequest, request: Request):
+    _upsert_saved_optimization(
+        request,
+        optimization_id=req.optimization_id,
+        name=req.name,
+        snapshot=req.snapshot or {},
+        created_at_client=req.created_at,
+        guest_id_hint=req.guest_id,
+    )
+    return {"ok": True, "saved_optimizations": _list_saved_optimizations(request, guest_id_hint=req.guest_id)}
+
+
+@app.delete("/user/saved-optimizations/{optimization_id}")
+def user_saved_optimizations_delete(
+    optimization_id: str,
+    request: Request,
+    guest_id: Optional[str] = Query(None, title="Guest id for guest-mode deletes"),
+):
+    _delete_saved_optimization(request, optimization_id=optimization_id, guest_id_hint=guest_id)
+    return {"ok": True, "saved_optimizations": _list_saved_optimizations(request, guest_id_hint=guest_id)}
+
+
 def _build_optimize_kwargs(
     *,
     team_id: int,
@@ -787,17 +1200,24 @@ def _sse_event(event: str, payload: dict) -> str:
     return f"event: {event}\ndata: {json.dumps(payload)}\n\n"
 
 
-def _stream_optimization(opt_kwargs: dict) -> StreamingResponse:
+def _stream_optimization(
+    opt_kwargs: dict,
+    *,
+    optimization_event_id: Optional[int] = None,
+) -> StreamingResponse:
     events: Queue = Queue()
 
     def _worker():
         solutions_found = {"count": 0}
+        solution1_points = {"value": None}
 
         def _on_solution(solution_no: int, rows: List[dict]):
             solutions_found["count"] = max(
                 int(solutions_found["count"]),
                 int(solution_no),
             )
+            if int(solution_no) == 1 and solution1_points["value"] is None:
+                solution1_points["value"] = _extract_solution1_predicted_points(rows)
             events.put(
                 (
                     "solution",
@@ -813,6 +1233,13 @@ def _stream_optimization(opt_kwargs: dict) -> StreamingResponse:
             solve_kwargs = dict(opt_kwargs)
             solve_kwargs["on_solution"] = _on_solution
             optimize_my_team(**solve_kwargs)
+            try:
+                _update_optimization_event_predicted_points(
+                    optimization_event_id,
+                    solution1_points["value"],
+                )
+            except Exception as e:
+                print(f"[analytics] failed to update optimization points (stream): {e}")
             events.put(
                 (
                     "done",
@@ -888,8 +1315,9 @@ def post_my_team_optimize(req: OptimizeRequest, request: Request):
         except Exception as e:
             print(f"[auth] failed to track recent team id in POST optimize: {e}")
 
+    optimization_event_id = None
     try:
-        _track_optimization_event(
+        optimization_event_id = _track_optimization_event(
             request,
             team_id=req.team_id,
             model_type=req.model_type,
@@ -924,11 +1352,22 @@ def post_my_team_optimize(req: OptimizeRequest, request: Request):
     )
 
     if req.stream:
-        return _stream_optimization(optimize_kwargs)
+        return _stream_optimization(
+            optimize_kwargs,
+            optimization_event_id=optimization_event_id,
+        )
 
     try:
         df = optimize_my_team(**optimize_kwargs)
-        return df.to_dict(orient="records")
+        rows = df.to_dict(orient="records")
+        try:
+            _update_optimization_event_predicted_points(
+                optimization_event_id,
+                _extract_solution1_predicted_points(rows),
+            )
+        except Exception as e:
+            print(f"[analytics] failed to update optimization points (POST): {e}")
+        return rows
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
@@ -979,8 +1418,9 @@ def get_my_team_optimize(
         except Exception as e:
             print(f"[auth] failed to track recent team id in GET optimize: {e}")
 
+    optimization_event_id = None
     try:
-        _track_optimization_event(
+        optimization_event_id = _track_optimization_event(
             request,
             team_id=team_id,
             model_type="ai",
@@ -1001,7 +1441,10 @@ def get_my_team_optimize(
         print(f"[analytics] failed to track optimization event (GET): {e}")
 
     if stream:
-        return _stream_optimization(optimize_kwargs)
+        return _stream_optimization(
+            optimize_kwargs,
+            optimization_event_id=optimization_event_id,
+        )
 
     try:
         df = optimize_my_team(**optimize_kwargs)
@@ -1010,7 +1453,15 @@ def get_my_team_optimize(
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
-    return df.to_dict(orient="records")
+    rows = df.to_dict(orient="records")
+    try:
+        _update_optimization_event_predicted_points(
+            optimization_event_id,
+            _extract_solution1_predicted_points(rows),
+        )
+    except Exception as e:
+        print(f"[analytics] failed to update optimization points (GET): {e}")
+    return rows
 
 
 @app.get("/Get_My_Team")

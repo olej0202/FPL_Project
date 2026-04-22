@@ -7,6 +7,8 @@ import React, {
   useCallback,
   useEffect,
 } from "react";
+import { API_BASE_URL } from "../config/apiBase";
+import { useUserData } from "./UserContext";
 
 const AdjustmentContext = createContext(null);
 
@@ -514,6 +516,7 @@ const buildStablePlayerCalcs = (playerRows, teamRows, fixtures) => {
 };
 
 export function AdjustmentDataProvider({ children }) {
+  const { authHeaders, guestTrackingId } = useUserData();
   const TeamRef = useRef(null);
   const PlayerRef = useRef(null);
   const ChangesRef = useRef([]);
@@ -543,13 +546,13 @@ export function AdjustmentDataProvider({ children }) {
       setLoading(true);
       try {
         const [TeamRes, PlayerRes, FixturesConfigRes] = await Promise.all([
-          fetch("https://fpl-project-t5e9.onrender.com/Team_result_adjust").then(
+          fetch(`${API_BASE_URL}/Team_result_adjust`, { headers: { ...authHeaders } }).then(
             (res) => res.json()
           ),
-          fetch("https://fpl-project-t5e9.onrender.com/Player_result_adjust").then(
+          fetch(`${API_BASE_URL}/Player_result_adjust`, { headers: { ...authHeaders } }).then(
             (res) => res.json()
           ),
-          fetch("https://fpl-project-t5e9.onrender.com/fixtures_config").then(
+          fetch(`${API_BASE_URL}/fixtures_config`, { headers: { ...authHeaders } }).then(
             (res) => res.json()
           ),
         ]);
@@ -584,7 +587,7 @@ export function AdjustmentDataProvider({ children }) {
 
     fetchInFlightRef.current = request;
     return request;
-  }, []);
+  }, [authHeaders]);
 
   const forceRefetch = useCallback(async () => {
     TeamRef.current = null;
@@ -695,6 +698,29 @@ export function AdjustmentDataProvider({ children }) {
     [updateFixture]
   );
 
+  const trackAdjustmentChanges = useCallback(
+    async (source, changes) => {
+      if (!Array.isArray(changes) || changes.length === 0) return false;
+      try {
+        const headers = { "Content-Type": "application/json", ...authHeaders };
+        const resp = await fetch(`${API_BASE_URL}/analytics/adjustment-change`, {
+          method: "POST",
+          headers,
+          body: JSON.stringify({
+            source,
+            changes,
+            guest_id: guestTrackingId || undefined,
+          }),
+          keepalive: true,
+        });
+        return Boolean(resp?.ok);
+      } catch {
+        return false;
+      }
+    },
+    [authHeaders, guestTrackingId]
+  );
+
   // Keep statistical model available without requiring a manual first navigation.
   useEffect(() => {
     fetchIfNeeded();
@@ -730,6 +756,7 @@ export function AdjustmentDataProvider({ children }) {
         setFixtures,
         updateFixture,
         normalizeFixtureProbabilities,
+        trackAdjustmentChanges,
       }}
     >
       {children}

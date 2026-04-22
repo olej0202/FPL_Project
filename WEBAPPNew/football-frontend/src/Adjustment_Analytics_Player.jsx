@@ -593,6 +593,7 @@ export default function PlayerAdjustmentsPage() {
     updatePlayerData,
     Fixtures,
     fixturesVersion,
+    trackAdjustmentChanges,
   } = useAdjustmentData();
 
   const [playersState, setPlayersState] = useState(null);
@@ -1677,6 +1678,7 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
     setPlayersState(nextPlayers);
     updatePlayerData(() => nextPlayers);
     adjustmentsToLog.forEach(logAdjustment);
+    trackAdjustmentChanges?.("player", adjustmentsToLog);
   }, [
     activePlayerKey,
     playersState,
@@ -1691,6 +1693,7 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
     getPlayerKey,
     updatePlayerData,
     logAdjustment,
+    trackAdjustmentChanges,
   ]);
 
   const handleSaveAndClose = useCallback(() => {

@@ -71,7 +71,7 @@ function derivePlayersFromRows(rows, ids) {
 }
 
 export function MyTeamDataContextProvider({ children }) {
-  const { authHeaders, recordRecentTeamId, guestTrackingId } = useUserData();
+  const { authHeaders, recordRecentTeamId, guestTrackingId, hasSession } = useUserData();
   const [teamId, setTeamId] = useState("");
   const [bbRound, setBbRound] = useState("");
   const [wildRound, setWildRound] = useState("");
@@ -140,6 +140,29 @@ export function MyTeamDataContextProvider({ children }) {
       const without = arr.filter((x) => x?.id !== opt.id);
       return [opt, ...without].slice(0, 50);
     });
+
+    (async () => {
+      try {
+        const resp = await fetch(`${API_BASE_URL}/user/saved-optimizations`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", ...authHeaders },
+          body: JSON.stringify({
+            optimization_id: String(opt.id),
+            name: String(opt.name),
+            created_at: Number(opt.createdAt || Date.now()),
+            snapshot: opt.snapshot || {},
+            guest_id: guestTrackingId || undefined,
+          }),
+        });
+        if (!resp.ok) throw new Error(await resp.text());
+        const payload = await resp.json();
+        if (Array.isArray(payload?.saved_optimizations)) {
+          setSavedOptimizations(payload.saved_optimizations);
+        }
+      } catch (e) {
+        console.warn("Failed to persist saved optimization to API:", e);
+      }
+    })();
   };
 
   const deleteOptimization = (id) => {
@@ -147,6 +170,25 @@ export function MyTeamDataContextProvider({ children }) {
     setSavedOptimizations((prev) =>
       (Array.isArray(prev) ? prev : []).filter((x) => x?.id !== id)
     );
+
+    (async () => {
+      try {
+        const q = guestTrackingId
+          ? `?guest_id=${encodeURIComponent(String(guestTrackingId))}`
+          : "";
+        const resp = await fetch(
+          `${API_BASE_URL}/user/saved-optimizations/${encodeURIComponent(String(id))}${q}`,
+          { method: "DELETE", headers: { ...authHeaders } }
+        );
+        if (!resp.ok) throw new Error(await resp.text());
+        const payload = await resp.json();
+        if (Array.isArray(payload?.saved_optimizations)) {
+          setSavedOptimizations(payload.saved_optimizations);
+        }
+      } catch (e) {
+        console.warn("Failed to delete saved optimization from API:", e);
+      }
+    })();
   };
 
   const loadOptimization = (id) => {
@@ -211,6 +253,32 @@ export function MyTeamDataContextProvider({ children }) {
     setLoading(false);
     sethas_changed(false);
   };
+
+  useEffect(() => {
+    if (!hasSession) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const q = guestTrackingId
+          ? `?guest_id=${encodeURIComponent(String(guestTrackingId))}`
+          : "";
+        const resp = await fetch(`${API_BASE_URL}/user/saved-optimizations${q}`, {
+          headers: { ...authHeaders },
+        });
+        if (!resp.ok) throw new Error(await resp.text());
+        const payload = await resp.json();
+        if (cancelled) return;
+        if (Array.isArray(payload?.saved_optimizations)) {
+          setSavedOptimizations(payload.saved_optimizations);
+        }
+      } catch (e) {
+        console.warn("Failed loading saved optimizations from API:", e);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [authHeaders, guestTrackingId, hasSession]);
 
   /**
    * Fetch current team data from Get_My_Team endpoint
