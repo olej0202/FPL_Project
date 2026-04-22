@@ -388,7 +388,7 @@ def optimize_my_team(
     fwd_indices = [i for i, pos in enumerate(positions) if pos == "FWD"]
     outfield_indices = [i for i, pos in enumerate(positions) if pos != "GKP"]
 
-    risk_score[gk_indices] = 0.0
+    #risk_score[gk_indices] = 0.0
 
 
 

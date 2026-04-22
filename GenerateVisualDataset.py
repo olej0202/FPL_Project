@@ -480,7 +480,7 @@ def Player_adjustements(current_player_path):
     cbi_opp=np.minimum(1.1,1+(df["Opp_defcon"]-77)/30)
 
     df["CBI_Percent"] = (
-        df["defcon_avg_hit_rate"] * 0.35+df["defcon_avg_hit_rate_T0"] * 0.3+df["defcon_avg_hit_rate_T1"] * 0.15+df["defcon_avg_hit_rate_T2"] * 0.1+df["defcon_avg_hit_rate_T3"] * 0.1
+        df["defcon_avg_hit_rate"] * 0.35+df["defcon_avg_hit_rate_T0"] * 0.3+df["defcon_avg_hit_rate_T1"] * 0.1+df["defcon_avg_hit_rate_T2"] * 0.1+df["defcon_avg_hit_rate_T3"] * 0.15
     )*cbi_opp
 
     bps_scaled = np.maximum(4, df["Rolling_adjusted_BPS"]*0.4+df["Rolling_adjusted_BPS_2"]*0.6) 

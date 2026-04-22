@@ -113,7 +113,7 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
 
                #own_data_xg_pred=((df['Rolling_adjusted_XG'].values[h]*0.7+df['rolling_Adjusted_XG_historic'].values[h]*0.3)*df["opposition_xgc"].values[h]+df['Share_of_XG'].values[h]*team_xg)*(0.5)
                own_data_xg_pred=(pred*team_xg)*1+0.0*((df['Rolling_adjusted_XG'].values[h]*0.7+df['rolling_Adjusted_XG_historic'].values[h]*0.3)*df["opposition_xgc"].values[h])
-               team_data_xg_pred=(df['Understat_POSXG'].values[h]*df["opposition_xgc"].values[h]*0+1*(df['Understat_POSXG_Share'].values[h]*0.7+0.3*df['Opp_Goal_Threat_Pos'].values[h])*team_xg)
+               team_data_xg_pred=(df['Understat_POSXG'].values[h]*df["opposition_xgc"].values[h]*0+1*(df['Understat_POSXG_Share'].values[h]*0.65+0.35*df['Opp_Goal_Threat_Pos'].values[h])*team_xg)
         
                player_preds.append(own_data_xg_pred*(1-fordelings_faktor)+fordelings_faktor*team_data_xg_pred+df['Team_Pen_Data'].values[h]*df['Pen_Number'].values[h]*0.8)
                
@@ -133,7 +133,7 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
                pred=pred*0.3+0.7*stat_pred
                #own_data_xa_pred=((df['Rolling_adjusted_XA'].values[h]*0.7+df['rolling_Adjusted_XA_historic'].values[h]*0.3)*df["opposition_xgc"].values[h]+df['Share_of_XA'].values[h]*team_xg)*(0.5)
                own_data_xa_pred=(pred*team_xg)*1+0*((df['Rolling_adjusted_XA'].values[h]*0.7+df['rolling_Adjusted_XA_historic'].values[h]*0.3)*df["opposition_xgc"].values[h])
-               team_data_xa_pred=(df['Understat_POSXA'].values[h]*df["opposition_xgc"].values[h]*0+1*(df['Understat_POSXA_Share'].values[h]*0.7+0.3*df['Opp_Assist_Threat_Pos'].values[h])*team_xg)
+               team_data_xa_pred=(df['Understat_POSXA'].values[h]*df["opposition_xgc"].values[h]*0+1*(df['Understat_POSXA_Share'].values[h]*0.65+0.35*df['Opp_Assist_Threat_Pos'].values[h])*team_xg)
                player_preds.append(own_data_xa_pred*(1-fordelings_faktor)+fordelings_faktor*team_data_xa_pred) 
                
                eta=-5.23+0.425*team_xg+4.92*(df["Rolling_adjusted_XA_per90"].values[h]*0.33+(df["Rolling_adjusted_creativity_per90"].values[h]/100)*0.33+df["rolling_Assist_min"].values[h]*0.33)+0.019*90
@@ -164,9 +164,9 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
             if(pred_variable=="CBI"):
                real_variable="cbi" 
                #player_preds.append((min(12,df['CBI'].values[h])**2)/12)
-               opp_defcon_fac=np.minimum(1.1,1+(df['Opp_defcon'].values[h]-78)/30)
+               opp_defcon_fac=np.minimum(1.1,1+(df['Opp_defcon'].values[h]-77)/30)
                
-               base_pred = min(1,(df['defcon_avg_hit_rate'].values[h] *0.35+df["defcon_avg_hit_rate_T0"].values[h] * 0.3 +df["defcon_avg_hit_rate_T1"].values[h] * 0.15+df["defcon_avg_hit_rate_T2"].values[h] * 0.1+df["defcon_avg_hit_rate_T3"].values[h] * 0.1)*opp_defcon_fac) * other_metric
+               base_pred = min(1,(df['defcon_avg_hit_rate'].values[h] *0.35+df["defcon_avg_hit_rate_T0"].values[h] * 0.3 +df["defcon_avg_hit_rate_T1"].values[h] * 0.1+df["defcon_avg_hit_rate_T2"].values[h] * 0.1+df["defcon_avg_hit_rate_T3"].values[h] * 0.15)*opp_defcon_fac) * other_metric
                player_preds.append(base_pred)
         
             if(pred_variable=="Fantasy"):
