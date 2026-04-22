@@ -12,7 +12,7 @@ from fastapi import HTTPException
 from fastapi.responses import PlainTextResponse
 from Generate_Optimize_Pyrobi_test import optimize_my_team
 from Generate_Fetch_Myteam import build_team_dataframe
-from typing import List, Optional, Literal
+from typing import List, Optional, Literal, Dict, Any
 from pydantic import BaseModel
 from fastapi.responses import JSONResponse
 from GenerateConfig import fixtures_config
@@ -55,6 +55,7 @@ class OptimizeRequest(BaseModel):
 
     # optional: passed only when model_type == "statistical"
     players: Optional[List[PlayerInput]] = None
+    guest_id: Optional[str] = None
 
 
 class GuestAuthRequest(BaseModel):
@@ -67,6 +68,14 @@ class GoogleAuthRequest(BaseModel):
 
 class TrackTeamIdRequest(BaseModel):
     team_id: int
+
+
+class PageActivityRequest(BaseModel):
+    path: str
+    duration_seconds: float
+    started_at: Optional[datetime] = None
+    ended_at: Optional[datetime] = None
+    guest_id: Optional[str] = None
 
 
 app = FastAPI()
@@ -141,6 +150,47 @@ def _init_auth_tables():
                 """
                 CREATE INDEX IF NOT EXISTS idx_user_recent_team_ids_user_used
                 ON user_recent_team_ids (user_id, used_at DESC);
+                """
+            )
+            cur.execute(
+                """
+                CREATE TABLE IF NOT EXISTS app_optimization_events (
+                    id BIGSERIAL PRIMARY KEY,
+                    provider TEXT NOT NULL,
+                    user_id BIGINT REFERENCES app_users(id) ON DELETE SET NULL,
+                    guest_id TEXT,
+                    team_id INTEGER NOT NULL,
+                    model_type TEXT,
+                    settings_json JSONB NOT NULL DEFAULT '{}'::jsonb,
+                    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                );
+                """
+            )
+            cur.execute(
+                """
+                CREATE INDEX IF NOT EXISTS idx_app_optimization_events_created
+                ON app_optimization_events (created_at DESC);
+                """
+            )
+            cur.execute(
+                """
+                CREATE TABLE IF NOT EXISTS app_page_activity_events (
+                    id BIGSERIAL PRIMARY KEY,
+                    provider TEXT NOT NULL,
+                    user_id BIGINT REFERENCES app_users(id) ON DELETE SET NULL,
+                    guest_id TEXT,
+                    page_path TEXT NOT NULL,
+                    duration_seconds DOUBLE PRECISION NOT NULL,
+                    started_at TIMESTAMPTZ,
+                    ended_at TIMESTAMPTZ,
+                    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                );
+                """
+            )
+            cur.execute(
+                """
+                CREATE INDEX IF NOT EXISTS idx_app_page_activity_events_created
+                ON app_page_activity_events (created_at DESC);
                 """
             )
         conn.commit()
@@ -273,15 +323,130 @@ def _track_recent_team_id(user_id: int, team_id: int):
     finally:
         conn.close()
 
+
+def _resolve_actor(request: Request, guest_id_hint: Optional[str] = None) -> Dict[str, Any]:
+    payload = _auth_payload_optional(request)
+    provider = str((payload or {}).get("provider") or "").strip().lower()
+
+    if provider == "google":
+        user_id = payload.get("user_id") if payload else None
+        return {
+            "provider": "google",
+            "user_id": int(user_id) if user_id is not None else None,
+            "guest_id": None,
+            "display_name": "Google User",
+        }
+
+    guest_id_from_token = (payload or {}).get("guest_id")
+    guest_id_value = (
+        str(guest_id_from_token or guest_id_hint or "Guest").strip() or "Guest"
+    )
+    return {
+        "provider": "guest",
+        "user_id": None,
+        "guest_id": guest_id_value,
+        "display_name": "Guest",
+    }
+
+
+def _track_optimization_event(
+    request: Request,
+    *,
+    team_id: int,
+    model_type: str,
+    settings: Optional[Dict[str, Any]] = None,
+    guest_id_hint: Optional[str] = None,
+):
+    actor = _resolve_actor(request, guest_id_hint=guest_id_hint)
+    conn = _connect_db()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO app_optimization_events (
+                    provider, user_id, guest_id, team_id, model_type, settings_json
+                )
+                VALUES (%s, %s, %s, %s, %s, %s::jsonb)
+                """,
+                (
+                    actor["provider"],
+                    actor["user_id"],
+                    actor["guest_id"],
+                    int(team_id),
+                    str(model_type or "").strip() or None,
+                    json.dumps(settings or {}),
+                ),
+            )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def _track_page_activity_event(
+    request: Request,
+    *,
+    path: str,
+    duration_seconds: float,
+    started_at: Optional[datetime] = None,
+    ended_at: Optional[datetime] = None,
+    guest_id_hint: Optional[str] = None,
+):
+    actor = _resolve_actor(request, guest_id_hint=guest_id_hint)
+    duration = float(duration_seconds or 0.0)
+    duration = max(0.0, min(duration, 60.0 * 60.0 * 24.0))
+    if duration <= 0:
+        return
+
+    normalized_path = str(path or "/").strip()
+    if not normalized_path:
+        normalized_path = "/"
+    normalized_path = normalized_path[:300]
+
+    conn = _connect_db()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO app_page_activity_events (
+                    provider, user_id, guest_id, page_path, duration_seconds, started_at, ended_at
+                )
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                """,
+                (
+                    actor["provider"],
+                    actor["user_id"],
+                    actor["guest_id"],
+                    normalized_path,
+                    duration,
+                    started_at,
+                    ended_at,
+                ),
+            )
+        conn.commit()
+    finally:
+        conn.close()
+
 # Allow frontend to access backend
+def _normalize_origin(value: str) -> str:
+    s = (value or "").strip().strip('"').strip("'")
+    if s.endswith("/"):
+        s = s[:-1]
+    return s
+
+
 cors_origins_env = os.getenv("CORS_ORIGINS", "*")
-cors_origins = [x.strip() for x in cors_origins_env.split(",") if x.strip()]
+cors_origins = [_normalize_origin(x) for x in cors_origins_env.split(",") if _normalize_origin(x)]
 if not cors_origins:
     cors_origins = ["*"]
+if "*" in cors_origins:
+    cors_origins = ["*"]
+cors_origin_regex = os.getenv("CORS_ORIGIN_REGEX", "").strip() or None
+print(f"[cors] allow_origins={cors_origins} allow_origin_regex={cors_origin_regex}")
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,  # set CORS_ORIGINS in Render for stricter control
+    allow_origin_regex=cors_origin_regex,
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -572,6 +737,19 @@ def user_recent_team_ids(payload: dict = Depends(_auth_payload_required)):
     return {"recent_team_ids": _get_recent_team_ids_for_user(int(user_id))}
 
 
+@app.post("/analytics/page-activity")
+def analytics_page_activity(req: PageActivityRequest, request: Request):
+    _track_page_activity_event(
+        request,
+        path=req.path,
+        duration_seconds=req.duration_seconds,
+        started_at=req.started_at,
+        ended_at=req.ended_at,
+        guest_id_hint=req.guest_id,
+    )
+    return {"ok": True}
+
+
 def _build_optimize_kwargs(
     *,
     team_id: int,
@@ -710,6 +888,28 @@ def post_my_team_optimize(req: OptimizeRequest, request: Request):
         except Exception as e:
             print(f"[auth] failed to track recent team id in POST optimize: {e}")
 
+    try:
+        _track_optimization_event(
+            request,
+            team_id=req.team_id,
+            model_type=req.model_type,
+            guest_id_hint=req.guest_id,
+            settings={
+                "bb_round": req.bb_round,
+                "wildcard_round": req.wildcard_round,
+                "freehit_round": req.freehit_round,
+                "n_hits": req.n_hits,
+                "risk": req.risk,
+                "transval": req.transval,
+                "stream": bool(req.stream),
+                "banned_list": req.banned_list or [],
+                "force_in_list": req.force_in_list or [],
+                "players_count": len(req.players or []),
+            },
+        )
+    except Exception as e:
+        print(f"[analytics] failed to track optimization event (POST): {e}")
+
     optimize_kwargs = _build_optimize_kwargs(
         team_id=req.team_id,
         banned_list=req.banned_list,
@@ -747,6 +947,7 @@ def get_my_team_optimize(
     n_hits:Optional[int]                   = Query(0, title="n_hits"),
     risk:Optional[float]                   = Query(0.0, title="risk"),
     transval:Optional[float]                   = Query(0.5, title="transval"),
+    guest_id: Optional[str]                = Query(None, title="Guest id for analytics"),
     stream: bool = Query(False, title="Stream optimization results"),
 ):
     """
@@ -777,6 +978,27 @@ def get_my_team_optimize(
             _track_recent_team_id(int(auth_payload["user_id"]), int(team_id))
         except Exception as e:
             print(f"[auth] failed to track recent team id in GET optimize: {e}")
+
+    try:
+        _track_optimization_event(
+            request,
+            team_id=team_id,
+            model_type="ai",
+            guest_id_hint=guest_id,
+            settings={
+                "bb_round": bb_round,
+                "wildcard_round": wildcard_round,
+                "freehit_round": freehit_round,
+                "n_hits": n_hits,
+                "risk": risk,
+                "transval": transval,
+                "stream": bool(stream),
+                "banned_list": banned_list or [],
+                "force_in_list": force_in_list or [],
+            },
+        )
+    except Exception as e:
+        print(f"[analytics] failed to track optimization event (GET): {e}")
 
     if stream:
         return _stream_optimization(optimize_kwargs)

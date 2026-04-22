@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { API_BASE_URL } from "../config/apiBase";
 
 const UserContext = createContext(null);
@@ -75,6 +75,10 @@ export function UserDataProvider({ children }) {
   const isLocalGuestToken =
     provider === "guest" && typeof token === "string" && token.startsWith(LOCAL_GUEST_TOKEN_PREFIX);
   const authHeaders = token && !isLocalGuestToken ? { Authorization: `Bearer ${token}` } : {};
+  const guestTrackingId =
+    provider === "guest"
+      ? String(user?.id || localStorage.getItem(GUEST_DEVICE_KEY) || "Guest")
+      : null;
 
   const loginAsGuest = async () => {
     setAuthBusy(true);
@@ -146,7 +150,13 @@ export function UserDataProvider({ children }) {
       });
       return true;
     } catch (e) {
-      setAuthError(e?.message || "Google login failed.");
+      if (e instanceof TypeError) {
+        setAuthError(
+          `Could not reach API (${API_BASE_URL}). Check VITE_API_BASE_URL, backend deploy, and CORS_ORIGINS.`
+        );
+      } else {
+        setAuthError(e?.message || "Google login failed.");
+      }
       return false;
     } finally {
       setAuthBusy(false);
@@ -227,6 +237,38 @@ export function UserDataProvider({ children }) {
     });
   };
 
+  const trackPageActivity = useCallback(
+    async ({ path, durationSeconds, startedAt = null, endedAt = null }) => {
+      const duration = Number(durationSeconds);
+      if (!Number.isFinite(duration) || duration <= 0) return false;
+
+      const payload = {
+        path: String(path || "/"),
+        duration_seconds: Math.max(0, Math.min(duration, 24 * 60 * 60)),
+        started_at: startedAt || undefined,
+        ended_at: endedAt || undefined,
+        guest_id: guestTrackingId || undefined,
+      };
+
+      try {
+        const headers = { "Content-Type": "application/json" };
+        if (token && !isLocalGuestToken) {
+          headers.Authorization = `Bearer ${token}`;
+        }
+        const res = await fetch(`${API_BASE_URL}/analytics/page-activity`, {
+          method: "POST",
+          headers,
+          body: JSON.stringify(payload),
+          keepalive: true,
+        });
+        return Boolean(res?.ok);
+      } catch {
+        return false;
+      }
+    },
+    [guestTrackingId, isLocalGuestToken, token]
+  );
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -290,6 +332,7 @@ export function UserDataProvider({ children }) {
       isGuestUser,
       provider,
       user,
+      guestTrackingId,
       recentTeamIds,
       token,
       authHeaders,
@@ -298,6 +341,7 @@ export function UserDataProvider({ children }) {
       refreshProfile,
       logout,
       recordRecentTeamId,
+      trackPageActivity,
     }),
     [
       authReady,
@@ -308,8 +352,10 @@ export function UserDataProvider({ children }) {
       isGuestUser,
       provider,
       user,
+      guestTrackingId,
       recentTeamIds,
       token,
+      trackPageActivity,
     ]
   );
 

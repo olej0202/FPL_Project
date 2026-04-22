@@ -71,7 +71,7 @@ function derivePlayersFromRows(rows, ids) {
 }
 
 export function MyTeamDataContextProvider({ children }) {
-  const { authHeaders, recordRecentTeamId } = useUserData();
+  const { authHeaders, recordRecentTeamId, guestTrackingId } = useUserData();
   const [teamId, setTeamId] = useState("");
   const [bbRound, setBbRound] = useState("");
   const [wildRound, setWildRound] = useState("");
@@ -392,6 +392,7 @@ export function MyTeamDataContextProvider({ children }) {
         params.append("risk", String(Number(risk) || 0));
         params.append("transval", String(Number(valtrans) || 0));
         params.append("stream", "true");
+        if (guestTrackingId) params.append("guest_id", String(guestTrackingId));
 
         const url = `${API_BASE_URL}/My_Team_Optimize?${params.toString()}`;
         const resp = await fetch(url, { headers: { ...authHeaders } });
@@ -431,6 +432,7 @@ export function MyTeamDataContextProvider({ children }) {
         risk: Number(risk) || 0,
         transval: Number(valtrans) || 0.5,
         stream: true,
+        guest_id: guestTrackingId || undefined,
       };
 
       const resp = await fetch(

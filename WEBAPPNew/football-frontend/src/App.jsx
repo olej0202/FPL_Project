@@ -66,6 +66,8 @@ export default function App() {
   const navigate = useNavigate();
   const desktopDropdownRef = useRef(null);
   const settingsDropdownRef = useRef(null);
+  const pageTrackPathRef = useRef(location.pathname || "/");
+  const pageTrackStartRef = useRef(Date.now());
   const {
     authReady,
     authBusy,
@@ -77,6 +79,7 @@ export default function App() {
     loginAsGuest,
     loginWithGoogleCredential,
     logout,
+    trackPageActivity,
   } = useUserData();
   const { setTeamId } = useMyteamData();
 
@@ -126,6 +129,60 @@ export default function App() {
     document.addEventListener("mousedown", onDocMouseDown);
     return () => document.removeEventListener("mousedown", onDocMouseDown);
   }, [settingsOpen]);
+
+  useEffect(() => {
+    if (!hasSession) return;
+    const nowMs = Date.now();
+    const previousPath = pageTrackPathRef.current || "/";
+    const startedMs = pageTrackStartRef.current || nowMs;
+    const durationSeconds = (nowMs - startedMs) / 1000;
+
+    if (durationSeconds >= 1) {
+      trackPageActivity({
+        path: previousPath,
+        durationSeconds,
+        startedAt: new Date(startedMs).toISOString(),
+        endedAt: new Date(nowMs).toISOString(),
+      });
+    }
+
+    pageTrackPathRef.current = location.pathname || "/";
+    pageTrackStartRef.current = nowMs;
+  }, [hasSession, location.pathname, trackPageActivity]);
+
+  useEffect(() => {
+    if (!hasSession) return;
+
+    const flushCurrentPage = () => {
+      const nowMs = Date.now();
+      const activePath = pageTrackPathRef.current || location.pathname || "/";
+      const startedMs = pageTrackStartRef.current || nowMs;
+      const durationSeconds = (nowMs - startedMs) / 1000;
+      if (durationSeconds < 1) return;
+
+      trackPageActivity({
+        path: activePath,
+        durationSeconds,
+        startedAt: new Date(startedMs).toISOString(),
+        endedAt: new Date(nowMs).toISOString(),
+      });
+
+      pageTrackStartRef.current = nowMs;
+    };
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        flushCurrentPage();
+      }
+    };
+
+    window.addEventListener("beforeunload", flushCurrentPage);
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => {
+      window.removeEventListener("beforeunload", flushCurrentPage);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
+  }, [hasSession, location.pathname, trackPageActivity]);
 
   const applyRecentTeamId = (id) => {
     if (id == null) return;
@@ -296,8 +353,10 @@ export default function App() {
 
                 <div
                   className={[
-                    "absolute right-0 mt-2 w-72 rounded-2xl border border-slate-200 bg-white p-3 shadow-lg",
-                    "origin-top-right transition-all duration-150",
+                    "z-50 rounded-2xl border border-slate-200 bg-white p-3 shadow-lg",
+                    "fixed left-2 right-2 top-[68px] max-h-[70vh] overflow-auto",
+                    "origin-top transition-all duration-150",
+                    "sm:absolute sm:left-auto sm:right-0 sm:top-auto sm:mt-2 sm:w-72 sm:max-h-[28rem] sm:origin-top-right",
                     settingsOpen
                       ? "translate-y-0 opacity-100 pointer-events-auto"
                       : "-translate-y-1 opacity-0 pointer-events-none",
@@ -640,6 +699,4 @@ export default function App() {
     </div>
   );
 }
-
-
 
