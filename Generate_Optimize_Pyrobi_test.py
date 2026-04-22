@@ -697,9 +697,9 @@ def optimize_my_team(
         m.forced_transfer_in_con = pyo.ConstraintList()
         for i in forced_transfer_indices:
             if next_week_is_freehit:
-                # If next GW is Free Hit, lock player into the free-hit squad for that GW.
+                # If next GW is Free Hit, lock player into the free-hit STARTING XI.
                 m.forced_transfer_in_con.add(
-                    m.fh_x[i] == 1
+                    m.fh_y[i] == 1
                 )
             else:
                 # Otherwise, lock player into first live GW squad.

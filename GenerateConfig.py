@@ -60,6 +60,8 @@ Manual_min=[
         {"name": "Brian_Brobbey", "type": "const",   "GW": "any", "value": 80},
         {"name": "Bruno_Guimarães Rodriguez Moura", "type": "const",   "GW": "any", "value": 80},
         {"name": "Chris_Wood", "type": "const",   "GW": "any", "value": 70},
+        {"name": "Walter_Benítez", "type": "const",   "GW": "any", "value": 0},
+
 
     ]
 
