@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 import pandas as pd
 import os
@@ -19,6 +19,12 @@ from GenerateConfig import fixtures_config
 from queue import Queue
 from threading import Thread
 import traceback
+from datetime import datetime, timedelta, timezone
+from uuid import uuid4
+import psycopg2
+import requests
+import jwt
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 
 class PlayerInput(BaseModel):
@@ -49,15 +55,234 @@ class OptimizeRequest(BaseModel):
 
     # optional: passed only when model_type == "statistical"
     players: Optional[List[PlayerInput]] = None
-    
+
+
+class GuestAuthRequest(BaseModel):
+    device_id: Optional[str] = None
+
+
+class GoogleAuthRequest(BaseModel):
+    credential: str
+
+
+class TrackTeamIdRequest(BaseModel):
+    team_id: int
+
+
 app = FastAPI()
 OPTIMIZER_N_SOLUTIONS = 3
+RECENT_TEAM_IDS_LIMIT = int(os.getenv("RECENT_TEAM_IDS_LIMIT", "30"))
+DATABASE_URL = os.getenv("DATABASE_URL")
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "").strip()
+AUTH_JWT_SECRET = os.getenv("AUTH_JWT_SECRET", "").strip() or "change-me-in-render-env"
+AUTH_JWT_ALGORITHM = "HS256"
+auth_bearer = HTTPBearer(auto_error=False)
+
+
+def _db_dsn() -> str:
+    if not DATABASE_URL:
+        raise HTTPException(
+            status_code=500,
+            detail="Database is not configured. Set DATABASE_URL on the API service.",
+        )
+    dsn = DATABASE_URL
+    if "sslmode=" not in dsn and "render.com" in dsn:
+        sep = "&" if "?" in dsn else "?"
+        dsn = f"{dsn}{sep}sslmode=require"
+    return dsn
+
+
+def _connect_db():
+    return psycopg2.connect(_db_dsn())
+
+
+def _init_auth_tables():
+    if not DATABASE_URL:
+        print("[auth] DATABASE_URL not set. Auth DB persistence endpoints will fail.")
+        return
+    conn = _connect_db()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                CREATE TABLE IF NOT EXISTS app_users (
+                    id BIGSERIAL PRIMARY KEY,
+                    google_sub TEXT UNIQUE NOT NULL,
+                    email TEXT,
+                    name TEXT,
+                    avatar_url TEXT,
+                    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                    last_login_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                );
+                """
+            )
+            cur.execute(
+                """
+                CREATE TABLE IF NOT EXISTS app_login_events (
+                    id BIGSERIAL PRIMARY KEY,
+                    user_id BIGINT REFERENCES app_users(id) ON DELETE CASCADE,
+                    provider TEXT NOT NULL,
+                    login_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                );
+                """
+            )
+            cur.execute(
+                """
+                CREATE TABLE IF NOT EXISTS user_recent_team_ids (
+                    id BIGSERIAL PRIMARY KEY,
+                    user_id BIGINT REFERENCES app_users(id) ON DELETE CASCADE,
+                    team_id INTEGER NOT NULL,
+                    used_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                    UNIQUE(user_id, team_id)
+                );
+                """
+            )
+            cur.execute(
+                """
+                CREATE INDEX IF NOT EXISTS idx_user_recent_team_ids_user_used
+                ON user_recent_team_ids (user_id, used_at DESC);
+                """
+            )
+        conn.commit()
+        print("[auth] Auth tables initialized.")
+    finally:
+        conn.close()
+
+
+@app.on_event("startup")
+def _startup():
+    _init_auth_tables()
+
+
+def _create_auth_token(payload: dict) -> str:
+    now = datetime.now(timezone.utc)
+    token_payload = {
+        **payload,
+        "iat": int(now.timestamp()),
+        "exp": int((now + timedelta(days=30)).timestamp()),
+    }
+    return jwt.encode(token_payload, AUTH_JWT_SECRET, algorithm=AUTH_JWT_ALGORITHM)
+
+
+def _decode_auth_token(token: str) -> dict:
+    try:
+        return jwt.decode(token, AUTH_JWT_SECRET, algorithms=[AUTH_JWT_ALGORITHM])
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Session expired. Please login again.")
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid auth token.")
+
+
+def _auth_payload_required(
+    credentials: HTTPAuthorizationCredentials = Depends(auth_bearer),
+) -> dict:
+    if not credentials or not credentials.credentials:
+        raise HTTPException(status_code=401, detail="Missing Authorization token.")
+    return _decode_auth_token(credentials.credentials)
+
+
+def _auth_payload_optional(request: Request) -> Optional[dict]:
+    auth_header = request.headers.get("Authorization", "")
+    if not auth_header.lower().startswith("bearer "):
+        return None
+    token = auth_header.split(" ", 1)[1].strip()
+    if not token:
+        return None
+    try:
+        return _decode_auth_token(token)
+    except Exception:
+        return None
+
+
+def _get_user_by_id(user_id: int) -> Optional[dict]:
+    conn = _connect_db()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT id, google_sub, email, name, avatar_url, created_at, last_login_at
+                FROM app_users
+                WHERE id = %s
+                """,
+                (int(user_id),),
+            )
+            row = cur.fetchone()
+            if not row:
+                return None
+            return {
+                "id": int(row[0]),
+                "google_sub": row[1],
+                "email": row[2],
+                "name": row[3],
+                "avatar_url": row[4],
+                "created_at": row[5].isoformat() if row[5] else None,
+                "last_login_at": row[6].isoformat() if row[6] else None,
+            }
+    finally:
+        conn.close()
+
+
+def _get_recent_team_ids_for_user(user_id: int) -> List[int]:
+    conn = _connect_db()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT team_id
+                FROM user_recent_team_ids
+                WHERE user_id = %s
+                ORDER BY used_at DESC
+                LIMIT %s
+                """,
+                (int(user_id), RECENT_TEAM_IDS_LIMIT),
+            )
+            rows = cur.fetchall() or []
+            return [int(r[0]) for r in rows if r and r[0] is not None]
+    finally:
+        conn.close()
+
+
+def _track_recent_team_id(user_id: int, team_id: int):
+    conn = _connect_db()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO user_recent_team_ids (user_id, team_id, used_at)
+                VALUES (%s, %s, NOW())
+                ON CONFLICT (user_id, team_id)
+                DO UPDATE SET used_at = EXCLUDED.used_at
+                """,
+                (int(user_id), int(team_id)),
+            )
+            cur.execute(
+                """
+                DELETE FROM user_recent_team_ids
+                WHERE user_id = %s
+                  AND id NOT IN (
+                    SELECT id
+                    FROM user_recent_team_ids
+                    WHERE user_id = %s
+                    ORDER BY used_at DESC
+                    LIMIT %s
+                  )
+                """,
+                (int(user_id), int(user_id), RECENT_TEAM_IDS_LIMIT),
+            )
+        conn.commit()
+    finally:
+        conn.close()
 
 # Allow frontend to access backend
+cors_origins_env = os.getenv("CORS_ORIGINS", "*")
+cors_origins = [x.strip() for x in cors_origins_env.split(",") if x.strip()]
+if not cors_origins:
+    cors_origins = ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # or use your frontend URL
-    allow_credentials=True,
+    allow_origins=cors_origins,  # set CORS_ORIGINS in Render for stricter control
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -156,6 +381,195 @@ def get_data():
 def get_fixtures_config():
     # fixtures_config imported from GenerateConfig
     return JSONResponse(content=fixtures_config)
+
+
+@app.post("/auth/guest")
+def auth_guest(req: GuestAuthRequest):
+    guest_id = req.device_id or f"guest-{uuid4().hex[:16]}"
+    token = _create_auth_token(
+        {
+            "provider": "guest",
+            "guest_id": guest_id,
+        }
+    )
+    return {
+        "token": token,
+        "provider": "guest",
+        "user": {
+            "id": guest_id,
+            "name": "Guest",
+            "email": None,
+            "avatar_url": None,
+        },
+        "recent_team_ids": [],
+    }
+
+
+def _verify_google_credential(id_token: str) -> dict:
+    if not GOOGLE_CLIENT_ID:
+        raise HTTPException(
+            status_code=500,
+            detail="Google login is not configured. Set GOOGLE_CLIENT_ID in API environment.",
+        )
+    try:
+        resp = requests.get(
+            "https://oauth2.googleapis.com/tokeninfo",
+            params={"id_token": id_token},
+            timeout=10,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Failed to verify Google token: {e}")
+
+    if resp.status_code != 200:
+        raise HTTPException(status_code=401, detail="Invalid Google credential.")
+
+    payload = resp.json()
+    aud = str(payload.get("aud", "")).strip()
+    if aud != GOOGLE_CLIENT_ID:
+        raise HTTPException(status_code=401, detail="Google token audience mismatch.")
+
+    exp = int(payload.get("exp", "0") or "0")
+    if exp and datetime.now(timezone.utc).timestamp() >= exp:
+        raise HTTPException(status_code=401, detail="Google token has expired.")
+    return payload
+
+
+def _upsert_google_user(google_payload: dict) -> dict:
+    google_sub = str(google_payload.get("sub", "")).strip()
+    if not google_sub:
+        raise HTTPException(status_code=401, detail="Google account id missing.")
+
+    email = google_payload.get("email")
+    name = google_payload.get("name") or email or "Google User"
+    avatar_url = google_payload.get("picture")
+
+    conn = _connect_db()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO app_users (google_sub, email, name, avatar_url, last_login_at)
+                VALUES (%s, %s, %s, %s, NOW())
+                ON CONFLICT (google_sub)
+                DO UPDATE SET
+                    email = EXCLUDED.email,
+                    name = EXCLUDED.name,
+                    avatar_url = EXCLUDED.avatar_url,
+                    last_login_at = NOW()
+                RETURNING id, google_sub, email, name, avatar_url
+                """,
+                (google_sub, email, name, avatar_url),
+            )
+            row = cur.fetchone()
+            if not row:
+                raise HTTPException(status_code=500, detail="Failed to create user.")
+            user_id = int(row[0])
+            cur.execute(
+                """
+                INSERT INTO app_login_events (user_id, provider)
+                VALUES (%s, %s)
+                """,
+                (user_id, "google"),
+            )
+        conn.commit()
+    finally:
+        conn.close()
+
+    return {
+        "id": user_id,
+        "google_sub": row[1],
+        "email": row[2],
+        "name": row[3],
+        "avatar_url": row[4],
+    }
+
+
+@app.post("/auth/google")
+def auth_google(req: GoogleAuthRequest):
+    payload = _verify_google_credential(req.credential)
+    user = _upsert_google_user(payload)
+    token = _create_auth_token(
+        {
+            "provider": "google",
+            "user_id": int(user["id"]),
+            "google_sub": user["google_sub"],
+        }
+    )
+    recent = _get_recent_team_ids_for_user(int(user["id"]))
+    return {
+        "token": token,
+        "provider": "google",
+        "user": {
+            "id": int(user["id"]),
+            "name": user.get("name"),
+            "email": user.get("email"),
+            "avatar_url": user.get("avatar_url"),
+        },
+        "recent_team_ids": recent,
+    }
+
+
+@app.get("/auth/me")
+def auth_me(payload: dict = Depends(_auth_payload_required)):
+    provider = payload.get("provider")
+    if provider == "google":
+        user_id = payload.get("user_id")
+        if user_id is None:
+            raise HTTPException(status_code=401, detail="Invalid auth session.")
+        user = _get_user_by_id(int(user_id))
+        if not user:
+            raise HTTPException(status_code=401, detail="User not found.")
+        return {
+            "provider": "google",
+            "user": {
+                "id": int(user["id"]),
+                "name": user.get("name"),
+                "email": user.get("email"),
+                "avatar_url": user.get("avatar_url"),
+            },
+            "recent_team_ids": _get_recent_team_ids_for_user(int(user_id)),
+        }
+
+    if provider == "guest":
+        return {
+            "provider": "guest",
+            "user": {
+                "id": payload.get("guest_id", "guest"),
+                "name": "Guest",
+                "email": None,
+                "avatar_url": None,
+            },
+            "recent_team_ids": [],
+        }
+
+    raise HTTPException(status_code=401, detail="Unknown auth provider.")
+
+
+@app.post("/user/recent-team-id")
+def user_recent_team_id_add(
+    req: TrackTeamIdRequest,
+    payload: dict = Depends(_auth_payload_required),
+):
+    provider = payload.get("provider")
+    if provider != "google":
+        return {"ok": True, "recent_team_ids": []}
+
+    user_id = payload.get("user_id")
+    if user_id is None:
+        raise HTTPException(status_code=401, detail="Invalid auth session.")
+    _track_recent_team_id(int(user_id), int(req.team_id))
+    return {"ok": True, "recent_team_ids": _get_recent_team_ids_for_user(int(user_id))}
+
+
+@app.get("/user/recent-team-ids")
+def user_recent_team_ids(payload: dict = Depends(_auth_payload_required)):
+    provider = payload.get("provider")
+    if provider != "google":
+        return {"recent_team_ids": []}
+    user_id = payload.get("user_id")
+    if user_id is None:
+        raise HTTPException(status_code=401, detail="Invalid auth session.")
+    return {"recent_team_ids": _get_recent_team_ids_for_user(int(user_id))}
 
 
 def _build_optimize_kwargs(
@@ -271,7 +685,7 @@ def get_data():
 
 
 @app.post("/My_Team_Optimize")
-def post_my_team_optimize(req: OptimizeRequest):
+def post_my_team_optimize(req: OptimizeRequest, request: Request):
     """
     POST variant:
     - model_type = "ai": behave like the existing GET endpoint
@@ -288,6 +702,13 @@ def post_my_team_optimize(req: OptimizeRequest):
     if req.players:
         # turn list[PlayerInput] -> DataFrame
         players_df = pd.DataFrame([p.dict() for p in req.players])
+
+    auth_payload = _auth_payload_optional(request)
+    if auth_payload and auth_payload.get("provider") == "google" and auth_payload.get("user_id") is not None:
+        try:
+            _track_recent_team_id(int(auth_payload["user_id"]), int(req.team_id))
+        except Exception as e:
+            print(f"[auth] failed to track recent team id in POST optimize: {e}")
 
     optimize_kwargs = _build_optimize_kwargs(
         team_id=req.team_id,
@@ -316,6 +737,7 @@ def post_my_team_optimize(req: OptimizeRequest):
 
 @app.get("/My_Team_Optimize")
 def get_my_team_optimize(
+    request: Request,
     team_id: int,
     banned_list: Optional[List[str]]        = Query(None, title="Player IDs to ban", alias="banned_list"),
     force_in_list: Optional[List[str]]      = Query(None, title="Player names to force in", alias="force_in_list"),
@@ -349,6 +771,13 @@ def get_my_team_optimize(
         transval=transval,
     )
 
+    auth_payload = _auth_payload_optional(request)
+    if auth_payload and auth_payload.get("provider") == "google" and auth_payload.get("user_id") is not None:
+        try:
+            _track_recent_team_id(int(auth_payload["user_id"]), int(team_id))
+        except Exception as e:
+            print(f"[auth] failed to track recent team id in GET optimize: {e}")
+
     if stream:
         return _stream_optimization(optimize_kwargs)
 
@@ -364,8 +793,15 @@ def get_my_team_optimize(
 
 @app.get("/Get_My_Team")
 def get_my_team_optimize(
+    request: Request,
     team_id: int
 ):
+    auth_payload = _auth_payload_optional(request)
+    if auth_payload and auth_payload.get("provider") == "google" and auth_payload.get("user_id") is not None:
+        try:
+            _track_recent_team_id(int(auth_payload["user_id"]), int(team_id))
+        except Exception as e:
+            print(f"[auth] failed to track recent team id in Get_My_Team: {e}")
     try:
         df = build_team_dataframe(
             team_id

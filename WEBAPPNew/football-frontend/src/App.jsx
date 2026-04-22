@@ -5,16 +5,21 @@ import {
   NavLink,
   Navigate,
   useLocation,
+  useNavigate,
 } from "react-router-dom";
 import {
   BarChart2,
   Brain,
   ChevronDown,
+  Clock3,
   LayoutDashboard,
+  LogOut,
   Menu,
   Newspaper,
   Search,
+  Settings,
   Trophy,
+  UserCircle2,
   X,
 } from "lucide-react";
 
@@ -43,7 +48,10 @@ import AdjustmentSimulatorPage from "./Adjustment_Analytics_Simulator";
 import AITeams from "./AITeams";
 import MyTeamOverview from "./MyTeam_Display";
 import CurrentlyUnavailable from "./components/CurrentlyUnavailable";
+import LoginGate from "./components/LoginGate";
 import { isSiteAvailable } from "./config/siteAvailability";
+import { useUserData } from "./Contexts/UserContext";
+import { useMyteamData } from "./Contexts/MyTeamContext";
 
 import logo from "./assets/FPL_analytics_logo.png";
 import "./index.css";
@@ -52,9 +60,25 @@ export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [analysisOpenDesktop, setAnalysisOpenDesktop] = useState(false);
   const [analysisOpenMobile, setAnalysisOpenMobile] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const location = useLocation();
+  const navigate = useNavigate();
   const desktopDropdownRef = useRef(null);
+  const settingsDropdownRef = useRef(null);
+  const {
+    authReady,
+    authBusy,
+    authError,
+    hasSession,
+    provider,
+    user,
+    recentTeamIds,
+    loginAsGuest,
+    loginWithGoogleCredential,
+    logout,
+  } = useUserData();
+  const { setTeamId } = useMyteamData();
 
   const analysisChildren = useMemo(
     () => [
@@ -77,6 +101,7 @@ export default function App() {
     setMenuOpen(false);
     setAnalysisOpenDesktop(false);
     setAnalysisOpenMobile(false);
+    setSettingsOpen(false);
   }, [location.pathname]);
 
   useEffect(() => {
@@ -90,6 +115,45 @@ export default function App() {
     document.addEventListener("mousedown", onDocMouseDown);
     return () => document.removeEventListener("mousedown", onDocMouseDown);
   }, [analysisOpenDesktop, menuOpen]);
+
+  useEffect(() => {
+    const onDocMouseDown = (event) => {
+      if (!settingsOpen || !settingsDropdownRef.current) return;
+      if (!settingsDropdownRef.current.contains(event.target)) {
+        setSettingsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onDocMouseDown);
+    return () => document.removeEventListener("mousedown", onDocMouseDown);
+  }, [settingsOpen]);
+
+  const applyRecentTeamId = (id) => {
+    if (id == null) return;
+    setTeamId(String(id));
+    setSettingsOpen(false);
+    navigate("/My_Team");
+  };
+
+  if (!authReady) {
+    return (
+      <div className="min-h-screen bg-app-gradient flex items-center justify-center">
+        <div className="rounded-2xl border border-slate-200 bg-white px-6 py-5 text-sm font-semibold text-slate-700 shadow-sm">
+          Preparing session...
+        </div>
+      </div>
+    );
+  }
+
+  if (!hasSession) {
+    return (
+      <LoginGate
+        authBusy={authBusy}
+        authError={authError}
+        onGuestLogin={loginAsGuest}
+        onGoogleCredential={loginWithGoogleCredential}
+      />
+    );
+  }
 
   const navItems = [
     { type: "link", to: "/My_Team", icon: Brain, label: "AI Teams" },
@@ -219,16 +283,86 @@ export default function App() {
               </div>
             </div>
 
-            <div className="ml-auto md:hidden">
-              <button
-                type="button"
-                onClick={() => setMenuOpen(true)}
-                className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-white px-3 py-1.5 text-xs font-semibold text-sky-700 shadow-sm"
-              >
-                <LayoutDashboard size={16} />
-                <span>Navigation</span>
-                <Menu size={16} />
-              </button>
+            <div className="ml-auto flex items-center gap-2">
+              <div className="relative" ref={settingsDropdownRef}>
+                <button
+                  type="button"
+                  onClick={() => setSettingsOpen((prev) => !prev)}
+                  className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:border-sky-200 hover:text-sky-700"
+                >
+                  <Settings size={16} />
+                  <span className="hidden sm:inline">Settings</span>
+                </button>
+
+                <div
+                  className={[
+                    "absolute right-0 mt-2 w-72 rounded-2xl border border-slate-200 bg-white p-3 shadow-lg",
+                    "origin-top-right transition-all duration-150",
+                    settingsOpen
+                      ? "translate-y-0 opacity-100 pointer-events-auto"
+                      : "-translate-y-1 opacity-0 pointer-events-none",
+                  ].join(" ")}
+                >
+                  <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
+                    <UserCircle2 size={18} className="text-sky-700" />
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-slate-900">
+                        {user?.name || "Session"}
+                      </p>
+                      <p className="truncate text-xs text-slate-500">
+                        {provider === "google" ? user?.email || "Google account" : "Guest mode"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="pt-3">
+                    <p className="mb-2 inline-flex items-center gap-1 text-xs font-semibold text-slate-600">
+                      <Clock3 size={13} />
+                      Recent Team IDs
+                    </p>
+
+                    {Array.isArray(recentTeamIds) && recentTeamIds.length ? (
+                      <div className="max-h-44 space-y-1 overflow-auto pr-1">
+                        {recentTeamIds.map((id) => (
+                          <button
+                            key={id}
+                            type="button"
+                            onClick={() => applyRecentTeamId(id)}
+                            className="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-left text-xs font-semibold text-slate-700 transition hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700"
+                          >
+                            Team ID {id}
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="rounded-lg border border-slate-200 bg-slate-50 px-2 py-2 text-xs text-slate-500">
+                        No recent team IDs yet.
+                      </p>
+                    )}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={logout}
+                    className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700 transition hover:bg-rose-100"
+                  >
+                    <LogOut size={15} />
+                    Log out
+                  </button>
+                </div>
+              </div>
+
+              <div className="md:hidden">
+                <button
+                  type="button"
+                  onClick={() => setMenuOpen(true)}
+                  className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-white px-3 py-1.5 text-xs font-semibold text-sky-700 shadow-sm"
+                >
+                  <LayoutDashboard size={16} />
+                  <span>Navigation</span>
+                  <Menu size={16} />
+                </button>
+              </div>
             </div>
           </div>
         </nav>
@@ -506,7 +640,6 @@ export default function App() {
     </div>
   );
 }
-
 
 
 

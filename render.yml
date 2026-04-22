@@ -1,6 +1,31 @@
-staticSites:
-  - name: vite-frontend
-    buildCommand: cd WebApp/football-frontend && npm install && npm run build
-    publishPath: WebApp/football-frontend/dist
-    environment: node
+services:
+  - type: web
+    name: fpl-api
+    env: python
+    rootDir: API
+    buildCommand: pip install -r requirementsAPI.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
     pullRequestPreviewsEnabled: true
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        value: 57284591314-0cojou9ct466fim5hgmo2l6nhqe86rdt.apps.googleusercontent.com
+      - key: AUTH_JWT_SECRET
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+      - key: RECENT_TEAM_IDS_LIMIT
+        value: "30"
+
+staticSites:
+  - name: fpl-frontend
+    rootDir: WEBAPPNew/football-frontend
+    buildCommand: npm install && npm run build
+    publishPath: dist
+    pullRequestPreviewsEnabled: true
+    envVars:
+      - key: VITE_API_BASE_URL
+        sync: false
+      - key: VITE_GOOGLE_CLIENT_ID
+        value: 57284591314-0cojou9ct466fim5hgmo2l6nhqe86rdt.apps.googleusercontent.com

@@ -46,6 +46,9 @@ ENGINEERED_FEATURES = [
     "Threat_Defense_Matchup",
     "Elo_Home_Interaction",
     "Elo_Ratio",
+    "Stat_XG_Index",
+    "Stat_XGA_Index",
+    "Stat_XG_Net_Index",
 ]
 
 
@@ -229,6 +232,17 @@ def _add_engineered_features(df: pd.DataFrame) -> pd.DataFrame:
 
     z["Elo_Home_Interaction"] = elo_diff * own_home
     z["Elo_Ratio"] = own_elo / (opp_elo.abs() + 1e-6)
+
+    # Statistical index feature requested:
+    # z = -3.15 + 1.485*A + 1.503*B - 0.174*A*B, prediction = exp(0.5*z)
+    # A = own attacking stat, B = opponent defensive stat.
+    z1 = -3.15 + 1.485 * own_xg + 1.503 * opp_xgc - 0.174 * own_xg * opp_xgc
+    z["Stat_XG_Index"] = np.exp(0.5 * z1)
+
+    # Symmetric defensive-side variant for goals conceded signal.
+    z2 = -3.15 + 1.485 * opp_xg + 1.503 * own_xgc - 0.174 * opp_xg * own_xgc
+    z["Stat_XGA_Index"] = np.exp(0.5 * z2)
+    z["Stat_XG_Net_Index"] = z["Stat_XG_Index"] - z["Stat_XGA_Index"]
     return z
 
 
@@ -1133,31 +1147,7 @@ def _attach_distribution_columns(
     hist_dist_df: pd.DataFrame,
     knn_sample_size: int = 220,
 ) -> pd.DataFrame:
-    """Attach P25/P50/P75 distribution columns for Plain_GS and Clean_Sheet."""
-    def _weighted_quantile(values: np.ndarray, weights: np.ndarray, qs: List[float]) -> np.ndarray:
-        values = np.asarray(values, dtype=float)
-        weights = np.asarray(weights, dtype=float)
-        qs_arr = np.asarray(qs, dtype=float)
-        if values.size == 0:
-            return np.full_like(qs_arr, np.nan, dtype=float)
-        order = np.argsort(values)
-        v = values[order]
-        w = np.clip(weights[order], 1e-12, None)
-        ws = np.cumsum(w)
-        total = ws[-1]
-        if total <= 0:
-            return np.quantile(v, qs_arr)
-        cdf = ws / total
-        return np.interp(qs_arr, cdf, v)
-
-    def _weighted_mean(values: np.ndarray, weights: np.ndarray) -> float:
-        v = np.asarray(values, dtype=float)
-        w = np.asarray(weights, dtype=float)
-        denom = np.sum(w)
-        if denom <= 0:
-            return float(np.nanmean(v))
-        return float(np.sum(v * w) / denom)
-
+    """Attach Bayesian bucketed distribution columns for Plain_GS and Clean_Sheet."""
     out = pred_df.copy()
     if out.empty or hist_dist_df.empty:
         for c in [
@@ -1171,6 +1161,9 @@ def _attach_distribution_columns(
             "Clean_Sheet_P25",
             "Clean_Sheet_P50",
             "Clean_Sheet_P75",
+            "Actual_Goals_Bucket_Avg",
+            "Actual_CS_Bucket_Avg",
+            "Distribution_Bucket_Width",
             "Distribution_Sample_N",
         ]:
             out[c] = np.nan
@@ -1181,54 +1174,64 @@ def _attach_distribution_columns(
     hgs = pd.to_numeric(hist_dist_df["Plain_GS"], errors="coerce").values.astype(float)
     hcs_obs = pd.to_numeric(hist_dist_df["Clean_Sheet"], errors="coerce").values.astype(float)
 
-    sxg = float(np.nanstd(hxg)) + 1e-6
-    scs = float(np.nanstd(hcs)) + 1e-6
-
     pxg_all = pd.to_numeric(out.get("XG"), errors="coerce").fillna(np.nanmedian(hxg)).values.astype(float)
     pcs_all = pd.to_numeric(out.get("CS"), errors="coerce").fillna(np.nanmedian(hcs)).values.astype(float)
 
-    n_hist = len(hist_dist_df)
-    k = int(max(40, min(knn_sample_size, n_hist)))
+    g_q = np.quantile(hgs, [0.25, 0.50, 0.75])
+    cs_q = np.quantile(hcs_obs, [0.25, 0.50, 0.75])
+    g_mean_global = float(np.mean(hgs))
+    cs_mean_global = float(np.mean(hcs_obs))
+
+    g_low_global = float(np.mean(hgs[hgs <= g_q[0]])) if np.any(hgs <= g_q[0]) else float(g_q[0])
+    g_hi_global = float(np.mean(hgs[hgs >= g_q[2]])) if np.any(hgs >= g_q[2]) else float(g_q[2])
 
     pgs_mean, pgs_l25_avg, pgs_u75_avg = [], [], []
     pgs25, pgs50, pgs75 = [], [], []
     pcs_mean = []
     pcs25, pcs50, pcs75 = [], [], []
+    bucket_used = []
     ns = []
 
+    bucket_schedule = [0.04, 0.06, 0.08, 0.12, 0.16, 0.24]
+    min_bucket_n = 35
+    prior_strength = 30.0  # empirical-Bayes shrinkage strength
+
     for pxg, pcs in zip(pxg_all, pcs_all):
-        d = ((hxg - pxg) / sxg) ** 2 + ((hcs - pcs) / scs) ** 2
-        if k < n_hist:
-            idx = np.argpartition(d, k)[:k]
-        else:
-            idx = np.arange(n_hist)
+        idx = None
+        used_bw = bucket_schedule[-1]
+        for bw in bucket_schedule:
+            mask = (np.abs(hxg - pxg) <= bw) & (np.abs(hcs - pcs) <= bw)
+            if np.sum(mask) >= min_bucket_n:
+                idx = np.where(mask)[0]
+                used_bw = bw
+                break
+            idx = np.where(mask)[0]
+
+        if idx is None or len(idx) == 0:
+            idx = np.arange(len(hgs))
+            used_bw = float("inf")
 
         s_gs = hgs[idx].astype(float)
         s_cs = hcs_obs[idx].astype(float)
-        s_d = d[idx].astype(float)
+        n = float(len(idx))
+        w = n / (n + prior_strength)
 
-        # Kernel weights (closer historical rows get more influence).
-        bw = float(np.quantile(s_d, 0.5)) + 1e-6
-        w = np.exp(-0.5 * s_d / bw)
-        w = np.clip(w, 1e-12, None)
-        w = w / np.sum(w)
+        q_gs_emp = np.quantile(s_gs, [0.25, 0.50, 0.75])
+        q_cs_emp = np.quantile(s_cs, [0.25, 0.50, 0.75])
+        q_gs = w * q_gs_emp + (1.0 - w) * g_q
+        q_cs = w * q_cs_emp + (1.0 - w) * cs_q
 
-        q_gs = _weighted_quantile(s_gs, w, [0.25, 0.50, 0.75])
-        q_cs = _weighted_quantile(s_cs, w, [0.25, 0.50, 0.75])
+        gs_mean_emp = float(np.mean(s_gs))
+        cs_mean_emp = float(np.mean(s_cs))
+        gs_mean = w * gs_mean_emp + (1.0 - w) * g_mean_global
+        cs_mean = w * cs_mean_emp + (1.0 - w) * cs_mean_global
 
-        gs_mean = _weighted_mean(s_gs, w)
-        cs_mean = _weighted_mean(s_cs, w)
-
-        l25_mask = s_gs <= q_gs[0]
-        u75_mask = s_gs >= q_gs[2]
-        if np.any(l25_mask):
-            l25_avg = _weighted_mean(s_gs[l25_mask], w[l25_mask])
-        else:
-            l25_avg = float(q_gs[0])
-        if np.any(u75_mask):
-            u75_avg = _weighted_mean(s_gs[u75_mask], w[u75_mask])
-        else:
-            u75_avg = float(q_gs[2])
+        l25_emp_mask = s_gs <= q_gs_emp[0]
+        u75_emp_mask = s_gs >= q_gs_emp[2]
+        l25_emp = float(np.mean(s_gs[l25_emp_mask])) if np.any(l25_emp_mask) else float(q_gs_emp[0])
+        u75_emp = float(np.mean(s_gs[u75_emp_mask])) if np.any(u75_emp_mask) else float(q_gs_emp[2])
+        l25_avg = w * l25_emp + (1.0 - w) * g_low_global
+        u75_avg = w * u75_emp + (1.0 - w) * g_hi_global
 
         pgs_mean.append(float(gs_mean))
         pgs_l25_avg.append(float(l25_avg))
@@ -1240,7 +1243,8 @@ def _attach_distribution_columns(
         pcs25.append(float(q_cs[0]))
         pcs50.append(float(q_cs[1]))
         pcs75.append(float(q_cs[2]))
-        ns.append(int(len(idx)))
+        bucket_used.append(float(used_bw))
+        ns.append(int(n))
 
     out["Plain_GS_Mean"] = pgs_mean
     out["Plain_GS_Avg_Lower25"] = pgs_l25_avg
@@ -1252,6 +1256,9 @@ def _attach_distribution_columns(
     out["Clean_Sheet_P25"] = pcs25
     out["Clean_Sheet_P50"] = pcs50
     out["Clean_Sheet_P75"] = pcs75
+    out["Actual_Goals_Bucket_Avg"] = out["Plain_GS_Mean"]
+    out["Actual_CS_Bucket_Avg"] = out["Clean_Sheet_Mean"]
+    out["Distribution_Bucket_Width"] = bucket_used
     out["Distribution_Sample_N"] = ns
     return out
 
@@ -1356,7 +1363,8 @@ def GenerateTeamPredictions2(
         "cs_blend_weight_model": cs_blend_w_model,
         "cs_blend_weight_pois": (1.0 - cs_blend_w_model),
         "cs_blend_brier": cs_blend_brier,
-        "distribution_method": "weighted_knn_xg_cs",
+        "distribution_method": "bayesian_bucket_pm_0.04",
+        "distribution_bucket_halfwidth_base": 0.04,
         "distribution_knn_sample_size": 220,
         "distribution_historical_rows": int(len(hist_dist_df)),
         "selected_features": {

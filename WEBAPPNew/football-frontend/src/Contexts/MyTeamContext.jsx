@@ -6,6 +6,8 @@ import React, {
   useMemo,
   useState,
 } from "react";
+import { API_BASE_URL } from "../config/apiBase";
+import { useUserData } from "./UserContext";
 
 const MyTeamDataContext = createContext();
 export const useMyteamData = () => useContext(MyTeamDataContext);
@@ -13,7 +15,6 @@ export const useMyteamData = () => useContext(MyTeamDataContext);
 // LocalStorage key
 const SAVED_OPT_KEY = "myteam_saved_optimizations_v1";
 const OPTIMIZATION_SOLUTIONS = 3;
-const API_BASE_URL = "https://fpl-project-t5e9.onrender.com";
 
 function safeJsonParse(str, fallback) {
   try {
@@ -70,6 +71,7 @@ function derivePlayersFromRows(rows, ids) {
 }
 
 export function MyTeamDataContextProvider({ children }) {
+  const { authHeaders, recordRecentTeamId } = useUserData();
   const [teamId, setTeamId] = useState("");
   const [bbRound, setBbRound] = useState("");
   const [wildRound, setWildRound] = useState("");
@@ -222,10 +224,11 @@ export function MyTeamDataContextProvider({ children }) {
     setTeamLoading(true);
     try {
       const url = `${API_BASE_URL}/Get_My_Team?team_id=${teamId}`;
-      const resp = await fetch(url);
+      const resp = await fetch(url, { headers: { ...authHeaders } });
       if (!resp.ok) throw new Error(await resp.text());
       const json = await resp.json();
       setTeamData(json);
+      await recordRecentTeamId(teamId);
     } catch (err) {
       console.error(err);
       alert("Error fetching team data: " + err.message);
@@ -391,9 +394,10 @@ export function MyTeamDataContextProvider({ children }) {
         params.append("stream", "true");
 
         const url = `${API_BASE_URL}/My_Team_Optimize?${params.toString()}`;
-        const resp = await fetch(url);
+        const resp = await fetch(url, { headers: { ...authHeaders } });
         if (!resp.ok) throw new Error(await resp.text());
         await consumeStreamResponse(resp);
+        await recordRecentTeamId(teamId);
 
         return;
       }
@@ -433,13 +437,14 @@ export function MyTeamDataContextProvider({ children }) {
         `${API_BASE_URL}/My_Team_Optimize`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...authHeaders },
           body: JSON.stringify(body),
         }
       );
 
       if (!resp.ok) throw new Error(await resp.text());
       await consumeStreamResponse(resp);
+      await recordRecentTeamId(teamId);
     } catch (err) {
       console.error(err);
       alert("Error: " + err.message);

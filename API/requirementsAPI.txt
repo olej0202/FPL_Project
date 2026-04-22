@@ -6,3 +6,5 @@ pulp
 requests
 pyomo
 highspy
+psycopg2-binary
+PyJWT
