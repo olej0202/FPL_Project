@@ -736,7 +736,7 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
       assists * assistFactor +
       cs * csFactor * minutesAdj +
       csNonlinear +
-      savePred/3
+      savePred/4
   );
 
   return {

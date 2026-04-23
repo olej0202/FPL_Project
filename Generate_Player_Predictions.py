@@ -989,7 +989,7 @@ def Generate_point_predictions(GW_list):
             
         elif(position=="GKP"):
             summary_dataset["Points_prediction"]=(2
-                                                  +summary_dataset["Save_pred"]/3
+                                                  +summary_dataset["Save_pred"]/4
                                                   + (30 - np.minimum(30, summary_dataset["GC_pred"]*100)) / -15
                                                   +summary_dataset["GC_pred"]*5)
             summary_dataset["Risk_share"]=(summary_dataset["GC_pred"]*5)/summary_dataset["Points_prediction"]
