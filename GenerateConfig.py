@@ -61,6 +61,11 @@ Manual_min=[
         {"name": "Bruno_Guimarães Rodriguez Moura", "type": "const",   "GW": "any", "value": 80},
         {"name": "Chris_Wood", "type": "const",   "GW": "any", "value": 70},
         {"name": "Walter_Benítez", "type": "const",   "GW": "any", "value": 0},
+        {"name": "Dominic_Solanke-Mitchell", "type": "const",   "GW": "any", "value": 90},
+        {"name": "Daniel_Ballard", "type": "const",   "GW": "any", "value": 90},
+        {"name": "Alexander_Isak", "type": "const",   "GW": "any", "value": 80},
+        {"name": "Robin_Roefs", "type": "const",   "GW": "any", "value": 90},
+        {"name": "Xavi_Simons", "type": "const",   "GW": "any", "value": 90},
 
 
     ]
