@@ -29,7 +29,7 @@ Manual_team_offensive_adjustments = {}
     
     
     
-Manual_team_defensive_adjustments = {39:1.15}
+Manual_team_defensive_adjustments = {39:1.1}
 
 
 Manual_NewPlayer_Adjustments={
@@ -77,10 +77,18 @@ NEW_TEAMS_NAME=[]
 fixtures_config = {
         
         "2562201":[
-            {"gw": 36, "probability": 0.9},
-            {"gw": 38, "probability": 0.1},
+            {"gw": 36, "probability": 0.7},
+            {"gw": 37, "probability": 0.3},
+        ],
+        "2562255":[
+            {"gw": 36, "probability": 0.3},
+            {"gw": 37, "probability": 0.7},
+        ],
+        "2562259":[
+            {"gw": 37, "probability": 1},
         ]
     }
+
 
 min_id=46805
 
