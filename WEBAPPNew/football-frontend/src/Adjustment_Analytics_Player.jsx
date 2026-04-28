@@ -15,6 +15,7 @@ import {
   DollarSign,
   Filter,
   ChevronDown,
+  ChevronLeft,
   ChevronRight,
   Sparkles,
   PencilLine,
@@ -61,6 +62,14 @@ const MEASURE_LABELS = {
   Save_Pred: "Predicted Saves",
 };
 
+const MODAL_METRIC_OPTIONS = [
+  { value: "points", label: "Points" },
+  { value: "goals", label: "Goals" },
+  { value: "assists", label: "Assists" },
+  { value: "saves", label: "Saves" },
+  { value: "defcon", label: "Defcon" },
+];
+
 const clamp01 = (x) => Math.max(0, Math.min(1, Number.isFinite(x) ? x : 0));
 const firstFinite = (...vals) => {
   for (const v of vals) {
@@ -86,19 +95,19 @@ const scaleRawCbiByAdjustedMean = (raw01, sourceMean01, adjustedMean01) => {
 function getMeasureMeta(measure) {
   switch (measure) {
     case "Points":
-      return { label: MEASURE_LABELS.Points, icon: Star, short: "Points", emoji: "⭐" };
+      return { label: MEASURE_LABELS.Points, icon: Star, short: "Points", emoji: "\u2B50" };
     case "Goal_Scored":
-      return { label: MEASURE_LABELS.Goal_Scored, icon: CircleDot, short: "Goals", emoji: "⚽" };
+      return { label: MEASURE_LABELS.Goal_Scored, icon: CircleDot, short: "Goals", emoji: "\u26BD" };
     case "Assists":
-      return { label: MEASURE_LABELS.Assists, icon: Footprints, short: "Assists", emoji: "🥾" };
+      return { label: MEASURE_LABELS.Assists, icon: Footprints, short: "Assists", emoji: "\uD83E\uDD7E" };
     case "Avg_Minutes":
-      return { label: MEASURE_LABELS.Avg_Minutes, icon: Clock3, short: "Minutes", emoji: "🕒" };
+      return { label: MEASURE_LABELS.Avg_Minutes, icon: Clock3, short: "Minutes", emoji: "\uD83D\uDD52" };
     case "CBI_Predictions":
-      return { label: MEASURE_LABELS.CBI_Predictions, icon: Shield, short: "Defcon", emoji: "🛡️" };
+      return { label: MEASURE_LABELS.CBI_Predictions, icon: Shield, short: "Defcon", emoji: "\uD83D\uDEE1\uFE0F" };
     case "Save_Pred":
-      return { label: MEASURE_LABELS.Save_Pred, icon: Hand, short: "Saves", emoji: "🧤" };
+      return { label: MEASURE_LABELS.Save_Pred, icon: Hand, short: "Saves", emoji: "\uD83E\uDDE4" };
     default:
-      return { label: measure, icon: Activity, short: measure, emoji: "•" };
+      return { label: measure, icon: Activity, short: measure, emoji: "\u2022" };
   }
 }
 
@@ -464,7 +473,7 @@ function TeamColorDot({ teamName }) {
 const PlayerRow = React.memo(function PlayerRow({
   row,
   idx,
-  allGWs,
+  displayedGWs,
   onOpen,
 }) {
   return (
@@ -532,7 +541,7 @@ const PlayerRow = React.memo(function PlayerRow({
         {row.value != null && !Number.isNaN(row.value) ? row.value.toFixed(1) : "-"}
       </td>
 
-      {allGWs.map((gw) => {
+      {displayedGWs.map((gw) => {
         const cell = row.gwMeasures[gw];
         const displayValue = cell ? cell[row.selectedMeasure] : 0;
         return (
@@ -840,6 +849,81 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
       setSelectedGwEnd(allGWs[allGWs.length - 1]);
     }
   }, [allGWs, selectedGwStart, selectedGwEnd]);
+
+  const normalizedGwRange = useMemo(() => {
+    if (!allGWs.length) {
+      return { start: 1, end: 38, min: 1, max: 38 };
+    }
+
+    const min = allGWs[0];
+    const max = allGWs[allGWs.length - 1];
+    const startCandidate = selectedGwStart != null ? Number(selectedGwStart) : min;
+    const endCandidate = selectedGwEnd != null ? Number(selectedGwEnd) : max;
+    const safeStart = Number.isFinite(startCandidate)
+      ? Math.max(min, Math.min(max, startCandidate))
+      : min;
+    const safeEnd = Number.isFinite(endCandidate)
+      ? Math.max(min, Math.min(max, endCandidate))
+      : max;
+
+    return {
+      start: Math.min(safeStart, safeEnd),
+      end: Math.max(safeStart, safeEnd),
+      min,
+      max,
+    };
+  }, [allGWs, selectedGwStart, selectedGwEnd]);
+
+  const displayedGWs = useMemo(() => {
+    if (!allGWs.length) return [];
+    const { start, end } = normalizedGwRange;
+    return allGWs.filter((gw) => gw >= start && gw <= end);
+  }, [allGWs, normalizedGwRange]);
+
+  const setGwRange = useCallback(
+    (startCandidate, endCandidate) => {
+      if (!allGWs.length) return;
+      const min = allGWs[0];
+      const max = allGWs[allGWs.length - 1];
+
+      const startNum = Number(startCandidate);
+      const endNum = Number(endCandidate);
+
+      const safeStart = Number.isFinite(startNum)
+        ? Math.max(min, Math.min(max, startNum))
+        : min;
+      const safeEnd = Number.isFinite(endNum)
+        ? Math.max(min, Math.min(max, endNum))
+        : max;
+
+      setSelectedGwStart(Math.min(safeStart, safeEnd));
+      setSelectedGwEnd(Math.max(safeStart, safeEnd));
+    },
+    [allGWs]
+  );
+
+  const handleGwStartSliderChange = useCallback(
+    (event) => {
+      const nextStart = Number(event.target.value);
+      setGwRange(nextStart, normalizedGwRange.end);
+    },
+    [setGwRange, normalizedGwRange.end]
+  );
+
+  const handleGwEndSliderChange = useCallback(
+    (event) => {
+      const nextEnd = Number(event.target.value);
+      setGwRange(normalizedGwRange.start, nextEnd);
+    },
+    [setGwRange, normalizedGwRange.start]
+  );
+
+  useEffect(() => {
+    if (sortConfig.type !== "gw" || sortConfig.gw == null) return;
+    if (!displayedGWs.includes(Number(sortConfig.gw))) {
+      setSortConfig({ type: "total", gw: null, direction: "desc" });
+    }
+  }, [displayedGWs, sortConfig.type, sortConfig.gw]);
 
   const playersByKey = useMemo(() => {
     const map = new Map();
@@ -1211,15 +1295,9 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
   ]);
 
   const filteredPlayerRows = useMemo(() => {
-    const horizonStart = selectedGwStart != null ? Number(selectedGwStart) : allGWs[0];
-    const horizonEnd = selectedGwEnd != null ? Number(selectedGwEnd) : allGWs[allGWs.length - 1];
-    const horizonMin = Math.min(horizonStart ?? 0, horizonEnd ?? 0);
-    const horizonMax = Math.max(horizonStart ?? 0, horizonEnd ?? 0);
-
     let rows = playerTableRowsBase.map((row) => {
       let totalMeasure = 0;
-      for (const gw of allGWs) {
-        if (gw < horizonMin || gw > horizonMax) continue;
+      for (const gw of displayedGWs) {
         const measures = row.gwMeasures[gw];
         const value = measures ? measures[selectedMeasure] : 0;
         if (typeof value === "number" && !Number.isNaN(value)) totalMeasure += value;
@@ -1281,7 +1359,7 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
     return rows;
   }, [
     playerTableRowsBase,
-    allGWs,
+    displayedGWs,
     selectedMeasure,
     debouncedPlayerNameFilter,
     selectedPlayerNames,
@@ -1290,8 +1368,6 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
     valueThreshold,
     globalMaxValue,
     sortConfig,
-    selectedGwStart,
-    selectedGwEnd,
   ]);
 
   const handleSortByGW = useCallback((gw) => {
@@ -1413,14 +1489,16 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
 
   const chartDataMinutes = useMemo(() => {
     if (!modalBaselineRows || modalBaselineRows.length === 0) return [];
-    return modalBaselineRows.map((row) => {
-      const original = Math.max(
-        MIN_MINUTES,
-        Math.min(MAX_MINUTES, Number(row.average_minutes) || 0)
-      );
-      const minutes = minutesDraft[row.GW] ?? original;
-      return { GW: row.GW, minutes };
-    });
+    return modalBaselineRows
+      .filter((row) => Number.isFinite(Number(row?.GW)) && Number(row.GW) <= 38)
+      .map((row) => {
+        const original = Math.max(
+          MIN_MINUTES,
+          Math.min(MAX_MINUTES, Number(row.average_minutes) || 0)
+        );
+        const minutes = minutesDraft[row.GW] ?? original;
+        return { GW: row.GW, minutes };
+      });
   }, [modalBaselineRows, minutesDraft]);
 
   const chartDataPoints = useMemo(() => {
@@ -1513,6 +1591,24 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
         };
     }
   }, [modalChartMetric]);
+
+  const modalMetricIndex = useMemo(() => {
+    const idx = MODAL_METRIC_OPTIONS.findIndex(
+      (opt) => opt.value === modalChartMetric
+    );
+    return idx >= 0 ? idx : 0;
+  }, [modalChartMetric]);
+
+  const stepModalMetric = useCallback((direction) => {
+    const dir = Number(direction) >= 0 ? 1 : -1;
+    const total = MODAL_METRIC_OPTIONS.length || 1;
+    setModalChartMetric((prev) => {
+      const currentIdx = MODAL_METRIC_OPTIONS.findIndex((opt) => opt.value === prev);
+      const safeIdx = currentIdx >= 0 ? currentIdx : 0;
+      const nextIdx = (safeIdx + dir + total) % total;
+      return MODAL_METRIC_OPTIONS[nextIdx].value;
+    });
+  }, []);
 
   const logAdjustment = useCallback((entry) => {
     updateChanges((prev) => [
@@ -2011,41 +2107,45 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
         </FilterCard>
 
         <FilterCard icon={CalendarRange} label="GW horizon for total">
-          <div className="grid grid-cols-2 gap-2">
-            <select
-              value={selectedGwStart ?? ""}
-              onChange={(e) => setSelectedGwStart(Number(e.target.value))}
-              className="w-full rounded-2xl px-3 py-3 text-sm outline-none"
-              style={{
-                border: `1px solid ${PALETTE.border}`,
-                background: "#f8fafc",
-                color: PALETTE.beige,
-              }}
-            >
-              {allGWs.map((gw) => (
-                <option key={`start_${gw}`} value={gw}>
-                  From GW {gw}
-                </option>
-              ))}
-            </select>
+          {allGWs.length > 0 ? (
+            <div className="space-y-3">
+              <div>
+                <div className="mb-1 text-xs font-medium" style={{ color: "#64748b" }}>
+                  From GW {normalizedGwRange.start}
+                </div>
+                <input
+                  type="range"
+                  min={normalizedGwRange.min}
+                  max={normalizedGwRange.max}
+                  step={1}
+                  value={normalizedGwRange.start}
+                  onChange={handleGwStartSliderChange}
+                  className="w-full"
+                  style={{ accentColor: PALETTE.gold }}
+                />
+              </div>
 
-            <select
-              value={selectedGwEnd ?? ""}
-              onChange={(e) => setSelectedGwEnd(Number(e.target.value))}
-              className="w-full rounded-2xl px-3 py-3 text-sm outline-none"
-              style={{
-                border: `1px solid ${PALETTE.border}`,
-                background: "#f8fafc",
-                color: PALETTE.beige,
-              }}
-            >
-              {allGWs.map((gw) => (
-                <option key={`end_${gw}`} value={gw}>
-                  To GW {gw}
-                </option>
-              ))}
-            </select>
-          </div>
+              <div>
+                <div className="mb-1 text-xs font-medium" style={{ color: "#64748b" }}>
+                  To GW {normalizedGwRange.end}
+                </div>
+                <input
+                  type="range"
+                  min={normalizedGwRange.min}
+                  max={normalizedGwRange.max}
+                  step={1}
+                  value={normalizedGwRange.end}
+                  onChange={handleGwEndSliderChange}
+                  className="w-full"
+                  style={{ accentColor: PALETTE.gold }}
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="text-sm" style={{ color: PALETTE.muted }}>
+              No GW data available.
+            </div>
+          )}
 
           <div
             className="mt-3 rounded-xl px-3 py-2 text-sm"
@@ -2055,9 +2155,7 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
               color: "#64748b",
             }}
           >
-            Total uses GW{" "}
-            {Math.min(selectedGwStart ?? allGWs[0], selectedGwEnd ?? allGWs[allGWs.length - 1])}
-            –{Math.max(selectedGwStart ?? allGWs[0], selectedGwEnd ?? allGWs[allGWs.length - 1])}
+            Total and visible GW columns use {normalizedGwRange.start}-{normalizedGwRange.end}
           </div>
         </FilterCard>
       </div>
@@ -2114,8 +2212,8 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
                           : a.type === "Defcon"
                           ? "Defcon"
                           : a.type}
-                        {a.gw != null ? ` · GW ${a.gw}` : ""}:{" "}
-                        {formatAdjustmentValue(a, "oldValue")} →{" "}
+                        {a.gw != null ? ` \u00B7 GW ${a.gw}` : ""}:{" "}
+                        {formatAdjustmentValue(a, "oldValue")} {"\u2192"}{" "}
                         <span style={{ color: PALETTE.gold }}>
                           {formatAdjustmentValue(a, "newValue")}
                         </span>
@@ -2243,7 +2341,7 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
                     Value
                   </th>
 
-                  {allGWs.map((gw) => {
+                  {displayedGWs.map((gw) => {
                     const isSorted = sortConfig.type === "gw" && sortConfig.gw === gw;
                     return (
                       <th
@@ -2259,7 +2357,7 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
                         <span className="inline-flex items-center gap-1">
                           GW {gw}
                           {isSorted ? (
-                            sortConfig.direction === "asc" ? "▲" : "▼"
+                            sortConfig.direction === "asc" ? "\u25B2" : "\u25BC"
                           ) : (
                             <ArrowUpDown size={12} />
                           )}
@@ -2280,7 +2378,7 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
                     <span className="inline-flex items-center gap-1">
                       Total{" "}
                       {sortConfig.type === "total" ? (
-                        sortConfig.direction === "asc" ? "▲" : "▼"
+                        sortConfig.direction === "asc" ? "\u25B2" : "\u25BC"
                       ) : (
                         <ArrowUpDown size={12} />
                       )}
@@ -2295,7 +2393,7 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
                     key={row.nameKey}
                     row={row}
                     idx={idx}
-                    allGWs={allGWs}
+                    displayedGWs={displayedGWs}
                     onOpen={openPlayerModal}
                   />
                 ))}
@@ -2303,7 +2401,7 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
                 {filteredPlayerRows.length === 0 && (
                   <tr>
                     <td
-                      colSpan={6 + allGWs.length}
+                      colSpan={6 + displayedGWs.length}
                       className="px-4 py-8 text-center"
                       style={{ color: "#64748b" }}
                     >
@@ -2380,7 +2478,7 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
                       style={{ color: "#64748b" }}
                     >
                       <span>{activePlayerFirstRow.position}</span>
-                      <span style={{ color: "#6b7280" }}>•</span>
+                      <span style={{ color: "#6b7280" }}>{"\u2022"}</span>
                       <TeamColorDot
                         teamName={teamNamesByCode.get(String(activePlayerFirstRow.Team)) || ""}
                       />
@@ -2796,22 +2894,40 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
                     <h3 className="text-base font-semibold">
                       Calculated {modalMetricMeta.label}
                     </h3>
-                    <select
-                      value={modalChartMetric}
-                      onChange={(e) => setModalChartMetric(e.target.value)}
-                      className="rounded-xl px-2 py-1 text-xs font-semibold outline-none"
+                    <div
+                      className="inline-flex items-center gap-1 rounded-xl px-1 py-1"
                       style={{
                         border: `1px solid ${PALETTE.border}`,
                         background: "#f8fafc",
-                        color: PALETTE.beige,
                       }}
                     >
-                      <option value="points">Points</option>
-                      <option value="goals">Goals</option>
-                      <option value="assists">Assists</option>
-                      <option value="saves">Saves</option>
-                      <option value="defcon">Defcon</option>
-                    </select>
+                      <button
+                        type="button"
+                        onClick={() => stepModalMetric(-1)}
+                        className="rounded-lg p-1.5"
+                        style={{ color: PALETTE.beige }}
+                        aria-label="Previous metric"
+                        title="Previous metric"
+                      >
+                        <ChevronLeft size={15} />
+                      </button>
+                      <div
+                        className="min-w-[84px] text-center text-xs font-semibold"
+                        style={{ color: PALETTE.beige }}
+                      >
+                        {MODAL_METRIC_OPTIONS[modalMetricIndex]?.label || "Points"}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => stepModalMetric(1)}
+                        className="rounded-lg p-1.5"
+                        style={{ color: PALETTE.beige }}
+                        aria-label="Next metric"
+                        title="Next metric"
+                      >
+                        <ChevronRight size={15} />
+                      </button>
+                    </div>
                   </div>
                   <div className="mb-2 text-xs" style={{ color: PALETTE.muted }}>
                     {modalMetricMeta.helper}
@@ -2988,4 +3104,5 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
     </div>
   );
 }
+
 

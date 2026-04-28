@@ -34,7 +34,7 @@
 32,Bournemouth,Ryan Christie,DM,5,5,100.0
 33,Brentford,Caoimhin Kelleher,GK,5,5,100.0
 34,Brentford,Dango Ouattara,RW,4,5,80.0
-35,Brentford,Keane Lewis-Potter,DL,4,5,80.0
+35,Brentford,Keane Lewis-Potter,DL,5,5,100.0
 36,Brentford,Kevin Schade,LW,5,5,100.0
 37,Brentford,Mathias Jensen,DM,5,5,100.0
 38,Brentford,Michael Kayode,DR,5,5,100.0
@@ -42,7 +42,7 @@
 40,Brentford,Nathan Collins,CB,5,5,100.0
 41,Brentford,Sepp van den Berg,CB,5,5,100.0
 42,Brentford,Thiago,FW,5,5,100.0
-43,Brentford,Yehor Yarmolyuk,DM,3,5,60.0
+43,Brentford,Yehor Yarmolyuk,DM,4,5,80.0
 44,Brighton,Bart Verbruggen,GK,5,5,100.0
 45,Brighton,Carlos Baleba,DM,1,5,20.0
 46,Brighton,Ferdi Kadioglu,DL,5,5,100.0
@@ -175,16 +175,16 @@
 173,Man City,Mathis Cherki,AMC,4,5,80.0
 174,Man City,Nico O&#039;Reilly,DM,4,5,80.0
 175,Man City,Rayan Ait Nouri,DL,3,5,60.0
-176,Man Utd,Ayden Heaven,CB,1,5,20.0
-177,Man Utd,Benjamin Sesko,FW,3,5,60.0
-178,Man Utd,Bruno Fernandes,AMC,5,5,100.0
-179,Man Utd,Bryan Mbeumo,RW,4,5,80.0
-180,Man Utd,Casemiro,DM,5,5,100.0
-181,Man Utd,Diogo Dalot,DR,3,5,60.0
-182,Man Utd,Kobbie Mainoo,DM,4,5,80.0
-183,Man Utd,Luke Shaw,DL,5,5,100.0
-184,Man Utd,Matheus Cunha,LW,5,5,100.0
-185,Man Utd,Noussair Mazraoui,CB,3,5,60.0
+176,Man Utd,Amad Diallo Traore,LW,4,5,80.0
+177,Man Utd,Ayden Heaven,CB,2,5,40.0
+178,Man Utd,Benjamin Sesko,FW,3,5,60.0
+179,Man Utd,Bruno Fernandes,AMC,5,5,100.0
+180,Man Utd,Bryan Mbeumo,RW,4,5,80.0
+181,Man Utd,Casemiro,DM,5,5,100.0
+182,Man Utd,Diogo Dalot,DR,4,5,80.0
+183,Man Utd,Harry Maguire,CB,3,5,60.0
+184,Man Utd,Kobbie Mainoo,DM,4,5,80.0
+185,Man Utd,Luke Shaw,DL,5,5,100.0
 186,Man Utd,Senne Lammens,GK,5,5,100.0
 187,Newcastle,Bruno Guimarães,MC,1,5,20.0
 188,Newcastle,Dan Burn,DL,2,5,40.0
