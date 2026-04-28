@@ -167,7 +167,16 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
                opp_defcon_fac=np.minimum(1.1,1+(df['Opp_defcon'].values[h]-79)/30)
                
                base_pred = min(1,(df['defcon_avg_hit_rate'].values[h] *0.35+df["defcon_avg_hit_rate_T0"].values[h] * 0.3 +df["defcon_avg_hit_rate_T1"].values[h] * 0.1+df["defcon_avg_hit_rate_T2"].values[h] * 0.1+df["defcon_avg_hit_rate_T3"].values[h] * 0.15)*opp_defcon_fac) * other_metric
-               player_preds.append(base_pred)
+               z = (
+                    -7.784197
+                    + 0.25 * float(df["defcon_avg_hit_rate_T0"].iloc[h])
+                    - 0.2 * float(df["defcon_avg_hit_rate_T1"].iloc[h])
+                    + 2.697022 * float(df["defcon_avg_hit_rate_T2"].iloc[h])
+                    - 0.110803 * float(df["defcon_avg_hit_rate_T3"].iloc[h])
+                    + 1.65 * float(df["defcon_avg_hit_rate"].iloc[h])
+                    + 0.056152 * float(df["Opp_defcon"].iloc[h]))
+               pred = 1 / (1 + np.exp(-z))
+               player_preds.append(pred)
         
             if(pred_variable=="Fantasy"):
                real_variable="total_points"
@@ -1032,6 +1041,7 @@ def Make_Predictions ():
         column_list.append(f"p{k+1}")
     column_list.append("position")
     positions=["GOALS", "Assist","GC","bps","Fantasy","CBI","cards","Saves"]
+    positions=["CBI","cards","Saves"]
     for y in range(len(positions)):
         XGB_pred=pd.DataFrame()
         position_filter=positions[y]

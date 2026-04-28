@@ -77,12 +77,12 @@ NEW_TEAMS_NAME=[]
 fixtures_config = {
         
         "2562201":[
-            {"gw": 36, "probability": 0.7},
-            {"gw": 37, "probability": 0.3},
+            {"gw": 36, "probability": 1},
+            {"gw": 37, "probability": 0},
         ],
         "2562255":[
-            {"gw": 36, "probability": 0.3},
-            {"gw": 37, "probability": 0.7},
+            {"gw": 36, "probability": 0},
+            {"gw": 37, "probability": 1},
         ],
         "2562259":[
             {"gw": 37, "probability": 1},

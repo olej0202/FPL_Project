@@ -482,6 +482,13 @@ def Player_adjustements(current_player_path):
     df["CBI_Percent"] = (
         df["defcon_avg_hit_rate"] * 0.35+df["defcon_avg_hit_rate_T0"] * 0.3+df["defcon_avg_hit_rate_T1"] * 0.1+df["defcon_avg_hit_rate_T2"] * 0.1+df["defcon_avg_hit_rate_T3"] * 0.15
     )*cbi_opp
+    
+    z = (-7.784197+ 0.25 * df["defcon_avg_hit_rate_T0"]- 0.2 * df["defcon_avg_hit_rate_T1"]
+        + 2.697022 * df["defcon_avg_hit_rate_T2"]- 0.110803 * df["defcon_avg_hit_rate_T3"]+ 1.65 * df["defcon_avg_hit_rate"]+ 0.056152 * df["Opp_defcon"]
+        )
+
+    # Logistic transformation → probability
+    df["CBI_Percent"]= 1 / (1 + np.exp(-z))
 
     bps_scaled = np.maximum(4, df["Rolling_adjusted_BPS"]*0.4+df["Rolling_adjusted_BPS_2"]*0.6) 
     df["BPS"]=bps_scaled*0.015-np.minimum(0.4, df["Rolling_cards"]) 

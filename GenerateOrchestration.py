@@ -55,7 +55,7 @@ def Data_Extraction(season,is_new_season,has_been_error):
 
 
 def Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos,Understat_path,Understat_shots_path):
-    #main_Transform()
+    main_Transform()
     Generate_Understat_dataset(current_player_path,run_player_pos)
     Generate_Shots_data(Understat_path,Understat_shots_path,current_player_path,current_team_path)
     team_data(current_team_path)
@@ -76,7 +76,7 @@ def Data_Predictions(current_fixture_path,current_player_path,current_team_path,
     player_history_path = Path("ML_training2.csv")
 
     # Trigger full simulator parameter optimization with all read paths passed in.
-    full_sim_control = FullSimulatorControlConfig(
+    """full_sim_control = FullSimulatorControlConfig(
         team_history_path=team_history_path,
         fixtures_path="Fantasy_season_Fixtures_EXPANDED.csv",
         current_teams_path=team_path,
@@ -126,8 +126,8 @@ def Data_Predictions(current_fixture_path,current_player_path,current_team_path,
         current_team_path=current_team_path,
         horizon=n_points_in_future,
         output_tag="3",
-    )
-    GenerateTeamPredictions( current_fixture_path,current_team_path, n_points_in_future)
+    )"""
+    #GenerateTeamPredictions( current_fixture_path,current_team_path, n_points_in_future)
     Make_Predictions()
     Generate_point_predictions(time_list)
     
@@ -189,7 +189,7 @@ def Main_Orchestration():
     
     
     #Transform data
-    Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos,Understat_path,Understat_shots_path)
+    #Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos,Understat_path,Understat_shots_path)
     
     #Predict data
     Data_Predictions(current_fixture_path,current_player_path,current_team_path, n_points_in_future,time_list)

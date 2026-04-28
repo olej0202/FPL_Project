@@ -97,6 +97,7 @@ def process_player_data(player_df, team, team_id2,kmeans):
     own_team_xgs=[]
     own_team_xas=[]
     own_saves=[]
+    opp_defcon=[]
     teams_dataset=pd.read_csv("Team_data_transformed2.csv")
     player_df['kickoff_time'] = pd.to_datetime(player_df['kickoff_time'])
     player_df['kickoff_time'] = player_df['kickoff_time'].dt.strftime('%Y-%m-%dT%H:%M:%SZ')
@@ -137,6 +138,7 @@ def process_player_data(player_df, team, team_id2,kmeans):
         own_team_xgs.append(own_row["Round_XG"].values[0])
         own_team_xas.append(own_row["Round_XA"].values[0])
         own_saves.append(own_row["Rolling_Saves"].values[0])
+        opp_defcon.append(opp_row["Rolling_Defcon_against"].values[0])
 
     df["Cluster"] = opp_cluster
     df["XGH"] = XGH
@@ -160,7 +162,7 @@ def process_player_data(player_df, team, team_id2,kmeans):
     df["Team_XG"]=own_team_xgs
     df["Team_XA"]=own_team_xas
     df["Team_Rolling_Saves"]=own_saves
-    
+    df["Opponent_defcon"]=opp_defcon
     df["yellow_cards"]=player_df['yellow_cards'].values
     df["red_cards"]=player_df['red_cards'].values
 
@@ -578,7 +580,7 @@ def Generate_team_data():
             New_team_df["Threat_against"]=Threatagainst['threat'].values
             New_team_df["XGC"]=New_team_df["XGC"]*0.8+0.002*New_team_df["Threat_against"]
             New_team_df["Defcon_against"]=Defconagainst['defensive_contribution'].values
-            New_team_df["Defcon_against"]=New_team_df['Defcon_against'].clip(lower=0, upper=100)
+            New_team_df["Defcon_against"]=New_team_df['Defcon_against'].clip(lower=0, upper=115)
             New_team_df["Saves_against"]=Savesagainst['saves'].values
             New_team_df["ICT_against"]=ict_indexagainst['ict_index'].values
             
