@@ -1,8 +1,9 @@
 player_id,understat_player,player_code,match_score,matched_name,matched_from,team_norm
 76,Fabian Schär,119471,1.03,Fabian Schär,full_name,newcastle
-8397,Florian Wirtz,494595,1.03,Florian Wirtz,full_name,liverpool
+11167,Chadi Riad,515621,1.03,Chadi Riad Dnanou,web_name,crystal palace
 10542,Jamie Bynoe-Gittens,463936,1.03,Jamie Bynoe-Gittens,full_name,chelsea
 10527,Carlos Baleba,535301,1.03,Carlos Baleba,full_name,brighton
+10405,Josh Dasilva,183656,1.03,Josh Dasilva,full_name,brentford
 10348,Omari Hutchinson,503301,1.03,Omari Hutchinson,full_name,nott m forest
 10293,Toti,510362,1.03,Toti Gomes,web_name,wolves
 10292,Nathan Patterson,243571,1.03,Nathan Patterson,full_name,everton
@@ -23,7 +24,6 @@ player_id,understat_player,player_code,match_score,matched_name,matched_from,tea
 9790,Josko Gvardiol,477424,1.03,Joško Gvardiol,full_name,man city
 9789,Brian Brobbey,441264,1.03,Brian Brobbey,full_name,sunderland
 9788,Dominik Szoboszlai,424876,1.03,Dominik Szoboszlai,full_name,liverpool
-9780,Mathys Tel,511499,1.03,Mathys Tel,full_name,spurs
 10564,Leny Yoro,550864,1.03,Leny Yoro,full_name,man utd
 10586,Tyler Dibling,496661,1.03,Tyler Dibling,full_name,everton
 10696,Noussair Mazraoui,230001,1.03,Noussair Mazraoui,full_name,man utd
@@ -50,22 +50,23 @@ player_id,understat_player,player_code,match_score,matched_name,matched_from,tea
 10744,Ryan Christie,158499,1.03,Ryan Christie,full_name,bournemouth
 10741,Marcus Tavernier,201658,1.03,Marcus Tavernier,full_name,bournemouth
 10721,Sepp van den Berg,444765,1.03,Sepp van den Berg,full_name,brentford
+9780,Mathys Tel,511499,1.03,Mathys Tel,full_name,spurs
 9767,Habib Diarra,547027,1.03,Habib Diarra,full_name,sunderland
 9749,Donyell Malen,204646,1.03,Donyell Malen,full_name,aston villa
-9740,José Sá,149065,1.03,José Malheiro de Sá,web_name,wolves
-8780,Joël Veltman,111478,1.03,Joël Veltman,full_name,brighton
+8812,Sasa Kalajdzic,429414,1.03,Saša Kalajdžić,full_name,wolves
+8981,Jéremy Doku,248875,1.03,Jérémy Doku,full_name,man city
 8942,Aaron Hickey,472713,1.03,Aaron Hickey,full_name,brentford
 8941,Jacob Ramsey,232653,1.03,Jacob Ramsey,full_name,newcastle
-8940,Antonee Robinson,169528,1.03,Antonee Robinson,full_name,fulham
-8920,Dilane Bakwa,476887,1.03,Dilane Bakwa,full_name,nott m forest
 87,Joelinton,180974,1.03,Joelinton Cássio Apolinário de Lira,web_name,newcastle
+8920,Dilane Bakwa,476887,1.03,Dilane Bakwa,full_name,nott m forest
+8875,Tolu Arokodare,488213,1.03,Tolu Arokodare,full_name,wolves
 8868,Liam Delap,463034,1.03,Liam Delap,full_name,chelsea
 8865,Ollie Watkins,178301,1.03,Ollie Watkins,full_name,aston villa
 8859,Mikkel Damsgaard,440089,1.03,Mikkel Damsgaard,full_name,brentford
 8853,Maxence Lacroix,437499,1.03,Maxence Lacroix,full_name,crystal palace
-8812,Sasa Kalajdzic,429414,1.03,Saša Kalajdžić,full_name,wolves
+8780,Joël Veltman,111478,1.03,Joël Veltman,full_name,brighton
+8995,Hugo Ekitike,510663,1.03,Hugo Ekitiké,full_name,liverpool
 8720,Jack Harrison,221399,1.03,Jack Harrison,full_name,leeds
-8986,Omar Alderete,201895,1.03,Omar Alderete,full_name,sunderland
 8717,Pascal Struijk,222694,1.03,Pascal Struijk,full_name,leeds
 8706,Eberechi Eze,232413,1.03,Eberechi Eze,full_name,arsenal
 8700,Xavi Simons,493362,1.03,Xavi Simons,full_name,spurs
@@ -75,11 +76,11 @@ player_id,understat_player,player_code,match_score,matched_name,matched_from,tea
 8635,Sven Botman,220237,1.03,Sven Botman,full_name,newcastle
 8537,Dennis Cirkin,461195,1.03,Dennis Cirkin,full_name,sunderland
 8497,Cole Palmer,244851,1.03,Cole Palmer,full_name,chelsea
-8476,Jarrad Branthwaite,480455,1.03,Jarrad Branthwaite,full_name,everton
-8981,Jéremy Doku,248875,1.03,Jérémy Doku,full_name,man city
-8995,Hugo Ekitike,510663,1.03,Hugo Ekitiké,full_name,liverpool
+8986,Omar Alderete,201895,1.03,Omar Alderete,full_name,sunderland
+9017,Malo Gusto,482609,1.03,Malo Gusto,full_name,chelsea
+9740,José Sá,149065,1.03,José Malheiro de Sá,web_name,wolves
+9556,William Osula,538207,1.03,William Osula,full_name,newcastle
 9739,Kiernan Dewsbury-Hall,215413,1.03,Kiernan Dewsbury-Hall,full_name,everton
-9554,Tim Iroegbunam,490094,1.03,Tim Iroegbunam,full_name,everton
 9733,Nathan Collins,432830,1.03,Nathan Collins,full_name,brentford
 9681,Frank Onyeka,428580,1.03,Frank Onyeka,full_name,brentford
 9680,Vitaly Janelt,204580,1.03,Vitaly Janelt,full_name,brentford
@@ -89,9 +90,9 @@ player_id,understat_player,player_code,match_score,matched_name,matched_from,tea
 9667,Amadou Onana,449871,1.03,Amadou Onana,full_name,aston villa
 9662,Dango Ouattara,533463,1.03,Dango Ouattara,full_name,brentford
 9558,Hannibal Mejbri,465527,1.03,Hannibal Mejbri,full_name,burnley
-9556,William Osula,538207,1.03,William Osula,full_name,newcastle
+9554,Tim Iroegbunam,490094,1.03,Tim Iroegbunam,full_name,everton
+9040,Conor Gallagher,232787,1.03,Conor Gallagher,full_name,spurs
 9524,Anthony Elanga,449434,1.03,Anthony Elanga,full_name,newcastle
-9017,Malo Gusto,482609,1.03,Malo Gusto,full_name,chelsea
 9492,Crysencio Summerville,450070,1.03,Crysencio Summerville,full_name,west ham
 9487,Maxime Estève,477717,1.03,Maxime Estève,full_name,burnley
 9332,Dane Scarlett,490145,1.03,Dane Scarlett,full_name,spurs
@@ -101,11 +102,10 @@ player_id,understat_player,player_code,match_score,matched_name,matched_from,tea
 9156,Kevin Schade,513418,1.03,Kevin Schade,full_name,brentford
 9154,Elliot Anderson,215379,1.03,Elliot Anderson,full_name,nott m forest
 9105,Radu Dragusin,493125,1.03,Radu Drăgușin,full_name,spurs
-9040,Conor Gallagher,232787,1.03,Conor Gallagher,full_name,spurs
 11155,Wilfried Gnonto,492859,1.03,Wilfried Gnonto,full_name,leeds
-11167,Chadi Riad,515621,1.03,Chadi Riad Dnanou,web_name,crystal palace
 11174,Kobbie Mainoo,516895,1.03,Kobbie Mainoo,full_name,man utd
-13387,Romain Esse,606921,1.03,Romain Esse,full_name,crystal palace
+8430,Chris Richards,427623,1.03,Chris Richards,full_name,crystal palace
+11243,Bashir Humphreys,461188,1.03,Bashir Humphreys,full_name,burnley
 13724,Freddie Potts,490142,1.03,Freddie Potts,full_name,west ham
 13723,El Hadji Malick Diouf,613804,1.03,El Hadji Malick Diouf,full_name,west ham
 13719,Chris Rigg,554197,1.03,Chris Rigg,full_name,sunderland
@@ -116,8 +116,8 @@ player_id,understat_player,player_code,match_score,matched_name,matched_from,tea
 13692,Rio Ngumoha,611922,1.03,Rio Ngumoha,full_name,liverpool
 13484,Mateus Mané,647671,1.03,Mateus Mané,full_name,wolves
 13392,Andrés García,606798,1.03,Andrés García,full_name,aston villa
+13387,Romain Esse,606921,1.03,Romain Esse,full_name,crystal palace
 13298,Max Alleyne,494307,1.03,Max Alleyne,full_name,man city
-13727,Quilindschy Hartman,494960,1.03,Quilindschy Hartman,full_name,burnley
 13247,Ezra Mayers,602903,1.03,Ezra Mayers,full_name,west ham
 13222,Thiago,502500,1.03,Igor Thiago Nascimento Rodrigues,web_name,brentford
 13220,Tom Edozie,596054,1.03,Tom Edozie,full_name,wolves
@@ -128,9 +128,10 @@ player_id,understat_player,player_code,match_score,matched_name,matched_from,tea
 13068,Morato,485047,1.03,Felipe Rodrigues da Silva,web_name,nott m forest
 13064,Lutsharel Geertruida,247955,1.03,Lutsharel Geertruida,full_name,sunderland
 13038,Justin Devenny,489706,1.03,Justin Devenny,full_name,crystal palace
+13022,André,509291,1.03,André Trindade da Costa Neto,web_name,wolves
 13726,Oliver Sonne,519895,1.03,Oliver Sonne,full_name,burnley
+13727,Quilindschy Hartman,494960,1.03,Quilindschy Hartman,full_name,burnley
 13728,Josh Laurent,167887,1.03,Josh Laurent,full_name,burnley
-12963,Evanilson,444102,1.03,Francisco Evanilson de Lima Barbosa,web_name,bournemouth
 14030,Kevin,560552,1.03,Kevin Santos Lopes de Macedo,web_name,fulham
 14424,Nilson Angulo,536661,1.03,Nilson Angulo,full_name,sunderland
 14410,Souza,616221,1.03,João Victor de Souza Menezes,web_name,spurs
@@ -154,11 +155,10 @@ player_id,understat_player,player_code,match_score,matched_name,matched_from,tea
 13741,Jhon Arias,230376,1.03,Jhon Arias,full_name,wolves
 13740,David Møller Wolfe,497949,1.03,David Møller Wolfe,full_name,wolves
 13730,Marcus Edwards,174592,1.03,Marcus Edwards,full_name,burnley
-13022,André,509291,1.03,André Trindade da Costa Neto,web_name,wolves
+12963,Evanilson,444102,1.03,Francisco Evanilson de Lima Barbosa,web_name,bournemouth
 12916,Thierno Barry,586309,1.03,Thierno Barry,full_name,everton
-11243,Bashir Humphreys,461188,1.03,Bashir Humphreys,full_name,burnley
+12912,Lucas Bergvall,570526,1.03,Lucas Bergvall,full_name,spurs
 11386,Lewis Miley,547719,1.03,Lewis Miley,full_name,newcastle
-11808,Andrey Santos,532605,1.03,Andrey Nascimento dos Santos,web_name,chelsea
 11807,Ian Maatsen,441302,1.03,Ian Maatsen,full_name,aston villa
 11728,Calvin Bassey,232892,1.03,Calvin Bassey,full_name,fulham
 11711,Bart Verbruggen,489639,1.03,Bart Verbruggen,full_name,brighton
@@ -166,10 +166,11 @@ player_id,understat_player,player_code,match_score,matched_name,matched_from,tea
 11709,Milos Kerkez,544877,1.03,Milos Kerkez,full_name,liverpool
 11707,Jurriën Timber,445122,1.03,Jurriën Timber,full_name,arsenal
 11704,Hjalmar Ekdal,478969,1.03,Hjalmar Ekdal,full_name,burnley
+11701,Zeki Amdouni,492831,1.03,Zeki Amdouni,full_name,burnley
 11633,Marc Guiu,499309,1.03,Marc Guiu Paz,web_name,chelsea
 11461,Romaine Mundle,461199,1.03,Romaine Mundle,full_name,sunderland
 11385,Yasin Ayari,509416,1.03,Yasin Ayari,full_name,brighton
-11903,Oscar Bobb,477555,1.03,Oscar Bobb,full_name,fulham
+11824,Lucas Pires,549329,1.03,Lucas Pires Silva,web_name,burnley
 11363,Antoine Semenyo,437730,1.03,Antoine Semenyo,full_name,man city
 11362,Facundo Buonanotte,536916,1.03,Facundo Buonanotte,full_name,leeds
 11357,Noni Madueke,248857,1.03,Noni Madueke,full_name,arsenal
@@ -180,11 +181,10 @@ player_id,understat_player,player_code,match_score,matched_name,matched_from,tea
 11281,Michael Kayode,607464,1.03,Michael Kayode,full_name,brentford
 11269,Jack Hinshelwood,532529,1.03,Jack Hinshelwood,full_name,brighton
 11253,Mamadou Sarr,574458,1.03,Mamadou Sarr,full_name,chelsea
-11824,Lucas Pires,549329,1.03,Lucas Pires Silva,web_name,burnley
-11936,Lorenzo Lucca,469130,1.03,Lorenzo Lucca,full_name,nott m forest
-12912,Lucas Bergvall,570526,1.03,Lucas Bergvall,full_name,spurs
-12412,Morgan Rogers,244850,1.03,Morgan Rogers,full_name,aston villa
+11808,Andrey Santos,532605,1.03,Andrey Nascimento dos Santos,web_name,chelsea
+11903,Oscar Bobb,477555,1.03,Oscar Bobb,full_name,fulham
 12905,Nicolò Savona,500151,1.03,Nicolò Savona,full_name,nott m forest
+12409,Adam Wharton,496221,1.03,Adam Wharton,full_name,crystal palace
 12774,Andy Irving,229384,1.03,Andy Irving,full_name,west ham
 12759,Yankuba Minteh,592031,1.03,Yankuba Minteh,full_name,brighton
 12758,Mats Wieffer,467779,1.03,Mats Wieffer,full_name,brighton
@@ -194,9 +194,9 @@ player_id,understat_player,player_code,match_score,matched_name,matched_from,tea
 12573,Tyrique George,550615,1.03,Tyrique George,full_name,everton
 12535,Josh Acheampong,577016,1.03,Josh Acheampong,full_name,chelsea
 12474,George Earthy,490885,1.03,George Earthy,full_name,west ham
-12409,Adam Wharton,496221,1.03,Adam Wharton,full_name,crystal palace
-11944,Patrick Dorgu,596777,1.03,Patrick Dorgu,full_name,man utd
+12412,Morgan Rogers,244850,1.03,Morgan Rogers,full_name,aston villa
 12359,Callum Marshall,565431,1.03,Callum Marshall,full_name,west ham
+11936,Lorenzo Lucca,469130,1.03,Lorenzo Lucca,full_name,nott m forest
 12272,Myles Lewis-Skelly,499169,1.03,Myles Lewis-Skelly,full_name,arsenal
 12234,Tawanda Chirewa,497606,1.03,Tawanda Chirewa,full_name,wolves
 12149,Alex Scott,503139,1.03,Alex Scott,full_name,bournemouth
@@ -206,10 +206,11 @@ player_id,understat_player,player_code,match_score,matched_name,matched_from,tea
 11974,Benjamin Sesko,485711,1.03,Benjamin Sesko,full_name,man utd
 11966,Noah Okafor,435997,1.03,Noah Okafor,full_name,leeds
 11965,Tijjani Reijnders,433036,1.03,Tijjani Reijnders,full_name,man city
-8430,Chris Richards,427623,1.03,Chris Richards,full_name,crystal palace
-8875,Tolu Arokodare,488213,1.03,Tolu Arokodare,full_name,wolves
-8393,Omar Marmoush,438234,1.03,Omar Marmoush,full_name,man city
-3203,Issa Diop,219924,1.03,Issa Diop,full_name,fulham
+11944,Patrick Dorgu,596777,1.03,Patrick Dorgu,full_name,man utd
+8476,Jarrad Branthwaite,480455,1.03,Jarrad Branthwaite,full_name,everton
+8940,Antonee Robinson,169528,1.03,Antonee Robinson,full_name,fulham
+8397,Florian Wirtz,494595,1.03,Florian Wirtz,full_name,liverpool
+5786,Yoane Wissa,216646,1.03,Yoane Wissa,full_name,newcastle
 5735,Jean-Philippe Mateta,231747,1.03,Jean-Philippe Mateta,full_name,crystal palace
 5722,Ibrahim Sangare,210462,1.03,Ibrahim Sangaré,full_name,nott m forest
 5675,Ismaila Sarr,232185,1.03,Ismaïla Sarr,full_name,crystal palace
@@ -234,9 +235,10 @@ player_id,understat_player,player_code,match_score,matched_name,matched_from,tea
 4419,Adam Armstrong,155511,1.03,Adam Armstrong,full_name,wolves
 3697,Odsonne Edouard,199670,1.03,Odsonne Édouard,full_name,crystal palace
 5743,Randal Kolo Muani,247693,1.03,Randal Kolo Muani,full_name,spurs
-5786,Yoane Wissa,216646,1.03,Yoane Wissa,full_name,newcastle
 5789,Boubacar Kamara,226944,1.03,Boubacar Kamara,full_name,aston villa
-6145,Daichi Kamada,209400,1.03,Daichi Kamada,full_name,crystal palace
+6544,Lukas Nmecha,174594,1.03,Lukas Nmecha,full_name,leeds
+5956,Youri Tielemans,166989,1.03,Youri Tielemans,full_name,aston villa
+6482,Eddie Nketiah,205533,1.03,Eddie Nketiah,full_name,crystal palace
 6456,Callum Hudson-Odoi,209046,1.03,Callum Hudson-Odoi,full_name,nott m forest
 6377,Joe Rodon,214225,1.03,Joe Rodon,full_name,leeds
 6369,Ethan Ampadu,199598,1.03,Ethan Ampadu,full_name,leeds
@@ -247,12 +249,12 @@ player_id,understat_player,player_code,match_score,matched_name,matched_from,tea
 6219,Enes Ünal,168636,1.03,Enes Ünal,full_name,bournemouth
 6174,Nikola Milenkovic,227444,1.03,Nikola Milenković,full_name,nott m forest
 6157,Timothy Castagne,166477,1.03,Timothy Castagne,full_name,fulham
+6145,Daichi Kamada,209400,1.03,Daichi Kamada,full_name,crystal palace
 6122,Douglas Luiz,230046,1.03,Douglas Luiz Soares de Paulo,web_name,aston villa
-5956,Youri Tielemans,166989,1.03,Youri Tielemans,full_name,aston villa
 6108,Rodrigo Bentancur,202993,1.03,Rodrigo Bentancur,full_name,spurs
 6104,Will Hughes,108413,1.03,Will Hughes,full_name,crystal palace
 6098,Niclas Füllkrug,91889,1.03,Niclas Füllkrug,full_name,west ham
-8384,Armando Broja,440323,1.03,Armando Broja,full_name,burnley
+8393,Omar Marmoush,438234,1.03,Omar Marmoush,full_name,man city
 6063,Jacob Murphy,114243,1.03,Jacob Murphy,full_name,newcastle
 6055,Phil Foden,209244,1.03,Phil Foden,full_name,man city
 6049,Solly March,109345,1.03,Solly March,full_name,brighton
@@ -260,8 +262,8 @@ player_id,understat_player,player_code,match_score,matched_name,matched_from,tea
 6026,Richarlison,212319,1.03,Richarlison de Andrade,web_name,spurs
 5973,Kenny Tete,167074,1.03,Kenny Tete,full_name,fulham
 3645,Olivier Boscagli,204120,1.03,Olivier Boscagli,full_name,brighton
+3203,Issa Diop,219924,1.03,Issa Diop,full_name,fulham
 2958,Oleksandr Zinchenko,206325,1.03,Oleksandr Zinchenko,full_name,nott m forest
-6492,Reiss Nelson,200641,1.03,Reiss Nelson,full_name,brentford
 2517,Martin Odegaard,184029,1.03,Martin Ødegaard,full_name,arsenal
 780,Karl Darlow,59735,1.03,Karl Darlow,full_name,leeds
 766,Jamaal Lascelles,101148,1.03,Jamaal Lascelles,full_name,newcastle
@@ -312,10 +314,11 @@ player_id,understat_player,player_code,match_score,matched_name,matched_from,tea
 934,Axel Tuanzebe,180804,1.03,Axel Tuanzebe,full_name,burnley
 925,Patrick Roberts,124165,1.03,Patrick Roberts,full_name,sunderland
 910,Harrison Reed,153366,1.03,Harrison Reed,full_name,fulham
-6482,Eddie Nketiah,205533,1.03,Eddie Nketiah,full_name,crystal palace
+6492,Reiss Nelson,200641,1.03,Reiss Nelson,full_name,brentford
 6080,Victor Lindelöf,184667,1.03,Victor Lindelöf,full_name,aston villa
-6544,Lukas Nmecha,174594,1.03,Lukas Nmecha,full_name,leeds
-7902,Matthijs de Ligt,209365,1.03,Matthijs de Ligt,full_name,man utd
+6552,Bryan Mbeumo,446008,1.03,Bryan Mbeumo,full_name,man utd
+7589,Wesley Fofana,444463,1.03,Wesley Fofana,full_name,chelsea
+7814,Taiwo Awoniyi,210156,1.03,Taiwo Awoniyi,full_name,nott m forest
 7768,Mason Mount,184341,1.03,Mason Mount,full_name,man utd
 7762,Jean-Ricner Bellegarde,231057,1.03,Jean-Ricner Bellegarde,full_name,wolves
 7753,James Justin,220627,1.03,James Justin,full_name,leeds
@@ -324,9 +327,10 @@ player_id,understat_player,player_code,match_score,matched_name,matched_from,tea
 7702,Dean Henderson,172649,1.03,Dean Henderson,full_name,crystal palace
 7698,Leandro Trossard,116216,1.03,Leandro Trossard,full_name,arsenal
 7603,Marc Guehi,209036,1.03,Marc Guéhi,full_name,man city
-7589,Wesley Fofana,444463,1.03,Wesley Fofana,full_name,chelsea
 7546,Harvey Elliott,444884,1.03,Harvey Elliott,full_name,aston villa
-6552,Bryan Mbeumo,446008,1.03,Bryan Mbeumo,full_name,man utd
+7230,Emile Smith-Rowe,209289,1.03,Emile Smith Rowe,full_name,fulham
+6615,Trevoh Chalobah,180736,1.03,Trevoh Chalobah,full_name,chelsea
+7498,Lyle Foster,435973,1.03,Lyle Foster,full_name,burnley
 7438,James Garner,232928,1.03,James Garner,full_name,everton
 7432,Reinildo,434399,1.03,Reinildo Mandava,web_name,sunderland
 7382,Dan Burn,78916,1.03,Dan Burn,full_name,newcastle
@@ -334,11 +338,11 @@ player_id,understat_player,player_code,match_score,matched_name,matched_from,tea
 7322,Bukayo Saka,223340,1.03,Bukayo Saka,full_name,arsenal
 7268,Bafode Diakite,242882,1.03,Bafodé Diakité,full_name,bournemouth
 7254,Viktor Gyokeres,224117,1.03,Viktor Gyökeres,full_name,arsenal
-7240,Benoit Badiashile Mukinayi,242880,1.03,Benoît Badiashile Mukinayi,full_name,chelsea
-7814,Taiwo Awoniyi,210156,1.03,Taiwo Awoniyi,full_name,nott m forest
+7902,Matthijs de Ligt,209365,1.03,Matthijs de Ligt,full_name,man utd
 7908,Marshall Munetsi,433312,1.03,Marshall Munetsi,full_name,wolves
-7218,Cristian Romero,221632,1.03,Cristian Romero,full_name,spurs
 7958,Sandro Tonali,432422,1.03,Sandro Tonali,full_name,newcastle
+8000,Ilia Gruev,486520,1.03,Ilia Gruev,full_name,leeds
+8384,Armando Broja,440323,1.03,Armando Broja,full_name,burnley
 8379,Alexis Mac Allister,243016,1.03,Alexis Mac Allister,full_name,liverpool
 8378,Malick Thiaw,465642,1.03,Malick Thiaw,full_name,newcastle
 8351,Ki-Jana Hoever,441271,1.03,Ki-Jana Hoever,full_name,wolves
@@ -357,10 +361,9 @@ player_id,understat_player,player_code,match_score,matched_name,matched_from,tea
 8067,Reece James,225796,1.03,Reece James,full_name,chelsea
 8044,Joshua Zirkzee,458249,1.03,Joshua Zirkzee,full_name,man utd
 8006,Evann Guessand,485337,1.03,Evann Guessand,full_name,crystal palace
-8000,Ilia Gruev,486520,1.03,Ilia Gruev,full_name,leeds
-7230,Emile Smith-Rowe,209289,1.03,Emile Smith Rowe,full_name,fulham
-7498,Lyle Foster,435973,1.03,Lyle Foster,full_name,burnley
-7208,Samuel Chukwueze,218328,1.03,Samuel Chukwueze,full_name,fulham
+7240,Benoit Badiashile Mukinayi,242880,1.03,Benoît Badiashile Mukinayi,full_name,chelsea
+14584,Jesse Derry,619734,1.03,Jesse Derry,full_name,chelsea
+7148,Wilson Isidor,437505,1.03,Wilson Isidor,full_name,sunderland
 6820,David Brooks,111317,1.03,David Brooks,full_name,bournemouth
 6963,Justin Kluivert,222683,1.03,Justin Kluivert,full_name,bournemouth
 7083,Christian Nørgaard,128295,1.03,Christian Nørgaard,full_name,arsenal
@@ -371,20 +374,20 @@ player_id,understat_player,player_code,match_score,matched_name,matched_from,tea
 6857,Morgan Gibbs-White,222531,1.03,Morgan Gibbs-White,full_name,nott m forest
 6852,Matt Doherty,87835,1.03,Matt Doherty,full_name,wolves
 6837,Ryan Sessegnon,184349,1.03,Ryan Sessegnon,full_name,fulham
-6835,Tom Cairney,76357,1.03,Tom Cairney,full_name,fulham
-6816,Jean-Clair Todibo,462116,1.03,Jean-Clair Todibo,full_name,west ham
 7078,Sean Longstaff,180135,1.03,Sean Longstaff,full_name,leeds
+6835,Tom Cairney,76357,1.03,Tom Cairney,full_name,fulham
+7075,Borna Sosa,218364,1.03,Borna Sosa,full_name,crystal palace
+6816,Jean-Clair Todibo,462116,1.03,Jean-Clair Todibo,full_name,west ham
 6807,Jaka Bijol,434752,1.03,Jaka Bijol,full_name,leeds
 6756,Dwight McNeil,433154,1.03,Dwight McNeil,full_name,everton
 6722,Konstantinos Mavropanos,233963,1.03,Konstantinos Mavropanos,full_name,west ham
 6681,Harvey Barnes,201666,1.03,Harvey Barnes,full_name,newcastle
-7148,Wilson Isidor,437505,1.03,Wilson Isidor,full_name,sunderland
 7166,Mathias Jensen,207283,1.03,Mathias Jensen,full_name,brentford
+7208,Samuel Chukwueze,218328,1.03,Samuel Chukwueze,full_name,fulham
+7218,Cristian Romero,221632,1.03,Cristian Romero,full_name,spurs
 6674,Rayan Ait Nouri,448514,1.03,Rayan Aït-Nouri,full_name,man city
 6665,Curtis Jones,206915,1.03,Curtis Jones,full_name,liverpool
 6630,Joe Willock,200089,1.03,Joe Willock,full_name,newcastle
-6615,Trevoh Chalobah,180736,1.03,Trevoh Chalobah,full_name,chelsea
-7075,Borna Sosa,218364,1.03,Borna Sosa,full_name,crystal palace
 7752,Gabriel Martinelli,444145,0.9585714285714286,Gabriel Martinelli Silva,full_name,arsenal
 2203,Emiliano Buendía,195546,0.9563157894736842,Emiliano Buendía Stati,full_name,aston villa
 2182,Jefferson Lerma,152551,0.9550000000000001,Jefferson Lerma Solís,full_name,crystal palace
@@ -393,18 +396,18 @@ player_id,understat_player,player_code,match_score,matched_name,matched_from,tea
 7526,Martín Zubimendi,481655,0.9530769230769232,Martín Zubimendi Ibáñez,full_name,arsenal
 10864,Marcos Senesi,221466,0.951875,Marcos Senesi Barón,full_name,bournemouth
 13718,Eliezer Mayenda,564406,0.9516216216216217,Eliezer Mayenda Dossou,full_name,sunderland
-7134,Marc Cucurella,179268,0.9500000000000001,Marc Cucurella Saseta,full_name,chelsea
-10552,Alejandro Garnacho,493105,0.9500000000000001,Alejandro Garnacho Ferreyra,full_name,chelsea
-5304,Mikel Merino,195384,0.9500000000000001,Mikel Merino Zazón,full_name,arsenal
 9453,Moisés Caicedo,486672,0.9500000000000001,Moisés Caicedo Corozo,full_name,chelsea
+10552,Alejandro Garnacho,493105,0.9500000000000001,Alejandro Garnacho Ferreyra,full_name,chelsea
+7134,Marc Cucurella,179268,0.9500000000000001,Marc Cucurella Saseta,full_name,chelsea
 12408,Daniel Muñoz,247348,0.9500000000000001,Daniel Muñoz Mejía,full_name,crystal palace
+5304,Mikel Merino,195384,0.9500000000000001,Mikel Merino Zazón,full_name,arsenal
 900,Adama Traoré,159533,0.9461290322580646,Adama Traoré Diarra,full_name,west ham
-10140,Hugo Bueno,490721,0.9453846153846155,Hugo Bueno López,full_name,wolves
 1679,Dominic Solanke,154566,0.9453846153846155,Dominic Solanke-Mitchell,full_name,spurs
+10140,Hugo Bueno,490721,0.9453846153846155,Hugo Bueno López,full_name,wolves
 11766,Manuel Ugarte,232112,0.9447058823529412,Manuel Ugarte Ribeiro,full_name,man utd
 8489,Jorge Cuenca,246301,0.9425,Jorge Cuenca Barreno,full_name,fulham
-10717,Rodrigo Muniz,244042,0.9414285714285715,Rodrigo Muniz Carvalho,full_name,fulham
 9802,Nico González,465694,0.9414285714285715,Nico González Iglesias,full_name,man city
+10717,Rodrigo Muniz,244042,0.9414285714285715,Rodrigo Muniz Carvalho,full_name,fulham
 9958,Yerson Mosquera,501837,0.9397560975609757,Yerson Mosquera Valdelamar,full_name,wolves
 7281,Diogo Dalot,216051,0.9364516129032259,Diogo Dalot Teixeira,full_name,man utd
 13364,Diego Gómez,514254,0.9364516129032259,Diego Gómez Amarilla,full_name,brighton
@@ -424,6 +427,7 @@ player_id,understat_player,player_code,match_score,matched_name,matched_from,tea
 6382,Pedro Neto,247632,0.7953846153846155,Pedro Lomba Neto,full_name,chelsea
 12756,Rodrigo Gomes,483081,0.7947058823529412,Rodrigo Martins Gomes,full_name,wolves
 9021,Pape Sarr,482442,0.7925,Pape Matar Sarr,full_name,spurs
+10805,Levi Colwill,460028,0.7925,Levi Samuels Colwill,full_name,chelsea
 7943,Igor Julio,223434,0.7890000000000001,Igor Julio dos Santos de Paulo,full_name,brighton
 11231,Ben Doak,496208,0.7843478260869565,Ben Gannon-Doak,full_name,bournemouth
 14446,Alysson Edward,653481,0.7836831168831169,Alysson Edward Franco da Rocha dos Santos,full_name,aston villa
@@ -434,8 +438,8 @@ player_id,understat_player,player_code,match_score,matched_name,matched_from,tea
 9501,Fabio Carvalho,244858,0.7504545454545455,Fábio Freitas Gouveia Carvalho,full_name,brentford
 2496,Rodri,220566,0.7457972972972974,Rodrigo 'Rodri' Hernandez Cascante,full_name,man city
 11592,Nico O&#039;Reilly,472769,0.6925,Nico O'Reilly,full_name,man city
-13206,Matt O&#039;Riley,219249,0.6910714285714286,Matt O'Riley,full_name,brighton
 12014,Jake O&#039;Brien,512462,0.6910714285714286,Jake O'Brien,full_name,everton
+13206,Matt O&#039;Riley,219249,0.6910714285714286,Matt O'Riley,full_name,brighton
 14099,Luke O&#039;Nien,167512,0.6894230769230769,Luke O'Nien,full_name,sunderland
 7080,Matheus Cunha,430871,0.6709333333333335,Matheus Santos Carneiro da Cunha,full_name,man utd
 11384,João Gomes,448089,0.6678666666666668,João Victor Gomes da Silva,full_name,wolves
@@ -450,9 +454,9 @@ player_id,understat_player,player_code,match_score,matched_name,matched_from,tea
 13715,Dan Ballard,223827,0.5416666666666667,Daniel Ballard,web_name,sunderland
 7332,Max Kilman,214048,0.5375000000000001,Maximilian Kilman,web_name,west ham
 7298,Ben White,198869,0.5321428571428571,Benjamin White,web_name,arsenal
-12358,Oliver Scarles,536109,0.525,Ollie Scarles,web_name,west ham
 9512,Valentino Livramento,441191,0.525,Tino Livramento,web_name,newcastle
 12032,Djordje Petrovic,457569,0.525,Đorđe Petrović,web_name,bournemouth
+12358,Oliver Scarles,536109,0.525,Ollie Scarles,web_name,west ham
 9451,Chimuanya Ugochukwu,503714,0.5214285714285715,Lesley Ugochukwu,web_name,burnley
 8094,Mathis Cherki,466052,0.5197368421052632,Rayan Cherki,web_name,man city
 11763,Abduqodir Khusanov,578153,0.5173076923076924,Abdukodir Khusanov,web_name,man city
