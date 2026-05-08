@@ -52,21 +52,17 @@ Manual_Player_Risk={
 Manual_min=[
         #Afcon
         {"name": "Amad_Diallo", "type": "const",   "GW": "any", "value": 75},
-        {"name": "Viktor_Gyökeres", "type": "const",   "GW": "any", "value": 75},
-        {"name": "Matheus_Santos Carneiro Da Cunha", "type": "const",   "GW": "any", "value": 75},
         {"name": "Melker_Ellborg", "type": "const",   "GW": "any", "value": 0},
         {"name": "Piero_Hincapié", "type": "const",   "GW": "any", "value": 70},
-        {"name": "Mitoma_Kaoru", "type": "const",   "GW": "any", "value": 70},
         {"name": "Brian_Brobbey", "type": "const",   "GW": "any", "value": 80},
         {"name": "Bruno_Guimarães Rodriguez Moura", "type": "const",   "GW": "any", "value": 80},
         {"name": "Chris_Wood", "type": "const",   "GW": "any", "value": 70},
         {"name": "Walter_Benítez", "type": "const",   "GW": "any", "value": 0},
         {"name": "Daniel_Ballard", "type": "const",   "GW": "any", "value": 90},
-        {"name": "Alexander_Isak", "type": "const",   "GW": "any", "value": 80},
         {"name": "Robin_Roefs", "type": "const",   "GW": "any", "value": 90},
         {"name": "Xavi_Simons", "type": "const",   "GW": "any", "value": 75},
         {"name": "Anton_Stach", "type": "const",   "GW": "any", "value": 90},
-        {"name": "Bukayo_Saka", "type": "const",   "GW": "any", "value": 75},
+        {"name": "Bukayo_Saka", "type": "const",   "GW": "any", "value": 70},
 
 
     ]
@@ -76,17 +72,7 @@ NEW_TEAMS=[]
 NEW_TEAMS_NAME=[]
 fixtures_config = {
         
-        "2562201":[
-            {"gw": 36, "probability": 1},
-            {"gw": 37, "probability": 0},
-        ],
-        "2562255":[
-            {"gw": 36, "probability": 0},
-            {"gw": 37, "probability": 1},
-        ],
-        "2562259":[
-            {"gw": 37, "probability": 1},
-        ]
+
     }
 
 

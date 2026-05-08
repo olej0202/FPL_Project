@@ -1041,7 +1041,6 @@ def Make_Predictions ():
         column_list.append(f"p{k+1}")
     column_list.append("position")
     positions=["GOALS", "Assist","GC","bps","Fantasy","CBI","cards","Saves"]
-    positions=["CBI","cards","Saves"]
     for y in range(len(positions)):
         XGB_pred=pd.DataFrame()
         position_filter=positions[y]
