@@ -3,6 +3,7 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
+from collections import defaultdict
 import glob
 import requests
 from scipy.stats import mode
@@ -99,46 +100,123 @@ def process_player_data(player_df, team, team_id2,kmeans):
     own_saves=[]
     opp_defcon=[]
     teams_dataset=pd.read_csv("Team_data_transformed2.csv")
-    player_df['kickoff_time'] = pd.to_datetime(player_df['kickoff_time'])
-    player_df['kickoff_time'] = player_df['kickoff_time'].dt.strftime('%Y-%m-%dT%H:%M:%SZ')
-    prev_kickoff=0
-    for i in range(len(df)):
-        
-        opponent = player_df["opponent_code"].values[i]
-        kickoff_time=player_df["kickoff_time"].values[i]
-        opp_row = teams_dataset[(teams_dataset["kickoff_time"] == kickoff_time) & (teams_dataset["code"] == opponent)]
-        own_row = teams_dataset[(teams_dataset["kickoff_time"] == kickoff_time) & (teams_dataset["code"] == player_df["team_code2"].values[i])]
-        if(len(own_row)<1):
-            kickoff_time = pd.to_datetime(kickoff_time)
-            teams_dataset['kickoff_time'] = pd.to_datetime(teams_dataset['kickoff_time'], errors='coerce')
-            own_row = (teams_dataset[(teams_dataset['kickoff_time'].dt.month == kickoff_time.month) & (teams_dataset['kickoff_time'].dt.year == kickoff_time.year) & 
-        (teams_dataset['code'] == player_df["team_code2"].values[i])].sort_values(by='kickoff_time', ascending=False).head(1))
+    teams_dataset["kickoff_time_dt"] = pd.to_datetime(teams_dataset["kickoff_time"], errors="coerce", utc=True)
+    teams_dataset["code"] = pd.to_numeric(teams_dataset["code"], errors="coerce").astype("Int64")
 
-      
-        own_stat = [[own_row["XGH"].values[0],own_row["XGCH"].values[0],own_row["XGA"].values[0],own_row["XGCA"].values[0]]]
-        new_opp_stat=[[opp_row["XGH"].values[0],opp_row["XGCH"].values[0],opp_row["XGA"].values[0],opp_row["XGCA"].values[0]]]
+    player_df = player_df.copy()
+    player_df["kickoff_time_dt"] = pd.to_datetime(player_df["kickoff_time"], errors="coerce", utc=True)
+    player_df["kickoff_time"] = player_df["kickoff_time_dt"].dt.strftime('%Y-%m-%dT%H:%M:%SZ')
+    player_df["opponent_code"] = pd.to_numeric(player_df["opponent_code"], errors="coerce").astype("Int64")
+    player_df["team_code2"] = pd.to_numeric(player_df["team_code2"], errors="coerce").astype("Int64")
+
+    required_cols = [
+        "XGH", "XGCH", "XGA", "XGCA",
+        "XG_DEF", "XG_FORWARD", "XG_MID",
+        "Round_XG", "Round_XA", "Rolling_Saves", "Rolling_Defcon_against"
+    ]
+    fallback_vals = {}
+    for c in required_cols:
+        fallback_vals[c] = float(pd.to_numeric(teams_dataset.get(c, pd.Series(dtype=float)), errors="coerce").mean())
+        if not np.isfinite(fallback_vals[c]):
+            fallback_vals[c] = 0.0
+
+    def _find_team_row(ts: pd.Timestamp, code: int):
+        if pd.isna(code):
+            return pd.DataFrame()
+
+        code_rows = teams_dataset[teams_dataset["code"] == int(code)].copy()
+        if code_rows.empty and "id" in teams_dataset.columns:
+            team_id_num = pd.to_numeric(teams_dataset["id"], errors="coerce")
+            code_rows = teams_dataset[team_id_num == int(code)].copy()
+        if code_rows.empty:
+            return pd.DataFrame()
+
+        # 1) exact kickoff match
+        if pd.notna(ts):
+            ts = pd.Timestamp(ts)
+            if ts.tzinfo is None:
+                ts = ts.tz_localize("UTC")
+            else:
+                ts = ts.tz_convert("UTC")
+
+            exact = code_rows[code_rows["kickoff_time_dt"] == ts]
+            if not exact.empty:
+                return exact.sort_values(by="kickoff_time_dt", ascending=False).head(1)
+
+            # 2) latest row at or before kickoff in same season timeline
+            prev_rows = code_rows[code_rows["kickoff_time_dt"] <= ts]
+            if not prev_rows.empty:
+                return prev_rows.sort_values(by="kickoff_time_dt", ascending=False).head(1)
+
+            # 3) month-year fallback
+            month_rows = code_rows[
+                (code_rows["kickoff_time_dt"].dt.month == ts.month) &
+                (code_rows["kickoff_time_dt"].dt.year == ts.year)
+            ]
+            if not month_rows.empty:
+                return month_rows.sort_values(by="kickoff_time_dt", ascending=False).head(1)
+
+        # 4) final fallback: latest available row for the team
+        return code_rows.sort_values(by="kickoff_time_dt", ascending=False).head(1)
+
+    def _row_val(row_df: pd.DataFrame, col: str) -> float:
+        if row_df.empty or col not in row_df.columns:
+            return fallback_vals.get(col, 0.0)
+        val = pd.to_numeric(row_df[col], errors="coerce")
+        if len(val) == 0 or pd.isna(val.values[0]):
+            return fallback_vals.get(col, 0.0)
+        return float(val.values[0])
+
+    for i in range(len(df)):
+        opponent = player_df["opponent_code"].values[i]
+        own_code = player_df["team_code2"].values[i]
+        kickoff_dt = player_df["kickoff_time_dt"].iloc[i]
+        if pd.notna(kickoff_dt):
+            kickoff_dt = pd.Timestamp(kickoff_dt)
+            if kickoff_dt.tzinfo is None:
+                kickoff_dt = kickoff_dt.tz_localize("UTC")
+            else:
+                kickoff_dt = kickoff_dt.tz_convert("UTC")
+        else:
+            kickoff_dt = pd.NaT
+
+        opp_row = _find_team_row(kickoff_dt, opponent)
+        own_row = _find_team_row(kickoff_dt, own_code)
+
+        own_xgh = _row_val(own_row, "XGH")
+        own_xgch = _row_val(own_row, "XGCH")
+        own_xga = _row_val(own_row, "XGA")
+        own_xgca = _row_val(own_row, "XGCA")
+
+        opp_xgh = _row_val(opp_row, "XGH")
+        opp_xgch = _row_val(opp_row, "XGCH")
+        opp_xga = _row_val(opp_row, "XGA")
+        opp_xgca = _row_val(opp_row, "XGCA")
+
+        own_stat = [[own_xgh, own_xgch, own_xga, own_xgca]]
+        new_opp_stat = [[opp_xgh, opp_xgch, opp_xga, opp_xgca]]
         
         if(df["was_home"].values[i]==1):
-            own_att_stat.append(own_row["XGH"].values[0])
+            own_att_stat.append(own_xgh)
         else:
-            own_att_stat.append(own_row["XGA"].values[0])
+            own_att_stat.append(own_xga)
  
-        XGH.append(opp_row["XGH"].values[0])
-        XGCH.append(opp_row["XGCH"].values[0])
-        XGA.append(opp_row["XGA"].values[0])
-        XGCA.append(opp_row["XGCA"].values[0])
-        dfXG.append(opp_row["XG_DEF"].values[0])
-        forXG.append(opp_row["XG_FORWARD"].values[0])
-        midXG.append(opp_row["XG_MID"].values[0])
+        XGH.append(opp_xgh)
+        XGCH.append(opp_xgch)
+        XGA.append(opp_xga)
+        XGCA.append(opp_xgca)
+        dfXG.append(_row_val(opp_row, "XG_DEF"))
+        forXG.append(_row_val(opp_row, "XG_FORWARD"))
+        midXG.append(_row_val(opp_row, "XG_MID"))
 
         cluster = kmeans.predict(new_opp_stat)[0]
         opp_cluster.append(cluster)
         o_cluster = kmeans.predict(own_stat)[0]
         own_cluster.append(o_cluster)
-        own_team_xgs.append(own_row["Round_XG"].values[0])
-        own_team_xas.append(own_row["Round_XA"].values[0])
-        own_saves.append(own_row["Rolling_Saves"].values[0])
-        opp_defcon.append(opp_row["Rolling_Defcon_against"].values[0])
+        own_team_xgs.append(_row_val(own_row, "Round_XG"))
+        own_team_xas.append(_row_val(own_row, "Round_XA"))
+        own_saves.append(_row_val(own_row, "Rolling_Saves"))
+        opp_defcon.append(_row_val(opp_row, "Rolling_Defcon_against"))
 
     df["Cluster"] = opp_cluster
     df["XGH"] = XGH
@@ -1045,6 +1123,211 @@ def _avg_histories(h1: dict, h2: dict, teams):
     return out
 
 
+def _safe_numeric_mean(series: pd.Series, fallback: float = 1.0) -> float:
+    s = pd.to_numeric(series, errors="coerce").dropna()
+    if len(s) == 0:
+        return float(fallback)
+    return float(s.mean())
+
+
+def _add_cluster_history_features(
+    team_transformed_df: pd.DataFrame,
+    team_transformed_df_newest: pd.DataFrame,
+    n_clusters: int = 4,
+    lookback_matches: int = 15,
+    min_cluster_support: int = 8,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """
+    Adds:
+    - cluster (team's current cluster from XGA/XGCA/XGH/XGCH)
+    - XG_vs_cluster_{0..n_clusters-1}
+    - XGC_vs_cluster_{0..n_clusters-1}
+
+    Historical rows use only prior matches for each team (no leakage).
+    If cluster sample size < min_cluster_support, blend:
+      own_cluster_data * min(n, min_support)/min_support
+      + global_cluster_average * max(0, min_support-n)/min_support
+    """
+    required = ["XGA", "XGCA", "XGH", "XGCH", "code", "opponent", "kickoff_time", "XG", "XGC"]
+    missing_hist = [c for c in required if c not in team_transformed_df.columns]
+    missing_new = [c for c in ["XGA", "XGCA", "XGH", "XGCH", "code", "opponent", "kickoff_time"] if c not in team_transformed_df_newest.columns]
+    if missing_hist:
+        raise ValueError(f"Missing required columns in transformed df for cluster features: {missing_hist}")
+    if missing_new:
+        raise ValueError(f"Missing required columns in newest df for cluster features: {missing_new}")
+
+    hist = team_transformed_df.copy()
+    newest = team_transformed_df_newest.copy()
+
+    hist["kickoff_time"] = pd.to_datetime(hist["kickoff_time"], errors="coerce")
+    newest["kickoff_time"] = pd.to_datetime(newest["kickoff_time"], errors="coerce")
+
+    hist = hist.sort_values(["kickoff_time", "code"]).reset_index(drop=True)
+    newest = newest.sort_values(["kickoff_time", "code"]).reset_index(drop=True)
+
+    feat_cols = ["XGA", "XGCA", "XGH", "XGCH"]
+    hist_feat = hist[feat_cols].apply(pd.to_numeric, errors="coerce")
+    newest_feat = newest[feat_cols].apply(pd.to_numeric, errors="coerce")
+
+    fill_values = {c: _safe_numeric_mean(hist_feat[c], fallback=1.0) for c in feat_cols}
+    for c in feat_cols:
+        hist_feat[c] = hist_feat[c].fillna(fill_values[c])
+        newest_feat[c] = newest_feat[c].fillna(fill_values[c])
+
+    kmeans = KMeans(n_clusters=n_clusters, random_state=32, n_init=20)
+    hist["cluster"] = kmeans.fit_predict(hist_feat.values).astype(int)
+    newest["cluster"] = kmeans.predict(newest_feat.values).astype(int)
+
+    # Map (kickoff_time, team_code) -> cluster to resolve opponent cluster per row.
+    key_to_cluster = {}
+    for _, r in hist[["kickoff_time", "code", "cluster"]].iterrows():
+        key_to_cluster[(r["kickoff_time"], int(r["code"]))] = int(r["cluster"])
+
+    # Build opponent cluster for each historical row (at that point in time).
+    opp_cluster = []
+    for _, r in hist[["kickoff_time", "opponent"]].iterrows():
+        key = (r["kickoff_time"], int(r["opponent"]))
+        opp_cluster.append(key_to_cluster.get(key, -1))
+    hist["opp_cluster"] = np.asarray(opp_cluster, dtype=int)
+
+    # Pre-create columns.
+    xg_cols = [f"XG_vs_cluster_{c}" for c in range(n_clusters)]
+    xgc_cols = [f"XGC_vs_cluster_{c}" for c in range(n_clusters)]
+    for col in xg_cols + xgc_cols:
+        hist[col] = np.nan
+        newest[col] = np.nan
+
+    # Global running stats (all teams) by opponent-cluster from prior rows.
+    global_sum_xg = np.zeros(n_clusters, dtype=float)
+    global_sum_xgc = np.zeros(n_clusters, dtype=float)
+    global_cnt = np.zeros(n_clusters, dtype=float)
+
+    overall_sum_xg = 0.0
+    overall_sum_xgc = 0.0
+    overall_cnt = 0.0
+
+    # Team history: last matches as (opp_cluster, xg, xgc)
+    team_hist = defaultdict(list)
+
+    for idx, r in hist.iterrows():
+        team = int(r["code"])
+        xg_val = float(pd.to_numeric(r["XG"], errors="coerce")) if pd.notna(r["XG"]) else np.nan
+        xgc_val = float(pd.to_numeric(r["XGC"], errors="coerce")) if pd.notna(r["XGC"]) else np.nan
+
+        recent = team_hist[team][-lookback_matches:]
+
+        for c in range(n_clusters):
+            rec_c = [(xg_i, xgc_i) for oc, xg_i, xgc_i in recent if oc == c and np.isfinite(xg_i) and np.isfinite(xgc_i)]
+            n = len(rec_c)
+
+            if n > 0:
+                own_xg = float(np.mean([p[0] for p in rec_c]))
+                own_xgc = float(np.mean([p[1] for p in rec_c]))
+            else:
+                own_xg = np.nan
+                own_xgc = np.nan
+
+            if global_cnt[c] > 0:
+                glob_xg = float(global_sum_xg[c] / global_cnt[c])
+                glob_xgc = float(global_sum_xgc[c] / global_cnt[c])
+            elif overall_cnt > 0:
+                glob_xg = float(overall_sum_xg / overall_cnt)
+                glob_xgc = float(overall_sum_xgc / overall_cnt)
+            else:
+                # hard fallback if this is one of the first rows
+                glob_xg = _safe_numeric_mean(hist["XG"], fallback=1.3)
+                glob_xgc = _safe_numeric_mean(hist["XGC"], fallback=1.3)
+
+            own_w = min(n, min_cluster_support) / float(min_cluster_support)
+            glob_w = max(0, min_cluster_support - n) / float(min_cluster_support)
+
+            if np.isnan(own_xg):
+                blend_xg = glob_xg
+            else:
+                blend_xg = own_xg * own_w + glob_xg * glob_w
+
+            if np.isnan(own_xgc):
+                blend_xgc = glob_xgc
+            else:
+                blend_xgc = own_xgc * own_w + glob_xgc * glob_w
+
+            hist.at[idx, f"XG_vs_cluster_{c}"] = blend_xg
+            hist.at[idx, f"XGC_vs_cluster_{c}"] = blend_xgc
+
+        oc = int(r["opp_cluster"])
+        if 0 <= oc < n_clusters and np.isfinite(xg_val) and np.isfinite(xgc_val):
+            global_sum_xg[oc] += xg_val
+            global_sum_xgc[oc] += xgc_val
+            global_cnt[oc] += 1.0
+
+            overall_sum_xg += xg_val
+            overall_sum_xgc += xgc_val
+            overall_cnt += 1.0
+
+            team_hist[team].append((oc, xg_val, xgc_val))
+
+    # Final global fallback values from all historical data.
+    final_glob_xg = np.zeros(n_clusters, dtype=float)
+    final_glob_xgc = np.zeros(n_clusters, dtype=float)
+    overall_xg = float(overall_sum_xg / overall_cnt) if overall_cnt > 0 else _safe_numeric_mean(hist["XG"], fallback=1.3)
+    overall_xgc = float(overall_sum_xgc / overall_cnt) if overall_cnt > 0 else _safe_numeric_mean(hist["XGC"], fallback=1.3)
+    for c in range(n_clusters):
+        if global_cnt[c] > 0:
+            final_glob_xg[c] = global_sum_xg[c] / global_cnt[c]
+            final_glob_xgc[c] = global_sum_xgc[c] / global_cnt[c]
+        else:
+            final_glob_xg[c] = overall_xg
+            final_glob_xgc[c] = overall_xgc
+
+    # Newest rows: same logic, using last lookback historical matches for each team.
+    hist_by_team = hist.sort_values(["kickoff_time"]).groupby("code", sort=False)
+    for idx, r in newest.iterrows():
+        team = int(r["code"])
+        team_hist_rows = hist_by_team.get_group(team) if team in hist_by_team.groups else pd.DataFrame(columns=hist.columns)
+        team_hist_rows = team_hist_rows.tail(lookback_matches)
+
+        for c in range(n_clusters):
+            sub = team_hist_rows[team_hist_rows["opp_cluster"] == c]
+            n = len(sub)
+
+            if n > 0:
+                own_xg = float(pd.to_numeric(sub["XG"], errors="coerce").mean())
+                own_xgc = float(pd.to_numeric(sub["XGC"], errors="coerce").mean())
+            else:
+                own_xg = np.nan
+                own_xgc = np.nan
+
+            glob_xg = float(final_glob_xg[c])
+            glob_xgc = float(final_glob_xgc[c])
+
+            own_w = min(n, min_cluster_support) / float(min_cluster_support)
+            glob_w = max(0, min_cluster_support - n) / float(min_cluster_support)
+
+            if np.isnan(own_xg):
+                blend_xg = glob_xg
+            else:
+                blend_xg = own_xg * own_w + glob_xg * glob_w
+
+            if np.isnan(own_xgc):
+                blend_xgc = glob_xgc
+            else:
+                blend_xgc = own_xgc * own_w + glob_xgc * glob_w
+
+            newest.at[idx, f"XG_vs_cluster_{c}"] = blend_xg
+            newest.at[idx, f"XGC_vs_cluster_{c}"] = blend_xgc
+
+    # Keep extra helper off output; requested output asks for "cluster" + 8 cols.
+    hist = hist.drop(columns=["opp_cluster"])
+
+    # Column order: append new columns at the end.
+    keep_hist_cols = [c for c in team_transformed_df.columns if c in hist.columns]
+    keep_new_cols = [c for c in team_transformed_df_newest.columns if c in newest.columns]
+    hist = hist[keep_hist_cols + ["cluster"] + xg_cols + xgc_cols]
+    newest = newest[keep_new_cols + ["cluster"] + xg_cols + xgc_cols]
+
+    return hist, newest
+
+
 def team_transformed2():
     team_df = pd.read_csv("Team_data_transformed.csv").iloc[:, 1:][
         ["XGC_avg", "XG_avg", "code", "kickoff_time", "XG", "XGC", "was_home",
@@ -1202,6 +1485,14 @@ def team_transformed2():
         newest_selected_team_df["XGC_pred_rolling_error"] = selected_team_df["XGC_pred_rolling_error"].iloc[-1]
 
         team_transformed_df_newest = pd.concat([team_transformed_df_newest, newest_selected_team_df], ignore_index=True)
+
+    team_transformed_df, team_transformed_df_newest = _add_cluster_history_features(
+        team_transformed_df=team_transformed_df,
+        team_transformed_df_newest=team_transformed_df_newest,
+        n_clusters=4,
+        lookback_matches=15,
+        min_cluster_support=8,
+    )
 
     team_transformed_df.to_csv("Team_data_transformed2.csv", index=False)
     team_transformed_df_newest.to_csv("Team_data_newest2.csv", index=False)

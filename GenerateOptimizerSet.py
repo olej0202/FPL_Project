@@ -26,7 +26,7 @@ def GenerateOptimizeSet(Current_data_path):
         "selected_by_percent": "selected",
         "defensive_contribution_per_90": "DefCon"
     })
-    prediction_data=pd.read_csv("Model_Predictions.csv").iloc[:,1:]
+    prediction_data=pd.read_csv("Model_Predictions.csv")
     
     merge_cols = ['Name2', 'value', 'team_code', 'news', 'selected',"web_name","DefCon","id"]
     result = result[merge_cols]

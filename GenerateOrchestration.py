@@ -6,6 +6,7 @@ from FullLoad_Understat import main_Extract_Understat #Henter data fra understat
 from Generate_Team_Predictions import GenerateTeamPredictions #Prediksjoner for kamper
 from Generate_Team_Predictions2 import GenerateTeamPredictions2 as GenerateTeamPredictions3Model
 from Generate_Player_Predictions import Make_Predictions,Generate_point_predictions #Lager prediksjoner og setter det sammen til et datatset
+from Generate_Player_Predictions2 import make_predictions2
 from GenerateOptimizerSet import GenerateOptimizeSet #Lager dataset klart til å optimeres på
 from GenerateVisualDataset import Generate_ALL_datasets
 from GenerateDataset_Understat import Generate_Understat_dataset
@@ -55,7 +56,7 @@ def Data_Extraction(season,is_new_season,has_been_error):
 
 
 def Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos,Understat_path,Understat_shots_path):
-    #main_Transform()
+    main_Transform()
     Generate_Understat_dataset(current_player_path,run_player_pos)
     Generate_Shots_data(Understat_path,Understat_shots_path,current_player_path,current_team_path)
     team_data(current_team_path)
@@ -130,6 +131,7 @@ def Data_Predictions(current_fixture_path,current_player_path,current_team_path,
     GenerateTeamPredictions( current_fixture_path,current_team_path, n_points_in_future)
     Make_Predictions()
     Generate_point_predictions(time_list)
+    make_predictions2(horizon=len(time_list), gw_list=time_list)
     
    
 def Data_Generation(ownership,budget,GW_list_wildcard,GW_list_freehit,current_player_path,current_team_path,current_season_path ):
@@ -185,14 +187,14 @@ def Main_Orchestration():
     
     
     #EXTARCT DATA
-    Data_Extraction(season,is_new_season,has_been_error)
+    #Data_Extraction(season,is_new_season,has_been_error)
     
     
     #Transform data
-    Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos,Understat_path,Understat_shots_path)
+    #Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos,Understat_path,Understat_shots_path)
     
     #Predict data
-    Data_Predictions(current_fixture_path,current_player_path,current_team_path, n_points_in_future,time_list)
+    #Data_Predictions(current_fixture_path,current_player_path,current_team_path, n_points_in_future,time_list)
     
     Data_Generation(ownership,budget,GW_list_wildcard,GW_list_freehit,current_player_path,current_team_path,current_season_path )
     
