@@ -835,6 +835,7 @@ def Generate_point_predictions(GW_list):
     
     
     simulation=pd.read_csv("SImulator\simtest_player_outcomes_upcoming.csv").sort_values(by=["event", "fixture_code"])
+    simulation2=pd.read_csv("SImulator\Full_simulator_player.csv").sort_values(by=["gameweek", "fixture_code"])
 
 
 
@@ -878,7 +879,9 @@ def Generate_point_predictions(GW_list):
         
         simulation_player=simulation[simulation["player_name"]==player].sort_values(by=["event", "fixture_code"])
 
-
+        simulation_player2=simulation2[simulation2["player_name"]==player].sort_values(by=["gameweek", "fixture_code"])
+        
+        
         overscore=max(0.9,player_data["Average_Overscore"].values[0])
         overscore=min(1.1,overscore)
 
@@ -903,19 +906,22 @@ def Generate_point_predictions(GW_list):
         for i in range(len(player_data)):
 
             try:
-                goals.append((((xgb_goals_player["75"].values[i]*0.5+0.5*xgb_goals_player["25"].values[i])*0.2
-                         +simulation_player["expected_goals"].values[i]*0.3
-                         +stat_goals_player["pred"].values[i]*0.5
+                goals.append((((xgb_goals_player["75"].values[i]*0.5+0.5*xgb_goals_player["25"].values[i])*0.1
+                         +simulation_player["expected_goals"].values[i]*0.25
+                         +simulation_player2["pred_goals"].values[i]*0.25
+                         +stat_goals_player["pred"].values[i]*0.4
                          +DNN_goals_player["pred"].values[i]*0.0
                          +CLUSTER_goals_player["pred"].values[i]*0.0))*overscore)
+                
             except:
                 goals.append(0)
 
             try:
 
-                assist.append((((xgb_assist_player["75"].values[i]*0.5+0.5*xgb_assist_player["25"].values[i])*0.2
-                                    +simulation_player["expected_assists"].values[i]*0.3
-                                    +stat_assist_player["pred"].values[i]*0.5
+                assist.append((((xgb_assist_player["75"].values[i]*0.5+0.5*xgb_assist_player["25"].values[i])*0.1
+                                    +simulation_player["expected_assists"].values[i]*0.25
+                                    +simulation_player2["pred_assists"].values[i]*0.25
+                                    +stat_assist_player["pred"].values[i]*0.4
                                     +DNN_assist_player["pred"].values[i]*0
                                     +historic_Assist*0
                                     +CLUSTER_assist_player["pred"].values[i]*0.0))*overassist)

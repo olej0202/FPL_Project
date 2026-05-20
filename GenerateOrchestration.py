@@ -21,6 +21,10 @@ from Generate_Full_Simulator import (
     SimulationControlConfig as FullSimulatorControlConfig,
     run_simulator_control as run_simulator_control,
 )
+from Generate_Full_SImulator2 import (
+    DataPaths as FullSimulator2DataPaths,
+    write_upcoming_prediction_files as write_full_simulator2_outputs,
+)
 
 #erere
 
@@ -49,10 +53,10 @@ class DeepNN(nn.Module):
 
 
 def Data_Extraction(season,is_new_season,has_been_error):
-    #main_Extract(season, is_new_season, has_been_error)
+    main_Extract(season, is_new_season, has_been_error)
     current_players(season)
     current_teams(season)
-    #main_Extract_Understat(season)
+    main_Extract_Understat(season)
 
 
 def Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos,Understat_path,Understat_shots_path):
@@ -64,7 +68,19 @@ def Data_Transformation(n_points_in_future, current_fixture_path,current_player_
     GeneratePlayerData(time_list, current_fixture_path,current_player_path,current_team_path)
 
     
-def Data_Predictions(current_fixture_path,current_player_path,current_team_path, n_points_in_future,time_list):
+def Data_Predictions(
+    current_fixture_path,
+    current_player_path,
+    current_team_path,
+    n_points_in_future,
+    time_list,
+    fixtures_expanded_path_25,
+    team_history_path_25,
+    player_prediction_path_25,
+    player_history_path_25,
+    full_simulator_team_output_path_25,
+    full_simulator_player_output_path_25,
+):
     # Run both simulation engines first
     sim_output_dir = Path("SImulator")
     sim_output_dir.mkdir(parents=True, exist_ok=True)
@@ -72,14 +88,15 @@ def Data_Predictions(current_fixture_path,current_player_path,current_team_path,
     fixture_path = Path(current_fixture_path)
     team_path = Path(current_team_path)
     player_path = Path(current_player_path)
-    team_history_path = Path("Team_data_transformed2.csv")
-    player_prediction_path = Path("Player_Prediction_set.csv")
-    player_history_path = Path("ML_training2.csv")
+    team_history_path = Path(team_history_path_25)
+    player_prediction_path = Path(player_prediction_path_25)
+    player_history_path = Path(player_history_path_25)
+    fixtures_expanded_path = Path(fixtures_expanded_path_25)
 
     # Trigger full simulator parameter optimization with all read paths passed in.
     full_sim_control = FullSimulatorControlConfig(
         team_history_path=team_history_path,
-        fixtures_path="Fantasy_season_Fixtures_EXPANDED.csv",
+        fixtures_path=fixtures_expanded_path,
         current_teams_path=team_path,
         player_prediction_path=player_prediction_path,
         player_history_path=player_history_path,
@@ -119,6 +136,44 @@ def Data_Predictions(current_fixture_path,current_player_path,current_team_path,
         simulations=3000,
         seed=42,
         horizon_gws=n_points_in_future,
+    )
+
+    print("Running full stochastic simulator v2 (team/player upcoming outputs)...")
+    fs2_paths = FullSimulator2DataPaths(
+        team_stats_candidates=(
+            Path("team_stats.csv"),
+            team_history_path,
+            Path("Team_data_newest3.csv"),
+            Path("Team_data_transformed2.csv"),
+        ),
+        player_stats_candidates=(
+            Path("player_stats.csv"),
+            player_prediction_path,
+            player_path,
+            Path("Player_Prediction_set.csv"),
+            player_history_path,
+            Path("ML_training2.csv"),
+        ),
+        fixtures_candidates=(
+            Path("fixtures.csv"),
+            fixtures_expanded_path,
+            fixture_path,
+            Path("Fantasy_season_Fixtures_EXPANDED.csv"),
+        ),
+        current_teams_path=team_path,
+        team_history_candidates=(
+            team_history_path,
+            Path("Team_data_transformed2.csv"),
+            Path("Team_data_newest3.csv"),
+            Path("Team_data_newest.csv"),
+        ),
+    )
+    write_full_simulator2_outputs(
+        team_output_path=Path(full_simulator_team_output_path_25),
+        player_output_path=Path(full_simulator_player_output_path_25),
+        n_scenarios=250,
+        include_finished_fixtures=False,
+        paths=fs2_paths,
     )
 
     # Trigger model 3 outputs (Team_prediction3 / visual3 / results3) for blend in total team predictions.
@@ -175,6 +230,12 @@ def Main_Orchestration():
     current_season_path="Raw_Data_25\Fantasy_season_2025_data.csv"
     Understat_path="Raw_Data_25/Understat_data.csv"
     Understat_shots_path="Raw_Data_25/Understat_data_shots.csv"
+    fixtures_expanded_path_25="Fantasy_season_Fixtures_EXPANDED.csv"
+    team_history_path_25="Team_data_transformed2.csv"
+    player_prediction_path_25="Player_Prediction_set.csv"
+    player_history_path_25="ML_training2.csv"
+    full_simulator_team_output_path_25="SImulator/Full_simulator_team.csv"
+    full_simulator_player_output_path_25="SImulator/Full_simulator_player.csv"
     #current_raw_data_path="Raw_Data_24\Fantasy_season_2024_data.csv"
     time_list=Get_times(current_fixture_path,n_points_in_future)
     
@@ -194,7 +255,19 @@ def Main_Orchestration():
     #Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos,Understat_path,Understat_shots_path)
     
     #Predict data
-    Data_Predictions(current_fixture_path,current_player_path,current_team_path, n_points_in_future,time_list)
+    Data_Predictions(
+        current_fixture_path,
+        current_player_path,
+        current_team_path,
+        n_points_in_future,
+        time_list,
+        fixtures_expanded_path_25,
+        team_history_path_25,
+        player_prediction_path_25,
+        player_history_path_25,
+        full_simulator_team_output_path_25,
+        full_simulator_player_output_path_25,
+    )
     
     Data_Generation(ownership,budget,GW_list_wildcard,GW_list_freehit,current_player_path,current_team_path,current_season_path )
     
