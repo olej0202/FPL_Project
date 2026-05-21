@@ -620,11 +620,14 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
     names = relevant_players["name"].unique()
     Future_dataframe = pd.DataFrame()
     missing_player = []
+    print(names)
 
     for name in names:
         player_risiko = 0.4
+        print(name)
 
         player_row = current_data[current_data["name"].str.lower() == name.lower()]
+        print(player_row)
         rel_player_player = relevant_players[relevant_players["name"] == name]
         if rel_player_player.empty:
             continue
@@ -665,6 +668,7 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
 
         player_row2 = current_players[current_players["name"] == name]
         if player_row2.empty:
+            print("emty")
             continue
 
         player_pen_takers = pen_takers[pen_takers["name"] == name]
@@ -829,8 +833,7 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
         player_row["Assist_Index"] = player_row["Understat_POSXA"] * player_risiko + (1 - player_risiko) * player_row["Assist_Statistics"]
         player_row["Player_code"] = player_code
 
-        if len(clusters) < 2:
-            break
+
 
         for i in range(len(clusters)):
             gw_i = int(GW[i])
@@ -864,8 +867,11 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
             player_row["Opp_Assist_Threat_Pos"] = ass_pos[i]
 
             Future_dataframe = pd.concat([Future_dataframe, player_row], axis=0, ignore_index=True)
+            print(Future_dataframe)
+    print("Ferdig")
 
     Future_dataframe.to_csv("Player_Prediction_set.csv", index=False)
+    
     add_team_share_per90()
 
     missing_names = [n for n in names if n not in Future_dataframe["name"].values]

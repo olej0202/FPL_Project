@@ -25,11 +25,11 @@ Spurs,6
 ,Ipswich,40"""
 
 
-Manual_team_offensive_adjustments = {}
+Manual_team_offensive_adjustments = {3:1.15,43:1.15,1:1.1,14:1.1,8:1.1}
     
     
     
-Manual_team_defensive_adjustments = {39:1.1}
+Manual_team_defensive_adjustments = {21:1.1,91:1.1,6:1.1,  }
 
 
 Manual_NewPlayer_Adjustments={
