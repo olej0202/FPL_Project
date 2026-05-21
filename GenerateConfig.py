@@ -25,11 +25,11 @@ Spurs,6
 ,Ipswich,40"""
 
 
-Manual_team_offensive_adjustments = {3:1.15,43:1.15,1:1.1,14:1.1,8:1.1}
+Manual_team_offensive_adjustments = {21:1.1,91:1.1,6:1.1,  }
     
     
     
-Manual_team_defensive_adjustments = {21:1.1,91:1.1,6:1.1,  }
+Manual_team_defensive_adjustments = {3:1.15,43:1.15,1:1.1,14:1.1,8:1.1}
 
 
 Manual_NewPlayer_Adjustments={
@@ -51,20 +51,8 @@ Manual_Player_Risk={
 
 Manual_min=[
         #Afcon
-        {"name": "Amad_Diallo", "type": "const",   "GW": "any", "value": 75},
-        {"name": "Melker_Ellborg", "type": "const",   "GW": "any", "value": 0},
-        {"name": "Piero_Hincapié", "type": "const",   "GW": "any", "value": 70},
-        {"name": "Brian_Brobbey", "type": "const",   "GW": "any", "value": 80},
-        {"name": "Bruno_Guimarães Rodriguez Moura", "type": "const",   "GW": "any", "value": 80},
-        {"name": "Chris_Wood", "type": "const",   "GW": "any", "value": 70},
         {"name": "Walter_Benítez", "type": "const",   "GW": "any", "value": 0},
-        {"name": "Daniel_Ballard", "type": "const",   "GW": "any", "value": 90},
         {"name": "Robin_Roefs", "type": "const",   "GW": "any", "value": 90},
-        {"name": "Xavi_Simons", "type": "const",   "GW": "any", "value": 75},
-        {"name": "Anton_Stach", "type": "const",   "GW": "any", "value": 90},
-        {"name": "Bukayo_Saka", "type": "const",   "GW": "any", "value": 80},
-        {"name": "João_Pedro Junqueira de Jesus", "type": "const",   "GW": "any", "value": 80},
-        {"name": "Viktor_Gyökeres", "type": "const",   "GW": "any", "value": 80},
 
 
     ]

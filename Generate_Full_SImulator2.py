@@ -170,10 +170,10 @@ def _load_team_stats(path: Path) -> pd.DataFrame:
     xgch = _to_num(out[xgch_col], 0.0)
     xgca = _to_num(out[xgca_col], 0.0)
 
-    attack_home_raw = 0.7 * xg_avg + 0.3 * xgh
-    attack_away_raw = 0.7 * xg_avg + 0.3 * xga
-    defence_home_raw = 0.7 * xgc_avg + 0.3 * xgch
-    defence_away_raw = 0.7 * xgc_avg + 0.3 * xgca
+    attack_home_raw = 0.4 * xg_avg + 0.6 * xgh
+    attack_away_raw = 0.4 * xg_avg + 0.6 * xga
+    defence_home_raw = 0.4 * xgc_avg + 0.6 * xgch
+    defence_away_raw = 0.4 * xgc_avg + 0.6 * xgca
 
     attack_ref = float(pd.concat([attack_home_raw, attack_away_raw], axis=0).mean())
     defence_ref = float(pd.concat([defence_home_raw, defence_away_raw], axis=0).mean())
@@ -185,10 +185,10 @@ def _load_team_stats(path: Path) -> pd.DataFrame:
     mapped = pd.DataFrame(
         {
             "team_id": _to_num(out[team_id_col]).astype("Int64"),
-            "attack_rating_home": (attack_home_raw / attack_ref).clip(lower=0.8, upper=2.2),
-            "attack_rating_away": (attack_away_raw / attack_ref).clip(lower=0.8, upper=2.2),
-            "defence_rating_home": (defence_home_raw / defence_ref).clip(lower=0.65, upper=2.0),
-            "defence_rating_away": (defence_away_raw / defence_ref).clip(lower=0.65, upper=2.0),
+            "attack_rating_home": (attack_home_raw / attack_ref).clip(lower=0.65, upper=2.5),
+            "attack_rating_away": (attack_away_raw / attack_ref).clip(lower=0.65, upper=2.5),
+            "defence_rating_home": (defence_home_raw / defence_ref).clip(lower=0.6, upper=2.2),
+            "defence_rating_away": (defence_away_raw / defence_ref).clip(lower=0.6, upper=2.2),
             "elo_rating": _to_num(out[elo_col], default=1500.0) if elo_col else 1500.0,
             "xgh": _to_num(out[xgh_col], np.nan),
             "xga": _to_num(out[xga_col], np.nan),
@@ -602,8 +602,8 @@ def _build_beta_training_frame(paths: DataPaths) -> pd.DataFrame:
         subset=["team_id", "opponent_id", "kickoff_time"], keep="last"
     )
 
-    attack_raw = np.where(h["was_home_bool"], 0.7 * h["xg_avg"] + 0.3 * h["xgh"], 0.7 * h["xg_avg"] + 0.3 * h["xga"])
-    defence_raw = np.where(h["was_home_bool"], 0.7 * h["xgc_avg"] + 0.3 * h["xgch"], 0.7 * h["xgc_avg"] + 0.3 * h["xgca"])
+    attack_raw = np.where(h["was_home_bool"], 0.4 * h["xg_avg"] + 0.6 * h["xgh"], 0.4 * h["xg_avg"] + 0.6 * h["xga"])
+    defence_raw = np.where(h["was_home_bool"], 0.4 * h["xgc_avg"] + 0.6 * h["xgch"], 0.4 * h["xgc_avg"] + 0.6 * h["xgca"])
     attack_ref = float(np.mean(attack_raw))
     defence_ref = float(np.mean(defence_raw))
     if not np.isfinite(attack_ref) or attack_ref <= 0:
@@ -611,8 +611,8 @@ def _build_beta_training_frame(paths: DataPaths) -> pd.DataFrame:
     if not np.isfinite(defence_ref) or defence_ref <= 0:
         raise DataValidationError("Kan ikke beregne defence_ref for beta-estimering.")
 
-    h["attack_rating"] = np.clip(attack_raw / attack_ref, 0.8, 2.2)
-    h["defence_rating"] = np.clip(defence_raw / defence_ref, 0.65, 2.0)
+    h["attack_rating"] = np.clip(attack_raw / attack_ref, 0.65, 2.5)
+    h["defence_rating"] = np.clip(defence_raw / defence_ref, 0.6, 2.2)
 
     opp = h[["team_id", "opponent_id", "kickoff_time", "defence_rating", "elo"]].rename(
         columns={
@@ -714,8 +714,8 @@ def _team_lambda_components(own_team: pd.Series, opp_team: pd.Series, is_home: b
     opp_xgc_avg = _row_num(opp_team, "xgc_avg", 0.0)
     opp_xgc_err = _row_num(opp_team, "xgc_pred_rolling_error", 0.0)
 
-    off_fac = own_xg * 0.7 + 0.3 * own_xg_avg - 0.5 * own_xg_err
-    def_fac = opp_xgc * 0.7 + 0.3 * opp_xgc_avg - 0.5 * opp_xgc_err
+    off_fac = own_xg * 0.4 + 0.6 * own_xg_avg - 0.5 * own_xg_err
+    def_fac = opp_xgc * 0.4 + 0.6 * opp_xgc_avg - 0.5 * opp_xgc_err
 
     eta = (
         -3.15
