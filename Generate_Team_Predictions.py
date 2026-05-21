@@ -1790,7 +1790,7 @@ def build_predicted_table_with_gw(
     return final_table
 
 
-def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
+def GenerateTeamPredictions(fixture_path, current_team_path, horizon, sim_full_weight=1):
     GenerateTeamPredictions1(fixture_path, current_team_path,horizon)
     GenerateTeamPredictions2(fixture_path, current_team_path,horizon)
     GenerateTeamPredictions_Results(fixture_path, current_team_path,horizon)
@@ -1842,6 +1842,7 @@ def GenerateTeamPredictions(fixture_path, current_team_path,horizon):
     sim_team_df, sim_visual_df = _combine_sim_sources(
         "SImulator/Full_simulator_team.csv",
         "SImulator/simtest_team_results_upcoming.csv",
+        full_sim_weight=sim_full_weight,
     )
 
     if all(k in team_pred1.columns for k in pred_keys) and all(k in team_results.columns for k in pred_keys):
@@ -2059,6 +2060,21 @@ def _coalesce_average(a, b):
     return out
 
 
+def _coalesce_weighted(a, b, weight_a=0.5):
+    wa = float(weight_a)
+    if wa < 0.0:
+        wa = 0.0
+    if wa > 1.0:
+        wa = 1.0
+    wb = 1.0 - wa
+    a = pd.to_numeric(a, errors="coerce")
+    b = pd.to_numeric(b, errors="coerce")
+    out = a * wa + b * wb
+    out = out.where(a.notna() & b.notna(), a)
+    out = out.where(a.notna() | b.notna(), b)
+    return out
+
+
 def _normalize_full_sim_team(path):
     try:
         df = pd.read_csv(path)
@@ -2220,7 +2236,7 @@ def _normalize_simtest_team(path):
     return t, v
 
 
-def _combine_sim_sources(full_path, simtest_path):
+def _combine_sim_sources(full_path, simtest_path, full_sim_weight=0.7):
     t1, v1 = _normalize_full_sim_team(full_path)
     t2, v2 = _normalize_simtest_team(simtest_path)
 
@@ -2237,14 +2253,14 @@ def _combine_sim_sources(full_path, simtest_path):
         )
         m["Home"] = m.get("Home_a").combine_first(m.get("Home_b"))
         for c in ["sim_xg", "sim_xgc", "sim_cs", "sim_win", "sim_draw", "sim_loss"]:
-            m[c] = _coalesce_average(m.get(f"{c}_a"), m.get(f"{c}_b"))
+            m[c] = _coalesce_weighted(m.get(f"{c}_a"), m.get(f"{c}_b"), weight_a=full_sim_weight)
         team = m[["fixture_code", "team_code", "opponent_code", "Home", "sim_xg", "sim_xgc", "sim_cs", "sim_win", "sim_draw", "sim_loss"]].copy()
 
     visual = pd.DataFrame()
     if not v1.empty or not v2.empty:
         m = v1.merge(v2, on=["fixture_code"], how="outer", suffixes=("_a", "_b"))
         for c in ["sim_home_goals", "sim_away_goals", "sim_home_cs", "sim_away_cs", "sim_home_win_pct", "sim_draw_pct", "sim_away_win_pct"]:
-            m[c] = _coalesce_average(m.get(f"{c}_a"), m.get(f"{c}_b"))
+            m[c] = _coalesce_weighted(m.get(f"{c}_a"), m.get(f"{c}_b"), weight_a=full_sim_weight)
         visual = m[["fixture_code", "sim_home_goals", "sim_away_goals", "sim_home_cs", "sim_away_cs", "sim_home_win_pct", "sim_draw_pct", "sim_away_win_pct"]].copy()
 
     return team, visual

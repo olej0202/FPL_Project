@@ -548,6 +548,7 @@ def Generate_team_data():
             
             XA=team_data.groupby('kickoff_time').filter(lambda x: len(x) >= 5).groupby('kickoff_time')['expected_assists'].sum()
             A=team_data.groupby('kickoff_time').filter(lambda x: len(x) >= 5).groupby('kickoff_time')['assists'].sum()
+            red_cards=team_data.groupby('kickoff_time').filter(lambda x: len(x) >= 5).groupby('kickoff_time')['red_cards'].sum()
             
             
             
