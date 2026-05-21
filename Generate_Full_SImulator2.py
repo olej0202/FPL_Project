@@ -16,6 +16,7 @@ MATCH_MINUTES = 90
 N_SCENARIOS = 1000
 EPS = 1e-9
 _BETA_CACHE: Dict[str, np.ndarray] = {}
+_ETA_FORMULA_CACHE: Dict[str, np.ndarray] = {}
 
 
 @dataclass(frozen=True)
@@ -551,7 +552,8 @@ def _build_beta_training_frame(paths: DataPaths) -> pd.DataFrame:
     xgch_col = _pick_col(df, ["xgch"])
     xgca_col = _pick_col(df, ["xgca"])
     elo_col = _pick_col(df, ["elo_rating", "elo"])
-    goals_col = _pick_col(df, ["plain_gs", "goals_scored", "team_goals"])
+    xg_col = _pick_col(df, ["xg"])
+    xgc_col = _pick_col(df, ["xgc"])
 
     missing = []
     if code_col is None:
@@ -576,8 +578,10 @@ def _build_beta_training_frame(paths: DataPaths) -> pd.DataFrame:
         missing.append("XGCA")
     if elo_col is None:
         missing.append("Elo_Rating")
-    if goals_col is None:
-        missing.append("Plain_GS/goals_scored")
+    if xg_col is None:
+        missing.append("XG")
+    if xgc_col is None:
+        missing.append("XGC")
     if missing:
         raise DataValidationError(
             f"Mangler historiske kolonner for beta-estimering i {hist_path.name}: {missing}"
@@ -595,9 +599,10 @@ def _build_beta_training_frame(paths: DataPaths) -> pd.DataFrame:
     h["xgch"] = _to_num(h[xgch_col], 0.0)
     h["xgca"] = _to_num(h[xgca_col], 0.0)
     h["elo"] = _to_num(h[elo_col], 1500.0)
-    h["goals_for"] = _to_num(h[goals_col], np.nan)
+    h["xg_obs"] = _to_num(h[xg_col], np.nan)
+    h["xgc_obs"] = _to_num(h[xgc_col], np.nan)
 
-    h = h.dropna(subset=["team_id", "opponent_id", "kickoff_time", "goals_for"]).copy()
+    h = h.dropna(subset=["team_id", "opponent_id", "kickoff_time", "xg_obs"]).copy()
     h = h.sort_values(["team_id", "kickoff_time", "opponent_id"]).drop_duplicates(
         subset=["team_id", "opponent_id", "kickoff_time"], keep="last"
     )
@@ -614,12 +619,13 @@ def _build_beta_training_frame(paths: DataPaths) -> pd.DataFrame:
     h["attack_rating"] = np.clip(attack_raw / attack_ref, 0.65, 2.5)
     h["defence_rating"] = np.clip(defence_raw / defence_ref, 0.6, 2.2)
 
-    opp = h[["team_id", "opponent_id", "kickoff_time", "defence_rating", "elo"]].rename(
+    opp = h[["team_id", "opponent_id", "kickoff_time", "defence_rating", "elo", "xgc_obs"]].rename(
         columns={
             "team_id": "opp_team_id",
             "opponent_id": "opp_opponent_id",
             "defence_rating": "defence_opp",
             "elo": "elo_opp",
+            "xgc_obs": "xgc_opp_obs",
         }
     )
     m = h.merge(
@@ -631,10 +637,14 @@ def _build_beta_training_frame(paths: DataPaths) -> pd.DataFrame:
 
     m["defence_opp"] = _to_num(m["defence_opp"], np.nan)
     m["elo_diff"] = _to_num(m["elo"], 1500.0) - _to_num(m["elo_opp"], 1500.0)
-    m["goals_for"] = _to_num(m["goals_for"], np.nan)
-    m = m.dropna(subset=["attack_rating", "defence_opp", "elo_diff", "goals_for"])
-    m = m[m["goals_for"] >= 0].copy()
-    m["goals_for"] = m["goals_for"].clip(lower=0.0, upper=10.0)
+    m["xg_obs"] = _to_num(m["xg_obs"], np.nan)
+    m["xgc_obs"] = _to_num(m["xgc_obs"], np.nan)
+    m["xgc_opp_obs"] = _to_num(m["xgc_opp_obs"], np.nan)
+    # Use XG and opposition XGC as predictor columns (instead of goals_scored columns).
+    m["xg_pred_col"] = m["xg_obs"].clip(lower=0.0, upper=10.0)
+    m["xgc_pred_col"] = m["xgc_opp_obs"].fillna(m["xgc_obs"]).clip(lower=0.0, upper=10.0)
+    m["xg_target"] = m["xg_obs"].clip(lower=0.0, upper=10.0)
+    m = m.dropna(subset=["xg_pred_col", "xgc_pred_col", "elo_diff", "xg_target"])
     return m
 
 
@@ -684,15 +694,158 @@ def estimate_beta_from_history(paths: Optional[DataPaths] = None) -> np.ndarray:
     X = np.column_stack(
         [
             np.ones(len(train), dtype=float),
-            train["attack_rating"].to_numpy(dtype=float),
-            train["defence_opp"].to_numpy(dtype=float),
+            train["xg_pred_col"].to_numpy(dtype=float),
+            train["xgc_pred_col"].to_numpy(dtype=float),
             train["elo_diff"].to_numpy(dtype=float),
         ]
     )
-    y = train["goals_for"].to_numpy(dtype=float)
+    y = train["xg_target"].to_numpy(dtype=float)
     beta = _fit_poisson_irls(X, y)
     _BETA_CACHE[cache_key] = beta.copy()
     return beta
+
+
+def _build_eta_training_frame(paths: DataPaths) -> pd.DataFrame:
+    hist_path = _first_existing(paths.team_history_candidates, "team_history")
+    df = pd.read_csv(hist_path)
+
+    code_col = _pick_col(df, ["code", "team_code", "team_id"])
+    opp_col = _pick_col(df, ["opponent", "opponent_code", "opp_code"])
+    was_home_col = _pick_col(df, ["was_home", "was_home_bool"])
+    kickoff_col = _pick_col(df, ["kickoff_time", "date", "kickoff_date"])
+    xg_avg_col = _pick_col(df, ["xg_avg"])
+    xgc_avg_col = _pick_col(df, ["xgc_avg"])
+    xgh_col = _pick_col(df, ["xgh"])
+    xga_col = _pick_col(df, ["xga"])
+    xgch_col = _pick_col(df, ["xgch"])
+    xgca_col = _pick_col(df, ["xgca"])
+    elo_col = _pick_col(df, ["elo_rating", "elo"])
+    xg_col = _pick_col(df, ["xg"])
+    xg_pred_err_col = _pick_col(df, ["xg_pred_rolling_error"])
+    xgc_pred_err_col = _pick_col(df, ["xgc_pred_rolling_error"])
+
+    missing = []
+    if code_col is None:
+        missing.append("code/team_code")
+    if opp_col is None:
+        missing.append("opponent")
+    if was_home_col is None:
+        missing.append("was_home")
+    if kickoff_col is None:
+        missing.append("kickoff_time/date")
+    if xg_avg_col is None:
+        missing.append("XG_avg")
+    if xgc_avg_col is None:
+        missing.append("XGC_avg")
+    if xgh_col is None:
+        missing.append("XGH")
+    if xga_col is None:
+        missing.append("XGA")
+    if xgch_col is None:
+        missing.append("XGCH")
+    if xgca_col is None:
+        missing.append("XGCA")
+    if elo_col is None:
+        missing.append("Elo_Rating")
+    if xg_col is None:
+        missing.append("XG")
+    if missing:
+        raise DataValidationError(
+            f"Mangler historiske kolonner for eta-estimering i {hist_path.name}: {missing}"
+        )
+
+    h = df.copy()
+    h["team_id"] = _to_num(h[code_col]).astype("Int64")
+    h["opponent_id"] = _to_num(h[opp_col]).astype("Int64")
+    h["kickoff_time"] = pd.to_datetime(h[kickoff_col], errors="coerce", utc=True)
+    h["was_home_bool"] = _parse_was_home_series(h[was_home_col])
+    h["xg_avg"] = _to_num(h[xg_avg_col], 0.0)
+    h["xgc_avg"] = _to_num(h[xgc_avg_col], 0.0)
+    h["xgh"] = _to_num(h[xgh_col], 0.0)
+    h["xga"] = _to_num(h[xga_col], 0.0)
+    h["xgch"] = _to_num(h[xgch_col], 0.0)
+    h["xgca"] = _to_num(h[xgca_col], 0.0)
+    h["elo"] = _to_num(h[elo_col], 1500.0)
+    h["xg_obs"] = _to_num(h[xg_col], np.nan)
+    h["xg_pred_err"] = _to_num(h[xg_pred_err_col], 0.0) if xg_pred_err_col is not None else 0.0
+    h["xgc_pred_err"] = _to_num(h[xgc_pred_err_col], 0.0) if xgc_pred_err_col is not None else 0.0
+
+    h = h.dropna(subset=["team_id", "opponent_id", "kickoff_time", "xg_obs"]).copy()
+    h = h.sort_values(["team_id", "kickoff_time", "opponent_id"]).drop_duplicates(
+        subset=["team_id", "opponent_id", "kickoff_time"], keep="last"
+    )
+
+    opp = h[
+        ["team_id", "opponent_id", "kickoff_time", "xgch", "xgca", "xgc_avg", "xgc_pred_err", "elo"]
+    ].rename(
+        columns={
+            "team_id": "opp_team_id",
+            "opponent_id": "opp_opponent_id",
+            "xgch": "opp_xgch",
+            "xgca": "opp_xgca",
+            "xgc_avg": "opp_xgc_avg",
+            "xgc_pred_err": "opp_xgc_pred_err",
+            "elo": "elo_opp",
+        }
+    )
+    m = h.merge(
+        opp,
+        left_on=["team_id", "opponent_id", "kickoff_time"],
+        right_on=["opp_opponent_id", "opp_team_id", "kickoff_time"],
+        how="left",
+    )
+
+    m["own_xg_side"] = np.where(m["was_home_bool"], m["xgh"], m["xga"])
+    m["opp_xgc_side"] = np.where(m["was_home_bool"], m["opp_xgca"], m["opp_xgch"])
+    m["opp_xgc_avg"] = _to_num(m["opp_xgc_avg"], np.nan).fillna(_to_num(m["xgc_avg"], 0.0))
+    m["opp_xgc_pred_err"] = _to_num(m["opp_xgc_pred_err"], 0.0)
+    m["elo_diff"] = _to_num(m["elo"], 1500.0) - _to_num(m["elo_opp"], 1500.0)
+
+    m["off_fac"] = (
+        _to_num(m["own_xg_side"], 0.0) * 0.4
+        + _to_num(m["xg_avg"], 0.0) * 0.6
+        - _to_num(m["xg_pred_err"], 0.0) * 0.5
+    )
+    m["def_fac"] = (
+        _to_num(m["opp_xgc_side"], 0.0) * 0.4
+        + _to_num(m["opp_xgc_avg"], 0.0) * 0.6
+        - _to_num(m["opp_xgc_pred_err"], 0.0) * 0.5
+    )
+    m["interaction"] = m["off_fac"] * m["def_fac"]
+    m["xg_target"] = _to_num(m["xg_obs"], np.nan).clip(lower=0.0, upper=10.0)
+
+    m = m.dropna(subset=["off_fac", "def_fac", "interaction", "elo_diff", "xg_target"]).copy()
+    m["off_fac"] = m["off_fac"].clip(lower=0.0, upper=10.0)
+    m["def_fac"] = m["def_fac"].clip(lower=0.0, upper=10.0)
+    m["interaction"] = m["interaction"].clip(lower=0.0, upper=100.0)
+    return m
+
+
+def estimate_eta_formula_from_history(paths: Optional[DataPaths] = None) -> np.ndarray:
+    paths = paths or DataPaths()
+    cache_key = "eta|" + "|".join(str(p) for p in paths.team_history_candidates)
+    if cache_key in _ETA_FORMULA_CACHE:
+        return _ETA_FORMULA_CACHE[cache_key].copy()
+
+    train = _build_eta_training_frame(paths)
+    if len(train) < 100:
+        raise DataValidationError(
+            f"For lite historisk datagrunnlag for eta-estimering: {len(train)} rader."
+        )
+
+    X = np.column_stack(
+        [
+            np.ones(len(train), dtype=float),
+            train["off_fac"].to_numpy(dtype=float),
+            train["def_fac"].to_numpy(dtype=float),
+            train["interaction"].to_numpy(dtype=float),
+            train["elo_diff"].to_numpy(dtype=float),
+        ]
+    )
+    y = train["xg_target"].to_numpy(dtype=float)
+    eta_params = _fit_poisson_irls(X, y)
+    _ETA_FORMULA_CACHE[cache_key] = eta_params.copy()
+    return eta_params
 
 
 # =========================
@@ -703,7 +856,13 @@ def _row_num(row: pd.Series, col: str, default: float = 0.0) -> float:
     return float(pd.to_numeric(pd.Series([row.get(col, default)]), errors="coerce").fillna(default).iloc[0])
 
 
-def _team_lambda_components(own_team: pd.Series, opp_team: pd.Series, is_home: bool) -> Dict[str, float]:
+def _team_lambda_components(
+    own_team: pd.Series,
+    opp_team: pd.Series,
+    is_home: bool,
+    eta_params: Optional[np.ndarray] = None,
+    paths: Optional[DataPaths] = None,
+) -> Dict[str, float]:
     # Own XG side: XGH if home, XGA if away
     own_xg = _row_num(own_team, "xgh" if is_home else "xga", 0.0)
     own_xg_avg = _row_num(own_team, "xg_avg", 0.0)
@@ -713,17 +872,26 @@ def _team_lambda_components(own_team: pd.Series, opp_team: pd.Series, is_home: b
     opp_xgc = _row_num(opp_team, "xgca" if is_home else "xgch", 0.0)
     opp_xgc_avg = _row_num(opp_team, "xgc_avg", 0.0)
     opp_xgc_err = _row_num(opp_team, "xgc_pred_rolling_error", 0.0)
+    elo_diff = _row_num(own_team, "elo_rating", 1500.0) - _row_num(opp_team, "elo_rating", 1500.0)
 
     off_fac = own_xg * 0.4 + 0.6 * own_xg_avg - 0.5 * own_xg_err
     def_fac = opp_xgc * 0.4 + 0.6 * opp_xgc_avg - 0.5 * opp_xgc_err
+    interaction = off_fac * def_fac
+
+    if eta_params is None:
+        eta_params = estimate_eta_formula_from_history(paths=paths)
+    if len(eta_params) < 5:
+        raise DataValidationError("eta_params ma ha 5 elementer: [intercept, off, def, interaction, elo].")
+    b0, b_off, b_def, b_int, b_elo = [float(x) for x in eta_params[:5]]
 
     eta = (
-        -3.15
-        + 1.485 * off_fac
-        + 1.503 * def_fac
-        - 0.174 * off_fac * def_fac
+        b0
+        + b_off * off_fac
+        + b_def * def_fac
+        + b_int * interaction
+        + b_elo * elo_diff
     )
-    lambda0 = float(np.exp(0.5 * eta))
+    lambda0 = float(np.exp(np.clip(eta, -20.0, 20.0)))
     return {
         "own_xg_side": float(own_xg),
         "own_xg_avg": float(own_xg_avg),
@@ -731,15 +899,29 @@ def _team_lambda_components(own_team: pd.Series, opp_team: pd.Series, is_home: b
         "opp_xgc_side": float(opp_xgc),
         "opp_xgc_avg": float(opp_xgc_avg),
         "opp_xgc_pred_rolling_error": float(opp_xgc_err),
+        "elo_diff": float(elo_diff),
         "off_fac": float(off_fac),
         "def_fac": float(def_fac),
+        "interaction": float(interaction),
         "eta": float(eta),
         "lambda0": float(lambda0),
+        "eta_intercept": float(b0),
+        "eta_off_coef": float(b_off),
+        "eta_def_coef": float(b_def),
+        "eta_interaction_coef": float(b_int),
+        "eta_elo_coef": float(b_elo),
+        "eta_scale": 1.0,
     }
 
 
-def baseline_lambda(own_team: pd.Series, opp_team: pd.Series, is_home: bool) -> float:
-    return _team_lambda_components(own_team, opp_team, is_home)["lambda0"]
+def baseline_lambda(
+    own_team: pd.Series,
+    opp_team: pd.Series,
+    is_home: bool,
+    eta_params: Optional[np.ndarray] = None,
+    paths: Optional[DataPaths] = None,
+) -> float:
+    return _team_lambda_components(own_team, opp_team, is_home, eta_params=eta_params, paths=paths)["lambda0"]
 
 
 # =========================
@@ -805,6 +987,8 @@ def simulate_match(
     home_players,
     away_players,
     params,
+    eta_params: Optional[np.ndarray] = None,
+    paths: Optional[DataPaths] = None,
 ):
     gamma, theta, delta = params
 
@@ -816,8 +1000,8 @@ def simulate_match(
     events = []
 
     # baseline lambdas
-    lambda_h0 = baseline_lambda(home_team, away_team, is_home=True)
-    lambda_a0 = baseline_lambda(away_team, home_team, is_home=False)
+    lambda_h0 = baseline_lambda(home_team, away_team, is_home=True, eta_params=eta_params, paths=paths)
+    lambda_a0 = baseline_lambda(away_team, home_team, is_home=False, eta_params=eta_params, paths=paths)
 
     t = 0.0
 
@@ -903,7 +1087,9 @@ def run_simulation(
     paths: Optional[DataPaths] = None,
 ):
     teams, players, fixtures = load_data(paths=paths, include_finished=include_finished_fixtures)
+    paths = paths or DataPaths()
     player_mode = _resolve_player_mode(players, include_finished_fixtures=include_finished_fixtures)
+    eta_params = estimate_eta_formula_from_history(paths=paths)
 
     gamma = np.array([-0.10, 0.35, 0.18, 0.0])
     theta = np.array([-13.0, 1.5])
@@ -938,7 +1124,7 @@ def run_simulation(
         ap = prepare_players(ap[["player_id", "team_id", "goal_index", "assist_index", "adjusted_minutes"]]) if not ap.empty else pd.DataFrame(columns=["player_id", "team_id", "goal_index", "assist_index", "adjusted_minutes", "g_adj", "a_adj"])
 
         for scenario in range(int(n_scenarios)):
-            res = simulate_match(home, away, hp, ap, params)
+            res = simulate_match(home, away, hp, ap, params, eta_params=eta_params, paths=paths)
             all_results.append(
                 {
                     "match_id": int(fx.match_id),
@@ -960,6 +1146,7 @@ def build_upcoming_prediction_tables(
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     teams, players, fixtures = load_data(paths=paths, include_finished=include_finished_fixtures)
     paths = paths or DataPaths()
+    eta_params = estimate_eta_formula_from_history(paths=paths)
     player_mode = _resolve_player_mode(players, include_finished_fixtures=include_finished_fixtures)
 
     team_name_map: Dict[int, str] = {}
@@ -1005,8 +1192,8 @@ def build_upcoming_prediction_tables(
 
         home = _team_row_for_side(home_base.iloc[0], is_home=True)
         away = _team_row_for_side(away_base.iloc[0], is_home=False)
-        home_lambda = _team_lambda_components(home, away, is_home=True)
-        away_lambda = _team_lambda_components(away, home, is_home=False)
+        home_lambda = _team_lambda_components(home, away, is_home=True, eta_params=eta_params, paths=paths)
+        away_lambda = _team_lambda_components(away, home, is_home=False, eta_params=eta_params, paths=paths)
 
         hp0 = _build_player_pool_from_loaded(
             players,
@@ -1064,7 +1251,7 @@ def build_upcoming_prediction_tables(
                 }
 
         for _ in range(int(n_scenarios)):
-            res = simulate_match(home, away, hp, ap, params)
+            res = simulate_match(home, away, hp, ap, params, eta_params=eta_params, paths=paths)
             sh = int(res["score_home"])
             sa = int(res["score_away"])
             rh = int(res["red_home"])
@@ -1146,17 +1333,20 @@ def build_upcoming_prediction_tables(
                 "eta_base": float(home_lambda["eta"]),
                 "off_fac": float(home_lambda["off_fac"]),
                 "def_fac": float(home_lambda["def_fac"]),
+                "interaction": float(home_lambda["interaction"]),
+                "elo_diff": float(home_lambda["elo_diff"]),
                 "own_xg_side": float(home_lambda["own_xg_side"]),
                 "own_xg_avg": float(home_lambda["own_xg_avg"]),
                 "own_xg_pred_rolling_error": float(home_lambda["own_xg_pred_rolling_error"]),
                 "opp_xgc_side": float(home_lambda["opp_xgc_side"]),
                 "opp_xgc_avg": float(home_lambda["opp_xgc_avg"]),
                 "opp_xgc_pred_rolling_error": float(home_lambda["opp_xgc_pred_rolling_error"]),
-                "eta_intercept": -3.15,
-                "eta_off_coef": 1.485,
-                "eta_def_coef": 1.503,
-                "eta_interaction_coef": -0.174,
-                "eta_scale": 0.5,
+                "eta_intercept": float(home_lambda["eta_intercept"]),
+                "eta_off_coef": float(home_lambda["eta_off_coef"]),
+                "eta_def_coef": float(home_lambda["eta_def_coef"]),
+                "eta_interaction_coef": float(home_lambda["eta_interaction_coef"]),
+                "eta_elo_coef": float(home_lambda["eta_elo_coef"]),
+                "eta_scale": float(home_lambda["eta_scale"]),
                 "gamma1": float(gamma[0]),
                 "gamma2": float(gamma[1]),
                 "gamma3": float(gamma[2]),
@@ -1192,17 +1382,20 @@ def build_upcoming_prediction_tables(
                 "eta_base": float(away_lambda["eta"]),
                 "off_fac": float(away_lambda["off_fac"]),
                 "def_fac": float(away_lambda["def_fac"]),
+                "interaction": float(away_lambda["interaction"]),
+                "elo_diff": float(away_lambda["elo_diff"]),
                 "own_xg_side": float(away_lambda["own_xg_side"]),
                 "own_xg_avg": float(away_lambda["own_xg_avg"]),
                 "own_xg_pred_rolling_error": float(away_lambda["own_xg_pred_rolling_error"]),
                 "opp_xgc_side": float(away_lambda["opp_xgc_side"]),
                 "opp_xgc_avg": float(away_lambda["opp_xgc_avg"]),
                 "opp_xgc_pred_rolling_error": float(away_lambda["opp_xgc_pred_rolling_error"]),
-                "eta_intercept": -3.15,
-                "eta_off_coef": 1.485,
-                "eta_def_coef": 1.503,
-                "eta_interaction_coef": -0.174,
-                "eta_scale": 0.5,
+                "eta_intercept": float(away_lambda["eta_intercept"]),
+                "eta_off_coef": float(away_lambda["eta_off_coef"]),
+                "eta_def_coef": float(away_lambda["eta_def_coef"]),
+                "eta_interaction_coef": float(away_lambda["eta_interaction_coef"]),
+                "eta_elo_coef": float(away_lambda["eta_elo_coef"]),
+                "eta_scale": float(away_lambda["eta_scale"]),
                 "gamma1": float(gamma[0]),
                 "gamma2": float(gamma[1]),
                 "gamma3": float(gamma[2]),
@@ -1301,5 +1494,3 @@ if __name__ == "__main__":
         print(f"Wrote player predictions: {len(player_df)} rows -> SImulator/Full_simulator_player.csv")
     except DataValidationError as exc:
         print(f"[DATA ERROR] {exc}")
-
-

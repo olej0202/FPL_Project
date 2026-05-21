@@ -583,11 +583,11 @@ def Generate_team_data():
                 if(XGC1==0):
                     XGCS.append(GC.values[k])
                 else:
-                    XGCS.append((GC.values[k]*0.2+XGC1*0.8))
+                    XGCS.append((GC.values[k]*0.3+XGC1*0.7))
                 if(XG1==0):
                     XGs.append(GS.values[k])
                 else:
-                    XGs.append((GS.values[k]*0.15+XG1*0.65+0.002*Threat.values[k]))
+                    XGs.append((GS.values[k]*0.25+XG1*0.55+0.002*Threat.values[k]))
                     
                 if(XG1==0):
                     XG2s.append(GS.values[k])
