@@ -17,6 +17,8 @@ N_SCENARIOS = 1000
 EPS = 1e-9
 _BETA_CACHE: Dict[str, np.ndarray] = {}
 _ETA_FORMULA_CACHE: Dict[str, np.ndarray] = {}
+ICT_MEASURE_MIN = 29.0
+ICT_MEASURE_MAX = 162.0
 
 
 @dataclass(frozen=True)
@@ -78,6 +80,15 @@ def _col_or_zero(df: pd.DataFrame, col: str) -> pd.Series:
     return pd.Series(np.zeros(len(df), dtype=float), index=df.index)
 
 
+def _normalize_minmax_01(s: pd.Series) -> pd.Series:
+    x = _to_num(s, np.nan)
+    mn = x.min(skipna=True)
+    mx = x.max(skipna=True)
+    if not np.isfinite(mn) or not np.isfinite(mx) or mx <= mn:
+        return pd.Series(np.zeros(len(x), dtype=float), index=x.index)
+    return ((x - mn) / (mx - mn)).clip(lower=0.0, upper=1.0)
+
+
 def _parse_bool(v) -> bool:
     s = str(v).strip().lower()
     if s in {"1", "true", "yes"}:
@@ -118,9 +129,15 @@ def _load_team_stats(path: Path) -> pd.DataFrame:
         opt_cols = [
             "xgh", "xga", "xg_avg", "xgch", "xgca", "xgc_avg",
             "xg_pred_rolling_error", "xgc_pred_rolling_error",
+            "rolling_ict_index", "rolling_ict_against",
         ]
         for c in opt_cols:
-            src = _pick_col(teams, [c, c.upper(), c.capitalize()])
+            if c == "rolling_ict_index":
+                src = _pick_col(teams, ["rolling_ict_index", "Rolling_ict_index", "Rolling_ICT_Index"])
+            elif c == "rolling_ict_against":
+                src = _pick_col(teams, ["rolling_ict_against", "Rolling_ICT_Against", "Rolling_ict_against"])
+            else:
+                src = _pick_col(teams, [c, c.upper(), c.capitalize()])
             out[c] = _to_num(teams[src], np.nan) if src is not None else np.nan
         return out.dropna(subset=["team_id", "attack_rating", "defence_rating"]).reset_index(drop=True)
 
@@ -199,6 +216,12 @@ def _load_team_stats(path: Path) -> pd.DataFrame:
             "xgc_avg": _to_num(out[xgc_avg_col], np.nan),
             "xg_pred_rolling_error": _to_num(out[_pick_col(out, ["xg_pred_rolling_error"])], 0.0) if _pick_col(out, ["xg_pred_rolling_error"]) is not None else 0.0,
             "xgc_pred_rolling_error": _to_num(out[_pick_col(out, ["xgc_pred_rolling_error"])], 0.0) if _pick_col(out, ["xgc_pred_rolling_error"]) is not None else 0.0,
+            "rolling_ict_index": _to_num(out[_pick_col(out, ["rolling_ict_index", "Rolling_ict_index", "Rolling_ICT_Index"])], np.nan)
+            if _pick_col(out, ["rolling_ict_index", "Rolling_ict_index", "Rolling_ICT_Index"]) is not None
+            else np.nan,
+            "rolling_ict_against": _to_num(out[_pick_col(out, ["rolling_ict_against", "Rolling_ICT_Against", "Rolling_ict_against"])], np.nan)
+            if _pick_col(out, ["rolling_ict_against", "Rolling_ICT_Against", "Rolling_ict_against"]) is not None
+            else np.nan,
         }
     )
     mapped["attack_rating"] = (mapped["attack_rating_home"] + mapped["attack_rating_away"]) / 2.0
@@ -510,6 +533,15 @@ def load_data(paths: Optional[DataPaths] = None, include_finished: bool = False)
             f"Mangler team-kolonner for lambda-uttrykket: {missing_lambda_cols}. "
             "Gi teamdata med disse historiske feltene."
         )
+
+    # Red card ICT feature:
+    # Own_ICT_Measure = Rolling_ict_index + (100 - Rolling_ICT_Against)
+    rolling_ict = _to_num(teams.get("rolling_ict_index", pd.Series(np.nan, index=teams.index)), np.nan)
+    rolling_ict_against = _to_num(teams.get("rolling_ict_against", pd.Series(np.nan, index=teams.index)), np.nan)
+    teams["ict_measure_raw"] = rolling_ict + (100.0 - rolling_ict_against)
+    teams["ict_measure_norm"] = (
+        (teams["ict_measure_raw"] - ICT_MEASURE_MIN) / (ICT_MEASURE_MAX - ICT_MEASURE_MIN)
+    ).clip(lower=0.0, upper=1.0)
 
     return teams.reset_index(drop=True), players.reset_index(drop=True), fixtures.reset_index(drop=True)
 
@@ -873,7 +905,6 @@ def _team_lambda_components(
     opp_xgc_avg = _row_num(opp_team, "xgc_avg", 0.0)
     opp_xgc_err = _row_num(opp_team, "xgc_pred_rolling_error", 0.0)
     elo_diff = _row_num(own_team, "elo_rating", 1500.0) - _row_num(opp_team, "elo_rating", 1500.0)
-
     off_fac = own_xg * 0.4 + 0.6 * own_xg_avg - 0.5 * own_xg_err
     def_fac = opp_xgc * 0.4 + 0.6 * opp_xgc_avg - 0.5 * opp_xgc_err
     interaction = off_fac * def_fac
@@ -938,9 +969,9 @@ def goal_intensity(lambda_0, score_diff, red_diff, t, gamma):
     )
 
 
-def red_card_intensity(t, theta):
+def red_card_intensity(t, theta, ict_diff: float = 0.0):
     t0, t1 = theta
-    return np.exp(t0 + t1 * np.log(max(t, 1.0)))
+    return np.exp(t0 + t1 * np.log(max(t, 1.0)) - 0.08 * float(ict_diff))
 
 
 # =========================
@@ -1002,6 +1033,10 @@ def simulate_match(
     # baseline lambdas
     lambda_h0 = baseline_lambda(home_team, away_team, is_home=True, eta_params=eta_params, paths=paths)
     lambda_a0 = baseline_lambda(away_team, home_team, is_home=False, eta_params=eta_params, paths=paths)
+    home_ict = _row_num(home_team, "ict_measure_norm", 0.0)
+    away_ict = _row_num(away_team, "ict_measure_norm", 0.0)
+    ict_diff_home = home_ict - away_ict
+    ict_diff_away = away_ict - home_ict
 
     t = 0.0
 
@@ -1014,8 +1049,8 @@ def simulate_match(
         l_h = float(np.clip(l_h, 0.0, 0.08))
         l_a = float(np.clip(l_a, 0.0, 0.08))
 
-        l_rh = red_card_intensity(t, theta)
-        l_ra = red_card_intensity(t, theta)
+        l_rh = red_card_intensity(t, theta, ict_diff=ict_diff_home)
+        l_ra = red_card_intensity(t, theta, ict_diff=ict_diff_away)
 
         l_total = l_h + l_a + l_rh + l_ra
 
@@ -1124,7 +1159,15 @@ def run_simulation(
         ap = prepare_players(ap[["player_id", "team_id", "goal_index", "assist_index", "adjusted_minutes"]]) if not ap.empty else pd.DataFrame(columns=["player_id", "team_id", "goal_index", "assist_index", "adjusted_minutes", "g_adj", "a_adj"])
 
         for scenario in range(int(n_scenarios)):
-            res = simulate_match(home, away, hp, ap, params, eta_params=eta_params, paths=paths)
+            res = simulate_match(
+                home,
+                away,
+                hp,
+                ap,
+                params,
+                eta_params=eta_params,
+                paths=paths,
+            )
             all_results.append(
                 {
                     "match_id": int(fx.match_id),
@@ -1194,6 +1237,8 @@ def build_upcoming_prediction_tables(
         away = _team_row_for_side(away_base.iloc[0], is_home=False)
         home_lambda = _team_lambda_components(home, away, is_home=True, eta_params=eta_params, paths=paths)
         away_lambda = _team_lambda_components(away, home, is_home=False, eta_params=eta_params, paths=paths)
+        home_ict = _row_num(home, "ict_measure_norm", 0.0)
+        away_ict = _row_num(away, "ict_measure_norm", 0.0)
 
         hp0 = _build_player_pool_from_loaded(
             players,
@@ -1251,7 +1296,15 @@ def build_upcoming_prediction_tables(
                 }
 
         for _ in range(int(n_scenarios)):
-            res = simulate_match(home, away, hp, ap, params, eta_params=eta_params, paths=paths)
+            res = simulate_match(
+                home,
+                away,
+                hp,
+                ap,
+                params,
+                eta_params=eta_params,
+                paths=paths,
+            )
             sh = int(res["score_home"])
             sa = int(res["score_away"])
             rh = int(res["red_home"])
@@ -1362,6 +1415,10 @@ def build_upcoming_prediction_tables(
                 "win_pct": home_win_pct,
                 "draw_pct": draw_pct,
                 "loss_pct": away_win_pct,
+                "ict_measure_norm": float(home_ict),
+                "opp_ict_measure_norm": float(away_ict),
+                "ict_diff_redcard": float(home_ict - away_ict),
+                "red_ict_coef": -0.08,
                 "scenarios": int(n_scenarios),
             }
         )
@@ -1411,6 +1468,10 @@ def build_upcoming_prediction_tables(
                 "win_pct": away_win_pct,
                 "draw_pct": draw_pct,
                 "loss_pct": home_win_pct,
+                "ict_measure_norm": float(away_ict),
+                "opp_ict_measure_norm": float(home_ict),
+                "ict_diff_redcard": float(away_ict - home_ict),
+                "red_ict_coef": -0.08,
                 "scenarios": int(n_scenarios),
             }
         )

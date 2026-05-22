@@ -2236,7 +2236,7 @@ def _normalize_simtest_team(path):
     return t, v
 
 
-def _combine_sim_sources(full_path, simtest_path, full_sim_weight=0.7):
+def _combine_sim_sources(full_path, simtest_path, full_sim_weight=0.8):
     t1, v1 = _normalize_full_sim_team(full_path)
     t2, v2 = _normalize_simtest_team(simtest_path)
 

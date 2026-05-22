@@ -655,6 +655,7 @@ def Generate_team_data():
             New_team_df["Threat"]=Threat.values
             New_team_df["saves"]=saves.values
             New_team_df["ict_index"]=ict_index.values
+            New_team_df["red_cards"]=red_cards.values
             
             New_team_df["Threat_against"]=Threatagainst['threat'].values
             New_team_df["XGC"]=New_team_df["XGC"]*0.8+0.002*New_team_df["Threat_against"]
