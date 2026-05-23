@@ -383,7 +383,7 @@ function SearchableMultiSelect({
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder={placeholder}
-                className="w-full rounded-xl py-2 pl-9 pr-3 text-sm outline-none"
+                className="w-full rounded-xl py-2 pl-9 pr-3 text-[16px] outline-none md:text-sm"
                 style={{
                   border: `1px solid ${PALETTE.border}`,
                   background: "#ffffff",
@@ -494,7 +494,7 @@ const PlayerRow = React.memo(function PlayerRow({
       }}
     >
       <td
-        className="sticky left-0 z-[1] px-4 py-3 font-semibold"
+        className="sticky left-0 z-[1] w-[128px] max-w-[128px] px-3 py-3 font-semibold sm:w-[220px] sm:max-w-[220px] sm:px-4"
         style={{
           background: idx % 2 === 0 ? "#ffffff" : "#f8fafc",
           borderBottom: "1px solid #e2e8f0",
@@ -502,9 +502,11 @@ const PlayerRow = React.memo(function PlayerRow({
       >
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
-            <div className="truncate">{row.displayName}</div>
+            <div className="truncate text-[13px] sm:text-sm" title={row.displayName}>
+              {row.displayName}
+            </div>
             <div
-              className="mt-1 inline-flex items-center gap-1 text-[11px] opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus:opacity-100"
+              className="mt-1 hidden items-center gap-1 text-[11px] opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus:opacity-100 sm:inline-flex"
               style={{ color: PALETTE.gold }}
             >
               <MousePointerClick size={11} />
@@ -513,7 +515,7 @@ const PlayerRow = React.memo(function PlayerRow({
           </div>
 
           <div
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full opacity-0 transition-all duration-150 group-hover:translate-x-0 group-hover:opacity-100 group-focus:translate-x-0 group-focus:opacity-100"
+            className="hidden h-8 w-8 shrink-0 items-center justify-center rounded-full opacity-0 transition-all duration-150 group-hover:translate-x-0 group-hover:opacity-100 group-focus:translate-x-0 group-focus:opacity-100 sm:flex"
             style={{
               border: `1px solid rgba(95,143,123,0.28)`,
               background: "rgba(95,143,123,0.08)",
@@ -2287,7 +2289,7 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
                     value={playerNameFilter}
                     onChange={(e) => setPlayerNameFilter(e.target.value)}
                     placeholder="Type player name..."
-                    className="w-full rounded-xl py-2 pl-9 pr-3 text-xs outline-none"
+                    className="w-full rounded-xl py-2 pl-9 pr-3 text-[16px] outline-none md:text-xs"
                     style={{
                       border: `1px solid ${PALETTE.border}`,
                       background: "#f8fafc",
@@ -2308,11 +2310,11 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[920px] border-collapse text-sm">
+            <table className="w-full min-w-[760px] border-collapse text-sm sm:min-w-[920px]">
               <thead>
                 <tr>
                   <th
-                    className="sticky left-0 z-[2] px-4 py-3 text-left"
+                    className="sticky left-0 z-[2] w-[128px] max-w-[128px] px-3 py-3 text-left sm:w-[220px] sm:max-w-[220px] sm:px-4"
                     style={{ background: "#ffffff", borderBottom: `1px solid ${PALETTE.gold}` }}
                   >
                     <div className="flex items-center gap-2">
@@ -2556,11 +2558,12 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
                         ? "Search to replace comparison..."
                         : "Search player to compare..."
                     }
-                    className="w-full rounded-xl py-2 pl-9 pr-3 text-sm outline-none"
+                    className="w-full rounded-xl py-2 pl-9 pr-3 text-[16px] outline-none md:text-sm"
                     style={{
                       border: `1px solid ${PALETTE.border}`,
                       background: "#f8fafc",
                       color: PALETTE.beige,
+                      fontSize: "16px",
                     }}
                   />
 

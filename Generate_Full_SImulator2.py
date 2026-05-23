@@ -20,6 +20,15 @@ _ETA_FORMULA_CACHE: Dict[str, np.ndarray] = {}
 ICT_MEASURE_MIN = 29.0
 ICT_MEASURE_MAX = 162.0
 
+# Bonus model settings (used only for top-3 bonus point allocation ranking).
+# Values are BPS-like weights by position for in-match contributions.
+POSITION_EVENT_BONUS = {
+    "GK": {"goal": 12.0, "assist": 9.0, "cs": 12.0},
+    "DEF": {"goal": 12.0, "assist": 9.0, "cs": 12.0},
+    "MID": {"goal": 18.0, "assist": 9.0, "cs": 0.0},
+    "FWD": {"goal": 24.0, "assist": 9.0, "cs": 0.0},
+}
+
 
 @dataclass(frozen=True)
 class DataPaths:
@@ -96,6 +105,24 @@ def _parse_bool(v) -> bool:
     if s in {"0", "false", "no"}:
         return False
     return False
+
+
+def _normalize_position(v) -> str:
+    s = str(v).strip().upper()
+    if s in {"1", "GK", "GKP", "GOALKEEPER"}:
+        return "GK"
+    if s in {"2", "DEF", "D", "DEFENDER"}:
+        return "DEF"
+    if s in {"3", "MID", "M", "MIDFIELDER"}:
+        return "MID"
+    if s in {"4", "FWD", "FW", "ST", "STRIKER", "FORWARD"}:
+        return "FWD"
+    return "MID"
+
+
+def _pos_bonus(pos: str, event: str) -> float:
+    p = _normalize_position(pos)
+    return float(POSITION_EVENT_BONUS.get(p, POSITION_EVENT_BONUS["MID"]).get(event, 0.0))
 
 
 def _validate_required(df: pd.DataFrame, required: List[str], filename: str) -> None:
@@ -249,6 +276,11 @@ def _load_player_stats(path: Path) -> pd.DataFrame:
         out["kickoff_time"] = pd.NaT
         out["_team_code"] = out["team_id"].astype("Int64")
         out["_source_mode"] = "simple"
+        pos_col_simple = _pick_col(out, ["position", "element_type", "gamepos", "pos"])
+        out["position"] = out[pos_col_simple].map(_normalize_position) if pos_col_simple is not None else "MID"
+        out["Rolling_adjusted_BPS"] = _to_num(out[_pick_col(out, ["Rolling_adjusted_BPS", "rolling_adjusted_bps"])], 0.0) if _pick_col(out, ["Rolling_adjusted_BPS", "rolling_adjusted_bps"]) is not None else 0.0
+        out["Rolling_adjusted_BPS_2"] = _to_num(out[_pick_col(out, ["Rolling_adjusted_BPS_2", "rolling_adjusted_bps_2"])], 0.0) if _pick_col(out, ["Rolling_adjusted_BPS_2", "rolling_adjusted_bps_2"]) is not None else 0.0
+        out["pred_minutes"] = out["adjusted_minutes"]
         return out.reset_index(drop=True)
 
     player_id_col = _pick_col(players, ["player_id", "player_code", "element", "id"])
@@ -284,6 +316,8 @@ def _load_player_stats(path: Path) -> pd.DataFrame:
     out["team_id"] = _to_num(out[team_col]).astype("Int64")
     out["name"] = out[name_col].astype(str) if name_col is not None else out["player_id"].astype(str)
     out["_team_code"] = out["team_id"].astype("Int64")
+    pos_col = _pick_col(out, ["position", "element_type", "gamepos", "pos"])
+    out["position"] = out[pos_col].map(_normalize_position) if pos_col is not None else "MID"
 
     has_new = all(
         c in out.columns
@@ -314,6 +348,20 @@ def _load_player_stats(path: Path) -> pd.DataFrame:
             out["adjusted_minutes"] = _to_num(out[minute_col], 0.0).clip(lower=0.0, upper=90.0)
         else:
             out["adjusted_minutes"] = 0.0
+
+    bps1_col = _pick_col(out, ["Rolling_adjusted_BPS", "rolling_adjusted_bps"])
+    bps2_col = _pick_col(out, ["Rolling_adjusted_BPS_2", "rolling_adjusted_bps_2"])
+    out["Rolling_adjusted_BPS"] = _to_num(out[bps1_col], 0.0) if bps1_col is not None else 0.0
+    out["Rolling_adjusted_BPS_2"] = _to_num(out[bps2_col], 0.0) if bps2_col is not None else 0.0
+    pred_minutes_col = _pick_col(out, ["pred_minutes", "Pred_minutes"])
+    if pred_minutes_col is not None:
+        out["pred_minutes"] = _to_num(out[pred_minutes_col], 0.0).clip(lower=0.0, upper=120.0)
+    else:
+        minute_col = _pick_col(out, ["average_minutes", "adjusted_minutes", "minutes"])
+        if minute_col is not None:
+            out["pred_minutes"] = _to_num(out[minute_col], 0.0).clip(lower=0.0, upper=120.0)
+        else:
+            out["pred_minutes"] = 0.0
 
     return out.reset_index(drop=True)
 
@@ -404,6 +452,19 @@ def _build_player_pool_from_loaded(
 
     pool["goal_index"] = _to_num(pool["XG_Index"], 0.0).clip(lower=0.0)
     pool["assist_index"] = _to_num(pool["XA_Index"], 0.0).clip(lower=0.0)
+    if "pred_minutes" in pool.columns:
+        pool["pred_minutes"] = _to_num(pool["pred_minutes"], 0.0).clip(lower=0.0, upper=120.0)
+    else:
+        if "average_minutes" in pool.columns:
+            pool["pred_minutes"] = _to_num(pool["average_minutes"], 0.0).clip(lower=0.0, upper=120.0)
+        else:
+            pool["pred_minutes"] = _to_num(pool["adjusted_minutes"], 0.0).clip(lower=0.0, upper=120.0)
+    if "position" in pool.columns:
+        pool["position"] = pool["position"].map(_normalize_position)
+    else:
+        pool["position"] = "MID"
+    pool["Rolling_adjusted_BPS"] = _col_or_zero(pool, "Rolling_adjusted_BPS")
+    pool["Rolling_adjusted_BPS_2"] = _col_or_zero(pool, "Rolling_adjusted_BPS_2")
     pool["team_id"] = _to_num(pool["_team_code"]).astype("Int64")
     pool["player_id"] = _to_num(pool["player_id"]).astype("Int64")
     return pool
@@ -1267,6 +1328,9 @@ def build_upcoming_prediction_tables(
             "assists": 0.0,
             "clean_sheets": 0.0,
             "points": 0.0,
+            "bonus_points": 0.0,
+            "grunn_bonus": 0.0,
+            "bps_score": 0.0,
             "adjusted_minutes": 0.0,
             "name": "",
         })
@@ -1284,6 +1348,10 @@ def build_upcoming_prediction_tables(
                 home_meta[pid] = {
                     "adjusted_minutes": float(r.get("adjusted_minutes", 0.0)),
                     "name": str(r.get("name", "")),
+                    "position": _normalize_position(r.get("position", "MID")),
+                    "pred_minutes": float(pd.to_numeric(pd.Series([r.get("pred_minutes", r.get("average_minutes", r.get("adjusted_minutes", 0.0)))]), errors="coerce").fillna(0.0).iloc[0]),
+                    "rolling_adjusted_bps": float(pd.to_numeric(pd.Series([r.get("Rolling_adjusted_BPS", 0.0)]), errors="coerce").fillna(0.0).iloc[0]),
+                    "rolling_adjusted_bps_2": float(pd.to_numeric(pd.Series([r.get("Rolling_adjusted_BPS_2", 0.0)]), errors="coerce").fillna(0.0).iloc[0]),
                     **{c: float(pd.to_numeric(pd.Series([r.get(c, 0.0)]), errors="coerce").fillna(0.0).iloc[0]) for c in home_param_cols},
                 }
         if not ap0.empty:
@@ -1292,6 +1360,10 @@ def build_upcoming_prediction_tables(
                 away_meta[pid] = {
                     "adjusted_minutes": float(r.get("adjusted_minutes", 0.0)),
                     "name": str(r.get("name", "")),
+                    "position": _normalize_position(r.get("position", "MID")),
+                    "pred_minutes": float(pd.to_numeric(pd.Series([r.get("pred_minutes", r.get("average_minutes", r.get("adjusted_minutes", 0.0)))]), errors="coerce").fillna(0.0).iloc[0]),
+                    "rolling_adjusted_bps": float(pd.to_numeric(pd.Series([r.get("Rolling_adjusted_BPS", 0.0)]), errors="coerce").fillna(0.0).iloc[0]),
+                    "rolling_adjusted_bps_2": float(pd.to_numeric(pd.Series([r.get("Rolling_adjusted_BPS_2", 0.0)]), errors="coerce").fillna(0.0).iloc[0]),
                     **{c: float(pd.to_numeric(pd.Series([r.get(c, 0.0)]), errors="coerce").fillna(0.0).iloc[0]) for c in away_param_cols},
                 }
 
@@ -1332,14 +1404,31 @@ def build_upcoming_prediction_tables(
             home_cs = sa == 0
             away_cs = sh == 0
 
+            # Bonus score tracking for this scenario (both teams together).
+            bonus_score_scn: Dict[Tuple[int, int], float] = {}
+            for pid, pdata in home_meta.items():
+                key = (home_team_id, pid)
+                minute_factor = float(pdata.get("pred_minutes", 0.0)) / 90.0
+                base_bonus = (0.4 * float(pdata.get("rolling_adjusted_bps", 0.0)) + 0.6 * float(pdata.get("rolling_adjusted_bps_2", 0.0))) * minute_factor
+                bonus_score_scn[key] = float(base_bonus)
+                player_agg[key]["grunn_bonus"] += float(base_bonus)
+            for pid, pdata in away_meta.items():
+                key = (away_team_id, pid)
+                minute_factor = float(pdata.get("pred_minutes", 0.0)) / 90.0
+                base_bonus = (0.4 * float(pdata.get("rolling_adjusted_bps", 0.0)) + 0.6 * float(pdata.get("rolling_adjusted_bps_2", 0.0))) * minute_factor
+                bonus_score_scn[key] = float(base_bonus)
+                player_agg[key]["grunn_bonus"] += float(base_bonus)
+
             for pid, pdata in home_meta.items():
                 mins = float(pdata["adjusted_minutes"])
                 pname = str(pdata["name"])
+                pos = _normalize_position(pdata.get("position", "MID"))
                 key = (home_team_id, pid)
                 g = int(g_scn.get(key, 0))
                 a = int(a_scn.get(key, 0))
                 cs = 1 if home_cs else 0
                 pts = fpl_points(g, a, bool(cs), mins)
+                bonus_score_scn[key] = float(bonus_score_scn.get(key, 0.0)) + _pos_bonus(pos, "goal") * g + _pos_bonus(pos, "assist") * a + _pos_bonus(pos, "cs") * cs
                 d = player_agg[key]
                 d["goals"] += g
                 d["assists"] += a
@@ -1351,11 +1440,13 @@ def build_upcoming_prediction_tables(
             for pid, pdata in away_meta.items():
                 mins = float(pdata["adjusted_minutes"])
                 pname = str(pdata["name"])
+                pos = _normalize_position(pdata.get("position", "MID"))
                 key = (away_team_id, pid)
                 g = int(g_scn.get(key, 0))
                 a = int(a_scn.get(key, 0))
                 cs = 1 if away_cs else 0
                 pts = fpl_points(g, a, bool(cs), mins)
+                bonus_score_scn[key] = float(bonus_score_scn.get(key, 0.0)) + _pos_bonus(pos, "goal") * g + _pos_bonus(pos, "assist") * a + _pos_bonus(pos, "cs") * cs
                 d = player_agg[key]
                 d["goals"] += g
                 d["assists"] += a
@@ -1363,6 +1454,17 @@ def build_upcoming_prediction_tables(
                 d["points"] += pts
                 d["adjusted_minutes"] = mins
                 d["name"] = pname
+
+            # Allocate actual FPL bonus points 3/2/1 to top-3 bonus scores in the match.
+            if bonus_score_scn:
+                rank = sorted(bonus_score_scn.items(), key=lambda x: x[1], reverse=True)
+                bonus_awards = [3.0, 2.0, 1.0]
+                for i, award in enumerate(bonus_awards):
+                    if i < len(rank):
+                        key = rank[i][0]
+                        player_agg[key]["bonus_points"] += float(award)
+            for key, score in bonus_score_scn.items():
+                player_agg[key]["bps_score"] += float(score)
 
         n = float(max(1, int(n_scenarios)))
         home_win_pct = 100.0 * float(np.mean(np.array(home_goals) > np.array(away_goals)))
@@ -1505,6 +1607,9 @@ def build_upcoming_prediction_tables(
                     "pred_assists": float(d["assists"]) / n,
                     "pred_clean_sheets": float(d["clean_sheets"]) / n,
                     "pred_fpl_points": float(d["points"]) / n,
+                    "pred_bonus_points": float(d["bonus_points"]) / n,
+                    "pred_grunn_bonus": float(d["grunn_bonus"]) / n,
+                    "pred_avg_bps": float(d["bps_score"]) / n,
                     "xg_index_base": float(pmeta["xg_index_base"]),
                     "xa_index_base": float(pmeta["xa_index_base"]),
                     "opp_goal_threat_pos": float(pmeta["opp_goal_threat_pos"]),

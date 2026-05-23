@@ -549,7 +549,8 @@ def Generate_team_data():
             XA=team_data.groupby('kickoff_time').filter(lambda x: len(x) >= 5).groupby('kickoff_time')['expected_assists'].sum()
             A=team_data.groupby('kickoff_time').filter(lambda x: len(x) >= 5).groupby('kickoff_time')['assists'].sum()
             red_cards=team_data.groupby('kickoff_time').filter(lambda x: len(x) >= 5).groupby('kickoff_time')['red_cards'].sum()
-            
+            team_data["defensive_contribution"] = team_data.get("defensive_contribution",0)
+            defensive_contribution=team_data.groupby('kickoff_time').filter(lambda x: len(x) >= 5).groupby('kickoff_time')['defensive_contribution'].sum()
             
             
  
@@ -656,6 +657,7 @@ def Generate_team_data():
             New_team_df["saves"]=saves.values
             New_team_df["ict_index"]=ict_index.values
             New_team_df["red_cards"]=red_cards.values
+            New_team_df["defensive_contribution"]=defensive_contribution.values
             
             New_team_df["Threat_against"]=Threatagainst['threat'].values
             New_team_df["XGC"]=New_team_df["XGC"]*0.8+0.002*New_team_df["Threat_against"]
@@ -722,6 +724,7 @@ def Generate_team_data():
         new_team['Rolling_Threat']=new_team['Threat'].rolling(window=20, min_periods=1).mean()
         new_team['Rolling_Saves']=new_team['saves'].rolling(window=20, min_periods=1).mean()
         new_team['Rolling_ict_index']=new_team['ict_index'].rolling(window=20, min_periods=1).mean()
+        new_team['Rolling_Defcon_for']=new_team['defensive_contribution'].where(new_team['defensive_contribution'] > 0).rolling(25, min_periods=1).mean()
         new_team['Rolling_Threat_Against']=new_team['Threat_against'].rolling(window=20, min_periods=1).mean()
         new_team['Rolling_Defcon_against']=new_team['Defcon_against'].where(new_team['Defcon_against'] > 0).rolling(30, min_periods=1).mean()
         
@@ -748,6 +751,8 @@ def Generate_team_data():
         new_team["Rolling_Threat_Against"]=new_team["Rolling_Threat_Against"].shift(1, fill_value=1.5)
         new_team["Rolling_XG"]=new_team["Rolling_XG"].shift(1, fill_value=1.5)
         new_team["Rolling_XGC"]=new_team["Rolling_XGC"].shift(1, fill_value=1.5)
+        new_team["Rolling_Defcon_for"]=new_team["Rolling_Defcon_for"].shift(1, fill_value=77)
+        new_team["Rolling_ict_index"]=new_team["Rolling_ict_index"].shift(1, fill_value=60)
 
         ALL_teams=pd.concat([ALL_teams, new_team], axis=0, ignore_index=True)
     ALL_teams.to_csv("Team_data_transformed.csv")

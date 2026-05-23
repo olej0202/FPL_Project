@@ -930,9 +930,7 @@ def Generate_point_predictions(GW_list):
 
             try:
 
-                bps.append(max(0.1,(xgb_bps_player["pred"].values[i]*0.2
-                                   +stat_bps_player["pred"].values[i]*0.8
-                                   +max(0.5,cluster_bps_player["pred"].values[i]*0.0*0.04)*0))*1)
+                bps.append(simulation_player2["pred_bonus_points"].values[i])
             except:
                 bps.append(0)
 
@@ -987,18 +985,18 @@ def Generate_point_predictions(GW_list):
             New_dataset.to_csv("debug1.csv")
             
         if(position=="FWD"):
-            summary_dataset["Points_prediction"]=(2+summary_dataset["Goal_pred"]*5.2
-                                                  +summary_dataset["Assist_pred"]*3.4
+            summary_dataset["Points_prediction"]=(2+summary_dataset["Goal_pred"]*4
+                                                  +summary_dataset["Assist_pred"]*3
                                                   +summary_dataset["Bonus_pred"]
-                                                  -summary_dataset["Card_pred"] )*0.9+0.1*summary_dataset["Fantasy_pred"]+summary_dataset["CBI_pred"]*0.7*2
+                                                  -summary_dataset["Card_pred"] )+summary_dataset["CBI_pred"]*2
             
             summary_dataset["Risk_share"]=(summary_dataset["Goal_pred"]*5.2+summary_dataset["Assist_pred"]*3.4)/summary_dataset["Points_prediction"]
         elif(position=="MID"):
-            summary_dataset["Points_prediction"]=(2+summary_dataset["Goal_pred"]*5.5
-                                                  +summary_dataset["Assist_pred"]*3.4
+            summary_dataset["Points_prediction"]=(2+summary_dataset["Goal_pred"]*5
+                                                  +summary_dataset["Assist_pred"]*3
                                                   +summary_dataset["Bonus_pred"]
                                                   +summary_dataset["GC_pred"]*0.8
-                                                  -summary_dataset["Card_pred"])*0.9+0.1*summary_dataset["Fantasy_pred"]+summary_dataset["CBI_pred"]*2
+                                                  -summary_dataset["Card_pred"])+summary_dataset["CBI_pred"]*2
             
             summary_dataset["Risk_share"]=(summary_dataset["Goal_pred"]*5.5+summary_dataset["Assist_pred"]*3.4+summary_dataset["GC_pred"]*0.8)/summary_dataset["Points_prediction"]
             
@@ -1006,16 +1004,18 @@ def Generate_point_predictions(GW_list):
             summary_dataset["Points_prediction"]=(2
                                                   +summary_dataset["Save_pred"]/4
                                                   + (30 - np.minimum(30, summary_dataset["GC_pred"]*100)) / -15
-                                                  +summary_dataset["GC_pred"]*5)
+                                                  +summary_dataset["GC_pred"]*4
+                                                  +summary_dataset["Bonus_pred"] )
+
             summary_dataset["Risk_share"]=(summary_dataset["GC_pred"]*5)/summary_dataset["Points_prediction"]
 
         else:
-            summary_dataset["Points_prediction"]=(1+summary_dataset["Goal_pred"]*6.5
-                                                  +summary_dataset["Assist_pred"]*3.4
+            summary_dataset["Points_prediction"]=(1+summary_dataset["Goal_pred"]*6
+                                                  +summary_dataset["Assist_pred"]*3
                                                   +summary_dataset["Bonus_pred"]
-                                                  +summary_dataset["GC_pred"]*5
+                                                  +summary_dataset["GC_pred"]*4
                                                   + (30 - np.minimum(30, summary_dataset["GC_pred"]*100)) / -15
-                                                  -summary_dataset["Card_pred"])*0.9+0.1*summary_dataset["Fantasy_pred"]+summary_dataset["CBI_pred"]*2
+                                                  -summary_dataset["Card_pred"])+summary_dataset["CBI_pred"]*2
             summary_dataset["Risk_share"]=(summary_dataset["Goal_pred"]*6.5+summary_dataset["Assist_pred"]*3.4+summary_dataset["GC_pred"]*3.5)/summary_dataset["Points_prediction"]
      
         
