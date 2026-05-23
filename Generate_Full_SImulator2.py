@@ -429,25 +429,41 @@ def _build_player_pool_from_loaded(
         pool["XA_Index"] = _col_or_zero(pool, "assist_index").clip(lower=0.0)
         pool["adjusted_minutes"] = _col_or_zero(pool, "adjusted_minutes").clip(lower=0.0, upper=90.0)
 
-    # Requested blend:
-    # goals: 0.65*current_xg_index + 0.15*Opp_Goal_Threat_Pos + 0.20*Understat_POSXG_Share
-    # assists: 0.65*current_xa_index + 0.15*Opp_Assist_Threat_Pos + 0.20*Understat_POSXA_Share
-    pool["xg_index_base"] = _to_num(pool["XG_Index"], 0.0)
-    pool["xa_index_base"] = _to_num(pool["XA_Index"], 0.0)
+    # Requested goal-index formula:
+    # Goal_Statistics*0.3 + Share_of_XG*0.15 + Share_of_XG_Short*0.1
+    # + Understat_POSXG_Share*0.3 + Opp_Goal_Threat_Pos*0.15
+    goal_stats = _col_or_zero(pool, "Goal_Statistics")
+    goal_stats_share = _col_or_zero(pool, "Goal_Statistics_share")
+    goal_stats_use = goal_stats.where(goal_stats.abs() > EPS, goal_stats_share)
+
     pool["opp_goal_threat_pos"] = _col_or_zero(pool, "Opp_Goal_Threat_Pos")
     pool["opp_assist_threat_pos"] = _col_or_zero(pool, "Opp_Assist_Threat_Pos")
     pool["understat_posxg_share"] = _col_or_zero(pool, "Understat_POSXG_Share")
     pool["understat_posxa_share"] = _col_or_zero(pool, "Understat_POSXA_Share")
+    assist_stats = _col_or_zero(pool, "Assist_Statistics")
+    assist_stats_share = _col_or_zero(pool, "Assist_Statistics_share")
+    assist_stats_use = assist_stats.where(assist_stats.abs() > EPS, assist_stats_share)
+
+    pool["xa_index_base"] = (
+        assist_stats_use * 0.3
+        + _col_or_zero(pool, "Share_of_XA") * 0.15
+        + _col_or_zero(pool, "Share_of_XA_Short") * 0.1
+        + pool["understat_posxa_share"] * 0.3
+    )
+    pool["xg_index_base"] = (
+        goal_stats_use * 0.3
+        + _col_or_zero(pool, "Share_of_XG") * 0.15
+        + _col_or_zero(pool, "Share_of_XG_Short") * 0.1
+        + pool["understat_posxg_share"] * 0.3
+    )
 
     pool["XG_Index"] = (
-        pool["xg_index_base"] * 0.65
+        pool["xg_index_base"]
         + pool["opp_goal_threat_pos"] * 0.15
-        + pool["understat_posxg_share"] * 0.20
     )
     pool["XA_Index"] = (
-        pool["xa_index_base"] * 0.65
+        pool["xa_index_base"]
         + pool["opp_assist_threat_pos"] * 0.15
-        + pool["understat_posxa_share"] * 0.20
     )
 
     pool["goal_index"] = _to_num(pool["XG_Index"], 0.0).clip(lower=0.0)

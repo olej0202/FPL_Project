@@ -27,15 +27,15 @@ class StatFormulaConfig:
 
 @dataclass(frozen=True)
 class SimulatorTestConfig:
-    team_history_path: Path = Path("Team_data_transformed2.csv")
+    team_history_path: Path = Path("Team_data_newest3.csv")
     fixtures_path: Path = Path("Fantasy_season_Fixtures_EXPANDED.csv")
-    current_teams_path: Path = Path("Raw_Data_25/current_teams.csv")
+    current_teams_path: Path = Path("Team_data_newest3.csv")
     player_prediction_path: Path = Path("Player_Prediction_set.csv")
     player_history_path: Path = Path("ML_training2.csv")
     rolling_window: int = 20
     test_teams_output_path: Path = Path("TestTeams.csv")
     csv_float_format: str = "%.6f"
-    assist_credit_prob: float = 0.75
+    assist_credit_prob: float = 0.95
 
 
 @dataclass(frozen=True)
@@ -44,9 +44,9 @@ class SimulationControlConfig:
     source: str = "upcoming"
 
     # Core CSV paths
-    team_history_path: Path = Path("Team_data_transformed2.csv")
+    team_history_path: Path = Path("Team_data_newest3.csv")
     fixtures_path: Path = Path("Fantasy_season_Fixtures_EXPANDED.csv")
-    current_teams_path: Path = Path("Raw_Data_25/current_teams.csv")
+    current_teams_path: Path = Path("Team_data_newest3.csv")
     player_prediction_path: Path = Path("Player_Prediction_set.csv")
     player_history_path: Path = Path("ML_training2.csv")
 
@@ -68,7 +68,7 @@ class SimulationControlConfig:
     rolling_window: int = 20
     csv_float_format: str = "%.6f"
     write_outputs: bool = True
-    assist_credit_prob: float = 0.75
+    assist_credit_prob: float = 0.95
 
     # Formula settings
     intercept: float = -3.15
@@ -239,6 +239,11 @@ def read_current_teams_df(path: Path) -> pd.DataFrame:
     out["id"] = pd.to_numeric(out["id"], errors="coerce")
     out["code"] = pd.to_numeric(out["code"], errors="coerce")
     out["name"] = out["name"].astype(str)
+    if "kickoff_time" in out.columns:
+        out["kickoff_time"] = pd.to_datetime(out["kickoff_time"], errors="coerce", utc=True)
+        out = out.sort_values(["id", "kickoff_time"], na_position="last")
+        out = out.groupby("id", as_index=False, group_keys=False).tail(1)
+    out = out.drop_duplicates(subset=["id", "code", "name"], keep="last")
     return out[["id", "code", "name"]]
 
 
@@ -769,18 +774,44 @@ def _build_player_pool_from_loaded(
     pool = pool.sort_values(["name", "kickoff_time"], na_position="last")
     pool = pool.groupby("name", as_index=False, group_keys=False).tail(1).reset_index(drop=True)
     
+    def _col_or_zero(df: pd.DataFrame, col: str) -> pd.Series:
+        if col in df.columns:
+            return pd.to_numeric(df[col], errors="coerce").fillna(0.0)
+        return pd.Series(np.zeros(len(df), dtype=float), index=df.index)
+
+    goal_stats = _col_or_zero(pool, "Goal_Statistics")
+    goal_stats_share = _col_or_zero(pool, "Goal_Statistics_share")
+    goal_stats_use = goal_stats.where(goal_stats.abs() > 1e-9, goal_stats_share)
+
+    assist_stats = _col_or_zero(pool, "Assist_Statistics")
+    assist_stats_share = _col_or_zero(pool, "Assist_Statistics_share")
+    assist_stats_use = assist_stats.where(assist_stats.abs() > 1e-9, assist_stats_share)
     if mode_norm == "histo":
-        risk_adj_minutes_factor = np.minimum(1,(pool["minutes"]+0.01)/90)
-        pool["XG_Index"] =pool['Goal_Statistics']*0.4+pool['Share_of_XG']*0.4+pool['Share_of_XG_Short']*0.2
-        pool["XG_Index"]=pool["XG_Index"]*risk_adj_minutes_factor
-        pool["XA_Index"] = pool['Assist_Statistics']*0.4+pool['Share_of_XA']*0.4+pool['Share_of_XA_Short']*0.2
-        pool["XA_Index"]=pool["XA_Index"]*risk_adj_minutes_factor
+        minutes_base = _col_or_zero(pool, "minutes")
     else:
-        risk_adj_minutes_factor = np.minimum(1,(pool["average_minutes"]+0.01)/90)
-        pool["XG_Index"] =pool['Goal_Statistics_share']*0.3*+pool["Rolling_adjusted_Threat_per90_share"]*0.2+pool['Rolling_adjusted_XG']*0.1*risk_adj_minutes_factor+pool['Big_Chances']*0.1*0.33*risk_adj_minutes_factor+pool['Share_of_XG']*0.3*risk_adj_minutes_factor+pool['Share_of_XG_Short']*0.0*risk_adj_minutes_factor
-        pool["XG_Index"]=pool["XG_Index"]*0.7+0.3*pool["Opp_Goal_Threat_Pos"]*risk_adj_minutes_factor
-        pool["XA_Index"] = pool['Assist_Statistics_share']*0.4+pool['Rolling_adjusted_XA']*0.1*risk_adj_minutes_factor+pool["Big_Chances_Created"]*0.5 * 0.2*risk_adj_minutes_factor+pool['Share_of_XA']*0.2*risk_adj_minutes_factor+pool['Share_of_XA_Short']*0.1*risk_adj_minutes_factor
-        pool["XA_Index"]=pool["XA_Index"]*0.7+0.3*pool["Opp_Assist_Threat_Pos"]*risk_adj_minutes_factor
+        minutes_base = _col_or_zero(pool, "average_minutes")
+        if float(minutes_base.abs().sum()) <= 1e-9:
+            minutes_base = _col_or_zero(pool, "minutes")
+    risk_adj_minutes_factor = np.minimum(1.0, (minutes_base + 0.01) / 90.0).clip(lower=0.0)
+
+    pool["XG_Index"] = (
+        goal_stats_use * 0.3
+        + _col_or_zero(pool, "Share_of_XG") * 0.15
+        + _col_or_zero(pool, "Share_of_XG_Short") * 0.1
+        + _col_or_zero(pool, "Understat_POSXG_Share") * 0.3
+        + _col_or_zero(pool, "Opp_Goal_Threat_Pos") * 0.15
+    )
+    pool["XA_Index"] = (
+        assist_stats_use * 0.3
+        + _col_or_zero(pool, "Share_of_XA") * 0.15
+        + _col_or_zero(pool, "Share_of_XA_Short") * 0.1
+        + _col_or_zero(pool, "Understat_POSXA_Share") * 0.3
+        + _col_or_zero(pool, "Opp_Assist_Threat_Pos") * 0.15
+    )
+    pool["XG_Index"] = pool["XG_Index"] * risk_adj_minutes_factor
+    pool["XA_Index"] = pool["XA_Index"] * risk_adj_minutes_factor
+    pool["XG_Index"] = pd.to_numeric(pool["XG_Index"], errors="coerce").fillna(0.0).clip(lower=0.0)
+    pool["XA_Index"] = pd.to_numeric(pool["XA_Index"], errors="coerce").fillna(0.0).clip(lower=0.0)
     return pool
 
 

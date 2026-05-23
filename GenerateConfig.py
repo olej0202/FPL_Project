@@ -53,6 +53,7 @@ Manual_min=[
         #Afcon
         {"name": "Walter_Benítez", "type": "const",   "GW": "any", "value": 0},
         {"name": "Robin_Roefs", "type": "const",   "GW": "any", "value": 90},
+        {"name": "Daniel_Bentley", "type": "const",   "GW": "any", "value": 0},
 
 
     ]
