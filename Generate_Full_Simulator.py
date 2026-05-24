@@ -83,7 +83,7 @@ class SimulationControlConfig:
     pass_scale: float = 0.77
     goal_scale: float = 0.4
     attack_base: float = 9.5
-    defence_base: float = 0.35
+    defence_base: float = 0.34
 
     # Parameter optimization switch/settings
     run_parameter_optimization: int = 0
@@ -99,7 +99,7 @@ class SimulatorTuningParams:
     pass_scale: float = 0.77          # multiplier in pass_percent
     goal_scale: float = 0.4          # multiplier in goal_percent
     attack_base: float = 9.5         # base multiplier in team_attacks
-    defence_base: float = 0.35       # coefficient in team_defences
+    defence_base: float = 0.34       # coefficient in team_defences
 
 
 def _to_bool_was_home(v) -> bool:

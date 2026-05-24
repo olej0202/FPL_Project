@@ -25,7 +25,7 @@ Spurs,6
 ,Ipswich,40"""
 
 
-Manual_team_offensive_adjustments = {21:1.1,91:1.1,6:1.1,  }
+Manual_team_offensive_adjustments = {21:1.15,91:1.1,6:1.1,  }
     
     
     
@@ -49,15 +49,31 @@ Manual_Player_Risk={
         "Jørgen_Strand Larsen":0.6,        
 }
 
-Manual_min=[
-        #Afcon
-        {"name": "Walter_Benítez", "type": "const",   "GW": "any", "value": 0},
-        {"name": "Robin_Roefs", "type": "const",   "GW": "any", "value": 90},
-        {"name": "Daniel_Bentley", "type": "const",   "GW": "any", "value": 0},
+Manual_min = [
+    # Afcon
+    {"name": "Walter_Benítez", "type": "const", "GW": "any", "value": 0},
+    {"name": "Robin_Roefs", "type": "const", "GW": "any", "value": 90},
+    {"name": "Daniel_Bentley", "type": "const", "GW": "any", "value": 0},
 
-
-    ]
-
+    {"name": "Noni_Madueke", "type": "const", "GW": "any", "value": 90},
+    {"name": "Declan_Rice", "type": "const", "GW": "any", "value": 50},
+    {"name": "Bukayo_Saka", "type": "const", "GW": "any", "value": 40},
+    {"name": "Gabriel_dos Santos Magalhães", "type": "const", "GW": "any", "value": 70},
+    {"name": "Gabriel_dos Santos Magalhães", "type": "const", "GW": "any", "value": 70},
+    {"name": "Gabriel_Martinelli Silva", "type": "const", "GW": "any", "value": 90},
+    {"name": "Ollie_Watkins", "type": "const", "GW": "any", "value": 30},
+    {"name": "Morgan_Rogers", "type": "const", "GW": "any", "value": 30},
+    {"name": "Tammy_Abraham", "type": "const", "GW": "any", "value": 90},
+    {"name": "Danny_Welbeck", "type": "const", "GW": "any", "value": 90},
+    {"name": "Diego_Gómez Amarilla", "type": "const", "GW": "any", "value": 90},
+    {"name": "João_Pedro Junqueira de Jesus", "type": "const", "GW": "any", "value": 75},
+    {"name": "Cody_Gakpo", "type": "const", "GW": "any", "value": 80},
+    {"name": "Florian_Wirtz", "type": "const", "GW": "any", "value": 80},
+    {"name": "Mohamed_Salah", "type": "const", "GW": "any", "value": 80},
+    {"name": "Marc_Guéhi", "type": "const", "GW": "any", "value": 70},
+    {"name": "Antoine_Semenyo", "type": "const", "GW": "any", "value": 65},
+    {"name": "Nico_O'Reilly", "type": "const", "GW": "any", "value": 75},
+]
 
 NEW_TEAMS=[]
 NEW_TEAMS_NAME=[]
