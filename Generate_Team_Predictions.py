@@ -1548,7 +1548,7 @@ def GenerateTeamPredictions_Results(fixture_path, current_team_path, horizon):
     return result_df, ALL_pred
 
 
-def build_current_table_from_fixtures(fixture_path, current_teams_path) -> pd.DataFrame:
+def build_current_table_from_fixtures(fixture_path, current_teams_path, time_list=None) -> pd.DataFrame:
     """
     Reads fixtures and current teams, returns a league table with:
     team_id, code, name, played, points, gf, ga, gd
@@ -1567,7 +1567,21 @@ def build_current_table_from_fixtures(fixture_path, current_teams_path) -> pd.Da
             .astype(bool)
         )
 
-    fin = df.loc[df["finished"]].copy()
+    fin = pd.DataFrame()
+    if time_list is not None and "event" in df.columns:
+        gws = []
+        for v in list(time_list):
+            try:
+                gws.append(int(float(v)))
+            except Exception:
+                continue
+        if gws:
+            df["event"] = pd.to_numeric(df["event"], errors="coerce")
+            cutoff = min(gws)
+            fin = df.loc[df["event"] < cutoff].copy()
+
+    if fin.empty:
+        fin = df.loc[df["finished"]].copy()
 
     fin["team_h_score"] = pd.to_numeric(fin["team_h_score"], errors="coerce")
     fin["team_a_score"] = pd.to_numeric(fin["team_a_score"], errors="coerce")
@@ -1596,24 +1610,35 @@ def build_current_table_from_fixtures(fixture_path, current_teams_path) -> pd.Da
         ga=("team_h_score", "sum"),
     ).rename(columns={"team_a": "team_id"})
 
-    table = (
-        pd.concat([home_agg, away_agg], ignore_index=True)
-        .groupby("team_id", as_index=False)[["played", "points", "gf", "ga"]]
-        .sum()
-    )
+    if home_agg.empty and away_agg.empty:
+        table = pd.DataFrame(columns=["team_id", "played", "points", "gf", "ga"])
+    else:
+        table = (
+            pd.concat([home_agg, away_agg], ignore_index=True)
+            .groupby("team_id", as_index=False)[["played", "points", "gf", "ga"]]
+            .sum()
+        )
 
-    table["gd"] = table["gf"] - table["ga"]
+    if table.empty:
+        table["gd"] = pd.Series(dtype=float)
+    else:
+        table["gd"] = table["gf"] - table["ga"]
 
     # --- Current teams ---
     teams = pd.read_csv(current_teams_path)[["id", "code", "name"]]
 
-    # Join
-    table = table.merge(
-        teams,
-        left_on="team_id",
-        right_on="id",
-        how="left"
-    ).drop(columns="id")
+    # Join (if no finished rows were found, seed table with all teams and zero baseline).
+    if table.empty:
+        table = teams.rename(columns={"id": "team_id"}).copy()
+        for c in ["played", "points", "gf", "ga", "gd"]:
+            table[c] = 0
+    else:
+        table = table.merge(
+            teams,
+            left_on="team_id",
+            right_on="id",
+            how="left"
+        ).drop(columns="id")
 
     # Final sort
     table = table.sort_values(
@@ -1621,7 +1646,8 @@ def build_current_table_from_fixtures(fixture_path, current_teams_path) -> pd.Da
         ascending=[False, False, False, True],
     ).reset_index(drop=True)
 
-    table.to_csv("Current_Table_Standings.csv")
+    table.to_csv("Current_Table_Standings.csv", index=False)
+    return table
 
 def build_predicted_table(
     table_df: pd.DataFrame,
@@ -1694,6 +1720,8 @@ def build_predicted_table_with_gw(
     points_col_name: str = "predicted_points",   # this will mean "predicted points THIS GW"
     gw_col: str = "GW",
 ) -> pd.DataFrame:
+    # Guard against duplicate column names causing ambiguous row access in apply/indexing.
+    table_df = table_df.loc[:, ~table_df.columns.duplicated()].copy()
     preds = pd.read_csv(prediction_path)
 
     required = {"team_code", "win_Percent", "Draw_percent", gw_col}
@@ -1727,6 +1755,7 @@ def build_predicted_table_with_gw(
         )
 
         predicted_table = table_df.merge(team_pred_points, on="code", how="left")
+        predicted_table = predicted_table.loc[:, ~predicted_table.columns.duplicated()].copy()
         predicted_table[points_col_name] = predicted_table[points_col_name].fillna(0)
 
         # update cumulative predicted points
@@ -1759,10 +1788,15 @@ def build_predicted_table_with_gw(
                 return "down"
             return "same"
 
-        predicted_table["movement"] = predicted_table.apply(
-            lambda r: get_movement(r["code"], r["position"]),
-            axis=1
-        )
+        movement_vals = []
+        code_series = pd.to_numeric(predicted_table["code"], errors="coerce")
+        pos_series = pd.to_numeric(predicted_table["position"], errors="coerce")
+        for c, p in zip(code_series, pos_series):
+            if pd.isna(c) or pd.isna(p):
+                movement_vals.append("same")
+            else:
+                movement_vals.append(get_movement(int(c), int(p)))
+        predicted_table["movement"] = movement_vals
 
         prev_positions = dict(zip(predicted_table["code"].astype(int), predicted_table["position"].astype(int)))
 
@@ -1790,7 +1824,14 @@ def build_predicted_table_with_gw(
     return final_table
 
 
-def GenerateTeamPredictions(fixture_path, current_team_path, horizon, sim_full_weight=1):
+def GenerateTeamPredictions(
+    fixture_path,
+    current_team_path,
+    horizon,
+    sim_full_weight=1,
+    time_list=None,
+    standings_fixture_path=None,
+):
     GenerateTeamPredictions1(fixture_path, current_team_path,horizon)
     GenerateTeamPredictions2(fixture_path, current_team_path,horizon)
     GenerateTeamPredictions_Results(fixture_path, current_team_path,horizon)
@@ -1801,6 +1842,23 @@ def GenerateTeamPredictions(fixture_path, current_team_path, horizon, sim_full_w
     team_results2=pd.read_csv("Team_prediction_results2.csv")
 
     team_results_path = "Team_prediction_results2.csv"
+    gw_filter = None
+    if time_list is not None:
+        gws = []
+        for v in list(time_list):
+            try:
+                gws.append(int(float(v)))
+            except Exception:
+                continue
+        gw_filter = set(gws) if gws else None
+
+    if gw_filter is not None:
+        if "GW" in team_pred1.columns:
+            team_pred1 = team_pred1[pd.to_numeric(team_pred1["GW"], errors="coerce").isin(gw_filter)].copy()
+        if "GW" in team_pred2.columns:
+            team_pred2 = team_pred2[pd.to_numeric(team_pred2["GW"], errors="coerce").isin(gw_filter)].copy()
+        if "GW" in team_results2.columns:
+            team_results2 = team_results2[pd.to_numeric(team_results2["GW"], errors="coerce").isin(gw_filter)].copy()
     team_pred_frames = [team_pred1.copy(), team_pred2.copy()]
     team_result_frames = [team_results2.copy()]
 
@@ -1894,10 +1952,19 @@ def GenerateTeamPredictions(fixture_path, current_team_path, horizon, sim_full_w
     
     team_pred_visual1=pd.read_csv("Team_prediction_visual1.csv")
     team_pred_visual2=pd.read_csv("Team_prediction_visual2.csv")
+    if gw_filter is not None:
+        if "GW" in team_pred_visual1.columns:
+            team_pred_visual1 = team_pred_visual1[pd.to_numeric(team_pred_visual1["GW"], errors="coerce").isin(gw_filter)].copy()
+        if "GW" in team_pred_visual2.columns:
+            team_pred_visual2 = team_pred_visual2[pd.to_numeric(team_pred_visual2["GW"], errors="coerce").isin(gw_filter)].copy()
     try:
         team_pred_visual3 = pd.read_csv("Team_prediction_visual3.csv")
+        if gw_filter is not None and "GW" in team_pred_visual3.columns:
+            team_pred_visual3 = team_pred_visual3[pd.to_numeric(team_pred_visual3["GW"], errors="coerce").isin(gw_filter)].copy()
         try:
             team_results_visual = pd.read_csv("Team_prediction_visual_results3.csv")
+            if gw_filter is not None and "GW" in team_results_visual.columns:
+                team_results_visual = team_results_visual[pd.to_numeric(team_results_visual["GW"], errors="coerce").isin(gw_filter)].copy()
         except Exception:
             team_results_visual = pd.DataFrame(
                 {
@@ -1916,6 +1983,8 @@ def GenerateTeamPredictions(fixture_path, current_team_path, horizon, sim_full_w
     except Exception as e:
         team_pred_visual3 = team_pred_visual2.copy()
         team_results_visual = pd.read_csv("Team_prediction_visual_results2.csv")
+        if gw_filter is not None and "GW" in team_results_visual.columns:
+            team_results_visual = team_results_visual[pd.to_numeric(team_results_visual["GW"], errors="coerce").isin(gw_filter)].copy()
         print(f"[GenerateTeamPredictions] Model-3 visual files not used, fallback to model-2: {e}")
 
     vis_keys = ["GW", "pred", "home_code", "away_code", "home_team", "away_team"]
@@ -2040,7 +2109,8 @@ def GenerateTeamPredictions(fixture_path, current_team_path, horizon, sim_full_w
         )
     team_pred_visual1.to_csv("Team_prediction_visual.csv")
     
-    build_current_table_from_fixtures(fixture_path, current_team_path)
+    standings_src = standings_fixture_path if standings_fixture_path is not None else fixture_path
+    build_current_table_from_fixtures(standings_src, current_team_path, time_list=time_list)
     predicted_table = build_predicted_table(
         table_df=pd.read_csv("Current_Table_Standings.csv"),
         prediction_path=team_results_path

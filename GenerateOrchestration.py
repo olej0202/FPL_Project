@@ -52,15 +52,58 @@ class DeepNN(nn.Module):
             return self.model(x)
 
 
+def _normalize_time_list(time_list):
+    out = []
+    for v in list(time_list or []):
+        try:
+            out.append(int(float(v)))
+        except Exception:
+            continue
+    # Stable unique preserving order.
+    seen = set()
+    uniq = []
+    for gw in out:
+        if gw not in seen:
+            seen.add(gw)
+            uniq.append(gw)
+    return uniq
+
+
+def _filter_fixtures_by_timelist(
+    input_path: str,
+    time_list,
+    output_path: Path,
+    force_unfinished: bool = False,
+) -> Path:
+    df = pd.read_csv(input_path)
+    if "event" not in df.columns:
+        raise ValueError(f"Fixture file {input_path} mangler kolonnen 'event'.")
+    gws = _normalize_time_list(time_list)
+    if not gws:
+        raise ValueError("time_list er tom eller ugyldig; kan ikke filtrere fixtures.")
+    out = df.copy()
+    out["event"] = pd.to_numeric(out["event"], errors="coerce")
+    out = out[out["event"].isin(gws)].copy()
+    if force_unfinished and "finished" in out.columns:
+        out["finished"] = False
+    if out.empty:
+        raise ValueError(
+            f"Ingen fixtures etter filtrering av {input_path} med time_list={gws}."
+        )
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    out.to_csv(output_path, index=False)
+    return output_path
+
+
 def Data_Extraction(season,is_new_season,has_been_error):
-    #main_Extract(season, is_new_season, has_been_error)
+    main_Extract(season, is_new_season, has_been_error)
     current_players(season)
     current_teams(season)
-    #main_Extract_Understat(season)
+    main_Extract_Understat(season)
 
 
 def Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos,Understat_path,Understat_shots_path):
-    #main_Transform()
+    main_Transform()
     Generate_Understat_dataset(current_player_path,run_player_pos)
     Generate_Shots_data(Understat_path,Understat_shots_path,current_player_path,current_team_path)
     team_data(current_team_path)
@@ -92,14 +135,31 @@ def Data_Predictions(
     player_prediction_path = Path(player_prediction_path_25)
     player_history_path = Path(player_history_path_25)
     fixtures_expanded_path = Path(fixtures_expanded_path_25)
+    gw_list = _normalize_time_list(time_list)
+    if not gw_list:
+        raise ValueError("time_list er tom/ugyldig i Data_Predictions.")
+
+    filtered_fixture_path = _filter_fixtures_by_timelist(
+        str(fixture_path),
+        gw_list,
+        sim_output_dir / "fixtures_filtered_by_timelist.csv",
+        force_unfinished=True,
+    )
+    filtered_fixtures_expanded_path = _filter_fixtures_by_timelist(
+        str(fixtures_expanded_path),
+        gw_list,
+        sim_output_dir / "fixtures_expanded_filtered_by_timelist.csv",
+        force_unfinished=True,
+    )
 
     # Trigger full simulator parameter optimization with all read paths passed in.
     full_sim_control = FullSimulatorControlConfig(
         team_history_path=team_history_path,
-        fixtures_path=fixtures_expanded_path,
+        fixtures_path=filtered_fixtures_expanded_path,
         current_teams_path=team_path,
         player_prediction_path=player_prediction_path,
         player_history_path=player_history_path,
+        n_upcoming=len(gw_list),
         optimization_output_path=sim_output_dir / "simtest_parameter_search.csv",
         optimization_best_output_path=sim_output_dir / "simtest_parameter_best.csv",
         write_outputs=True,
@@ -109,7 +169,7 @@ def Data_Predictions(
 
     print("Running core match/player simulator...")
     RunCoreSimulator(
-        fixture_path=fixture_path,
+        fixture_path=filtered_fixture_path,
         current_teams_path=team_path,
         current_players_path=player_path,
         team_history_path=team_history_path,
@@ -119,12 +179,12 @@ def Data_Predictions(
         output_player_path=sim_output_dir / "player_outcomes_per_gw.csv",
         simulations=5000,
         seed=42,
-        horizon_gws=n_points_in_future,
+        horizon_gws=len(gw_list),
     )
 
     print("Running detailed attack-turn simulator...")
     RunDetailedMatchSimulator(
-        fixture_path=fixture_path,
+        fixture_path=filtered_fixture_path,
         current_teams_path=team_path,
         current_players_path=player_path,
         team_history_path=team_history_path,
@@ -135,7 +195,7 @@ def Data_Predictions(
         sample_match_path=sim_output_dir / "sample_detailed_match.txt",
         simulations=3000,
         seed=42,
-        horizon_gws=n_points_in_future,
+        horizon_gws=len(gw_list),
     )
 
     print("Running full stochastic simulator v2 (team/player upcoming outputs)...")
@@ -156,6 +216,8 @@ def Data_Predictions(
         ),
         fixtures_candidates=(
             Path("fixtures.csv"),
+            filtered_fixtures_expanded_path,
+            filtered_fixture_path,
             fixtures_expanded_path,
             fixture_path,
             Path("Fantasy_season_Fixtures_EXPANDED.csv"),
@@ -178,12 +240,18 @@ def Data_Predictions(
 
     # Trigger model 3 outputs (Team_prediction3 / visual3 / results3) for blend in total team predictions.
     GenerateTeamPredictions3Model(
-        fixture_path=current_fixture_path,
+        fixture_path=str(filtered_fixture_path),
         current_team_path=current_team_path,
-        horizon=n_points_in_future,
+        horizon=len(gw_list),
         output_tag="3",
     )
-    GenerateTeamPredictions( current_fixture_path,current_team_path, n_points_in_future)
+    GenerateTeamPredictions(
+        str(filtered_fixture_path),
+        current_team_path,
+        len(gw_list),
+        time_list=gw_list,
+        standings_fixture_path=str(fixture_path),
+    )
     Make_Predictions()
     Generate_point_predictions(time_list)
     #make_predictions2(horizon=len(time_list), gw_list=time_list)
@@ -238,7 +306,7 @@ def Main_Orchestration():
     full_simulator_player_output_path_25="SImulator/Full_simulator_player.csv"
     #current_raw_data_path="Raw_Data_24\Fantasy_season_2024_data.csv"
     time_list=Get_times(current_fixture_path,n_points_in_future)
-    
+    time_list=["33","34","35","36","37","38"]
     GW_list_wildcard=time_list
     GW_list_freehit=[time_list[0]]
     
@@ -248,7 +316,7 @@ def Main_Orchestration():
     
     
     #EXTARCT DATA
-    Data_Extraction(season,is_new_season,has_been_error)
+    #Data_Extraction(season,is_new_season,has_been_error)
     
     
     #Transform data

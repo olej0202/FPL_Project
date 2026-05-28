@@ -1960,11 +1960,13 @@ def main_Transform():
                     )
             
             FACTS = {
-                "GKP": (0.0, 0.0, 10),
-                "DEF": (10,  9.0, 10),
-                "MID": (15,  9.0, 0.0),
-                "FWD": (20,  9.0, 0.0),
+                "GKP": (12, 9, 12),
+                "DEF": (12,  9.0, 12),
+                "MID": (18,  9.0, 0.0),
+                "FWD": (24,  9.0, 0.0),
             }
+            
+
             DEFAULT = (0.0, 0.0, 0.0)
 
             # Optional: normalize position labels to match keys
@@ -1987,7 +1989,7 @@ def main_Transform():
                 - f3 * cs_flag
             )
 
-            player_df["Rolling_adjusted_BPS"]=player_df['Adjusted_BPS'].rolling(window=15, min_periods=1).mean()
+            player_df["Rolling_adjusted_BPS"]=(player_df['Adjusted_BPS'].rolling(window=15, min_periods=1).mean()/player_df["minutes"].clip(lower=10).rolling(window=15, min_periods=1).sum()) * 90    
             player_df["rolling_bps_historic"] = player_df['Adjusted_BPS'].rolling(window=30, min_periods=1).mean()
             player_df["Rolling_adjusted_BPS_2"]=(player_df['Adjusted_BPS'].rolling(window=30, min_periods=1).sum()/player_df["minutes"].clip(lower=10).rolling(window=30, min_periods=1).sum()) * 90    
             #player_df["Rolling_adjusted_BPS"]=adjust_measure(player_df, 'bps')
