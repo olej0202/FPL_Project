@@ -734,7 +734,10 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     recall = recall_score(y_CS_test, y_pred_CS_binary, pos_label=1)
     print(f"Recall (actual clean sheets captured): {recall:.3f}")
 
-    fixture_data=pd.read_csv(fixture_path)[["event","team_a","team_h","finished"]]
+    fixture_data = (
+        pd.read_csv(fixture_path)[["code", "event", "team_a", "team_h", "finished"]]
+        .rename(columns={"code": "fixture_code"})
+    )
     team_code_data=pd.read_csv(current_team_path)[["name","code","id"]]
 
     team_data=pd.read_csv("Team_data_newest3.csv")[["code","XGA","XGCA","XGH","XGCH","XG_slope","XGC_slope","XG_avg","XGC_avg","Rolling_Threat","Rolling_Threat_Against","roll10_xpts","roll10_deep","Rolling_XG","Rolling_XGC","XG_pred_rolling_error","XGC_pred_rolling_error"]]
@@ -756,7 +759,7 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
 
     df_merged = fixture_data.merge(team_code_data, left_on='team_a', right_on='id', how='left')  # Left join to keep all rows from df2
     df_merged = df_merged.merge(team_code_data, left_on='team_h', right_on='id', how='left')  # Left join to keep all rows from df2
-    predict_data=df_merged[["event"]]
+    predict_data = df_merged[["fixture_code", "event"]].copy()
     predict_data["team_a"]=df_merged["code_x"].values
     predict_data["team_h"]=df_merged["code_y"].values
     predict_data["team_a_name"]=df_merged["name_x"].values
@@ -977,6 +980,7 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
 
     result_df=pd.DataFrame()
     result_df["GW"]=df_merged["event"]
+    result_df["fixture_code"] = df_merged["fixture_code"]
     result_df["pred"]=df_merged["event"]-min_event+1
     result_df["home_team"]=df_merged["team_h_name"]
     result_df["away_team"]=df_merged["team_a_name"]
@@ -991,7 +995,7 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     result_df["test_opp_XGC"]=css_test
     result_df.to_csv("Team_prediction_visual2.csv")
 
-    home_df=result_df[["GW", "pred"]]
+    home_df=result_df[["fixture_code", "GW", "pred"]].copy()
     home_df["team_name"]=result_df["home_team"]
     home_df["team_code"]=result_df["home_code"]
     home_df["XG"]=result_df["home_goals"]
@@ -1002,7 +1006,7 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     home_df["Opponent_team"]=result_df["away_team"]
     home_df["Home"]='H'
 
-    away_df=result_df[["GW", "pred"]]
+    away_df=result_df[["fixture_code", "GW", "pred"]].copy()
     away_df["team_name"]=result_df["away_team"]
     away_df["team_code"]=result_df["away_code"]
     away_df["XG"]=result_df["away_goals"]
@@ -1828,7 +1832,7 @@ def GenerateTeamPredictions(
     fixture_path,
     current_team_path,
     horizon,
-    sim_full_weight=1,
+    sim_full_weight=0.7,
     time_list=None,
     standings_fixture_path=None,
 ):
@@ -1859,6 +1863,10 @@ def GenerateTeamPredictions(
             team_pred2 = team_pred2[pd.to_numeric(team_pred2["GW"], errors="coerce").isin(gw_filter)].copy()
         if "GW" in team_results2.columns:
             team_results2 = team_results2[pd.to_numeric(team_results2["GW"], errors="coerce").isin(gw_filter)].copy()
+
+    raw_team_pred1 = team_pred1.copy()
+    raw_team_pred2 = team_pred2.copy()
+
     team_pred_frames = [team_pred1.copy(), team_pred2.copy()]
     team_result_frames = [team_results2.copy()]
 
@@ -1869,22 +1877,16 @@ def GenerateTeamPredictions(
             ren = {c: f"{c}_p{i}" for c in pred_value_cols if c in dfp.columns}
             add = dfp[pred_keys + [c for c in pred_value_cols if c in dfp.columns]].copy().rename(columns=ren)
             team_pred1 = team_pred1.merge(add, on=pred_keys, how="left")
-        for c in pred_value_cols:
-            cols = [c] + [x for x in team_pred1.columns if x.startswith(f"{c}_p")]
-            vals = team_pred1[cols].apply(pd.to_numeric, errors="coerce")
-            team_pred1[c] = vals.mean(axis=1, skipna=True)
-            team_pred1 = team_pred1.drop(columns=[x for x in cols if x != c])
     else:
-        # Fallback: index-based average across available Team_prediction files.
+        # Fallback: align model-2 columns by row order when key columns are missing.
         min_len = min(len(df) for df in team_pred_frames)
         team_pred1 = team_pred1.reset_index(drop=True)
+        team_pred2 = team_pred2.reset_index(drop=True)
         for c in pred_value_cols:
-            stack = []
-            for dfp in team_pred_frames:
-                if c in dfp.columns:
-                    stack.append(pd.to_numeric(dfp.reset_index(drop=True).loc[: min_len - 1, c], errors="coerce"))
-            if stack:
-                team_pred1.loc[: min_len - 1, c] = pd.concat(stack, axis=1).mean(axis=1, skipna=True).values
+            if c in team_pred2.columns:
+                team_pred1.loc[: min_len - 1, f"{c}_p2"] = pd.to_numeric(
+                    team_pred2.loc[: min_len - 1, c], errors="coerce"
+                ).values
 
     # Winning odds come from Team_prediction_results files.
     for dfr in team_result_frames:
@@ -1902,6 +1904,32 @@ def GenerateTeamPredictions(
         "SImulator/simtest_team_results_upcoming.csv",
         full_sim_weight=sim_full_weight,
     )
+
+    team_pred_ver_sources = [
+        ("Team_prediction1", raw_team_pred1.copy()),
+        ("Team_prediction2", raw_team_pred2.copy()),
+    ]
+    if sim_team_df is not None and not sim_team_df.empty:
+        sim_team_ver = sim_team_df.copy()
+        sim_team_ver["XG"] = sim_team_ver.get("sim_xg")
+        sim_team_ver["CS"] = sim_team_ver.get("sim_cs")
+        team_pred_ver_sources.append(("Simulator", sim_team_ver))
+
+    fixture_kickoff_df = pd.DataFrame()
+    try:
+        fixture_raw = pd.read_csv(fixture_path)
+        if "code" in fixture_raw.columns and "kickoff_time" in fixture_raw.columns:
+            fixture_kickoff_df = fixture_raw[["code", "kickoff_time"]].copy().rename(
+                columns={"code": "fixture_code"}
+            )
+    except Exception:
+        fixture_kickoff_df = pd.DataFrame()
+
+    team_pred_ver = _build_team_pred_verification_csv(
+        team_pred_ver_sources,
+        fixture_kickoff_df=fixture_kickoff_df,
+    )
+    team_pred_ver.to_csv("TeamPredVer.csv", index=False)
 
     if all(k in team_pred1.columns for k in pred_keys) and all(k in team_results.columns for k in pred_keys):
         team_res_small = team_results[pred_keys + ["win_Percent", "Draw_percent", "Loss_percent"]].copy()
@@ -1930,21 +1958,56 @@ def GenerateTeamPredictions(
             print("[GenerateTeamPredictions] Missing fixture_code/team_code in Team_prediction1.csv, skipping simulator team merge.")
 
         xg_orig = pd.to_numeric(team_pred1["XG"], errors="coerce")
+        xg_p2 = pd.to_numeric(team_pred1.get("XG_p2"), errors="coerce")
         xgc_orig = pd.to_numeric(team_pred1["XGC"], errors="coerce")
+        xgc_p2 = pd.to_numeric(team_pred1.get("XGC_p2"), errors="coerce")
         cs_orig = pd.to_numeric(team_pred1["CS"], errors="coerce")
+        cs_p2 = pd.to_numeric(team_pred1.get("CS_p2"), errors="coerce")
         win_orig = pd.to_numeric(team_pred1["Win_Percent"], errors="coerce")
         draw_orig = pd.to_numeric(team_pred1["Draw_percent"], errors="coerce")
         loss_orig = pd.to_numeric(team_pred1["Loss_percent"], errors="coerce")
 
-        team_pred1["XG"] = _coalesce_average(xg_orig, team_pred1.get("sim_xg"))
-        team_pred1["XGC"] = _coalesce_average(xgc_orig, team_pred1.get("sim_xgc"))
-        team_pred1["CS"] = _coalesce_average(cs_orig, team_pred1.get("sim_cs"))
+        team_pred1["XG"] = _weighted_blend_columns(
+            [
+                (xg_orig, 0.25),
+                (xg_p2, 0.5),
+                (team_pred1.get("sim_xg"), 0.25),
+            ]
+        )
+        team_pred1["XGC"] = _weighted_blend_columns(
+            [
+                (xgc_orig, 0.25),
+                (xgc_p2, 0.5),
+                (team_pred1.get("sim_xgc"), 0.25),
+            ]
+        )
+        team_pred1["CS"] = _weighted_blend_columns(
+            [
+                (cs_orig, 0.45),
+                (cs_p2, 0.1),
+                (team_pred1.get("sim_cs"), 0.45),
+            ]
+        )
         team_pred1["Win_Percent"] = _coalesce_average(win_orig, team_pred1.get("sim_win"))
         team_pred1["Draw_percent"] = _coalesce_average(draw_orig, team_pred1.get("sim_draw"))
         team_pred1["Loss_percent"] = _coalesce_average(loss_orig, team_pred1.get("sim_loss"))
 
         team_pred1 = team_pred1.drop(
-            columns=[c for c in ["sim_xg", "sim_xgc", "sim_cs", "sim_win", "sim_draw", "sim_loss"] if c in team_pred1.columns]
+            columns=[
+                c
+                for c in [
+                    "XG_p2",
+                    "XGC_p2",
+                    "CS_p2",
+                    "sim_xg",
+                    "sim_xgc",
+                    "sim_cs",
+                    "sim_win",
+                    "sim_draw",
+                    "sim_loss",
+                ]
+                if c in team_pred1.columns
+            ]
         )
 
     
@@ -2121,6 +2184,67 @@ def GenerateTeamPredictions(
     )
 
 
+def _build_team_pred_verification_csv(team_pred_sources, fixture_kickoff_df=None):
+    merge_keys_preferred = ["fixture_code", "GW", "pred", "team_code", "team_name", "Opponent_team", "Home"]
+    merge_keys_fallback = ["GW", "pred", "team_code", "team_name", "Opponent_team", "Home"]
+
+    frames = []
+    for source_name, df in team_pred_sources:
+        current = df.copy()
+        for key in ["fixture_code", "GW", "pred", "team_code"]:
+            if key in current.columns:
+                current[key] = pd.to_numeric(current[key], errors="coerce")
+
+        available_keys = [k for k in merge_keys_preferred if k in current.columns]
+        if "fixture_code" not in available_keys:
+            available_keys = [k for k in merge_keys_fallback if k in current.columns]
+
+        rename_map = {}
+        if "XG" in current.columns:
+            rename_map["XG"] = f"{source_name}_goal_pred"
+        if "CS" in current.columns:
+            rename_map["CS"] = f"{source_name}_cs_pred"
+
+        keep_cols = available_keys + [c for c in ["XG", "CS"] if c in current.columns]
+        current = current[keep_cols].copy().rename(columns=rename_map)
+        frames.append((available_keys, current))
+
+    if not frames:
+        return pd.DataFrame()
+
+    merge_keys = frames[0][0]
+    merged = frames[0][1].copy()
+
+    for keys, frame in frames[1:]:
+        join_keys = [k for k in merge_keys if k in frame.columns and k in merged.columns]
+        if not join_keys:
+            continue
+        merged = merged.merge(frame, on=join_keys, how="outer")
+
+    if fixture_kickoff_df is not None and not fixture_kickoff_df.empty:
+        kickoff_map = fixture_kickoff_df.copy()
+        kickoff_map["fixture_code"] = pd.to_numeric(kickoff_map["fixture_code"], errors="coerce")
+        merged = merged.merge(kickoff_map.drop_duplicates(subset=["fixture_code"]), on="fixture_code", how="left")
+
+    preferred_order = [
+        "fixture_code",
+        "kickoff_time",
+        "GW",
+        "pred",
+        "team_code",
+        "team_name",
+        "Opponent_team",
+        "Home",
+    ]
+    pred_cols = [c for c in merged.columns if c.endswith("_goal_pred") or c.endswith("_cs_pred")]
+    ordered_cols = [c for c in preferred_order if c in merged.columns] + pred_cols
+    return merged[ordered_cols].sort_values(
+        by=[c for c in ["GW", "fixture_code", "team_code", "Home"] if c in merged.columns],
+        kind="stable",
+        na_position="last",
+    ).reset_index(drop=True)
+
+
 def _coalesce_average(a, b):
     a = pd.to_numeric(a, errors="coerce")
     b = pd.to_numeric(b, errors="coerce")
@@ -2128,6 +2252,25 @@ def _coalesce_average(a, b):
     out = out.where(a.notna() & b.notna(), a)
     out = out.where(a.notna() | b.notna(), b)
     return out
+
+
+def _weighted_blend_columns(weighted_values):
+    numerator = None
+    denominator = None
+
+    for values, weight in weighted_values:
+        series = pd.to_numeric(values, errors="coerce")
+        valid = series.notna().astype(float)
+        weighted_series = series.fillna(0) * float(weight)
+
+        if numerator is None:
+            numerator = weighted_series
+            denominator = valid * float(weight)
+        else:
+            numerator = numerator + weighted_series
+            denominator = denominator + (valid * float(weight))
+
+    return numerator.divide(denominator.where(denominator != 0))
 
 
 def _coalesce_weighted(a, b, weight_a=0.5):
