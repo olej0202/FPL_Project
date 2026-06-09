@@ -20,6 +20,13 @@ _ETA_FORMULA_CACHE: Dict[str, np.ndarray] = {}
 ICT_MEASURE_MIN = 29.0
 ICT_MEASURE_MAX = 162.0
 
+# Hardcoded Poisson lambda formula coefficients.
+LAMBDA_POISSON_INTERCEPT = -0.9830
+LAMBDA_POISSON_OWN_OFF_COEF = 0.5209
+LAMBDA_POISSON_OPP_DEF_COEF = 0.5805
+LAMBDA_POISSON_INTERACTION_COEF = -0.1277
+LAMBDA_POISSON_ICT_DIFF_COEF = 0.8811
+
 # Bonus model settings (used only for top-3 bonus point allocation ranking).
 # Values are BPS-like weights by position for in-match contributions.
 POSITION_EVENT_BONUS = {
@@ -982,22 +989,23 @@ def _team_lambda_components(
     opp_xgc_avg = _row_num(opp_team, "xgc_avg", 0.0)
     opp_xgc_err = _row_num(opp_team, "xgc_pred_rolling_error", 0.0)
     elo_diff = _row_num(own_team, "elo_rating", 1500.0) - _row_num(opp_team, "elo_rating", 1500.0)
+    ict_diff = _row_num(own_team, "ict_measure_norm", 0.0) - _row_num(opp_team, "ict_measure_norm", 0.0)
     off_fac = own_xg * 0.4 + 0.6 * own_xg_avg - 0.5 * own_xg_err
     def_fac = opp_xgc * 0.4 + 0.6 * opp_xgc_avg - 0.5 * opp_xgc_err
     interaction = off_fac * def_fac
 
-    if eta_params is None:
-        eta_params = estimate_eta_formula_from_history(paths=paths)
-    if len(eta_params) < 5:
-        raise DataValidationError("eta_params ma ha 5 elementer: [intercept, off, def, interaction, elo].")
-    b0, b_off, b_def, b_int, b_elo = [float(x) for x in eta_params[:5]]
+    b0 = float(LAMBDA_POISSON_INTERCEPT)
+    b_off = float(LAMBDA_POISSON_OWN_OFF_COEF)
+    b_def = float(LAMBDA_POISSON_OPP_DEF_COEF)
+    b_int = float(LAMBDA_POISSON_INTERACTION_COEF)
+    b_ict = float(LAMBDA_POISSON_ICT_DIFF_COEF)
 
     eta = (
         b0
         + b_off * off_fac
         + b_def * def_fac
         + b_int * interaction
-        + b_elo * elo_diff
+        + b_ict * ict_diff
     )
     lambda0 = float(np.exp(np.clip(eta, -20.0, 20.0)))
     return {
@@ -1008,6 +1016,7 @@ def _team_lambda_components(
         "opp_xgc_avg": float(opp_xgc_avg),
         "opp_xgc_pred_rolling_error": float(opp_xgc_err),
         "elo_diff": float(elo_diff),
+        "ict_diff": float(ict_diff),
         "off_fac": float(off_fac),
         "def_fac": float(def_fac),
         "interaction": float(interaction),
@@ -1017,7 +1026,8 @@ def _team_lambda_components(
         "eta_off_coef": float(b_off),
         "eta_def_coef": float(b_def),
         "eta_interaction_coef": float(b_int),
-        "eta_elo_coef": float(b_elo),
+        "eta_elo_coef": 0.0,
+        "eta_ict_coef": float(b_ict),
         "eta_scale": 1.0,
     }
 

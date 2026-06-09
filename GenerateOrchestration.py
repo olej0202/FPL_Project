@@ -151,7 +151,7 @@ def Data_Predictions(
         sim_output_dir / "fixtures_expanded_filtered_by_timelist.csv",
         force_unfinished=True,
     )
-    """
+    
 
     # Trigger full simulator parameter optimization with all read paths passed in.
     full_sim_control = FullSimulatorControlConfig(
@@ -237,7 +237,7 @@ def Data_Predictions(
         n_scenarios=1000,
         include_finished_fixtures=False,
         paths=fs2_paths,
-    )"""
+    )
 
 
     GenerateTeamPredictions(

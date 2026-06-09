@@ -851,24 +851,24 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     
          
     eta = (
-    -3.15
-    + 1.485 * new_input_XG["off_fac"]
-    + 1.503 * new_input_XG["def_fac"]
-    - 0.174 * new_input_XG["off_fac"] * new_input_XG["def_fac"]
+    -1.8166
+    + 0.7939 * new_input_XG["off_fac"]
+    + 0.8837 * new_input_XG["def_fac"]
+    - 0.1104 * new_input_XG["off_fac"] * new_input_XG["def_fac"]
     )
 
 
-    xg_stat_h = np.exp(0.5 * eta)
+    xg_stat_h = np.exp(eta)
     
     new_input_XG2["off_fac"]=new_input_XG2["Own_XG"]*0.7+0.3*new_input_XG2["Own_XG_avg"]-0.5*df_merged["XG_pred_rolling_error_x"]
     new_input_XG2["def_fac"]=new_input_XG2["Opposition_XGC"]*0.7+0.3*new_input_XG2["Opposition_XGC_avg"]-0.5*df_merged["XGC_pred_rolling_error_y"]
-    eta2 = (-3.15
-        + 1.485 * new_input_XG2["off_fac"]
-        + 1.503 * new_input_XG2["def_fac"]
-        - 0.174 * new_input_XG2["off_fac"] * new_input_XG2["def_fac"]
+    eta2 = (-1.8166
+        + 0.7939 * new_input_XG2["off_fac"]
+        + 0.8837 * new_input_XG2["def_fac"]
+        - 0.1104 * new_input_XG2["off_fac"] * new_input_XG2["def_fac"]
         )
 
-    xg_stat_a = np.exp(0.5 * eta2)
+    xg_stat_a = np.exp(eta2)
     
     xg2 = proba2 @ weights    
 
