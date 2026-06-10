@@ -439,7 +439,799 @@ def GenerateTeamPredictions1(fixture_path, current_team_path,horizon):
 
 
 
+import pandas as pd
+import numpy as np
 
+from sklearn.metrics import (
+    mean_squared_error,
+    mean_absolute_error,
+    log_loss,
+    accuracy_score,
+    roc_auc_score
+)
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.neural_network import MLPRegressor
+from sklearn.linear_model import LogisticRegression
+
+from xgboost import XGBRegressor, XGBClassifier
+
+
+def make_timestamp_like_series(value, series):
+    ts = pd.to_datetime(value)
+    series_tz = getattr(series.dt, "tz", None)
+
+    if series_tz is not None:
+        if ts.tzinfo is None:
+            ts = ts.tz_localize(series_tz)
+        else:
+            ts = ts.tz_convert(series_tz)
+    else:
+        if ts.tzinfo is not None:
+            ts = ts.tz_localize(None)
+
+    return ts
+
+
+def run_fixture_xg_cs_model(
+    fixture_path,
+    current_team_path,
+    historical_team_path="Team_data_transformed2.csv",
+    newest_team_path="Team_data_newest3.csv",
+    teampredver_path="TeamPredVer.csv",
+    output_teampredver_path="TeamPredVer_with_model_prediction.csv",
+    output_disagreements_path="TeamPredVer_largest_prediction_disagreements.csv",
+    output_fixture_long_path="fixture_predictions_long.csv",
+    horizons=(8, 20, 30),
+    home_away_diff_window=25,
+    cap_lower=0.5,
+    cap_upper=3.5,
+    train_start="2022-11-01",
+    use_date_filter=0,
+    train_end="2026-04-04"
+):
+    HORIZONS = list(horizons)
+    SHORT, MEDIUM, LONG = HORIZONS
+
+    XG_TARGET = "XG"
+    CS_TARGET = "Clean_Sheet"
+
+    required_cols = [
+        'name', 'code', 'opponent', 'cluster', 'kickoff_time',
+        'Plain_GS', 'Plain_GC', 'Plain_XGC', 'was_home',
+        'Round_XG', 'XG', 'XGC', 'Clean_Sheet',
+        'Elo_Rating',
+        'Rolling_Threat', 'Rolling_Threat_Against'
+    ]
+
+    team_df = pd.read_csv(historical_team_path)
+
+    missing = [c for c in required_cols if c not in team_df.columns]
+    if missing:
+        raise ValueError(f"Missing columns in {historical_team_path}: {missing}")
+
+    team_df = team_df[required_cols].copy()
+
+    team_df['code'] = team_df['code'].astype(int)
+    team_df['opponent'] = team_df['opponent'].astype(int)
+    team_df['kickoff_time'] = pd.to_datetime(team_df['kickoff_time'])
+    team_df = team_df.sort_values(['code', 'kickoff_time']).reset_index(drop=True)
+
+    team_df['Plain_XG'] = team_df['Round_XG']
+
+    rolling_cols = ['Plain_GS', 'Plain_GC', 'Plain_XGC', 'Plain_XG']
+
+    for col in rolling_cols:
+        capped_col = f'{col}_capped'
+        team_df[capped_col] = team_df[col].clip(lower=cap_lower, upper=cap_upper)
+
+        for horizon in HORIZONS:
+            team_df[f'{col}_roll{horizon}'] = (
+                team_df
+                .groupby('code')[capped_col]
+                .transform(
+                    lambda s: s.shift(1).rolling(
+                        window=horizon,
+                        min_periods=1
+                    ).mean()
+                )
+            )
+
+    team_df['Offensive_Index'] = (
+        0.2 * (0.7 * team_df[f'Plain_XG_roll{SHORT}'] + 0.3 * team_df[f'Plain_GS_roll{SHORT}'])
+        +
+        0.3 * (0.7 * team_df[f'Plain_XG_roll{MEDIUM}'] + 0.3 * team_df[f'Plain_GS_roll{MEDIUM}'])
+        +
+        0.5 * (0.7 * team_df[f'Plain_XG_roll{LONG}'] + 0.3 * team_df[f'Plain_GS_roll{LONG}'])
+    )
+
+    team_df['Defensive_Index'] = (
+        0.2 * (0.7 * team_df[f'Plain_XGC_roll{SHORT}'] + 0.3 * team_df[f'Plain_GC_roll{SHORT}'])
+        +
+        0.3 * (0.7 * team_df[f'Plain_XGC_roll{MEDIUM}'] + 0.3 * team_df[f'Plain_GC_roll{MEDIUM}'])
+        +
+        0.5 * (0.7 * team_df[f'Plain_XGC_roll{LONG}'] + 0.3 * team_df[f'Plain_GC_roll{LONG}'])
+    )
+
+    for col in ['Plain_XG', 'Plain_XGC']:
+        capped_col = f'{col}_capped'
+
+        home_roll_col = f'{col}_home_roll{home_away_diff_window}'
+        away_roll_col = f'{col}_away_roll{home_away_diff_window}'
+        diff_col = f'{col}_home_away_diff{home_away_diff_window}'
+
+        team_df[home_roll_col] = (
+            team_df
+            .assign(temp_value=np.where(team_df['was_home'] == 1, team_df[capped_col], np.nan))
+            .groupby('code')['temp_value']
+            .transform(
+                lambda s: s.shift(1).rolling(
+                    window=home_away_diff_window,
+                    min_periods=1
+                ).mean()
+            )
+        )
+
+        team_df[away_roll_col] = (
+            team_df
+            .assign(temp_value=np.where(team_df['was_home'] == 0, team_df[capped_col], np.nan))
+            .groupby('code')['temp_value']
+            .transform(
+                lambda s: s.shift(1).rolling(
+                    window=home_away_diff_window,
+                    min_periods=1
+                ).mean()
+            )
+        )
+
+        team_df[diff_col] = team_df[home_roll_col] - team_df[away_roll_col]
+
+    opponent_base_features = (
+        [
+            'Elo_Rating',
+            'Rolling_Threat',
+            'Rolling_Threat_Against',
+            'Offensive_Index',
+            'Defensive_Index',
+            f'Plain_XG_home_away_diff{home_away_diff_window}',
+            f'Plain_XGC_home_away_diff{home_away_diff_window}',
+        ]
+        +
+        [f'Plain_GS_roll{h}' for h in HORIZONS]
+        +
+        [f'Plain_XG_roll{h}' for h in HORIZONS]
+        +
+        [f'Plain_GC_roll{h}' for h in HORIZONS]
+        +
+        [f'Plain_XGC_roll{h}' for h in HORIZONS]
+    )
+
+    opp_df = team_df[['code', 'kickoff_time'] + opponent_base_features].copy()
+
+    opp_df = opp_df.rename(
+        columns={
+            'code': 'opponent',
+            **{col: f'opp_{col}' for col in opponent_base_features}
+        }
+    )
+
+    model_df = team_df.merge(
+        opp_df,
+        on=['opponent', 'kickoff_time'],
+        how='left'
+    )
+
+    xg_team_offensive_features = (
+        [f'Plain_GS_roll{h}' for h in HORIZONS] +
+        [f'Plain_XG_roll{h}' for h in HORIZONS]
+    )
+
+    xg_team_form_features = [
+        'Offensive_Index',
+        'Defensive_Index',
+        'was_home',
+        'Elo_Rating',
+        'Rolling_Threat',
+        f'Plain_XG_home_away_diff{home_away_diff_window}',
+        f'Plain_XGC_home_away_diff{home_away_diff_window}'
+    ]
+
+    xg_opponent_features = (
+        [
+            'opp_Elo_Rating',
+            'opp_Rolling_Threat_Against',
+            'opp_Defensive_Index',
+            f'opp_Plain_XGC_home_away_diff{home_away_diff_window}'
+        ]
+        +
+        [f'opp_Plain_GC_roll{h}' for h in HORIZONS]
+        +
+        [f'opp_Plain_XGC_roll{h}' for h in HORIZONS]
+    )
+
+    xg_features = xg_team_offensive_features + xg_team_form_features + xg_opponent_features
+
+    cs_team_defensive_features = (
+        [f'Plain_GC_roll{h}' for h in HORIZONS] +
+        [f'Plain_XGC_roll{h}' for h in HORIZONS]
+    )
+
+    cs_team_form_features = [
+        'Defensive_Index',
+        'Offensive_Index',
+        'was_home',
+        'Elo_Rating',
+        'Rolling_Threat_Against',
+        f'Plain_XGC_home_away_diff{home_away_diff_window}',
+        f'Plain_XG_home_away_diff{home_away_diff_window}'
+    ]
+
+    cs_opponent_offensive_features = (
+        [
+            'opp_Elo_Rating',
+            'opp_Rolling_Threat',
+            'opp_Offensive_Index',
+            f'opp_Plain_XG_home_away_diff{home_away_diff_window}'
+        ]
+        +
+        [f'opp_Plain_GS_roll{h}' for h in HORIZONS]
+        +
+        [f'opp_Plain_XG_roll{h}' for h in HORIZONS]
+    )
+
+    cs_features = cs_team_defensive_features + cs_team_form_features + cs_opponent_offensive_features
+
+    # =========================
+    # Train XG regression models
+    # =========================
+
+    xg_model_df = model_df.dropna(subset=xg_features + [XG_TARGET]).copy()
+
+    train_start_ts = make_timestamp_like_series(
+        train_start,
+        xg_model_df["kickoff_time"]
+    )
+
+    xg_train_df = xg_model_df[
+        xg_model_df["kickoff_time"] >= train_start_ts
+    ].copy()
+
+    if use_date_filter == 1:
+        train_end_ts = make_timestamp_like_series(
+            train_end,
+            xg_model_df["kickoff_time"]
+        )
+
+        xg_train_df = xg_train_df[
+            xg_train_df["kickoff_time"] < train_end_ts
+        ].copy()
+
+    if len(xg_train_df) == 0:
+        raise ValueError("Ingen XG-treningsrader funnet.")
+
+    X_xg_train_raw = xg_train_df[xg_features]
+    y_xg_train = xg_train_df[XG_TARGET]
+
+    xg_scaler = MinMaxScaler()
+    X_xg_train = xg_scaler.fit_transform(X_xg_train_raw)
+    X_xg_train = pd.DataFrame(X_xg_train, columns=xg_features, index=X_xg_train_raw.index)
+
+    xgb_xg_model = XGBRegressor(
+        objective='reg:squarederror',
+        random_state=42,
+        n_jobs=-1,
+        n_estimators=2000,
+        learning_rate=0.01,
+        max_depth=5,
+        min_child_weight=8,
+        subsample=0.75,
+        colsample_bytree=0.75,
+        reg_alpha=0.1,
+        reg_lambda=2.0,
+        gamma=0.05
+    )
+
+    xgb_xg_model.fit(X_xg_train, y_xg_train)
+
+    nn_xg_model = MLPRegressor(
+        hidden_layer_sizes=(64, 16),
+        activation='relu',
+        solver='adam',
+        alpha=0.001,
+        learning_rate_init=0.001,
+        max_iter=1500,
+        early_stopping=True,
+        random_state=42
+    )
+
+    nn_xg_model.fit(X_xg_train, y_xg_train)
+
+    print("\nXG train results")
+    print("XGB XG MSE:", mean_squared_error(y_xg_train, xgb_xg_model.predict(X_xg_train)))
+    print("XGB XG MAE:", mean_absolute_error(y_xg_train, xgb_xg_model.predict(X_xg_train)))
+    print("NN XG MSE:", mean_squared_error(y_xg_train, nn_xg_model.predict(X_xg_train)))
+    print("NN XG MAE:", mean_absolute_error(y_xg_train, nn_xg_model.predict(X_xg_train)))
+
+    # =========================
+    # Train CS classification models
+    # =========================
+
+    cs_model_df = model_df.dropna(subset=cs_features + [CS_TARGET]).copy()
+
+    train_start_ts = make_timestamp_like_series(
+        train_start,
+        cs_model_df["kickoff_time"]
+    )
+
+    cs_train_df = cs_model_df[
+        cs_model_df["kickoff_time"] >= train_start_ts
+    ].copy()
+
+    if use_date_filter == 1:
+        train_end_ts = make_timestamp_like_series(
+            train_end,
+            cs_model_df["kickoff_time"]
+        )
+
+        cs_train_df = cs_train_df[
+            cs_train_df["kickoff_time"] < train_end_ts
+        ].copy()
+
+    if len(cs_train_df) == 0:
+        raise ValueError("Ingen CS-treningsrader funnet.")
+
+    X_cs_train_raw = cs_train_df[cs_features]
+    y_cs_train = cs_train_df[CS_TARGET].astype(int)
+
+    cs_scaler = MinMaxScaler()
+    X_cs_train = cs_scaler.fit_transform(X_cs_train_raw)
+    X_cs_train = pd.DataFrame(X_cs_train, columns=cs_features, index=X_cs_train_raw.index)
+
+    cs_pos_rate = y_cs_train.mean()
+    scale_pos_weight = (1 - cs_pos_rate) / cs_pos_rate if cs_pos_rate > 0 else 1
+
+    xgb_cs_model = XGBClassifier(
+        objective="binary:logistic",
+        eval_metric="logloss",
+        random_state=42,
+        n_jobs=-1,
+        n_estimators=800,
+        learning_rate=0.01,
+        max_depth=5,
+        min_child_weight=8,
+        subsample=0.75,
+        colsample_bytree=0.75,
+        reg_alpha=0.1,
+        reg_lambda=3.0,
+        gamma=0.05,
+        scale_pos_weight=scale_pos_weight
+    )
+
+    xgb_cs_model.fit(X_cs_train, y_cs_train)
+
+    logistic_cs_model = LogisticRegression(
+        penalty="l2",
+        C=0.3,
+        solver="lbfgs",
+        max_iter=2000,
+        class_weight=None,
+
+        random_state=42
+    )
+
+    logistic_cs_model.fit(X_cs_train, y_cs_train)
+
+    xgb_cs_train_prob = xgb_cs_model.predict_proba(X_cs_train)[:, 1]
+    logistic_cs_train_prob = logistic_cs_model.predict_proba(X_cs_train)[:, 1]
+
+    print("\nCS classification train results")
+    print("XGB CS LogLoss:", log_loss(y_cs_train, xgb_cs_train_prob))
+    print("XGB CS Accuracy:", accuracy_score(y_cs_train, xgb_cs_train_prob >= 0.5))
+    print("Logistic CS LogLoss:", log_loss(y_cs_train, logistic_cs_train_prob))
+    print("Logistic CS Accuracy:", accuracy_score(y_cs_train, logistic_cs_train_prob >= 0.5))
+
+    if y_cs_train.nunique() == 2:
+        print("XGB CS AUC:", roc_auc_score(y_cs_train, xgb_cs_train_prob))
+        print("Logistic CS AUC:", roc_auc_score(y_cs_train, logistic_cs_train_prob))
+
+    # =========================
+    # Latest team features
+    # =========================
+
+    latest_team_features = (
+        team_df
+        .sort_values(['code', 'kickoff_time'])
+        .groupby('code')
+        .tail(1)
+        .copy()
+    )
+
+    latest_cols = [
+        'name',
+        'code',
+        'Elo_Rating',
+        'Rolling_Threat',
+        'Rolling_Threat_Against',
+        'Offensive_Index',
+        'Defensive_Index',
+        f'Plain_XG_home_away_diff{home_away_diff_window}',
+        f'Plain_XGC_home_away_diff{home_away_diff_window}'
+    ] + [
+        f'Plain_GS_roll{h}' for h in HORIZONS
+    ] + [
+        f'Plain_XG_roll{h}' for h in HORIZONS
+    ] + [
+        f'Plain_GC_roll{h}' for h in HORIZONS
+    ] + [
+        f'Plain_XGC_roll{h}' for h in HORIZONS
+    ]
+
+    latest_team_features = latest_team_features[latest_cols].copy()
+
+    newest_df = pd.read_csv(newest_team_path)
+
+    newest_optional_cols = [
+        'code',
+        'Rolling_Threat',
+        'Rolling_Threat_Against',
+        'Elo_Rating'
+    ]
+
+    available_newest_cols = [
+        c for c in newest_optional_cols
+        if c in newest_df.columns
+    ]
+
+    newest_features = newest_df[available_newest_cols].copy()
+    newest_features['code'] = newest_features['code'].astype(int)
+
+    latest_team_features = latest_team_features.merge(
+        newest_features,
+        on='code',
+        how='left',
+        suffixes=('', '_newest')
+    )
+
+    for col in ['Rolling_Threat', 'Rolling_Threat_Against', 'Elo_Rating']:
+        newest_col = f'{col}_newest'
+        if newest_col in latest_team_features.columns:
+            latest_team_features[col] = latest_team_features[newest_col].combine_first(
+                latest_team_features[col]
+            )
+            latest_team_features = latest_team_features.drop(columns=[newest_col])
+
+    fixture_data = (
+        pd.read_csv(fixture_path)[["code", "event", "team_a", "team_h", "finished"]]
+        .rename(columns={"code": "fixture_code"})
+    )
+
+    team_code_data = pd.read_csv(current_team_path)[["name", "code", "id"]].copy()
+
+    team_code_data['code'] = team_code_data['code'].astype(int)
+    team_code_data['id'] = team_code_data['id'].astype(int)
+
+    fixture_data['team_a'] = fixture_data['team_a'].astype(int)
+    fixture_data['team_h'] = fixture_data['team_h'].astype(int)
+
+    fixture_data["finished_clean"] = (
+        fixture_data["finished"]
+        .astype(str)
+        .str.lower()
+        .str.strip()
+    )
+
+    fixture_data = fixture_data[
+        fixture_data["finished_clean"].isin(["false", "0", "no", "nan"])
+    ].copy()
+
+    if len(fixture_data) == 0:
+        raise ValueError("Ingen unfinished fixtures funnet.")
+
+    fixture_data = fixture_data.merge(
+        team_code_data,
+        left_on='team_a',
+        right_on='id',
+        how='left'
+    )
+
+    fixture_data = fixture_data.merge(
+        team_code_data,
+        left_on='team_h',
+        right_on='id',
+        how='left',
+        suffixes=('_away', '_home')
+    )
+
+    fixture_base = pd.DataFrame({
+        'fixture_code': fixture_data['fixture_code'],
+        'event': fixture_data['event'],
+        'team_a': fixture_data['code_away'],
+        'team_h': fixture_data['code_home'],
+        'team_a_name': fixture_data['name_away'],
+        'team_h_name': fixture_data['name_home']
+    })
+
+    fixture_base = fixture_base.dropna(subset=['team_a', 'team_h']).copy()
+
+    fixture_base['team_a'] = fixture_base['team_a'].astype(int)
+    fixture_base['team_h'] = fixture_base['team_h'].astype(int)
+
+    home_rows = fixture_base.copy()
+    home_rows['team_code'] = home_rows['team_h']
+    home_rows['opponent'] = home_rows['team_a']
+    home_rows['team_name'] = home_rows['team_h_name']
+    home_rows['opponent_name'] = home_rows['team_a_name']
+    home_rows['was_home'] = 1
+
+    away_rows = fixture_base.copy()
+    away_rows['team_code'] = away_rows['team_a']
+    away_rows['opponent'] = away_rows['team_h']
+    away_rows['team_name'] = away_rows['team_a_name']
+    away_rows['opponent_name'] = away_rows['team_h_name']
+    away_rows['was_home'] = 0
+
+    predict_rows = pd.concat([home_rows, away_rows], ignore_index=True)
+    predict_rows = predict_rows.rename(columns={'team_code': 'code'})
+
+    predict_df = predict_rows.merge(
+        latest_team_features,
+        on='code',
+        how='left',
+        suffixes=('', '_feature')
+    )
+
+    if 'name' in predict_df.columns:
+        predict_df = predict_df.drop(columns=['name'])
+
+    opp_cols_to_keep = [
+        'code',
+        'Elo_Rating',
+        'Rolling_Threat',
+        'Rolling_Threat_Against',
+        'Offensive_Index',
+        'Defensive_Index',
+        f'Plain_XG_home_away_diff{home_away_diff_window}',
+        f'Plain_XGC_home_away_diff{home_away_diff_window}',
+    ] + [
+        f'Plain_GS_roll{h}' for h in HORIZONS
+    ] + [
+        f'Plain_XG_roll{h}' for h in HORIZONS
+    ] + [
+        f'Plain_GC_roll{h}' for h in HORIZONS
+    ] + [
+        f'Plain_XGC_roll{h}' for h in HORIZONS
+    ]
+
+    opp_latest_features = latest_team_features[opp_cols_to_keep].copy()
+
+    opp_latest_features = opp_latest_features.rename(
+        columns={
+            'code': 'opponent',
+            **{
+                col: f'opp_{col}'
+                for col in opp_cols_to_keep
+                if col != 'code'
+            }
+        }
+    )
+
+    predict_df = predict_df.merge(
+        opp_latest_features,
+        on='opponent',
+        how='left'
+    )
+
+    all_prediction_features = sorted(set(xg_features + cs_features))
+
+    nan_rows = predict_df[predict_df[all_prediction_features].isna().any(axis=1)].copy()
+
+    if len(nan_rows) > 0:
+        print("\nWARNING: rows with missing features:")
+        print(nan_rows[[
+            'fixture_code',
+            'event',
+            'team_name',
+            'opponent_name',
+            'code',
+            'opponent',
+            'was_home'
+        ]])
+        nan_rows.to_csv("fixture_prediction_nan_rows.csv", index=False)
+
+    predict_df = predict_df.dropna(subset=all_prediction_features).copy()
+
+    if len(predict_df) == 0:
+        raise ValueError("Ingen gyldige prediksjonsrader etter dropna.")
+
+    X_xg_predict_raw = predict_df[xg_features]
+    X_xg_predict = xg_scaler.transform(X_xg_predict_raw)
+    X_xg_predict = pd.DataFrame(
+        X_xg_predict,
+        columns=xg_features,
+        index=X_xg_predict_raw.index
+    )
+
+    predict_df['XGB_pred_XG'] = xgb_xg_model.predict(X_xg_predict)
+    predict_df['NN_pred_XG'] = nn_xg_model.predict(X_xg_predict)
+
+    predict_df['Final_pred_XG'] = (
+        0.7 * predict_df['XGB_pred_XG'] +
+        0.3 * predict_df['NN_pred_XG']
+    )
+
+    X_cs_predict_raw = predict_df[cs_features]
+    X_cs_predict = cs_scaler.transform(X_cs_predict_raw)
+    X_cs_predict = pd.DataFrame(
+        X_cs_predict,
+        columns=cs_features,
+        index=X_cs_predict_raw.index
+    )
+
+    predict_df['XGB_pred_CS'] = xgb_cs_model.predict_proba(X_cs_predict)[:, 1]
+    predict_df['Logistic_pred_CS'] = logistic_cs_model.predict_proba(X_cs_predict)[:, 1]
+
+    predict_df['Final_pred_CS'] = (
+        0.0* predict_df['XGB_pred_CS'] +
+        1 * predict_df['Logistic_pred_CS']
+    )
+
+    predict_df['Final_pred_CS'] = predict_df['Final_pred_CS'].clip(0, 1)
+    predict_df['XGB_pred_CS'] = predict_df['XGB_pred_CS'].clip(0, 1)
+    predict_df['Logistic_pred_CS'] = predict_df['Logistic_pred_CS'].clip(0, 1)
+
+    fixture_predictions_long = predict_df[[
+        'fixture_code',
+        'event',
+        'code',
+        'team_name',
+        'opponent',
+        'opponent_name',
+        'was_home',
+
+        'Offensive_Index',
+        'Defensive_Index',
+        'opp_Offensive_Index',
+        'opp_Defensive_Index',
+
+        'Rolling_Threat',
+        'Rolling_Threat_Against',
+        'opp_Rolling_Threat',
+        'opp_Rolling_Threat_Against',
+
+        'XGB_pred_XG',
+        'NN_pred_XG',
+        'Final_pred_XG',
+
+        'XGB_pred_CS',
+        'Logistic_pred_CS',
+        'Final_pred_CS'
+    ]].copy()
+
+    fixture_predictions_long = fixture_predictions_long.rename(columns={
+        'code': 'team_code'
+    })
+
+    fixture_predictions_long = fixture_predictions_long.sort_values(
+        ['event', 'fixture_code', 'was_home'],
+        ascending=[True, True, False]
+    )
+
+    fixture_predictions_long.to_csv(output_fixture_long_path, index=False)
+
+    # ======================================
+    # Build Team_prediction_visual1 format
+    # ======================================
+
+    min_event = fixture_predictions_long["event"].min()
+
+    home_pred = fixture_predictions_long[
+        fixture_predictions_long["was_home"] == 1
+    ].copy()
+
+    away_pred = fixture_predictions_long[
+        fixture_predictions_long["was_home"] == 0
+    ].copy()
+
+    fixture_summary = home_pred.merge(
+        away_pred,
+        on="fixture_code",
+        suffixes=("_home", "_away")
+    )
+
+    result_df = pd.DataFrame()
+
+    result_df["GW"] = fixture_summary["event_home"]
+    result_df["fixture_code"] = fixture_summary["fixture_code"]
+
+    result_df["pred"] = (
+        fixture_summary["event_home"] - min_event + 1
+    )
+
+    result_df["home_team"] = fixture_summary["team_name_home"]
+    result_df["away_team"] = fixture_summary["team_name_away"]
+
+    result_df["home_code"] = fixture_summary["team_code_home"]
+    result_df["away_code"] = fixture_summary["team_code_away"]
+
+    result_df["home_goals"] = fixture_summary["Final_pred_XG_home"]
+    result_df["away_goals"] = fixture_summary["Final_pred_XG_away"]
+
+    result_df["Clean_Sheet_home"] = fixture_summary["Final_pred_CS_home"]
+    result_df["Clean_Sheet_away"] = fixture_summary["Final_pred_CS_away"]
+
+    result_df["test_XG"] = fixture_summary["XGB_pred_XG_home"]
+    result_df["test_cluster"] = fixture_summary["NN_pred_XG_home"]
+    result_df["test_opp_XGC"] = fixture_summary["XGB_pred_XG_away"]
+
+    result_df.to_csv(
+        "Team_prediction_visual4.csv",
+        index=False
+    )
+
+
+    home_df = result_df[
+        ["fixture_code", "GW", "pred"]
+    ].copy()
+
+    home_df["team_name"] = result_df["home_team"]
+    home_df["team_code"] = result_df["home_code"]
+
+    home_df["XG"] = result_df["home_goals"]
+    home_df["XGC"] = result_df["away_goals"]
+
+    home_df["CS"] = result_df["Clean_Sheet_home"]
+
+    home_df["Opponent_team"] = result_df["away_team"]
+    home_df["Home"] = "H"
+
+
+    away_df = result_df[
+        ["fixture_code", "GW", "pred"]
+    ].copy()
+
+    away_df["team_name"] = result_df["away_team"]
+    away_df["team_code"] = result_df["away_code"]
+
+    away_df["XG"] = result_df["away_goals"]
+    away_df["XGC"] = result_df["home_goals"]
+
+    away_df["CS"] = result_df["Clean_Sheet_away"]
+
+    away_df["Opponent_team"] = result_df["home_team"]
+    away_df["Home"] = "A"
+
+
+    ALL_pred = pd.concat(
+        [home_df, away_df],
+        axis=0,
+        ignore_index=True
+    )
+
+    ALL_pred = ALL_pred.sort_values(
+        ["GW", "fixture_code", "Home"]
+    )
+
+    ALL_pred.to_csv(
+        "Team_prediction4.csv",
+        index=False
+    )
+
+    print("Saved Team_prediction_visual1.csv")
+    print("Saved Team_prediction1.csv")
+
+
+if __name__ == "__main__":
+    outputs = run_fixture_xg_cs_model(
+        historical_team_path="Team_data_transformed2.csv",
+        newest_team_path="Team_data_newest3.csv",
+        fixture_path=r"SImulator/fixtures_expanded_filtered_by_timelist.csv",
+        current_team_path=r"Raw_Data_25\current_teams.csv",
+        teampredver_path="TeamPredVer.csv",
+        output_teampredver_path="TeamPredVer_with_model_prediction.csv",
+        output_disagreements_path="TeamPredVer_largest_prediction_disagreements.csv",
+        output_fixture_long_path="fixture_predictions_long.csv",
+        use_date_filter=1,
+        train_end="2026-04-04"
+    )
 
 
 
@@ -1839,10 +2631,14 @@ def GenerateTeamPredictions(
     GenerateTeamPredictions1(fixture_path, current_team_path,horizon)
     GenerateTeamPredictions2(fixture_path, current_team_path,horizon)
     GenerateTeamPredictions_Results(fixture_path, current_team_path,horizon)
+    run_fixture_xg_cs_model(        
+        fixture_path=fixture_path,
+        current_team_path=current_team_path)
     
     
     team_pred1=pd.read_csv("Team_prediction1.csv")
     team_pred2=pd.read_csv("Team_prediction2.csv")
+    team_pred4=pd.read_csv("Team_prediction4.csv")
     team_results2=pd.read_csv("Team_prediction_results2.csv")
 
     team_results_path = "Team_prediction_results2.csv"
@@ -1861,31 +2657,41 @@ def GenerateTeamPredictions(
             team_pred1 = team_pred1[pd.to_numeric(team_pred1["GW"], errors="coerce").isin(gw_filter)].copy()
         if "GW" in team_pred2.columns:
             team_pred2 = team_pred2[pd.to_numeric(team_pred2["GW"], errors="coerce").isin(gw_filter)].copy()
+        if "GW" in team_pred4.columns:
+            team_pred4 = team_pred4[pd.to_numeric(team_pred4["GW"], errors="coerce").isin(gw_filter)].copy()
         if "GW" in team_results2.columns:
             team_results2 = team_results2[pd.to_numeric(team_results2["GW"], errors="coerce").isin(gw_filter)].copy()
 
     raw_team_pred1 = team_pred1.copy()
     raw_team_pred2 = team_pred2.copy()
+    raw_team_pred4 = team_pred4.copy()
 
-    team_pred_frames = [team_pred1.copy(), team_pred2.copy()]
+    team_pred_frames = [team_pred1.copy(), team_pred2.copy(), team_pred4.copy()]
     team_result_frames = [team_results2.copy()]
 
     pred_keys = ["GW", "pred", "team_code", "Opponent_team", "Home"]
     pred_value_cols = ["XG", "XGC", "CS"]
     if all(all(k in df.columns for k in pred_keys) for df in team_pred_frames):
-        for i, dfp in enumerate(team_pred_frames[1:], start=2):
-            ren = {c: f"{c}_p{i}" for c in pred_value_cols if c in dfp.columns}
+        merge_suffix_map = {2: "p2", 4: "p4"}
+        for dfp, label_idx in zip(team_pred_frames[1:], [2, 4]):
+            suffix = merge_suffix_map[label_idx]
+            ren = {c: f"{c}_{suffix}" for c in pred_value_cols if c in dfp.columns}
             add = dfp[pred_keys + [c for c in pred_value_cols if c in dfp.columns]].copy().rename(columns=ren)
             team_pred1 = team_pred1.merge(add, on=pred_keys, how="left")
     else:
-        # Fallback: align model-2 columns by row order when key columns are missing.
+        # Fallback: align model-2/model-4 columns by row order when key columns are missing.
         min_len = min(len(df) for df in team_pred_frames)
         team_pred1 = team_pred1.reset_index(drop=True)
         team_pred2 = team_pred2.reset_index(drop=True)
+        team_pred4 = team_pred4.reset_index(drop=True)
         for c in pred_value_cols:
             if c in team_pred2.columns:
                 team_pred1.loc[: min_len - 1, f"{c}_p2"] = pd.to_numeric(
                     team_pred2.loc[: min_len - 1, c], errors="coerce"
+                ).values
+            if c in team_pred4.columns:
+                team_pred1.loc[: min_len - 1, f"{c}_p4"] = pd.to_numeric(
+                    team_pred4.loc[: min_len - 1, c], errors="coerce"
                 ).values
 
     # Winning odds come from Team_prediction_results files.
@@ -1908,6 +2714,7 @@ def GenerateTeamPredictions(
     team_pred_ver_sources = [
         ("Team_prediction1", raw_team_pred1.copy()),
         ("Team_prediction2", raw_team_pred2.copy()),
+        ("Team_prediction4", raw_team_pred4.copy()),
     ]
     if sim_team_df is not None and not sim_team_df.empty:
         sim_team_ver = sim_team_df.copy()
@@ -1959,33 +2766,36 @@ def GenerateTeamPredictions(
 
         xg_orig = pd.to_numeric(team_pred1["XG"], errors="coerce")
         xg_p2 = pd.to_numeric(team_pred1.get("XG_p2"), errors="coerce")
+        xg_p4 = pd.to_numeric(team_pred1.get("XG_p4"), errors="coerce")
         xgc_orig = pd.to_numeric(team_pred1["XGC"], errors="coerce")
         xgc_p2 = pd.to_numeric(team_pred1.get("XGC_p2"), errors="coerce")
+        xgc_p4 = pd.to_numeric(team_pred1.get("XGC_p4"), errors="coerce")
         cs_orig = pd.to_numeric(team_pred1["CS"], errors="coerce")
-        cs_p2 = pd.to_numeric(team_pred1.get("CS_p2"), errors="coerce")
+        cs_p4 = pd.to_numeric(team_pred1.get("CS_p4"), errors="coerce")
         win_orig = pd.to_numeric(team_pred1["Win_Percent"], errors="coerce")
         draw_orig = pd.to_numeric(team_pred1["Draw_percent"], errors="coerce")
         loss_orig = pd.to_numeric(team_pred1["Loss_percent"], errors="coerce")
 
         team_pred1["XG"] = _weighted_blend_columns(
             [
-                (xg_orig, 0.25),
-                (xg_p2, 0.5),
-                (team_pred1.get("sim_xg"), 0.25),
+                (xg_p2, 0.3),
+                (xg_p4, 0.4),
+                (team_pred1.get("sim_xg"), 0.3),
             ]
         )
         team_pred1["XGC"] = _weighted_blend_columns(
             [
-                (xgc_orig, 0.25),
-                (xgc_p2, 0.5),
-                (team_pred1.get("sim_xgc"), 0.25),
+                (xgc_p2, 0.3),
+                (xgc_p4, 0.4),
+                (team_pred1.get("sim_xgc"), 0.3),
             ]
         )
         team_pred1["CS"] = _weighted_blend_columns(
             [
                 (cs_orig, 0.45),
-                (cs_p2, 0.1),
-                (team_pred1.get("sim_cs"), 0.45),
+                (cs_p4, 0.4),
+                (team_pred1.get("sim_cs"), 0.3),
+                (cs_orig, 0.3),
             ]
         )
         team_pred1["Win_Percent"] = _coalesce_average(win_orig, team_pred1.get("sim_win"))
@@ -1997,8 +2807,11 @@ def GenerateTeamPredictions(
                 c
                 for c in [
                     "XG_p2",
+                    "XG_p4",
                     "XGC_p2",
+                    "XGC_p4",
                     "CS_p2",
+                    "CS_p4",
                     "sim_xg",
                     "sim_xgc",
                     "sim_cs",
@@ -2015,6 +2828,7 @@ def GenerateTeamPredictions(
     
     team_pred_visual1=pd.read_csv("Team_prediction_visual1.csv")
     team_pred_visual2=pd.read_csv("Team_prediction_visual2.csv")
+    team_pred_visual4=pd.read_csv("Team_prediction_visual4.csv")
     if gw_filter is not None:
         if "GW" in team_pred_visual1.columns:
             team_pred_visual1 = team_pred_visual1[pd.to_numeric(team_pred_visual1["GW"], errors="coerce").isin(gw_filter)].copy()

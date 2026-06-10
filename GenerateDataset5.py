@@ -688,10 +688,54 @@ def Generate_team_data():
 
     full_team_data.to_csv("Team_Data_FUll.csv")
     full_team_data=pd.read_csv("Team_Data_FUll.csv").iloc[:,1:]
+    full_team_data["kickoff_time"] = pd.to_datetime(full_team_data["kickoff_time"], errors="coerce")
+    full_team_data = full_team_data.sort_values(["code", "kickoff_time"]).reset_index(drop=True)
+
+    SHORT = 8
+    MEDIUM = 18
+    LONG = 30
+    HORIZONS = [SHORT, MEDIUM, LONG]
+    cap_lower = 0.5
+    cap_upper = 3.5
+
+    rolling_cols = ['Plain_GS', 'Plain_GC', 'Plain_XGC', 'Plain_XG','Threat','Threat_against']
+
+    for col in rolling_cols:
+        capped_col = f'{col}_capped'
+        full_team_data[capped_col] = full_team_data[col].clip(lower=cap_lower, upper=cap_upper)
+
+        for horizon in HORIZONS:
+            full_team_data[f'{col}_roll{horizon}'] = (
+                full_team_data
+                .groupby('code')[capped_col]
+                .transform(
+                    lambda s: s.rolling(
+                        window=horizon,
+                        min_periods=1
+                    ).mean()
+                )
+            )
+
+    full_team_data['Offensive_Index'] = (
+        0.2 * (0.5 * full_team_data[f'Plain_XG_roll{SHORT}'] + 0.3 * full_team_data[f'Plain_GS_roll{SHORT}']+ 0.2 *0.01* full_team_data[f'Threat_roll{SHORT}'])
+        +
+        0.3 * (0.5 * full_team_data[f'Plain_XG_roll{MEDIUM}'] + 0.3 * full_team_data[f'Plain_GS_roll{MEDIUM}']+ 0.2 *0.01*  full_team_data[f'Threat_roll{MEDIUM}'])
+        +
+        0.5 * (0.5 * full_team_data[f'Plain_XG_roll{LONG}'] + 0.3 * full_team_data[f'Plain_GS_roll{LONG}']+ 0.2 *0.01*  full_team_data[f'Threat_roll{LONG}'])
+    )
+
+    full_team_data['Defensive_Index'] = (
+        0.2 * (0.5 * full_team_data[f'Plain_XGC_roll{SHORT}'] + 0.3 * full_team_data[f'Plain_GC_roll{SHORT}']+ 0.2 *0.01*  full_team_data[f'Threat_against_roll{SHORT}'])
+        +
+        0.3 * (0.5 * full_team_data[f'Plain_XGC_roll{MEDIUM}'] + 0.3 * full_team_data[f'Plain_GC_roll{MEDIUM}']+ 0.2 *0.01*  full_team_data[f'Threat_against_roll{MEDIUM}'])
+        +
+        0.5 * (0.5 * full_team_data[f'Plain_XGC_roll{LONG}'] + 0.3 * full_team_data[f'Plain_GC_roll{LONG}']+ 0.2 *0.01* full_team_data[f'Threat_against_roll{LONG}'])
+    )
+
     teams=full_team_data["name"].unique()
     ALL_teams=pd.DataFrame()
     newest_data=pd.DataFrame()
-    clip_val=3.2
+    clip_val=3.5
     for i in range(len(teams)):
         team=teams[i]
         team_data=full_team_data[full_team_data["name"]==team]
