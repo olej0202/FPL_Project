@@ -702,7 +702,10 @@ def Generate_team_data():
 
     for col in rolling_cols:
         capped_col = f'{col}_capped'
-        full_team_data[capped_col] = full_team_data[col].clip(lower=cap_lower, upper=cap_upper)
+        if(col in ['Threat','Threat_against'] ):
+            full_team_data[capped_col] = full_team_data[col].clip(lower=40, upper=300)
+        else:
+            full_team_data[capped_col] = full_team_data[col].clip(lower=cap_lower, upper=cap_upper)
 
         for horizon in HORIZONS:
             full_team_data[f'{col}_roll{horizon}'] = (
@@ -831,8 +834,8 @@ import numpy as np
 import pandas as pd
 
 def predict_xg_from_indices(A: float, B: float) -> float:
-    z = -3.15 + 1.485 * A + 1.503 * B - 0.174 * A * B
-    return math.exp(0.5 * z)
+    z = -1.807 + 0.848 * A + 0.91 * B - 0.128 * A * B
+    return math.exp( z)
 
 
 def rolling_slope(x: np.ndarray) -> float:
@@ -1467,26 +1470,26 @@ def team_transformed2():
         selected_team_df["XGA"] = ((
             (1 - overall_weight) * np.array(off_away_hist[team][:-1]) +
             overall_weight * selected_team_df["XGA"]
-        ) * 0.7 + 0.3 * selected_team_df["Rolling_Threat"])*0.99+0*np.array(off_neutral_hist[team][:-1])
+        ) * 0.9 + 0.1 * selected_team_df["Rolling_Threat"])*0.99+0*np.array(off_neutral_hist[team][:-1])
 
         selected_team_df["XGCA"] = ((
             (1 - overall_weight) * np.array(def_away_hist[team][:-1]) +
             overall_weight * selected_team_df["XGCA"]
-        ) * 0.7 + 0.3 * selected_team_df["Rolling_Threat_Against"])*0.99+0*np.array(def_neutral_hist[team][:-1])
+        ) * 0.9 + 0.1 * selected_team_df["Rolling_Threat_Against"])*0.99+0*np.array(def_neutral_hist[team][:-1])
 
         selected_team_df["XGH"] = ((
             (1 - overall_weight) * np.array(off_home_hist[team][:-1]) +
             overall_weight * selected_team_df["XGH"]
-        ) * 0.7 + 0.3 * selected_team_df["Rolling_Threat"])*0.99+0*np.array(off_neutral_hist[team][:-1])
+        ) * 0.9 + 0.1 * selected_team_df["Rolling_Threat"])*0.99+0*np.array(off_neutral_hist[team][:-1])
 
         selected_team_df["XGCH"] = ((
             (1 - overall_weight) * np.array(def_home_hist[team][:-1]) +
             overall_weight * selected_team_df["XGCH"]
-        ) * 0.7 + 0.3 * selected_team_df["Rolling_Threat_Against"])*0.99+0*np.array(def_neutral_hist[team][:-1])
+        ) * 0.9 + 0.1 * selected_team_df["Rolling_Threat_Against"])*0.99+0*np.array(def_neutral_hist[team][:-1])
 
 
-        selected_team_df["XG_avg"] = selected_team_df["XGH"] * 0.5 + selected_team_df["XGA"] * 0.5
-        selected_team_df["XGC_avg"] = selected_team_df["XGCH"] * 0.5 + selected_team_df["XGCA"] * 0.5
+        selected_team_df["XG_avg"] = (selected_team_df["XGH"] * 0.5 + selected_team_df["XGA"] * 0.5)*0.65+0.35*selected_team_df["Offensive_Index"] 
+        selected_team_df["XGC_avg"] = (selected_team_df["XGCH"] * 0.5 + selected_team_df["XGCA"] * 0.5)*0.65+0.35*selected_team_df["Defensive_Index"] 
 
         selected_team_df["XG_slope"] = slope_df["XG_slope"].values[:-1]
         selected_team_df["XGC_slope"] = slope_df["XGC_slope"].values[:-1]
@@ -1506,26 +1509,26 @@ def team_transformed2():
         newest_selected_team_df["XGA"] = ((
             off_away_hist[team][-1] * (1 - overall_weight) +
             overall_weight * newest_selected_team_df["XGA"]
-        ) * 0.7 + 0.3 * newest_selected_team_df["Rolling_Threat"])*0.99+0*off_neutral_hist[team][-1] 
+        ) * 0.9 + 0.1 * newest_selected_team_df["Rolling_Threat"])*0.99+0*off_neutral_hist[team][-1] 
 
         newest_selected_team_df["XGCA"] = ((
             def_away_hist[team][-1] * (1 - overall_weight) +
             overall_weight * newest_selected_team_df["XGCA"]
-        ) * 0.7 + 0.3 * newest_selected_team_df["Rolling_Threat_Against"])*0.99+0.0*def_neutral_hist[team][-1] 
+        ) * 0.9 + 0.1 * newest_selected_team_df["Rolling_Threat_Against"])*0.99+0.0*def_neutral_hist[team][-1] 
 
         newest_selected_team_df["XGH"] = ((
             off_home_hist[team][-1] * (1 - overall_weight) +
             overall_weight * newest_selected_team_df["XGH"]
-        ) * 0.7 + 0.3 * newest_selected_team_df["Rolling_Threat"])*0.99+0.0*off_neutral_hist[team][-1] 
+        ) * 0.9 + 0.1 * newest_selected_team_df["Rolling_Threat"])*0.99+0.0*off_neutral_hist[team][-1] 
 
         newest_selected_team_df["XGCH"] = ((
             def_home_hist[team][-1] * (1 - overall_weight) +
             overall_weight * newest_selected_team_df["XGCH"]
-        ) * 0.7 + 0.3 * newest_selected_team_df["Rolling_Threat_Against"])*0.99+0*def_neutral_hist[team][-1] 
+        ) * 0.9 + 0.1 * newest_selected_team_df["Rolling_Threat_Against"])*0.99+0*def_neutral_hist[team][-1] 
 
 
-        newest_selected_team_df["XG_avg"] = newest_selected_team_df["XGH"] * 0.5 + newest_selected_team_df["XGA"] * 0.5
-        newest_selected_team_df["XGC_avg"] = newest_selected_team_df["XGCH"] * 0.5 + newest_selected_team_df["XGCA"] * 0.5
+        newest_selected_team_df["XG_avg"] = (newest_selected_team_df["XGH"] * 0.5 + newest_selected_team_df["XGA"] * 0.5)*0.65+0.35*newest_selected_team_df["Offensive_Index"] 
+        newest_selected_team_df["XGC_avg"] = (newest_selected_team_df["XGCH"] * 0.5 + newest_selected_team_df["XGCA"] * 0.5)*0.65+0.35*newest_selected_team_df["Defensive_Index"] 
 
         newest_selected_team_df["XG_slope"] = slope_df["XG_slope"].values[-1]
         newest_selected_team_df["XGC_slope"] = slope_df["XGC_slope"].values[-1]
@@ -2080,7 +2083,8 @@ def main_Transform():
                     ((player_df["expected_assists"] / player_df["minutes"].clip(lower=10) * 90)/(player_df["Team_XA"]))
                     .clip(upper=0.5).rolling(window=window_size, min_periods=1).mean())
             
-            
+            player_df["Share_of_XG_Measure"] = ((player_df["expected_goals"] / player_df["minutes"].clip(lower=10) * 90)/(player_df["Team_XG"])).clip(upper=0.5)
+            player_df["Share_of_XA_Measure"] = ((player_df["expected_assists"] / player_df["minutes"].clip(lower=10) * 90)/(player_df["Team_XA"])).clip(upper=0.5)
             short_size = 8
             rolling_games_short = player_df["expected_goals"].rolling(window=short_size, min_periods=1).count()
             

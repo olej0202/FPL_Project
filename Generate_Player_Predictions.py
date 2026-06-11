@@ -83,9 +83,12 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
             fix_id=df["fix_id"].values[h]
             fix_precent=df["fix_percentage"].values[h]
             player_preds.append(GW)
+            player_preds.append(fix_id)
             player_preds2.append(GW)
+            player_preds2.append(fix_id)
             player_model.append(players[i])
             player_model.append(GW)
+            player_model.append(fix_id)
             team_stats=team_data[(team_data["team_code"]==team) & (team_data["fixture_code"]==fix_id)].copy()
 
             if(len(team_stats)<1):
@@ -194,7 +197,7 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
             all_preds_model.append(player_model)
             
         
-    columns=["Name", "GW", "pred", "position", "opp_stat"]
+    columns=["Name", "GW", "fix_id", "pred", "position", "opp_stat"]
     data_f=pd.DataFrame(all_preds, columns=columns)
     if(pred_variable in ["GOALS","Assist"]):
         data_f_model=pd.DataFrame(all_preds_model, columns=columns)
@@ -482,6 +485,7 @@ def XGB_Make_Pred(trainingdf,target_value,position2,column_list,predlength,posit
             row_pred=[]
             row_pred.append(preds_list[i])
             gw=gws[y]
+            fix_id = Pred_data_filtered["fix_id"].values[y]
             row=filtered_df.iloc[[y]] 
             dtest = xgb.DMatrix(row, label=[y],enable_categorical=True)
         
@@ -502,6 +506,7 @@ def XGB_Make_Pred(trainingdf,target_value,position2,column_list,predlength,posit
             y75 = float(model75.predict(dtest)[0])
             row_pred.append(filtered_df["position"].values[0])
             row_pred.append(gw)
+            row_pred.append(fix_id)
             row_pred.append(row["opposition_xgc"].values[0])
             row_pred.append(y25)
             row_pred.append(y75)
@@ -509,7 +514,7 @@ def XGB_Make_Pred(trainingdf,target_value,position2,column_list,predlength,posit
 
             total.append(row_pred)
 
-    column_list = ["Name", "pred", "position", "GW","opp_stat","25","75" ]
+    column_list = ["Name", "pred", "position", "GW","fix_id","opp_stat","25","75" ]
 
     data_f=pd.DataFrame(total, columns=column_list)
     data_f.to_csv(f"XGB_{position}.csv", index=False)
@@ -524,7 +529,7 @@ def XGB(position,position2,column_list,predlength):
 def Generate_LSTM_preds(pred,column_list,predlength):
     if(pred in ["GC","Fantasy","bps","CBI","cards","Saves"]):
         return 0
-    column_list = ["Name", "pred", "position", "GW","opp_stat" ]
+    column_list = ["Name", "pred", "position", "GW","fix_id","opp_stat" ]
 
     time_df=pd.read_csv("ML_training2.csv").iloc[:,1:]
     
@@ -683,6 +688,7 @@ def Generate_LSTM_preds(pred,column_list,predlength):
             pred_list.append(preds[j])
             pred_list.append(new_player_data["position"].values[0])
             pred_list.append(new_player_data["GW"].values[j])
+            pred_list.append(new_player_data["fix_id"].values[j])
             pred_list.append(new_player_data["played_XGC"].values[j])
 
             total_preds.append(pred_list)
@@ -742,6 +748,7 @@ def CLUSTER_preds(pred_variable):
             out = [
                 name,
                 int(row["GW"]) if not pd.isna(row.get("GW")) else np.nan,
+                int(row["fix_id"]) if not pd.isna(row.get("fix_id")) else np.nan,
                 float(val) if not pd.isna(val) else 0.0,
                 row.get("position", ""),
                 # include an opponent stat if useful (or drop this)
@@ -749,7 +756,7 @@ def CLUSTER_preds(pred_variable):
             ]
             all_rows.append(out)
 
-    out_df = pd.DataFrame(all_rows, columns=["Name", "GW", "pred", "position", "opp_stat"])
+    out_df = pd.DataFrame(all_rows, columns=["Name", "GW", "fix_id", "pred", "position", "opp_stat"])
     out_path = f"CLUSTER_{pred_variable}.csv"
     out_df.to_csv(out_path, index=False)
 
@@ -810,78 +817,118 @@ def normalize_player_gws(
 def Generate_point_predictions(GW_list):
     players=pd.read_csv("Player_prediction_set.csv").iloc[:,1:]
     unique_players=players["name"].unique()
-    xgb_goals = Get_rows("XGB", "GOALS").sort_values(by=["GW", "opp_stat"])
-    stat_goals = Get_rows("STAT", "GOALS").sort_values(by=["GW", "opp_stat"])
-    DNN_goals = Get_rows("DNN", "GOALS").sort_values(by=["GW", "opp_stat"])
-    cluster_goals=Get_rows("CLUSTER", "GOALS").sort_values(by=["GW", "opp_stat"])
+    xgb_goals = Get_rows("XGB", "GOALS")
+    stat_goals = Get_rows("STAT", "GOALS")
+    DNN_goals = Get_rows("DNN", "GOALS")
+    cluster_goals=Get_rows("CLUSTER", "GOALS")
 
-    xgb_assist = Get_rows("XGB", "Assist").sort_values(by=["GW", "opp_stat"])
-    stat_assist = Get_rows("STAT", "Assist").sort_values(by=["GW", "opp_stat"])
-    DNN_assist = Get_rows("DNN", "Assist").sort_values(by=["GW", "opp_stat"])
-    cluster_assist=Get_rows("CLUSTER", "Assist").sort_values(by=["GW", "opp_stat"])
+    xgb_assist = Get_rows("XGB", "Assist")
+    stat_assist = Get_rows("STAT", "Assist")
+    DNN_assist = Get_rows("DNN", "Assist")
+    cluster_assist=Get_rows("CLUSTER", "Assist")
 
-    xgb_bps = Get_rows("XGB", "bps").sort_values(by=["GW", "opp_stat"])
-    stat_bps = Get_rows("STAT", "bps").sort_values(by=["GW", "opp_stat"])
-    cluster_bps=Get_rows("CLUSTER", "bps").sort_values(by=["GW", "opp_stat"])
+    xgb_bps = Get_rows("XGB", "bps")
+    stat_bps = Get_rows("STAT", "bps")
+    cluster_bps=Get_rows("CLUSTER", "bps")
 
 
-    stat_GC = Get_rows("STAT", "GC").sort_values(by=["GW", "opp_stat"])
+    stat_GC = Get_rows("STAT", "GC")
 
-    xgb_fantasy= Get_rows("XGB", "Fantasy").sort_values(by=["GW", "opp_stat"])
+    xgb_fantasy= Get_rows("XGB", "Fantasy")
     
-    stat_cbi= Get_rows("STAT", "CBI").sort_values(by=["GW", "opp_stat"])
+    stat_cbi= Get_rows("STAT", "CBI")
     
-    stat_card= Get_rows("STAT", "cards").sort_values(by=["GW", "opp_stat"])
+    stat_card= Get_rows("STAT", "cards")
     
-    stat_saves=Get_rows("STAT", "Saves").sort_values(by=["GW", "opp_stat"])
+    stat_saves=Get_rows("STAT", "Saves")
     
     
     simulation=pd.read_csv("SImulator\simtest_player_outcomes_upcoming.csv").sort_values(by=["event", "fixture_code"])
     simulation2=pd.read_csv("SImulator\Full_simulator_player.csv").sort_values(by=["gameweek", "fixture_code"])
 
 
-
+    
 
     
     full_df=pd.DataFrame()
     for j in range(len(unique_players)):
         player=unique_players[j]
-        player_data=players[players["name"]==player].sort_values(by=["GW", "played_XGC"])
+        player_data=players[players["name"]==player].sort_values(by=["GW", "fix_id", "played_XGC"]).copy()
         position=player_data["position"].values[0]
         model_list=["STAT", "DNN", "XGB"]
         positions=["GOALS", "Assist","GC","bps","Fantasy"]
-        
-        xgb_goals_player = xgb_goals[xgb_goals["Name"]==player].sort_values(by=["GW", "opp_stat"])
-        stat_goals_player = stat_goals[stat_goals["Name"]==player].sort_values(by=["GW", "opp_stat"])
-        DNN_goals_player = DNN_goals[DNN_goals["Name"]==player].sort_values(by=["GW", "opp_stat"])
-        CLUSTER_goals_player = cluster_goals[cluster_goals["Name"]==player].sort_values(by=["GW", "opp_stat"])
 
-        
+        merge_keys = ["Name", "GW", "fix_id"]
+        player_base = player_data.rename(columns={"name": "Name"})[["Name", "GW", "fix_id"]].copy()
+        player_base["GW"] = pd.to_numeric(player_base["GW"], errors="coerce")
+        player_base["fix_id"] = pd.to_numeric(player_base["fix_id"], errors="coerce")
 
-        xgb_assist_player = xgb_assist[xgb_assist["Name"]==player].sort_values(by=["GW", "opp_stat"])
-        stat_assist_player = stat_assist[stat_assist["Name"]==player].sort_values(by=["GW", "opp_stat"])
-        DNN_assist_player = DNN_assist[DNN_assist["Name"]==player].sort_values(by=["GW", "opp_stat"])
-        CLUSTER_assist_player = cluster_assist[cluster_assist["Name"]==player].sort_values(by=["GW", "opp_stat"])
+        def _prepare_source(df_src, pred_col_name):
+            if df_src.empty:
+                return pd.DataFrame(columns=merge_keys + [pred_col_name])
+            src = df_src.copy()
+            if "Name" not in src.columns and "player_name" in src.columns:
+                src["Name"] = src["player_name"]
+            if "GW" not in src.columns and "event" in src.columns:
+                src["GW"] = src["event"]
+            if "GW" not in src.columns and "gameweek" in src.columns:
+                src["GW"] = src["gameweek"]
+            if "fix_id" not in src.columns and "fixture_code" in src.columns:
+                src["fix_id"] = src["fixture_code"]
+            src["GW"] = pd.to_numeric(src["GW"], errors="coerce")
+            src["fix_id"] = pd.to_numeric(src["fix_id"], errors="coerce")
+            keep_cols = [c for c in merge_keys if c in src.columns] + [pred_col_name]
+            if pred_col_name not in src.columns:
+                return pd.DataFrame(columns=merge_keys + [pred_col_name])
+            src = src[keep_cols].copy()
+            src = src.drop_duplicates(subset=merge_keys, keep="last")
+            return src
 
+        player_preds = player_base.copy()
+        player_preds = player_preds.merge(_prepare_source(xgb_goals[xgb_goals["Name"]==player], "pred").rename(columns={"pred": "xgb_goals_pred"}), on=merge_keys, how="left")
+        player_preds = player_preds.merge(_prepare_source(xgb_goals[xgb_goals["Name"]==player], "25").rename(columns={"25": "xgb_goals_25"}), on=merge_keys, how="left")
+        player_preds = player_preds.merge(_prepare_source(xgb_goals[xgb_goals["Name"]==player], "75").rename(columns={"75": "xgb_goals_75"}), on=merge_keys, how="left")
+        player_preds = player_preds.merge(_prepare_source(stat_goals[stat_goals["Name"]==player], "pred").rename(columns={"pred": "stat_goals_pred"}), on=merge_keys, how="left")
+        player_preds = player_preds.merge(_prepare_source(DNN_goals[DNN_goals["Name"]==player], "pred").rename(columns={"pred": "dnn_goals_pred"}), on=merge_keys, how="left")
+        player_preds = player_preds.merge(_prepare_source(cluster_goals[cluster_goals["Name"]==player], "pred").rename(columns={"pred": "cluster_goals_pred"}), on=merge_keys, how="left")
 
-        xgb_bps_player = xgb_bps[xgb_bps["Name"]==player].sort_values(by=["GW", "opp_stat"])
-        stat_bps_player = stat_bps[stat_bps["Name"]==player].sort_values(by=["GW", "opp_stat"])
-        cluster_bps_player = cluster_bps[cluster_bps["Name"]==player].sort_values(by=["GW", "opp_stat"])
+        player_preds = player_preds.merge(_prepare_source(xgb_assist[xgb_assist["Name"]==player], "25").rename(columns={"25": "xgb_assist_25"}), on=merge_keys, how="left")
+        player_preds = player_preds.merge(_prepare_source(xgb_assist[xgb_assist["Name"]==player], "75").rename(columns={"75": "xgb_assist_75"}), on=merge_keys, how="left")
+        player_preds = player_preds.merge(_prepare_source(stat_assist[stat_assist["Name"]==player], "pred").rename(columns={"pred": "stat_assist_pred"}), on=merge_keys, how="left")
+        player_preds = player_preds.merge(_prepare_source(DNN_assist[DNN_assist["Name"]==player], "pred").rename(columns={"pred": "dnn_assist_pred"}), on=merge_keys, how="left")
+        player_preds = player_preds.merge(_prepare_source(cluster_assist[cluster_assist["Name"]==player], "pred").rename(columns={"pred": "cluster_assist_pred"}), on=merge_keys, how="left")
 
+        player_preds = player_preds.merge(_prepare_source(stat_GC[stat_GC["Name"]==player], "pred").rename(columns={"pred": "stat_gc_pred"}), on=merge_keys, how="left")
+        player_preds = player_preds.merge(_prepare_source(xgb_fantasy[xgb_fantasy["Name"]==player], "pred").rename(columns={"pred": "xgb_fantasy_pred"}), on=merge_keys, how="left")
+        player_preds = player_preds.merge(_prepare_source(stat_cbi[stat_cbi["Name"]==player], "pred").rename(columns={"pred": "stat_cbi_pred"}), on=merge_keys, how="left")
+        player_preds = player_preds.merge(_prepare_source(stat_card[stat_card["Name"]==player], "pred").rename(columns={"pred": "stat_card_pred"}), on=merge_keys, how="left")
+        player_preds = player_preds.merge(_prepare_source(stat_saves[stat_saves["Name"]==player], "pred").rename(columns={"pred": "stat_saves_pred"}), on=merge_keys, how="left")
 
-        stat_GC_player = stat_GC[stat_GC["Name"]==player].sort_values(by=["GW", "opp_stat"])
-
-        xgb_fantasy_player= xgb_fantasy[xgb_fantasy["Name"]==player].sort_values(by=["GW", "opp_stat"])
-        
-        stat_cbi_player= stat_cbi[stat_cbi["Name"]==player].sort_values(by=["GW", "opp_stat"])
-        
-        stat_card_player= stat_card[stat_card["Name"]==player].sort_values(by=["GW", "opp_stat"])
-        
-        stat_saves_player= stat_saves[stat_saves["Name"]==player].sort_values(by=["GW", "opp_stat"])
-        
-        simulation_player=simulation[simulation["player_name"]==player].sort_values(by=["event", "fixture_code"])
-
-        simulation_player2=simulation2[simulation2["player_name"]==player].sort_values(by=["gameweek", "fixture_code"])
+        player_preds = player_preds.merge(
+            _prepare_source(simulation[simulation["player_name"]==player], "expected_goals").rename(columns={"expected_goals": "sim_goals_pred"}),
+            on=merge_keys,
+            how="left",
+        )
+        player_preds = player_preds.merge(
+            _prepare_source(simulation[simulation["player_name"]==player], "expected_assists").rename(columns={"expected_assists": "sim_assists_pred"}),
+            on=merge_keys,
+            how="left",
+        )
+        player_preds = player_preds.merge(
+            _prepare_source(simulation2[simulation2["player_name"]==player], "pred_goals").rename(columns={"pred_goals": "sim2_goals_pred"}),
+            on=merge_keys,
+            how="left",
+        )
+        player_preds = player_preds.merge(
+            _prepare_source(simulation2[simulation2["player_name"]==player], "pred_assists").rename(columns={"pred_assists": "sim2_assists_pred"}),
+            on=merge_keys,
+            how="left",
+        )
+        player_preds = player_preds.merge(
+            _prepare_source(simulation2[simulation2["player_name"]==player], "pred_bonus_points").rename(columns={"pred_bonus_points": "sim2_bonus_pred"}),
+            on=merge_keys,
+            how="left",
+        )
         
         
         overscore=max(0.9,player_data["Average_Overscore"].values[0])
@@ -896,85 +943,47 @@ def Generate_point_predictions(GW_list):
         cbi_hit_rate=player_data["defcon_avg_hit_rate"].values[-1]
 
 
-        goals=[]
-        assist=[]
-        bps=[]
-        gc=[]
-        fantasy=[]
-        cbi=[]
-        cards=[]
-        saves=[]
+        player_preds = player_preds.fillna(0)
+        player_preds["Goal_pred"] = (
+            (
+                (player_preds["xgb_goals_75"] * 0.5 + 0.5 * player_preds["xgb_goals_25"]) * 0.1
+                + player_preds["sim_goals_pred"] * 0.15
+                + player_preds["sim2_goals_pred"] * 0.25
+                + player_preds["stat_goals_pred"] * 0.5
+                + player_preds["dnn_goals_pred"] * 0.0
+                + player_preds["cluster_goals_pred"] * 0.0
+            ) * overscore
+        )
 
-        for i in range(len(player_data)):
+        player_preds["Assist_pred"] = (
+            (
+                (player_preds["xgb_assist_75"] * 0.5 + 0.5 * player_preds["xgb_assist_25"]) * 0.1
+                + player_preds["sim_assists_pred"] * 0.15
+                + player_preds["sim2_assists_pred"] * 0.25
+                + player_preds["stat_assist_pred"] * 0.5
+                + player_preds["dnn_assist_pred"] * 0.0
+                + historic_Assist * 0
+                + player_preds["cluster_assist_pred"] * 0.0
+            ) * overassist
+        )
+        player_preds["Bonus_pred"] = player_preds["sim2_bonus_pred"]
+        player_preds["GC_pred"] = player_preds["stat_gc_pred"]
+        player_preds["Fantasy_pred"] = player_preds["xgb_fantasy_pred"]
+        player_preds["CBI_pred"] = player_preds["stat_cbi_pred"]
+        player_preds["Card_pred"] = player_preds["stat_card_pred"]
+        player_preds["Save_pred"] = player_preds["stat_saves_pred"]
 
-            try:
-                goals.append((((xgb_goals_player["75"].values[i]*0.5+0.5*xgb_goals_player["25"].values[i])*0.1
-                         +simulation_player["expected_goals"].values[i]*0.15
-                         +simulation_player2["pred_goals"].values[i]*0.25
-                         +stat_goals_player["pred"].values[i]*0.5
-                         +DNN_goals_player["pred"].values[i]*0.0
-                         +CLUSTER_goals_player["pred"].values[i]*0.0))*overscore)
-                
-            except:
-                goals.append(0)
-
-            try:
-
-                assist.append((((xgb_assist_player["75"].values[i]*0.5+0.5*xgb_assist_player["25"].values[i])*0.1
-                                    +simulation_player["expected_assists"].values[i]*0.15
-                                    +simulation_player2["pred_assists"].values[i]*0.25
-                                    +stat_assist_player["pred"].values[i]*0.5
-                                    +DNN_assist_player["pred"].values[i]*0
-                                    +historic_Assist*0
-                                    +CLUSTER_assist_player["pred"].values[i]*0.0))*overassist)
-            except:
-                assist.append(0)
-
-            try:
-
-                bps.append(simulation_player2["pred_bonus_points"].values[i])
-            except:
-                bps.append(0)
-
-            try:
-                gc.append(stat_GC_player["pred"].values[i])
-            except:
-                gc.append(0)
-                
-            try:
-                cbi.append(stat_cbi_player["pred"].values[i])
-            except:
-                cbi.append(0)
-                
-            try:
-                cards.append(stat_card_player["pred"].values[i])
-            except:
-                cards.append(0)
+        columns_to_include=["name","position", "GW","fix_id","Rolling_adjusted_BPS", "Rolling_adjusted_XG", "Rolling_adjusted_XA","played_XGC","average_minutes","fix_percentage"]
             
-            try:
-                saves.append(stat_saves_player["pred"].values[i])
-            except:
-                saves.append(0) 
-            try:
-
-                fantasy.append(xgb_fantasy_player["pred"].values[i])
-            except:
-                fantasy.append(0)
-
-        columns_to_include=["name","position", "GW","Rolling_adjusted_BPS", "Rolling_adjusted_XG", "Rolling_adjusted_XA","played_XGC","average_minutes","fix_percentage"]
-            
-        New_dataset=player_data[columns_to_include]
-        New_dataset["Goal_pred"]=goals
-        
-        New_dataset["Assist_pred"]=assist
-        
-        New_dataset["Bonus_pred"]=bps
-        
-        New_dataset["GC_pred"]=gc
-        New_dataset["Fantasy_pred"]=fantasy
-        New_dataset["CBI_pred"]=cbi
-        New_dataset["Card_pred"]=cards
-        New_dataset["Save_pred"]=saves
+        New_dataset=player_data[columns_to_include].copy()
+        New_dataset = New_dataset.merge(
+            player_preds[["Name", "GW", "fix_id", "Goal_pred", "Assist_pred", "Bonus_pred", "GC_pred", "Fantasy_pred", "CBI_pred", "Card_pred", "Save_pred"]],
+            left_on=["name", "GW", "fix_id"],
+            right_on=["Name", "GW", "fix_id"],
+            how="left",
+        ).drop(columns=["Name"])
+        pred_fill_cols = ["Goal_pred", "Assist_pred", "Bonus_pred", "GC_pred", "Fantasy_pred", "CBI_pred", "Card_pred", "Save_pred"]
+        New_dataset[pred_fill_cols] = New_dataset[pred_fill_cols].fillna(0)
         
         
 

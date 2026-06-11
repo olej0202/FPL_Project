@@ -1643,10 +1643,10 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     
          
     eta = (
-    -1.8166
-    + 0.7939 * new_input_XG["off_fac"]
-    + 0.8837 * new_input_XG["def_fac"]
-    - 0.1104 * new_input_XG["off_fac"] * new_input_XG["def_fac"]
+    -1.807
+    + 0.848 * new_input_XG["off_fac"]
+    + 0.91 * new_input_XG["def_fac"]
+    - 0.128 * new_input_XG["off_fac"] * new_input_XG["def_fac"]
     )
 
 
@@ -1654,10 +1654,10 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     
     new_input_XG2["off_fac"]=new_input_XG2["Own_XG"]*0.7+0.3*new_input_XG2["Own_XG_avg"]-0.5*df_merged["XG_pred_rolling_error_x"]
     new_input_XG2["def_fac"]=new_input_XG2["Opposition_XGC"]*0.7+0.3*new_input_XG2["Opposition_XGC_avg"]-0.5*df_merged["XGC_pred_rolling_error_y"]
-    eta2 = (-1.8166
-        + 0.7939 * new_input_XG2["off_fac"]
-        + 0.8837 * new_input_XG2["def_fac"]
-        - 0.1104 * new_input_XG2["off_fac"] * new_input_XG2["def_fac"]
+    eta2 = (-1.807
+        + 0.848 * new_input_XG2["off_fac"]
+        + 0.91 * new_input_XG2["def_fac"]
+        - 0.128 * new_input_XG2["off_fac"] * new_input_XG2["def_fac"]
         )
 
     xg_stat_a = np.exp(eta2)
@@ -1688,10 +1688,10 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
          
     css_stat_home = np.exp(
         -np.exp(
-            -1.56
-            + 0.746 * (new_input_XGC["Own_XGC"]-0.5*df_merged["XGC_pred_rolling_error_y"])
-            + 0.73 * (new_input_XGC["Opposition_XG"]+-0.5*df_merged["XG_pred_rolling_error_x"])
-            - 0.079 * new_input_XGC["Own_XGC"] * new_input_XGC["Opposition_XG"]
+            -1.807
+            + 0.848 * (new_input_XGC["Own_XGC"]-0.5*df_merged["XGC_pred_rolling_error_y"])
+            + 0.91 * (new_input_XGC["Opposition_XG"]+-0.5*df_merged["XG_pred_rolling_error_x"])
+            - 0.128 * new_input_XGC["Own_XGC"] * new_input_XGC["Opposition_XG"]
         )
     )
 
@@ -1716,10 +1716,10 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     
     css_stat_away = np.exp(
         -np.exp(
-            -1.56
-            + 0.746 * new_input_XGC2["Own_XGC"]
-            + 0.73 * new_input_XGC2["Opposition_XG"]
-            - 0.079 * new_input_XGC2["Own_XGC"] * new_input_XGC2["Opposition_XG"]
+            -1.807
+            + 0.848 * new_input_XGC2["Own_XGC"]
+            + 0.91 * new_input_XGC2["Opposition_XG"]
+            - 0.128 * new_input_XGC2["Own_XGC"] * new_input_XGC2["Opposition_XG"]
         )
     )
 

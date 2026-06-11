@@ -171,7 +171,7 @@ def Generate_Player_Rankings(current_teams):
     )
 
     # Rename merge keys to avoid collision
-    df = df.rename(columns={"name": "name2", "GW": "GW2"})
+    df = df.rename(columns={"name": "name2", "GW": "GW2","fix_id":"fix_id2" })
 
     # Base predictions table (all players/GWs you want)
     df2 = pd.read_csv("Model_Predictions_visual.csv").iloc[:, 1:]
@@ -179,10 +179,10 @@ def Generate_Player_Rankings(current_teams):
     # Merge fixture info onto df2
     df3 = df2.merge(
         df,
-        left_on=["name", "GW"],
-        right_on=["name2", "GW2"],
+        left_on=["name", "fix_id"],
+        right_on=["name2", "fix_id2"],
         how="left",
-    ).drop(columns=["name2", "GW2"])
+    ).drop(columns=["name2", "fix_id2", "GW2"])
 
     # ✅ Fill ONLY when there was no fixture match for that GW
     # Use "nan" string as you requested (not actual NaN)

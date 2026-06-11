@@ -591,11 +591,11 @@ function recomputeMetrics(rows) {
     if (r.Home === "H") {
       const A = ownXG + ownAttE;
       const B = oppXGC - oppDefE;
-      xg = Math.exp( (-1.8166 + 0.7939 * A + 0.8837 * B - 0.1104 * A * B));
+      xg = Math.exp( (-1.807 + 0.848 * A + 0.91 * B - 0.128 * A * B));
     } else {
       const A = ownXG - ownAttE;
       const B = oppXGC + oppDefE;
-      xg = Math.exp((-1.8166 + 0.7939 * A + 0.8837 * B - 0.1104 * A * B));
+      xg = Math.exp((-1.807 + 0.848 * A + 0.91 * B - 0.128 * A * B));
     }
     let csProb;
 
@@ -605,10 +605,10 @@ function recomputeMetrics(rows) {
       const alpha = 0.00000009;
 
       const eta =
-        -1.8166 +
-        0.7939 * A +
-        0.8837 * B +
-        -0.1104 * A * B;
+        -1.807 +
+        0.848 * A +
+        0.91 * B +
+        -0.128 * A * B;
 
       const mu = Math.exp(eta);
 
@@ -619,10 +619,10 @@ function recomputeMetrics(rows) {
       const alpha = 0.00000009;
 
       const eta =
-        -1.8166 +
-        0.7939 * A +
-        0.8837 * B +
-        -0.1104 * A * B;
+        -1.807 +
+        0.848 * A +
+        0.91 * B +
+        -0.128 * A * B;
 
       const mu = Math.exp(eta);
 
