@@ -22,6 +22,282 @@ from torch.utils.data import TensorDataset, DataLoader
 import joblib
 criterion = nn.L1Loss()
 
+import pandas as pd
+import numpy as np
+
+from sklearn.metrics import mean_squared_error, mean_absolute_error
+from xgboost import XGBRegressor
+
+
+def train_share_model(
+    data_path,
+    model_type="Goals",  # "Goals" or "Assist"
+    output_predictions_path=None,
+    output_largest_errors_path=None,
+    output_importance_path=None,
+    date_col="kickoff_time",
+    train_start=None,
+    train_end=None,
+    test_start=None,
+    test_end=None,
+    xgb_params=None
+):
+    model_type = model_type.lower().strip()
+
+    if model_type not in ["goals", "goal", "assist", "assists"]:
+        raise ValueError("model_type must be 'Goals' or 'Assist'")
+
+    df = pd.read_csv(data_path).copy()
+
+    # =========================
+    # Model-specific setup
+    # =========================
+
+    if model_type in ["goals", "goal"]:
+        target_col = "XGSHARE"
+
+        required_for_target = ["expected_goals", "Team_XG"]
+
+        missing_target_cols = [
+            c for c in required_for_target
+            if c not in df.columns
+        ]
+
+        if missing_target_cols:
+            raise ValueError(
+                f"Missing columns needed to calculate XGSHARE: {missing_target_cols}"
+            )
+
+        df[target_col] = (
+            df["expected_goals"] / df["Team_XG"]
+        ).clip(upper=0.5)
+
+        feature_cols = [
+            "minutes",
+            "Share_of_XG",
+            "Goal_Statistics",
+            "Rolling_adjusted_XG"
+        ]
+
+        model_label = "Goals"
+
+    else:
+        target_col = "XASHARE"
+
+        required_for_target = ["expected_assists", "Team_XG"]
+
+        missing_target_cols = [
+            c for c in required_for_target
+            if c not in df.columns
+        ]
+
+        if missing_target_cols:
+            raise ValueError(
+                f"Missing columns needed to calculate XASHARE: {missing_target_cols}"
+            )
+
+        df[target_col] = (
+            df["expected_assists"] / df["Team_XG"]
+        ).clip(upper=0.5)
+
+        feature_cols = [
+            "minutes",
+            "Share_of_XA",
+            "Assist_Statistics",
+            "Rolling_adjusted_XA"
+        ]
+
+        model_label = "Assist"
+
+    if output_predictions_path is None:
+        output_predictions_path = f"{model_label}_share_test_predictions.csv"
+
+    if output_largest_errors_path is None:
+        output_largest_errors_path = f"{model_label}_share_largest_errors.csv"
+
+    if output_importance_path is None:
+        output_importance_path = f"{model_label}_share_feature_importance.csv"
+
+    required_cols = feature_cols + [target_col, date_col]
+
+    missing = [c for c in required_cols if c not in df.columns]
+
+    if missing:
+        raise ValueError(f"Missing columns in {data_path}: {missing}")
+
+    # =========================
+    # Datetime handling
+    # =========================
+
+    df[date_col] = pd.to_datetime(
+        df[date_col],
+        format="mixed",
+        utc=True
+    )
+
+    # =========================
+    # Clean data
+    # =========================
+
+    df = df.replace([np.inf, -np.inf], np.nan)
+    df = df.dropna(subset=required_cols).copy()
+
+    # =========================
+    # Train filter
+    # =========================
+
+    train_df = df.copy()
+
+    if train_start is not None:
+        train_start = pd.to_datetime(train_start, utc=True)
+        train_df = train_df[train_df[date_col] >= train_start].copy()
+
+    if train_end is not None:
+        train_end = pd.to_datetime(train_end, utc=True)
+        train_df = train_df[train_df[date_col] < train_end].copy()
+
+    # =========================
+    # Test filter
+    # =========================
+
+    test_df = df.copy()
+
+    if test_start is not None:
+        test_start = pd.to_datetime(test_start, utc=True)
+        test_df = test_df[test_df[date_col] >= test_start].copy()
+
+    if test_end is not None:
+        test_end = pd.to_datetime(test_end, utc=True)
+        test_df = test_df[test_df[date_col] < test_end].copy()
+
+    if len(train_df) == 0:
+        raise ValueError("No training rows after date filtering.")
+
+    if len(test_df) == 0:
+        raise ValueError("No test rows after date filtering.")
+
+    # =========================
+    # Train model
+    # =========================
+
+    X_train = train_df[feature_cols]
+    y_train = train_df[target_col]
+
+    X_test = test_df[feature_cols]
+    y_test = test_df[target_col]
+
+    if xgb_params is None:
+        xgb_params = {
+            "objective": "reg:squarederror",
+            "n_estimators": 500,
+            "learning_rate": 0.03,
+            "max_depth": 4,
+            "min_child_weight": 5,
+            "subsample": 0.8,
+            "colsample_bytree": 0.8,
+            "reg_alpha": 0.1,
+            "reg_lambda": 2.0,
+            "gamma": 0.05,
+            "random_state": 42,
+            "n_jobs": -1
+        }
+
+    model = XGBRegressor(**xgb_params)
+    model.fit(X_train, y_train)
+
+    test_pred = model.predict(X_test)
+
+    mse = mean_squared_error(y_test, test_pred)
+    mae = mean_absolute_error(y_test, test_pred)
+
+    print(f"\n{model_label} share model results")
+    print("Target:", target_col)
+    print("Features:", feature_cols)
+    print("Train rows:", len(train_df))
+    print("Test rows:", len(test_df))
+    print("MSE:", mse)
+    print("MAE:", mae)
+
+    # =========================
+    # Test prediction dataframe
+    # =========================
+
+    prediction_df = pd.DataFrame(index=test_df.index)
+
+    extra_cols = [
+        "name",
+        "player_name",
+        "team",
+        "Team",
+        "position",
+        "Position",
+        "GW",
+        "fix_id",
+        date_col
+    ]
+
+    for col in extra_cols:
+        if col in test_df.columns and col not in prediction_df.columns:
+            prediction_df[col] = test_df[col].values
+
+    prediction_df["model_type"] = model_label
+    prediction_df["target_col"] = target_col
+    prediction_df["actual"] = y_test.values
+    prediction_df["prediction"] = test_pred
+
+    prediction_df["error"] = (
+        prediction_df["actual"] -
+        prediction_df["prediction"]
+    )
+
+    prediction_df["abs_error"] = prediction_df["error"].abs()
+
+    for col in feature_cols:
+        prediction_df[col] = test_df[col].values
+
+    prediction_df = prediction_df.sort_values(
+        "abs_error",
+        ascending=False
+    ).reset_index(drop=True)
+
+    prediction_df["error_rank"] = np.arange(
+        1,
+        len(prediction_df) + 1
+    )
+
+
+    return {
+        "model": model,
+        "model_type": model_label,
+        "target_col": target_col,
+        "predictions": prediction_df,
+        "mse": mse,
+        "mae": mae,
+        "features": feature_cols,
+        "train_df": train_df,
+        "test_df": test_df
+    }
+
+def predict_single_player(
+    model_output,
+    minutes,
+    share,
+    statistic,
+    rolling_adjusted
+):
+    model = model_output["model"]
+    features = model_output["features"]
+
+    row = pd.DataFrame([{
+        features[0]: minutes,
+        features[1]: share,
+        features[2]: statistic,
+        features[3]: rolling_adjusted
+    }])
+
+    pred = model.predict(row)[0]
+
+    return pred
 def setup_dataset():
     df=pd.read_csv("testML4.csv").iloc[:,1:]
     max_t=df['time'].max()
@@ -52,11 +328,23 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
     data['rolling_key_passes'] = data['rolling_key_passes'].fillna(0.5)
     data['rolling_ICT'] = data['rolling_ICT'].fillna(5)
     data['Rolling_creativity'] = data['Rolling_creativity'].fillna(10)
-    xgb_model = joblib.load( f"XGB_XG_SHARE_MODEL.joblib")
-    rf_model=joblib.load( f"RF_XG_SHARE_MODEL.joblib")
-    
-    xgb_model_XA = joblib.load( f"XGB_XA_SHARE_MODEL.joblib")
-    rf_model_XA=joblib.load( f"RF_XA_SHARE_MODEL.joblib")
+    goals_output=train_share_model(
+        data_path="ML_training2.csv",
+        model_type="Goals",
+        train_start="2022-11-01",
+        train_end="2026-04-04",
+        test_start="2026-04-04",
+        test_end=None
+    )
+    assist_output = train_share_model(
+        data_path="ML_training2.csv",
+        model_type="Assist",
+        train_start="2022-11-01",
+        train_end="2026-04-04",
+        test_start="2026-04-04",
+        test_end=None
+    )
+
     
     
     players=data["name"].unique()
@@ -107,9 +395,17 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
             defensive_factor=(team_CS)
             fordelings_faktor=df["player_risiko"].values[0]
             if(pred_variable=="GOALS"):
+                
+
                base = df.loc[h, ['Rolling_adjusted_XG_share','rolling_Threat_share','rolling_XG_share','Rolling_adjusted_XG','Rolling_adjusted_XG_per90','Rolling_adjusted_Threat_per90']].to_numpy(dtype=float)      # 1D array length 4
                row = np.hstack([base, team_xg]).reshape(1, -1)  
-               pred=xgb_model.predict(row)[0]*0.5+0.5*rf_model.predict(row)[0]
+               pred=predict_single_player(
+                    goals_output,
+                    df['average_minutes'].values[h],
+                    df['Share_of_XG'].values[h],
+                    df['Goal_Statistics'].values[h],
+                    df['Rolling_adjusted_XG'].values[h]
+                )
                stat_pred=df['Goal_Statistics_share'].values[h]*0.3+df["Rolling_adjusted_Threat_per90_share"].values[h]*0.2+df['Rolling_adjusted_XG'].values[h]*0.1+df['Big_Chances'].values[h]*0.1*0.33+df['Share_of_XG'].values[h]*0.2+df['Share_of_XG_Short'].values[h]*0.1
 
                player_model.append(pred)
@@ -131,10 +427,16 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
             if(pred_variable=="Assist"):
                base = df.loc[h, ['Rolling_adjusted_XA_share','Rolling_creativity_share','rolling_XA_share','Rolling_adjusted_XA','Rolling_adjusted_XA_per90','Rolling_adjusted_creativity_per90']].to_numpy(dtype=float)      # 1D array length 4
                row = np.hstack([base, team_xg]).reshape(1, -1)  
-               pred=xgb_model_XA.predict(row)[0]*0.5+0.5*rf_model_XA.predict(row)[0]
+               pred=predict_single_player(
+                    assist_output,
+                    df['average_minutes'].values[h],
+                    df['Share_of_XA'].values[h],
+                    df['Assist_Statistics'].values[h],
+                    df['Rolling_adjusted_XA'].values[h]
+                )
                stat_pred=df['Assist_Statistics_share'].values[h]*0.4+df['Rolling_adjusted_XA'].values[h]*0.1+df["Big_Chances_Created"].values[h]/2 * 0.2+df['Share_of_XA'].values[h]*0.2+df['Share_of_XA_Short'].values[h]*0.1
                player_model.append(pred)
-               pred=pred*0.3+0.7*stat_pred
+               pred=pred*0.4+0.6*stat_pred
 
                #own_data_xa_pred=((df['Rolling_adjusted_XA'].values[h]*0.7+df['rolling_Adjusted_XA_historic'].values[h]*0.3)*df["opposition_xgc"].values[h]+df['Share_of_XA'].values[h]*team_xg)*(0.5)
                own_data_xa_pred=(pred*team_xg)*1+0*((df['Rolling_adjusted_XA'].values[h]*0.7+df['rolling_Adjusted_XA_historic'].values[h]*0.3)*df["opposition_xgc"].values[h])
@@ -1063,9 +1365,9 @@ def Make_Predictions ():
         position_filter=positions[y]
         Stat_preds(is_pred, position_filter,column_list,predlength)
 
-        pred2=XGB(position_filter,"FWD",column_list,predlength)        
-        Generate_LSTM_preds(position_filter,column_list,predlength)
-        CLUSTER_preds(position_filter)
+        #pred2=XGB(position_filter,"FWD",column_list,predlength)        
+        #Generate_LSTM_preds(position_filter,column_list,predlength)
+        #CLUSTER_preds(position_filter)
 
 
 
