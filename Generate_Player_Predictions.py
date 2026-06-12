@@ -2,7 +2,6 @@
 import pandas as pd
 import numpy as np
 import xgboost as xgb
-from sklearn.metrics import mean_squared_error
 from sklearn.preprocessing import StandardScaler
 from xgboost import XGBClassifier
 from datetime import datetime, timedelta
@@ -20,13 +19,43 @@ import torch
 import torch.nn as nn
 from torch.utils.data import TensorDataset, DataLoader
 import joblib
+from GenerateConfig import date_filter as config_date_filter
 criterion = nn.L1Loss()
 
-import pandas as pd
-import numpy as np
+
 
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 from xgboost import XGBRegressor
+
+
+def _resolve_config_date_filter(value):
+    if value is None:
+        return None
+
+    if isinstance(value, (pd.Timestamp, datetime)):
+        ts = pd.Timestamp(value)
+        return ts.tz_localize("UTC") if ts.tzinfo is None else ts.tz_convert("UTC")
+
+    raw = str(value).strip()
+    if not raw:
+        return None
+
+    parsed = pd.to_datetime(raw, utc=True, errors="coerce")
+    if pd.notna(parsed):
+        return parsed
+
+    parsed_dayfirst = pd.to_datetime(raw, utc=True, errors="coerce", dayfirst=True)
+    if pd.notna(parsed_dayfirst):
+        return parsed_dayfirst
+
+    raise ValueError(
+        f"Could not parse date_filter from GenerateConfig.py: {value!r}. "
+        "Expected a valid date string or date/datetime object."
+    )
+
+
+
+
 
 
 def train_share_model(
@@ -43,11 +72,48 @@ def train_share_model(
     xgb_params=None
 ):
     model_type = model_type.lower().strip()
+    config_split_date = _resolve_config_date_filter(config_date_filter)
 
     if model_type not in ["goals", "goal", "assist", "assists"]:
         raise ValueError("model_type must be 'Goals' or 'Assist'")
 
     df = pd.read_csv(data_path).copy()
+
+    df[date_col] = pd.to_datetime(
+        df[date_col],
+        format="mixed",
+        utc=True
+    )
+
+    df = df.sort_values(
+        ["name", date_col]
+    ).reset_index(drop=True)
+
+    # =========================
+    # Shift leakage-sensitive columns
+    # =========================
+
+    shift_cols = [
+        "Share_of_XG",
+        "Share_of_XG_Short",
+        "Goal_Statistics",
+        "Rolling_adjusted_XG",
+        "Share_of_XA",
+        "Share_of_XA_Short",
+        "Assist_Statistics",
+        "Rolling_adjusted_XA"
+    ]
+
+    existing_shift_cols = [
+        c for c in shift_cols
+        if c in df.columns
+    ]
+
+    for col in existing_shift_cols:
+        df[col] = (
+            df.groupby("name")[col]
+            .shift(1)
+        )
 
     # =========================
     # Model-specific setup
@@ -75,6 +141,7 @@ def train_share_model(
         feature_cols = [
             "minutes",
             "Share_of_XG",
+            "Share_of_XG_Short",
             "Goal_Statistics",
             "Rolling_adjusted_XG"
         ]
@@ -103,6 +170,7 @@ def train_share_model(
         feature_cols = [
             "minutes",
             "Share_of_XA",
+            "Share_of_XA_Short",
             "Assist_Statistics",
             "Rolling_adjusted_XA"
         ]
@@ -126,16 +194,6 @@ def train_share_model(
         raise ValueError(f"Missing columns in {data_path}: {missing}")
 
     # =========================
-    # Datetime handling
-    # =========================
-
-    df[date_col] = pd.to_datetime(
-        df[date_col],
-        format="mixed",
-        utc=True
-    )
-
-    # =========================
     # Clean data
     # =========================
 
@@ -147,6 +205,8 @@ def train_share_model(
     # =========================
 
     train_df = df.copy()
+    if train_end is None and config_split_date is not None:
+        train_end = config_split_date
 
     if train_start is not None:
         train_start = pd.to_datetime(train_start, utc=True)
@@ -161,6 +221,8 @@ def train_share_model(
     # =========================
 
     test_df = df.copy()
+    if test_start is None and config_split_date is not None:
+        test_start = config_split_date
 
     if test_start is not None:
         test_start = pd.to_datetime(test_start, utc=True)
@@ -219,6 +281,21 @@ def train_share_model(
     print("MAE:", mae)
 
     # =========================
+    # Feature importance
+    # =========================
+
+    feature_importance = pd.DataFrame({
+        "feature": feature_cols,
+        "importance": model.feature_importances_
+    }).sort_values(
+        "importance",
+        ascending=False
+    ).reset_index(drop=True)
+
+    print("\nFeature importance")
+    print(feature_importance)
+
+    # =========================
     # Test prediction dataframe
     # =========================
 
@@ -271,17 +348,18 @@ def train_share_model(
         "model_type": model_label,
         "target_col": target_col,
         "predictions": prediction_df,
+        "feature_importance": feature_importance,
         "mse": mse,
         "mae": mae,
         "features": feature_cols,
         "train_df": train_df,
         "test_df": test_df
     }
-
 def predict_single_player(
     model_output,
     minutes,
     share,
+    short_share,
     statistic,
     rolling_adjusted
 ):
@@ -291,13 +369,14 @@ def predict_single_player(
     row = pd.DataFrame([{
         features[0]: minutes,
         features[1]: share,
-        features[2]: statistic,
-        features[3]: rolling_adjusted
+        features[2]: short_share,
+        features[3]: statistic,
+        features[4]: rolling_adjusted
     }])
 
     pred = model.predict(row)[0]
 
-    return pred
+    return float(pred)
 def setup_dataset():
     df=pd.read_csv("testML4.csv").iloc[:,1:]
     max_t=df['time'].max()
@@ -332,16 +411,16 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
         data_path="ML_training2.csv",
         model_type="Goals",
         train_start="2022-11-01",
-        train_end="2026-04-04",
-        test_start="2026-04-04",
+        train_end=None,
+        test_start=None,
         test_end=None
     )
     assist_output = train_share_model(
         data_path="ML_training2.csv",
         model_type="Assist",
         train_start="2022-11-01",
-        train_end="2026-04-04",
-        test_start="2026-04-04",
+        train_end=None,
+        test_start=None,
         test_end=None
     )
 
@@ -398,18 +477,20 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
                 
 
                base = df.loc[h, ['Rolling_adjusted_XG_share','rolling_Threat_share','rolling_XG_share','Rolling_adjusted_XG','Rolling_adjusted_XG_per90','Rolling_adjusted_Threat_per90']].to_numpy(dtype=float)      # 1D array length 4
-               row = np.hstack([base, team_xg]).reshape(1, -1)  
+               row = np.hstack([base, team_xg]).reshape(1, -1) 
+
                pred=predict_single_player(
                     goals_output,
                     df['average_minutes'].values[h],
                     df['Share_of_XG'].values[h],
+                    df['Share_of_XG_Short'].values[h],
                     df['Goal_Statistics'].values[h],
                     df['Rolling_adjusted_XG'].values[h]
                 )
                stat_pred=df['Goal_Statistics_share'].values[h]*0.3+df["Rolling_adjusted_Threat_per90_share"].values[h]*0.2+df['Rolling_adjusted_XG'].values[h]*0.1+df['Big_Chances'].values[h]*0.1*0.33+df['Share_of_XG'].values[h]*0.2+df['Share_of_XG_Short'].values[h]*0.1
 
                player_model.append(pred)
-               pred=pred*0.4+0.6*stat_pred
+               pred=pred*0.7+0.3*stat_pred
 
                #own_data_xg_pred=((df['Rolling_adjusted_XG'].values[h]*0.7+df['rolling_Adjusted_XG_historic'].values[h]*0.3)*df["opposition_xgc"].values[h]+df['Share_of_XG'].values[h]*team_xg)*(0.5)
                own_data_xg_pred=(pred*team_xg)*1+0.0*((df['Rolling_adjusted_XG'].values[h]*0.7+df['rolling_Adjusted_XG_historic'].values[h]*0.3)*df["opposition_xgc"].values[h])
@@ -431,12 +512,13 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
                     assist_output,
                     df['average_minutes'].values[h],
                     df['Share_of_XA'].values[h],
+                    df['Share_of_XA_Short'].values[h],
                     df['Assist_Statistics'].values[h],
                     df['Rolling_adjusted_XA'].values[h]
                 )
                stat_pred=df['Assist_Statistics_share'].values[h]*0.4+df['Rolling_adjusted_XA'].values[h]*0.1+df["Big_Chances_Created"].values[h]/2 * 0.2+df['Share_of_XA'].values[h]*0.2+df['Share_of_XA_Short'].values[h]*0.1
                player_model.append(pred)
-               pred=pred*0.4+0.6*stat_pred
+               pred=pred*0.7+0.3*stat_pred
 
                #own_data_xa_pred=((df['Rolling_adjusted_XA'].values[h]*0.7+df['rolling_Adjusted_XA_historic'].values[h]*0.3)*df["opposition_xgc"].values[h]+df['Share_of_XA'].values[h]*team_xg)*(0.5)
                own_data_xa_pred=(pred*team_xg)*1+0*((df['Rolling_adjusted_XA'].values[h]*0.7+df['rolling_Adjusted_XA_historic'].values[h]*0.3)*df["opposition_xgc"].values[h])
@@ -1248,10 +1330,10 @@ def Generate_point_predictions(GW_list):
         player_preds = player_preds.fillna(0)
         player_preds["Goal_pred"] = (
             (
-                (player_preds["xgb_goals_75"] * 0.5 + 0.5 * player_preds["xgb_goals_25"]) * 0.1
+                (player_preds["xgb_goals_75"] * 0.5 + 0.5 * player_preds["xgb_goals_25"]) * 0.0
                 + player_preds["sim_goals_pred"] * 0.15
                 + player_preds["sim2_goals_pred"] * 0.25
-                + player_preds["stat_goals_pred"] * 0.5
+                + player_preds["stat_goals_pred"] * 0.6
                 + player_preds["dnn_goals_pred"] * 0.0
                 + player_preds["cluster_goals_pred"] * 0.0
             ) * overscore
@@ -1259,10 +1341,10 @@ def Generate_point_predictions(GW_list):
 
         player_preds["Assist_pred"] = (
             (
-                (player_preds["xgb_assist_75"] * 0.5 + 0.5 * player_preds["xgb_assist_25"]) * 0.1
+                (player_preds["xgb_assist_75"] * 0.5 + 0.5 * player_preds["xgb_assist_25"]) * 0.0
                 + player_preds["sim_assists_pred"] * 0.15
                 + player_preds["sim2_assists_pred"] * 0.25
-                + player_preds["stat_assist_pred"] * 0.5
+                + player_preds["stat_assist_pred"] * 0.6
                 + player_preds["dnn_assist_pred"] * 0.0
                 + historic_Assist * 0
                 + player_preds["cluster_assist_pred"] * 0.0

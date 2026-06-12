@@ -61,6 +61,7 @@ fixtures_config = {
 
     }
 
+date_filter="2026-14-04"
 
 min_id=46805
 
