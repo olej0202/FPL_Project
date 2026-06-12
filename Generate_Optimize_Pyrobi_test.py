@@ -200,6 +200,7 @@ def optimize_my_team(
 
     current_fixture_path = "Raw_Data_25/Fantasy_season_2025_Fixtures.csv"
     Last_GW = get_last_completed_gw(current_fixture_path)
+    Last_GW=32
 
     start = max(Last_GW + 1, 1)
     cutoff = min(start + 5, 38)   # ensure we never go past GW38

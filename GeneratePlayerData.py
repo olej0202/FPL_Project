@@ -474,92 +474,196 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
           understat_posxa (float),
           understat_posxa_share (float)
         """
+    
         pos_row = understat_pos.loc[
             understat_pos["fpl_name"] == name,
             ["Matched_Pos_List", "Matched_Pos_Pct_List"]
         ]
-
+    
         if pos_row.empty:
             pos_list = ["SUB"]
             pct_list = [1.0]
         else:
             pos_list = _as_list(pos_row["Matched_Pos_List"].iloc[0], ["SUB"])
             pct_list = _as_list(pos_row["Matched_Pos_Pct_List"].iloc[0], [1.0])
-
-        # remove SUB from weighting (if you want SUB excluded)
-        pairs = [(p, w) for p, w in zip(pos_list, pct_list) if str(p).upper() != "SUB"]
+    
+        pairs = [
+            (p, w)
+            for p, w in zip(pos_list, pct_list)
+            if str(p).upper() != "SUB"
+        ]
+    
         if not pairs:
             pairs = [("SUB", 1.0)]
-
+    
         pos_list, pct_list = zip(*pairs)
         pos_list = list(pos_list)
         w = _normalize_weights(pct_list)
-
-        # main position = highest weight
+    
         main_pos = pos_list[int(np.argmax(w))] if pos_list else "SUB"
-
+    
+        # =========================
+        # 1. Try current team + weighted positions
+        # =========================
+    
         team_pos = understat_team[
             (understat_team["Team_code"] == team_code) &
             (understat_team["pos_group"].isin(pos_list))
         ].copy()
-
-        # If some positions missing in understat_team, drop and renormalize
+    
+        fallback_used = False
+    
         if not team_pos.empty:
-            available = team_pos["pos_group"].tolist()
-            pairs2 = [(p, wi) for p, wi in zip(pos_list, w) if p in set(available)]
+            available = set(team_pos["pos_group"].tolist())
+    
+            pairs2 = [
+                (p, wi)
+                for p, wi in zip(pos_list, w)
+                if p in available
+            ]
+    
             if pairs2:
                 pos_list2, w2 = zip(*pairs2)
                 pos_list = list(pos_list2)
                 w = _normalize_weights(w2)
                 main_pos = pos_list[int(np.argmax(w))]
-                team_pos = team_pos[team_pos["pos_group"].isin(pos_list)].copy()
+                team_pos = team_pos[
+                    team_pos["pos_group"].isin(pos_list)
+                ].copy()
             else:
-                team_pos = pd.DataFrame()  # force fallback below
-
-        # fallback: if nothing matched, try main_pos row; if that fails, return zeros
+                team_pos = pd.DataFrame()
+    
+        # =========================
+        # 2. Try current team + main position
+        # =========================
+    
         if team_pos.empty:
             team_pos = understat_team[
                 (understat_team["Team_code"] == team_code) &
                 (understat_team["pos_group"] == main_pos)
             ].copy()
-            if team_pos.empty:
-                return main_pos, 0.0, 0.0, 0.0, 0.0
-            team_pos["__w"] = 1.0
-            wsum = 1.0
-        else:
-            pos_to_w = {p: float(wi) for p, wi in zip(pos_list, w)}
+    
+            if not team_pos.empty:
+                team_pos["__w"] = 1.0
+                wsum = 1.0
+    
+        # =========================
+        # 3. Fallback: all teams + weighted positions
+        # =========================
+    
+        if team_pos.empty:
+            fallback_used = True
+    
+            team_pos = understat_team[
+                understat_team["pos_group"].isin(pos_list)
+            ].copy()
+    
+            if not team_pos.empty:
+                available = set(team_pos["pos_group"].tolist())
+    
+                pairs2 = [
+                    (p, wi)
+                    for p, wi in zip(pos_list, w)
+                    if p in available
+                ]
+    
+                if pairs2:
+                    pos_list2, w2 = zip(*pairs2)
+                    pos_list = list(pos_list2)
+                    w = _normalize_weights(w2)
+                    main_pos = pos_list[int(np.argmax(w))]
+                    team_pos = team_pos[
+                        team_pos["pos_group"].isin(pos_list)
+                    ].copy()
+    
+                    pos_to_w = {
+                        p: float(wi)
+                        for p, wi in zip(pos_list, w)
+                    }
+    
+                    team_pos["__w"] = team_pos["pos_group"].map(pos_to_w).fillna(0.0)
+                    wsum = float(team_pos["__w"].sum())
+    
+                    if wsum <= 0:
+                        team_pos["__w"] = 1.0
+                        wsum = float(team_pos["__w"].sum())
+    
+        # =========================
+        # 4. Fallback: all teams + main_pos
+        # =========================
+    
+        if team_pos.empty:
+            fallback_used = True
+    
+            team_pos = understat_team[
+                understat_team["pos_group"] == main_pos
+            ].copy()
+    
+            if not team_pos.empty:
+                team_pos["__w"] = 1.0
+                wsum = float(team_pos["__w"].sum())
+    
+        # =========================
+        # 5. Nothing found
+        # =========================
+    
+        if team_pos.empty:
+            return main_pos, 0.0, 0.0, 0.0, 0.0
+    
+        # =========================
+        # Normal team-specific weighting
+        # =========================
+    
+        if "__w" not in team_pos.columns:
+            pos_to_w = {
+                p: float(wi)
+                for p, wi in zip(pos_list, w)
+            }
+    
             team_pos["__w"] = team_pos["pos_group"].map(pos_to_w).fillna(0.0)
             wsum = float(team_pos["__w"].sum())
+    
             if wsum <= 0:
                 team_pos["__w"] = 1.0
                 wsum = float(team_pos["__w"].sum())
-
+    
         def wavg(col):
-            return float((team_pos[col].fillna(0.0) * team_pos["__w"]).sum() / wsum)
-
+            return float(
+                (
+                    team_pos[col].fillna(0.0) *
+                    team_pos["__w"]
+                ).sum() / wsum
+            )
+    
         posxg = wavg("XGIndex")
         posxa = wavg("XAIndex")
-
+    
         posxg_share = float(
             (
                 (
-                    (team_pos["Rolling_XG_Share"].fillna(0.0) * 0.8
-                     + 0.2 * team_pos["Rolling_Shots_Share"].fillna(0.0)) * 0.6
+                    (
+                        team_pos["Rolling_XG_Share"].fillna(0.0) * 0.8
+                        + 0.2 * team_pos["Rolling_Shots_Share"].fillna(0.0)
+                    ) * 0.6
                     + 0.4 * team_pos["Rolling_XG_Share2"].fillna(0.0)
-                ) * team_pos["__w"]
+                )
+                * team_pos["__w"]
             ).sum() / wsum
         )
-
+    
         posxa_share = float(
             (
                 (
-                    (team_pos["Rolling_XA_Share"].fillna(0.0) * 0.8
-                     + 0.2 * team_pos["Rolling_KeyPasses_Share"].fillna(0.0)) * 0.6
+                    (
+                        team_pos["Rolling_XA_Share"].fillna(0.0) * 0.8
+                        + 0.2 * team_pos["Rolling_KeyPasses_Share"].fillna(0.0)
+                    ) * 0.6
                     + 0.4 * team_pos["Rolling_XA_Share2"].fillna(0.0)
-                ) * team_pos["__w"]
+                )
+                * team_pos["__w"]
             ).sum() / wsum
         )
-
+    
         return main_pos, posxg, posxg_share, posxa, posxa_share
 
     # -----------------------------
