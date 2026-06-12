@@ -7,6 +7,7 @@ from typing import Dict, Iterable, List, Optional, Tuple
 import numpy as np
 import pandas as pd
 from collections import defaultdict
+from GenerateConfig import POSITION_EVENT_BONUS
 
 # =========================
 # CONFIG
@@ -29,12 +30,6 @@ LAMBDA_POISSON_ICT_DIFF_COEF = 0.395
 
 # Bonus model settings (used only for top-3 bonus point allocation ranking).
 # Values are BPS-like weights by position for in-match contributions.
-POSITION_EVENT_BONUS = {
-    "GK": {"goal": 12.0, "assist": 9.0, "cs": 12.0},
-    "DEF": {"goal": 12.0, "assist": 9.0, "cs": 12.0},
-    "MID": {"goal": 18.0, "assist": 9.0, "cs": 0.0},
-    "FWD": {"goal": 24.0, "assist": 9.0, "cs": 0.0},
-}
 
 
 @dataclass(frozen=True)
@@ -117,7 +112,7 @@ def _parse_bool(v) -> bool:
 def _normalize_position(v) -> str:
     s = str(v).strip().upper()
     if s in {"1", "GK", "GKP", "GOALKEEPER"}:
-        return "GK"
+        return "GKP"
     if s in {"2", "DEF", "D", "DEFENDER"}:
         return "DEF"
     if s in {"3", "MID", "M", "MIDFIELDER"}:

@@ -20,6 +20,8 @@ import torch.nn as nn
 from torch.utils.data import TensorDataset, DataLoader
 import joblib
 from GenerateConfig import date_filter as config_date_filter
+from GenerateConfig import POSITION_EVENT_BONUS,POINTS_RULES
+
 criterion = nn.L1Loss()
 
 
@@ -539,7 +541,7 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
             
             if(pred_variable=="bps"):
                real_variable="bonus" 
-               player_preds.append(max(df['Rolling_adjusted_BPS'].values[h]*0.4+df['Rolling_adjusted_BPS_2'].values[h]*0.6,5)*0.015*other_metric)
+               player_preds.append(max(df['Rolling_adjusted_BPS'].values[h]*0.4+df['Rolling_adjusted_BPS_2'].values[h]*0.6,5)*other_metric)
                
             if(pred_variable=="cards"):
                real_variable="cards" 
@@ -1287,6 +1289,8 @@ def Generate_point_predictions(GW_list):
         player_preds = player_preds.merge(_prepare_source(stat_cbi[stat_cbi["Name"]==player], "pred").rename(columns={"pred": "stat_cbi_pred"}), on=merge_keys, how="left")
         player_preds = player_preds.merge(_prepare_source(stat_card[stat_card["Name"]==player], "pred").rename(columns={"pred": "stat_card_pred"}), on=merge_keys, how="left")
         player_preds = player_preds.merge(_prepare_source(stat_saves[stat_saves["Name"]==player], "pred").rename(columns={"pred": "stat_saves_pred"}), on=merge_keys, how="left")
+        player_preds = player_preds.merge(_prepare_source(stat_bps[stat_bps["Name"]==player], "pred").rename(columns={"pred": "stat_bps"}), on=merge_keys, how="left")
+
 
         player_preds = player_preds.merge(
             _prepare_source(simulation[simulation["player_name"]==player], "expected_goals").rename(columns={"expected_goals": "sim_goals_pred"}),
@@ -1350,7 +1354,8 @@ def Generate_point_predictions(GW_list):
                 + player_preds["cluster_assist_pred"] * 0.0
             ) * overassist
         )
-        player_preds["Bonus_pred"] = player_preds["sim2_bonus_pred"]
+        player_preds["Bonus_pred2"] = player_preds["sim2_bonus_pred"]
+        player_preds["Bonus_pred"] = player_preds["stat_bps"]
         player_preds["GC_pred"] = player_preds["stat_gc_pred"]
         player_preds["Fantasy_pred"] = player_preds["xgb_fantasy_pred"]
         player_preds["CBI_pred"] = player_preds["stat_cbi_pred"]
@@ -1361,17 +1366,17 @@ def Generate_point_predictions(GW_list):
             
         New_dataset=player_data[columns_to_include].copy()
         New_dataset = New_dataset.merge(
-            player_preds[["Name", "GW", "fix_id", "Goal_pred", "Assist_pred", "Bonus_pred", "GC_pred", "Fantasy_pred", "CBI_pred", "Card_pred", "Save_pred"]],
+            player_preds[["Name", "GW", "fix_id", "Goal_pred", "Assist_pred", "Bonus_pred","Bonus_pred2", "GC_pred", "Fantasy_pred", "CBI_pred", "Card_pred", "Save_pred"]],
             left_on=["name", "GW", "fix_id"],
             right_on=["Name", "GW", "fix_id"],
             how="left",
         ).drop(columns=["Name"])
-        pred_fill_cols = ["Goal_pred", "Assist_pred", "Bonus_pred", "GC_pred", "Fantasy_pred", "CBI_pred", "Card_pred", "Save_pred"]
+        pred_fill_cols = ["Goal_pred", "Assist_pred", "Bonus_pred", "Bonus_pred2","GC_pred", "Fantasy_pred", "CBI_pred", "Card_pred", "Save_pred"]
         New_dataset[pred_fill_cols] = New_dataset[pred_fill_cols].fillna(0)
         
         
 
-        summary_dataset = New_dataset.groupby(columns_to_include)[["Goal_pred", "Assist_pred", "Bonus_pred", "GC_pred", "Fantasy_pred", "CBI_pred","Card_pred","Save_pred"]].sum().reset_index()
+        summary_dataset = New_dataset.groupby(columns_to_include)[["Goal_pred", "Assist_pred", "Bonus_pred","Bonus_pred2", "GC_pred", "Fantasy_pred", "CBI_pred","Card_pred","Save_pred"]].sum().reset_index()
         summary_dataset["Average_Overscore"]=player_data["Average_Overscore"].values[0]
         summary_dataset["Point_STD"]=player_data["TP_std_20"].values[0]
         summary_dataset = summary_dataset.fillna(0)
@@ -1379,36 +1384,65 @@ def Generate_point_predictions(GW_list):
             summary_dataset.to_csv("debug2.csv")
             New_dataset.to_csv("debug1.csv")
             
+
+            
         if(position=="FWD"):
-            summary_dataset["Points_prediction"]=(2+summary_dataset["Goal_pred"]*4
-                                                  +summary_dataset["Assist_pred"]*3
+            summary_dataset["Bonus_pred"]=summary_dataset["Bonus_pred2"]*0.6+0.4*(
+                summary_dataset["Bonus_pred"]+
+                summary_dataset["Goal_pred"]*POSITION_EVENT_BONUS[position]["goal"]+
+                summary_dataset["Assist_pred"]*POSITION_EVENT_BONUS[position]["assist"]
+                )*0.03
+            summary_dataset["Points_prediction"]=(2+summary_dataset["Goal_pred"]*POINTS_RULES[position]["goal"]
+                                                  +summary_dataset["Assist_pred"]*POINTS_RULES[position]["assist"]
                                                   +summary_dataset["Bonus_pred"]
                                                   -summary_dataset["Card_pred"] )+summary_dataset["CBI_pred"]*2
             
             summary_dataset["Risk_share"]=(summary_dataset["Goal_pred"]*5.2+summary_dataset["Assist_pred"]*3.4)/summary_dataset["Points_prediction"]
         elif(position=="MID"):
-            summary_dataset["Points_prediction"]=(2+summary_dataset["Goal_pred"]*5
-                                                  +summary_dataset["Assist_pred"]*3
+            summary_dataset["Bonus_pred"]=summary_dataset["Bonus_pred2"]*0.6+0.4*(
+                summary_dataset["Bonus_pred"]+
+                summary_dataset["Goal_pred"]*POSITION_EVENT_BONUS[position]["goal"]+
+                summary_dataset["Assist_pred"]*POSITION_EVENT_BONUS[position]["assist"]
+                )*0.03
+            summary_dataset["Points_prediction"]=(2+summary_dataset["Goal_pred"]*POINTS_RULES[position]["goal"]
+                                                  +summary_dataset["Assist_pred"]*POINTS_RULES[position]["assist"]
                                                   +summary_dataset["Bonus_pred"]
-                                                  +summary_dataset["GC_pred"]*0.8
+                                                  +summary_dataset["GC_pred"]*POINTS_RULES[position]["cs"]
                                                   -summary_dataset["Card_pred"])+summary_dataset["CBI_pred"]*2
-            
+
             summary_dataset["Risk_share"]=(summary_dataset["Goal_pred"]*5.5+summary_dataset["Assist_pred"]*3.4+summary_dataset["GC_pred"]*0.8)/summary_dataset["Points_prediction"]
             
         elif(position=="GKP"):
+            summary_dataset["Bonus_pred"]=summary_dataset["Bonus_pred2"]*0.6+0.4*(
+                summary_dataset["Bonus_pred"]+
+                summary_dataset["Goal_pred"]*POSITION_EVENT_BONUS[position]["goal"]+
+                summary_dataset["Assist_pred"]*POSITION_EVENT_BONUS[position]["assist"]+
+                summary_dataset["GC_pred"]*POSITION_EVENT_BONUS[position]["cs"]
+                )*0.03
             summary_dataset["Points_prediction"]=(2
                                                   +summary_dataset["Save_pred"]/4
                                                   + (30 - np.minimum(30, summary_dataset["GC_pred"]*100)) / -15
-                                                  +summary_dataset["GC_pred"]*4
+                                                  +summary_dataset["GC_pred"]*POINTS_RULES[position]["cs"]
                                                   +summary_dataset["Bonus_pred"] )
 
             summary_dataset["Risk_share"]=(summary_dataset["GC_pred"]*5)/summary_dataset["Points_prediction"]
 
         else:
-            summary_dataset["Points_prediction"]=(1+summary_dataset["Goal_pred"]*6
-                                                  +summary_dataset["Assist_pred"]*3
+            summary_dataset["Bonus_pred"]=summary_dataset["Bonus_pred2"]*0.6+0.4*(
+                summary_dataset["Bonus_pred"]+
+                summary_dataset["Goal_pred"]*POSITION_EVENT_BONUS[position]["goal"]+
+                summary_dataset["Assist_pred"]*POSITION_EVENT_BONUS[position]["assist"]+
+                summary_dataset["GC_pred"]*POSITION_EVENT_BONUS[position]["cs"]
+                )*0.03
+            
+            POINTS_RULES[position]["goal"]
+            
+
+    
+            summary_dataset["Points_prediction"]=(1.5+summary_dataset["Goal_pred"]*POINTS_RULES[position]["goal"]
+                                                  +summary_dataset["Assist_pred"]*POINTS_RULES[position]["assist"]
                                                   +summary_dataset["Bonus_pred"]
-                                                  +summary_dataset["GC_pred"]*4
+                                                  +summary_dataset["GC_pred"]*POINTS_RULES[position]["cs"]
                                                   + (30 - np.minimum(30, summary_dataset["GC_pred"]*100)) / -15
                                                   -summary_dataset["Card_pred"])+summary_dataset["CBI_pred"]*2
             summary_dataset["Risk_share"]=(summary_dataset["Goal_pred"]*6.5+summary_dataset["Assist_pred"]*3.4+summary_dataset["GC_pred"]*3.5)/summary_dataset["Points_prediction"]

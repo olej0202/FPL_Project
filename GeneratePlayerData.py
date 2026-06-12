@@ -4,6 +4,7 @@ import numpy as np
 from datetime import datetime
 
 from GenerateConfig import Manual_Player_Risk,Manual_team_offensive_adjustments, Manual_team_defensive_adjustments,Manual_NewPlayer_Adjustments,Manual_Player_Adjustments,NEW_TEAMS,fixtures_config
+from GenerateConfig import date_filter as config_date_filter
 
 def Xmins(current_players):
     xmins=pd.read_csv("GenerateXmins.csv").iloc[:,1:]
@@ -625,10 +626,36 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
     for name in names:
         player_risiko = 0.4
         print(name)
+        
+        
 
-        player_row = current_data[current_data["name"].str.lower() == name.lower()]
-        print(player_row)
-        rel_player_player = relevant_players[relevant_players["name"] == name]
+        if config_date_filter is None:
+            player_row = current_data[
+                current_data["name"].str.lower() == name.lower()
+            ]
+        
+        else:
+            filter_date = pd.to_datetime(config_date_filter, utc=True)
+        
+            history_data = history_data.copy()
+            history_data["kickoff_time_parsed"] = pd.to_datetime(
+                history_data["kickoff_time"],
+                format="mixed",
+                utc=True,
+                errors="coerce"
+            )
+        
+            player_row = (
+                history_data[
+                    (history_data["name"].str.lower() == name.lower()) &
+                    (history_data["kickoff_time_parsed"] < filter_date)
+                ]
+                .sort_values("kickoff_time_parsed", ascending=False)
+                .head(1)
+            )
+                    
+            print(player_row)
+            rel_player_player = relevant_players[relevant_players["name"] == name]
         if rel_player_player.empty:
             continue
 

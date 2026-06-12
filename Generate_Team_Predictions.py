@@ -19,6 +19,8 @@ import tensorflow as tf
 from tensorflow.keras import layers, regularizers, callbacks, Model, Input,Sequential,losses
 import joblib
 from sklearn.utils.class_weight import compute_class_weight
+from GenerateConfig import date_filter as config_date_filter
+
 
 def GenerateTeamPredictions1(fixture_path, current_team_path,horizon):
     team_df = pd.read_csv("Team_data_transformed2.csv").iloc[:, 1:]
@@ -475,6 +477,7 @@ def make_timestamp_like_series(value, series):
 def run_fixture_xg_cs_model(
     fixture_path,
     current_team_path,
+    train_end,
     historical_team_path="Team_data_transformed2.csv",
     newest_team_path="Team_data_newest3.csv",
     teampredver_path="TeamPredVer.csv",
@@ -485,10 +488,8 @@ def run_fixture_xg_cs_model(
     home_away_diff_window=25,
     cap_lower=0.5,
     cap_upper=3.5,
-    train_start="2022-11-01",
-    use_date_filter=0,
-    train_end="2026-04-04"
-):
+    train_start="2022-11-01"):
+    
     HORIZONS = list(horizons)
     SHORT, MEDIUM, LONG = HORIZONS
 
@@ -695,7 +696,7 @@ def run_fixture_xg_cs_model(
         xg_model_df["kickoff_time"] >= train_start_ts
     ].copy()
 
-    if use_date_filter == 1:
+    if train_end != None:
         train_end_ts = make_timestamp_like_series(
             train_end,
             xg_model_df["kickoff_time"]
@@ -766,7 +767,7 @@ def run_fixture_xg_cs_model(
         cs_model_df["kickoff_time"] >= train_start_ts
     ].copy()
 
-    if use_date_filter == 1:
+    if train_end != None:
         train_end_ts = make_timestamp_like_series(
             train_end,
             cs_model_df["kickoff_time"]
@@ -1218,20 +1219,6 @@ def run_fixture_xg_cs_model(
     print("Saved Team_prediction_visual1.csv")
     print("Saved Team_prediction1.csv")
 
-
-if __name__ == "__main__":
-    outputs = run_fixture_xg_cs_model(
-        historical_team_path="Team_data_transformed2.csv",
-        newest_team_path="Team_data_newest3.csv",
-        fixture_path=r"SImulator/fixtures_expanded_filtered_by_timelist.csv",
-        current_team_path=r"Raw_Data_25\current_teams.csv",
-        teampredver_path="TeamPredVer.csv",
-        output_teampredver_path="TeamPredVer_with_model_prediction.csv",
-        output_disagreements_path="TeamPredVer_largest_prediction_disagreements.csv",
-        output_fixture_long_path="fixture_predictions_long.csv",
-        use_date_filter=1,
-        train_end="2026-04-04"
-    )
 
 
 
@@ -2633,7 +2620,8 @@ def GenerateTeamPredictions(
     GenerateTeamPredictions_Results(fixture_path, current_team_path,horizon)
     run_fixture_xg_cs_model(        
         fixture_path=fixture_path,
-        current_team_path=current_team_path)
+        current_team_path=current_team_path,
+        train_end=config_date_filter)
     
     
     team_pred1=pd.read_csv("Team_prediction1.csv")

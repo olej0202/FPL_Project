@@ -61,7 +61,20 @@ fixtures_config = {
 
     }
 
-date_filter="2026-14-04"
+date_filter="2026-04-14"
+POSITION_EVENT_BONUS = {
+    "GKP": {"goal": 12.0, "assist": 9.0, "cs": 12.0},
+    "DEF": {"goal": 12.0, "assist": 9.0, "cs": 12.0},
+    "MID": {"goal": 18.0, "assist": 9.0, "cs": 0.0},
+    "FWD": {"goal": 24.0, "assist": 9.0, "cs": 0.0},
+}
+
+POINTS_RULES = {
+    "GKP": {"goal": 6, "assist": 3, "cs": 4, "start": 2},
+    "DEF": {"goal": 6, "assist": 3, "cs": 4, "start": 1},
+    "MID": {"goal": 5, "assist": 3, "cs": 0.8, "start": 2},
+    "FWD": {"goal": 4, "assist": 3, "cs": 0, "start": 2},
+}
 
 min_id=46805
 
