@@ -99,6 +99,8 @@ def process_player_data(player_df, team, team_id2,kmeans):
     own_team_xas=[]
     own_saves=[]
     opp_defcon=[]
+    team_defcon=[]
+    rolling_team_defcon=[]
     teams_dataset=pd.read_csv("Team_data_transformed2.csv")
     teams_dataset["kickoff_time_dt"] = pd.to_datetime(teams_dataset["kickoff_time"], errors="coerce", utc=True)
     teams_dataset["code"] = pd.to_numeric(teams_dataset["code"], errors="coerce").astype("Int64")
@@ -112,7 +114,7 @@ def process_player_data(player_df, team, team_id2,kmeans):
     required_cols = [
         "XGH", "XGCH", "XGA", "XGCA",
         "XG_DEF", "XG_FORWARD", "XG_MID",
-        "Round_XG", "Round_XA", "Rolling_Saves", "Rolling_Defcon_against"
+        "Round_XG", "Round_XA", "Rolling_Saves", "Rolling_Defcon_against","defensive_contribution"
     ]
     fallback_vals = {}
     for c in required_cols:
@@ -217,6 +219,9 @@ def process_player_data(player_df, team, team_id2,kmeans):
         own_team_xas.append(_row_val(own_row, "Round_XA"))
         own_saves.append(_row_val(own_row, "Rolling_Saves"))
         opp_defcon.append(_row_val(opp_row, "Rolling_Defcon_against"))
+        team_defcon.append(_row_val(own_row, "defensive_contribution"))
+        rolling_team_defcon.append(_row_val(own_row, "Rolling_Defcon_for"))
+        
 
     df["Cluster"] = opp_cluster
     df["XGH"] = XGH
@@ -241,6 +246,8 @@ def process_player_data(player_df, team, team_id2,kmeans):
     df["Team_XA"]=own_team_xas
     df["Team_Rolling_Saves"]=own_saves
     df["Opponent_defcon"]=opp_defcon
+    df["Rolling_Defcon_For"]=rolling_team_defcon
+    df["Team_defcon"]=team_defcon
     df["yellow_cards"]=player_df['yellow_cards'].values
     df["red_cards"]=player_df['red_cards'].values
 
@@ -773,7 +780,7 @@ def Generate_team_data():
         new_team['Rolling_ict_index']=new_team['ict_index'].rolling(window=20, min_periods=1).mean()
         new_team['Rolling_Defcon_for']=new_team['defensive_contribution'].where(new_team['defensive_contribution'] > 0).rolling(25, min_periods=1).mean()
         new_team['Rolling_Threat_Against']=new_team['Threat_against'].rolling(window=20, min_periods=1).mean()
-        new_team['Rolling_Defcon_against']=new_team['Defcon_against'].where(new_team['Defcon_against'] > 0).rolling(30, min_periods=1).mean()
+        new_team['Rolling_Defcon_against']=new_team['Defcon_against'].where(new_team['Defcon_against'] > 0).rolling(25, min_periods=1).mean()
         
         new_team['Rolling_ICT_Against']=new_team['ICT_against'].rolling(window=20, min_periods=1).mean()
         new_team['Rolling_Saves_Against']=new_team['Saves_against'].rolling(window=20, min_periods=1).mean()
@@ -2111,6 +2118,14 @@ def main_Transform():
             player_df['defcon_avg_hit_rate_T2'] = player_df['defcon_hit_rate_T2'].where(player_df['defcon'] > 0).rolling(30, min_periods=1).mean()*0.5+0.5*player_df['defcon_hit_rate_T2'].where(player_df['defcon'] > 0).rolling(10, min_periods=1).mean()
             player_df['defcon_avg_hit_rate_T0'] = player_df['defcon_hit_rate_T0'].where(player_df['defcon'] > 0).rolling(30, min_periods=1).mean()*0.5+0.5*player_df['defcon_hit_rate_T0'].where(player_df['defcon'] > 0).rolling(10, min_periods=1).mean()
             player_df['defcon_avg_hit_rate_T3'] = player_df['defcon_hit_rate_T3'].where(player_df['defcon'] > 0).rolling(30, min_periods=1).mean()*0.5+0.5*player_df['defcon_hit_rate_T3'].where(player_df['defcon'] > 0).rolling(10, min_periods=1).mean()
+            
+            player_df["Share_of_Defcon"] = (
+                    ((player_df["defcon"] / player_df["minutes"].clip(lower=10) * 90)/(player_df["Team_defcon"]))
+                    .clip(upper=0.2).where(player_df['Team_defcon'] > 0).rolling(window=window_size, min_periods=1).mean())
+            
+            player_df["Share_of_Defcon_Short"] = (
+                    ((player_df["defcon"] / player_df["minutes"].clip(lower=10) * 90)/(player_df["Team_defcon"]))
+                    .clip(upper=0.2).where(player_df['Team_defcon'] > 0).rolling(window=8, min_periods=1).mean())
 
             mask = player_df["defcon"].gt(0)
 

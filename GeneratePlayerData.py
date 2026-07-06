@@ -64,6 +64,7 @@ def next_opp(team, n_future, fixtures,kmeans,team_code,current_teams,position):
     saves=[]
     goal_pos=[]
     ass_pos=[]
+    Team_defcon=[]
     kl=0
     for k in range(len(filtered_fix)):
         
@@ -112,6 +113,7 @@ def next_opp(team, n_future, fixtures,kmeans,team_code,current_teams,position):
         XGC_MID.append(next_opp_newest_row["XG_MID"])
         defcons.append(next_opp_newest_row["Rolling_Defcon_against"])
         saves.append(next_opp_newest_row["Rolling_Saves_Against"])
+        Team_defcon.append(own_data_newest_row["Rolling_Defcon_for"])
         if position in ["GK", "GKP"]:
             goal_pos.append(0)
             ass_pos.append(0)
@@ -125,7 +127,7 @@ def next_opp(team, n_future, fixtures,kmeans,team_code,current_teams,position):
     print(position)
     print(goal_pos)
 
-    return clusters,home,n_matches,XGH,XGCH,XGA,XGCA,XGC_DEF,XGC_FWD,XGC_MID,own_XG,GW,played_XGC,played_XG,opp_code,defcons,saves,goal_pos,ass_pos,fix_ids,fix_percent
+    return clusters,home,n_matches,XGH,XGCH,XGA,XGCA,XGC_DEF,XGC_FWD,XGC_MID,own_XG,GW,played_XGC,played_XG,opp_code,defcons,saves,goal_pos,ass_pos,fix_ids,fix_percent,Team_defcon
 
 import pandas as pd
 from datetime import datetime
@@ -474,54 +476,54 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
           understat_posxa (float),
           understat_posxa_share (float)
         """
-    
+
         pos_row = understat_pos.loc[
             understat_pos["fpl_name"] == name,
             ["Matched_Pos_List", "Matched_Pos_Pct_List"]
         ]
-    
+
         if pos_row.empty:
             pos_list = ["SUB"]
             pct_list = [1.0]
         else:
             pos_list = _as_list(pos_row["Matched_Pos_List"].iloc[0], ["SUB"])
             pct_list = _as_list(pos_row["Matched_Pos_Pct_List"].iloc[0], [1.0])
-    
+
         pairs = [
             (p, w)
             for p, w in zip(pos_list, pct_list)
             if str(p).upper() != "SUB"
         ]
-    
+
         if not pairs:
             pairs = [("SUB", 1.0)]
-    
+
         pos_list, pct_list = zip(*pairs)
         pos_list = list(pos_list)
         w = _normalize_weights(pct_list)
-    
+
         main_pos = pos_list[int(np.argmax(w))] if pos_list else "SUB"
-    
+
         # =========================
         # 1. Try current team + weighted positions
         # =========================
-    
+
         team_pos = understat_team[
             (understat_team["Team_code"] == team_code) &
             (understat_team["pos_group"].isin(pos_list))
         ].copy()
-    
+
         fallback_used = False
-    
+
         if not team_pos.empty:
             available = set(team_pos["pos_group"].tolist())
-    
+
             pairs2 = [
                 (p, wi)
                 for p, wi in zip(pos_list, w)
                 if p in available
             ]
-    
+
             if pairs2:
                 pos_list2, w2 = zip(*pairs2)
                 pos_list = list(pos_list2)
@@ -532,41 +534,41 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
                 ].copy()
             else:
                 team_pos = pd.DataFrame()
-    
+
         # =========================
         # 2. Try current team + main position
         # =========================
-    
+
         if team_pos.empty:
             team_pos = understat_team[
                 (understat_team["Team_code"] == team_code) &
                 (understat_team["pos_group"] == main_pos)
             ].copy()
-    
+
             if not team_pos.empty:
                 team_pos["__w"] = 1.0
                 wsum = 1.0
-    
+
         # =========================
         # 3. Fallback: all teams + weighted positions
         # =========================
-    
+
         if team_pos.empty:
             fallback_used = True
-    
+
             team_pos = understat_team[
                 understat_team["pos_group"].isin(pos_list)
             ].copy()
-    
+
             if not team_pos.empty:
                 available = set(team_pos["pos_group"].tolist())
-    
+
                 pairs2 = [
                     (p, wi)
                     for p, wi in zip(pos_list, w)
                     if p in available
                 ]
-    
+
                 if pairs2:
                     pos_list2, w2 = zip(*pairs2)
                     pos_list = list(pos_list2)
@@ -575,58 +577,58 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
                     team_pos = team_pos[
                         team_pos["pos_group"].isin(pos_list)
                     ].copy()
-    
+
                     pos_to_w = {
                         p: float(wi)
                         for p, wi in zip(pos_list, w)
                     }
-    
+
                     team_pos["__w"] = team_pos["pos_group"].map(pos_to_w).fillna(0.0)
                     wsum = float(team_pos["__w"].sum())
-    
+
                     if wsum <= 0:
                         team_pos["__w"] = 1.0
                         wsum = float(team_pos["__w"].sum())
-    
+
         # =========================
         # 4. Fallback: all teams + main_pos
         # =========================
-    
+
         if team_pos.empty:
             fallback_used = True
-    
+
             team_pos = understat_team[
                 understat_team["pos_group"] == main_pos
             ].copy()
-    
+
             if not team_pos.empty:
                 team_pos["__w"] = 1.0
                 wsum = float(team_pos["__w"].sum())
-    
+
         # =========================
         # 5. Nothing found
         # =========================
-    
+
         if team_pos.empty:
             return main_pos, 0.0, 0.0, 0.0, 0.0
-    
+
         # =========================
         # Normal team-specific weighting
         # =========================
-    
+
         if "__w" not in team_pos.columns:
             pos_to_w = {
                 p: float(wi)
                 for p, wi in zip(pos_list, w)
             }
-    
+
             team_pos["__w"] = team_pos["pos_group"].map(pos_to_w).fillna(0.0)
             wsum = float(team_pos["__w"].sum())
-    
+
             if wsum <= 0:
                 team_pos["__w"] = 1.0
                 wsum = float(team_pos["__w"].sum())
-    
+
         def wavg(col):
             return float(
                 (
@@ -634,10 +636,10 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
                     team_pos["__w"]
                 ).sum() / wsum
             )
-    
+
         posxg = wavg("XGIndex")
         posxa = wavg("XAIndex")
-    
+
         posxg_share = float(
             (
                 (
@@ -650,7 +652,7 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
                 * team_pos["__w"]
             ).sum() / wsum
         )
-    
+
         posxa_share = float(
             (
                 (
@@ -663,7 +665,7 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
                 * team_pos["__w"]
             ).sum() / wsum
         )
-    
+
         return main_pos, posxg, posxg_share, posxa, posxa_share
 
     # -----------------------------
@@ -911,7 +913,7 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
         )
 
         # Use main_pos for next_opp so you don't have to change that function
-        clusters, home, n_matches, XGH, XGCH, XGA, XGCA, XGC_DEF, XGC_FWD, XGC_MID, own_XG, GW, played_XGC, played_XG, opp_code, defcons,saves, goal_pos, ass_pos, fix_ids, fix_percent = next_opp(
+        clusters, home, n_matches, XGH, XGCH, XGA, XGCA, XGC_DEF, XGC_FWD, XGC_MID, own_XG, GW, played_XGC, played_XG, opp_code, defcons,saves, goal_pos, ass_pos, fix_ids, fix_percent,Team_defcon = next_opp(
             team_id, time_list, fixture_data, kmeans, team_code, current_teams, main_pos
         )
 
@@ -996,6 +998,7 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
             player_row["Rolling_cards"] = rolling_cards
             player_row["Opp_Goal_Threat_Pos"] = goal_pos[i]
             player_row["Opp_Assist_Threat_Pos"] = ass_pos[i]
+            player_row["Rolling_Team_Defcon"]=Team_defcon[i]
 
             Future_dataframe = pd.concat([Future_dataframe, player_row], axis=0, ignore_index=True)
             print(Future_dataframe)

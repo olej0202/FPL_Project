@@ -26,10 +26,71 @@ criterion = nn.L1Loss()
 
 
 
-from sklearn.metrics import mean_squared_error, mean_absolute_error
+from sklearn.metrics import mean_squared_error, mean_absolute_error,r2_score
 from xgboost import XGBRegressor
+from scipy.stats import norm
 
+def train_xgb_defcon_model(path="TestML4.csv"):
+    df = pd.read_csv(path)
 
+    df["kickoff_time"] = pd.to_datetime(
+        df["kickoff_time"],
+        format="mixed",
+        utc=True
+    )
+    df = df[df["kickoff_time"] >= pd.Timestamp("2025-11-01", tz="UTC")]
+
+    df = df[df["Team_defcon"] > 0].copy()
+
+    features = [
+        "Share_of_Defcon_Short",
+        "Share_of_Defcon",
+        "defcon_avg",
+        "minutes",
+        "Rolling_Defcon_For",
+        "Opponent_defcon"
+    ]
+
+    needed_cols = [
+        "name",
+        "kickoff_time",
+        "Team_defcon",
+        "defcon"
+    ] + features
+
+    df = df[needed_cols].copy()
+
+    df_train = df.dropna(subset=features + ["defcon"]).copy()
+
+    X = df_train[features]
+    y = df_train["defcon"]
+
+    model = XGBRegressor(
+        n_estimators=200,
+        learning_rate=0.03,
+        max_depth=4,
+        subsample=0.85,
+        colsample_bytree=0.85,
+        objective="reg:squarederror",
+        random_state=42
+    )
+
+    model.fit(X, y)
+
+    df_train["xgb_pred"] = model.predict(X)
+    df_train["error"] = df_train["defcon"] - df_train["xgb_pred"]
+
+    sigma = df_train["error"].std()
+
+    print("\nHistorical XGBoost performance")
+    print("MAE:", mean_absolute_error(y, df_train["xgb_pred"]))
+    print("RMSE:", np.sqrt(mean_squared_error(y, df_train["xgb_pred"])))
+    print("R2:", r2_score(y, df_train["xgb_pred"]))
+    print("Sigma:", sigma)
+
+    df_train.to_csv("defcon_test.csv", index=False)
+
+    return model, sigma
 def _resolve_config_date_filter(value):
     if value is None:
         return None
@@ -425,6 +486,10 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
         test_start=None,
         test_end=None
     )
+    if pred_variable=="CBI":
+        defcon_model, sigma = train_xgb_defcon_model("TestML4.csv")
+    else:
+        defcon_model, sigma=None,None
 
     
     
@@ -552,23 +617,48 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
                
                player_preds.append(min(df['Team_Rolling_Saves'].values[h]*(df['Opp_Saves_Against'].values[h]/2.7),5))
                
-            if(pred_variable=="CBI"):
-               real_variable="cbi" 
-               #player_preds.append((min(12,df['CBI'].values[h])**2)/12)
-               opp_defcon_fac=np.minimum(1.1,1+(df['Opp_defcon'].values[h]-79)/30)
-               
-               base_pred = min(1,(df['defcon_avg_hit_rate'].values[h] *0.35+df["defcon_avg_hit_rate_T0"].values[h] * 0.3 +df["defcon_avg_hit_rate_T1"].values[h] * 0.1+df["defcon_avg_hit_rate_T2"].values[h] * 0.1+df["defcon_avg_hit_rate_T3"].values[h] * 0.15)*opp_defcon_fac) * other_metric
-               z = (
-                    -7.784197
-                    + 0.25 * float(df["defcon_avg_hit_rate_T0"].iloc[h])
-                    - 0.2 * float(df["defcon_avg_hit_rate_T1"].iloc[h])
-                    + 2.697022 * float(df["defcon_avg_hit_rate_T2"].iloc[h])
-                    - 0.110803 * float(df["defcon_avg_hit_rate_T3"].iloc[h])
-                    + 1.65 * float(df["defcon_avg_hit_rate"].iloc[h])
-                    + 0.056152 * float(df["Opp_defcon"].iloc[h]))
-               pred = 1 / (1 + np.exp(-z))
-               player_preds.append(pred)
-        
+            if pred_variable == "CBI":
+                real_variable = "cbi"
+
+                row = pd.DataFrame([[
+                    df["Share_of_Defcon_Short"].values[h],
+                    df["Share_of_Defcon"].values[h],
+                    df["defcon_avg"].values[h],
+                    df["average_minutes"].values[h],
+                    df["Rolling_Team_Defcon"].values[h],
+                    df["Opp_defcon"].values[h]
+                ]], columns=[
+                    "Share_of_Defcon_Short",
+                    "Share_of_Defcon",
+                    "defcon_avg",
+                    "minutes",
+                    "Rolling_Defcon_For",
+                    "Opponent_defcon"
+                ])
+
+                pred = defcon_model.predict(row)[0]
+
+                if position == "DEF":
+                    cbi_pred = 1 - norm.cdf(9.5, loc=pred, scale=sigma)
+                else:
+                    cbi_pred = 1 - norm.cdf(11.5, loc=pred, scale=sigma)
+
+                player_preds.append(cbi_pred)
+       
+                """
+                #player_preds.append((min(12,df['CBI'].values[h])**2)/12)
+                opp_defcon_fac=np.minimum(1.1,1+(df['Opp_defcon'].values[h]-79)/30)
+
+                base_pred = min(1,(df['defcon_avg_hit_rate'].values[h] *0.35+df["defcon_avg_hit_rate_T0"].values[h] * 0.3 +df["defcon_avg_hit_rate_T1"].values[h] * 0.1+df["defcon_avg_hit_rate_T2"].values[h] * 0.1+df["defcon_avg_hit_rate_T3"].values[h] * 0.15)*opp_defcon_fac) * other_metric
+                z = (
+                     -7.784197
+                     + 0.25 * float(df["defcon_avg_hit_rate_T0"].iloc[h])
+                     - 0.2 * float(df["defcon_avg_hit_rate_T1"].iloc[h])
+                     + 2.697022 * float(df["defcon_avg_hit_rate_T2"].iloc[h])
+                     - 0.110803 * float(df["defcon_avg_hit_rate_T3"].iloc[h])
+                     + 1.65 * float(df["defcon_avg_hit_rate"].iloc[h])
+                     + 0.056152 * float(df["Opp_defcon"].iloc[h]))
+                pred = 1 / (1 + np.exp(-z))"""        
             if(pred_variable=="Fantasy"):
                real_variable="total_points"
                player_preds.append(df['Rolling_adjusted_Fantasy'].values[h]*0.04)
