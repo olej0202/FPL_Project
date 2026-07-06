@@ -1,6 +1,7 @@
 import pandas as pd
 import joblib
 import numpy as np
+from scipy.stats import poisson
 
 
 
@@ -492,9 +493,16 @@ def Player_adjustements(current_player_path):
 
     bps_scaled = np.maximum(4, df["Rolling_adjusted_BPS"]*0.4+df["Rolling_adjusted_BPS_2"]*0.6) 
     df["BPS"]=bps_scaled*0.015-np.minimum(0.4, df["Rolling_cards"]) 
+    pred = np.exp(
+            -0.435141
+            + 0.3 * df["Opp_Saves_Against"]
+            + 0.3 * df["Team_Rolling_Saves"]
+            - 0.0262 * df["Team_Rolling_Saves"] * df["Opp_Saves_Against"]
+        )
+
     df["Save_Pred"] = np.where(
         df["position"] == "GKP",
-        np.minimum(df["Team_Rolling_Saves"] * (df["Opp_Saves_Against"] / 2.7), 5),
+        (1 - poisson.cdf(2, pred)) + (1 - poisson.cdf(5, pred)),
         0
     )
 
