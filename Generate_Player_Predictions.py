@@ -21,6 +21,7 @@ from torch.utils.data import TensorDataset, DataLoader
 import joblib
 from GenerateConfig import date_filter as config_date_filter
 from GenerateConfig import POSITION_EVENT_BONUS,POINTS_RULES
+from scipy.stats import poisson
 
 criterion = nn.L1Loss()
 
@@ -615,7 +616,19 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
             if(pred_variable=="Saves"):
                real_variable="saves" 
                
-               player_preds.append(min(df['Team_Rolling_Saves'].values[h]*(df['Opp_Saves_Against'].values[h]/2.7),5))
+               
+            pred = np.exp(
+                -0.435141
+                + 0.3 * df["Opp_Saves_Against"]
+                + 0.3 * df["Team_Rolling_Saves"]
+                - 0.0262 * df["Team_Rolling_Saves"] * df["Opp_Saves_Against"]
+            )
+            
+            df["Save_Pred"] = np.where(
+                df["position"] == "GKP",
+                (1 - poisson.cdf(2, pred)) + (1 - poisson.cdf(5, pred)),
+                0
+            )
                
             if pred_variable == "CBI":
                 real_variable = "cbi"

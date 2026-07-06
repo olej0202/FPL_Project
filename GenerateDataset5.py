@@ -98,6 +98,7 @@ def process_player_data(player_df, team, team_id2,kmeans):
     own_team_xgs=[]
     own_team_xas=[]
     own_saves=[]
+    opp_saves=[]
     opp_defcon=[]
     team_defcon=[]
     rolling_team_defcon=[]
@@ -218,6 +219,7 @@ def process_player_data(player_df, team, team_id2,kmeans):
         own_team_xgs.append(_row_val(own_row, "Round_XG"))
         own_team_xas.append(_row_val(own_row, "Round_XA"))
         own_saves.append(_row_val(own_row, "Rolling_Saves"))
+        opp_saves.append(_row_val(opp_row, "Rolling_Saves_Against"))
         opp_defcon.append(_row_val(opp_row, "Rolling_Defcon_against"))
         team_defcon.append(_row_val(own_row, "defensive_contribution"))
         rolling_team_defcon.append(_row_val(own_row, "Rolling_Defcon_for"))
@@ -245,6 +247,7 @@ def process_player_data(player_df, team, team_id2,kmeans):
     df["Team_XG"]=own_team_xgs
     df["Team_XA"]=own_team_xas
     df["Team_Rolling_Saves"]=own_saves
+    df["Opponent_Saves_against"]=opp_saves
     df["Opponent_defcon"]=opp_defcon
     df["Rolling_Defcon_For"]=rolling_team_defcon
     df["Team_defcon"]=team_defcon
