@@ -29,6 +29,7 @@ import Team_Analytics_Individual from "./Team_Analytics_individual";
 import Team_Analytics_Analysis from "./Team_Analytics_Analysis";
 import Team_Predictions from "./Team_Predictions";
 import AIChipTeam from "./AI_Chip_Team";
+import AIModel from "./AI_Model";
 import MyTeam from "./My_team";
 import Player_analytics from "./Player_Analytics";
 import Player_analytics_rankings from "./Player_Analytics_rankings";
@@ -88,7 +89,6 @@ export default function App() {
       { to: "/Team_Analytics", label: "Team Analytics" },
       { to: "/Player_Analytics", label: "Player Analytics" },
       { to: "/Season_Analysis", label: "Season Analytics" },
-      { to: "/TeamPredictionsFuture", label: "Fixture Analytics" },
       { to: "/Weekly_Review", label: "Weekly Review" },
       { to: "/Personal_Analysis", label: "Personal Analysis" },
     ],
@@ -213,18 +213,18 @@ export default function App() {
   }
 
   const navItems = [
-    { type: "link", to: "/My_Team", icon: Brain, label: "AI Teams" },
+    { type: "link", to: "/My_Team", icon: Brain, label: "Optimize" },
     {
       type: "link",
       to: "/AI_Model",
       icon: LayoutDashboard,
-      label: "AI-Model",
+      label: "AI Model",
     },
     {
       type: "link",
       to: "/Adjustment_Analysis",
       icon: BarChart2,
-      label: "Statistical model",
+      label: "Statistical Model",
     },
     {
       type: "group",
@@ -607,12 +607,27 @@ export default function App() {
 
             <Route
               path="/AI_Model"
-              element={routeElement(
-                "playerAnalyticsRankings",
-                <Player_analytics_rankings />,
-                "AI-Model"
-              )}
-            />
+              element={routeElement("playerAnalyticsRankings", <AIModel />, "AI Model")}
+            >
+              <Route index element={<Navigate to="Players" replace />} />
+              <Route
+                path="Players"
+                element={routeElement(
+                  "playerAnalyticsRankings",
+                  <Player_analytics_rankings />,
+                  "AI Model Players"
+                )}
+              />
+              <Route
+                path="Fixtures"
+                element={routeElement(
+                  "fixtureAnalytics",
+                  <TeamPredictionsFuture />,
+                  "AI Model Fixtures"
+                )}
+              />
+              <Route path="Teams" element={<Navigate to="/AI_Model/Fixtures" replace />} />
+            </Route>
 
             <Route
               path="/Player_Analytics"
@@ -620,7 +635,7 @@ export default function App() {
             >
               <Route
                 path="Rankings"
-                element={<Navigate to="/AI_Model" replace />}
+                element={<Navigate to="/AI_Model/Players" replace />}
               />
               <Route
                 path="Individual"
@@ -662,7 +677,7 @@ export default function App() {
               element={routeElement(
                 "statisticalModelShell",
                 <AdjustmentAnalytics />,
-                "Statistical model"
+                "Statistical Model"
               )}
             >
               <Route index element={<Navigate to="Adjustment_Player" replace />} />
@@ -671,7 +686,7 @@ export default function App() {
                 element={routeElement(
                   "statisticalModelTeams",
                   <TeamAdjustmentsPage />,
-                  "Statistical model Team Adjustment"
+                  "Statistical Model Team Adjustment"
                 )}
               />
               <Route
@@ -679,7 +694,7 @@ export default function App() {
                 element={routeElement(
                   "statisticalModelPlayers",
                   <PlayerAdjustmentsPage />,
-                  "Statistical model Player Adjustment"
+                  "Statistical Model Player Adjustment"
                 )}
               />
               <Route
@@ -687,7 +702,7 @@ export default function App() {
                 element={routeElement(
                   "statisticalModelFixtures",
                   <FixturesPage />,
-                  "Statistical model Fixture Adjustment"
+                  "Statistical Model Fixture Adjustment"
                 )}
               />
               <Route
@@ -695,7 +710,7 @@ export default function App() {
                 element={routeElement(
                   "statisticalModelSimulator",
                   <AdjustmentSimulatorPage />,
-                  "Statistical model Simulator"
+                  "Statistical Model Simulator"
                 )}
               />
             </Route>

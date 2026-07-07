@@ -777,7 +777,7 @@ export default function Player_analytics_rankings() {
   const { fetchIfNeeded, loading, PlayersData, TeamData, dataVersion } = useStatsData();
   const { fetchIfNeeded: fetchOtherIfNeeded, FixtureData, dataVersion: otherVersion } = useOtherData();
 
-  const [showFilters, setShowFilters] = useState(true);
+  const [showFilters, setShowFilters] = useState(false);
   const [selectedMeasure, setSelectedMeasure] = useState("Points_prediction");
   const [selectedPlayerKeys, setSelectedPlayerKeys] = useState([]);
   const [selectedTeamCodes, setSelectedTeamCodes] = useState([]);
@@ -1310,13 +1310,13 @@ export default function Player_analytics_rankings() {
               }}
             >
               <Sparkles size={14} />
-              AI-Model
+              AI Model
             </div>
             <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-              AI-Model
+              AI Model
             </h1>
             <p className="mt-2 max-w-2xl text-sm" style={{ color: "#64748b" }}>
-              AI-model player predictions not adjustable
+              AI Model player predictions not adjustable
             </p>
           </div>
 
@@ -1598,14 +1598,14 @@ export default function Player_analytics_rankings() {
                   )}
 
                   <div
-                    className="mt-3 rounded-xl px-3 py-2 text-sm"
+                    className="mt-3 rounded-xl px-3 py-2 text-sm leading-snug break-words"
                     style={{
                       border: `1px solid ${PALETTE.border}`,
                       background: "rgba(248,250,252,0.95)",
                       color: "#64748b",
                     }}
                   >
-                    Visible GW columns use {normalizedGwRange.start}-{normalizedGwRange.end}
+                    Visible GW range: {normalizedGwRange.start}-{normalizedGwRange.end}
                   </div>
                 </FilterCard>
               </div>
@@ -1631,24 +1631,27 @@ export default function Player_analytics_rankings() {
 
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center lg:justify-end">
                 <div
-                  className="flex items-center gap-2 rounded-xl px-2"
+                  className="flex w-full max-w-full items-center gap-2 overflow-x-auto rounded-xl px-2 sm:w-auto"
                   style={{
                     border: `1px solid ${PALETTE.border}`,
                     background: "#f8fafc",
                     height: "36px",
                   }}
                 >
-                  <CurrentMeasureIcon size={14} style={{ color: PALETTE.gold }} />
+                  <CurrentMeasureIcon
+                    size={14}
+                    className="shrink-0"
+                    style={{ color: PALETTE.gold }}
+                  />
                   <select
                     value={selectedMeasure}
                     onChange={(e) => setSelectedMeasure(e.target.value)}
-                    className="rounded-xl text-xs font-semibold outline-none"
+                    className="min-w-[140px] shrink-0 rounded-xl text-xs font-semibold outline-none"
                     style={{
                       background: "#ffffff",
                       color: PALETTE.gold,
                       border: "none",
                       height: "32px",
-                      minWidth: "130px",
                     }}
                   >
                     {MEASURE_OPTIONS.map((option) => (
@@ -1800,8 +1803,11 @@ export default function Player_analytics_rankings() {
             </table>
           </div>
 
-          <div className="border-t px-4 py-3 text-xs sm:px-5" style={{ borderColor: PALETTE.border, color: PALETTE.muted }}>
-            Showing {currentMeasureMeta.description} by GW {normalizedGwRange.start}-{normalizedGwRange.end}.
+          <div
+            className="border-t px-4 py-3 text-xs leading-snug sm:px-5"
+            style={{ borderColor: PALETTE.border, color: PALETTE.muted }}
+          >
+            Showing {currentMeasureMeta.description} for GW {normalizedGwRange.start}-{normalizedGwRange.end}.
           </div>
         </GlassCard>
 
@@ -2056,7 +2062,7 @@ export default function Player_analytics_rankings() {
                       </div>
 
                       <div
-                        className="flex items-center gap-2 rounded-xl px-2"
+                        className="flex w-full max-w-full items-center gap-2 overflow-x-auto rounded-xl px-2 sm:w-auto"
                         style={{
                           border: `1px solid ${PALETTE.border}`,
                           background: "#f8fafc",
@@ -2065,18 +2071,18 @@ export default function Player_analytics_rankings() {
                       >
                         {React.createElement(getMeasureMeta(activeChartMeasure).icon, {
                           size: 14,
+                          className: "shrink-0",
                           style: { color: PALETTE.gold },
                         })}
                         <select
                           value={activeChartMeasure}
                           onChange={(e) => setActiveChartMeasure(e.target.value)}
-                          className="rounded-xl text-xs font-semibold outline-none"
+                          className="min-w-[140px] shrink-0 rounded-xl text-xs font-semibold outline-none"
                           style={{
                             background: "#ffffff",
                             color: PALETTE.gold,
                             border: "none",
                             height: "32px",
-                            minWidth: "130px",
                           }}
                         >
                           {MEASURE_OPTIONS.map((option) => (
