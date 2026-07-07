@@ -1447,8 +1447,8 @@ def Generate_point_predictions(GW_list):
             (
                 (player_preds["xgb_goals_75"] * 0.5 + 0.5 * player_preds["xgb_goals_25"]) * 0.0
                 + player_preds["sim_goals_pred"] * 0.15
-                + player_preds["sim2_goals_pred"] * 0.25
-                + player_preds["stat_goals_pred"] * 0.6
+                + player_preds["sim2_goals_pred"] * 0.2
+                + player_preds["stat_goals_pred"] * 0.65
                 + player_preds["dnn_goals_pred"] * 0.0
                 + player_preds["cluster_goals_pred"] * 0.0
             ) * overscore
@@ -1458,8 +1458,8 @@ def Generate_point_predictions(GW_list):
             (
                 (player_preds["xgb_assist_75"] * 0.5 + 0.5 * player_preds["xgb_assist_25"]) * 0.0
                 + player_preds["sim_assists_pred"] * 0.15
-                + player_preds["sim2_assists_pred"] * 0.25
-                + player_preds["stat_assist_pred"] * 0.6
+                + player_preds["sim2_assists_pred"] * 0.2
+                + player_preds["stat_assist_pred"] * 0.65
                 + player_preds["dnn_assist_pred"] * 0.0
                 + historic_Assist * 0
                 + player_preds["cluster_assist_pred"] * 0.0
@@ -1532,7 +1532,8 @@ def Generate_point_predictions(GW_list):
                 )*0.03
             summary_dataset["Points_prediction"]=(2
                                                   +summary_dataset["Save_pred"]
-                                                  + (30 - np.minimum(30, summary_dataset["GC_pred"]*100)) / -15
+                                                  + 0.5 * ((30 - np.minimum(30, summary_dataset["GC_pred"] * 100)) / -15
+                                                           + 1 - summary_dataset["GC_pred"] * (1 - np.log(summary_dataset["GC_pred"])))
                                                   +summary_dataset["GC_pred"]*POINTS_RULES[position]["cs"]
                                                   +summary_dataset["Bonus_pred"] )
 
@@ -1554,7 +1555,8 @@ def Generate_point_predictions(GW_list):
                                                   +summary_dataset["Assist_pred"]*POINTS_RULES[position]["assist"]
                                                   +summary_dataset["Bonus_pred"]
                                                   +summary_dataset["GC_pred"]*POINTS_RULES[position]["cs"]
-                                                  + (30 - np.minimum(30, summary_dataset["GC_pred"]*100)) / -15
+                                                  + 0.5 * ((30 - np.minimum(30, summary_dataset["GC_pred"] * 100)) / -15
+                                                           + 1 - summary_dataset["GC_pred"] * (1 - np.log(summary_dataset["GC_pred"])))
                                                   -summary_dataset["Card_pred"])+summary_dataset["CBI_pred"]*2
             summary_dataset["Risk_share"]=(summary_dataset["Goal_pred"]*6.5+summary_dataset["Assist_pred"]*3.4+summary_dataset["GC_pred"]*3.5)/summary_dataset["Points_prediction"]
      
