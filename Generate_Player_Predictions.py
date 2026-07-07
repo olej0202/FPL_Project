@@ -24,7 +24,7 @@ from GenerateConfig import POSITION_EVENT_BONUS,POINTS_RULES
 from scipy.stats import poisson
 
 criterion = nn.L1Loss()
-
+from sklearn.pipeline import Pipeline
 
 
 from sklearn.metrics import mean_squared_error, mean_absolute_error,r2_score
@@ -42,6 +42,20 @@ def train_xgb_defcon_model(path="TestML4.csv"):
     df = df[df["kickoff_time"] >= pd.Timestamp("2025-11-01", tz="UTC")]
 
     df = df[df["Team_defcon"] > 0].copy()
+
+    df = df.sort_values(["name", "kickoff_time"])
+
+    # Shift features to use only previous-match information
+    shift_cols = [
+        "Share_of_Defcon_Short",
+        "Share_of_Defcon",
+        "defcon_avg"
+    ]
+
+    df[shift_cols] = (
+        df.groupby("name")[shift_cols]
+          .shift(1)
+    )
 
     features = [
         "Share_of_Defcon_Short",
@@ -66,15 +80,10 @@ def train_xgb_defcon_model(path="TestML4.csv"):
     X = df_train[features]
     y = df_train["defcon"]
 
-    model = XGBRegressor(
-        n_estimators=200,
-        learning_rate=0.03,
-        max_depth=4,
-        subsample=0.85,
-        colsample_bytree=0.85,
-        objective="reg:squarederror",
-        random_state=42
-    )
+    model = Pipeline([
+        ("scaler", StandardScaler()),
+        ("svr", SVR(kernel="rbf", C=1, epsilon=0.1))
+    ])
 
     model.fit(X, y)
 
@@ -89,9 +98,9 @@ def train_xgb_defcon_model(path="TestML4.csv"):
     print("R2:", r2_score(y, df_train["xgb_pred"]))
     print("Sigma:", sigma)
 
-    df_train.to_csv("defcon_test.csv", index=False)
 
     return model, sigma
+
 def _resolve_config_date_filter(value):
     if value is None:
         return None
@@ -617,18 +626,15 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
                real_variable="saves" 
                
                
-            pred = np.exp(
-                -0.435141
-                + 0.3 * df["Opp_Saves_Against"]
-                + 0.3 * df["Team_Rolling_Saves"]
-                - 0.0262 * df["Team_Rolling_Saves"] * df["Opp_Saves_Against"]
-            )
-            
-            df["Save_Pred"] = np.where(
-                df["position"] == "GKP",
-                (1 - poisson.cdf(2, pred)) + (1 - poisson.cdf(5, pred)),
-                0
-            )
+               pred = np.exp(
+                    -0.435141
+                    + 0.3 * df["Opp_Saves_Against"].values[h]
+                    + 0.3 * df["Team_Rolling_Saves"].values[h]
+                    - 0.0262 * df["Team_Rolling_Saves"].values[h] * df["Opp_Saves_Against"].values[h]
+                )
+               player_preds.append((1 - poisson.cdf(2, pred)) + (1 - poisson.cdf(5, pred)))
+
+
                
             if pred_variable == "CBI":
                 real_variable = "cbi"
@@ -647,7 +653,7 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
                     "minutes",
                     "Rolling_Defcon_For",
                     "Opponent_defcon"
-                ])
+                ]).fillna(0)
 
                 pred = defcon_model.predict(row)[0]
 
@@ -1523,7 +1529,7 @@ def Generate_point_predictions(GW_list):
                 summary_dataset["GC_pred"]*POSITION_EVENT_BONUS[position]["cs"]
                 )*0.03
             summary_dataset["Points_prediction"]=(2
-                                                  +summary_dataset["Save_pred"]/4
+                                                  +summary_dataset["Save_pred"]
                                                   + (30 - np.minimum(30, summary_dataset["GC_pred"]*100)) / -15
                                                   +summary_dataset["GC_pred"]*POINTS_RULES[position]["cs"]
                                                   +summary_dataset["Bonus_pred"] )
