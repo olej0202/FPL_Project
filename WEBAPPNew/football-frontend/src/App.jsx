@@ -216,9 +216,15 @@ export default function App() {
     { type: "link", to: "/My_Team", icon: Brain, label: "AI Teams" },
     {
       type: "link",
+      to: "/AI_Model",
+      icon: LayoutDashboard,
+      label: "AI-Model",
+    },
+    {
+      type: "link",
       to: "/Adjustment_Analysis",
       icon: BarChart2,
-      label: "Prediction Model",
+      label: "Statistical model",
     },
     {
       type: "group",
@@ -600,16 +606,21 @@ export default function App() {
             </Route>
 
             <Route
+              path="/AI_Model"
+              element={routeElement(
+                "playerAnalyticsRankings",
+                <Player_analytics_rankings />,
+                "AI-Model"
+              )}
+            />
+
+            <Route
               path="/Player_Analytics"
               element={routeElement("playerAnalyticsShell", <Player_analytics />, "Player Analytics")}
             >
               <Route
                 path="Rankings"
-                element={routeElement(
-                  "playerAnalyticsRankings",
-                  <Player_analytics_rankings />,
-                  "Player Analytics Rankings"
-                )}
+                element={<Navigate to="/AI_Model" replace />}
               />
               <Route
                 path="Individual"
@@ -651,7 +662,7 @@ export default function App() {
               element={routeElement(
                 "statisticalModelShell",
                 <AdjustmentAnalytics />,
-                "Statistical Model"
+                "Statistical model"
               )}
             >
               <Route index element={<Navigate to="Adjustment_Player" replace />} />
@@ -660,7 +671,7 @@ export default function App() {
                 element={routeElement(
                   "statisticalModelTeams",
                   <TeamAdjustmentsPage />,
-                  "Statistical Model Team Adjustment"
+                  "Statistical model Team Adjustment"
                 )}
               />
               <Route
@@ -668,7 +679,7 @@ export default function App() {
                 element={routeElement(
                   "statisticalModelPlayers",
                   <PlayerAdjustmentsPage />,
-                  "Statistical Model Player Adjustment"
+                  "Statistical model Player Adjustment"
                 )}
               />
               <Route
@@ -676,7 +687,7 @@ export default function App() {
                 element={routeElement(
                   "statisticalModelFixtures",
                   <FixturesPage />,
-                  "Statistical Model Fixture Adjustment"
+                  "Statistical model Fixture Adjustment"
                 )}
               />
               <Route
@@ -684,7 +695,7 @@ export default function App() {
                 element={routeElement(
                   "statisticalModelSimulator",
                   <AdjustmentSimulatorPage />,
-                  "Statistical Model Simulator"
+                  "Statistical model Simulator"
                 )}
               />
             </Route>
@@ -699,4 +710,3 @@ export default function App() {
     </div>
   );
 }
-

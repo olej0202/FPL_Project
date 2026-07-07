@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
-import { User, BarChart } from "lucide-react";
+import { User } from "lucide-react";
 
 const tabClass = ({ isActive }) =>
   [
@@ -16,18 +16,13 @@ export default function Player_analytics() {
 
   useEffect(() => {
     if (location.pathname === "/Player_Analytics") {
-      navigate("/Player_Analytics/Rankings");
+      navigate("/Player_Analytics/Individual");
     }
   }, [location.pathname, navigate]);
 
   return (
     <div className="space-y-4 px-2 py-2 text-slate-800 sm:px-3">
       <div className="flex flex-wrap justify-center gap-2 border-b border-slate-200 pb-3">
-        <NavLink to="Rankings" end className={tabClass}>
-          <BarChart size={16} />
-          Player Rankings
-        </NavLink>
-
         <NavLink to="Individual" className={tabClass}>
           <User size={16} />
           Individual Player

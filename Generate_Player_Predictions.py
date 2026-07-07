@@ -625,13 +625,15 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
             if(pred_variable=="Saves"):
                real_variable="saves" 
                
-               
-               pred = np.exp(
-                    -0.435141
-                    + 0.3 * df["Opp_Saves_Against"].values[h]
-                    + 0.3 * df["Team_Rolling_Saves"].values[h]
-                    - 0.0262 * df["Team_Rolling_Saves"].values[h] * df["Opp_Saves_Against"].values[h]
-                )
+               if position in ["GKP", "GK"]:
+                    pred = np.exp(
+                         -0.435141
+                         + 0.3 * df["Opp_Saves_Against"].values[h]
+                         + 0.3 * df["Team_Rolling_Saves"].values[h]
+                         - 0.0262 * df["Team_Rolling_Saves"].values[h] * df["Opp_Saves_Against"].values[h]
+                     )
+               else:
+                   pred=0 
                player_preds.append((1 - poisson.cdf(2, pred)) + (1 - poisson.cdf(5, pred)))
 
 

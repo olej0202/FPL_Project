@@ -1938,8 +1938,7 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
               Player Adjustment Tool
             </h1>
             <p className="mt-2 max-w-2xl text-sm" style={{ color: "#64748b" }}>
-              Filter your player pool, inspect projected outputs by gameweek, and fine-tune
-              shares, minutes, and Defcon with a cleaner workflow.
+              Statistical model predictions adjust Minutes, Goal Shares and Defcon% by clicking the player.
             </p>
           </div>
 
