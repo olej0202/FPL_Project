@@ -107,7 +107,7 @@ def Data_Transformation(n_points_in_future, current_fixture_path,current_player_
     #Generate_Understat_dataset(current_player_path,run_player_pos)
     #Generate_Shots_data(Understat_path,Understat_shots_path,current_player_path,current_team_path)
     #team_data(current_team_path)
-    #GetXmins(current_player_path, time_list, scenarios=Manual_min)
+    GetXmins(current_player_path, time_list, scenarios=Manual_min)
     GeneratePlayerData(time_list, current_fixture_path,current_player_path,current_team_path)
 
     
@@ -151,7 +151,6 @@ def Data_Predictions(
         sim_output_dir / "fixtures_expanded_filtered_by_timelist.csv",
         force_unfinished=True,
     )
-    """
     # Trigger full simulator parameter optimization with all read paths passed in.
     full_sim_control = FullSimulatorControlConfig(
         team_history_path=team_history_path,
@@ -246,7 +245,6 @@ def Data_Predictions(
         time_list=gw_list,
         standings_fixture_path=str(fixture_path),
     )
-    """
     Make_Predictions()
     Generate_point_predictions(time_list)
     #make_predictions2(horizon=len(time_list), gw_list=time_list)
@@ -318,6 +316,7 @@ def Main_Orchestration():
     #Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos,Understat_path,Understat_shots_path)
     
     #Predict data
+    """
     Data_Predictions(
         current_fixture_path,
         current_player_path,
@@ -330,7 +329,7 @@ def Main_Orchestration():
         player_history_path_25,
         full_simulator_team_output_path_25,
         full_simulator_player_output_path_25,
-    )
+    )"""
     
     Data_Generation(ownership,budget,GW_list_wildcard,GW_list_freehit,current_player_path,current_team_path,current_season_path )
     

@@ -111,7 +111,7 @@ def GenerateTeamPredictions1(fixture_path, current_team_path,horizon):
 
     # Filter for current month
     test_df = Model_pred[(Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month == current_month)| 
-                   (Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month == current_month-1) ]
+                   (Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month == current_month-6) ]
     train_df = Model_pred[(Model_pred['kickoff_time'].dt.year < current_year) | 
                      ((Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month < current_month-2))]
     train_df=train_df[train_df['kickoff_time']>'2022-12-31']
@@ -1330,7 +1330,7 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
 
     # Filter for current month
     test_df = Model_pred[(Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month == current_month)| 
-                   (Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month == current_month-2) ]
+                   (Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month == current_month-6) ]
     train_df = Model_pred[(Model_pred['kickoff_time'].dt.year < current_year) | 
                      ((Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month < current_month-2))]
     train_df=train_df[train_df['kickoff_time']>'2022-12-31']
@@ -2002,7 +2002,7 @@ def GenerateTeamPredictions_Results(fixture_path, current_team_path, horizon):
 
     test_df = Model_pred[
         ((Model_pred["kickoff_time"].dt.year == current_year) & (Model_pred["kickoff_time"].dt.month == current_month))
-        | ((Model_pred["kickoff_time"].dt.year == current_year) & (Model_pred["kickoff_time"].dt.month == current_month - 2))
+        | ((Model_pred["kickoff_time"].dt.year == current_year) & (Model_pred["kickoff_time"].dt.month == current_month - 6))
     ].copy()
 
     train_df = Model_pred[

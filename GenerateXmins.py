@@ -57,6 +57,45 @@ def _feature_importance_df(
     )
 
 
+def _prediction_uncertainty_minutes(
+    prob_gt0: float,
+    prob_30: float,
+    prob_60: float,
+    prob_80: float,
+) -> float:
+    """
+    Approximate prediction uncertainty as the standard deviation of a
+    discrete minutes distribution derived from the bucket probabilities.
+    """
+    p_gt0 = float(np.clip(prob_gt0, 0.0, 1.0))
+    p30 = float(np.clip(prob_30, 0.0, p_gt0))
+    p60 = float(np.clip(prob_60, 0.0, p30))
+    p80 = float(np.clip(prob_80, 0.0, p60))
+
+    bucket_probs = np.array(
+        [
+            1.0 - p_gt0,   # 0 minutes
+            p_gt0 - p30,   # 1-29
+            p30 - p60,     # 30-59
+            p60 - p80,     # 60-74
+            p80,           # 75+
+        ],
+        dtype=float,
+    )
+    bucket_probs = np.clip(bucket_probs, 0.0, None)
+
+    total_prob = float(bucket_probs.sum())
+    if total_prob <= 0:
+        bucket_probs = np.array([1.0, 0.0, 0.0, 0.0, 0.0], dtype=float)
+    else:
+        bucket_probs = bucket_probs / total_prob
+
+    bucket_minutes = np.array([0.0, 15.0, 45.0, 67.5, 82.5], dtype=float)
+    mean_minutes = float(np.dot(bucket_probs, bucket_minutes))
+    variance = float(np.dot(bucket_probs, (bucket_minutes - mean_minutes) ** 2))
+    return float(np.sqrt(max(variance, 0.0)))
+
+
 # -----------------------------
 # Two readers (KEY FIX)
 # -----------------------------
@@ -364,6 +403,12 @@ def train_minutes_bucket_models(
         preds["Predicted_minutes"] * preds["prob_gt0"],
         preds["Predicted_minutes"],
     )
+    preds["prediction_uncertainty_minutes"] = preds.apply(
+        lambda r: _prediction_uncertainty_minutes(
+            r["prob_gt0"], r["prob_30"], r["prob_60"], r["prob_80"]
+        ),
+        axis=1,
+    )
     preds.to_csv(out_predictions_path, index=False)
 
     # -------------------------
@@ -524,6 +569,7 @@ def GetXmins(current_players, n_future, scenarios=None, position_slots=None):
     minutes_calc=pd.read_csv("minutes_bucket_predictions.csv")
     for _, r in df_current.iterrows():
         code = r["code"]
+        team_code = r["team_code"]
         name = r.get("name", code)
         news = r.get("news", "")
         chance = 100
@@ -532,9 +578,16 @@ def GetXmins(current_players, n_future, scenarios=None, position_slots=None):
 
         # History for modeling (non-zero)
         pdf = hist.loc[hist[code_col] == code, ["kickoff_time", "minutes"]].copy()
-        player_mins = minutes_calc.loc[minutes_calc["code"] == code, ["Final_pred","name"]].copy()
-        pred_mins=player_mins["Final_pred"].values[0]
-        print(player_mins)
+        player_mins = minutes_calc.loc[
+            minutes_calc["code"] == code,
+            ["Final_pred", "prediction_uncertainty_minutes", "name"],
+        ].copy()
+        pred_mins = float(player_mins["Final_pred"].iloc[0]) if not player_mins.empty else 0.0
+        pred_uncertainty = (
+            float(player_mins["prediction_uncertainty_minutes"].iloc[0])
+            if not player_mins.empty and "prediction_uncertainty_minutes" in player_mins.columns
+            else 0.0
+        )
         base_est, mult, ispercent = baseline_minutes_from(pdf, news, chance)
         prophet_vec, prophet_reason = prophet_minutes_from(pdf, periods=len(future_gws), min_points=3)
         
@@ -554,12 +607,14 @@ def GetXmins(current_players, n_future, scenarios=None, position_slots=None):
             out_rows.append({
                 "name": name,
                 "GW": str(gw),
+                "team_code": str(team_code),
                 "minutes_multiplier": multiplier,
                 "minutes_prophet": minutes_prophet,
                 "minutes": round(m_final, 2),
                 "prophet_reason": prophet_reason,
                 "Final minutes": final_minutes,
                 "last5_avg_incl_zeros": round(last5_avg, 2),
+                "prediction_uncertainty_minutes": round(pred_uncertainty, 4),
             })
     out = pd.DataFrame(out_rows)
 
@@ -775,11 +830,29 @@ def GetXmins(current_players, n_future, scenarios=None, position_slots=None):
 
     # (optional) expose how much was added per row
     out["comp_minutes_added"] = out.apply(lambda r: additions.get((r["GW"], r["name"]), 0.0), axis=1)
-    out["Final_minutes_Adjusted"] = (
-        out["minutes_scenario"].astype(float) + 0*out["comp_minutes_added"].fillna(0).astype(float)
-    ).clip(upper=90.0)
-    
-   
+    out["Final_minutes_Adjusted"] = out["minutes_scenario_adj"].astype(float).clip(lower=0.0, upper=90.0)
+    out["GW_team_Final_minutes_Adjusted_sum"] = (
+        out.groupby(["GW", "team_code"])["Final_minutes_Adjusted"]
+        .transform("sum")
+        .round(2)
+    )
+    minutes = out["Final_minutes_Adjusted"].astype(float)
 
+    out["Final_minutes_Adjusted_weight"] = np.where(
+        (minutes < 10) | (minutes > 75),
+        0.0,
+        (np.maximum(
+            0.0,
+            75.0 - np.maximum(30.0, out["Final_minutes_Adjusted"].astype(float)),
+        ) ** 1.2)*0.5+0.5*np.maximum(12,out["prediction_uncertainty_minutes"])**1.3,
+    )
+    out["GW_adjustement_weight"] =out["Final_minutes_Adjusted_weight"]/  (
+        out.groupby(["GW", "team_code"])["Final_minutes_Adjusted_weight"]
+        .transform("sum")
+        .round(2)
+    )
+    out["Adjustement"] =(990-out["GW_team_Final_minutes_Adjusted_sum"])*out["GW_adjustement_weight"]
+    out["Final_minutes_Adjusted"] =np.maximum(0,out["Final_minutes_Adjusted"]+out["Adjustement"])
+    
     # Save & return
     out.to_csv("GenerateXmins2.csv", index=False)
