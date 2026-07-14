@@ -936,6 +936,22 @@ def _attacks_for_row(team_row: pd.Series) -> int:
     return max(0, n_attacks)
 
 
+def _choice_excluding_index(
+    rng: np.random.Generator,
+    weights: np.ndarray,
+    exclude_idx: Optional[int] = None,
+) -> Optional[int]:
+    weights = np.asarray(weights, dtype=float)
+    if exclude_idx is not None and 0 <= int(exclude_idx) < len(weights):
+        weights = weights.copy()
+        weights[int(exclude_idx)] = 0.0
+    total = float(weights.sum())
+    if total <= 0:
+        return None
+    probs = weights / total
+    return int(rng.choice(len(weights), p=probs))
+
+
 def _attach_opponent_features(df: pd.DataFrame) -> pd.DataFrame:
     out = df.copy()
     required_cols = {
@@ -1185,7 +1201,9 @@ def run_team_row_simulations(
                     # Intercepted
                     continue
 
-                scorer_idx = int(rng.choice(len(pool), p=goal_w))
+                scorer_idx = _choice_excluding_index(rng, goal_w, exclude_idx=assister_idx)
+                if scorer_idx is None:
+                    continue
                 scorer = pool.iloc[scorer_idx]
                 scorer_name = str(scorer.get("name", ""))
                 row_player_counts[scorer_name]["scorer_picks"] += 1.0

@@ -3,7 +3,7 @@ import joblib
 import numpy as np
 from datetime import datetime
 
-from GenerateConfig import Manual_Player_Risk,Manual_team_offensive_adjustments, Manual_team_defensive_adjustments,Manual_NewPlayer_Adjustments,Manual_Player_Adjustments,NEW_TEAMS,fixtures_config, normalize_player_name
+from GenerateConfig import Manual_Player_Risk,Manual_team_offensive_adjustments, Manual_team_defensive_adjustments,Manual_Player_Adjustments,NEW_TEAMS,fixtures_config, normalize_player_name
 from GenerateConfig import date_filter as config_date_filter
 
 def Xmins(current_players):
@@ -703,7 +703,6 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
     history_data = pd.read_csv("testML4.csv").iloc[:, 1:]
     xmins = pd.read_csv("GenerateXmins2.csv")
     xmins["GW"] = xmins["GW"].astype(int)
-    new_players_cluster = Manual_NewPlayer_Adjustments
     new_team_cluster = Manual_Player_Adjustments
 
     current_players["name"] = current_players["name"].apply(normalize_player_name)
@@ -1019,6 +1018,14 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
         columns_to_average = [col for col in player_row.columns if col not in exclude_columns]
         player_row[columns_to_average] = player_cluster[columns_to_average].mean()
         
+        if name in new_team_cluster:
+            members = new_team_cluster[name]
+            cluster_df = Future_dataframe[Future_dataframe["name"].isin(members)]
+            cluster_means = cluster_df[columns_to_average].mean()
+            player_row[columns_to_average] = 0.5 * player_row[columns_to_average] + 0.5 * cluster_means
+
+        
+        
         # Upcomming
         clusters, home, n_matches, XGH, XGCH, XGA, XGCA, XGC_DEF, XGC_FWD, XGC_MID, own_XG, GW, played_XGC, played_XG, opp_code, defcons,saves, goal_pos, ass_pos, fix_ids, fix_percent,Team_defcon = next_opp(
             team_id, time_list, fixture_data, kmeans, team_code, current_teams, main_pos
@@ -1041,7 +1048,10 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
         player_row["Understat_pos"] = main_pos
         player_row["Team_Pen_Data"] = player_team_pen_data
         player_row["Pen_Number"] = pen_number
-        player_row["player_risiko"] = 0.8
+        player_risiko=0.8
+        if name in Manual_Player_Risk:
+            player_risiko = Manual_Player_Risk[name]
+        player_row["player_risiko"] = player_risiko
         player_row["Player_code"] = player_code
         player_row["Rolling_cards"] = 0.1
         
@@ -1085,7 +1095,7 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
     add_team_share_per90()
     
     df = pd.read_csv("Player_Prediction_set.csv")
-    df["Goal_Index"] = df["Understat_POSXG"] * df["player_risiko"] + (1 - df["player_risiko"]) * (df["Goal_Statistics"]*0.5+df["Rolling_adjusted_XG"]*0.25+0.15*df['Big_Chances']*0.33+0.1*df['Rolling_adjusted_Threat_per90']*0.01)+df['Team_Pen_Data']*df['Pen_Number']*0.8
+    df["Goal_Index"] = df["Understat_POSXG"] * df["player_risiko"] + (1 - df["player_risiko"]) * (df["Goal_Statistics"]*0.5+df["Rolling_adjusted_XG"]*0.25+0.15*df['Big_Chances']*0.33+0.1*df['Rolling_adjusted_Threat_per90']*0.01)
     df["Assist_Index"] = df["Understat_POSXA"] * df["player_risiko"] + (1 - df["player_risiko"]) * (df["Assist_Statistics"]*0.5+df["Rolling_adjusted_XA"]*0.25+0.15*df['Big_Chances_Created']*0.5+0.1*df['Rolling_adjusted_creativity_per90']*0.01)
     df["Goal_Index_Share"] = df["Understat_POSXG_Share"] * df["player_risiko"] + (1 - df["player_risiko"]) * (df["Goal_Statistics_share"]*0.4+df["Share_of_XG"]*0.35+0.15*df['Share_of_XG_Short']+0.1*df['Rolling_adjusted_Threat_per90_share'])
     df["Assist_Index_Share"] = df["Understat_POSXA"] * df["player_risiko"] + (1 - df["player_risiko"]) * (df["Assist_Statistics_share"]*0.4+df["Share_of_XA"]*0.35+0.15*df['Share_of_XA_Short']+0.1*df['Rolling_adjusted_creativity_per90_share'])

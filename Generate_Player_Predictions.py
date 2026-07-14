@@ -564,20 +564,24 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
                     df['Goal_Statistics'].values[h],
                     df['Rolling_adjusted_XG'].values[h]
                 )
-               stat_pred=df['Goal_Statistics_share'].values[h]*0.3+df["Rolling_adjusted_Threat_per90_share"].values[h]*0.2+df['Rolling_adjusted_XG'].values[h]*0.1+df['Big_Chances'].values[h]*0.1*0.33+df['Share_of_XG'].values[h]*0.2+df['Share_of_XG_Short'].values[h]*0.1
+               subset = data[(data["fix_id"] == fix_id) & (data["Team"] == team)]
 
+               goal_sum = (
+                subset["Goal_Index"]
+                * np.minimum(1, subset["average_minutes"] / 80)
+                ).sum()
+               
+               stat_pred=(df['Goal_Index'].values[h]* np.minimum(1, df["average_minutes"].values[h] / 80))/goal_sum
+               stat_pred_share=df['Goal_Index_Share'].values[h]
                player_model.append(pred)
-               pred=pred*0.7+0.3*stat_pred
+               pred=pred*0.33+0.33*stat_pred+0.33*stat_pred_share
 
-               #own_data_xg_pred=((df['Rolling_adjusted_XG'].values[h]*0.7+df['rolling_Adjusted_XG_historic'].values[h]*0.3)*df["opposition_xgc"].values[h]+df['Share_of_XG'].values[h]*team_xg)*(0.5)
-               own_data_xg_pred=(pred*team_xg)*1+0.0*((df['Rolling_adjusted_XG'].values[h]*0.7+df['rolling_Adjusted_XG_historic'].values[h]*0.3)*df["opposition_xgc"].values[h])
-               team_data_xg_pred=(df['Understat_POSXG'].values[h]*df["opposition_xgc"].values[h]*0+1*(df['Understat_POSXG_Share'].values[h]*0.65+0.35*df['Opp_Goal_Threat_Pos'].values[h])*team_xg)
         
-               player_preds.append(own_data_xg_pred*(1-fordelings_faktor)+fordelings_faktor*team_data_xg_pred+df['Team_Pen_Data'].values[h]*df['Pen_Number'].values[h]*0.8)
+               player_preds.append(pred*team_xg+df['Team_Pen_Data'].values[h]*df['Pen_Number'].values[h]*0.8)
                
                xgind=df["Rolling_adjusted_XG_per90"].values[h]*0.5+(df["Rolling_adjusted_Threat_per90"].values[h]/100)*0.25+df["rolling_Goal_min"].values[h]*0.25
                eta=-5.2+0.58*team_xg+5.53*xgind+0.018*90
-               player_preds2.append(np.exp(eta))
+               player_preds2.append(pred)
                
                real_variable="expected_goals" 
                
@@ -593,17 +597,21 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
                     df['Assist_Statistics'].values[h],
                     df['Rolling_adjusted_XA'].values[h]
                 )
-               stat_pred=df['Assist_Statistics_share'].values[h]*0.4+df['Rolling_adjusted_XA'].values[h]*0.1+df["Big_Chances_Created"].values[h]/2 * 0.2+df['Share_of_XA'].values[h]*0.2+df['Share_of_XA_Short'].values[h]*0.1
-               player_model.append(pred)
-               pred=pred*0.7+0.3*stat_pred
+               subset = data[(data["fix_id"] == fix_id) & (data["Team"] == team)]
 
-               #own_data_xa_pred=((df['Rolling_adjusted_XA'].values[h]*0.7+df['rolling_Adjusted_XA_historic'].values[h]*0.3)*df["opposition_xgc"].values[h]+df['Share_of_XA'].values[h]*team_xg)*(0.5)
-               own_data_xa_pred=(pred*team_xg)*1+0*((df['Rolling_adjusted_XA'].values[h]*0.7+df['rolling_Adjusted_XA_historic'].values[h]*0.3)*df["opposition_xgc"].values[h])
-               team_data_xa_pred=(df['Understat_POSXA'].values[h]*df["opposition_xgc"].values[h]*0+1*(df['Understat_POSXA_Share'].values[h]*0.65+0.35*df['Opp_Assist_Threat_Pos'].values[h])*team_xg)
-               player_preds.append(own_data_xa_pred*(1-fordelings_faktor)+fordelings_faktor*team_data_xa_pred) 
+               assist_sum = (
+                subset["Assist_Index"]
+                * np.minimum(1, subset["average_minutes"] / 80)
+                ).sum()
+               
+               stat_pred=(df['Assist_Index'].values[h]* np.minimum(1, df["average_minutes"].values[h] / 80))/assist_sum
+               stat_pred_share=df['Assist_Index_Share'].values[h]
+               player_model.append(pred)
+               pred=pred*0.33+0.33*stat_pred+0.33*stat_pred_share
+               player_preds.append(pred*team_xg)
                
                eta=-5.23+0.425*team_xg+4.92*(df["Rolling_adjusted_XA_per90"].values[h]*0.33+(df["Rolling_adjusted_creativity_per90"].values[h]/100)*0.33+df["rolling_Assist_min"].values[h]*0.33)+0.019*90
-               player_preds2.append(np.exp(eta))
+               player_preds2.append(stat_pred)
                       
                
                 

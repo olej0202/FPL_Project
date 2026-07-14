@@ -1029,12 +1029,17 @@ def prepare_players(players_df):
     return df
 
 
-def sample_player(df, col):
-    weights = df[col].values
+def sample_player(df, col, exclude_player_id=None):
+    pool = df
+    if exclude_player_id is not None and "player_id" in pool.columns:
+        pool = pool[pool["player_id"] != exclude_player_id]
+    if pool.empty:
+        return None
+    weights = pool[col].values
     if weights.sum() < EPS:
         return None
     probs = weights / weights.sum()
-    return np.random.choice(df["player_id"].values, p=probs)
+    return np.random.choice(pool["player_id"].values, p=probs)
 
 
 # =========================
@@ -1097,13 +1102,13 @@ def simulate_match(
         if u < l_h:
             score_h += 1
             scorer = sample_player(home_players, "g_adj")
-            assist = sample_player(home_players, "a_adj")
+            assist = sample_player(home_players, "a_adj", exclude_player_id=scorer)
             events.append(("goal_home", t, scorer, assist))
 
         elif u < l_h + l_a:
             score_a += 1
             scorer = sample_player(away_players, "g_adj")
-            assist = sample_player(away_players, "a_adj")
+            assist = sample_player(away_players, "a_adj", exclude_player_id=scorer)
             events.append(("goal_away", t, scorer, assist))
 
         elif u < l_h + l_a + l_rh:
