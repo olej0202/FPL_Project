@@ -22,6 +22,38 @@ from sklearn.utils.class_weight import compute_class_weight
 from GenerateConfig import date_filter as config_date_filter
 
 
+def _split_latest_and_previous_month(model_pred, min_train_date="2022-12-31"):
+    model_pred = model_pred.copy()
+    model_pred["kickoff_time"] = pd.to_datetime(model_pred["kickoff_time"], errors="coerce")
+
+    valid_dates = model_pred["kickoff_time"].dropna()
+    if valid_dates.empty:
+        raise ValueError("No valid kickoff_time values found for train/test split.")
+
+    periods = model_pred["kickoff_time"].dt.to_period("M")
+    latest_period = valid_dates.dt.to_period("M").max()
+    previous_period = latest_period - 1
+    cutoff = pd.Timestamp(min_train_date)
+    kickoff_tz = model_pred["kickoff_time"].dt.tz
+    if kickoff_tz is not None and cutoff.tzinfo is None:
+        cutoff = cutoff.tz_localize(kickoff_tz)
+    elif kickoff_tz is None and cutoff.tzinfo is not None:
+        cutoff = cutoff.tz_localize(None)
+    elif kickoff_tz is not None and cutoff.tzinfo is not None:
+        cutoff = cutoff.tz_convert(kickoff_tz)
+
+    test_mask = periods.isin([latest_period, previous_period])
+    train_mask = (~test_mask) & (model_pred["kickoff_time"] > cutoff)
+
+    train_df = model_pred.loc[train_mask].copy()
+    test_df = model_pred.loc[test_mask].copy()
+
+    print(f"Using test periods: {previous_period} and {latest_period}")
+    print(f"Train rows: {len(train_df)}, Test rows: {len(test_df)}")
+
+    return train_df, test_df
+
+
 def GenerateTeamPredictions1(fixture_path, current_team_path,horizon):
     team_df = pd.read_csv("Team_data_transformed2.csv").iloc[:, 1:]
 
@@ -105,16 +137,7 @@ def GenerateTeamPredictions1(fixture_path, current_team_path,horizon):
 
     Model_pred['kickoff_time'] = pd.to_datetime(Model_pred['kickoff_time'])
 
-    # Get current year and month
-    current_year = datetime.today().year
-    current_month = datetime.today().month
-
-    # Filter for current month
-    test_df = Model_pred[(Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month == current_month)| 
-                   (Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month == current_month-6) ]
-    train_df = Model_pred[(Model_pred['kickoff_time'].dt.year < current_year) | 
-                     ((Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month < current_month-2))]
-    train_df=train_df[train_df['kickoff_time']>'2022-12-31']
+    train_df, test_df = _split_latest_and_previous_month(Model_pred)
 
 
 
@@ -1324,16 +1347,7 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
 
     Model_pred['kickoff_time'] = pd.to_datetime(Model_pred['kickoff_time'])
 
-    # Get current year and month
-    current_year = datetime.today().year
-    current_month = datetime.today().month
-
-    # Filter for current month
-    test_df = Model_pred[(Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month == current_month)| 
-                   (Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month == current_month-6) ]
-    train_df = Model_pred[(Model_pred['kickoff_time'].dt.year < current_year) | 
-                     ((Model_pred['kickoff_time'].dt.year == current_year) & (Model_pred['kickoff_time'].dt.month < current_month-2))]
-    train_df=train_df[train_df['kickoff_time']>'2022-12-31']
+    train_df, test_df = _split_latest_and_previous_month(Model_pred)
 
 
     
@@ -1997,20 +2011,7 @@ def GenerateTeamPredictions_Results(fixture_path, current_team_path, horizon):
     # =========================
     Model_pred["kickoff_time"] = pd.to_datetime(Model_pred["kickoff_time"])
 
-    current_year = datetime.today().year
-    current_month = datetime.today().month
-
-    test_df = Model_pred[
-        ((Model_pred["kickoff_time"].dt.year == current_year) & (Model_pred["kickoff_time"].dt.month == current_month))
-        | ((Model_pred["kickoff_time"].dt.year == current_year) & (Model_pred["kickoff_time"].dt.month == current_month - 6))
-    ].copy()
-
-    train_df = Model_pred[
-        (Model_pred["kickoff_time"].dt.year < current_year)
-        | ((Model_pred["kickoff_time"].dt.year == current_year) & (Model_pred["kickoff_time"].dt.month < current_month - 2))
-    ].copy()
-
-    train_df = train_df[train_df["kickoff_time"] > "2022-12-31"].copy()
+    train_df, test_df = _split_latest_and_previous_month(Model_pred)
 
     # drop missing target
     train_df = train_df.dropna(subset=["Result"])

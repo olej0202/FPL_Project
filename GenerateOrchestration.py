@@ -106,8 +106,8 @@ def Data_Transformation(n_points_in_future, current_fixture_path,current_player_
     #main_Transform()
     #Generate_Understat_dataset(current_player_path,run_player_pos)
     #Generate_Shots_data(Understat_path,Understat_shots_path,current_player_path,current_team_path)
-    #team_data(current_team_path)
-    GetXmins(current_player_path, time_list, scenarios=Manual_min)
+    team_data(current_team_path)
+    #GetXmins(current_player_path, time_list, scenarios=Manual_min)
     GeneratePlayerData(time_list, current_fixture_path,current_player_path,current_team_path)
 
     
@@ -127,6 +127,7 @@ def Data_Predictions(
     # Run both simulation engines first
     sim_output_dir = Path("SImulator")
     sim_output_dir.mkdir(parents=True, exist_ok=True)
+    upcoming_team_stats_path = Path("Team_data_newest3.csv")
 
     fixture_path = Path(current_fixture_path)
     team_path = Path(current_team_path)
@@ -151,10 +152,10 @@ def Data_Predictions(
         sim_output_dir / "fixtures_expanded_filtered_by_timelist.csv",
         force_unfinished=True,
     )
-    """
     # Trigger full simulator parameter optimization with all read paths passed in.
     full_sim_control = FullSimulatorControlConfig(
         team_history_path=team_history_path,
+        upcoming_team_stats_path=upcoming_team_stats_path,
         fixtures_path=filtered_fixtures_expanded_path,
         current_teams_path=team_path,
         player_prediction_path=player_prediction_path,
@@ -168,6 +169,7 @@ def Data_Predictions(
     run_simulator_control(control_cfg=full_sim_control)
 
     print("Running core match/player simulator...")
+    """
     RunCoreSimulator(
         fixture_path=filtered_fixture_path,
         current_teams_path=team_path,
@@ -196,14 +198,14 @@ def Data_Predictions(
         simulations=3000,
         seed=42,
         horizon_gws=len(gw_list),
-    )
+    )"""
 
     print("Running full stochastic simulator v2 (team/player upcoming outputs)...")
     fs2_paths = FullSimulator2DataPaths(
         team_stats_candidates=(
+            Path("Team_data_newest3.csv"),
             Path("team_stats.csv"),
             team_history_path,
-            Path("Team_data_newest3.csv"),
             Path("Team_data_transformed2.csv"),
         ),
         player_stats_candidates=(
@@ -225,8 +227,8 @@ def Data_Predictions(
         current_teams_path=team_path,
         team_history_candidates=(
             team_history_path,
-            Path("Team_data_transformed2.csv"),
             Path("Team_data_newest3.csv"),
+            Path("Team_data_transformed2.csv"),
             Path("Team_data_newest.csv"),
         ),
     )
@@ -238,14 +240,13 @@ def Data_Predictions(
         paths=fs2_paths,
     )
 
-
     GenerateTeamPredictions(
         str(filtered_fixture_path),
         current_team_path,
         len(gw_list),
         time_list=gw_list,
         standings_fixture_path=str(fixture_path),
-    )"""
+    )
     Make_Predictions()
     Generate_point_predictions(time_list)
     #make_predictions2(horizon=len(time_list), gw_list=time_list)

@@ -27,7 +27,8 @@ class StatFormulaConfig:
 
 @dataclass(frozen=True)
 class SimulatorTestConfig:
-    team_history_path: Path = Path("Team_data_newest3.csv")
+    team_history_path: Path = Path("Team_data_transformed2.csv")
+    upcoming_team_stats_path: Path = Path("Team_data_newest3.csv")
     fixtures_path: Path = Path("Fantasy_season_Fixtures_EXPANDED.csv")
     current_teams_path: Path = Path("Team_data_newest3.csv")
     player_prediction_path: Path = Path("Player_Prediction_set.csv")
@@ -44,7 +45,8 @@ class SimulationControlConfig:
     source: str = "upcoming"
 
     # Core CSV paths
-    team_history_path: Path = Path("Team_data_newest3.csv")
+    team_history_path: Path = Path("Team_data_transformed2.csv")
+    upcoming_team_stats_path: Path = Path("Team_data_newest3.csv")
     fixtures_path: Path = Path("Fantasy_season_Fixtures_EXPANDED.csv")
     current_teams_path: Path = Path("Team_data_newest3.csv")
     player_prediction_path: Path = Path("Player_Prediction_set.csv")
@@ -465,7 +467,7 @@ def build_upcoming_adjustments_all_teams(
     cfg = cfg or SimulatorTestConfig()
     formula_cfg = formula_cfg or StatFormulaConfig()
 
-    hist_raw = read_team_history_df(cfg.team_history_path)
+    upcoming_stats_raw = read_team_history_df(cfg.upcoming_team_stats_path)
     hist_full = build_historical_adjustments_all_teams(cfg=cfg, formula_cfg=formula_cfg, write_csv=True)
     hist_roll = (
         hist_full.sort_values(["code", "kickoff_time"])
@@ -479,7 +481,7 @@ def build_upcoming_adjustments_all_teams(
         )
     )
 
-    latest = _build_latest_team_profiles(hist_raw).rename(
+    latest = _build_latest_team_profiles(upcoming_stats_raw).rename(
         columns={
             "name": "team_name",
             "XGH": "team_xgh",
@@ -1722,6 +1724,7 @@ def _build_configs_from_control(
 ) -> Tuple[SimulatorTestConfig, StatFormulaConfig, SimulatorTuningParams]:
     sim_cfg = SimulatorTestConfig(
         team_history_path=control_cfg.team_history_path,
+        upcoming_team_stats_path=control_cfg.upcoming_team_stats_path,
         fixtures_path=control_cfg.fixtures_path,
         current_teams_path=control_cfg.current_teams_path,
         player_prediction_path=control_cfg.player_prediction_path,

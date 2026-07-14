@@ -155,6 +155,11 @@ def team_data(
 
     current_teams = pd.read_csv(current_teams)
     teams_dataset = pd.read_csv("Team_data_newest2.csv")
+    team_history = pd.read_csv("Team_data_transformed2.csv")
+
+    current_teams["code_norm"] = current_teams["code"].astype(str).str.strip()
+    teams_dataset["code_norm"] = teams_dataset["code"].astype(str).str.strip()
+    team_history["code_norm"] = team_history["code"].astype(str).str.strip()
 
     # make sure numeric cols are numeric
     for col in set(offense_cols + defense_cols):
@@ -162,8 +167,8 @@ def team_data(
             teams_dataset[col] = pd.to_numeric(teams_dataset[col], errors="coerce")
 
     # fill any missing codes with averages from representative teams (as you had)
-    codes = current_teams["code"].unique()
-    existing_codes = teams_dataset["code"].unique()
+    codes = current_teams["code_norm"].dropna().unique()
+    existing_codes = set(teams_dataset["code_norm"].dropna().unique())
     missing_codes = [c for c in codes if c not in existing_codes]
 
     average_team_codes = [13, 90, 102, 40, 49,2,20]
@@ -183,10 +188,11 @@ def team_data(
 
         synthetic_rows = []
         for code in missing_codes:
-            row_info = current_teams.loc[current_teams["code"] == code].iloc[0]
+            row_info = current_teams.loc[current_teams["code_norm"] == code].iloc[0]
             synthetic = {
                 "name":         row_info["name"],
-                "code":         code,
+                "code":         row_info["code"],
+                "code_norm":    code,
                 "id":           row_info["id"],
                 "kickoff_time": datetime.today(),
             }
@@ -198,9 +204,15 @@ def team_data(
 
         teams_dataset = pd.concat([teams_dataset, pd.DataFrame(synthetic_rows)], ignore_index=True)
     # Blend toward representative-team averages for teams with short history.
-    team_codes_str = {str(c) for c in current_teams["code"].dropna().unique()}
-    codes = teams_dataset["code"].astype(str)
+    team_codes_str = set(current_teams["code_norm"].dropna().unique())
+    codes = teams_dataset["code_norm"]
     mask = codes.isin(team_codes_str)
+
+    history_counts = (
+        team_history["code_norm"]
+        .value_counts(dropna=False)
+        .to_dict()
+    )
 
     if not mask.any():
         print("No matching team codes in teams_dataset")
@@ -217,7 +229,7 @@ def team_data(
             if not team_mask.any():
                 continue
 
-            team_len = int(team_mask.sum())
+            team_len = int(history_counts.get(team_code, 0))
             current_weight = min(1.0, team_len / 15.0)
             avg_weight = 1.0 - current_weight
 
@@ -252,6 +264,8 @@ def team_data(
 
     teams_dataset = _apply_factors(teams_dataset, off_factors, offense_cols,1)
     teams_dataset = _apply_factors(teams_dataset, def_factors, defense_cols,0)
+
+    teams_dataset = teams_dataset.drop(columns=["code_norm"], errors="ignore")
 
     teams_dataset.to_csv("Team_data_newest3.csv", index=False)
     return teams_dataset

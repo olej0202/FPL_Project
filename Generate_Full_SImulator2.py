@@ -35,8 +35,8 @@ LAMBDA_POISSON_ICT_DIFF_COEF = 0.395
 @dataclass(frozen=True)
 class DataPaths:
     team_stats_candidates: Tuple[Path, ...] = (
-        Path("team_stats.csv"),
         Path("Team_data_newest3.csv"),
+        Path("team_stats.csv"),
         Path("Team_data_transformed2.csv"),
     )
     player_stats_candidates: Tuple[Path, ...] = (
