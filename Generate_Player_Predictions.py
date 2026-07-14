@@ -1454,9 +1454,9 @@ def Generate_point_predictions(GW_list):
         player_preds["Goal_pred"] = (
             (
                 (player_preds["xgb_goals_75"] * 0.5 + 0.5 * player_preds["xgb_goals_25"]) * 0.0
-                + player_preds["sim_goals_pred"] * 0.15
-                + player_preds["sim2_goals_pred"] * 0.2
-                + player_preds["stat_goals_pred"] * 0.65
+                + player_preds["sim_goals_pred"] * 0.2
+                + player_preds["sim2_goals_pred"] * 0.3
+                + player_preds["stat_goals_pred"] * 0.5
                 + player_preds["dnn_goals_pred"] * 0.0
                 + player_preds["cluster_goals_pred"] * 0.0
             ) * overscore
@@ -1465,9 +1465,9 @@ def Generate_point_predictions(GW_list):
         player_preds["Assist_pred"] = (
             (
                 (player_preds["xgb_assist_75"] * 0.5 + 0.5 * player_preds["xgb_assist_25"]) * 0.0
-                + player_preds["sim_assists_pred"] * 0.15
-                + player_preds["sim2_assists_pred"] * 0.2
-                + player_preds["stat_assist_pred"] * 0.65
+                + player_preds["sim_assists_pred"] * 0.2
+                + player_preds["sim2_assists_pred"] * 0.3
+                + player_preds["stat_assist_pred"] * 0.5
                 + player_preds["dnn_assist_pred"] * 0.0
                 + historic_Assist * 0
                 + player_preds["cluster_assist_pred"] * 0.0
