@@ -824,9 +824,10 @@ def GetXmins(current_players, n_future, scenarios=None, position_slots=None):
         # any leftover delta is dropped (no eligible complements with headroom)
 
     # Apply additions
+    """
     for (gw, nm), add in additions.items():
         idx = key_index[(gw, nm)]
-        out.at[idx, "minutes_scenario_adj"] = min(90.0, float(out.at[idx, "minutes_scenario_adj"]) + add)
+        out.at[idx, "minutes_scenario_adj"] = min(90.0, float(out.at[idx, "minutes_scenario_adj"]) + add)"""
 
     # (optional) expose how much was added per row
     out["comp_minutes_added"] = out.apply(lambda r: additions.get((r["GW"], r["name"]), 0.0), axis=1)

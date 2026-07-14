@@ -574,7 +574,8 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
                stat_pred=(df['Goal_Index'].values[h]* np.minimum(1, df["average_minutes"].values[h] / 80))/goal_sum
                stat_pred_share=df['Goal_Index_Share'].values[h]
                player_model.append(pred)
-               pred=pred*0.33+0.33*stat_pred+0.33*stat_pred_share
+               pred=(pred*0.33+0.33*stat_pred+0.33*stat_pred_share)*0.8+0.2*df['Opp_Goal_Threat_Pos'].values[h]
+               
 
         
                player_preds.append(pred*team_xg+df['Team_Pen_Data'].values[h]*df['Pen_Number'].values[h]*0.8)
@@ -607,7 +608,7 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
                stat_pred=(df['Assist_Index'].values[h]* np.minimum(1, df["average_minutes"].values[h] / 80))/assist_sum
                stat_pred_share=df['Assist_Index_Share'].values[h]
                player_model.append(pred)
-               pred=pred*0.33+0.33*stat_pred+0.33*stat_pred_share
+               pred=(pred*0.33+0.33*stat_pred+0.33*stat_pred_share)*0.8+0.2*df['Opp_Assist_Threat_Pos'].values[h]
                player_preds.append(pred*team_xg)
                
                eta=-5.23+0.425*team_xg+4.92*(df["Rolling_adjusted_XA_per90"].values[h]*0.33+(df["Rolling_adjusted_creativity_per90"].values[h]/100)*0.33+df["rolling_Assist_min"].values[h]*0.33)+0.019*90
