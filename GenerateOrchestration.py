@@ -107,7 +107,7 @@ def Data_Transformation(n_points_in_future, current_fixture_path,current_player_
     #Generate_Understat_dataset(current_player_path,run_player_pos)
     #Generate_Shots_data(Understat_path,Understat_shots_path,current_player_path,current_team_path)
     #team_data(current_team_path)
-    GetXmins(current_player_path, time_list, scenarios=Manual_min)
+    #GetXmins(current_player_path, time_list, scenarios=Manual_min)
     GeneratePlayerData(time_list, current_fixture_path,current_player_path,current_team_path)
 
     
@@ -303,7 +303,7 @@ def Main_Orchestration():
     GW_list_wildcard=time_list
     GW_list_freehit=[time_list[0]]
     
-    run_player_pos=0
+    run_player_pos=1
     
     print(time_list)
     
@@ -313,10 +313,9 @@ def Main_Orchestration():
     
     
     #Transform data
-    #Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos,Understat_path,Understat_shots_path)
+    Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos,Understat_path,Understat_shots_path)
     
     #Predict data
-    """
     Data_Predictions(
         current_fixture_path,
         current_player_path,
@@ -329,7 +328,7 @@ def Main_Orchestration():
         player_history_path_25,
         full_simulator_team_output_path_25,
         full_simulator_player_output_path_25,
-    )"""
+    )
     
     Data_Generation(ownership,budget,GW_list_wildcard,GW_list_freehit,current_player_path,current_team_path,current_season_path )
     

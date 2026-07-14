@@ -1,9 +1,9 @@
-import pandas as pd
+﻿import pandas as pd
 import joblib
 import numpy as np
 from datetime import datetime
 
-from GenerateConfig import Manual_Player_Risk,Manual_team_offensive_adjustments, Manual_team_defensive_adjustments,Manual_NewPlayer_Adjustments,Manual_Player_Adjustments,NEW_TEAMS,fixtures_config
+from GenerateConfig import Manual_Player_Risk,Manual_team_offensive_adjustments, Manual_team_defensive_adjustments,Manual_NewPlayer_Adjustments,Manual_Player_Adjustments,NEW_TEAMS,fixtures_config, normalize_player_name
 from GenerateConfig import date_filter as config_date_filter
 
 def Xmins(current_players):
@@ -166,7 +166,8 @@ def team_data(
     existing_codes = teams_dataset["code"].unique()
     missing_codes = [c for c in codes if c not in existing_codes]
 
-    average_team_codes = [13, 90, 102, 40, 49]
+    average_team_codes = [13, 90, 102, 40, 49,2,20]
+    
     average_df = teams_dataset[teams_dataset["code"].isin(average_team_codes)]
     numeric_cols = [
             "XG","XGC","was_home","opponent","Clean_Sheet","Result",
@@ -196,26 +197,39 @@ def team_data(
     
 
         teams_dataset = pd.concat([teams_dataset, pd.DataFrame(synthetic_rows)], ignore_index=True)
-    if NEW_TEAMS:
-        # 1) Normalize key types so .isin works
-        new_codes = {str(c) for c in NEW_TEAMS}
-        codes = teams_dataset["code"].astype(str)
-        mask = codes.isin(new_codes)
+    # Blend toward representative-team averages for teams with short history.
+    team_codes_str = {str(c) for c in current_teams["code"].dropna().unique()}
+    codes = teams_dataset["code"].astype(str)
+    mask = codes.isin(team_codes_str)
 
-        if not mask.any():
-            print("No matching team codes in teams_dataset")
-        else:
-            # 2) Use only columns present in BOTH frames
-            cols = [c for c in numeric_cols if c in average_df.columns and c in teams_dataset.columns]
+    if not mask.any():
+        print("No matching team codes in teams_dataset")
+    else:
+        cols = [c for c in numeric_cols if c in average_df.columns and c in teams_dataset.columns]
 
-            # 3) Coerce to numeric before taking means (avoids all-NaN means)
-            avg_num = average_df[cols].apply(pd.to_numeric, errors="coerce")
-            col_means = avg_num.mean()               # index = cols
-            col_means = col_means.reindex(cols)      # keep order
-            col_means = col_means.fillna(0)          # or choose another fallback
+        avg_num = average_df[cols].apply(pd.to_numeric, errors="coerce")
+        col_means = avg_num.mean()
+        col_means = col_means.reindex(cols)
+        col_means = col_means.fillna(0)
 
-            # 4) Assign (broadcast to all masked rows)
-            teams_dataset.loc[mask, cols] = col_means.values*0.3+teams_dataset.loc[mask, cols].values*0.7
+        for team_code in team_codes_str:
+            team_mask = codes.eq(team_code)
+            if not team_mask.any():
+                continue
+
+            team_len = int(team_mask.sum())
+            current_weight = min(1.0, team_len / 15.0)
+            avg_weight = 1.0 - current_weight
+
+            current_values = (
+                teams_dataset.loc[team_mask, cols]
+                .apply(pd.to_numeric, errors="coerce")
+                .fillna(0.0)
+                .to_numpy(dtype=float)
+            )
+            teams_dataset.loc[team_mask, cols] = (
+                col_means.values * avg_weight + current_values * current_weight
+            )
 
     # ---- APPLY TEAM-SPECIFIC MULTIPLIERS ----
     def _apply_factors(df, factors, cols,is_offensive):
@@ -679,7 +693,6 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
     current_players = pd.read_csv(current_player_path).iloc[:, 1:]
     current_teams = pd.read_csv(current_teams_path)
     season_data = pd.read_csv("Unwanted_players.csv").iloc[:, 1:]
-    cbi_data = pd.read_csv("GenerateCBI2.csv")
     understat_pos = pd.read_csv("Generate_Player_Matches.csv")
     understat_team = pd.read_csv("Team_Positions_transformed_Newest.csv")
     team_pen_data = pd.read_csv("Team_Penalties.csv")
@@ -688,49 +701,21 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
     player_assists = pd.read_csv("Bronze/Understat_PlayerAssist.csv")
     kmeans = joblib.load('kmeans_Groundmodel.pkl')
     history_data = pd.read_csv("testML4.csv").iloc[:, 1:]
-
-    relevant_players = current_players.copy()
-    name_map = {
-        "Pedro_Porro Sauceda": "Pedro_Porro",
-        "Sávio_Moreira de Oliveira": "Sávio_'Savinho' Moreira de Oliveira",
-        "Daniel_Muñoz Mejía": "Daniel_Muñoz",
-        "Bernardo_Mota Veiga de Carvalho e Silva": "Bernardo_Veiga de Carvalho e Silva",
-        "Ederson_Santana de Moraes": "Ederson_Santana de Moraes",
-        "Levi_Samuels Colwill": "Levi_Colwill",
-        "Marcos_Senesi Barón": "Marcos_Senesi",
-        "Raúl_Jiménez Rodríguez": "Raúl_Jiménez",
-        "Robert_Lynch Sánchez": "Robert_Sánchez",
-        "Rodrigo_'Rodri' Hernandez Cascante": "Rodrigo_Hernandez",
-        "Rúben_dos Santos Gato Alves Dias": "Rúben_Gato Alves Dias",
-        "Kaoru_Mitoma": "Mitoma_Kaoru",
-        "Matheus_Santos Carneiro da Cunha": "Matheus_Santos Carneiro Da Cunha",
-        "David_Raya Martín": "David_Raya Martin",
-        "Kepa_Arrizabalaga Revuelta": "Kepa_Arrizabalaga",
-        "Idrissa_Gana Gueye": "Idrissa_Gueye",
-        "Alisson_Becker": "Alisson_Ramses Becker",
-        "Luis_Díaz Marulanda": "Luis_Díaz",
-        "Matheus Luiz_Nunes": "Matheus_Nunes",
-        "Alejandro_Garnacho Ferreyra": "Alejandro_Garnacho",
-    }
-
+    xmins = pd.read_csv("GenerateXmins2.csv")
+    xmins["GW"] = xmins["GW"].astype(int)
     new_players_cluster = Manual_NewPlayer_Adjustments
     new_team_cluster = Manual_Player_Adjustments
 
-    relevant_players["name"] = relevant_players["name"].apply(lambda n: name_map.get(n, n))
+    current_players["name"] = current_players["name"].apply(normalize_player_name)
+    xmins["name"] = xmins["name"].apply(normalize_player_name)
 
-    xmins = pd.read_csv("GenerateXmins2.csv")
-    xmins["name"] = xmins["name"].apply(lambda n: name_map.get(n, n))
-    xmins["GW"] = xmins["GW"].astype(int)
-    cbi_data["name"] = cbi_data["name"].apply(lambda n: name_map.get(n, n))
-    current_players["name"] = current_players["name"].apply(lambda n: name_map.get(n, n))
-
-    names = relevant_players["name"].unique()
+    names = current_players["name"].unique()
     Future_dataframe = pd.DataFrame()
     missing_player = []
-    print(names)
+    Players_without_history=[]
 
     for name in names:
-        player_risiko = 0.4
+        player_risiko = 0.35
         print(name)
         
         
@@ -761,24 +746,34 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
             )
                     
             print(player_row)
-            rel_player_player = relevant_players[relevant_players["name"] == name]
+        rel_player_player = current_players[current_players["name"] == name]
+        history_player = history_data[history_data["name"] == name]
+        player_pen_takers = pen_takers[pen_takers["name"] == name]
+        playerMins = xmins[xmins["name"] == name]
+
         if rel_player_player.empty:
             continue
 
         player_code = rel_player_player["code"].values[0]
+        team_id = rel_player_player["team"].values[0]
+        team_code = rel_player_player["team_code"].values[0]
+        element_type = rel_player_player["element_type"].values[0]
+        
+        team_pens=team_pen_data[team_pen_data["code"] == team_code]
 
         # Shot/assist data
         shot_data = player_shots[player_shots["Shot_player_code"] == player_code].copy()
         assist_data = player_assists[player_assists["Assist_player_code"] == player_code].copy()
 
-        if assist_data.empty:
+
+        if len(assist_data)<5:
             big_chances_created = 0.15
         else:
             newest_row_ass = assist_data.sort_values("date").tail(1).iloc[0]
             bcc_rm = newest_row_ass.get("bc_created_rm25", np.nan)
             big_chances_created = 0.15 if pd.isna(bcc_rm) else bcc_rm
 
-        if shot_data.empty:
+        if len(shot_data)<5:
             big_chances = 0.2
             goal_conv = 1
         else:
@@ -798,33 +793,31 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
             goal_conv = 1 + newest_row.get("Shot_conversion_sum_rm20", 1)
             if pd.isna(goal_conv):
                 goal_conv = 1
+  
 
-        player_row2 = current_players[current_players["name"] == name]
-        if player_row2.empty:
-            print("emty")
-            continue
-
-        player_pen_takers = pen_takers[pen_takers["name"] == name]
-        history_player = history_data[history_data["name"] == name]
-
-        pen_number = 0 if len(player_pen_takers) == 0 else player_pen_takers["Is_taker"].values[0]
-
-        playerMins = xmins[xmins["name"] == name]
+        
+        #Minutes
+        
         mins_lookup = (
             playerMins[["name", "GW", "Final_minutes_Adjusted"]]
             .rename(columns={"Final_minutes_Adjusted": "average_minutes"})
             .set_index(["name", "GW"])
         )
-
-        playerCBI = cbi_data[cbi_data["name"] == name]
         minutes = playerMins["Final_minutes_Adjusted"].values
 
-        team_id = player_row2["team"].values[0]
-        team_code = player_row2["team_code"].values[0]
 
-        player_team_pen_data = team_pen_data[team_pen_data["code"] == team_code]["Penalty"].values[0]
+        #Penalty Data
 
-        element_type = player_row2["element_type"].values[0]
+        if(len(team_pens)<1):
+            player_team_pen_data=0.1
+        else:
+            player_team_pen_data = team_pens["Penalty"].values[0]
+            
+        pen_number = 0 if len(player_pen_takers) == 0 else player_pen_takers["Is_taker"].values[0]
+
+
+        #Position
+        
         if element_type == 1:
             position = 'GKP'
         elif element_type == 2:
@@ -836,10 +829,23 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
 
         if element_type == 5:
             continue
-
         player_row["position"] = position
+        
+        
+        main_pos, posxg, posxg_share, posxa, posxa_share = _weighted_understat_for_player(
+            name=name,
+            team_code=team_code,
+            understat_pos=understat_pos,
+            understat_team=understat_team
+        )
 
-        # --- existing "missing player" logic (unchanged) ---
+        if len(player_row) < 1:
+            missing_player.append(name)
+            Players_without_history.append([name,team_code,player_code,position,main_pos,minutes,team_id,pen_number,player_team_pen_data])
+            continue
+
+        """
+        # Hvis player mangeler
         if len(player_row) < 1:
             player_risiko = 0.8
             missing_player.append(name)
@@ -882,37 +888,14 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
                 own_new_row["average_minutes"] = 90 if (player_row2["now_cost"].values[0] > 65) else 40
 
             player_row = pd.DataFrame([own_new_row])
+            """
 
         pd.DataFrame(missing_player).to_csv("MIssing_players.csv", index=False)
 
-        # --- CBI logic (unchanged) ---
-        if position == 'GKP':
-            player_row["CBI"] = 0
-        elif position == 'DEF':
-            player_row["CBI"] = 3.8
-        else:
-            player_row["CBI"] = 0
+        player_row["CBI"] = 0
 
-        if len(playerCBI) > 0 and len(minutes) > 0:
-            cbi_ind = ((playerCBI["CBI"].values[0] / 90) * minutes[0])
-            last = player_row["defcon_avg"].iloc[-1] if not player_row["defcon_avg"].empty else np.nan
-            cbi_hist = cbi_ind if pd.isna(last) else last
-            player_row["CBI"] = cbi_ind * 0.0 + 1 * cbi_hist
-        else:
-            last = player_row["defcon_avg"].iloc[-1] if not player_row["defcon_avg"].empty else np.nan
-            player_row["CBI"] = last
 
-        # -----------------------------
-        # ✅ NEW: weighted Understat position metrics
-        # -----------------------------
-        main_pos, posxg, posxg_share, posxa, posxa_share = _weighted_understat_for_player(
-            name=name,
-            team_code=team_code,
-            understat_pos=understat_pos,
-            understat_team=understat_team
-        )
-
-        # Use main_pos for next_opp so you don't have to change that function
+        # Upcomming
         clusters, home, n_matches, XGH, XGCH, XGA, XGCA, XGC_DEF, XGC_FWD, XGC_MID, own_XG, GW, played_XGC, played_XG, opp_code, defcons,saves, goal_pos, ass_pos, fix_ids, fix_percent,Team_defcon = next_opp(
             team_id, time_list, fixture_data, kmeans, team_code, current_teams, main_pos
         )
@@ -933,21 +916,16 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
 
         rolling_cards = 0.1
         if len(history_player) <= 6:
-            player_risiko = 0.8
             overscore = 1
             overassist = 1
-        elif len(history_player) <= 10:
-            player_risiko = 0.6
-            overscore = 1
-            overassist = 1
-            rolling_cards = player_row["Rolling_cards"].values[0]
         elif len(history_player) <= 15:
-            player_risiko = 0.5
             overscore = 1
             overassist = 1
             rolling_cards = player_row["Rolling_cards"].values[0]
         else:
             rolling_cards = player_row["Rolling_cards"].values[0]
+            
+        player_risiko=1-min(0.65,len(history_player)/25)
 
         if name in Manual_Player_Risk:
             player_risiko = Manual_Player_Risk[name]
@@ -1001,13 +979,121 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
             player_row["Rolling_Team_Defcon"]=Team_defcon[i]
 
             Future_dataframe = pd.concat([Future_dataframe, player_row], axis=0, ignore_index=True)
-            print(Future_dataframe)
+            
+            
+            
+    #New Players        
+    column_dummy=[]
+    for t in range(len(Players_without_history[0])):
+        column_dummy.append(str(t))
+    missing_players_df=pd.DataFrame(Players_without_history, columns=column_dummy)
+    missing_players_df.to_csv("Player_without_history.csv")
+    for player in Players_without_history:
+        name=player[0]
+        print(name)
+        team_code=player[1]
+        player_code=player[2]
+        position=player[3]
+        main_pos=player[4]
+        minutes=player[5]
+        team_id=player[6]
+        pen_number=player[7]
+        player_team_pen_data=player[8]
+        
+        
+        exclude_columns = ["kickoff_time", "season", "position", "Team", "name", "gamepos", "GW","Understat_pos"]
+        
+        if(team_code in NEW_TEAMS):
+            player_cluster = Future_dataframe[
+                    (Future_dataframe["Understat_pos"] == main_pos)
+                ]
+            
+            
+        else:
+            player_cluster = Future_dataframe[
+                    (Future_dataframe["Understat_pos"] == main_pos) &
+                    (Future_dataframe["Team"] == team_code)
+                ]
+        player_cluster = player_cluster.replace([np.inf, -np.inf], 0).fillna(0)
+        player_row = Future_dataframe.head(1).copy()
+        columns_to_average = [col for col in player_row.columns if col not in exclude_columns]
+        player_row[columns_to_average] = player_cluster[columns_to_average].mean()
+        
+        # Upcomming
+        clusters, home, n_matches, XGH, XGCH, XGA, XGCA, XGC_DEF, XGC_FWD, XGC_MID, own_XG, GW, played_XGC, played_XG, opp_code, defcons,saves, goal_pos, ass_pos, fix_ids, fix_percent,Team_defcon = next_opp(
+            team_id, time_list, fixture_data, kmeans, team_code, current_teams, main_pos
+        )
+        
+        playerMins = xmins[xmins["name"] == name]
+        
+        mins_lookup = (
+            playerMins[["name", "GW", "Final_minutes_Adjusted"]]
+            .rename(columns={"Final_minutes_Adjusted": "average_minutes"})
+            .set_index(["name", "GW"])
+        )
+        
+        player_row["name"] = name
+        player_row["Team"] = team_code
+        player_row["position"] = position
+        player_row["Average_Overscore"] = 1
+        player_row["Average_OverAssist"] = 1
+        player_row["TP_std_20"] = 3
+        player_row["Understat_pos"] = main_pos
+        player_row["Team_Pen_Data"] = player_team_pen_data
+        player_row["Pen_Number"] = pen_number
+        player_row["player_risiko"] = 0.8
+        player_row["Player_code"] = player_code
+        player_row["Rolling_cards"] = 0.1
+        
+        print(minutes)
+        for i in range(len(clusters)):
+            gw_i = int(GW[i])
+            print(GW[i])
+            player_row["Cluster"] = clusters[i]
+            player_row["XGH"] = XGH[i]
+            player_row["XGCH"] = XGCH[i]
+            player_row["XGA"] = XGA[i]
+            player_row["XGCA"] = XGCA[i]
+            player_row["Own_Attacking_form"] = own_XG[i]
+            player_row["XGC_DEF"] = XGC_DEF[i]
+            player_row["XGC_FWD"] = XGC_FWD[i]
+            player_row["XGC_MID"] = XGC_MID[i]
+            player_row["was_home"] = home[i]
+            player_row["GW"] = GW[i]
+            player_row["played_XGC"] = played_XGC[i]
+            player_row["played_XG"] = played_XG[i]
+            player_row["opp_code"] = opp_code[i]
+            player_row["average_minutes"] = float(mins_lookup.loc[(name, gw_i), "average_minutes"]) if (name, gw_i) in mins_lookup.index else 1.0
+            
+            player_row["Opp_defcon"] = defcons[i]
+            player_row["Opp_Saves_Against"] = saves[i]
+            player_row["fix_id"] = fix_ids[i]
+            player_row["fix_percentage"] = fix_percent[i]
+            player_row["Opp_Goal_Threat_Pos"] = goal_pos[i]
+            player_row["Opp_Assist_Threat_Pos"] = ass_pos[i]
+            player_row["Rolling_Team_Defcon"]=Team_defcon[i]
+
+            Future_dataframe = pd.concat([Future_dataframe, player_row], axis=0, ignore_index=True)
+        
+        
+        
     print("Ferdig")
+    
 
     Future_dataframe.to_csv("Player_Prediction_set.csv", index=False)
     
     add_team_share_per90()
-
+    
+    df = pd.read_csv("Player_Prediction_set.csv")
+    df["Goal_Index"] = df["Understat_POSXG"] * df["player_risiko"] + (1 - df["player_risiko"]) * (df["Goal_Statistics"]*0.5+df["Rolling_adjusted_XG"]*0.25+0.15*df['Big_Chances']*0.33+0.1*df['Rolling_adjusted_Threat_per90']*0.01)+df['Team_Pen_Data']*df['Pen_Number']*0.8
+    df["Assist_Index"] = df["Understat_POSXA"] * df["player_risiko"] + (1 - df["player_risiko"]) * (df["Assist_Statistics"]*0.5+df["Rolling_adjusted_XA"]*0.25+0.15*df['Big_Chances_Created']*0.5+0.1*df['Rolling_adjusted_creativity_per90']*0.01)
+    df["Goal_Index_Share"] = df["Understat_POSXG_Share"] * df["player_risiko"] + (1 - df["player_risiko"]) * (df["Goal_Statistics_share"]*0.4+df["Share_of_XG"]*0.35+0.15*df['Share_of_XG_Short']+0.1*df['Rolling_adjusted_Threat_per90_share'])
+    df["Assist_Index_Share"] = df["Understat_POSXA"] * df["player_risiko"] + (1 - df["player_risiko"]) * (df["Assist_Statistics_share"]*0.4+df["Share_of_XA"]*0.35+0.15*df['Share_of_XA_Short']+0.1*df['Rolling_adjusted_creativity_per90_share'])
+    
+               
+    df.to_csv("Player_Prediction_set.csv", index=False)
+    
+    
     missing_names = [n for n in names if n not in Future_dataframe["name"].values]
     print("Missing players:", missing_names)
     print("Total missing:", len(missing_names))

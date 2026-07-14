@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
@@ -389,87 +389,34 @@ def _build_player_pool_from_loaded(
         pool = pool.groupby("player_id", as_index=False, group_keys=False).tail(1).reset_index(drop=True)
 
     if mode_norm == "histo":
-        risk_adj_minutes_factor = np.minimum(1.0, (_col_or_zero(pool, "minutes") + 0.01) / 90.0)
-        pool["risk_adj_minutes_factor"] = risk_adj_minutes_factor
-        pool["XG_Index"] = (
-            _col_or_zero(pool, "Goal_Statistics") * 0.4
-            + _col_or_zero(pool, "Share_of_XG") * 0.4
-            + _col_or_zero(pool, "Share_of_XG_Short") * 0.2
-        )
-        pool["XG_Index"] = pool["XG_Index"] * risk_adj_minutes_factor
-        pool["XA_Index"] = (
-            _col_or_zero(pool, "Assist_Statistics") * 0.4
-            + _col_or_zero(pool, "Share_of_XA") * 0.4
-            + _col_or_zero(pool, "Share_of_XA_Short") * 0.2
-        )
-        pool["XA_Index"] = pool["XA_Index"] * risk_adj_minutes_factor
         pool["adjusted_minutes"] = _col_or_zero(pool, "minutes").clip(lower=0.0, upper=90.0)
     elif mode_norm == "new":
-        risk_adj_minutes_factor = np.minimum(1.0, (_col_or_zero(pool, "average_minutes") + 0.01) / 90.0)
-        pool["risk_adj_minutes_factor"] = risk_adj_minutes_factor
-        pool["XG_Index"] = (
-            _col_or_zero(pool, "Goal_Statistics_share") * 0.3
-            + _col_or_zero(pool, "Rolling_adjusted_Threat_per90_share") * 0.2
-            + _col_or_zero(pool, "Rolling_adjusted_XG") * 0.1 * risk_adj_minutes_factor
-            + _col_or_zero(pool, "Big_Chances") * 0.1 * 0.33 * risk_adj_minutes_factor
-            + _col_or_zero(pool, "Share_of_XG") * 0.3 * risk_adj_minutes_factor
-            + _col_or_zero(pool, "Share_of_XG_Short") * 0.0 * risk_adj_minutes_factor
-        )
-        pool["XG_Index"] = pool["XG_Index"] * 0.7 + 0.3 * _col_or_zero(pool, "Opp_Goal_Threat_Pos") * risk_adj_minutes_factor
-        pool["XA_Index"] = (
-            _col_or_zero(pool, "Assist_Statistics_share") * 0.4
-            + _col_or_zero(pool, "Rolling_adjusted_XA") * 0.1 * risk_adj_minutes_factor
-            + _col_or_zero(pool, "Big_Chances_Created") * 0.5 * 0.2 * risk_adj_minutes_factor
-            + _col_or_zero(pool, "Share_of_XA") * 0.2 * risk_adj_minutes_factor
-            + _col_or_zero(pool, "Share_of_XA_Short") * 0.1 * risk_adj_minutes_factor
-        )
-        pool["XA_Index"] = pool["XA_Index"] * 0.7 + 0.3 * _col_or_zero(pool, "Opp_Assist_Threat_Pos") * risk_adj_minutes_factor
         pool["adjusted_minutes"] = _col_or_zero(pool, "average_minutes").clip(lower=0.0, upper=90.0)
     else:
-        pool["risk_adj_minutes_factor"] = np.minimum(1.0, (_col_or_zero(pool, "adjusted_minutes") + 0.01) / 90.0)
-        pool["XG_Index"] = _col_or_zero(pool, "goal_index").clip(lower=0.0)
-        pool["XA_Index"] = _col_or_zero(pool, "assist_index").clip(lower=0.0)
         pool["adjusted_minutes"] = _col_or_zero(pool, "adjusted_minutes").clip(lower=0.0, upper=90.0)
-
-    # Requested goal-index formula:
-    # Goal_Statistics*0.3 + Share_of_XG*0.15 + Share_of_XG_Short*0.1
-    # + Understat_POSXG_Share*0.3 + Opp_Goal_Threat_Pos*0.15
-    goal_stats = _col_or_zero(pool, "Goal_Statistics")
-    goal_stats_share = _col_or_zero(pool, "Goal_Statistics_share")
-    goal_stats_use = goal_stats.where(goal_stats.abs() > EPS, goal_stats_share)
-
+    pool["risk_adj_minutes_factor"] = np.minimum(1.0, (_col_or_zero(pool, "adjusted_minutes") + 0.01) / 90.0)
+    pool["goal_index"] = _to_num(
+        _col_or_zero(pool, "Goal_Index").where(
+            _col_or_zero(pool, "Goal_Index").abs() > EPS,
+            _col_or_zero(pool, "goal_index"),
+        ),
+        0.0,
+    ).clip(lower=0.0)
+    pool["assist_index"] = _to_num(
+        _col_or_zero(pool, "Assist_Index").where(
+            _col_or_zero(pool, "Assist_Index").abs() > EPS,
+            _col_or_zero(pool, "assist_index"),
+        ),
+        0.0,
+    ).clip(lower=0.0)
+    pool["XG_Index"] = pool["goal_index"]
+    pool["XA_Index"] = pool["assist_index"]
+    pool["xg_index_base"] = pool["goal_index"]
+    pool["xa_index_base"] = pool["assist_index"]
     pool["opp_goal_threat_pos"] = _col_or_zero(pool, "Opp_Goal_Threat_Pos")
     pool["opp_assist_threat_pos"] = _col_or_zero(pool, "Opp_Assist_Threat_Pos")
     pool["understat_posxg_share"] = _col_or_zero(pool, "Understat_POSXG_Share")
     pool["understat_posxa_share"] = _col_or_zero(pool, "Understat_POSXA_Share")
-    assist_stats = _col_or_zero(pool, "Assist_Statistics")
-    assist_stats_share = _col_or_zero(pool, "Assist_Statistics_share")
-    assist_stats_use = assist_stats.where(assist_stats.abs() > EPS, assist_stats_share)
-
-    pool["xa_index_base"] = (
-        assist_stats_use * 0.3
-        + _col_or_zero(pool, "Share_of_XA") * 0.15
-        + _col_or_zero(pool, "Share_of_XA_Short") * 0.1
-        + pool["understat_posxa_share"] * 0.3
-    )
-    pool["xg_index_base"] = (
-        goal_stats_use * 0.3
-        + _col_or_zero(pool, "Share_of_XG") * 0.15
-        + _col_or_zero(pool, "Share_of_XG_Short") * 0.1
-        + pool["understat_posxg_share"] * 0.3
-    )
-
-    pool["XG_Index"] = (
-        pool["xg_index_base"]
-        + pool["opp_goal_threat_pos"] * 0.15
-    )
-    pool["XA_Index"] = (
-        pool["xa_index_base"]
-        + pool["opp_assist_threat_pos"] * 0.15
-    )
-
-    pool["goal_index"] = _to_num(pool["XG_Index"], 0.0).clip(lower=0.0)
-    pool["assist_index"] = _to_num(pool["XA_Index"], 0.0).clip(lower=0.0)
     if "pred_minutes" in pool.columns:
         pool["pred_minutes"] = _to_num(pool["pred_minutes"], 0.0).clip(lower=0.0, upper=120.0)
     else:

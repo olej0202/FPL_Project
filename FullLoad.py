@@ -4,6 +4,7 @@ import requests
 import json
 import pandas as pd
 import numpy as np
+from GenerateConfig import normalize_player_name
 
 def fixtures(season):
     url = "https://fantasy.premierleague.com/api/fixtures/"
@@ -177,29 +178,7 @@ def current_players(season):
     players_new["name"]=players["first_name"]+" "+players["second_name"]
     players_new["name"]=players_new["name"].str.replace(" ", "_", n=1)
     players_new["chance_of_playing_this_round"]=players["chance_of_playing_this_round"]    
-    name_map = {
-    "Pedro_Porro Sauceda":          "Pedro_Porro",
-    "Sávio_Moreira de Oliveira":    "Sávio_'Savinho' Moreira de Oliveira",
-    "Daniel_Muñoz Mejía":           "Daniel_Muñoz",
-    "Bernardo_Mota Veiga de Carvalho e Silva": "Bernardo_Veiga de Carvalho e Silva",
-    "Ederson_Santana de Moraes":    "Ederson_Santana de Moraes",
-    "Levi_Samuels Colwill":         "Levi_Colwill",
-    "Marcos_Senesi Barón":          "Marcos_Senesi",
-    "Raúl_Jiménez Rodríguez":       "Raúl_Jiménez",
-    "Robert_Lynch Sánchez":         "Robert_Sánchez",
-    "Rodrigo_'Rodri' Hernandez Cascante": "Rodrigo_Hernandez",
-    "Rúben_dos Santos Gato Alves Dias":   "Rúben_Gato Alves Dias",
-    "Kaoru_Mitoma":                 "Mitoma_Kaoru",
-    "Matheus_Santos Carneiro da Cunha": "Matheus_Santos Carneiro Da Cunha",
-    "David_Raya Martín":"David_Raya Martin",
-    "Kepa_Arrizabalaga Revuelta": "Kepa_Arrizabalaga",
-    "Idrissa_Gana Gueye": "Idrissa_Gueye",
-    "Alisson_Becker": "Alisson_Ramses Becker",
-    "Luis_Díaz Marulanda": "Luis_Díaz",
-    "Matheus Luiz_Nunes":"Matheus_Nunes",
-    "Alejandro_Garnacho Ferreyra":"Alejandro_Garnacho"
-}
-    players_new["name"] = players_new["name"].apply(lambda n: name_map.get(n, n))
+    players_new["name"] = players_new["name"].apply(normalize_player_name)
 
     players_new.to_csv(f"Raw_Data_{season}/current_players.csv")
     fixtures(season)

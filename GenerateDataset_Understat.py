@@ -480,7 +480,10 @@ def Generate_Understat_dataset(current_players, run_player_pos):
                   .reset_index(level=0, drop=True)
     )
 
-    df_penalty["Penalty"] = df_penalty["penalty_roll30_mean"].fillna(0.10).clip(0.12, 0.17)
+    df_penalty["Penalty"] = df_penalty["penalty_roll30_mean"].fillna(0.10).clip(0.1, 0.2)
+    games_per_team = df_penalty.groupby("player_team")["date"].transform("count")
+
+    df_penalty.loc[games_per_team < 16, "Penalty"] = 0.10
 
     team_dataset_newest = pd.read_csv("Team_data_newest2.csv", usecols=["name", "code"])
     latest_penalty_df = (

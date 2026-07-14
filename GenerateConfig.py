@@ -24,6 +24,36 @@ Spurs,6
 ,Luton,102,
 ,Ipswich,40"""
 
+PLAYER_NAME_MAP = {
+        "Pedro_Porro Sauceda": "Pedro_Porro",
+        "Sávio_Moreira de Oliveira": "Sávio_'Savinho' Moreira de Oliveira",
+        "Daniel_Muñoz Mejía": "Daniel_Muñoz",
+        "Bernardo_Mota Veiga de Carvalho e Silva": "Bernardo_Veiga de Carvalho e Silva",
+        "Ederson_Santana de Moraes": "Ederson_Santana de Moraes",
+        "Levi_Samuels Colwill": "Levi_Colwill",
+        "Marcos_Senesi Barón": "Marcos_Senesi",
+        "Raúl_Jiménez Rodríguez": "Raúl_Jiménez",
+        "Robert_Lynch Sánchez": "Robert_Sánchez",
+        "Rodrigo_'Rodri' Hernandez Cascante": "Rodrigo_Hernandez",
+        "Rúben_dos Santos Gato Alves Dias": "Rúben_Gato Alves Dias",
+        "Kaoru_Mitoma": "Mitoma_Kaoru",
+        "Matheus_Santos Carneiro da Cunha": "Matheus_Santos Carneiro Da Cunha",
+        "David_Raya Martín": "David_Raya Martin",
+        "Kepa_Arrizabalaga Revuelta": "Kepa_Arrizabalaga",
+        "Idrissa_Gana Gueye": "Idrissa_Gueye",
+        "Alisson_Becker": "Alisson_Ramses Becker",
+        "Luis_Díaz Marulanda": "Luis_Díaz",
+        "Matheus Luiz_Nunes": "Matheus_Nunes",
+        "Alejandro_Garnacho Ferreyra": "Alejandro_Garnacho",
+    }
+
+
+
+def normalize_player_name(name):
+    if name is None:
+        return name
+    return PLAYER_NAME_MAP.get(name, name)
+
 
 Manual_team_offensive_adjustments = { }
     

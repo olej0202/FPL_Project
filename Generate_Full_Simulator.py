@@ -795,19 +795,15 @@ def _build_player_pool_from_loaded(
     risk_adj_minutes_factor = np.minimum(1.0, (minutes_base + 0.01) / 90.0).clip(lower=0.0)
 
     pool["XG_Index"] = (
-        goal_stats_use * 0.3
-        + _col_or_zero(pool, "Share_of_XG") * 0.15
-        + _col_or_zero(pool, "Share_of_XG_Short") * 0.1
-        + _col_or_zero(pool, "Understat_POSXG_Share") * 0.3
+        _col_or_zero(pool, "Goal_Index") * 0.85
         + _col_or_zero(pool, "Opp_Goal_Threat_Pos") * 0.15
     )
+    
     pool["XA_Index"] = (
-        assist_stats_use * 0.3
-        + _col_or_zero(pool, "Share_of_XA") * 0.15
-        + _col_or_zero(pool, "Share_of_XA_Short") * 0.1
-        + _col_or_zero(pool, "Understat_POSXA_Share") * 0.3
+        _col_or_zero(pool, "Assist_Index") * 0.85
         + _col_or_zero(pool, "Opp_Assist_Threat_Pos") * 0.15
     )
+ 
     pool["XG_Index"] = pool["XG_Index"] * risk_adj_minutes_factor
     pool["XA_Index"] = pool["XA_Index"] * risk_adj_minutes_factor
     pool["XG_Index"] = pd.to_numeric(pool["XG_Index"], errors="coerce").fillna(0.0).clip(lower=0.0)
