@@ -49,7 +49,11 @@ def train_xgb_defcon_model(path="TestML4.csv"):
     shift_cols = [
         "Share_of_Defcon_Short",
         "Share_of_Defcon",
-        "defcon_avg"
+        "defcon_avg",
+        "defcon_avg_hit_rate",
+        "defcon_avg_hit_rate_T3",
+        "defcon_avg_hit_rate_T0",
+        "defcon_avg_hit_rate_T1"
     ]
 
     df[shift_cols] = (
@@ -61,6 +65,10 @@ def train_xgb_defcon_model(path="TestML4.csv"):
         "Share_of_Defcon_Short",
         "Share_of_Defcon",
         "defcon_avg",
+        "defcon_avg_hit_rate",
+        "defcon_avg_hit_rate_T3",
+        "defcon_avg_hit_rate_T0",
+        "defcon_avg_hit_rate_T1",
         "minutes",
         "Rolling_Defcon_For",
         "Opponent_defcon"
@@ -654,6 +662,10 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
                     df["Share_of_Defcon_Short"].values[h],
                     df["Share_of_Defcon"].values[h],
                     df["defcon_avg"].values[h],
+                    df["defcon_avg_hit_rate"].values[h],
+                    df["defcon_avg_hit_rate_T3"].values[h],
+                    df["defcon_avg_hit_rate_T0"].values[h],
+                    df["defcon_avg_hit_rate_T1"].values[h],
                     df["average_minutes"].values[h],
                     df["Rolling_Team_Defcon"].values[h],
                     df["Opp_defcon"].values[h]
@@ -661,6 +673,10 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
                     "Share_of_Defcon_Short",
                     "Share_of_Defcon",
                     "defcon_avg",
+                    "defcon_avg_hit_rate",
+                    "defcon_avg_hit_rate_T3",
+                    "defcon_avg_hit_rate_T0",
+                    "defcon_avg_hit_rate_T1",
                     "minutes",
                     "Rolling_Defcon_For",
                     "Opponent_defcon"
@@ -1455,9 +1471,9 @@ def Generate_point_predictions(GW_list):
         player_preds["Goal_pred"] = (
             (
                 (player_preds["xgb_goals_75"] * 0.5 + 0.5 * player_preds["xgb_goals_25"]) * 0.0
-                + player_preds["sim_goals_pred"] * 0.2
-                + player_preds["sim2_goals_pred"] * 0.3
-                + player_preds["stat_goals_pred"] * 0.5
+                + player_preds["sim_goals_pred"] * 0.15
+                + player_preds["sim2_goals_pred"] * 0.25
+                + player_preds["stat_goals_pred"] * 0.6
                 + player_preds["dnn_goals_pred"] * 0.0
                 + player_preds["cluster_goals_pred"] * 0.0
             ) * overscore
@@ -1466,9 +1482,9 @@ def Generate_point_predictions(GW_list):
         player_preds["Assist_pred"] = (
             (
                 (player_preds["xgb_assist_75"] * 0.5 + 0.5 * player_preds["xgb_assist_25"]) * 0.0
-                + player_preds["sim_assists_pred"] * 0.2
-                + player_preds["sim2_assists_pred"] * 0.3
-                + player_preds["stat_assist_pred"] * 0.5
+                + player_preds["sim_assists_pred"] * 0.15
+                + player_preds["sim2_assists_pred"] * 0.25
+                + player_preds["stat_assist_pred"] * 0.6
                 + player_preds["dnn_assist_pred"] * 0.0
                 + historic_Assist * 0
                 + player_preds["cluster_assist_pred"] * 0.0

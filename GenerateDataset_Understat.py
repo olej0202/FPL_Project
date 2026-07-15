@@ -12,7 +12,7 @@
 import numpy as np
 import pandas as pd
 
-from GenerateConfig import NEW_TEAMS_NAME
+from GenerateConfig import NEW_TEAMS_NAME,Understat_Team_MAP
 # from Generate_Fetch_Myteam import build_team_dataframe  # (not used here)
 # from GenerateConfig import ... (your other imports)
 
@@ -355,25 +355,42 @@ def Generate_Understat_dataset(current_players, run_player_pos):
         mask = (tmp[dtcol] >= pd.Timestamp(start)) & (tmp[dtcol] <= pd.Timestamp(end))
         return tmp.loc[mask].drop(columns=[dtcol])
 
-    # ---- load your data ----
-    df1 = pd.read_csv("Raw_Data_22/Understat_data.csv")
-    df2 = pd.read_csv("Raw_Data_23/Understat_data.csv")
-    df3 = pd.read_csv("Raw_Data_24/Understat_data.csv")
-    df4 = pd.read_csv("Raw_Data_25/Understat_data.csv")
+    from pathlib import Path
 
-    windows = {
-        "22": ("2022-08-01", "2023-05-30"),
-        "23": ("2023-08-01", "2024-05-30"),
-        "24": ("2024-08-01", "2025-05-30"),
-        "25": ("2025-08-01", "2026-05-30"),
-    }
+    start_season = 22
+    season = start_season
+    filtered_dfs = []
 
-    f1 = filter_by_window(df1, *windows["22"]); f1["season"] = "22"
-    f2 = filter_by_window(df2, *windows["23"]); f2["season"] = "23"
-    f3 = filter_by_window(df3, *windows["24"]); f3["season"] = "24"
-    f4 = filter_by_window(df4, *windows["25"]); f4["season"] = "25"
+    while True:
+        file_path = Path(f"Raw_Data_{season}/Understat_data.csv")
 
-    final = pd.concat([f1, f2, f3, f4], ignore_index=True, sort=False)
+        if not file_path.exists():
+            print(f"File not found: {file_path}. Stopping.")
+            break
+
+        df = pd.read_csv(file_path)
+
+        start_year = 2000 + season
+        end_year = start_year + 1
+
+        start_date = f"{start_year}-08-01"
+        end_date = f"{end_year}-05-30"
+
+        filtered_df = filter_by_window(df, start_date, end_date).copy()
+        filtered_df["season"] = str(season)
+
+        filtered_dfs.append(filtered_df)
+
+        season += 1
+
+    if filtered_dfs:
+        final = pd.concat(
+            filtered_dfs,
+            ignore_index=True,
+            sort=False
+        )
+    else:
+        final = pd.DataFrame()
 
     # ---- find home/away team cols ----
     def _find_team_cols(df):
@@ -443,16 +460,7 @@ def Generate_Understat_dataset(current_players, run_player_pos):
     df = df.dropna(subset=["player_team"])
 
     # name mapping
-    mapping = {
-        "Manchester City": "Man City",
-        "Manchester United": "Man Utd",
-        "Newcastle United": "Newcastle",
-        "Nottingham Forest": "Nott'm Forest",
-        "Sheffield United": "Sheffield Utd",
-        "Tottenham": "Spurs",
-        "Tottenham Hotspur": "Spurs",
-        "Wolverhampton Wanderers": "Wolves",
-    }
+    mapping = Understat_Team_MAP
 
     df["player_team"] = df["player_team"].astype(str).str.strip().replace(mapping)
     df["opponent"] = df["opponent"].astype(str).str.strip().replace(mapping)

@@ -46,6 +46,17 @@ PLAYER_NAME_MAP = {
         "Matheus Luiz_Nunes": "Matheus_Nunes",
         "Alejandro_Garnacho Ferreyra": "Alejandro_Garnacho",
     }
+Understat_Team_MAP={
+        "Manchester City": "Man City",
+        "Manchester United": "Man Utd",
+        "Newcastle United": "Newcastle",
+        "Nottingham Forest": "Nott'm Forest",
+        "Sheffield United": "Sheffield Utd",
+        "Tottenham": "Spurs",
+        "Tottenham Hotspur": "Spurs",
+        "Wolverhampton Wanderers": "Wolves",
+    }
+
 
 
 
@@ -83,7 +94,25 @@ Manual_Player_Risk={
 }
 
 Manual_min = [
-    # Afcon
+    # GenerateXmins.py expects a list of dicts with:
+    # - "name"  : exact player name used in the prediction files
+    # - "type"  : one of "const", "adjust_from", "linear_from"
+    # - "GW"    : pivot GW for "adjust_from" and "linear_from"
+    # - "value" : target minutes (0 to 90)
+
+    # {"name": "Mohamed_Salah", "type": "const", "value": 90},
+
+    # 2. adjust_from
+    # Keeps current prediction up to and including pivot GW,
+    # then sets all later GWs to value.
+    # {"name": "Son_Heung-min", "type": "adjust_from", "GW": "35", "value": 0},
+
+    # 3. linear_from
+    # Starts at the model prediction in pivot GW,
+    # moves linearly toward value, reaches it after 3 GWs,
+    # and then holds that level.
+    # {"name": "Cole_Palmer", "type": "linear_from", "GW": "34", "value": 90},
+
 
 ]
 

@@ -3,7 +3,7 @@ import numpy as np
 import re
 import unicodedata
 from difflib import SequenceMatcher
-
+from GenerateConfig import Understat_Team_MAP
 # -------------------------
 # Normalization utilities
 # -------------------------
@@ -89,16 +89,8 @@ def ShotsData(shots_path):
     shots_df = shots_df[shots_df["situation"] != "Penalty"]
 
 
-    mapping = {
-        "Manchester City": "Man City",
-        "Manchester United": "Man Utd",
-        "Newcastle United": "Newcastle",
-        "Nottingham Forest": "Nott'm Forest",
-        "Sheffield United": "Sheffield Utd",
-        "Tottenham": "Spurs",
-        "Tottenham Hotspur": "Spurs",
-        "Wolverhampton Wanderers": "Wolves",
-    }
+    mapping = Understat_Team_MAP
+
 
     for col in ["team_title", "a_team", "h_team"]:
         shots_df[col] = shots_df[col].astype(str).str.strip().replace(mapping)
@@ -934,16 +926,7 @@ def GenerateTeamShots(
 
 
 def Generate_Shots_data(Understat_data,shots_path,player_path,team_path):
-    mapping = {
-        "Manchester City": "Man City",
-        "Manchester United": "Man Utd",
-        "Newcastle United": "Newcastle",
-        "Nottingham Forest": "Nott'm Forest",
-        "Sheffield United": "Sheffield Utd",
-        "Tottenham": "Spurs",
-        "Tottenham Hotspur": "Spurs",
-        "Wolverhampton Wanderers": "Wolves",
-    }
+    mapping = Understat_Team_MAP
     Understat_data=Understat_data
 
     shots_df = ShotsData(shots_path)

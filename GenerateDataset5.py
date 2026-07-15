@@ -1,4 +1,4 @@
-import pandas as pd
+﻿import pandas as pd
 import os
 import numpy as np
 import matplotlib.pyplot as plt
@@ -1695,7 +1695,6 @@ def main_Transform():
     df_26=pd.read_csv("Raw_Data_25/Fantasy_season_2025_data.csv").iloc[:,1:]
     df_26["name"]=df_26["first_name"]+" "+df_26["second_name"]
     df_26["season"]='26'
-    
     df_25=pd.read_csv("Raw_Data_24/Fantasy_season_2024_data.csv").iloc[:,1:]
     df_25["name"]=df_25["first_name"]+" "+df_25["second_name"]
     #df_25["name"]=df_25["first_name"]+" "+df_25["second_name"]

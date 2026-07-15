@@ -177,7 +177,7 @@ def team_data(
     existing_codes = set(teams_dataset["code_norm"].dropna().unique())
     missing_codes = [c for c in codes if c not in existing_codes]
 
-    average_team_codes = [13, 90, 102, 40, 49,2,20]
+    average_team_codes = [13, 90, 102, 40, 49,2,20,39,56]
     
     average_df = teams_dataset[teams_dataset["code"].isin(average_team_codes)]
     numeric_cols = [
