@@ -55,11 +55,15 @@ def normalize_player_name(name):
     return PLAYER_NAME_MAP.get(name, name)
 
 
-Manual_team_offensive_adjustments = { }
+Manual_team_offensive_adjustments = { 
+        #example 90:1.1 bedre off,  90:0.95 dårligere off
+}
     
     
     
-Manual_team_defensive_adjustments = {}
+Manual_team_defensive_adjustments = {
+        #example 90:1.1 dårligere def,  90:0.95 bedre def
+}
 
 
 Manual_NewPlayer_Adjustments={
@@ -67,16 +71,15 @@ Manual_NewPlayer_Adjustments={
     }
 
 Manual_Player_Adjustments={
+    #exemple Alexander_Isak:["Tammy_Abraham","Yoane_Wissa" ]
 
         
-     }
+}
 
 
 Manual_Player_Risk={
-        "Alexander_Isak":0.6,
-        "Yoane_Wissa":0.8,
-        "Tammy_Abraham":0.8,
-        "Jørgen_Strand Larsen":0.6,        
+        # exemple"Alexander_Isak":0.6,
+       
 }
 
 Manual_min = [
@@ -84,14 +87,19 @@ Manual_min = [
 
 ]
 
+#use code
 NEW_TEAMS=[]
+#use name
 NEW_TEAMS_NAME=[]
+
 fixtures_config = {
         
 
-    }
+}
 
 date_filter="2026-04-14"
+
+
 POSITION_EVENT_BONUS = {
     "GKP": {"goal": 12.0, "assist": 9.0, "cs": 12.0},
     "DEF": {"goal": 12.0, "assist": 9.0, "cs": 12.0},

@@ -121,8 +121,14 @@ def next_opp(team, n_future, fixtures,kmeans,team_code,current_teams,position):
             goal_pos.append(0.05)
             ass_pos.append(0.05)
         else:
-            goal_pos.append(opp_threat["Goal_Threat"].values[0]*0.6+0.4*opp_threat["npxG_ewm"].values[0])
-            ass_pos.append(opp_threat["Assist_Threat"].values[0]*0.6+0.4*opp_threat["xA_ewm"].values[0])
+            if(len(opp_threat)<1 or nxt_opp_code in NEW_TEAMS):
+                        goal=undeerstat_threats[undeerstat_threats["pos_group"]==position]["Goal_Threat"].mean()
+                        assist=undeerstat_threats[undeerstat_threats["pos_group"]==position]["Assist_Threat"].mean()
+                        goal_pos.append(goal)
+                        ass_pos.append(assist)
+            else:
+                goal_pos.append(opp_threat["Goal_Threat"].values[0]*0.6+0.4*opp_threat["npxG_ewm"].values[0])
+                ass_pos.append(opp_threat["Assist_Threat"].values[0]*0.6+0.4*opp_threat["xA_ewm"].values[0])
         kl+=1
     print(position)
     print(goal_pos)
@@ -179,9 +185,13 @@ def team_data(
             "Threat","Threat_against","XG_DEF","XG_MID","XG_FORWARD",
             "XGA","XGCA","XGH","XGCH","XG_avg","XGC_avg",
             "Rolling_Threat","Rolling_Threat_Against","XG_slope","XGC_slope","Elo_Rating","Rolling_XG","Rolling_XGC",
+            "Plain_GS_roll18","Plain_GS_roll30","Plain_GC_roll18","Plain_GC_roll30","Plain_GS_roll8","Plain_GC_roll8",
+            "Plain_XG_roll8","Plain_XG_roll18","Plain_XG_roll30", "Plain_XGC_roll8","Plain_XGC_roll18","Plain_XGC_roll30",
+            "Threat_roll8","Threat_roll18","Threat_roll30","Threat_against_roll8","Threat_against_roll18","Threat_against_roll30",
+            "Offensive_Index", "Defensive_Index","Rolling_Saves", "Rolling_ict_index","Rolling_Defcon_for", "Rolling_Defcon_against",
+            "Rolling_ICT_Against","Rolling_Saves_Against", "XG_pred_rolling_error", "XGC_pred_rolling_error","roll10_deep","roll10_xpts"
             
         ]
-    
     if missing_codes:
         
         col_means = average_df[numeric_cols].mean(numeric_only=True)
