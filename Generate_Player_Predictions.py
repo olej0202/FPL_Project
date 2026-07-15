@@ -48,9 +48,9 @@ class DefconEnsemble:
         svr_model,
         xgb_model,
         elastic_net_model,
-        svr_weight=1 / 3,
-        xgb_weight=1 / 3,
-        elastic_net_weight=1 / 3
+        svr_weight=0.4,
+        xgb_weight=0.2,
+        elastic_net_weight=0.4
     ):
         weights = np.array(
             [
@@ -856,6 +856,7 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
     all_preds=[]
     all_preds_model=[]
     all_preds2=[]
+    cbi_debug_rows=[]
     MSE=[]
     for i in range(len(players)):
         preds=[]
@@ -1023,7 +1024,17 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
                     "Opponent_defcon"
                 ]).fillna(0)
 
-                pred = defcon_model.predict(row)[0]
+                component_preds = defcon_model.predict_components(row)
+                pred = component_preds["ensemble_pred"][0]
+
+                cbi_debug_rows.append({
+                    "name": players[i],
+                    "GW": GW,
+                    "svr_pred": float(component_preds["svr_pred"][0]),
+                    "xgb_pred": float(component_preds["xgb_pred"][0]),
+                    "elastic_net_pred": float(component_preds["elastic_net_pred"][0]),
+                    "ensemble_pred": float(component_preds["ensemble_pred"][0]),
+                })
 
                 if position == "DEF":
                     cbi_pred = 1 - norm.cdf(9.5, loc=pred, scale=sigma)
@@ -1069,6 +1080,8 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
     if(pred_variable in ['Assist','GOALS']):
         data_f_model=pd.DataFrame(all_preds2, columns=columns)
         data_f_model.to_csv(f"STAT_Pois_{pred_variable}.csv", index=False)
+    if pred_variable == "CBI":
+        pd.DataFrame(cbi_debug_rows).to_csv("CBI_debug.csv", index=False)
     data_f.to_csv(f"STAT_{pred_variable}.csv", index=False)
     
 def XGB_Make_dataset(position,position2):
