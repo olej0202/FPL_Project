@@ -14,7 +14,6 @@ from tensorflow.keras.models import load_model
 from tensorflow.keras.models import load_model
 from tensorflow.keras.losses import MeanSquaredError
 import tensorflow as tf
-from sklearn.svm import SVR
 import torch
 import torch.nn as nn
 from torch.utils.data import TensorDataset, DataLoader
@@ -31,21 +30,162 @@ from sklearn.metrics import mean_squared_error, mean_absolute_error,r2_score
 from xgboost import XGBRegressor
 from scipy.stats import norm
 
-def train_xgb_defcon_model(path="TestML4.csv"):
+from sklearn.svm import SVR
+from sklearn.linear_model import ElasticNet
+
+
+
+class DefconEnsemble:
+    """
+    Vektet ensemble av:
+    - SVR
+    - XGBoost
+    - Elastic Net
+    """
+
+    def __init__(
+        self,
+        svr_model,
+        xgb_model,
+        elastic_net_model,
+        svr_weight=1 / 3,
+        xgb_weight=1 / 3,
+        elastic_net_weight=1 / 3
+    ):
+        weights = np.array(
+            [
+                svr_weight,
+                xgb_weight,
+                elastic_net_weight
+            ],
+            dtype=float
+        )
+
+        if np.any(weights < 0):
+            raise ValueError(
+                "Ensemblevektene kan ikke være negative."
+            )
+
+        if weights.sum() == 0:
+            raise ValueError(
+                "Minst én ensemblevekt må være større enn 0."
+            )
+
+        # Normaliser vektene slik at de alltid summerer til 1
+        weights = weights / weights.sum()
+
+        self.svr_model = svr_model
+        self.xgb_model = xgb_model
+        self.elastic_net_model = elastic_net_model
+
+        self.svr_weight = weights[0]
+        self.xgb_weight = weights[1]
+        self.elastic_net_weight = weights[2]
+
+    def predict(self, X):
+        """
+        Returnerer ensembleprediksjonen.
+        """
+        svr_pred = self.svr_model.predict(X)
+        xgb_pred = self.xgb_model.predict(X)
+        elastic_net_pred = self.elastic_net_model.predict(X)
+
+        ensemble_pred = (
+            self.svr_weight * svr_pred
+            + self.xgb_weight * xgb_pred
+            + self.elastic_net_weight * elastic_net_pred
+        )
+
+        return ensemble_pred
+
+    def predict_components(self, X):
+        """
+        Returnerer prediksjonen fra hver modell,
+        samt den vektede ensembleprediksjonen.
+        """
+        svr_pred = self.svr_model.predict(X)
+        xgb_pred = self.xgb_model.predict(X)
+        elastic_net_pred = self.elastic_net_model.predict(X)
+
+        ensemble_pred = (
+            self.svr_weight * svr_pred
+            + self.xgb_weight * xgb_pred
+            + self.elastic_net_weight * elastic_net_pred
+        )
+
+        return {
+            "svr_pred": svr_pred,
+            "xgb_pred": xgb_pred,
+            "elastic_net_pred": elastic_net_pred,
+            "ensemble_pred": ensemble_pred
+        }
+
+
+def train_defcon_ensemble_model(
+    path="TestML4.csv",
+    svr_weight=1 / 3,
+    xgb_weight=1 / 3,
+    elastic_net_weight=1 / 3,
+    elastic_net_alpha=0.01,
+    elastic_net_l1_ratio=0.5
+):
+    # ---------------------------------------------------------
+    # 1. Les data
+    # ---------------------------------------------------------
     df = pd.read_csv(path)
 
     df["kickoff_time"] = pd.to_datetime(
         df["kickoff_time"],
         format="mixed",
-        utc=True
+        utc=True,
+        errors="coerce"
     )
-    df = df[df["kickoff_time"] >= pd.Timestamp("2025-11-01", tz="UTC")]
 
-    df = df[df["Team_defcon"] > 0].copy()
+    df = df.dropna(
+        subset=["kickoff_time"]
+    ).copy()
 
-    df = df.sort_values(["name", "kickoff_time"])
+    df = df[
+        df["kickoff_time"]
+        >= pd.Timestamp("2025-10-01", tz="UTC")
+    ].copy()
 
-    # Shift features to use only previous-match information
+    if df.empty:
+        raise ValueError(
+            "Ingen observasjoner gjenstår etter datofilteret."
+        )
+
+    # ---------------------------------------------------------
+    # 2. Datofilter
+    # ---------------------------------------------------------
+    max_date = df["kickoff_time"].max()
+
+    cutoff = (
+        max_date.to_period("M") - 1
+    ).to_timestamp().tz_localize("UTC")
+
+    # Samme datologikk som i originalkoden
+    df = df[
+        df["kickoff_time"] <= cutoff
+    ].copy()
+
+    df = df[
+        df["Team_defcon"] > 0
+    ].copy()
+
+    if df.empty:
+        raise ValueError(
+            "Ingen observasjoner gjenstår etter alle filtre."
+        )
+
+    # Sorter før shift
+    df = df.sort_values(
+        ["name", "kickoff_time"]
+    ).copy()
+
+    # ---------------------------------------------------------
+    # 3. Features
+    # ---------------------------------------------------------
     shift_cols = [
         "Share_of_Defcon_Short",
         "Share_of_Defcon",
@@ -55,11 +195,6 @@ def train_xgb_defcon_model(path="TestML4.csv"):
         "defcon_avg_hit_rate_T0",
         "defcon_avg_hit_rate_T1"
     ]
-
-    df[shift_cols] = (
-        df.groupby("name")[shift_cols]
-          .shift(1)
-    )
 
     features = [
         "Share_of_Defcon_Short",
@@ -81,33 +216,230 @@ def train_xgb_defcon_model(path="TestML4.csv"):
         "defcon"
     ] + features
 
+    missing_cols = [
+        col
+        for col in needed_cols
+        if col not in df.columns
+    ]
+
+    if missing_cols:
+        raise ValueError(
+            f"Følgende kolonner mangler: {missing_cols}"
+        )
+
+    # Bruk verdier fra forrige kamp for hver spiller
+    df[shift_cols] = (
+        df.groupby("name")[shift_cols]
+        .shift(1)
+    )
+
     df = df[needed_cols].copy()
 
-    df_train = df.dropna(subset=features + ["defcon"]).copy()
+    df_train = df.dropna(
+        subset=features + ["defcon"]
+    ).copy()
+
+    if df_train.empty:
+        raise ValueError(
+            "Ingen komplette treningsobservasjoner etter shift og dropna."
+        )
 
     X = df_train[features]
     y = df_train["defcon"]
 
-    model = Pipeline([
-        ("scaler", StandardScaler()),
-        ("svr", SVR(kernel="rbf", C=1, epsilon=0.1))
+    # ---------------------------------------------------------
+    # 4. SVR
+    # ---------------------------------------------------------
+    svr_model = Pipeline([
+        (
+            "scaler",
+            StandardScaler()
+        ),
+        (
+            "svr",
+            SVR(
+                kernel="rbf",
+                C=1.0,
+                epsilon=0.1
+            )
+        )
     ])
 
-    model.fit(X, y)
+    # ---------------------------------------------------------
+    # 5. XGBoost
+    # ---------------------------------------------------------
+    xgb_model = XGBRegressor(
+        n_estimators=300,
+        max_depth=4,
+        learning_rate=0.05,
+        subsample=0.8,
+        colsample_bytree=0.8,
+        objective="reg:squarederror",
+        eval_metric="rmse",
+        random_state=42,
+        n_jobs=-1
+    )
 
-    df_train["xgb_pred"] = model.predict(X)
-    df_train["error"] = df_train["defcon"] - df_train["xgb_pred"]
+    # ---------------------------------------------------------
+    # 6. Elastic Net
+    # ---------------------------------------------------------
+    # Elastic Net er følsom for skala, så StandardScaler brukes.
+    elastic_net_model = Pipeline([
+        (
+            "scaler",
+            StandardScaler()
+        ),
+        (
+            "elastic_net",
+            ElasticNet(
+                alpha=elastic_net_alpha,
+                l1_ratio=elastic_net_l1_ratio,
+                max_iter=10000,
+                random_state=42
+            )
+        )
+    ])
 
-    sigma = df_train["error"].std()
+    # ---------------------------------------------------------
+    # 7. Tren alle modellene
+    # ---------------------------------------------------------
+    svr_model.fit(X, y)
+    xgb_model.fit(X, y)
+    elastic_net_model.fit(X, y)
 
-    print("\nHistorical XGBoost performance")
-    print("MAE:", mean_absolute_error(y, df_train["xgb_pred"]))
-    print("RMSE:", np.sqrt(mean_squared_error(y, df_train["xgb_pred"])))
-    print("R2:", r2_score(y, df_train["xgb_pred"]))
-    print("Sigma:", sigma)
+    ensemble_model = DefconEnsemble(
+        svr_model=svr_model,
+        xgb_model=xgb_model,
+        elastic_net_model=elastic_net_model,
+        svr_weight=svr_weight,
+        xgb_weight=xgb_weight,
+        elastic_net_weight=elastic_net_weight
+    )
+
+    # ---------------------------------------------------------
+    # 8. Prediksjoner
+    # ---------------------------------------------------------
+    predictions = ensemble_model.predict_components(X)
+
+    df_train["svr_pred"] = predictions["svr_pred"]
+    df_train["xgb_pred"] = predictions["xgb_pred"]
+    df_train["elastic_net_pred"] = predictions[
+        "elastic_net_pred"
+    ]
+    df_train["ensemble_pred"] = predictions[
+        "ensemble_pred"
+    ]
+
+    df_train["svr_error"] = (
+        df_train["defcon"] - df_train["svr_pred"]
+    )
+
+    df_train["xgb_error"] = (
+        df_train["defcon"] - df_train["xgb_pred"]
+    )
+
+    df_train["elastic_net_error"] = (
+        df_train["defcon"]
+        - df_train["elastic_net_pred"]
+    )
+
+    df_train["ensemble_error"] = (
+        df_train["defcon"]
+        - df_train["ensemble_pred"]
+    )
+
+    sigma = df_train["ensemble_error"].std()
+
+    # ---------------------------------------------------------
+    # 9. Evaluer alle modellene
+    # ---------------------------------------------------------
+    model_predictions = {
+        "SVR": df_train["svr_pred"],
+        "XGBoost": df_train["xgb_pred"],
+        "Elastic Net": df_train["elastic_net_pred"],
+        "Ensemble": df_train["ensemble_pred"]
+    }
+
+    results = []
+
+    for model_name, pred in model_predictions.items():
+        errors = y - pred
+
+        results.append({
+            "Model": model_name,
+            "MAE": mean_absolute_error(y, pred),
+            "RMSE": np.sqrt(
+                mean_squared_error(y, pred)
+            ),
+            "R2": r2_score(y, pred),
+            "Sigma": errors.std()
+        })
+
+    results_df = (
+        pd.DataFrame(results)
+        .sort_values(
+            ["MAE", "RMSE"]
+        )
+        .reset_index(drop=True)
+    )
+
+    # ---------------------------------------------------------
+    # 10. Skriv ut resultatene
+    # ---------------------------------------------------------
+    print("\n" + "=" * 80)
+    print("HISTORISK MODELLYTELSE")
+    print("=" * 80)
+
+    print(
+        results_df.round(4).to_string(
+            index=False
+        )
+    )
+
+    print("\n" + "=" * 80)
+    print("ENSEMBLEVEKTER")
+    print("=" * 80)
+
+    print(
+        f"SVR:         "
+        f"{ensemble_model.svr_weight:.4f}"
+    )
+    print(
+        f"XGBoost:     "
+        f"{ensemble_model.xgb_weight:.4f}"
+    )
+    print(
+        f"Elastic Net: "
+        f"{ensemble_model.elastic_net_weight:.4f}"
+    )
+
+    print("\nElastic Net-parametere")
+    print(f"Alpha:    {elastic_net_alpha}")
+    print(f"L1 ratio: {elastic_net_l1_ratio}")
+
+    print("\nAntall treningsobservasjoner:", len(df_train))
+
+    print(
+        "Treningsperiode:",
+        df_train["kickoff_time"].min(),
+        "til",
+        df_train["kickoff_time"].max()
+    )
+
+    print("\nEnsemble sigma:", round(sigma, 4))
+
+    return (
+        ensemble_model,
+        sigma,
+        results_df,
+        df_train
+    )
 
 
-    return model, sigma
+# -------------------------------------------------------------
+# Tren med like vekter
+# -------------------------------------------------------------
+
 
 def _resolve_config_date_filter(value):
     if value is None:
@@ -505,7 +837,16 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
         test_end=None
     )
     if pred_variable=="CBI":
-        defcon_model, sigma = train_xgb_defcon_model("TestML4.csv")
+        defcon_model, sigma, results, historical_predictions = (
+            train_defcon_ensemble_model(
+            path="TestML4.csv",
+            svr_weight=1 / 3,
+            xgb_weight=1 / 3,
+            elastic_net_weight=1 / 3,
+            elastic_net_alpha=0.01,
+            elastic_net_l1_ratio=0.5
+            )   
+        )
     else:
         defcon_model, sigma=None,None
 
