@@ -15,7 +15,7 @@ from Generate_Fetch_Myteam import build_team_dataframe
 from typing import List, Optional, Literal, Dict, Any
 from pydantic import BaseModel
 from fastapi.responses import JSONResponse
-from GenerateConfig import fixtures_config
+from GenerateConfig import fixtures_config,Player_picture_url,current_season
 from queue import Queue
 from threading import Thread
 import traceback
@@ -25,6 +25,8 @@ import psycopg2
 import requests
 import jwt
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+
+RAW_DATA_DIR = f"Raw_Data_{current_season}"
 
 
 class PlayerInput(BaseModel):
@@ -839,7 +841,7 @@ def load_and_transform(endpoint):
     elif endpoint == "Teams":
         csv_path = os.path.join(parent_dir, "Team_data_transformed2.csv")
     elif endpoint == "Current_players":
-        csv_path = os.path.join(parent_dir, "Raw_Data_25", "current_players.csv")
+        csv_path = os.path.join(parent_dir, RAW_DATA_DIR, "current_players.csv")
     elif endpoint == "free-hit":
         csv_path = os.path.join(parent_dir, "Free_hit_team.csv")
     elif endpoint == "wildcard":
@@ -1187,7 +1189,7 @@ def _build_optimize_kwargs(
         Last_GW=4,
         GW_list=["0", "5", "6", "7", "8", "9"],
         n_hits=n_hits,
-        current_player_path="Raw_Data_25/current_players.csv",
+        current_player_path=f"{RAW_DATA_DIR}/current_players.csv",
         players_override=players_df,
         risk_factor=risk,
         transval=transval,
@@ -1618,7 +1620,7 @@ def get_team_data_unique(player: str = Query(None)):
         raise HTTPException(status_code=404, detail="Player not found")
 
     picture = player_df["code"].values[0]
-    return f"https://resources.premierleague.com/premierleague25/photos/players/500x500/{picture}.png"
+    return f"{Player_picture_url}{picture}.png"
 
 @app.get("/Player_unique")
 def get_team_data_unique():

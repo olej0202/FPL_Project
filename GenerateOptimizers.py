@@ -6,7 +6,8 @@ import pandas as pd
 import numpy as np
 from pulp import LpMaximize, LpProblem, LpVariable, lpSum
 from pulp import value 
-def wildcard_optimize_team(sel_thresh, budget, columns, file_path="Model_Optimizer.csv", current_player_path="Raw_Data_25/current_players.csv"):
+from GenerateConfig import Player_picture_url
+def wildcard_optimize_team(sel_thresh, budget, columns,current_player_path="Raw_Data_25/current_players.csv", file_path="Model_Optimizer.csv"):
     # Load and preprocess data
     data = pd.read_csv(file_path)
     columns = [str(gw) for gw in columns]
@@ -210,7 +211,7 @@ def wildcard_optimize_team(sel_thresh, budget, columns, file_path="Model_Optimiz
     
 
     
-def freeHit_optimize_team(sel_thresh, budget, columns, file_path="Model_Optimizer.csv", current_player_path="Raw_Data_25/current_players.csv"):
+def freeHit_optimize_team(sel_thresh, budget, columns, current_player_path="Raw_Data_25/current_players.csv",file_path="Model_Optimizer.csv"):
 
     data = pd.read_csv(file_path)
     cols = columns
@@ -296,7 +297,7 @@ def freeHit_optimize_team(sel_thresh, budget, columns, file_path="Model_Optimize
     # Display selected players
     result_set=[]
     print("\nGameweek 1 Squad:")
-    current_players=pd.read_csv("Raw_Data_25/current_players.csv")
+    current_players=pd.read_csv(current_player_path)
     for i in range(num_players):
         player_set=[]
         if x[i].varValue > 0.5:
@@ -409,7 +410,7 @@ def freeHit_values(sel_thresh, budget, columns, file_path="Model_Optimizer.csv",
     # Check the status of the solution
     return [columns, obj_val]
 
-def generate_optimizers(ownership, budget, GW_list_wildcard, GW_list_freehit):
+def generate_optimizers(ownership, budget, GW_list_wildcard, GW_list_freehit,current_player_path):
     free_hit_vals=[]
     for i in range(len(GW_list_wildcard)):
         cols=GW_list_wildcard[i]
@@ -418,8 +419,8 @@ def generate_optimizers(ownership, budget, GW_list_wildcard, GW_list_freehit):
         free_hit_vals.append(val)
     free_hit_df=pd.DataFrame(free_hit_vals, columns=["GW", "Val"])
     free_hit_df.to_csv("Free_hit_values.csv")
-    wildcard_optimize_team(ownership, budget, GW_list_wildcard)
-    freeHit_optimize_team(ownership, budget, GW_list_freehit)
+    wildcard_optimize_team(ownership, budget, GW_list_wildcard,current_player_path)
+    freeHit_optimize_team(ownership, budget, GW_list_freehit,current_player_path)
     
 
         

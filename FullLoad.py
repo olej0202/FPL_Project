@@ -1,4 +1,4 @@
-import pandas as pd
+﻿import pandas as pd
 import os
 import requests
 import json
@@ -79,7 +79,7 @@ def Fulload(season):
     full_df.to_csv(f"Raw_Data_{season}/Fantasy_season_20{season}_data.csv")
     
     print(full_df)
-    fixtures()
+    fixtures(season)
     
     
 def Incremental(Has_been_error,season):

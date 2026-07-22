@@ -254,7 +254,7 @@ def Data_Predictions(
    
 def Data_Generation(ownership,budget,GW_list_wildcard,GW_list_freehit,current_player_path,current_team_path,current_season_path ):
     GenerateOptimizeSet(current_player_path)
-    generate_optimizers(ownership=ownership,budget=budget,GW_list_wildcard=GW_list_wildcard,GW_list_freehit=GW_list_freehit  )
+    generate_optimizers(ownership=ownership,budget=budget,GW_list_wildcard=GW_list_wildcard,GW_list_freehit=GW_list_freehit,current_player_path=current_player_path )
     Generate_ALL_datasets(current_team_path,current_player_path,current_season_path)
     #main_GPT_News()
     
@@ -280,17 +280,17 @@ def Get_times(current_fixture_path,n_points_in_future):
     return next_n["event"].astype(int).values
     #w
 def Main_Orchestration():
-    season=25
-    is_new_season=0
+    season=26
+    is_new_season=1
     has_been_error=0
     n_points_in_future=8
     budget=101
     ownership=0.9
     
-    current_fixture_path="Raw_Data_25\Fantasy_season_2025_Fixtures.csv"
-    current_player_path="Raw_Data_25/current_players.csv"
-    current_team_path="Raw_Data_25\current_teams.csv"
-    current_season_path="Raw_Data_25\Fantasy_season_2025_data.csv"
+    current_fixture_path="Raw_Data_26\Fantasy_season_2026_Fixtures.csv"
+    current_player_path="Raw_Data_26/current_players.csv"
+    current_team_path="Raw_Data_26\current_teams.csv"
+    current_season_path="Raw_Data_26\Fantasy_season_2026_data.csv"
     Understat_path="Raw_Data_25/Understat_data.csv"
     Understat_shots_path="Raw_Data_25/Understat_data_shots.csv"
     fixtures_expanded_path_25="Fantasy_season_Fixtures_EXPANDED.csv"
@@ -311,13 +311,14 @@ def Main_Orchestration():
     
     
     #EXTARCT DATA
-    #Data_Extraction(season,is_new_season,has_been_error)
+    Data_Extraction(season,is_new_season,has_been_error)
     
     
     #Transform data
     #Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos,Understat_path,Understat_shots_path)
     
     #Predict data
+    """
     Data_Predictions(
         fixtures_expanded_path_25,
         current_player_path,
@@ -330,9 +331,9 @@ def Main_Orchestration():
         player_history_path_25,
         full_simulator_team_output_path_25,
         full_simulator_player_output_path_25,
-    )
+    )"""
     
-    Data_Generation(ownership,budget,GW_list_wildcard,GW_list_freehit,current_player_path,current_team_path,current_season_path )
+    #Data_Generation(ownership,budget,GW_list_wildcard,GW_list_freehit,current_player_path,current_team_path,current_season_path )
     
     #Specials(ownership,budget,GW_list_wildcard,current_player_path )
     

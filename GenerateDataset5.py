@@ -11,25 +11,21 @@ import xgboost as xgb
 from sklearn.svm import SVR
 import joblib
 from GenerateConfig import normalize_player_name
+from GenerateConfig import Understat_Team_MAP
 
 def make_Kmeans():
-    seasons=['2022-23', '2023-24']
 
-    teams23=pd.read_csv("Fantasy-Premier-League/Fantasy-Premier-League/data/2022-23/teams2.csv")[["code","name", "XGH","XGCH","XGA","XGCA"]]
-    teams24=pd.read_csv("Fantasy-Premier-League/Fantasy-Premier-League/data/2023-24/teams2.csv")[["code","name", "XGH","XGCH","XGA","XGCA"]]
-    teams25=pd.read_csv("Fantasy-Premier-League/Fantasy-Premier-League/data/2024-25/teams2.csv")[["code","name", "XGH","XGCH","XGA","XGCA"]]
+    teams=pd.read_csv("Team_data_transformed2.csv")[["code","name", "XGH","XGCH","XGA","XGCA"]]
 
-    a=pd.concat([teams23,teams24,teams25],
-                  axis = 0)
-    cluster_data=a.iloc[:,2:].values
+    cluster_data=teams.iloc[:,2:].values
 
 
     kmeans = KMeans(n_clusters=4, random_state=32)
     kmeans.fit(cluster_data)
     joblib.dump(kmeans, 'kmeans_Groundmodel.pkl')
 
-    a["predict"]=kmeans.predict(cluster_data)
-    a.to_csv("team_clusters.csv")
+    cluster_data["predict"]=kmeans.predict(teams)
+    teams.to_csv("team_clusters.csv")
     return kmeans
 
 
@@ -1610,16 +1606,7 @@ def Understat_teams():
     unioned_df = pd.concat([unioned_df, roll_inc, roll_prev], axis=1)
 
     unioned_df = unioned_df.dropna().reset_index(drop=True)
-    mapping = {
-        "Manchester City": "Man City",
-        "Manchester United": "Man Utd",
-        "Newcastle United": "Newcastle",
-        "Nottingham Forest": "Nott'm Forest",
-        "Sheffield United": "Sheffield Utd",
-        "Tottenham": "Spurs",                 # if your data has "Tottenham Hotspur", map that too:
-        "Tottenham Hotspur": "Spurs",
-        "Wolverhampton Wanderers": "Wolves",
-    }
+    mapping = Understat_Team_MAP
 
     # tidy whitespace then map
     unioned_df["title"] = unioned_df["title"].astype(str).str.strip().replace(mapping)

@@ -2,6 +2,7 @@ import pandas as pd
 import joblib
 import numpy as np
 from scipy.stats import poisson
+from GenerateConfig import Player_picture_url,PLAYER_NAME_MAP
 
 
 
@@ -166,7 +167,7 @@ def Generate_Player_Rankings(current_teams):
     ]]
 
     df["photo"] = (
-        "https://resources.premierleague.com/premierleague25/photos/players/500x500/"
+        Player_picture_url
         + df["Player_code"].astype(str)
         + ".png"
     )
@@ -224,31 +225,7 @@ def Generate_season_data(current_player_path, current_season_path):
     players_current=pd.read_csv(current_player_path)
 
 
-    name_map = {
-        "Pedro_Porro Sauceda":          "Pedro_Porro",
-        "Sávio_Moreira de Oliveira":    "Sávio_'Savinho' Moreira de Oliveira",
-        "Daniel_Muñoz Mejía":           "Daniel_Muñoz",
-        "Bernardo_Mota Veiga de Carvalho e Silva": "Bernardo_Veiga de Carvalho e Silva",
-        "Ederson_Santana de Moraes":    "Ederson_Santana de Moraes",
-        "Levi_Samuels Colwill":         "Levi_Colwill",
-        "Marcos_Senesi Barón":          "Marcos_Senesi",
-        "Raúl_Jiménez Rodríguez":       "Raúl_Jiménez",
-        "Robert_Lynch Sánchez":         "Robert_Sánchez",
-        "Rodrigo_'Rodri' Hernandez Cascante": "Rodrigo_Hernandez",
-        "Rúben_dos Santos Gato Alves Dias":   "Rúben_Gato Alves Dias",
-        "Kaoru_Mitoma":                 "Mitoma_Kaoru",
-        "Matheus_Santos Carneiro da Cunha": "Matheus_Santos Carneiro Da Cunha",
-        "David_Raya Martín":"David_Raya Martin",
-        "Kepa_Arrizabalaga Revuelta": "Kepa_Arrizabalaga",
-        "Idrissa_Gana Gueye": "Idrissa_Gueye",
-        "Alisson_Becker": "Alisson_Ramses Becker",
-        "Luis_Díaz Marulanda": "Luis_Díaz",
-        "Matheus Luiz_Nunes":"Matheus_Nunes",
-        "Alejandro_Garnacho Ferreyra":"Alejandro_Garnacho",
-        "Francisco Evanilson_de Lima Barbosa":"Francisco_Evanilson de Lima Barbosa",
-        "João Pedro_Junqueira de Jesus": "João_Pedro Junqueira de Jesus",
-        "Igor Thiago_Nascimento Rodrigues":"Igor_Thiago Nascimento Rodrigues"
-    }
+    name_map = PLAYER_NAME_MAP
 
 
     df["Full_Name"] = df["Full_Name"].apply(lambda n: name_map.get(n, n))
@@ -449,8 +426,8 @@ def Player_adjustements(current_player_path):
 
 
     # Cap overscore/overassist factors per player in [0.9, 1.15]
-    overscore_factor = df["Average_Overscore"].clip(0.9, 1.12)
-    overassist_factor = df["Average_OverAssist"].clip(0.9, 1.1)
+    overscore_factor = df["Average_Overscore"].clip(0.92, 1.1)
+    overassist_factor = df["Average_OverAssist"].clip(0.92, 1.1)
 
     df["Goal_share"] = df["Goal_share"] * overscore_factor
     df["Assist_share"] = df["Assist_share"] * overassist_factor

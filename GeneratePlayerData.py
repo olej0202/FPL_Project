@@ -150,15 +150,24 @@ def team_data(
 
     if offense_cols is None:
         offense_cols = [
-            "XGH","XGA","XG_avg",
-            "Rolling_Threat", "roll10_deep","XG","Rolling_XG"
-        ]
-    if defense_cols is None:
-        defense_cols = [
-            "XGCH","XGCA","XGC_avg",
-            "Rolling_Threat_Against","XGC","Rolling_XGC"
+            "XGH", "XGA", "XG_avg",
+            "Rolling_Threat", "roll10_deep", "XG", "Rolling_XG",
+            "Plain_GS_roll8", "Plain_GS_roll18", "Plain_GS_roll30",
+            "Plain_XG_roll8", "Plain_XG_roll18", "Plain_XG_roll30",
+            "Threat_roll8", "Threat_roll18", "Threat_roll30",
+            "Offensive_Index",
         ]
 
+    if defense_cols is None:
+        defense_cols = [
+            "XGCH", "XGCA", "XGC_avg",
+            "Rolling_Threat_Against", "XGC", "Rolling_XGC",
+            "Plain_GC_roll8", "Plain_GC_roll18", "Plain_GC_roll30",
+            "Plain_XGC_roll8", "Plain_XGC_roll18", "Plain_XGC_roll30",
+            "Threat_against_roll8", "Threat_against_roll18",
+            "Threat_against_roll30",
+            "Defensive_Index",
+        ]
     current_teams = pd.read_csv(current_teams)
     teams_dataset = pd.read_csv("Team_data_newest2.csv")
     team_history = pd.read_csv("Team_data_transformed2.csv")
@@ -177,7 +186,7 @@ def team_data(
     existing_codes = set(teams_dataset["code_norm"].dropna().unique())
     missing_codes = [c for c in codes if c not in existing_codes]
 
-    average_team_codes = [13, 90, 102, 40, 49,2,20,39,56]
+    average_team_codes = [13, 90, 102, 40, 49,2,20,39,56,11,54]
     
     average_df = teams_dataset[teams_dataset["code"].isin(average_team_codes)]
     numeric_cols = [
@@ -709,7 +718,7 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
     # -----------------------------
     # Your existing setup
     # -----------------------------
-    Xmins(current_player_path)
+    #Xmins(current_player_path)
     Fixture_Config(fixture_path)
 
     current_data = pd.read_csv("Player_future.csv").iloc[:, 1:]

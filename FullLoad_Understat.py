@@ -146,6 +146,7 @@ def teams_data(season):
     decoded = json.loads(raw.encode('utf-8').decode('unicode_escape'))
     # decoded is a dict keyed by team id; values are dicts with xG/xGA totals & more
     df = pd.DataFrame.from_dict(decoded, orient="index").reset_index(drop=True)
+    print(df)
     
     df['history'] = df['history'].apply(lambda x: x if isinstance(x, list) else [])
 
@@ -188,6 +189,7 @@ def teams_data(season):
 
 def encode_teams(teams_dict,season):
     df = pd.DataFrame.from_dict(teams_dict, orient="index").reset_index(drop=True)
+    print(df)
     
     df['history'] = df['history'].apply(lambda x: x if isinstance(x, list) else [])
 
@@ -422,4 +424,4 @@ def main_Extract_Understat(season):
     )
     #loader.load_all(season)
 if __name__ == "__main__":
-    main_Extract_Understat(25)     
+    main_Extract_Understat(26)     

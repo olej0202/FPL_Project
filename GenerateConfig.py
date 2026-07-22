@@ -45,7 +45,12 @@ PLAYER_NAME_MAP = {
         "Luis_Díaz Marulanda": "Luis_Díaz",
         "Matheus Luiz_Nunes": "Matheus_Nunes",
         "Alejandro_Garnacho Ferreyra": "Alejandro_Garnacho",
+        "Francisco Evanilson_de Lima Barbosa":"Francisco_Evanilson de Lima Barbosa",
+        "João Pedro_Junqueira de Jesus": "João_Pedro Junqueira de Jesus",
+        "Igor Thiago_Nascimento Rodrigues":"Igor_Thiago Nascimento Rodrigues"
     }
+
+
 Understat_Team_MAP={
         "Manchester City": "Man City",
         "Manchester United": "Man Utd",
@@ -57,6 +62,8 @@ Understat_Team_MAP={
         "Wolverhampton Wanderers": "Wolves",
     }
 
+Player_picture_url="https://resources.premierleague.com/premierleague25/photos/players/500x500/"
+current_season="26"
 
 
 
@@ -126,7 +133,7 @@ fixtures_config = {
 
 }
 
-date_filter="2026-04-14"
+date_filter=None
 
 
 POSITION_EVENT_BONUS = {

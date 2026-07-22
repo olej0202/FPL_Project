@@ -4,6 +4,7 @@ import pandas as pd
 import pyomo.environ as pyo
 
 from Generate_Fetch_Myteam import build_team_dataframe
+from GenerateConfig import Player_picture_url,current_season
 
 
 # ============================================================
@@ -198,7 +199,7 @@ def optimize_my_team(
             + ", ".join(conflicting_force_ban)
         )
 
-    current_fixture_path = "Raw_Data_25/Fantasy_season_2025_Fixtures.csv"
+    current_fixture_path = f"Raw_Data_{current_season}/Fantasy_season_20{current_season}_Fixtures.csv"
     #Last_GW = get_last_completed_gw(current_fixture_path)
     Last_GW=32
 
@@ -255,8 +256,37 @@ def optimize_my_team(
     if is_first:
         initial_saved = 1
         team_df = pd.read_csv("Free_hit_team.csv")
-        team_df["Full_Name"] = team_df["Name"].values
-        money_in_bank_init = 0.0
+        if "name" not in team_df.columns and "Name" in team_df.columns:
+            team_df["name"] = team_df["Name"].astype(str)
+        team_df["Full_Name"] = team_df["name"].astype(str).values
+
+        price_lookup = (
+            data[["name", "value"]]
+            .dropna(subset=["name", "value"])
+            .assign(name_key=lambda d: d["name"].astype(str).str.strip().str.lower())
+            .drop_duplicates(subset=["name_key"], keep="last")
+            .set_index("name_key")["value"]
+        )
+
+        squad_name_keys = team_df["name"].astype(str).str.strip().str.lower()
+        missing_price_names = sorted(
+            team_df.loc[~squad_name_keys.isin(price_lookup.index), "name"].astype(str).unique().tolist()
+        )
+        if missing_price_names:
+            raise ValueError(
+                "Could not calculate initial bank for is_first because these free-hit players "
+                "are missing from Model_Optimizer.csv: "
+                + ", ".join(missing_price_names)
+            )
+
+        initial_squad_cost = float(price_lookup.reindex(squad_name_keys).astype(float).sum())
+        money_in_bank_init = float(100.0 - initial_squad_cost)
+        if money_in_bank_init < -1e-6:
+            raise ValueError(
+                f"Initial proxy squad from Free_hit_team.csv costs {initial_squad_cost:.2f}, "
+                f"which exceeds the 100.0 budget by {-money_in_bank_init:.2f}."
+            )
+        money_in_bank_init = max(0.0, round(money_in_bank_init, 4))
     else:
         team_df = build_team_dataframe(team_id)
         initial_saved = int(team_df["saved_transfers"].values[0])
@@ -1036,7 +1066,7 @@ def optimize_my_team(
                         "status": "transferred_in",
                         "GW": gw,
                         "position": pos,
-                        "photo": f"https://resources.premierleague.com/premierleague25/photos/players/500x500/{player_row_code}.png",
+                        "photo": f"{Player_picture_url}{player_row_code}.png",
                         "Is_captain": False,
                         "web_name": web_name,
                     })
@@ -1047,7 +1077,7 @@ def optimize_my_team(
                         "status": "transferred_out",
                         "GW": gw,
                         "position": pos,
-                        "photo": f"https://resources.premierleague.com/premierleague25/photos/players/500x500/{player_row_code}.png",
+                        "photo": f"{Player_picture_url}{player_row_code}.png",
                         "Is_captain": False,
                         "web_name": web_name,
                     })
@@ -1071,7 +1101,7 @@ def optimize_my_team(
                             "status": status,
                             "GW": gw,
                             "position": pos,
-                            "photo": f"https://resources.premierleague.com/premierleague25/photos/players/500x500/{player_row_code}.png",
+                            "photo": f"{Player_picture_url}{player_row_code}.png",
                             "Is_captain": is_capt,
                             "web_name": web_name,
                         })
@@ -1090,7 +1120,7 @@ def optimize_my_team(
                             "status": status,
                             "GW": gw,
                             "position": pos,
-                            "photo": f"https://resources.premierleague.com/premierleague25/photos/players/500x500/{player_row_code}.png",
+                            "photo": f"{Player_picture_url}{player_row_code}.png",
                             "Is_captain": is_capt,
                             "web_name": web_name,
                         })
