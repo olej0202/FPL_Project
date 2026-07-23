@@ -840,9 +840,9 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
         defcon_model, sigma, results, historical_predictions = (
             train_defcon_ensemble_model(
             path="TestML4.csv",
-            svr_weight=0.4,
-            xgb_weight=0.2,
-            elastic_net_weight=0.4,
+            svr_weight=0.45,
+            xgb_weight=0.4,
+            elastic_net_weight=0.15,
             elastic_net_alpha=0.01,
             elastic_net_l1_ratio=0.5
             )   
