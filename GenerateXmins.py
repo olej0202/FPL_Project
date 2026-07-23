@@ -847,13 +847,26 @@ def GetXmins(current_players, n_future, scenarios=None, position_slots=None):
             75.0 - np.maximum(30.0, out["Final_minutes_Adjusted"].astype(float)),
         ) ** 1.2)*0.5+0.5*np.maximum(12,out["prediction_uncertainty_minutes"])**1.3,
     )
-    out["GW_adjustement_weight"] =out["Final_minutes_Adjusted_weight"]/  (
+    team_weight_sum = (
         out.groupby(["GW", "team_code"])["Final_minutes_Adjusted_weight"]
         .transform("sum")
-        .round(2)
+        .astype(float)
     )
-    out["Adjustement"] =(990-out["GW_team_Final_minutes_Adjusted_sum"])*out["GW_adjustement_weight"]
-    out["Final_minutes_Adjusted"] =np.maximum(0,out["Final_minutes_Adjusted"]+out["Adjustement"])
+    valid_weight_mask = np.isfinite(team_weight_sum) & (team_weight_sum > 0)
+    out["GW_adjustement_weight"] = np.where(
+        valid_weight_mask,
+        out["Final_minutes_Adjusted_weight"] / team_weight_sum,
+        0.0,
+    )
+    out["Adjustement"] = np.where(
+        valid_weight_mask,
+        (990 - out["GW_team_Final_minutes_Adjusted_sum"]) * out["GW_adjustement_weight"],
+        0.0,
+    )
+    out["Final_minutes_Adjusted"] = np.maximum(
+        0,
+        out["Final_minutes_Adjusted"] + out["Adjustement"],
+    )
     
     # Save & return
     out.to_csv("GenerateXmins2.csv", index=False)

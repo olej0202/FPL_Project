@@ -1539,7 +1539,7 @@ def get_data():
 @app.get("/Team_result_adjust")
 def get_data():
     df = load_and_transform("Team_result_adjust")
-    return df.to_dict(orient="records")
+    return _json_safe_records(df, fill_value=0)
 
 @app.get("/wildcard")
 def get_data():

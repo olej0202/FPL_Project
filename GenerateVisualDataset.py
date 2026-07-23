@@ -303,9 +303,10 @@ def Generate_season_data(current_player_path, current_season_path):
 def Generate_Team_Adjustments():
     df = pd.read_csv("Team_prediction.csv").iloc[:, 2:]
 
-    team_data_home = pd.read_csv("Team_data_newest3.csv").iloc[:, 1:][[
+    team_data_home = pd.read_csv("Team_data_newest3.csv")[[
         "name", "code", "XG_avg", "XGC_avg", "XGH", "XGA", "XGCH", "XGCA"
     ]]
+    print(team_data_home)
 
     # Create home metrics
     team_data_home["H_Att_E"] = (team_data_home["XGH"] - team_data_home["XGA"])/2
