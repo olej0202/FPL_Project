@@ -161,7 +161,7 @@ def train_defcon_ensemble_model(
     max_date = df["kickoff_time"].max()
 
     cutoff = (
-        max_date.to_period("M")
+        max_date.to_period("M")-1
     ).to_timestamp().tz_localize("UTC")
 
     # Samme datologikk som i originalkoden

@@ -1017,7 +1017,7 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
       return {
         playerTableRowsBase: [],
         globalMinValue: 0,
-        globalMaxValue: 150,
+        globalMaxValue: 155,
         allTeamOptions: [],
         playerOptions: [],
       };
@@ -1077,7 +1077,7 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
     }
 
     if (minValue === Infinity) minValue = 0;
-    if (maxValue === -Infinity) maxValue = 150;
+    if (maxValue === -Infinity) maxValue = 155;
 
     const teamOptions = Array.from(teamNamesByCode.entries()).map(([code, name]) => ({
       code,

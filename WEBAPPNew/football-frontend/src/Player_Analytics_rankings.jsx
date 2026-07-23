@@ -783,7 +783,7 @@ export default function Player_analytics_rankings() {
   const [selectedTeamCodes, setSelectedTeamCodes] = useState([]);
   const [selectedPositions, setSelectedPositions] = useState([]);
   const [playerNameFilter, setPlayerNameFilter] = useState("");
-  const [valueRange, setValueRange] = useState([0, 15]);
+  const [valueRange, setValueRange] = useState([0, 15.5]);
   const [selectedRange, setSelectedRange] = useState([0, 100]);
   const [selectedGwStart, setSelectedGwStart] = useState(null);
   const [selectedGwEnd, setSelectedGwEnd] = useState(null);
@@ -973,7 +973,7 @@ export default function Player_analytics_rankings() {
         .sort((a, b) => a.label.localeCompare(b.label)),
       allPositions: sortedPositions,
       globalMinValue: minValue === Infinity ? 0 : minValue,
-      globalMaxValue: maxValue === -Infinity ? 15 : maxValue,
+      globalMaxValue: maxValue === -Infinity ? 15.5 : maxValue,
       globalMinSelected: minSelected === Infinity ? 0 : minSelected,
       globalMaxSelected: maxSelected === -Infinity ? 100 : maxSelected,
     };

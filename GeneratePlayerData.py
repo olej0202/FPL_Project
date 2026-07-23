@@ -186,7 +186,7 @@ def team_data(
     existing_codes = set(teams_dataset["code_norm"].dropna().unique())
     missing_codes = [c for c in codes if c not in existing_codes]
 
-    average_team_codes = [13, 90, 102, 40, 49,2,20,39,56,11,54]
+    average_team_codes = [13, 90, 102, 40, 49,2,20,39,56]
     
     average_df = teams_dataset[teams_dataset["code"].isin(average_team_codes)]
     numeric_cols = [
@@ -939,6 +939,54 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
         overscore = goal_conv
         overassist = player_row["Average_OverAssist"].values[0]
         columns_to_average = [col for col in player_row.columns if col not in exclude_columns]
+        
+        history_data["kickoff_time_parsed"] = pd.to_datetime(
+                history_data["kickoff_time"],
+                format="mixed",
+                utc=True,
+                errors="coerce"
+            )
+        
+        filtered = (
+            history_data[
+                (history_data["name"].str.lower() == name.lower()) 
+            ]
+            .sort_values("kickoff_time_parsed", ascending=False)
+        )
+
+        defcon_rows = filtered["defcon_avg"].notna().sum()
+        defcon_columns = ["defcon_avg"]
+        if defcon_rows < 4:
+            if team_code in NEW_TEAMS:
+                reference_team_codes = [13, 90, 102, 40, 49, 2, 20, 39, 56, 11, 54] 
+            else:
+                reference_team_codes = [team_code]
+
+
+            position_values = ["GK", "GKP"] if position in ["GK", "GKP"] else [position]
+            candidate_rows = history_data[
+                (history_data["Team"].isin(reference_team_codes)) &
+                (history_data["position"].isin(position_values)) 
+            ].copy()
+            candidate_rows["minutes"] = pd.to_numeric(candidate_rows["minutes"], errors="coerce").fillna(0.0)
+            candidate_rows = candidate_rows.sort_values("kickoff_time_parsed", ascending=False)
+
+            eligible_names = (
+                candidate_rows
+                .groupby("name", group_keys=False)
+                .head(10)
+                .groupby("name")["minutes"]
+                .sum()
+            )
+            eligible_names = eligible_names[eligible_names > 800].index.tolist()
+
+            if eligible_names:
+                defcon_source = history_data[
+                    (history_data["name"].isin(eligible_names))
+                ]
+                defcon_means = defcon_source[defcon_columns].apply(pd.to_numeric, errors="coerce").mean()
+                player_row[defcon_columns] = defcon_means.reindex(defcon_columns).values
+                
 
         if name in new_team_cluster:
             members = new_team_cluster[name]
@@ -975,6 +1023,7 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
         player_row["Goal_Index"] = player_row["Understat_POSXG"] * player_risiko + (1 - player_risiko) * player_row["Goal_Statistics"]
         player_row["Assist_Index"] = player_row["Understat_POSXA"] * player_risiko + (1 - player_risiko) * player_row["Assist_Statistics"]
         player_row["Player_code"] = player_code
+        
 
 
 
