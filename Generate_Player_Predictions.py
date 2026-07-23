@@ -1695,17 +1695,12 @@ def Generate_point_predictions(GW_list):
     unique_players=players["name"].unique()
     xgb_goals = Get_rows("XGB", "GOALS")
     stat_goals = Get_rows("STAT", "GOALS")
-    DNN_goals = Get_rows("DNN", "GOALS")
-    cluster_goals=Get_rows("CLUSTER", "GOALS")
 
     xgb_assist = Get_rows("XGB", "Assist")
     stat_assist = Get_rows("STAT", "Assist")
-    DNN_assist = Get_rows("DNN", "Assist")
-    cluster_assist=Get_rows("CLUSTER", "Assist")
 
     xgb_bps = Get_rows("XGB", "bps")
     stat_bps = Get_rows("STAT", "bps")
-    cluster_bps=Get_rows("CLUSTER", "bps")
 
 
     stat_GC = Get_rows("STAT", "GC")
@@ -1765,14 +1760,10 @@ def Generate_point_predictions(GW_list):
         player_preds = player_preds.merge(_prepare_source(xgb_goals[xgb_goals["Name"]==player], "25").rename(columns={"25": "xgb_goals_25"}), on=merge_keys, how="left")
         player_preds = player_preds.merge(_prepare_source(xgb_goals[xgb_goals["Name"]==player], "75").rename(columns={"75": "xgb_goals_75"}), on=merge_keys, how="left")
         player_preds = player_preds.merge(_prepare_source(stat_goals[stat_goals["Name"]==player], "pred").rename(columns={"pred": "stat_goals_pred"}), on=merge_keys, how="left")
-        player_preds = player_preds.merge(_prepare_source(DNN_goals[DNN_goals["Name"]==player], "pred").rename(columns={"pred": "dnn_goals_pred"}), on=merge_keys, how="left")
-        player_preds = player_preds.merge(_prepare_source(cluster_goals[cluster_goals["Name"]==player], "pred").rename(columns={"pred": "cluster_goals_pred"}), on=merge_keys, how="left")
 
         player_preds = player_preds.merge(_prepare_source(xgb_assist[xgb_assist["Name"]==player], "25").rename(columns={"25": "xgb_assist_25"}), on=merge_keys, how="left")
         player_preds = player_preds.merge(_prepare_source(xgb_assist[xgb_assist["Name"]==player], "75").rename(columns={"75": "xgb_assist_75"}), on=merge_keys, how="left")
         player_preds = player_preds.merge(_prepare_source(stat_assist[stat_assist["Name"]==player], "pred").rename(columns={"pred": "stat_assist_pred"}), on=merge_keys, how="left")
-        player_preds = player_preds.merge(_prepare_source(DNN_assist[DNN_assist["Name"]==player], "pred").rename(columns={"pred": "dnn_assist_pred"}), on=merge_keys, how="left")
-        player_preds = player_preds.merge(_prepare_source(cluster_assist[cluster_assist["Name"]==player], "pred").rename(columns={"pred": "cluster_assist_pred"}), on=merge_keys, how="left")
 
         player_preds = player_preds.merge(_prepare_source(stat_GC[stat_GC["Name"]==player], "pred").rename(columns={"pred": "stat_gc_pred"}), on=merge_keys, how="left")
         player_preds = player_preds.merge(_prepare_source(xgb_fantasy[xgb_fantasy["Name"]==player], "pred").rename(columns={"pred": "xgb_fantasy_pred"}), on=merge_keys, how="left")
@@ -1828,8 +1819,6 @@ def Generate_point_predictions(GW_list):
                 + player_preds["sim_goals_pred"] * 0.15
                 + player_preds["sim2_goals_pred"] * 0.25
                 + player_preds["stat_goals_pred"] * 0.6
-                + player_preds["dnn_goals_pred"] * 0.0
-                + player_preds["cluster_goals_pred"] * 0.0
             ) * overscore
         )
 
@@ -1839,9 +1828,7 @@ def Generate_point_predictions(GW_list):
                 + player_preds["sim_assists_pred"] * 0.15
                 + player_preds["sim2_assists_pred"] * 0.25
                 + player_preds["stat_assist_pred"] * 0.6
-                + player_preds["dnn_assist_pred"] * 0.0
                 + historic_Assist * 0
-                + player_preds["cluster_assist_pred"] * 0.0
             ) * overassist
         )
         player_preds["Bonus_pred2"] = player_preds["sim2_bonus_pred"]

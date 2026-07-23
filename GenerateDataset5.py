@@ -24,7 +24,7 @@ def make_Kmeans():
     kmeans.fit(cluster_data)
     joblib.dump(kmeans, 'kmeans_Groundmodel.pkl')
 
-    cluster_data["predict"]=kmeans.predict(teams)
+    teams["predict"]=kmeans.predict(cluster_data)
     teams.to_csv("team_clusters.csv")
     return kmeans
 

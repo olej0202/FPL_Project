@@ -1,28 +1,24 @@
 """
-Southampton,20,
-Bournemouth,91,
-Chelsea,8,
-Newcastle,4,
-Leicester,13
-Nott'm Forest,17,
-Crystal Palace,31,
-Wolves,39,
-Brentford,94,
-Spurs,6
-,West Ham,21
-,Liverpool,14
-,Leeds,2,
-,Fulham,54,
-,Brighton,36,
-,Man City,43
-,Man Utd,1
-,Aston Villa,7
-,Everton,11,
-,Arsenal,3,
-,Sheffield Utd,49
-,Burnley,90,
-,Luton,102,
-,Ipswich,40"""
+3,0,,1,0,Arsenal,0,0,0,ARS,,,False,0,,4,5,0,0,0,0,1
+7,0,,2,0,Aston Villa,0,0,0,AVL,,,False,0,,3,4,0,0,0,0,2
+91,0,,3,0,Bournemouth,0,0,0,BOU,,,False,0,,3,3,0,0,0,0,127
+94,0,,4,0,Brentford,0,0,0,BRE,,,False,0,,3,3,0,0,0,0,130
+36,0,,5,0,Brighton,0,0,0,BHA,,,False,0,,2,3,0,0,0,0,131
+8,0,,6,0,Chelsea,0,0,0,CHE,,,False,0,,4,4,0,0,0,0,4
+9,0,,7,0,Coventry City,0,0,0,COV,,,False,0,,2,2,0,0,0,0,5
+31,0,,8,0,Crystal Palace,0,0,0,CRY,,,False,0,,3,3,0,0,0,0,6
+11,0,,9,0,Everton,0,0,0,EVE,,,False,0,,3,3,0,0,0,0,7
+54,0,,10,0,Fulham,0,0,0,FUL,,,False,0,,2,3,0,0,0,0,34
+88,0,,11,0,Hull City,0,0,0,HUL,,,False,0,,2,2,0,0,0,0,41
+40,0,,12,0,Ipswich Town,0,0,0,IPS,,,False,0,,2,2,0,0,0,0,8
+2,0,,13,0,Leeds,0,0,0,LEE,,,False,0,,2,3,0,0,0,0,9
+14,0,,14,0,Liverpool,0,0,0,LIV,,,False,0,,4,4,0,0,0,0,10
+43,0,,15,0,Man City,0,0,0,MCI,,,False,0,,4,5,0,0,0,0,11
+1,0,,16,0,Man Utd,0,0,0,MUN,,,False,0,,4,4,0,0,0,0,12
+4,0,,17,0,Newcastle,0,0,0,NEW,,,False,0,,2,3,0,0,0,0,23
+17,0,,18,0,Nott'm Forest,0,0,0,NFO,,,False,0,,3,3,0,0,0,0,15
+6,0,,19,0,Spurs,0,0,0,TOT,,,False,0,,3,3,0,0,0,0,21
+56,0,,20,0,Sunderland,0,0,0,SUN,,,False,0,,2,3,0,0,0,0,29"""
 
 PLAYER_NAME_MAP = {
         "Pedro_Porro Sauceda": "Pedro_Porro",
@@ -122,11 +118,22 @@ Manual_min = [
 
 
 ]
+import pandas as pd
+generated = pd.read_csv("GenerateStartofSeasonMins.csv")
+
+# Keep only the fields GenerateXmins.py expects
+Manual_min = generated[
+    ["name", "type", "value"]
+].to_dict(orient="records")
+Manual_min.extend([
+    #{"name": "Mohamed_Salah", "type": "const", "value": 90},
+
+])
 
 #use code
-NEW_TEAMS=[]
+NEW_TEAMS=[9,40,88]
 #use name
-NEW_TEAMS_NAME=[]
+NEW_TEAMS_NAME=["Coventry City","Hull City","Ipswich Town"]
 
 fixtures_config = {
         
@@ -150,6 +157,6 @@ POINTS_RULES = {
     "FWD": {"goal": 4, "assist": 3, "cs": 0, "start": 2},
 }
 
-min_id=46805
+min_id=2440
 
-ai_id=7025308
+ai_id=14177
