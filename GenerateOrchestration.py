@@ -174,7 +174,6 @@ def Data_Predictions(
         optimization_best_output_path=sim_output_dir / "simtest_parameter_best.csv",
         write_outputs=True,
     )
-    """
     print("Running full simulator parameter optimization...")
     run_simulator_control(control_cfg=full_sim_control)
 
@@ -255,7 +254,7 @@ def Data_Predictions(
         len(gw_list),
         time_list=gw_list,
         standings_fixture_path=str(fixture_path),
-    )"""
+    )
     Make_Predictions()
     Generate_point_predictions(time_list)
     #make_predictions2(horizon=len(time_list), gw_list=time_list)
@@ -265,7 +264,7 @@ def Data_Generation(ownership,budget,GW_list_wildcard,GW_list_freehit,current_pl
     GenerateOptimizeSet(current_player_path)
     generate_optimizers(ownership=ownership,budget=budget,GW_list_wildcard=GW_list_wildcard,GW_list_freehit=GW_list_freehit,current_player_path=current_player_path )
     Generate_ALL_datasets(current_team_path,current_player_path,current_season_path)
-    main_GPT_News()
+    #main_GPT_News()
     
 def Specials(ownership,budget,GW_list_wildcard,current_player_path ):
     wildcard_optimize_team_shocks(ownership,budget,GW_list_wildcard,current_player_path=current_player_path,robust_trials=15,lock_from_freq=True,lock_counts={"FWD":2, "MID":3, "DEF":3},lock_scope="t0",lock_as_starters=False)
@@ -313,7 +312,7 @@ def Main_Orchestration():
     GW_list_wildcard=time_list
     GW_list_freehit=[time_list[0]]
     
-    run_player_pos=1
+    run_player_pos=0
     
     print(time_list)
     
@@ -323,7 +322,7 @@ def Main_Orchestration():
     
     
     #Transform data
-    #Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos,Understat_path,Understat_shots_path)
+    Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos,Understat_path,Understat_shots_path)
     
     #Predict data
     Data_Predictions(

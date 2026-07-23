@@ -884,6 +884,14 @@ def load_and_transform(endpoint):
     
     return df
 
+
+def _json_safe_records(df: pd.DataFrame, fill_value=0):
+    safe_df = df.copy()
+    safe_df = safe_df.replace([np.inf, -np.inf], np.nan)
+    safe_df = safe_df.fillna(fill_value)
+    records = safe_df.to_dict(orient="records")
+    return json.loads(json.dumps(records, allow_nan=False))
+
 @app.get("/Predictions")
 def get_data():
     df = load_and_transform("Predictions")
@@ -1514,8 +1522,7 @@ def get_player_rankings():
 @app.get("/Player_result_adjust")
 def get_data():
     df = load_and_transform("Player_result_adjust")
-    df=df.fillna(0)
-    return df.to_dict(orient="records")    
+    return _json_safe_records(df, fill_value=0)
 
 @app.get("/Team_current")
 def get_data():
