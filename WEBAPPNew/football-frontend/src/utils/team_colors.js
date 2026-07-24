@@ -21,7 +21,10 @@ const teamColors = {
   "Spurs": "#ffffffff",
   "Sunderland": "#EB172B",
   "Burnley": "#6C1D45",
-  "Leeds": "#ffffffff"
+  "Leeds": "#ffffffff",
+  "Hull City":"#ffffffff",
+  "Ipswich Town":"#ffffffff",
+  "Coventry City":"#ffffffff",
 };
 
 export default teamColors;

@@ -33,6 +33,7 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  ComposedChart,
   Legend,
   Line,
   LineChart,
@@ -75,14 +76,20 @@ const POINTS_RULES = {
 };
 
 const STACK_MEASURE_SERIES = [
-  { key: "base", label: "Base", color: "#e2e8f0" },
-  { key: "goal", label: "Goal", color: "#dc2626" },
-  { key: "assist", label: "Assist", color: "#f59e0b" },
-  { key: "bonus", label: "Bonus", color: "#22c55e" },
-  { key: "defcon", label: "Defcon", color: "#0ea5e9" },
-  { key: "cs", label: "CS", color: "#8b5cf6" },
-  { key: "card", label: "Card", color: "#94a3b8" },
+  { key: "base", label: "Base", color: "#475569" },
+  { key: "goal", label: "Goal", color: "#2563eb" },
+  { key: "assist", label: "Assist", color: "#0f766e" },
+  { key: "bonus", label: "Bonus", color: "#d97706" },
+  { key: "defcon", label: "Defcon", color: "#7c3aed" },
+  { key: "cs", label: "CS", color: "#059669" },
+  { key: "card", label: "Card", color: "#dc2626" },
 ];
+
+const STACK_TOTAL_SERIES = {
+  key: "componentTotal",
+  label: "Total",
+  color: "#0f172a",
+};
 
 const MEASURE_OPTIONS = [
   {
@@ -242,8 +249,7 @@ function computeCsContribution(row, position) {
       savePred +
       0.5 *
         ((30 - Math.min(30, gcPred * 100)) / -15 +
-          -1 -
-          gcPred * (1 - Math.log(safeGcPred))) +
+          -(1 - gcPred * (1 - Math.log(safeGcPred)))) +
       gcPred * rules.cs
     );
   }
@@ -253,8 +259,7 @@ function computeCsContribution(row, position) {
       gcPred * rules.cs +
       0.5 *
         ((30 - Math.min(30, gcPred * 100)) / -15 +
-          -1 -
-          gcPred * (1 - Math.log(safeGcPred)))
+          -(1 - gcPred * (1 - Math.log(safeGcPred))))
     );
   }
 
@@ -2332,13 +2337,15 @@ export default function Player_analytics_rankings() {
                           ) : null}
                         </LineChart>
                         ) : (
-                          <BarChart data={activeStackedChartData} margin={{ top: 12, right: 12, left: 0, bottom: 4 }}>
+                          <ComposedChart data={activeStackedChartData} margin={{ top: 12, right: 12, left: 0, bottom: 4 }}>
                             <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.24)" />
                             <XAxis dataKey="label" tick={{ fill: "#64748b", fontSize: 12 }} axisLine={false} tickLine={false} />
                             <YAxis tick={{ fill: "#64748b", fontSize: 12 }} axisLine={false} tickLine={false} />
                             <Tooltip
                               formatter={(value, name) => {
-                                const label = STACK_MEASURE_SERIES.find((series) => series.key === name)?.label || name;
+                                const label =
+                                  STACK_MEASURE_SERIES.find((series) => series.key === name)?.label ||
+                                  (name === STACK_TOTAL_SERIES.key ? STACK_TOTAL_SERIES.label : name);
                                 return [`${(Number(value) || 0).toFixed(2)} pts`, label];
                               }}
                               labelFormatter={(label, payload) => {
@@ -2356,7 +2363,8 @@ export default function Player_analytics_rankings() {
                             <Legend
                               verticalAlign="bottom"
                               formatter={(value) =>
-                                STACK_MEASURE_SERIES.find((series) => series.key === value)?.label || value
+                                STACK_MEASURE_SERIES.find((series) => series.key === value)?.label ||
+                                (value === STACK_TOTAL_SERIES.key ? STACK_TOTAL_SERIES.label : value)
                               }
                             />
                             <ReferenceLine y={0} stroke="rgba(15,23,42,0.35)" />
@@ -2367,9 +2375,20 @@ export default function Player_analytics_rankings() {
                                 name={series.key}
                                 stackId="points"
                                 fill={series.color}
+                                stroke="rgba(15,23,42,0.18)"
+                                strokeWidth={1}
                               />
                             ))}
-                          </BarChart>
+                            <Line
+                              type="monotone"
+                              dataKey={STACK_TOTAL_SERIES.key}
+                              name={STACK_TOTAL_SERIES.key}
+                              stroke={STACK_TOTAL_SERIES.color}
+                              strokeWidth={3}
+                              dot={{ r: 4, fill: STACK_TOTAL_SERIES.color, stroke: "#ffffff", strokeWidth: 1.5 }}
+                              activeDot={{ r: 6, fill: STACK_TOTAL_SERIES.color, stroke: "#ffffff", strokeWidth: 1.5 }}
+                            />
+                          </ComposedChart>
                         )}
                       </ResponsiveContainer>
                     </div>

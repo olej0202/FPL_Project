@@ -975,7 +975,7 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
             
             if(pred_variable=="bps"):
                real_variable="bonus" 
-               player_preds.append(max(df['Rolling_adjusted_BPS'].values[h]*0.4+df['Rolling_adjusted_BPS_2'].values[h]*0.6,5))
+               player_preds.append(max(df['Rolling_adjusted_BPS'].values[h]*0.4+df['Rolling_adjusted_BPS_2'].values[h]*0.6,5)*np.minimum(1, df["average_minutes"].values[h] / 80))
                
             if(pred_variable=="cards"):
                real_variable="cards" 
@@ -1938,7 +1938,7 @@ def Generate_point_predictions(GW_list):
             summary_dataset["Points_prediction"]=(2
                                                   +summary_dataset["Save_pred"]
                                                   + 0.5 * ((30 - np.minimum(30, summary_dataset["GC_pred"] * 100)) / -15
-                                                           - 1 - summary_dataset["GC_pred"] * (1 - np.log(summary_dataset["GC_pred"])))
+                                                           - (1 - summary_dataset["GC_pred"] * (1 - np.log(summary_dataset["GC_pred"]))))
                                                   +summary_dataset["GC_pred"]*POINTS_RULES[position]["cs"]
                                                   +summary_dataset["Bonus_pred"] )
 
@@ -1961,7 +1961,7 @@ def Generate_point_predictions(GW_list):
                                                   +summary_dataset["Bonus_pred"]
                                                   +summary_dataset["GC_pred"]*POINTS_RULES[position]["cs"]
                                                   + 0.5 * ((30 - np.minimum(30, summary_dataset["GC_pred"] * 100)) / -15
-                                                           - 1 - summary_dataset["GC_pred"] * (1 - np.log(summary_dataset["GC_pred"])))
+                                                           - (1 - summary_dataset["GC_pred"] * (1 - np.log(summary_dataset["GC_pred"]))))
                                                   -summary_dataset["Card_pred"])+summary_dataset["CBI_pred"]*2
             summary_dataset["Risk_share"]=(summary_dataset["Goal_pred"]*6.5+summary_dataset["Assist_pred"]*3.4+summary_dataset["GC_pred"]*3.5)/summary_dataset["Points_prediction"]
      
