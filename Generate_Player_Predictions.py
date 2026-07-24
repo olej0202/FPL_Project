@@ -161,7 +161,7 @@ def train_defcon_ensemble_model(
     max_date = df["kickoff_time"].max()
 
     cutoff = (
-        max_date.to_period("M")-1
+        max_date.to_period("M")+1
     ).to_timestamp().tz_localize("UTC")
 
     # Samme datologikk som i originalkoden
@@ -269,8 +269,8 @@ def train_defcon_ensemble_model(
     # 5. XGBoost
     # ---------------------------------------------------------
     xgb_model = XGBRegressor(
-        n_estimators=300,
-        max_depth=4,
+        n_estimators=200,
+        max_depth=5,
         learning_rate=0.05,
         subsample=0.8,
         colsample_bytree=0.8,
