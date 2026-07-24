@@ -242,7 +242,7 @@ function computeCsContribution(row, position) {
       savePred +
       0.5 *
         ((30 - Math.min(30, gcPred * 100)) / -15 +
-          1 -
+          -1 -
           gcPred * (1 - Math.log(safeGcPred))) +
       gcPred * rules.cs
     );
@@ -253,7 +253,7 @@ function computeCsContribution(row, position) {
       gcPred * rules.cs +
       0.5 *
         ((30 - Math.min(30, gcPred * 100)) / -15 +
-          1 -
+          -1 -
           gcPred * (1 - Math.log(safeGcPred)))
     );
   }
