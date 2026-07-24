@@ -1721,7 +1721,40 @@ def Generate_point_predictions(GW_list):
     
     simulation=pd.read_csv("SImulator\simtest_player_outcomes_upcoming.csv").sort_values(by=["event", "fixture_code"])
     simulation2=pd.read_csv("SImulator\Full_simulator_player.csv").sort_values(by=["gameweek", "fixture_code"])
-
+    
+    from sklearn.linear_model import LogisticRegression
+    bpsdf = pd.read_csv("testML4.csv")[["bonus", "bps"]].dropna()
+    X = bpsdf[["bps"]]
+    y = bpsdf["bonus"].astype(int)
+    model = LogisticRegression(
+        solver="lbfgs",
+        max_iter=2000,
+        class_weight="balanced"
+    )
+    model.fit(X, y)
+    
+    def expected_bonus(bps):
+        bps_series = pd.Series(bps, dtype="float64")
+        valid_mask = (
+            bps_series.notna()
+            & np.isfinite(bps_series)
+        )
+        result = pd.Series(
+            np.nan,
+            index=bps_series.index,
+            dtype="float64"
+        )
+        if valid_mask.any():
+            prediction_df = pd.DataFrame({
+                "bps": bps_series.loc[valid_mask].to_numpy()
+            })
+            probabilities = model.predict_proba(prediction_df)
+            result.loc[valid_mask] = (
+                probabilities @ model.classes_.astype(float)
+            )
+        if np.isscalar(bps):
+            return float(result.iloc[0])
+        return result.to_numpy()
 
     
 
@@ -1821,20 +1854,20 @@ def Generate_point_predictions(GW_list):
         player_preds["Goal_pred"] = (
             (
                 (player_preds["xgb_goals_75"] * 0.5 + 0.5 * player_preds["xgb_goals_25"]) * 0.0
-                + player_preds["sim_goals_pred"] * 0.15
-                + player_preds["sim2_goals_pred"] * 0.25
-                + player_preds["stat_goals_pred"] * 0.6
+                + player_preds["sim_goals_pred"] * 0.1
+                + player_preds["sim2_goals_pred"] * 0.35
+                + player_preds["stat_goals_pred"] * 0.55
             ) * overscore
         )
 
         player_preds["Assist_pred"] = (
             (
                 (player_preds["xgb_assist_75"] * 0.5 + 0.5 * player_preds["xgb_assist_25"]) * 0.0
-                + player_preds["sim_assists_pred"] * 0.15
-                + player_preds["sim2_assists_pred"] * 0.25
-                + player_preds["stat_assist_pred"] * 0.6
+                + player_preds["sim_assists_pred"] * 0.1
+                + player_preds["sim2_assists_pred"] * 0.35
+                + player_preds["stat_assist_pred"] * 0.55
                 + historic_Assist * 0
-            ) * overassist
+            ) 
         )
         player_preds["Bonus_pred2"] = player_preds["sim2_bonus_pred"]
         player_preds["Bonus_pred"] = player_preds["stat_bps"]
@@ -1865,51 +1898,12 @@ def Generate_point_predictions(GW_list):
         if(New_dataset["name"].values[0]=='Matheus_Santos Carneiro da Cunha'):
             summary_dataset.to_csv("debug2.csv")
             New_dataset.to_csv("debug1.csv")
-        from sklearn.linear_model import LogisticRegression
-        bpsdf = pd.read_csv("testML4.csv")[["bonus", "bps"]].dropna()
-        X = bpsdf[["bps"]]
-        y = bpsdf["bonus"].astype(int)
-        model = LogisticRegression(
-            solver="lbfgs",
-            max_iter=2000,
-            class_weight="balanced"
-        )
-        model.fit(X, y)
         
-        def expected_bonus(bps):
-            bps_series = pd.Series(bps, dtype="float64")
-        
-            valid_mask = (
-                bps_series.notna()
-                & np.isfinite(bps_series)
-            )
-        
-            result = pd.Series(
-                np.nan,
-                index=bps_series.index,
-                dtype="float64"
-            )
-        
-            if valid_mask.any():
-                prediction_df = pd.DataFrame({
-                    "bps": bps_series.loc[valid_mask].to_numpy()
-                })
-        
-                probabilities = model.predict_proba(prediction_df)
-        
-                result.loc[valid_mask] = (
-                    probabilities @ model.classes_.astype(float)
-                )
-        
-            if np.isscalar(bps):
-                return float(result.iloc[0])
-        
-            return result.to_numpy()
 
 
             
         if(position=="FWD"):
-            summary_dataset["Bonus_pred"]=summary_dataset["Bonus_pred2"]*0.6+0.4*expected_bonus(
+            summary_dataset["Bonus_pred"]=summary_dataset["Bonus_pred2"]*0.7+0.3*expected_bonus(
                 summary_dataset["Bonus_pred"]+
                 summary_dataset["Goal_pred"]*POSITION_EVENT_BONUS[position]["goal"]+
                 summary_dataset["Assist_pred"]*POSITION_EVENT_BONUS[position]["assist"]
@@ -1921,7 +1915,7 @@ def Generate_point_predictions(GW_list):
             
             summary_dataset["Risk_share"]=(summary_dataset["Goal_pred"]*5.2+summary_dataset["Assist_pred"]*3.4)/summary_dataset["Points_prediction"]
         elif(position=="MID"):
-            summary_dataset["Bonus_pred"]=summary_dataset["Bonus_pred2"]*0.6+0.4*expected_bonus(
+            summary_dataset["Bonus_pred"]=summary_dataset["Bonus_pred2"]*0.7+0.3*expected_bonus(
                 summary_dataset["Bonus_pred"]+
                 summary_dataset["Goal_pred"]*POSITION_EVENT_BONUS[position]["goal"]+
                 summary_dataset["Assist_pred"]*POSITION_EVENT_BONUS[position]["assist"]
@@ -1935,7 +1929,7 @@ def Generate_point_predictions(GW_list):
             summary_dataset["Risk_share"]=(summary_dataset["Goal_pred"]*5.5+summary_dataset["Assist_pred"]*3.4+summary_dataset["GC_pred"]*0.8)/summary_dataset["Points_prediction"]
             
         elif(position=="GKP"):
-            summary_dataset["Bonus_pred"]=summary_dataset["Bonus_pred2"]*0.6+0.4*expected_bonus(
+            summary_dataset["Bonus_pred"]=summary_dataset["Bonus_pred2"]*0.7+0.3*expected_bonus(
                 summary_dataset["Bonus_pred"]+
                 summary_dataset["Goal_pred"]*POSITION_EVENT_BONUS[position]["goal"]+
                 summary_dataset["Assist_pred"]*POSITION_EVENT_BONUS[position]["assist"]+
@@ -1951,7 +1945,7 @@ def Generate_point_predictions(GW_list):
             summary_dataset["Risk_share"]=(summary_dataset["GC_pred"]*5)/summary_dataset["Points_prediction"]
 
         else:
-            summary_dataset["Bonus_pred"]=summary_dataset["Bonus_pred2"]*0.6+0.4*expected_bonus(
+            summary_dataset["Bonus_pred"]=summary_dataset["Bonus_pred2"]*0.7+0.3*expected_bonus(
                 summary_dataset["Bonus_pred"]+
                 summary_dataset["Goal_pred"]*POSITION_EVENT_BONUS[position]["goal"]+
                 summary_dataset["Assist_pred"]*POSITION_EVENT_BONUS[position]["assist"]+

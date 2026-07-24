@@ -175,6 +175,7 @@ def optimize_my_team(
     mip_gap: float = 0.01,
     n_solutions: int = 1,
     multi_solution_warmstart: bool = True,
+    solver_tee: bool = True,
     solution_decay: float = 0.92,
     min_solution_distance: int = 12,
     force_in_list: Optional[list[str]] = None,
@@ -1154,7 +1155,7 @@ def optimize_my_team(
                 print(f"on_solution callback failed at solution {solution_no}: {cb_exc}")
 
     def solve_model_with_optional_warmstart() -> Any:
-        solve_kwargs: Dict[str, Any] = {"tee": True}
+        solve_kwargs: Dict[str, Any] = {"tee": bool(solver_tee)}
         if multi_solution_warmstart:
             solve_kwargs["warmstart"] = True
         try:
@@ -1165,7 +1166,7 @@ def optimize_my_team(
             # as a seed and resolve without the explicit keyword.
             if multi_solution_warmstart and "warmstart" in str(exc).lower():
                 print("Solver wrapper does not accept warmstart kwarg; retrying without it.")
-                return solver.solve(m, tee=True)
+                return solver.solve(m, tee=bool(solver_tee))
             raise
 
     def is_good_termination(results: Any) -> bool:

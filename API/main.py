@@ -1202,6 +1202,7 @@ def _build_optimize_kwargs(
         risk_factor=risk,
         transval=transval,
         n_solutions=OPTIMIZER_N_SOLUTIONS,
+        solver_tee=False,
         on_solution=on_solution,
     )
 
