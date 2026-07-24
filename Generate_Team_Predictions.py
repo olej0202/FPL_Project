@@ -581,8 +581,8 @@ def GenerateTeamPredictions1(fixture_path, current_team_path,horizon):
     result_df["away_team"]=df_merged["team_a_name"]
     result_df["home_code"]=df_merged["team_h"]
     result_df["away_code"]=df_merged["team_a"]
-    result_df["home_goals"]=((xg+xgc2)/2)*0.3+0.7*xg_25H
-    result_df["away_goals"]=((xgc+xg2)/2)*0.3+0.7*xg_25A
+    result_df["home_goals"]=xg_25H
+    result_df["away_goals"]=xg_25A
     result_df["Clean_Sheet_home"]=css1
     result_df["Clean_Sheet_away"]=css2
     result_df["test_XG"]=xg_25H
@@ -1285,8 +1285,8 @@ def run_fixture_xg_cs_model(
     predict_df['NN_pred_XG'] = nn_xg_model.predict(X_xg_predict)
 
     predict_df['Final_pred_XG'] = (
-        0.7 * predict_df['XGB_pred_XG'] +
-        0.3 * predict_df['NN_pred_XG']
+        0.3 * predict_df['XGB_pred_XG'] +
+        0.7 * predict_df['NN_pred_XG']
     )
 
     X_cs_predict_raw = predict_df[cs_features]
@@ -2021,10 +2021,10 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     result_df["away_team"]=df_merged["team_a_name"]
     result_df["home_code"]=df_merged["team_h"]
     result_df["away_code"]=df_merged["team_a"]
-    result_df["home_goals"]=(xg*0.3+0.7*xg_stat_h)
-    result_df["away_goals"]=(xg2*0.3+0.7*xg_stat_a)
-    result_df["Clean_Sheet_home"]=css_test*0.2+0.8*css_stat_home
-    result_df["Clean_Sheet_away"]=css_test2*0.2+0.8*css_stat_away
+    result_df["home_goals"]=(xg_stat_h)
+    result_df["away_goals"]=(xg_stat_a)
+    result_df["Clean_Sheet_home"]=css_stat_home*0.6+0.4*css1
+    result_df["Clean_Sheet_away"]=css_stat_away*0.6+0.4*css2
     result_df["test_XG"]=xg
     result_df["test_cluster"]=xg2
     result_df["test_opp_XGC"]=css_test
@@ -3114,10 +3114,10 @@ def GenerateTeamPredictions(
         )
         team_pred1["CS"] = _weighted_blend_columns(
             [
-                (cs_orig, 0.45),
-                (cs_p4, 0.4),
-                (team_pred1.get("sim_cs"), 0.3),
                 (cs_orig, 0.3),
+                (cs_p4, 0.2),
+                (team_pred1.get("CS_p2"), 0.3),
+                (team_pred1.get("sim_cs"), 0.2),
             ]
         )
         team_pred1["Win_Percent"] = _coalesce_average(win_orig, team_pred1.get("sim_win"))
