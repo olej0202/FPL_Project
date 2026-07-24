@@ -156,18 +156,18 @@ team_code,name,type,value
 7,Ian_Maatsen,const,43.702356253388245
 7,Joao_Gomes,const,83.52261899999999
 7,Johan_Manzambi,const,70.0
-7,John_McGinn,const,66.75840959517006
+7,John_McGinn,const,75.75840959517006
 7,Kosta_Nedeljkovic,const,2.853
 7,Lamare_Bogarde,const,30.009400501175097
 7,Leon_Bailey,const,4.403993680747842
 7,Lucas_Digne,const,71.14921491396157
 7,Marco_Bizot,const,18.8256669173441
 7,Matty_Cash,const,89.66999999999999
-7,Ollie_Watkins,const,79.188425
+7,Ollie_Watkins,const,74.188425
 7,Pau_Torres,const,29.838839330857517
 7,Ross_Barkley,const,43.67923973816459
 7,Samuel_Iling-Junior,const,0.0
-7,Tammy_Abraham,const,0.0
+7,Tammy_Abraham,const,70.0
 7,Tyrone_Mings,const,86.958
 7,Victor_Lindelöf,const,56.62787518035768
 8,Alejandro_Garnacho,const,0.0
@@ -359,7 +359,7 @@ team_code,name,type,value
 36,João_Pedro Loureiro da Costa,const,0.0
 36,Lewis_Dunk,const,82.642732
 36,Luka_Vušković,const,0.0
-36,Mats_Wieffer,const,75.78052399848069
+36,Mats_Wieffer,const,70.78052399848069
 36,Matt_O'Riley,const,0.6911055728685724
 36,Maxim_De Cuyper,const,48.673625459612346
 36,Michael_Svoboda,const,0.0

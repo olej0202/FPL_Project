@@ -161,7 +161,7 @@ def train_defcon_ensemble_model(
     max_date = df["kickoff_time"].max()
 
     cutoff = (
-        max_date.to_period("M")+1
+        max_date.to_period("M")
     ).to_timestamp().tz_localize("UTC")
 
     # Samme datologikk som i originalkoden
@@ -921,7 +921,7 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
                 * np.minimum(1, subset["average_minutes"] / 80)
                 ).sum()
                
-               stat_pred=(df['Goal_Index'].values[h]* np.minimum(1, df["average_minutes"].values[h] / 80))/goal_sum
+               stat_pred=np.maximum(0.35,(df['Goal_Index'].values[h]* np.minimum(1, df["average_minutes"].values[h] / 80))/goal_sum)
                stat_pred_share=df['Goal_Index_Share'].values[h]
                player_model.append(pred)
                pred=(pred*0.33+0.33*stat_pred+0.33*stat_pred_share)*0.8+0.2*df['Opp_Goal_Threat_Pos'].values[h]
@@ -955,7 +955,7 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
                 * np.minimum(1, subset["average_minutes"] / 80)
                 ).sum()
                
-               stat_pred=(df['Assist_Index'].values[h]* np.minimum(1, df["average_minutes"].values[h] / 80))/assist_sum
+               stat_pred=np.maximum(0.35,(df['Assist_Index'].values[h]* np.minimum(1, df["average_minutes"].values[h] / 80))/assist_sum)
                stat_pred_share=df['Assist_Index_Share'].values[h]
                player_model.append(pred)
                pred=(pred*0.33+0.33*stat_pred+0.33*stat_pred_share)*0.8+0.2*df['Opp_Assist_Threat_Pos'].values[h]
@@ -1038,7 +1038,7 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
                 
                 value = (
                     np.clip(1 + (df["Opp_defcon"].values[h] - 77.7) / 30, 0.75, 1.15)
-                    * df["defcon_avg"].values[h]
+                    * (0.5*df["defcon_avg"].values[h]+0.5*(df["Rolling_Team_Defcon"].values[h]*(df["Share_of_Defcon"].values[h]*0.7+0.3*df["Share_of_Defcon_Short"].values[h])))
                     * min(80, df["average_minutes"].values[h]) / 80
                 )
                 if position == "DEF":

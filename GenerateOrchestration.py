@@ -112,7 +112,7 @@ def Data_Extraction(season,is_new_season,has_been_error):
 
 
 def Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos,Understat_path,Understat_shots_path):
-    main_Transform()
+    #main_Transform()
     Generate_Understat_dataset(current_player_path,run_player_pos)
     Generate_Shots_data(Understat_path,Understat_shots_path,current_player_path,current_team_path)
     team_data(current_team_path)
@@ -174,6 +174,7 @@ def Data_Predictions(
         optimization_best_output_path=sim_output_dir / "simtest_parameter_best.csv",
         write_outputs=True,
     )
+    """
     print("Running full simulator parameter optimization...")
     run_simulator_control(control_cfg=full_sim_control)
 
@@ -246,7 +247,7 @@ def Data_Predictions(
         n_scenarios=1000,
         include_finished_fixtures=False,
         paths=fs2_paths,
-    )
+    )"""
 
     GenerateTeamPredictions(
         str(filtered_fixture_path),
