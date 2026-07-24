@@ -955,7 +955,17 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
         )
 
         defcon_rows = filtered["defcon_avg"].notna().sum()
-        defcon_columns = ["defcon_avg"]
+        defcon_columns = [
+            "defcon_avg",
+            "defcon_avg_hit_rate",
+            "defcon_avg_hit_rate_T0",
+            "defcon_avg_hit_rate_T1",
+            "defcon_avg_hit_rate_T2",
+            "defcon_avg_hit_rate_T3",
+            "Share_of_Defcon",
+            "Share_of_Defcon_Short",
+        ]
+
         if defcon_rows < 4:
             if team_code in NEW_TEAMS:
                 reference_team_codes = [13, 90, 102, 40, 49, 2, 20, 39, 56, 11, 54] 

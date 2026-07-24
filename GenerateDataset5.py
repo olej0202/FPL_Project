@@ -2010,6 +2010,14 @@ def main_Transform():
                 - f2 * player_df["assists"].to_numpy()
                 - f3 * cs_flag
             )
+            mask = (
+                    (pd.to_datetime(player_df["kickoff_time"]) < "2026-07-30") &
+                    (player_df["defcon"].notna())
+            )
+
+            player_df.loc[mask, "Adjusted_BPS"] -= (
+                    player_df.loc[mask, "defcon"] * 0.17
+            )
 
             player_df["Rolling_adjusted_BPS"]=(player_df['Adjusted_BPS'].rolling(window=15, min_periods=1).mean()/player_df["minutes"].clip(lower=10).rolling(window=15, min_periods=1).sum()) * 90    
             player_df["rolling_bps_historic"] = player_df['Adjusted_BPS'].rolling(window=30, min_periods=1).mean()

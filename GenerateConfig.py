@@ -88,7 +88,13 @@ Manual_NewPlayer_Adjustments={
 
 Manual_Player_Adjustments={
     #exemple Alexander_Isak:["Tammy_Abraham","Yoane_Wissa" ]
-    "Elliot_Anderson":["Rodrigo_Hernandez"]
+    "Elliot_Anderson":["Rodrigo_Hernandez"],
+    "Milan_van Ewijk":["Lucas_Digne"],
+    "Liam_Kitching":["Jaydee_Canvot"],
+    "Bobby_Thomas":["Jaydee_Canvot"],
+    
+    
+    
         
 }
 
