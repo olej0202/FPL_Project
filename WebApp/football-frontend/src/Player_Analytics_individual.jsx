@@ -18,6 +18,8 @@ import NameModal from "./components/NameAnalysis";
 import teamLogos from "./utils/team_logos";
 
 import {
+  BarChart,
+  Bar,
   LineChart,
   Line,
   XAxis,
@@ -30,6 +32,7 @@ import {
   PolarAngleAxis,
   Radar,
   Legend,
+  ReferenceLine,
 } from "recharts";
 
 const PALETTE = {
@@ -38,6 +41,89 @@ const PALETTE = {
   black: "#000000",
   beige: "#f7ead6",
 };
+
+const POINTS_RULES = {
+  GKP: { goal: 6, assist: 3, cs: 4, start: 2 },
+  DEF: { goal: 6, assist: 3, cs: 4, start: 1 },
+  MID: { goal: 5, assist: 3, cs: 1, start: 2 },
+  FWD: { goal: 4, assist: 3, cs: 0, start: 2 },
+};
+
+const toNumber = (value) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+};
+
+const computeCsComponent = (row, position) => {
+  const gcPred = Math.max(0, toNumber(row?.GC_pred));
+  const safeGcPred = Math.max(gcPred, 1e-9);
+  const savePred = toNumber(row?.Save_pred);
+
+  if (position === "GKP") {
+    return (
+      savePred +
+      0.5 *
+        ((30 - Math.min(30, gcPred * 100)) / -15 +
+          1 -
+          gcPred * (1 - Math.log(safeGcPred))) +
+      gcPred * POINTS_RULES[position].cs
+    );
+  }
+
+  if (position === "DEF") {
+    return (
+      gcPred * POINTS_RULES[position].cs +
+      0.5 *
+        ((30 - Math.min(30, gcPred * 100)) / -15 +
+          1 -
+          gcPred * (1 - Math.log(safeGcPred)))
+    );
+  }
+
+  if (position === "MID") {
+    return gcPred * POINTS_RULES[position].cs;
+  }
+
+  return 0;
+};
+
+const buildPredictionMeasureRow = (row) => {
+  const position = String(row?.position || "").toUpperCase();
+  const rules = POINTS_RULES[position] || POINTS_RULES.DEF;
+  const base = position === "DEF" ? 1.5 : rules.start;
+  const goal = toNumber(row?.Goal_pred) * rules.goal;
+  const assist = toNumber(row?.Assist_pred) * rules.assist;
+  const bonus = toNumber(row?.Bonus_pred);
+  const defcon = toNumber(row?.CBI_pred) * 2;
+  const cs = computeCsComponent(row, position);
+  const card = -toNumber(row?.Card_pred);
+  const componentTotal = base + goal + assist + bonus + defcon + cs + card;
+
+  return {
+    GW: row?.GW,
+    opponent_name: row?.opponent_name || "",
+    venue: row?.was_home ? "H" : "A",
+    base,
+    goal,
+    assist,
+    bonus,
+    defcon,
+    cs,
+    card,
+    componentTotal,
+    pointsPrediction: toNumber(row?.Points_prediction),
+  };
+};
+
+const MEASURE_SERIES = [
+  { key: "base", label: "Base", color: "#f7ead6" },
+  { key: "goal", label: "Goal", color: "#dc2626" },
+  { key: "assist", label: "Assist", color: "#f59e0b" },
+  { key: "bonus", label: "Bonus", color: "#22c55e" },
+  { key: "defcon", label: "Defcon", color: "#0ea5e9" },
+  { key: "cs", label: "CS", color: "#8b5cf6" },
+  { key: "card", label: "Card", color: "#94a3b8" },
+];
 
 export default function PlayerAnalyticsIndividual() {
   const {
@@ -74,6 +160,7 @@ export default function PlayerAnalyticsIndividual() {
   const [opponentFilter, setOpponentFilter] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [fixtureChartMode, setFixtureChartMode] = useState("line");
 
   const scrollToBottom = () => {
     window.scrollTo({
@@ -407,6 +494,11 @@ export default function PlayerAnalyticsIndividual() {
     });
   }, [playerFixtures, compareFixtures, playerFilter, comparePlayer]);
 
+  const fixtureMeasureData = useMemo(
+    () => playerFixtures.map((row) => buildPredictionMeasureRow(row)),
+    [playerFixtures]
+  );
+
   const CustomRadarTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       const player1 = payload[0]?.name;
@@ -623,57 +715,167 @@ export default function PlayerAnalyticsIndividual() {
             marginBottom: "1.6rem",
           }}
         >
-          <h3 className="text-lg font-semibold mb-2 text-center">
-            Predicted Points
-          </h3>
+          <div className="flex flex-col items-center gap-3 mb-2">
+            <h3 className="text-lg font-semibold text-center">
+              Predicted Points
+            </h3>
+            <div className="inline-flex rounded-full border border-yellow-700 overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setFixtureChartMode("line")}
+                className="px-4 py-2 text-sm font-semibold transition-colors"
+                style={{
+                  backgroundColor:
+                    fixtureChartMode === "line"
+                      ? PALETTE.gold
+                      : "transparent",
+                  color:
+                    fixtureChartMode === "line"
+                      ? PALETTE.black
+                      : PALETTE.beige,
+                }}
+              >
+                Trend
+              </button>
+              <button
+                type="button"
+                onClick={() => setFixtureChartMode("measures")}
+                className="px-4 py-2 text-sm font-semibold transition-colors"
+                style={{
+                  backgroundColor:
+                    fixtureChartMode === "measures"
+                      ? PALETTE.gold
+                      : "transparent",
+                  color:
+                    fixtureChartMode === "measures"
+                      ? PALETTE.black
+                      : PALETTE.beige,
+                }}
+              >
+                Measures
+              </button>
+            </div>
+            {fixtureChartMode === "measures" && (
+              <p className="text-xs text-center text-stone-300">
+                Stacked view shows how base, goal, assist, bonus, defcon, CS,
+                and cards build the selected player&apos;s point prediction.
+              </p>
+            )}
+          </div>
           <div className="h-60">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart
-                data={fixtureData}
-                margin={{ top: 0, right: 5, left: 0, bottom: 5 }}
-              >
-                <CartesianGrid stroke="#444" strokeDasharray="3 3" />
-                <XAxis
-                  dataKey="GW"
-                  tick={{ fill: "#fff", fontSize: 10 }}
-                  stroke="#fff"
-                />
-                <YAxis
-                  tick={{ fill: "#fff", fontSize: 10 }}
-                  domain={["auto", "auto"]}
-                  stroke="#fff"
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "#111",
-                    borderColor: PALETTE.gold,
-                    color: "#fff",
-                  }}
-                  itemStyle={{ color: "#fff" }}
-                  labelStyle={{ color: "#fff" }}
-                  formatter={(v) =>
-                    v != null ? v.toFixed(1) : "-"
-                  }
-                  labelFormatter={(l) => `GW ${l}`}
-                />
-                <Legend verticalAlign="bottom" align="right" />
-                <Line
-                  type="monotone"
-                  dataKey={playerFilter}
-                  name={playerFilter.replace(/_/g, " ")}
-                  stroke="#ffffff"
-                  dot={false}
-                />
-                {comparePlayer && (
+              {fixtureChartMode === "line" ? (
+                <LineChart
+                  data={fixtureData}
+                  margin={{ top: 0, right: 5, left: 0, bottom: 5 }}
+                >
+                  <CartesianGrid stroke="#444" strokeDasharray="3 3" />
+                  <XAxis
+                    dataKey="GW"
+                    tick={{ fill: "#fff", fontSize: 10 }}
+                    stroke="#fff"
+                  />
+                  <YAxis
+                    tick={{ fill: "#fff", fontSize: 10 }}
+                    domain={["auto", "auto"]}
+                    stroke="#fff"
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "#111",
+                      borderColor: PALETTE.gold,
+                      color: "#fff",
+                    }}
+                    itemStyle={{ color: "#fff" }}
+                    labelStyle={{ color: "#fff" }}
+                    formatter={(v) =>
+                      v != null ? v.toFixed(1) : "-"
+                    }
+                    labelFormatter={(l) => `GW ${l}`}
+                  />
+                  <Legend verticalAlign="bottom" align="right" />
                   <Line
                     type="monotone"
-                    dataKey={comparePlayer}
-                    name={comparePlayer.replace(/_/g, " ")}
-                    stroke={PALETTE.gold}
+                    dataKey={playerFilter}
+                    name={playerFilter.replace(/_/g, " ")}
+                    stroke="#ffffff"
                     dot={false}
                   />
-                )}
-              </LineChart>
+                  {comparePlayer && (
+                    <Line
+                      type="monotone"
+                      dataKey={comparePlayer}
+                      name={comparePlayer.replace(/_/g, " ")}
+                      stroke={PALETTE.gold}
+                      dot={false}
+                    />
+                  )}
+                </LineChart>
+              ) : (
+                <BarChart
+                  data={fixtureMeasureData}
+                  margin={{ top: 10, right: 10, left: 0, bottom: 5 }}
+                >
+                  <CartesianGrid stroke="#444" strokeDasharray="3 3" />
+                  <XAxis
+                    dataKey="GW"
+                    tick={{ fill: "#fff", fontSize: 10 }}
+                    stroke="#fff"
+                  />
+                  <YAxis
+                    tick={{ fill: "#fff", fontSize: 10 }}
+                    domain={["auto", "auto"]}
+                    stroke="#fff"
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "#111",
+                      borderColor: PALETTE.gold,
+                      color: "#fff",
+                    }}
+                    itemStyle={{ color: "#fff" }}
+                    labelStyle={{ color: "#fff" }}
+                    formatter={(value, name, item) => {
+                      const label =
+                        MEASURE_SERIES.find((series) => series.key === name)
+                          ?.label || name;
+                      if (item?.payload) {
+                        return [
+                          `${toNumber(value).toFixed(2)} pts`,
+                          label,
+                        ];
+                      }
+                      return [`${toNumber(value).toFixed(2)} pts`, label];
+                    }}
+                    labelFormatter={(gw, payload) => {
+                      const row = payload?.[0]?.payload;
+                      const suffix = row?.opponent_name
+                        ? ` vs ${row.opponent_name} (${row.venue})`
+                        : "";
+                      return `GW ${gw}${suffix}`;
+                    }}
+                  />
+                  <Legend
+                    verticalAlign="bottom"
+                    align="center"
+                    formatter={(value) =>
+                      MEASURE_SERIES.find((series) => series.key === value)
+                        ?.label || value
+                    }
+                  />
+                  <ReferenceLine y={0} stroke="#f8fafc" strokeOpacity={0.45} />
+                  {MEASURE_SERIES.map((series) => (
+                    <Bar
+                      key={series.key}
+                      dataKey={series.key}
+                      name={series.key}
+                      stackId="prediction"
+                      fill={series.color}
+                      radius={series.key === "card" ? [0, 0, 4, 4] : [4, 4, 0, 0]}
+                    />
+                  ))}
+                </BarChart>
+              )}
             </ResponsiveContainer>
           </div>
         </section>

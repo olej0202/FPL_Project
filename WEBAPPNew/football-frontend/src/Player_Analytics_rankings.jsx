@@ -30,9 +30,13 @@ import {
   X,
 } from "lucide-react";
 import {
+  Bar,
+  BarChart,
   CartesianGrid,
+  Legend,
   Line,
   LineChart,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -60,6 +64,25 @@ const POSITION_ORDER = {
   FWD: 3,
   FOR: 3,
 };
+
+const POINTS_RULES = {
+  GKP: { goal: 6, assist: 3, cs: 4, start: 2 },
+  GK: { goal: 6, assist: 3, cs: 4, start: 2 },
+  DEF: { goal: 6, assist: 3, cs: 4, start: 1 },
+  MID: { goal: 5, assist: 3, cs: 1, start: 2 },
+  FWD: { goal: 4, assist: 3, cs: 0, start: 2 },
+  FOR: { goal: 4, assist: 3, cs: 0, start: 2 },
+};
+
+const STACK_MEASURE_SERIES = [
+  { key: "base", label: "Base", color: "#e2e8f0" },
+  { key: "goal", label: "Goal", color: "#dc2626" },
+  { key: "assist", label: "Assist", color: "#f59e0b" },
+  { key: "bonus", label: "Bonus", color: "#22c55e" },
+  { key: "defcon", label: "Defcon", color: "#0ea5e9" },
+  { key: "cs", label: "CS", color: "#8b5cf6" },
+  { key: "card", label: "Card", color: "#94a3b8" },
+];
 
 const MEASURE_OPTIONS = [
   {
@@ -195,9 +218,106 @@ function getMeasureValue(row, measure) {
       return firstFinite(row?.average_minutes);
     case "Save_pred":
       return firstFinite(row?.Save_pred);
+    case "Card_pred":
+      return firstFinite(row?.Card_pred);
     default:
       return 0;
   }
+}
+
+function getPointRules(position) {
+  const key = String(position || "").toUpperCase();
+  return POINTS_RULES[key] || POINTS_RULES.DEF;
+}
+
+function computeCsContribution(row, position) {
+  const normalizedPosition = String(position || "").toUpperCase();
+  const gcPred = Math.max(0, firstFinite(row?.GC_pred));
+  const safeGcPred = Math.max(gcPred, 1e-9);
+  const savePred = firstFinite(row?.Save_pred);
+  const rules = getPointRules(normalizedPosition);
+
+  if (normalizedPosition === "GKP" || normalizedPosition === "GK") {
+    return (
+      savePred +
+      0.5 *
+        ((30 - Math.min(30, gcPred * 100)) / -15 +
+          1 -
+          gcPred * (1 - Math.log(safeGcPred))) +
+      gcPred * rules.cs
+    );
+  }
+
+  if (normalizedPosition === "DEF") {
+    return (
+      gcPred * rules.cs +
+      0.5 *
+        ((30 - Math.min(30, gcPred * 100)) / -15 +
+          1 -
+          gcPred * (1 - Math.log(safeGcPred)))
+    );
+  }
+
+  if (normalizedPosition === "MID") {
+    return gcPred * rules.cs;
+  }
+
+  return 0;
+}
+
+function buildPointBreakdownRow(rawRows, gw, fixtureDetail, fallbackTeamName = "") {
+  const rows = Array.isArray(rawRows) ? rawRows : [];
+  const totals = {
+    base: 0,
+    goal: 0,
+    assist: 0,
+    bonus: 0,
+    defcon: 0,
+    cs: 0,
+    card: 0,
+    pointsPrediction: 0,
+    minutes: 0,
+  };
+
+  for (const row of rows) {
+    const position = String(row?.position || "").toUpperCase();
+    const rules = getPointRules(position);
+    totals.base += position === "DEF" ? 1.5 : rules.start;
+    totals.goal += firstFinite(row?.Goal_pred) * rules.goal;
+    totals.assist += firstFinite(row?.Assist_pred) * rules.assist;
+    totals.bonus += firstFinite(row?.Bonus_pred, row?.Bonus_pred2);
+    totals.defcon += firstFinite(row?.CBI_pred, row?.DefCon) * 2;
+    totals.cs += computeCsContribution(row, position);
+    totals.card -= firstFinite(row?.Card_pred);
+    totals.pointsPrediction += firstFinite(row?.Points_prediction, row?.Point_prediction);
+    totals.minutes += firstFinite(row?.average_minutes);
+  }
+
+  return {
+    gw,
+    label: `GW ${gw}`,
+    fixId: fixtureDetail?.fixId || "-",
+    teamName: fixtureDetail?.teamName || fallbackTeamName,
+    opponent: fixtureDetail?.opponent || "",
+    venue: fixtureDetail?.venue || "",
+    base: totals.base,
+    goal: totals.goal,
+    assist: totals.assist,
+    bonus: totals.bonus,
+    defcon: totals.defcon,
+    cs: totals.cs,
+    card: totals.card,
+    pointsPrediction: totals.pointsPrediction,
+    componentTotal:
+      totals.base +
+      totals.goal +
+      totals.assist +
+      totals.bonus +
+      totals.defcon +
+      totals.cs +
+      totals.card,
+    minutes: totals.minutes,
+  };
 }
 
 function ownershipPercent(row) {
@@ -790,6 +910,7 @@ export default function Player_analytics_rankings() {
   const [sortConfig, setSortConfig] = useState({ type: "total", gw: null, direction: "desc" });
   const [activePlayerKey, setActivePlayerKey] = useState(null);
   const [activeChartMeasure, setActiveChartMeasure] = useState("Points_prediction");
+  const [activeChartView, setActiveChartView] = useState("line");
   const [activeDetailGw, setActiveDetailGw] = useState(null);
   const [comparisonSearch, setComparisonSearch] = useState("");
   const [comparisonPlayerKey, setComparisonPlayerKey] = useState(null);
@@ -1171,6 +1292,35 @@ export default function Player_analytics_rankings() {
       };
     });
   }, [activeChartMeasure, activePlayerSummary, comparisonSummary, displayedGWs, fixtureMetaById, teamNamesByCode]);
+
+  const activeStackedChartData = useMemo(() => {
+    if (!activePlayerSummary) return [];
+
+    const sourceGws = displayedGWs.length
+      ? displayedGWs
+      : Object.keys(activePlayerSummary.gwDetails)
+          .map((gw) => Number(gw))
+          .filter((gw) => Number.isFinite(gw))
+          .sort((a, b) => a - b);
+
+    return sourceGws.map((gw) => {
+      const gwDetail = activePlayerSummary.gwDetails[gw] || null;
+      const representativeRow =
+        gwDetail?.rawRows?.[0] ||
+        activePlayerSummary.seriesRows?.find((row) => Number(row?.GW) === gw) ||
+        null;
+      const fixtureDetail = representativeRow
+        ? resolveFixtureDetail(representativeRow, gwDetail, fixtureMetaById, teamNamesByCode)
+        : { opponent: "", venue: "", fixId: "-", teamName: activePlayerSummary.teamName };
+
+      return buildPointBreakdownRow(
+        gwDetail?.rawRows || [],
+        gw,
+        fixtureDetail,
+        activePlayerSummary.teamName
+      );
+    });
+  }, [activePlayerSummary, displayedGWs, fixtureMetaById, teamNamesByCode]);
 
   const activeDetail = useMemo(() => {
     if (!activePlayerSummary || !Number.isFinite(activeDetailGw)) return null;
@@ -2054,48 +2204,88 @@ export default function Player_analytics_rankings() {
                     <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                       <div>
                         <div className="text-sm font-semibold" style={{ color: PALETTE.gold }}>
-                          Player line chart
+                          Player prediction chart
                         </div>
                         <div className="mt-1 text-xs" style={{ color: PALETTE.muted }}>
-                          Track the clicked player across the visible GW horizon.
+                          Switch between single-measure trend and full point breakdown across the visible GW horizon.
                         </div>
                       </div>
 
-                      <div
-                        className="flex w-full max-w-full items-center gap-2 overflow-x-auto rounded-xl px-2 sm:w-auto"
-                        style={{
-                          border: `1px solid ${PALETTE.border}`,
-                          background: "#f8fafc",
-                          height: "36px",
-                        }}
-                      >
-                        {React.createElement(getMeasureMeta(activeChartMeasure).icon, {
-                          size: 14,
-                          className: "shrink-0",
-                          style: { color: PALETTE.gold },
-                        })}
-                        <select
-                          value={activeChartMeasure}
-                          onChange={(e) => setActiveChartMeasure(e.target.value)}
-                          className="min-w-[140px] shrink-0 rounded-xl text-xs font-semibold outline-none"
+                      <div className="flex w-full flex-col gap-2 sm:w-auto sm:items-end">
+                        <div
+                          className="inline-flex overflow-hidden rounded-xl"
                           style={{
-                            background: "#ffffff",
-                            color: PALETTE.gold,
-                            border: "none",
-                            height: "32px",
+                            border: `1px solid ${PALETTE.border}`,
+                            background: "#f8fafc",
                           }}
                         >
-                          {MEASURE_OPTIONS.map((option) => (
-                            <option key={option.value} value={option.value}>
-                              {option.label}
-                            </option>
-                          ))}
-                        </select>
+                          <button
+                            type="button"
+                            onClick={() => setActiveChartView("line")}
+                            className="px-3 py-2 text-xs font-semibold"
+                            style={{
+                              background: activeChartView === "line" ? PALETTE.gold : "transparent",
+                              color: activeChartView === "line" ? "#ffffff" : PALETTE.beige,
+                            }}
+                          >
+                            Measure trend
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setActiveChartView("stacked")}
+                            className="px-3 py-2 text-xs font-semibold"
+                            style={{
+                              background: activeChartView === "stacked" ? PALETTE.gold : "transparent",
+                              color: activeChartView === "stacked" ? "#ffffff" : PALETTE.beige,
+                            }}
+                          >
+                            Point breakdown
+                          </button>
+                        </div>
+
+                        {activeChartView === "line" ? (
+                          <div
+                            className="flex w-full max-w-full items-center gap-2 overflow-x-auto rounded-xl px-2 sm:w-auto"
+                            style={{
+                              border: `1px solid ${PALETTE.border}`,
+                              background: "#f8fafc",
+                              height: "36px",
+                            }}
+                          >
+                            {React.createElement(getMeasureMeta(activeChartMeasure).icon, {
+                              size: 14,
+                              className: "shrink-0",
+                              style: { color: PALETTE.gold },
+                            })}
+                            <select
+                              value={activeChartMeasure}
+                              onChange={(e) => setActiveChartMeasure(e.target.value)}
+                              className="min-w-[140px] shrink-0 rounded-xl text-xs font-semibold outline-none"
+                              style={{
+                                background: "#ffffff",
+                                color: PALETTE.gold,
+                                border: "none",
+                                height: "32px",
+                              }}
+                            >
+                              {MEASURE_OPTIONS.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                  {option.label}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        ) : (
+                          <div className="text-xs text-right" style={{ color: PALETTE.muted }}>
+                            Base, goal, assist, bonus, defcon, CS and card components for point prediction.
+                          </div>
+                        )}
                       </div>
                     </div>
 
                     <div className="h-[320px] w-full">
                       <ResponsiveContainer width="100%" height="100%">
+                        {activeChartView === "line" ? (
                         <LineChart data={activeChartData} margin={{ top: 12, right: 12, left: 0, bottom: 4 }}>
                           <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.24)" />
                           <XAxis dataKey="label" tick={{ fill: "#64748b", fontSize: 12 }} axisLine={false} tickLine={false} />
@@ -2141,6 +2331,46 @@ export default function Player_analytics_rankings() {
                             />
                           ) : null}
                         </LineChart>
+                        ) : (
+                          <BarChart data={activeStackedChartData} margin={{ top: 12, right: 12, left: 0, bottom: 4 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.24)" />
+                            <XAxis dataKey="label" tick={{ fill: "#64748b", fontSize: 12 }} axisLine={false} tickLine={false} />
+                            <YAxis tick={{ fill: "#64748b", fontSize: 12 }} axisLine={false} tickLine={false} />
+                            <Tooltip
+                              formatter={(value, name) => {
+                                const label = STACK_MEASURE_SERIES.find((series) => series.key === name)?.label || name;
+                                return [`${(Number(value) || 0).toFixed(2)} pts`, label];
+                              }}
+                              labelFormatter={(label, payload) => {
+                                const point = payload?.[0]?.payload;
+                                if (!point) return label;
+                                const venueText = point.venue ? ` (${point.venue})` : "";
+                                return `${label} · vs ${point.opponent || ""}${venueText}`;
+                              }}
+                              contentStyle={{
+                                borderRadius: "16px",
+                                border: `1px solid ${PALETTE.border}`,
+                                boxShadow: "0 14px 30px rgba(15,23,42,0.12)",
+                              }}
+                            />
+                            <Legend
+                              verticalAlign="bottom"
+                              formatter={(value) =>
+                                STACK_MEASURE_SERIES.find((series) => series.key === value)?.label || value
+                              }
+                            />
+                            <ReferenceLine y={0} stroke="rgba(15,23,42,0.35)" />
+                            {STACK_MEASURE_SERIES.map((series) => (
+                              <Bar
+                                key={series.key}
+                                dataKey={series.key}
+                                name={series.key}
+                                stackId="points"
+                                fill={series.color}
+                              />
+                            ))}
+                          </BarChart>
+                        )}
                       </ResponsiveContainer>
                     </div>
                   </div>

@@ -161,7 +161,7 @@ POSITION_EVENT_BONUS = {
 POINTS_RULES = {
     "GKP": {"goal": 6, "assist": 3, "cs": 4, "start": 2},
     "DEF": {"goal": 6, "assist": 3, "cs": 4, "start": 1},
-    "MID": {"goal": 5, "assist": 3, "cs": 0.8, "start": 2},
+    "MID": {"goal": 5, "assist": 3, "cs": 1, "start": 2},
     "FWD": {"goal": 4, "assist": 3, "cs": 0, "start": 2},
 }
 
