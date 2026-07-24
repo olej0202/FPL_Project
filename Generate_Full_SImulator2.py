@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
@@ -1382,13 +1382,13 @@ def build_upcoming_prediction_tables(
             for pid, pdata in home_meta.items():
                 key = (home_team_id, pid)
                 minute_factor = float(pdata.get("pred_minutes", 0.0)) / 90.0
-                base_bonus = (0.4 * float(pdata.get("rolling_adjusted_bps", 0.0)) + 0.6 * float(pdata.get("rolling_adjusted_bps_2", 0.0))) * minute_factor
+                base_bonus = 0.8*(0.4 * float(pdata.get("rolling_adjusted_bps", 0.0)) + 0.6 * float(pdata.get("rolling_adjusted_bps_2", 0.0))) * minute_factor
                 bonus_score_scn[key] = float(base_bonus)
                 player_agg[key]["grunn_bonus"] += float(base_bonus)
             for pid, pdata in away_meta.items():
                 key = (away_team_id, pid)
                 minute_factor = float(pdata.get("pred_minutes", 0.0)) / 90.0
-                base_bonus = (0.4 * float(pdata.get("rolling_adjusted_bps", 0.0)) + 0.6 * float(pdata.get("rolling_adjusted_bps_2", 0.0))) * minute_factor
+                base_bonus = 0.8*(0.4 * float(pdata.get("rolling_adjusted_bps", 0.0)) + 0.6 * float(pdata.get("rolling_adjusted_bps_2", 0.0))) * minute_factor
                 bonus_score_scn[key] = float(base_bonus)
                 player_agg[key]["grunn_bonus"] += float(base_bonus)
 

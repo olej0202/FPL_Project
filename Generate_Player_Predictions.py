@@ -975,7 +975,7 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
             
             if(pred_variable=="bps"):
                real_variable="bonus" 
-               player_preds.append(max(df['Rolling_adjusted_BPS'].values[h]*0.4+df['Rolling_adjusted_BPS_2'].values[h]*0.6,5)*other_metric)
+               player_preds.append(max(df['Rolling_adjusted_BPS'].values[h]*0.4+df['Rolling_adjusted_BPS_2'].values[h]*0.6,5)*0.8)
                
             if(pred_variable=="cards"):
                real_variable="cards" 
@@ -1873,7 +1873,7 @@ def Generate_point_predictions(GW_list):
                 summary_dataset["Bonus_pred"]+
                 summary_dataset["Goal_pred"]*POSITION_EVENT_BONUS[position]["goal"]+
                 summary_dataset["Assist_pred"]*POSITION_EVENT_BONUS[position]["assist"]
-                )*0.03
+                )*0.029
             summary_dataset["Points_prediction"]=(2+summary_dataset["Goal_pred"]*POINTS_RULES[position]["goal"]
                                                   +summary_dataset["Assist_pred"]*POINTS_RULES[position]["assist"]
                                                   +summary_dataset["Bonus_pred"]
@@ -1885,7 +1885,7 @@ def Generate_point_predictions(GW_list):
                 summary_dataset["Bonus_pred"]+
                 summary_dataset["Goal_pred"]*POSITION_EVENT_BONUS[position]["goal"]+
                 summary_dataset["Assist_pred"]*POSITION_EVENT_BONUS[position]["assist"]
-                )*0.03
+                )*0.029
             summary_dataset["Points_prediction"]=(2+summary_dataset["Goal_pred"]*POINTS_RULES[position]["goal"]
                                                   +summary_dataset["Assist_pred"]*POINTS_RULES[position]["assist"]
                                                   +summary_dataset["Bonus_pred"]
@@ -1900,7 +1900,7 @@ def Generate_point_predictions(GW_list):
                 summary_dataset["Goal_pred"]*POSITION_EVENT_BONUS[position]["goal"]+
                 summary_dataset["Assist_pred"]*POSITION_EVENT_BONUS[position]["assist"]+
                 summary_dataset["GC_pred"]*POSITION_EVENT_BONUS[position]["cs"]
-                )*0.03
+                )*0.029
             summary_dataset["Points_prediction"]=(2
                                                   +summary_dataset["Save_pred"]
                                                   + 0.5 * ((30 - np.minimum(30, summary_dataset["GC_pred"] * 100)) / -15
@@ -1916,7 +1916,7 @@ def Generate_point_predictions(GW_list):
                 summary_dataset["Goal_pred"]*POSITION_EVENT_BONUS[position]["goal"]+
                 summary_dataset["Assist_pred"]*POSITION_EVENT_BONUS[position]["assist"]+
                 summary_dataset["GC_pred"]*POSITION_EVENT_BONUS[position]["cs"]
-                )*0.03
+                )*0.029
             
             POINTS_RULES[position]["goal"]
             
