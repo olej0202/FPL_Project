@@ -515,7 +515,7 @@ João_Victor de Souza Menezes,Souza,Souza,90.0,name-relaxed,Souza,"['RW', 'DL']"
 Mohammed_Kudus,Kudus,Mohammed Kudus,100.0,name-strict,Mohammed Kudus,"['RW', 'AMC']","[0.7, 0.3]",1
 Xavi_Simons,Xavi,Xavi Simons,100.0,name-strict,Xavi Simons,"['LW', 'FW']","[0.8333333333333334, 0.16666666666666666]",1
 Mathys_Tel,Tel,Mathys Tel,100.0,name-strict,Mathys Tel,"['LW', 'AMC']","[0.8571428571428571, 0.14285714285714285]",1
-James_Maddison,Maddison,James Maddison,100.0,name-strict,James Maddison,['MC'],[1.0],1
+James_Maddison,Maddison,James Maddison,100.0,name-strict,James Maddison,['AMC'],[1.0],1
 Rodrigo_Bentancur,Bentancur,Rodrigo Bentancur,100.0,name-strict,Rodrigo Bentancur,"['DM', 'MC']","[0.8, 0.2]",1
 Wilson_Odobert,Odobert,Wilson Odobert,100.0,name-strict,Wilson Odobert,"['RW', 'AMC', 'LW']","[0.5, 0.3333333333333333, 0.16666666666666666]",1
 Pape_Matar Sarr,P.M.Sarr,Unknown for understat,,no-match,,['MC'],[1.0],1
