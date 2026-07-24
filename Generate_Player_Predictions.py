@@ -1035,11 +1035,16 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
                     "elastic_net_pred": float(component_preds["elastic_net_pred"][0]),
                     "ensemble_pred": float(component_preds["ensemble_pred"][0]),
                 })
-
+                
+                value = (
+                    np.clip(1 + (df["Opp_defcon"].values[h] - 77.7) / 30, 0.75, 1.15)
+                    * df["defcon_avg"].values[h]
+                    * min(80, df["average_minutes"].values[h]) / 80
+                )
                 if position == "DEF":
-                    cbi_pred = 1 - norm.cdf(9.5, loc=pred, scale=sigma)
+                    cbi_pred = 1 - norm.cdf(9.5, loc=pred*0.5+0.5*value, scale=sigma)
                 else:
-                    cbi_pred = 1 - norm.cdf(11.5, loc=pred, scale=sigma)
+                    cbi_pred = 1 - norm.cdf(11.5, loc=pred*0.5+0.5*value, scale=sigma)
 
                 player_preds.append(cbi_pred)
        

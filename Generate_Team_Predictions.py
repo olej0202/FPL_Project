@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import re
 from sklearn.svm import SVR
 from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
@@ -151,6 +152,54 @@ def _build_upcoming_team_feature_table(
         merged[col] = history_weight * own_values + (1.0 - history_weight) * float(rep_means[col])
 
     return merged[["name", "code", "id"] + feature_cols].copy()
+
+
+def _debug_slug(name: str) -> str:
+    return re.sub(r"[^A-Za-z0-9_]+", "_", str(name)).strip("_")
+
+
+def _build_team_debug_rows(result_df: pd.DataFrame):
+    common_cols = ["GW", "pred", "home_team", "away_team", "home_code", "away_code"]
+    if "fixture_code" in result_df.columns:
+        common_cols = ["fixture_code"] + common_cols
+
+    home_df = result_df[common_cols].copy()
+    home_df["team_name"] = result_df["home_team"].values
+    home_df["team_code"] = result_df["home_code"].values
+    home_df["Opponent_team"] = result_df["away_team"].values
+    home_df["Home"] = "H"
+
+    away_df = result_df[common_cols].copy()
+    away_df["team_name"] = result_df["away_team"].values
+    away_df["team_code"] = result_df["away_code"].values
+    away_df["Opponent_team"] = result_df["home_team"].values
+    away_df["Home"] = "A"
+
+    drop_cols = ["home_team", "away_team", "home_code", "away_code"]
+    home_df = home_df.drop(columns=drop_cols, errors="ignore")
+    away_df = away_df.drop(columns=drop_cols, errors="ignore")
+    return home_df, away_df
+
+
+def _write_team_debug_csv(
+    result_df: pd.DataFrame,
+    number: str,
+    name: str,
+    home_values: dict,
+    away_values: dict,
+):
+    home_df, away_df = _build_team_debug_rows(result_df)
+    for col, values in home_values.items():
+        home_df[col] = values
+    for col, values in away_values.items():
+        away_df[col] = values
+
+    debug_df = pd.concat([home_df, away_df], axis=0, ignore_index=True)
+    sort_cols = [c for c in ["GW", "fixture_code", "Home"] if c in debug_df.columns]
+    if sort_cols:
+        debug_df = debug_df.sort_values(sort_cols)
+    debug_path = f"Team_pred_debug_{number}_{_debug_slug(name)}.csv"
+    debug_df.to_csv(debug_path, index=False)
 
 
 def GenerateTeamPredictions1(fixture_path, current_team_path,horizon):
@@ -540,6 +589,48 @@ def GenerateTeamPredictions1(fixture_path, current_team_path,horizon):
     result_df["test_cluster"]=xg_75H
     result_df["test_opp_XGC"]=xg_25A
     result_df.to_csv("Team_prediction_visual1.csv")
+
+    _write_team_debug_csv(
+        result_df,
+        "1",
+        "xg_svr_blend",
+        home_values={
+            "XG": (xg + xgc2) / 2,
+            "XGC": (xgc + xg2) / 2,
+        },
+        away_values={
+            "XG": (xgc + xg2) / 2,
+            "XGC": (xg + xgc2) / 2,
+        },
+    )
+    _write_team_debug_csv(
+        result_df,
+        "1",
+        "xg_quantile50",
+        home_values={"XG": xg_25H, "XGC": xg_25A},
+        away_values={"XG": xg_25A, "XGC": xg_25H},
+    )
+    _write_team_debug_csv(
+        result_df,
+        "1",
+        "xg_quantile75",
+        home_values={"XG": xg_75H, "XGC": xg_75A},
+        away_values={"XG": xg_75A, "XGC": xg_75H},
+    )
+    _write_team_debug_csv(
+        result_df,
+        "1",
+        "xgc_svr",
+        home_values={"XGC": xgc},
+        away_values={"XGC": xgc2},
+    )
+    _write_team_debug_csv(
+        result_df,
+        "1",
+        "cs_logistic",
+        home_values={"CS": css1},
+        away_values={"CS": css2},
+    )
 
     home_df=result_df[["fixture_code", "GW", "pred"]].copy()
     home_df["team_name"]=result_df["home_team"]
@@ -1307,6 +1398,35 @@ def run_fixture_xg_cs_model(
         index=False
     )
 
+    _write_team_debug_csv(
+        result_df,
+        "4",
+        "xgb_xg",
+        home_values={"XG": fixture_summary["XGB_pred_XG_home"], "XGC": fixture_summary["XGB_pred_XG_away"]},
+        away_values={"XG": fixture_summary["XGB_pred_XG_away"], "XGC": fixture_summary["XGB_pred_XG_home"]},
+    )
+    _write_team_debug_csv(
+        result_df,
+        "4",
+        "nn_xg",
+        home_values={"XG": fixture_summary["NN_pred_XG_home"], "XGC": fixture_summary["NN_pred_XG_away"]},
+        away_values={"XG": fixture_summary["NN_pred_XG_away"], "XGC": fixture_summary["NN_pred_XG_home"]},
+    )
+    _write_team_debug_csv(
+        result_df,
+        "4",
+        "xgb_cs",
+        home_values={"CS": fixture_summary["XGB_pred_CS_home"]},
+        away_values={"CS": fixture_summary["XGB_pred_CS_away"]},
+    )
+    _write_team_debug_csv(
+        result_df,
+        "4",
+        "logistic_cs",
+        home_values={"CS": fixture_summary["Logistic_pred_CS_home"]},
+        away_values={"CS": fixture_summary["Logistic_pred_CS_away"]},
+    )
+
 
     home_df = result_df[
         ["fixture_code", "GW", "pred"]
@@ -1910,6 +2030,49 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     result_df["test_opp_XGC"]=css_test
     result_df.to_csv("Team_prediction_visual2.csv")
 
+    _write_team_debug_csv(
+        result_df,
+        "2",
+        "xg_bucket_xgb",
+        home_values={"XG": xg, "XGC": xg2},
+        away_values={"XG": xg2, "XGC": xg},
+    )
+    _write_team_debug_csv(
+        result_df,
+        "2",
+        "xg_stat_formula",
+        home_values={"XG": xg_stat_h, "XGC": xg_stat_a},
+        away_values={"XG": xg_stat_a, "XGC": xg_stat_h},
+    )
+    _write_team_debug_csv(
+        result_df,
+        "2",
+        "xgc_bucket_xgb",
+        home_values={"XGC": xgc},
+        away_values={"XGC": xgc2},
+    )
+    _write_team_debug_csv(
+        result_df,
+        "2",
+        "cs_bucket_blend",
+        home_values={"CS": css_test},
+        away_values={"CS": css_test2},
+    )
+    _write_team_debug_csv(
+        result_df,
+        "2",
+        "cs_stat_formula",
+        home_values={"CS": css_stat_home},
+        away_values={"CS": css_stat_away},
+    )
+    _write_team_debug_csv(
+        result_df,
+        "2",
+        "cs_svr",
+        home_values={"CS": css1},
+        away_values={"CS": css2},
+    )
+
     home_df=result_df[["fixture_code", "GW", "pred"]].copy()
     home_df["team_name"]=result_df["home_team"]
     home_df["team_code"]=result_df["home_code"]
@@ -2427,6 +2590,52 @@ def GenerateTeamPredictions_Results(fixture_path, current_team_path, horizon):
     result_df["Draw_percent2"] = (p_draw3 * 100).round(2)
 
     result_df.to_csv("Team_prediction_visual_results2.csv", index=False)
+
+    _write_team_debug_csv(
+        result_df,
+        "results2",
+        "xgb_multiclass",
+        home_values={
+            "win_Percent": (proba_pred_xgb[:, 2] * 100).round(2),
+            "Draw_percent": (proba_pred_xgb[:, 1] * 100).round(2),
+            "Loss_percent": (proba_pred_xgb[:, 0] * 100).round(2),
+        },
+        away_values={
+            "win_Percent": (proba_pred_xgb[:, 0] * 100).round(2),
+            "Draw_percent": (proba_pred_xgb[:, 1] * 100).round(2),
+            "Loss_percent": (proba_pred_xgb[:, 2] * 100).round(2),
+        },
+    )
+    _write_team_debug_csv(
+        result_df,
+        "results2",
+        "logistic_multiclass",
+        home_values={
+            "win_Percent": (proba_pred_lr[:, 2] * 100).round(2),
+            "Draw_percent": (proba_pred_lr[:, 1] * 100).round(2),
+            "Loss_percent": (proba_pred_lr[:, 0] * 100).round(2),
+        },
+        away_values={
+            "win_Percent": (proba_pred_lr[:, 0] * 100).round(2),
+            "Draw_percent": (proba_pred_lr[:, 1] * 100).round(2),
+            "Loss_percent": (proba_pred_lr[:, 2] * 100).round(2),
+        },
+    )
+    _write_team_debug_csv(
+        result_df,
+        "results2",
+        "elo_formula",
+        home_values={
+            "win_Percent": (p_home3 * 100).round(2),
+            "Draw_percent": (p_draw3 * 100).round(2),
+            "Loss_percent": (p_away3 * 100).round(2),
+        },
+        away_values={
+            "win_Percent": (p_away3 * 100).round(2),
+            "Draw_percent": (p_draw3 * 100).round(2),
+            "Loss_percent": (p_home3 * 100).round(2),
+        },
+    )
 
     # =========================
     # Build Team_prediction5.csv (home/away rows)
