@@ -2002,7 +2002,10 @@ def main_Transform():
             f2 = player_df["position"].map(f2_map).fillna(DEFAULT[1]).to_numpy()
             f3 = player_df["position"].map(f3_map).fillna(DEFAULT[2]).to_numpy()
 
-            cs_flag = (player_df["goals_conceded"] < 1).to_numpy().astype(int)
+            cs_flag = (
+                (player_df["goals_conceded"] < 1) &
+                (player_df["minutes"] > 60)
+            ).to_numpy().astype(int)
 
             player_df["Adjusted_BPS"] = (
                 player_df["bps"].to_numpy()
