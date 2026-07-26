@@ -52,7 +52,7 @@ def GenerateOptimizeSet(Current_data_path):
     
     cols_to_offset=["Goal_pred","Assist_pred","Points_prediction"]
     for col in cols_to_offset:
-        visual_df[col] = visual_df[col] * visual_df["minutes_multiplier"]
+        visual_df[col] = visual_df[col]
     
 
     
@@ -110,7 +110,7 @@ def GenerateOptimizeSet(Current_data_path):
     optimized_player_set["minutes_multiplier"] = np.minimum(1, optimized_player_set['average_minutes'] / 75)
     optimized_player_set["0"] = 0
     
-    optimized_player_set["Points_prediction"] = optimized_player_set["Points_prediction"] * optimized_player_set["minutes_multiplier"]
+    optimized_player_set["Points_prediction"] = optimized_player_set["Points_prediction"]
     optimized_player_set["Risk_share"] = pd.to_numeric(optimized_player_set["Risk_share"], errors="coerce"
     )
     risk_avg = (

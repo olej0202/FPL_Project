@@ -237,37 +237,94 @@ function getPointRules(position) {
   return POINTS_RULES[key] || POINTS_RULES.DEF;
 }
 
-function computeCsContribution(row, position) {
-  const normalizedPosition = String(position || "").toUpperCase();
+function getCanonicalPosition(position) {
+  const key = String(position || "").toUpperCase();
+  if (key === "GK") return "GKP";
+  if (key === "FOR") return "FWD";
+  return key || "DEF";
+}
+
+function getMinuteLikelihoods(minutes) {
+  const predictionMinutes = Math.max(0, firstFinite(minutes));
+  const z60 = -3.045855 + 0.056203 * predictionMinutes;
+  const z0 = -1.855427 + 0.056741 * predictionMinutes;
+  return {
+    predictionMinutes,
+    likelihoodOf60: 1 / (1 + Math.exp(-z60)),
+    likelihoodOf0: 1 / (1 + Math.exp(-z0)),
+  };
+}
+
+function computeGoalsConcededCurve(gcPred, scale = 1) {
+  const safeGcPred = Math.max(Math.max(0, gcPred), 1e-9);
+  return (
+    0.5 *
+    scale *
+    (((30 - Math.min(30, safeGcPred * 100)) / -15) -
+      (1 - safeGcPred * (1 - Math.log(safeGcPred))))
+  );
+}
+
+function computePointBreakdown(row) {
+  const position = getCanonicalPosition(row?.position);
+  const rules = getPointRules(position);
+  const { predictionMinutes, likelihoodOf60, likelihoodOf0 } = getMinuteLikelihoods(
+    row?.average_minutes
+  );
+  const goalPred = firstFinite(row?.Goal_pred);
+  const assistPred = firstFinite(row?.Assist_pred);
+  const bonusPred = firstFinite(row?.Bonus_pred, row?.Bonus_pred2);
   const gcPred = Math.max(0, firstFinite(row?.GC_pred));
-  const safeGcPred = Math.max(gcPred, 1e-9);
+  const cardPred = firstFinite(row?.Card_pred);
+  const cbiPred = firstFinite(row?.CBI_pred, row?.DefCon);
   const savePred = firstFinite(row?.Save_pred);
-  const rules = getPointRules(normalizedPosition);
 
-  if (normalizedPosition === "GKP" || normalizedPosition === "GK") {
-    return (
+  const base = likelihoodOf60 + likelihoodOf0;
+  let goal = 0;
+  let assist = 0;
+  let defcon = 0;
+  let cs = 0;
+  let card = 0;
+
+  if (position === "FWD") {
+    goal = goalPred * rules.goal;
+    assist = assistPred * rules.assist;
+    defcon = cbiPred * 2;
+    card = -cardPred;
+  } else if (position === "MID") {
+    goal = goalPred * rules.goal;
+    assist = assistPred * rules.assist;
+    defcon = cbiPred * 2;
+    cs = gcPred * rules.cs * likelihoodOf60;
+    card = -cardPred;
+  } else if (position === "GKP") {
+    cs =
       savePred +
-      0.5 *
-        ((30 - Math.min(30, gcPred * 100)) / -15 +
-          -(1 - gcPred * (1 - Math.log(safeGcPred)))) +
-      gcPred * rules.cs
-    );
+      computeGoalsConcededCurve(gcPred) +
+      gcPred * rules.cs * likelihoodOf60;
+  } else {
+    goal = goalPred * rules.goal;
+    assist = assistPred * rules.assist;
+    defcon = cbiPred * 2;
+    cs =
+      gcPred * rules.cs * likelihoodOf60 +
+      computeGoalsConcededCurve(gcPred, predictionMinutes / 90);
+    card = -cardPred;
   }
 
-  if (normalizedPosition === "DEF") {
-    return (
-      gcPred * rules.cs +
-      0.5 *
-        ((30 - Math.min(30, gcPred * 100)) / -15 +
-          -(1 - gcPred * (1 - Math.log(safeGcPred))))
-    );
-  }
+  const componentTotal = base + goal + assist + bonusPred + defcon + cs + card;
 
-  if (normalizedPosition === "MID") {
-    return gcPred * rules.cs;
-  }
-
-  return 0;
+  return {
+    base,
+    goal,
+    assist,
+    bonus: bonusPred,
+    defcon,
+    cs,
+    card,
+    pointsPrediction: firstFinite(row?.Points_prediction, row?.Point_prediction, componentTotal),
+    componentTotal,
+  };
 }
 
 function buildPointBreakdownRow(rawRows, gw, fixtureDetail, fallbackTeamName = "") {
@@ -285,16 +342,15 @@ function buildPointBreakdownRow(rawRows, gw, fixtureDetail, fallbackTeamName = "
   };
 
   for (const row of rows) {
-    const position = String(row?.position || "").toUpperCase();
-    const rules = getPointRules(position);
-    totals.base += position === "DEF" ? 1.5 : rules.start;
-    totals.goal += firstFinite(row?.Goal_pred) * rules.goal;
-    totals.assist += firstFinite(row?.Assist_pred) * rules.assist;
-    totals.bonus += firstFinite(row?.Bonus_pred, row?.Bonus_pred2);
-    totals.defcon += firstFinite(row?.CBI_pred, row?.DefCon) * 2;
-    totals.cs += computeCsContribution(row, position);
-    totals.card -= firstFinite(row?.Card_pred);
-    totals.pointsPrediction += firstFinite(row?.Points_prediction, row?.Point_prediction);
+    const breakdown = computePointBreakdown(row);
+    totals.base += breakdown.base;
+    totals.goal += breakdown.goal;
+    totals.assist += breakdown.assist;
+    totals.bonus += breakdown.bonus;
+    totals.defcon += breakdown.defcon;
+    totals.cs += breakdown.cs;
+    totals.card += breakdown.card;
+    totals.pointsPrediction += breakdown.pointsPrediction;
     totals.minutes += firstFinite(row?.average_minutes);
   }
 
@@ -2282,7 +2338,7 @@ export default function Player_analytics_rankings() {
                           </div>
                         ) : (
                           <div className="text-xs text-right" style={{ color: PALETTE.muted }}>
-                            Base, goal, assist, bonus, defcon, CS and card components for point prediction.
+                            Base reflects the 0/60-minute likelihood model, with the other point components split by position.
                           </div>
                         )}
                       </div>

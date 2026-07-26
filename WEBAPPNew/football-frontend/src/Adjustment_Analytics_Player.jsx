@@ -36,6 +36,18 @@ import {
 } from "lucide-react";
 import { useAdjustmentData, fixtureIdFromRow } from "./Contexts/AdjustmentsContext";
 import teamColors from "./utils/team_colors";
+import {
+  Bar,
+  CartesianGrid,
+  ComposedChart,
+  Legend,
+  Line,
+  ReferenceLine,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 const PALETTE = {
   red: "#f8fafc",
@@ -69,6 +81,21 @@ const MODAL_METRIC_OPTIONS = [
   { value: "saves", label: "Saves" },
   { value: "defcon", label: "Defcon" },
 ];
+
+const BREAKDOWN_SERIES = [
+  { key: "base", label: "Base", color: "#475569" },
+  { key: "goal", label: "Goal", color: "#2563eb" },
+  { key: "assist", label: "Assist", color: "#0f766e" },
+  { key: "defcon", label: "Defcon", color: "#7c3aed" },
+  { key: "cs", label: "CS", color: "#059669" },
+  { key: "saves", label: "Saves", color: "#d97706" },
+];
+
+const BREAKDOWN_TOTAL_SERIES = {
+  key: "total",
+  label: "Total",
+  color: "#0f172a",
+};
 
 const clamp01 = (x) => Math.max(0, Math.min(1, Number.isFinite(x) ? x : 0));
 const firstFinite = (...vals) => {
@@ -695,6 +722,15 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
       Avg_Minutes: 0,
       CBI_Predictions: 0,
       _CBI01_Raw: 0,
+      _Breakdown: {
+        base: 0,
+        goal: 0,
+        assist: 0,
+        defcon: 0,
+        cs: 0,
+        saves: 0,
+        total: 0,
+      },
     };
   }
 
@@ -745,16 +781,20 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
   // new
   const savePred = savePredRaw * minutesAdj * matchCount;
 
+  const baseOnlyPoints = (defaultPoints + bps) * minutesAdj * matchCount;
+  const goalPoints = goalScored * goalFactor;
+  const assistPoints = assists * assistFactor;
+  const csPoints = cs * csFactor * minutesAdj + csNonlinear;
+
   const basePoints =
-    (defaultPoints + bps) * minutesAdj * matchCount + defconPointsTerm;
+    baseOnlyPoints + defconPointsTerm;
 
   const points = Math.max(
     0,
     basePoints +
-      goalScored * goalFactor +
-      assists * assistFactor +
-      cs * csFactor * minutesAdj +
-      csNonlinear +
+      goalPoints +
+      assistPoints +
+      csPoints +
       savePred
   );
 
@@ -766,6 +806,15 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
     Avg_Minutes: avgMin * matchCount,
     CBI_Predictions: cbi01,
     _CBI01_Raw: rawCbi01,
+    _Breakdown: {
+      base: baseOnlyPoints,
+      goal: goalPoints,
+      assist: assistPoints,
+      defcon: defconPointsTerm,
+      cs: csPoints,
+      saves: savePred,
+      total: points,
+    },
   };
 }, []);
 
@@ -1201,6 +1250,37 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
     });
   }, [comparisonBaselineRows, teamLookup, computeMeasures, comparisonDefconAdjust01]);
 
+  const comparisonBreakdownByGw = useMemo(() => {
+    if (!comparisonBaselineRows.length) return new Map();
+
+    const rawSeries = comparisonBaselineRows
+      .filter((row) => Number.isFinite(Number(row?.GW)) && Number(row.GW) <= 38)
+      .map((row) => {
+        const teamRow = teamLookup.get(`${String(row.Team)}_${row.GW}`);
+        const measures = computeMeasures(row, teamRow);
+        const raw01 = clamp01(Number(measures._CBI01_Raw));
+        return { GW: Number(row.GW), raw01, teamRow, row };
+      });
+
+    const meanRaw = rawSeries.length
+      ? rawSeries.reduce((sum, entry) => sum + entry.raw01, 0) / rawSeries.length
+      : 0;
+
+    const targetAdj = comparisonDefconAdjust01 != null
+      ? clamp01(comparisonDefconAdjust01)
+      : clamp01(meanRaw);
+
+    const map = new Map();
+
+    rawSeries.forEach(({ GW, raw01, teamRow, row }) => {
+      const adjusted01 = scaleRawCbiByAdjustedMean(raw01, meanRaw, targetAdj);
+      const measures = computeMeasures(row, teamRow, adjusted01);
+      map.set(GW, Number(measures._Breakdown?.total) || 0);
+    });
+
+    return map;
+  }, [comparisonBaselineRows, teamLookup, computeMeasures, comparisonDefconAdjust01]);
+
   const comparisonMinutesByGw = useMemo(() => {
     const map = new Map();
     comparisonChartDataMinutes.forEach((row) => {
@@ -1551,6 +1631,63 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
     pendingAssistShare,
     defconAdjust01,
     computeMeasures,
+  ]);
+
+  const modalBreakdownChartData = useMemo(() => {
+    if (!modalBaselineRows || modalBaselineRows.length === 0) return [];
+
+    const rawSeries = modalBaselineRows
+      .filter((row) => Number.isFinite(Number(row?.GW)) && Number(row.GW) <= 38)
+      .map((row) => {
+        const teamRow = teamLookup.get(`${String(row.Team)}_${row.GW}`);
+
+        const effectiveRow = {
+          ...row,
+          average_minutes: minutesDraft[row.GW] ?? row.average_minutes,
+          Goal_share: pendingGoalShare != null ? pendingGoalShare : row.Goal_share,
+          Assist_share: pendingAssistShare != null ? pendingAssistShare : row.Assist_share,
+        };
+
+        const measures = computeMeasures(effectiveRow, teamRow);
+        const raw01 = clamp01(Number(measures._CBI01_Raw));
+        return { GW: Number(row.GW), raw01, teamRow, effectiveRow };
+      });
+
+    const meanRaw = rawSeries.length
+      ? rawSeries.reduce((sum, entry) => sum + entry.raw01, 0) / rawSeries.length
+      : 0;
+
+    const targetAdj = clamp01(Number(defconAdjust01));
+
+    return rawSeries.map(({ GW, raw01, teamRow, effectiveRow }) => {
+      const adjusted01 = scaleRawCbiByAdjustedMean(raw01, meanRaw, targetAdj);
+      const measures = computeMeasures(effectiveRow, teamRow, adjusted01);
+      const breakdown = measures._Breakdown || {};
+
+      return {
+        GW,
+        label: `GW ${GW}`,
+        base: Number(breakdown.base) || 0,
+        goal: Number(breakdown.goal) || 0,
+        assist: Number(breakdown.assist) || 0,
+        defcon: Number(breakdown.defcon) || 0,
+        cs: Number(breakdown.cs) || 0,
+        saves: Number(breakdown.saves) || 0,
+        total: Number(breakdown.total) || 0,
+        compareTotal: comparisonBreakdownByGw.has(GW)
+          ? Number(comparisonBreakdownByGw.get(GW)) || 0
+          : null,
+      };
+    });
+  }, [
+    modalBaselineRows,
+    teamLookup,
+    minutesDraft,
+    pendingGoalShare,
+    pendingAssistShare,
+    defconAdjust01,
+    computeMeasures,
+    comparisonBreakdownByGw,
   ]);
 
   const modalMetricMeta = useMemo(() => {
@@ -2894,207 +3031,104 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
                 <div>
                   <div className="mb-3 flex items-center justify-between gap-3">
                     <h3 className="text-base font-semibold">
-                      Calculated {modalMetricMeta.label}
+                      Calculated point breakdown
                     </h3>
-                    <div
-                      className="inline-flex items-center gap-1 rounded-xl px-1 py-1"
-                      style={{
-                        border: `1px solid ${PALETTE.border}`,
-                        background: "#f8fafc",
-                      }}
-                    >
-                      <button
-                        type="button"
-                        onClick={() => stepModalMetric(-1)}
-                        className="rounded-lg p-1.5"
-                        style={{ color: PALETTE.beige }}
-                        aria-label="Previous metric"
-                        title="Previous metric"
-                      >
-                        <ChevronLeft size={15} />
-                      </button>
-                      <div
-                        className="min-w-[84px] text-center text-xs font-semibold"
-                        style={{ color: PALETTE.beige }}
-                      >
-                        {MODAL_METRIC_OPTIONS[modalMetricIndex]?.label || "Points"}
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => stepModalMetric(1)}
-                        className="rounded-lg p-1.5"
-                        style={{ color: PALETTE.beige }}
-                        aria-label="Next metric"
-                        title="Next metric"
-                      >
-                        <ChevronRight size={15} />
-                      </button>
-                    </div>
                   </div>
                   <div className="mb-2 text-xs" style={{ color: PALETTE.muted }}>
-                    {modalMetricMeta.helper}
+                    Base, goal, assist, defcon, CS and saves are stacked, with total shown as an overlay line.
                   </div>
-                  {chartDataPoints.length === 0 ? (
-                    <div className="text-sm">{modalMetricMeta.emptyText}</div>
+                  {modalBreakdownChartData.length === 0 ? (
+                    <div className="text-sm">No calculated point breakdown data for this player.</div>
                   ) : (
-                    <svg
-                      width="100%"
-                      height="280"
-                      viewBox="0 0 600 280"
-                      preserveAspectRatio="none"
+                    <div
                       className="rounded-2xl"
                       style={{
                         border: `1px solid ${PALETTE.gold}`,
                         background: "#ffffff",
                       }}
                     >
-                      {(() => {
-                        const padding = 20;
-                        const width = 600;
-                        const height = 280;
-                        const n = chartDataPoints.length;
-                        const innerWidth = width - 2 * padding;
-                        const vals = [
-                          ...chartDataPoints.map((d) => Number(d[modalChartMetric]) || 0),
-                          ...comparisonChartDataPoints.map((d) => Number(d[modalChartMetric]) || 0),
-                        ];
-                        const minP = vals.length > 0 ? Math.min(...vals) : 0;
-                        const maxP = vals.length > 0 ? Math.max(...vals) : 1;
-                        const range = maxP - minP || 1;
-                        const yFromValue = (value) => {
-                          const ratio = ((Number(value) || 0) - minP) / range;
-                          return height - padding - ratio * (height - 2 * padding);
-                        };
-                        const zeroY = yFromValue(0);
-                        const hasComparisonSeries = comparisonChartDataPoints.length > 0;
-                        const slotWidth = n > 0 ? innerWidth / n : innerWidth;
-                        const groupWidth = slotWidth * 0.74;
-                        const barGap = hasComparisonSeries ? groupWidth * 0.12 : 0;
-                        const barWidth = hasComparisonSeries
-                          ? (groupWidth - barGap) / 2
-                          : groupWidth * 0.72;
-
-                        const bars = chartDataPoints.map((d, i) => {
-                          const gw = Number(d.GW);
-                          const value = Number(d[modalChartMetric]) || 0;
-                          const compareValue = Number(comparisonPointsByGw.get(gw));
-                          const hasCompare = Number.isFinite(compareValue);
-                          const groupX = padding + i * slotWidth + (slotWidth - groupWidth) / 2;
-
-                          const mainTopY = Math.min(yFromValue(value), zeroY);
-                          const mainBottomY = Math.max(yFromValue(value), zeroY);
-                          const mainX = hasComparisonSeries
-                            ? groupX
-                            : groupX + (groupWidth - barWidth) / 2;
-
-                          const compareTopY = hasCompare
-                            ? Math.min(yFromValue(compareValue), zeroY)
-                            : null;
-                          const compareBottomY = hasCompare
-                            ? Math.max(yFromValue(compareValue), zeroY)
-                            : null;
-                          const compareX = groupX + barWidth + barGap;
-
-                          return {
-                            gw,
-                            value,
-                            xLabel: groupX + groupWidth / 2,
-                            main: {
-                              x: mainX,
-                              y: mainTopY,
-                              height: Math.max(1, mainBottomY - mainTopY),
-                            },
-                            compare: hasCompare
-                              ? {
-                                  value: compareValue,
-                                  x: compareX,
-                                  y: compareTopY,
-                                  height: Math.max(1, compareBottomY - compareTopY),
-                                }
-                              : null,
-                          };
-                        });
-
-                        return (
-                          <>
-                            {minP < 0 && maxP > 0 ? (
-                              <line
-                                x1={padding}
-                                y1={zeroY}
-                                x2={width - padding}
-                                y2={zeroY}
-                                stroke="#cbd5e1"
-                                strokeWidth="1"
-                                strokeDasharray="4 3"
+                      <div className="h-[280px] w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <ComposedChart data={modalBreakdownChartData} margin={{ top: 12, right: 12, left: 0, bottom: 4 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.24)" />
+                            <XAxis
+                              dataKey="label"
+                              tick={{ fill: "#64748b", fontSize: 12 }}
+                              axisLine={false}
+                              tickLine={false}
+                            />
+                            <YAxis
+                              tick={{ fill: "#64748b", fontSize: 12 }}
+                              axisLine={false}
+                              tickLine={false}
+                            />
+                            <Tooltip
+                              formatter={(value, name) => {
+                                const label =
+                                  BREAKDOWN_SERIES.find((series) => series.key === name)?.label ||
+                                  (name === BREAKDOWN_TOTAL_SERIES.key
+                                    ? BREAKDOWN_TOTAL_SERIES.label
+                                    : name === "compareTotal"
+                                    ? "Compare total"
+                                    : name);
+                                return [`${(Number(value) || 0).toFixed(2)} pts`, label];
+                              }}
+                              labelFormatter={(label) => label}
+                              contentStyle={{
+                                borderRadius: "16px",
+                                border: `1px solid ${PALETTE.border}`,
+                                boxShadow: "0 14px 30px rgba(15,23,42,0.12)",
+                              }}
+                            />
+                            <Legend
+                              verticalAlign="bottom"
+                              formatter={(value) =>
+                                BREAKDOWN_SERIES.find((series) => series.key === value)?.label ||
+                                (value === BREAKDOWN_TOTAL_SERIES.key
+                                  ? BREAKDOWN_TOTAL_SERIES.label
+                                  : value === "compareTotal"
+                                  ? "Compare total"
+                                  : value)
+                              }
+                            />
+                            <ReferenceLine y={0} stroke="rgba(15,23,42,0.35)" />
+                            {BREAKDOWN_SERIES.map((series) => (
+                              <Bar
+                                key={series.key}
+                                dataKey={series.key}
+                                name={series.key}
+                                stackId="points"
+                                fill={series.color}
+                                stroke="rgba(15,23,42,0.18)"
+                                strokeWidth={1}
+                              />
+                            ))}
+                            <Line
+                              type="monotone"
+                              dataKey={BREAKDOWN_TOTAL_SERIES.key}
+                              name={BREAKDOWN_TOTAL_SERIES.key}
+                              stroke={BREAKDOWN_TOTAL_SERIES.color}
+                              strokeWidth={3}
+                              dot={{ r: 4, fill: BREAKDOWN_TOTAL_SERIES.color, stroke: "#ffffff", strokeWidth: 1.5 }}
+                              activeDot={{ r: 6, fill: BREAKDOWN_TOTAL_SERIES.color, stroke: "#ffffff", strokeWidth: 1.5 }}
+                            />
+                            {comparisonSummary ? (
+                              <Line
+                                type="monotone"
+                                dataKey="compareTotal"
+                                name="compareTotal"
+                                stroke="#94a3b8"
+                                strokeWidth={2.5}
+                                strokeDasharray="6 4"
+                                dot={{ r: 3, fill: "#94a3b8" }}
+                                activeDot={{ r: 5 }}
+                                connectNulls={false}
                               />
                             ) : null}
-                            {bars.map((b) => (
-                              <g key={b.gw}>
-                                {b.compare ? (
-                                  <rect
-                                    x={b.compare.x}
-                                    y={b.compare.y}
-                                    width={barWidth}
-                                    height={b.compare.height}
-                                    rx={3}
-                                    fill="#cbd5e1"
-                                    stroke="#94a3b8"
-                                    strokeWidth="1"
-                                  />
-                                ) : null}
-                                <rect
-                                  x={b.main.x}
-                                  y={b.main.y}
-                                  width={barWidth}
-                                  height={b.main.height}
-                                  rx={3}
-                                  fill={PALETTE.gold}
-                                  stroke={PALETTE.black}
-                                  strokeWidth="1"
-                                />
-                                <line
-                                  x1={b.xLabel}
-                                  y1={height - padding}
-                                  x2={b.xLabel}
-                                  y2={height - padding + 4}
-                                  stroke="#555"
-                                  strokeWidth="1"
-                                />
-                                <text
-                                  x={b.xLabel}
-                                  y={height - 5}
-                                  fontSize="9"
-                                  textAnchor="middle"
-                                  fill="#64748b"
-                                >
-                                  {b.gw}
-                                </text>
-                                {b.compare ? (
-                                  <text
-                                    x={b.compare.x + barWidth / 2}
-                                    y={b.compare.value >= 0 ? b.compare.y - 6 : b.compare.y + b.compare.height + 10}
-                                    fontSize="9"
-                                    textAnchor="middle"
-                                    fill="#64748b"
-                                  >
-                                    {modalMetricMeta.format(b.compare.value)}
-                                  </text>
-                                ) : null}
-                                <text
-                                  x={b.main.x + barWidth / 2}
-                                  y={b.value >= 0 ? b.main.y - 6 : b.main.y + b.main.height + 10}
-                                  fontSize="9"
-                                  textAnchor="middle"
-                                  fill={PALETTE.beige}
-                                >
-                                  {modalMetricMeta.format(b.value)}
-                                </text>
-                              </g>
-                            ))}
-                          </>
-                        );
-                      })()}
-                    </svg>
+                          </ComposedChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
                   )}
                 </div>
               </div>
@@ -3106,5 +3140,3 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
     </div>
   );
 }
-
-

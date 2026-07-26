@@ -1898,9 +1898,14 @@ def Generate_point_predictions(GW_list):
         if(New_dataset["name"].values[0]=='Matheus_Santos Carneiro da Cunha'):
             summary_dataset.to_csv("debug2.csv")
             New_dataset.to_csv("debug1.csv")
-        
+        import numpy as np
+        prediction_mins = summary_dataset["average_minutes"].astype(float)
 
+        z60 = -3.045855 + 0.056203 * prediction_mins
+        likelihood_of_60 = 1 / (1 + np.exp(-z60))
 
+        z0 = -1.855427 + 0.056741 * prediction_mins
+        likelihood_of_0 = 1 / (1 + np.exp(-z0))
             
         if(position=="FWD"):
             summary_dataset["Bonus_pred"]=summary_dataset["Bonus_pred2"]*0.7+0.3*expected_bonus(
@@ -1908,7 +1913,7 @@ def Generate_point_predictions(GW_list):
                 summary_dataset["Goal_pred"]*POSITION_EVENT_BONUS[position]["goal"]+
                 summary_dataset["Assist_pred"]*POSITION_EVENT_BONUS[position]["assist"]
                 )
-            summary_dataset["Points_prediction"]=(2+summary_dataset["Goal_pred"]*POINTS_RULES[position]["goal"]
+            summary_dataset["Points_prediction"]=((1*likelihood_of_60+1*likelihood_of_0)+summary_dataset["Goal_pred"]*POINTS_RULES[position]["goal"]
                                                   +summary_dataset["Assist_pred"]*POINTS_RULES[position]["assist"]
                                                   +summary_dataset["Bonus_pred"]
                                                   -summary_dataset["Card_pred"] )+summary_dataset["CBI_pred"]*2
@@ -1920,10 +1925,10 @@ def Generate_point_predictions(GW_list):
                 summary_dataset["Goal_pred"]*POSITION_EVENT_BONUS[position]["goal"]+
                 summary_dataset["Assist_pred"]*POSITION_EVENT_BONUS[position]["assist"]
                 )
-            summary_dataset["Points_prediction"]=(2+summary_dataset["Goal_pred"]*POINTS_RULES[position]["goal"]
+            summary_dataset["Points_prediction"]=((1*likelihood_of_60+1*likelihood_of_0)+summary_dataset["Goal_pred"]*POINTS_RULES[position]["goal"]
                                                   +summary_dataset["Assist_pred"]*POINTS_RULES[position]["assist"]
                                                   +summary_dataset["Bonus_pred"]
-                                                  +summary_dataset["GC_pred"]*POINTS_RULES[position]["cs"]
+                                                  +summary_dataset["GC_pred"]*POINTS_RULES[position]["cs"]*likelihood_of_60
                                                   -summary_dataset["Card_pred"])+summary_dataset["CBI_pred"]*2
 
             summary_dataset["Risk_share"]=(summary_dataset["Goal_pred"]*5.5+summary_dataset["Assist_pred"]*3.4+summary_dataset["GC_pred"]*0.8)/summary_dataset["Points_prediction"]
@@ -1933,13 +1938,13 @@ def Generate_point_predictions(GW_list):
                 summary_dataset["Bonus_pred"]+
                 summary_dataset["Goal_pred"]*POSITION_EVENT_BONUS[position]["goal"]+
                 summary_dataset["Assist_pred"]*POSITION_EVENT_BONUS[position]["assist"]+
-                summary_dataset["GC_pred"]*POSITION_EVENT_BONUS[position]["cs"]
+                summary_dataset["GC_pred"]*POSITION_EVENT_BONUS[position]["cs"]*likelihood_of_60
                 )
-            summary_dataset["Points_prediction"]=(2
+            summary_dataset["Points_prediction"]=((1*likelihood_of_60+1*likelihood_of_0)
                                                   +summary_dataset["Save_pred"]
                                                   + 0.5 * ((30 - np.minimum(30, summary_dataset["GC_pred"] * 100)) / -15
                                                            - (1 - summary_dataset["GC_pred"] * (1 - np.log(summary_dataset["GC_pred"]))))
-                                                  +summary_dataset["GC_pred"]*POINTS_RULES[position]["cs"]
+                                                  +summary_dataset["GC_pred"]*POINTS_RULES[position]["cs"]*likelihood_of_60
                                                   +summary_dataset["Bonus_pred"] )
 
             summary_dataset["Risk_share"]=(summary_dataset["GC_pred"]*5)/summary_dataset["Points_prediction"]
@@ -1949,18 +1954,18 @@ def Generate_point_predictions(GW_list):
                 summary_dataset["Bonus_pred"]+
                 summary_dataset["Goal_pred"]*POSITION_EVENT_BONUS[position]["goal"]+
                 summary_dataset["Assist_pred"]*POSITION_EVENT_BONUS[position]["assist"]+
-                summary_dataset["GC_pred"]*POSITION_EVENT_BONUS[position]["cs"]
+                summary_dataset["GC_pred"]*POSITION_EVENT_BONUS[position]["cs"]*likelihood_of_60
                 )
             
             POINTS_RULES[position]["goal"]
             
 
     
-            summary_dataset["Points_prediction"]=(1.5+summary_dataset["Goal_pred"]*POINTS_RULES[position]["goal"]
+            summary_dataset["Points_prediction"]=((1*likelihood_of_60+1*likelihood_of_0)+summary_dataset["Goal_pred"]*POINTS_RULES[position]["goal"]
                                                   +summary_dataset["Assist_pred"]*POINTS_RULES[position]["assist"]
                                                   +summary_dataset["Bonus_pred"]
-                                                  +summary_dataset["GC_pred"]*POINTS_RULES[position]["cs"]
-                                                  + 0.5 * ((30 - np.minimum(30, summary_dataset["GC_pred"] * 100)) / -15
+                                                  +summary_dataset["GC_pred"]*POINTS_RULES[position]["cs"]*likelihood_of_60
+                                                  + 0.5 * prediction_mins/90*((30 - np.minimum(30, summary_dataset["GC_pred"] * 100)) / -15
                                                            - (1 - summary_dataset["GC_pred"] * (1 - np.log(summary_dataset["GC_pred"]))))
                                                   -summary_dataset["Card_pred"])+summary_dataset["CBI_pred"]*2
             summary_dataset["Risk_share"]=(summary_dataset["Goal_pred"]*6.5+summary_dataset["Assist_pred"]*3.4+summary_dataset["GC_pred"]*3.5)/summary_dataset["Points_prediction"]
