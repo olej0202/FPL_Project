@@ -2045,7 +2045,7 @@ def Generate_simulator(
     current_teams,
     GW_list,
     match_id=None,
-    n_simulations=400,
+    n_simulations=800,
     random_seed=42,
     parallel_workers=1,
 ):
@@ -2394,6 +2394,17 @@ def Generate_simulator(
         player_df["average_minutes"] / 90.0
     )
 
+    player_df["_likelihood_of_60"] = 1.0 / (
+        1.0
+        + np.exp(
+            -(
+                -3.045855
+                + 0.056203
+                * player_df["average_minutes"]
+            )
+        )
+    )
+
     # Probability weight for choosing a shooter.
     player_df["_goal_weight"] = (
         player_df["Goal_Index"]
@@ -2720,6 +2731,15 @@ def Generate_simulator(
                     "base_bps": safe_float(
                         player["_base_bps"]
                     ),
+                    "goal_weight": safe_float(
+                        player["_goal_weight"]
+                    ),
+                    "assist_weight": safe_float(
+                        player["_assist_weight"]
+                    ),
+                    "likelihood_of_60": safe_float(
+                        player["_likelihood_of_60"]
+                    ),
                     "overscore": safe_float(
                         player["Average_Overscore"],
                         default=1.0,
@@ -3019,6 +3039,9 @@ def Generate_simulator(
                 "Team": player["Team"],
                 "position": player["position"],
                 "base_bps": player["base_bps"],
+                "goal_weight": player["goal_weight"],
+                "assist_weight": player["assist_weight"],
+                "likelihood_of_60": player["likelihood_of_60"],
                 "xg": 0.0,
                 "goals": 0,
                 "assists": 0,
@@ -3350,6 +3373,15 @@ def Generate_simulator(
                 "clean_sheets": 0.0,
                 "bonus": 0.0,
                 "bps": 0.0,
+                "goal_weight": player[
+                    "goal_weight"
+                ],
+                "assist_weight": player[
+                    "assist_weight"
+                ],
+                "likelihood_of_60": player[
+                    "likelihood_of_60"
+                ],
             }
 
     for simulation_number in range(
@@ -3739,6 +3771,7 @@ def Generate_simulator(
                     + player["assists"]
                     * position_rules["assist"]
                     + player["clean_sheet"]
+                    * player["likelihood_of_60"]
                     * position_rules["cs"]
                 )
 
@@ -3896,6 +3929,15 @@ def Generate_simulator(
                         player_result["bps"]
                         / n_simulations
                     ),
+                    "goal_weight": player_result[
+                        "goal_weight"
+                    ],
+                    "assist_weight": player_result[
+                        "assist_weight"
+                    ],
+                    "likelihood_of_60": player_result[
+                        "likelihood_of_60"
+                    ],
                     "event": player_result["event"],
                 }
             )
@@ -4065,6 +4107,9 @@ def Generate_simulator(
         "avg_clean_sheet",
         "avg_bonus_points",
         "avg_bps",
+        "goal_weight",
+        "assist_weight",
+        "likelihood_of_60",
         "event",
     ]
 
@@ -4098,6 +4143,9 @@ def Generate_simulator(
         "avg_clean_sheet",
         "avg_bonus_points",
         "avg_bps",
+        "goal_weight",
+        "assist_weight",
+        "likelihood_of_60",
     ]
 
     player_prediction_df[

@@ -247,9 +247,9 @@ def Data_Predictions(
         n_scenarios=1000,
         include_finished_fixtures=False,
         paths=fs2_paths,
-    )
+    )"""
     
-    Generate_Minutes_Simulator(current_team_path,gw_list)"""
+    Generate_Minutes_Simulator(current_team_path,gw_list)
 
     GenerateTeamPredictions(
         str(filtered_fixture_path),
