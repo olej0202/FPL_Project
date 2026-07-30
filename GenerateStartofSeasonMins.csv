@@ -103,7 +103,7 @@ team_code,name,type,value
 4,Nick_Woltemade,const,70.92992358886265
 4,Sean_Neave,const,4.71570685
 4,Sean_Steur,const,0.0
-4,Sven_Botman,const,86.835062
+4,Sven_Botman,const,75.835062
 4,Tino_Livramento,const,0.0
 4,William_Osula,const,70.55722163518976
 4,Yoane_Wissa,const,40.94259360107887
@@ -243,7 +243,7 @@ team_code,name,type,value
 11,Kiernan_Dewsbury-Hall,const,90.0
 11,Mark_Travers,const,22.199607170897323
 11,Merlin_Röhl,const,55.47584745466979
-11,Michael_Keane,const,84.966
+11,Michael_Keane,const,54.966
 11,Nathan_Patterson,const,4.672723862796131
 11,Norberto_Bercique Gomes Betuncal,const,50.51518272144055
 11,Thierno_Barry,const,32.11484172867585
@@ -445,7 +445,7 @@ team_code,name,type,value
 54,Kenny_Tete,const,28.35203889109077
 54,Kevin_Santos Lopes de Macedo,const,31.16028372352904
 54,Oscar_Bobb,const,37.04391915895234
-54,Rodrigo_Muniz Carvalho,const,80.9386347708218
+54,Rodrigo_Muniz Carvalho,const,75.9386347708218
 54,Ryan_Sessegnon,const,30.564312062366408
 54,Sander_Berge,const,45.45967665809943
 54,Saša_Lukić,const,72.79234437567624
@@ -545,7 +545,7 @@ team_code,name,type,value
 94,Keane_Lewis-Potter,const,79.035
 94,Kevin_Schade,const,80.49981486037902
 94,Kim_Ji-soo,const,0.0
-94,Kristoffer_Ajer,const,15.807782200069685
+94,Kristoffer_Ajer,const,80.807782200069685
 94,Mathias_Jensen,const,82.74381299999999
 94,Michael_Kayode,const,90.0
 94,Mikkel_Damsgaard,const,56.74331399086113

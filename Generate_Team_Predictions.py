@@ -3032,6 +3032,9 @@ def GenerateTeamPredictions(
         "SImulator/simtest_team_results_upcoming.csv",
         full_sim_weight=sim_full_weight,
     )
+    minutes_sim_team_df, minutes_sim_visual_df = _normalize_minutes_simulator_team(
+        "SImulator/MinutesSimulator_team_predictions.csv"
+    )
 
     team_pred_ver_sources = [
         ("Team_prediction1", raw_team_pred1.copy()),
@@ -3043,6 +3046,11 @@ def GenerateTeamPredictions(
         sim_team_ver["XG"] = sim_team_ver.get("sim_xg")
         sim_team_ver["CS"] = sim_team_ver.get("sim_cs")
         team_pred_ver_sources.append(("Simulator", sim_team_ver))
+    if minutes_sim_team_df is not None and not minutes_sim_team_df.empty:
+        minutes_team_ver = minutes_sim_team_df.copy()
+        minutes_team_ver["XG"] = minutes_team_ver.get("minutes_sim_xg")
+        minutes_team_ver["CS"] = minutes_team_ver.get("minutes_sim_cs")
+        team_pred_ver_sources.append(("MinutesSimulator", minutes_team_ver))
 
     fixture_kickoff_df = pd.DataFrame()
     try:
@@ -3144,6 +3152,35 @@ def GenerateTeamPredictions(
                 if c in team_pred1.columns
             ]
         )
+
+    if minutes_sim_team_df is not None and not minutes_sim_team_df.empty:
+        if "fixture_code" in team_pred1.columns and "team_code" in team_pred1.columns:
+            team_pred1["fixture_code"] = pd.to_numeric(team_pred1["fixture_code"], errors="coerce")
+            team_pred1["team_code"] = pd.to_numeric(team_pred1["team_code"], errors="coerce")
+            minutes_sim_team_df["fixture_code"] = pd.to_numeric(minutes_sim_team_df["fixture_code"], errors="coerce")
+            minutes_sim_team_df["team_code"] = pd.to_numeric(minutes_sim_team_df["team_code"], errors="coerce")
+            team_pred1 = team_pred1.merge(
+                minutes_sim_team_df[["fixture_code", "team_code", "minutes_sim_xg", "minutes_sim_cs"]],
+                on=["fixture_code", "team_code"],
+                how="left",
+            )
+            team_pred1["XG"] = _weighted_blend_columns(
+                [
+                    (pd.to_numeric(team_pred1["XG"], errors="coerce"), 0.6),
+                    (pd.to_numeric(team_pred1.get("minutes_sim_xg"), errors="coerce"), 0.4),
+                ]
+            )
+            team_pred1["CS"] = _weighted_blend_columns(
+                [
+                    (pd.to_numeric(team_pred1["CS"], errors="coerce"), 0.6),
+                    (pd.to_numeric(team_pred1.get("minutes_sim_cs"), errors="coerce"), 0.4),
+                ]
+            )
+            team_pred1 = team_pred1.drop(
+                columns=[c for c in ["minutes_sim_xg", "minutes_sim_cs"] if c in team_pred1.columns]
+            )
+        else:
+            print("[GenerateTeamPredictions] Missing fixture_code/team_code in Team_prediction.csv blend, skipping MinutesSimulator team merge.")
 
     
     team_pred1.to_csv("Team_prediction.csv")
@@ -3302,6 +3339,47 @@ def GenerateTeamPredictions(
                     "sim_home_win_pct",
                     "sim_draw_pct",
                     "sim_away_win_pct",
+                ]
+                if c in team_pred_visual1.columns
+            ]
+        )
+
+    if minutes_sim_visual_df is not None and not minutes_sim_visual_df.empty:
+        minutes_sim_visual_df["fixture_code"] = pd.to_numeric(minutes_sim_visual_df["fixture_code"], errors="coerce")
+        team_pred_visual1["fixture_code"] = pd.to_numeric(team_pred_visual1["fixture_code"], errors="coerce")
+        team_pred_visual1 = team_pred_visual1.merge(minutes_sim_visual_df, on="fixture_code", how="left")
+        team_pred_visual1["home_goals"] = _weighted_blend_columns(
+            [
+                (pd.to_numeric(team_pred_visual1["home_goals"], errors="coerce"), 0.6),
+                (pd.to_numeric(team_pred_visual1.get("minutes_sim_home_xg"), errors="coerce"), 0.4),
+            ]
+        )
+        team_pred_visual1["away_goals"] = _weighted_blend_columns(
+            [
+                (pd.to_numeric(team_pred_visual1["away_goals"], errors="coerce"), 0.6),
+                (pd.to_numeric(team_pred_visual1.get("minutes_sim_away_xg"), errors="coerce"), 0.4),
+            ]
+        )
+        team_pred_visual1["Clean_Sheet_home"] = _weighted_blend_columns(
+            [
+                (pd.to_numeric(team_pred_visual1["Clean_Sheet_home"], errors="coerce"), 0.6),
+                (pd.to_numeric(team_pred_visual1.get("minutes_sim_home_cs"), errors="coerce"), 0.4),
+            ]
+        )
+        team_pred_visual1["Clean_Sheet_away"] = _weighted_blend_columns(
+            [
+                (pd.to_numeric(team_pred_visual1["Clean_Sheet_away"], errors="coerce"), 0.6),
+                (pd.to_numeric(team_pred_visual1.get("minutes_sim_away_cs"), errors="coerce"), 0.4),
+            ]
+        )
+        team_pred_visual1 = team_pred_visual1.drop(
+            columns=[
+                c
+                for c in [
+                    "minutes_sim_home_xg",
+                    "minutes_sim_away_xg",
+                    "minutes_sim_home_cs",
+                    "minutes_sim_away_cs",
                 ]
                 if c in team_pred_visual1.columns
             ]
@@ -3583,6 +3661,73 @@ def _normalize_simtest_team(path):
             v[c] = np.nan
     v = v[needed].copy()
     return t, v
+
+
+def _normalize_minutes_simulator_team(path):
+    try:
+        df = pd.read_csv(path)
+    except Exception:
+        return pd.DataFrame(), pd.DataFrame()
+    if df.empty:
+        return pd.DataFrame(), pd.DataFrame()
+
+    required_columns = {
+        "fix_id",
+        "event",
+        "home_team_code",
+        "home_team_name",
+        "away_team_code",
+        "away_team_name",
+        "average_home_xg",
+        "average_away_xg",
+        "home_clean_sheet_probability",
+        "away_clean_sheet_probability",
+    }
+    if not required_columns.issubset(df.columns):
+        return pd.DataFrame(), pd.DataFrame()
+
+    base = df.copy()
+    base["fix_id"] = pd.to_numeric(base["fix_id"], errors="coerce")
+    base["event"] = pd.to_numeric(base["event"], errors="coerce")
+    base["home_team_code"] = pd.to_numeric(base["home_team_code"], errors="coerce")
+    base["away_team_code"] = pd.to_numeric(base["away_team_code"], errors="coerce")
+
+    home = pd.DataFrame()
+    home["fixture_code"] = base["fix_id"]
+    home["GW"] = base["event"]
+    home["team_code"] = base["home_team_code"]
+    home["team_name"] = base["home_team_name"]
+    home["opponent_code"] = base["away_team_code"]
+    home["opponent_name"] = base["away_team_name"]
+    home["Home"] = "H"
+    home["minutes_sim_xg"] = pd.to_numeric(base["average_home_xg"], errors="coerce")
+    home["minutes_sim_xgc"] = pd.to_numeric(base["average_away_xg"], errors="coerce")
+    home["minutes_sim_cs"] = pd.to_numeric(base["home_clean_sheet_probability"], errors="coerce")
+
+    away = pd.DataFrame()
+    away["fixture_code"] = base["fix_id"]
+    away["GW"] = base["event"]
+    away["team_code"] = base["away_team_code"]
+    away["team_name"] = base["away_team_name"]
+    away["opponent_code"] = base["home_team_code"]
+    away["opponent_name"] = base["home_team_name"]
+    away["Home"] = "A"
+    away["minutes_sim_xg"] = pd.to_numeric(base["average_away_xg"], errors="coerce")
+    away["minutes_sim_xgc"] = pd.to_numeric(base["average_home_xg"], errors="coerce")
+    away["minutes_sim_cs"] = pd.to_numeric(base["away_clean_sheet_probability"], errors="coerce")
+
+    team = pd.concat([home, away], axis=0, ignore_index=True)
+    team = team.dropna(subset=["fixture_code", "team_code"]).copy()
+
+    visual = pd.DataFrame()
+    visual["fixture_code"] = pd.to_numeric(base["fix_id"], errors="coerce")
+    visual["minutes_sim_home_xg"] = pd.to_numeric(base["average_home_xg"], errors="coerce")
+    visual["minutes_sim_away_xg"] = pd.to_numeric(base["average_away_xg"], errors="coerce")
+    visual["minutes_sim_home_cs"] = pd.to_numeric(base["home_clean_sheet_probability"], errors="coerce")
+    visual["minutes_sim_away_cs"] = pd.to_numeric(base["away_clean_sheet_probability"], errors="coerce")
+    visual = visual.dropna(subset=["fixture_code"]).copy()
+
+    return team, visual
 
 
 def _combine_sim_sources(full_path, simtest_path, full_sim_weight=0.8):

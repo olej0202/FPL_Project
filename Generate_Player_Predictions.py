@@ -1721,7 +1721,8 @@ def Generate_point_predictions(GW_list):
     
     simulation=pd.read_csv("SImulator\simtest_player_outcomes_upcoming.csv").sort_values(by=["event", "fixture_code"])
     simulation2=pd.read_csv("SImulator\Full_simulator_player.csv").sort_values(by=["gameweek", "fixture_code"])
-    
+    minutes_simulation=pd.read_csv("SImulator\MinutesSimulator_player_predictions.csv").sort_values(by=["event", "fix_id"])
+
     from sklearn.linear_model import LogisticRegression
     bpsdf = pd.read_csv("testML4.csv")[["bonus", "bps"]].dropna()
     X = bpsdf[["bps"]]
@@ -1838,6 +1839,26 @@ def Generate_point_predictions(GW_list):
         )
         
         
+        player_preds = player_preds.merge(
+            _prepare_source(simulation2[simulation2["player_name"]==player], "avg_goal").rename(columns={"avg_goal": "sim3_goals_pred"}),
+            on=merge_keys,
+            how="left",
+        )
+        player_preds = player_preds.merge(
+            _prepare_source(simulation2[simulation2["player_name"]==player], "avg_assist").rename(columns={"avg_assist": "sim3_assists_pred"}),
+            on=merge_keys,
+            how="left",
+        )
+        player_preds = player_preds.merge(
+            _prepare_source(simulation2[simulation2["player_name"]==player], "avg_bonus_points").rename(columns={"avg_bonus_points": "sim3_bonus_pred"}),
+            on=merge_keys,
+            how="left",
+        )
+        
+        
+        
+
+        
         overscore=max(0.9,player_data["Average_Overscore"].values[0])
         overscore=min(1.1,overscore)
 
@@ -1854,22 +1875,22 @@ def Generate_point_predictions(GW_list):
         player_preds["Goal_pred"] = (
             (
                 (player_preds["xgb_goals_75"] * 0.5 + 0.5 * player_preds["xgb_goals_25"]) * 0.0
-                + player_preds["sim_goals_pred"] * 0.1
-                + player_preds["sim2_goals_pred"] * 0.35
-                + player_preds["stat_goals_pred"] * 0.55
+                + player_preds["sim3_goals_pred"] * 0.25
+                + player_preds["sim2_goals_pred"] * 0.3
+                + player_preds["stat_goals_pred"] * 0.45
             ) * overscore
         )
 
         player_preds["Assist_pred"] = (
             (
                 (player_preds["xgb_assist_75"] * 0.5 + 0.5 * player_preds["xgb_assist_25"]) * 0.0
-                + player_preds["sim_assists_pred"] * 0.1
-                + player_preds["sim2_assists_pred"] * 0.35
-                + player_preds["stat_assist_pred"] * 0.55
+                + player_preds["sim_assists_pred"] * 0.25
+                + player_preds["sim2_assists_pred"] * 0.3
+                + player_preds["stat_assist_pred"] * 0.45
                 + historic_Assist * 0
             ) 
         )
-        player_preds["Bonus_pred2"] = player_preds["sim2_bonus_pred"]
+        player_preds["Bonus_pred2"] = player_preds["sim2_bonus_pred"]*0.5+player_preds["sim3_bonus_pred"]*0.5
         player_preds["Bonus_pred"] = player_preds["stat_bps"]
         player_preds["GC_pred"] = player_preds["stat_gc_pred"]
         player_preds["Fantasy_pred"] = player_preds["xgb_fantasy_pred"]

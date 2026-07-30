@@ -25,7 +25,7 @@ from Generate_Full_SImulator2 import (
     DataPaths as FullSimulator2DataPaths,
     write_upcoming_prediction_files as write_full_simulator2_outputs,
 )
-
+from Generate_Minutes_Simulator import Generate_Minutes_Simulator
 #erere
 
 import pandas as pd
@@ -247,6 +247,8 @@ def Data_Predictions(
         include_finished_fixtures=False,
         paths=fs2_paths,
     )
+    
+    Generate_Minutes_Simulator(current_team_path,gw_list)
 
     GenerateTeamPredictions(
         str(filtered_fixture_path),

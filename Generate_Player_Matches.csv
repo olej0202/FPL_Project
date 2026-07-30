@@ -469,7 +469,7 @@ William_Osula,Osula,William Osula,100.0,name-strict,William Osula,['FW'],[1.0],1
 Sean_Neave,Neave,Sean Neave,100.0,name-strict,Sean Neave,['SUB'],[1.0],1
 Matz_Sels,Sels,Matz Sels,100.0,name-strict,Matz Sels,['GK'],[1.0],1
 John_Victor Maciel Furtado,John,John Victor,90.0,name-relaxed,John Victor,['GK'],[1.0],1
-Neco_Williams,N.Williams,Neco Williams,100.0,name-strict,Neco Williams,"['DL', 'DR']","[0.7777777777777778, 0.2222222222222222]",1
+Neco_Williams,N.Williams,Neco Williams,100.0,name-strict,Neco Williams,"['DL', 'DR']","[0.99, 0.0]",1
 Felipe_Rodrigues da Silva,Morato,Rodri,90.0,name-relaxed,Rodri,"['DM', 'MC']","[0.8, 0.2]",1
 Nikola_Milenković,Milenković,Nikola Milenkovic,100.0,name-strict,Nikola Milenkovic,['CB'],[1.0],1
 Murillo_Costa dos Santos,Murillo,Murillo,90.0,name-relaxed,Murillo,['CB'],[1.0],1
