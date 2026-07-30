@@ -936,7 +936,7 @@ def Generate_which_attack_model(df):
     # the training and testing datasets.
     group_splitter = GroupShuffleSplit(
         n_splits=1,
-        test_size=0.10,
+        test_size=0.05,
         random_state=42,
     )
 
@@ -1043,7 +1043,7 @@ def Generate_which_attack_model(df):
         num_class=3,
         n_estimators=300,
         learning_rate=0.01,
-        max_depth=5,
+        max_depth=4,
         eval_metric="mlogloss",
         tree_method="hist",
         random_state=42,
@@ -1671,7 +1671,7 @@ def Generate_XG_models(team_df):
     # Keep all rows from the same match in the same split.
     splitter = GroupShuffleSplit(
         n_splits=1,
-        test_size=0.10,
+        test_size=0.05,
         random_state=42,
     )
 
@@ -1780,7 +1780,7 @@ def Generate_XG_models(team_df):
         objective="reg:squarederror",
         n_estimators=300,
         learning_rate=0.01,
-        max_depth=5,
+        max_depth=4,
         eval_metric="rmse",
         tree_method="hist",
         random_state=42,
@@ -2045,7 +2045,7 @@ def Generate_simulator(
     current_teams,
     GW_list,
     match_id=None,
-    n_simulations=200,
+    n_simulations=400,
     random_seed=42,
     parallel_workers=1,
 ):
@@ -2924,8 +2924,8 @@ def Generate_simulator(
                 ] = xgboost_raw[:, index]
 
         combined_probabilities = (
-            statistical_probabilities*0.7
-            + xgboost_probabilities*0.3
+            statistical_probabilities*0.5
+            + xgboost_probabilities*0.5
         )
 
         combined_probabilities = np.clip(
@@ -2992,7 +2992,7 @@ def Generate_simulator(
         )
 
         combined_xg = (
-            statistical_xg*0.7 + xgboost_xg*0.3
+            statistical_xg*0.5 + xgboost_xg*0.5
         )
 
         return np.clip(

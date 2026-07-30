@@ -247,7 +247,7 @@ def Data_Predictions(
         n_scenarios=1000,
         include_finished_fixtures=False,
         paths=fs2_paths,
-    )
+    )"""
     
     Generate_Minutes_Simulator(current_team_path,gw_list)
 
@@ -257,7 +257,7 @@ def Data_Predictions(
         len(gw_list),
         time_list=gw_list,
         standings_fixture_path=str(fixture_path),
-    )"""
+    )
     Make_Predictions()
     Generate_point_predictions(time_list)
     #make_predictions2(horizon=len(time_list), gw_list=time_list)
