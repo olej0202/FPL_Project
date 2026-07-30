@@ -161,7 +161,6 @@ def Data_Predictions(
         sim_output_dir / "fixtures_expanded_filtered_by_timelist.csv",
         force_unfinished=True,
     )
-    """
     # Trigger full simulator parameter optimization with all read paths passed in.
     full_sim_control = FullSimulatorControlConfig(
         team_history_path=team_history_path,
@@ -247,7 +246,7 @@ def Data_Predictions(
         n_scenarios=1000,
         include_finished_fixtures=False,
         paths=fs2_paths,
-    )"""
+    )
     
     Generate_Minutes_Simulator(current_team_path,gw_list)
 
@@ -325,7 +324,7 @@ def Main_Orchestration():
     
     
     #Transform data
-    #Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos,Understat_path,Understat_shots_path)
+    Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos,Understat_path,Understat_shots_path)
     
     #Predict data
     Data_Predictions(

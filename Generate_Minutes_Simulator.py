@@ -19,6 +19,26 @@ import pandas as pd
 from sklearn.linear_model import Ridge
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 
+def compute_goal_prediction_feature(
+    off_factor,
+    def_factor,
+):
+    off_numeric = pd.to_numeric(
+        off_factor,
+        errors="coerce",
+    )
+    def_numeric = pd.to_numeric(
+        def_factor,
+        errors="coerce",
+    )
+    eta = (
+        -1.807
+        + 0.848 * off_numeric
+        + 0.91 * def_numeric
+        - 0.128 * off_numeric * def_numeric
+    )
+    return np.exp(eta)
+
 def Make_Dataset():
     INPUT_FILE = "Understat_All_shots_data.csv"
     INPUT_FILE_TEAM = "Team_data_transformed2.csv"
@@ -739,6 +759,8 @@ def Generate_which_attack_model(df):
         "Away_Team_Def",
         "Home_Team_Off",
         "Home_Team_Def",
+        "Away_Goal_Pred",
+        "Home_Goal_Pred",
         "minute",
         "goal_acc_a",
         "goal_acc_h",
@@ -749,6 +771,19 @@ def Generate_which_attack_model(df):
         #"momentum_xg_a",
         #"momentum_xg_h",
     ]
+
+    result_df["Home_Goal_Pred"] = (
+        compute_goal_prediction_feature(
+            result_df["Home_Team_Off"],
+            result_df["Away_Team_Def"],
+        )
+    )
+    result_df["Away_Goal_Pred"] = (
+        compute_goal_prediction_feature(
+            result_df["Away_Team_Off"],
+            result_df["Home_Team_Def"],
+        )
+    )
 
     # These columns contain information accumulated during the match.
     # Shift them by one row within each match so the model only sees
@@ -819,6 +854,8 @@ def Generate_which_attack_model(df):
         "Away_Team_Def",
         "Home_Team_Off",
         "Home_Team_Def",
+        "Away_Goal_Pred",
+        "Home_Goal_Pred",
         "minute",
     ]
 
@@ -2045,7 +2082,7 @@ def Generate_simulator(
     current_teams,
     GW_list,
     match_id=None,
-    n_simulations=800,
+    n_simulations=500,
     random_seed=42,
     parallel_workers=1,
 ):
@@ -2503,6 +2540,8 @@ def Generate_simulator(
         "Away_Team_Def",
         "Home_Team_Off",
         "Home_Team_Def",
+        "Away_Goal_Pred",
+        "Home_Goal_Pred",
         "minute",
         "goal_acc_a",
         "goal_acc_h",
@@ -3318,6 +3357,14 @@ def Generate_simulator(
                 "home_def": home_def,
                 "away_off": away_off,
                 "away_def": away_def,
+                "home_goal_pred": compute_goal_prediction_feature(
+                    home_off,
+                    away_def,
+                ),
+                "away_goal_pred": compute_goal_prediction_feature(
+                    away_off,
+                    home_def,
+                ),
                 "home_player_pool": home_player_pool,
                 "away_player_pool": away_player_pool,
                 "fixture_player_records": fixture_player_records,
@@ -3388,6 +3435,10 @@ def Generate_simulator(
         1,
         n_simulations + 1,
     ):
+        print(
+            f"Running simulation {simulation_number}/{n_simulations}",
+            flush=True,
+        )
         simulation_states = []
 
         for fixture_job in fixture_jobs:
@@ -3422,6 +3473,8 @@ def Generate_simulator(
                         fixture_job["away_def"],
                         fixture_job["home_off"],
                         fixture_job["home_def"],
+                        fixture_job["away_goal_pred"],
+                        fixture_job["home_goal_pred"],
                         minute,
                         simulation_state[
                             "goal_acc_a"
