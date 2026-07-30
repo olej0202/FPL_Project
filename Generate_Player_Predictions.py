@@ -1779,12 +1779,16 @@ def Generate_point_predictions(GW_list):
             src = df_src.copy()
             if "Name" not in src.columns and "player_name" in src.columns:
                 src["Name"] = src["player_name"]
+            if "Name" not in src.columns and "name" in src.columns:
+                src["Name"] = src["name"]
             if "GW" not in src.columns and "event" in src.columns:
                 src["GW"] = src["event"]
             if "GW" not in src.columns and "gameweek" in src.columns:
                 src["GW"] = src["gameweek"]
             if "fix_id" not in src.columns and "fixture_code" in src.columns:
                 src["fix_id"] = src["fixture_code"]
+            if not all(key in src.columns for key in merge_keys):
+                return pd.DataFrame(columns=merge_keys + [pred_col_name])
             src["GW"] = pd.to_numeric(src["GW"], errors="coerce")
             src["fix_id"] = pd.to_numeric(src["fix_id"], errors="coerce")
             keep_cols = [c for c in merge_keys if c in src.columns] + [pred_col_name]
@@ -1840,17 +1844,17 @@ def Generate_point_predictions(GW_list):
         
         
         player_preds = player_preds.merge(
-            _prepare_source(simulation2[simulation2["player_name"]==player], "avg_goal").rename(columns={"avg_goal": "sim3_goals_pred"}),
+            _prepare_source(minutes_simulation[minutes_simulation["name"]==player], "avg_goal").rename(columns={"avg_goal": "sim3_goals_pred"}),
             on=merge_keys,
             how="left",
         )
         player_preds = player_preds.merge(
-            _prepare_source(simulation2[simulation2["player_name"]==player], "avg_assist").rename(columns={"avg_assist": "sim3_assists_pred"}),
+            _prepare_source(minutes_simulation[minutes_simulation["name"]==player], "avg_assist").rename(columns={"avg_assist": "sim3_assists_pred"}),
             on=merge_keys,
             how="left",
         )
         player_preds = player_preds.merge(
-            _prepare_source(simulation2[simulation2["player_name"]==player], "avg_bonus_points").rename(columns={"avg_bonus_points": "sim3_bonus_pred"}),
+            _prepare_source(minutes_simulation[minutes_simulation["name"]==player], "avg_bonus_points").rename(columns={"avg_bonus_points": "sim3_bonus_pred"}),
             on=merge_keys,
             how="left",
         )
