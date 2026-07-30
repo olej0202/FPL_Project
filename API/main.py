@@ -17,7 +17,7 @@ from pydantic import BaseModel
 from fastapi.responses import JSONResponse
 from GenerateConfig import fixtures_config,Player_picture_url,current_season
 from queue import Queue
-from threading import Thread
+from threading import Thread, Lock, BoundedSemaphore
 import traceback
 from datetime import datetime, timedelta, timezone
 from uuid import uuid4
@@ -102,6 +102,54 @@ GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "").strip()
 AUTH_JWT_SECRET = os.getenv("AUTH_JWT_SECRET", "").strip() or "change-me-in-render-env"
 AUTH_JWT_ALGORITHM = "HS256"
 auth_bearer = HTTPBearer(auto_error=False)
+MAX_CONCURRENT_OPTIMIZATIONS = max(
+    1,
+    int(os.getenv("MAX_CONCURRENT_OPTIMIZATIONS", "1")),
+)
+OPTIMIZATION_BUSY_MESSAGE = (
+    "Optimizer is busy. Please retry in a moment."
+)
+_optimization_semaphore = BoundedSemaphore(MAX_CONCURRENT_OPTIMIZATIONS)
+_optimization_count_lock = Lock()
+_active_optimization_count = 0
+
+
+def _optimizer_status_snapshot() -> Dict[str, int]:
+    with _optimization_count_lock:
+        return {
+            "active": int(_active_optimization_count),
+            "max": int(MAX_CONCURRENT_OPTIMIZATIONS),
+        }
+
+
+def _acquire_optimization_slot() -> Dict[str, int]:
+    acquired = _optimization_semaphore.acquire(blocking=False)
+    if not acquired:
+        status = _optimizer_status_snapshot()
+        raise HTTPException(
+            status_code=429,
+            detail={
+                "message": OPTIMIZATION_BUSY_MESSAGE,
+                "active_optimizations": status["active"],
+                "max_concurrent_optimizations": status["max"],
+            },
+        )
+
+    global _active_optimization_count
+    with _optimization_count_lock:
+        _active_optimization_count += 1
+        return {
+            "active": int(_active_optimization_count),
+            "max": int(MAX_CONCURRENT_OPTIMIZATIONS),
+        }
+
+
+def _release_optimization_slot():
+    global _active_optimization_count
+    with _optimization_count_lock:
+        if _active_optimization_count > 0:
+            _active_optimization_count -= 1
+    _optimization_semaphore.release()
 
 
 def _db_dsn() -> str:
@@ -1215,6 +1263,7 @@ def _stream_optimization(
     opt_kwargs: dict,
     *,
     optimization_event_id: Optional[int] = None,
+    release_slot_on_finish: bool = False,
 ) -> StreamingResponse:
     events: Queue = Queue()
 
@@ -1266,9 +1315,16 @@ def _stream_optimization(
             traceback.print_exc()
             events.put(("error", {"status": 500, "detail": str(e)}))
         finally:
+            if release_slot_on_finish:
+                _release_optimization_slot()
             events.put(("__end__", {}))
 
-    Thread(target=_worker, daemon=True).start()
+    try:
+        Thread(target=_worker, daemon=True).start()
+    except Exception:
+        if release_slot_on_finish:
+            _release_optimization_slot()
+        raise
 
     def _generator():
         yield _sse_event("meta", {"n_solutions": OPTIMIZER_N_SOLUTIONS})
@@ -1362,10 +1418,12 @@ def post_my_team_optimize(req: OptimizeRequest, request: Request):
         players_df=players_df,
     )
 
+    _acquire_optimization_slot()
     if req.stream:
         return _stream_optimization(
             optimize_kwargs,
             optimization_event_id=optimization_event_id,
+            release_slot_on_finish=True,
         )
 
     try:
@@ -1384,6 +1442,8 @@ def post_my_team_optimize(req: OptimizeRequest, request: Request):
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        _release_optimization_slot()
 
 @app.get("/My_Team_Optimize")
 def get_my_team_optimize(
@@ -1451,10 +1511,12 @@ def get_my_team_optimize(
     except Exception as e:
         print(f"[analytics] failed to track optimization event (GET): {e}")
 
+    _acquire_optimization_slot()
     if stream:
         return _stream_optimization(
             optimize_kwargs,
             optimization_event_id=optimization_event_id,
+            release_slot_on_finish=True,
         )
 
     try:
@@ -1464,6 +1526,8 @@ def get_my_team_optimize(
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        _release_optimization_slot()
     rows = df.to_dict(orient="records")
     try:
         _update_optimization_event_predicted_points(

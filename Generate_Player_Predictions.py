@@ -1933,7 +1933,7 @@ def Generate_point_predictions(GW_list):
         likelihood_of_0 = 1 / (1 + np.exp(-z0))
             
         if(position=="FWD"):
-            summary_dataset["Bonus_pred"]=summary_dataset["Bonus_pred2"]*0.5+0.5*expected_bonus(
+            summary_dataset["Bonus_pred"]=summary_dataset["Bonus_pred2"]*0.7+0.3*expected_bonus(
                 summary_dataset["Bonus_pred"]+
                 summary_dataset["Goal_pred"]*POSITION_EVENT_BONUS[position]["goal"]+
                 summary_dataset["Assist_pred"]*POSITION_EVENT_BONUS[position]["assist"]
@@ -1945,7 +1945,7 @@ def Generate_point_predictions(GW_list):
             
             summary_dataset["Risk_share"]=(summary_dataset["Goal_pred"]*5.2+summary_dataset["Assist_pred"]*3.4)/summary_dataset["Points_prediction"]
         elif(position=="MID"):
-            summary_dataset["Bonus_pred"]=summary_dataset["Bonus_pred2"]*0.5+0.5*expected_bonus(
+            summary_dataset["Bonus_pred"]=summary_dataset["Bonus_pred2"]*0.7+0.3*expected_bonus(
                 summary_dataset["Bonus_pred"]+
                 summary_dataset["Goal_pred"]*POSITION_EVENT_BONUS[position]["goal"]+
                 summary_dataset["Assist_pred"]*POSITION_EVENT_BONUS[position]["assist"]
@@ -1959,7 +1959,7 @@ def Generate_point_predictions(GW_list):
             summary_dataset["Risk_share"]=(summary_dataset["Goal_pred"]*5.5+summary_dataset["Assist_pred"]*3.4+summary_dataset["GC_pred"]*0.8)/summary_dataset["Points_prediction"]
             
         elif(position=="GKP"):
-            summary_dataset["Bonus_pred"]=summary_dataset["Bonus_pred2"]*0.5+0.5*expected_bonus(
+            summary_dataset["Bonus_pred"]=summary_dataset["Bonus_pred2"]*0.7+0.3*expected_bonus(
                 summary_dataset["Bonus_pred"]+
                 summary_dataset["Goal_pred"]*POSITION_EVENT_BONUS[position]["goal"]+
                 summary_dataset["Assist_pred"]*POSITION_EVENT_BONUS[position]["assist"]+
@@ -1975,7 +1975,7 @@ def Generate_point_predictions(GW_list):
             summary_dataset["Risk_share"]=(summary_dataset["GC_pred"]*5)/summary_dataset["Points_prediction"]
 
         else:
-            summary_dataset["Bonus_pred"]=summary_dataset["Bonus_pred2"]*0.5+0.5*expected_bonus(
+            summary_dataset["Bonus_pred"]=summary_dataset["Bonus_pred2"]*0.7+0.3*expected_bonus(
                 summary_dataset["Bonus_pred"]+
                 summary_dataset["Goal_pred"]*POSITION_EVENT_BONUS[position]["goal"]+
                 summary_dataset["Assist_pred"]*POSITION_EVENT_BONUS[position]["assist"]+

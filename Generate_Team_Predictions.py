@@ -3109,15 +3109,15 @@ def GenerateTeamPredictions(
         team_pred1["XG"] = _weighted_blend_columns(
             [
                 (xg_p2, 0.3),
-                (xg_p4, 0.4),
-                (team_pred1.get("sim_xg"), 0.3),
+                (xg_p4, 0.5),
+                (team_pred1.get("sim_xg"), 0.2),
             ]
         )
         team_pred1["XGC"] = _weighted_blend_columns(
             [
                 (xgc_p2, 0.3),
-                (xgc_p4, 0.4),
-                (team_pred1.get("sim_xgc"), 0.3),
+                (xgc_p4, 0.5),
+                (team_pred1.get("sim_xgc"), 0.2),
             ]
         )
         team_pred1["CS"] = _weighted_blend_columns(
@@ -3166,14 +3166,14 @@ def GenerateTeamPredictions(
             )
             team_pred1["XG"] = _weighted_blend_columns(
                 [
-                    (pd.to_numeric(team_pred1["XG"], errors="coerce"), 0.6),
-                    (pd.to_numeric(team_pred1.get("minutes_sim_xg"), errors="coerce"), 0.4),
+                    (pd.to_numeric(team_pred1["XG"], errors="coerce"), 0.5),
+                    (pd.to_numeric(team_pred1.get("minutes_sim_xg"), errors="coerce"), 0.5),
                 ]
             )
             team_pred1["CS"] = _weighted_blend_columns(
                 [
-                    (pd.to_numeric(team_pred1["CS"], errors="coerce"), 0.6),
-                    (pd.to_numeric(team_pred1.get("minutes_sim_cs"), errors="coerce"), 0.4),
+                    (pd.to_numeric(team_pred1["CS"], errors="coerce"), 0.5),
+                    (pd.to_numeric(team_pred1.get("minutes_sim_cs"), errors="coerce"), 0.5),
                 ]
             )
             team_pred1 = team_pred1.drop(
@@ -3350,26 +3350,26 @@ def GenerateTeamPredictions(
         team_pred_visual1 = team_pred_visual1.merge(minutes_sim_visual_df, on="fixture_code", how="left")
         team_pred_visual1["home_goals"] = _weighted_blend_columns(
             [
-                (pd.to_numeric(team_pred_visual1["home_goals"], errors="coerce"), 0.6),
-                (pd.to_numeric(team_pred_visual1.get("minutes_sim_home_xg"), errors="coerce"), 0.4),
+                (pd.to_numeric(team_pred_visual1["home_goals"], errors="coerce"), 0.5),
+                (pd.to_numeric(team_pred_visual1.get("minutes_sim_home_xg"), errors="coerce"), 0.5),
             ]
         )
         team_pred_visual1["away_goals"] = _weighted_blend_columns(
             [
-                (pd.to_numeric(team_pred_visual1["away_goals"], errors="coerce"), 0.6),
-                (pd.to_numeric(team_pred_visual1.get("minutes_sim_away_xg"), errors="coerce"), 0.4),
+                (pd.to_numeric(team_pred_visual1["away_goals"], errors="coerce"), 0.5),
+                (pd.to_numeric(team_pred_visual1.get("minutes_sim_away_xg"), errors="coerce"), 0.5),
             ]
         )
         team_pred_visual1["Clean_Sheet_home"] = _weighted_blend_columns(
             [
-                (pd.to_numeric(team_pred_visual1["Clean_Sheet_home"], errors="coerce"), 0.6),
-                (pd.to_numeric(team_pred_visual1.get("minutes_sim_home_cs"), errors="coerce"), 0.4),
+                (pd.to_numeric(team_pred_visual1["Clean_Sheet_home"], errors="coerce"), 0.5),
+                (pd.to_numeric(team_pred_visual1.get("minutes_sim_home_cs"), errors="coerce"), 0.5),
             ]
         )
         team_pred_visual1["Clean_Sheet_away"] = _weighted_blend_columns(
             [
-                (pd.to_numeric(team_pred_visual1["Clean_Sheet_away"], errors="coerce"), 0.6),
-                (pd.to_numeric(team_pred_visual1.get("minutes_sim_away_cs"), errors="coerce"), 0.4),
+                (pd.to_numeric(team_pred_visual1["Clean_Sheet_away"], errors="coerce"), 0.5),
+                (pd.to_numeric(team_pred_visual1.get("minutes_sim_away_cs"), errors="coerce"), 0.5),
             ]
         )
         team_pred_visual1 = team_pred_visual1.drop(
