@@ -54,7 +54,7 @@ team_code,name,type,value
 2,Sean_Longstaff,const,31.67481880546758
 2,Sebastiaan_Bornauw,const,38.0996294959153
 2,Tanaka_Ao,const,64.59325686307005
-2,Tarik_Muharemović,const,0.0
+2,Tarik_Muharemović,const,90.0
 2,Wilfried_Gnonto,const,28.12953170840899
 3,Benjamin_White,const,0.0
 3,Bukayo_Saka,const,80.98524368646423
@@ -449,7 +449,7 @@ team_code,name,type,value
 54,Ryan_Sessegnon,const,30.564312062366408
 54,Sander_Berge,const,45.45967665809943
 54,Saša_Lukić,const,72.79234437567624
-54,Timothy_Castagne,const,79.54884999999999
+54,Timothy_Castagne,const,50.54884999999999
 54,Tom_Cairney,const,42.94873115975708
 56,Anthony_Patterson,const,0.0
 56,Arthur_Masuaku,const,0.0

@@ -92,6 +92,7 @@ Manual_Player_Adjustments={
     "Milan_van Ewijk":["Lucas_Digne"],
     "Liam_Kitching":["Jaydee_Canvot"],
     "Bobby_Thomas":["Jaydee_Canvot"],
+    "Tarik_Muharemović":["Jaydee_Canvot"],
     
     
     

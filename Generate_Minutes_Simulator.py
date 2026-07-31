@@ -2458,7 +2458,7 @@ def Generate_simulator(
     player_df["_base_bps"] = (
         player_df["Rolling_adjusted_BPS_2"] * 0.5
         + player_df["Rolling_adjusted_BPS"] * 0.5
-    )
+    )*0.9
 
     current_team_lookup = {}
     for _, team_row in current_teams.iterrows():

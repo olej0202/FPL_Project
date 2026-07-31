@@ -1879,8 +1879,8 @@ def Generate_point_predictions(GW_list):
         player_preds["Goal_pred"] = (
             (
                 (player_preds["xgb_goals_75"] * 0.5 + 0.5 * player_preds["xgb_goals_25"]) * 0.0
-                + player_preds["sim3_goals_pred"] * 0.3
-                + player_preds["sim2_goals_pred"] * 0.2
+                + player_preds["sim3_goals_pred"] * 0.35
+                + player_preds["sim2_goals_pred"] * 0.15
                 + player_preds["stat_goals_pred"] * 0.5
             ) * overscore
         )
@@ -1888,13 +1888,13 @@ def Generate_point_predictions(GW_list):
         player_preds["Assist_pred"] = (
             (
                 (player_preds["xgb_assist_75"] * 0.5 + 0.5 * player_preds["xgb_assist_25"]) * 0.0
-                + player_preds["sim_assists_pred"] * 0.3
-                + player_preds["sim2_assists_pred"] * 0.2
+                + player_preds["sim_assists_pred"] * 0.35
+                + player_preds["sim2_assists_pred"] * 0.15
                 + player_preds["stat_assist_pred"] * 0.5
                 + historic_Assist * 0
             ) 
         )
-        player_preds["Bonus_pred2"] = player_preds["sim2_bonus_pred"]*0.5+player_preds["sim3_bonus_pred"]*0.5
+        player_preds["Bonus_pred2"] = player_preds["sim2_bonus_pred"]*0.3+player_preds["sim3_bonus_pred"]*0.7
         player_preds["Bonus_pred"] = player_preds["stat_bps"]
         player_preds["GC_pred"] = player_preds["stat_gc_pred"]
         player_preds["Fantasy_pred"] = player_preds["xgb_fantasy_pred"]
