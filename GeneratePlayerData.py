@@ -1191,7 +1191,49 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
     df["Assist_Index"] = df["Understat_POSXA"] * df["player_risiko"] + (1 - df["player_risiko"]) * (df["Assist_Statistics"]*0.55+df["Rolling_adjusted_XA"]*0.3+0.15*df['Rolling_adjusted_creativity_per90']*0.01)
     df["Goal_Index_Share"] = df["Understat_POSXG_Share"] * df["player_risiko"] + (1 - df["player_risiko"]) * (df["Goal_Statistics_share"]*0.4+df["Share_of_XG"]*0.35+0.15*df['Share_of_XG_Short']+0.1*df['Rolling_adjusted_Threat_per90_share'])
     df["Assist_Index_Share"] = df["Understat_POSXA"] * df["player_risiko"] + (1 - df["player_risiko"]) * (df["Assist_Statistics_share"]*0.4+df["Share_of_XA"]*0.35+0.15*df['Share_of_XA_Short']+0.1*df['Rolling_adjusted_creativity_per90_share'])
-    
+    df["average_minutes"] = pd.to_numeric(
+        df["average_minutes"],
+        errors="coerce",
+    ).fillna(0.0)
+    df["_minutes_factor"] = (
+        df["average_minutes"]
+        .clip(lower=0.0)
+        / 90.0
+    )
+    df["Goal_Weight"] = (
+        pd.to_numeric(
+            df["Goal_Index"],
+            errors="coerce",
+        ).fillna(0.0)
+        * df["_minutes_factor"]
+    )
+    df["Assist_Weight"] = (
+        pd.to_numeric(
+            df["Assist_Index"],
+            errors="coerce",
+        ).fillna(0.0)
+        * df["_minutes_factor"]
+    )
+    goal_weight_sum = df.groupby(
+        ["Team", "GW"],
+        dropna=False,
+    )["Goal_Weight"].transform("sum")
+    assist_weight_sum = df.groupby(
+        ["Team", "GW"],
+        dropna=False,
+    )["Assist_Weight"].transform("sum")
+    df["Goal_Weight_Share"] = np.where(
+        goal_weight_sum > 0,
+        df["Goal_Weight"] / goal_weight_sum,
+        0.0,
+    )
+    df["Assist_Weight_Share"] = np.where(
+        assist_weight_sum > 0,
+        df["Assist_Weight"] / assist_weight_sum,
+        0.0,
+    )
+    df = df.drop(columns=["_minutes_factor"])
+
                
     df.to_csv("Player_Prediction_set.csv", index=False)
     

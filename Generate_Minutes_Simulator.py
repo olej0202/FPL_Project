@@ -2456,8 +2456,8 @@ def Generate_simulator(
 
     # Ground/base BPS used in each simulation.
     player_df["_base_bps"] = (
-        player_df["Rolling_adjusted_BPS_2"] * 0.5
-        + player_df["Rolling_adjusted_BPS"] * 0.5
+        player_df["Rolling_adjusted_BPS_2"] * 0.7
+        + player_df["Rolling_adjusted_BPS"] * 0.3
     )*0.9
 
     current_team_lookup = {}

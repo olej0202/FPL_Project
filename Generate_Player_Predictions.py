@@ -959,7 +959,7 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
                stat_pred_share=df['Assist_Index_Share'].values[h]
                player_model.append(pred)
                pred=(pred*0.33+0.33*stat_pred+0.33*stat_pred_share)*0.8+0.2*df['Opp_Assist_Threat_Pos'].values[h]
-               player_preds.append(pred*team_xg)
+               player_preds.append(pred*team_xg*0.85)
                
                eta=-5.23+0.425*team_xg+4.92*(df["Rolling_adjusted_XA_per90"].values[h]*0.33+(df["Rolling_adjusted_creativity_per90"].values[h]/100)*0.33+df["rolling_Assist_min"].values[h]*0.33)+0.019*90
                player_preds2.append(stat_pred)
