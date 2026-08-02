@@ -863,9 +863,22 @@ def GetXmins(current_players, n_future, scenarios=None, position_slots=None):
         (1100 - out["GW_team_Final_minutes_Adjusted_sum"]) * out["GW_adjustement_weight"],
         0.0,
     )
-    out["Final_minutes_Adjusted"] = np.maximum(
-        0,
-        out["Final_minutes_Adjusted"] + out["Adjustement"],
+    out["Adjustement"] = np.clip(
+        pd.to_numeric(
+            out["Adjustement"],
+            errors="coerce",
+        ).fillna(0.0),
+        -30.0,
+        30.0,
+    )
+    out["Final_minutes_Adjusted"] = np.clip(
+        pd.to_numeric(
+            out["Final_minutes_Adjusted"],
+            errors="coerce",
+        ).fillna(0.0)
+        + out["Adjustement"],
+        0.0,
+        90.0,
     )
     
     # Save & return

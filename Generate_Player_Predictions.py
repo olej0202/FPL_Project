@@ -21,6 +21,7 @@ import joblib
 from GenerateConfig import date_filter as config_date_filter
 from GenerateConfig import POSITION_EVENT_BONUS,POINTS_RULES
 from scipy.stats import poisson
+from sklearn.impute import SimpleImputer
 
 criterion = nn.L1Loss()
 from sklearn.pipeline import Pipeline
@@ -435,6 +436,131 @@ def train_defcon_ensemble_model(
         df_train
     )
 
+def Generate_Defensive_Contribution_Models(
+    training_file="Team_data_transformed2.csv",
+    team_data_path="Team_data_newest3.csv",
+    fixture_path="Fantasy_season_Fixtures_EXPANDED.csv",
+    current_team_path=r"Raw_Data_26\current_teams.csv",
+    output_file="Defcon_preds.csv"
+):
+    features = [
+        "own_Rolling_Defcon_for",
+        "opponent_Rolling_Defcon_against",
+        "own_XG_avg", "own_XGC_avg",
+        "opponent_XG_avg", "opponent_XGC_avg"
+    ]
+    target = "defensive_contribution"
+
+    # Historical data + opponent stats
+    df = pd.read_csv(training_file)
+    df["kickoff_time"] = pd.to_datetime(df["kickoff_time"], errors="coerce", utc=True)
+    df = df[df["kickoff_time"] > pd.Timestamp("2025-09-30", tz="UTC")].copy()
+    df[["code", "opponent"]] = df[["code", "opponent"]].apply(pd.to_numeric, errors="coerce")
+    df = df.dropna(subset=["code", "opponent"])
+    df[["code", "opponent"]] = df[["code", "opponent"]].astype(int)
+    df["_date"] = df["kickoff_time"].dt.normalize()
+
+    opp = df[["_date", "code", "Rolling_Defcon_against", "XG_avg", "XGC_avg"]].rename(columns={
+        "code": "opponent",
+        "Rolling_Defcon_against": "opponent_Rolling_Defcon_against",
+        "XG_avg": "opponent_XG_avg",
+        "XGC_avg": "opponent_XGC_avg"
+    }).drop_duplicates(["_date", "opponent"], keep="last")
+
+    df = df.merge(opp, on=["_date", "opponent"], how="left").rename(columns={
+        "Rolling_Defcon_for": "own_Rolling_Defcon_for",
+        "XG_avg": "own_XG_avg",
+        "XGC_avg": "own_XGC_avg"
+    })
+
+    df[features + [target]] = df[features + [target]].apply(pd.to_numeric, errors="coerce")
+    df = df.dropna(subset=[target, "opponent_Rolling_Defcon_against"]).sort_values("kickoff_time")
+
+    # Time-ordered test
+    split = max(1, min(int(len(df) * .8), len(df) - 1))
+    train, test = df.iloc[:split], df.iloc[split:]
+    imputer = SimpleImputer(strategy="median")
+    X_train = imputer.fit_transform(train[features])
+    X_test = imputer.transform(test[features])
+
+    model = XGBRegressor(
+        objective="reg:squarederror",
+        n_estimators=300, learning_rate=.03, max_depth=3,
+        min_child_weight=5, subsample=.8, colsample_bytree=.8,
+        reg_alpha=.1, reg_lambda=1, random_state=42, n_jobs=-1
+    )
+    model.fit(X_train, train[target])
+
+    p = model.predict(X_test)
+    print(f"XGBoost | MAE {mean_absolute_error(test[target], p):.4f} | "
+          f"RMSE {np.sqrt(mean_squared_error(test[target], p)):.4f} | "
+          f"R² {r2_score(test[target], p):.4f}")
+
+    # Refit all history
+    X_all = imputer.fit_transform(df[features])
+    model.fit(X_all, df[target])
+
+    print("\nFeature importance:")
+    print(pd.Series(model.feature_importances_, index=features).sort_values(ascending=False))
+
+    # Fixtures: fixture code becomes fix_id
+    fixtures = pd.read_csv(fixture_path)[["code", "event", "team_a", "team_h", "finished"]]
+    fixtures = fixtures[~fixtures["finished"].fillna(False).astype(bool)].rename(columns={"code": "fix_id"})
+
+    teams = pd.read_csv(current_team_path)[["id", "code", "name"]]
+    teams[["id", "code"]] = teams[["id", "code"]].apply(pd.to_numeric, errors="coerce")
+
+    f = fixtures.merge(
+        teams.add_suffix("_away"), left_on="team_a", right_on="id_away", how="left"
+    ).merge(
+        teams.add_suffix("_home"), left_on="team_h", right_on="id_home", how="left"
+    )
+
+    # Latest stats per team
+    stats = pd.read_csv(team_data_path)
+    stats["code"] = pd.to_numeric(stats["code"], errors="coerce")
+    if "kickoff_time" in stats:
+        stats["kickoff_time"] = pd.to_datetime(stats["kickoff_time"], errors="coerce", utc=True)
+        stats = stats.sort_values("kickoff_time")
+    stats = stats.drop_duplicates("code", keep="last")
+
+    s = stats[["code", "Rolling_Defcon_for", "Rolling_Defcon_against", "XG_avg", "XGC_avg"]]
+    f = f.merge(s.add_suffix("_away"), left_on="code_away", right_on="code_away", how="left")
+    f = f.merge(s.add_suffix("_home"), left_on="code_home", right_on="code_home", how="left")
+
+    # One row per team per fixture
+    def rows(side, opp, ha):
+        return pd.DataFrame({
+            "fix_id": f["fix_id"],
+            "event": f["event"],
+            "team_code": f[f"code_{side}"],
+            "team_name": f[f"name_{side}"],
+            "opponent_code": f[f"code_{opp}"],
+            "opponent_name": f[f"name_{opp}"],
+            "home_away": ha,
+            "own_Rolling_Defcon_for": f[f"Rolling_Defcon_for_{side}"],
+            "opponent_Rolling_Defcon_against": f[f"Rolling_Defcon_against_{opp}"],
+            "own_XG_avg": f[f"XG_avg_{side}"],
+            "own_XGC_avg": f[f"XGC_avg_{side}"],
+            "opponent_XG_avg": f[f"XG_avg_{opp}"],
+            "opponent_XGC_avg": f[f"XGC_avg_{opp}"]
+        })
+
+    pred = pd.concat([rows("away", "home", "A"), rows("home", "away", "H")], ignore_index=True)
+    pred[features] = pred[features].apply(pd.to_numeric, errors="coerce")
+
+    valid = pred["own_Rolling_Defcon_for"].notna()
+    pred["defcon_prediction"] = np.nan
+    pred.loc[valid, "defcon_prediction"] = model.predict(imputer.transform(pred.loc[valid, features]))
+    pred["defcon_prediction_ratio"] = pred["defcon_prediction"] / pred["own_Rolling_Defcon_for"].replace(0, np.nan)
+
+    pred = pred.sort_values(["event", "fix_id", "home_away", "team_name"]).reset_index(drop=True)
+    pred[features + ["defcon_prediction", "defcon_prediction_ratio"]] = \
+        pred[features + ["defcon_prediction", "defcon_prediction_ratio"]].round(6)
+
+    pred.to_csv(output_file, index=False)
+    print(f"\nSaved {len(pred)} predictions to {output_file}")
+    return model, df, pred
 
 # -------------------------------------------------------------
 # Tren med like vekter
@@ -847,6 +973,9 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
             elastic_net_l1_ratio=0.5
             )   
         )
+        Generate_Defensive_Contribution_Models()
+        defcon_team_preds=pd.read_csv("Defcon_preds.csv")
+
     else:
         defcon_model, sigma=None,None
 
@@ -1036,15 +1165,18 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
                     "ensemble_pred": float(component_preds["ensemble_pred"][0]),
                 })
                 
+                defcon_team_preds_val=defcon_team_preds[(defcon_team_preds["team_code"]==team) & (defcon_team_preds["fixture_code"]==fix_id)].copy()["defcon_prediction"].values[0]
+
+                
                 value = (
-                    np.clip(1 + (df["Opp_defcon"].values[h] - 77.7) / 30, 0.75, 1.15)
-                    * (0.5*df["defcon_avg"].values[h]+0.5*(df["Rolling_Team_Defcon"].values[h]*(df["Share_of_Defcon"].values[h]*0.7+0.3*df["Share_of_Defcon_Short"].values[h])))
+                    defcon_team_preds_val
+                    *(df["Share_of_Defcon"].values[h]*0.7+0.3*df["Share_of_Defcon_Short"].values[h])
                     * min(80, df["average_minutes"].values[h]) / 80
                 )
                 if position == "DEF":
-                    cbi_pred = 1 - norm.cdf(9.5, loc=pred*0.5+0.5*value, scale=sigma)
+                    cbi_pred = 1 - norm.cdf(9.5, loc=pred*0.5+0.5*value, scale=2.4)
                 else:
-                    cbi_pred = 1 - norm.cdf(11.5, loc=pred*0.5+0.5*value, scale=sigma)
+                    cbi_pred = 1 - norm.cdf(11.5, loc=pred*0.5+0.5*value, scale=2.4)
 
                 player_preds.append(cbi_pred)
        
