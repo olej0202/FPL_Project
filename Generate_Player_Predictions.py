@@ -1165,7 +1165,7 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
                     "ensemble_pred": float(component_preds["ensemble_pred"][0]),
                 })
                 
-                defcon_team_preds_val=defcon_team_preds[(defcon_team_preds["team_code"]==team) & (defcon_team_preds["fixture_code"]==fix_id)].copy()["defcon_prediction"].values[0]
+                defcon_team_preds_val=defcon_team_preds[(defcon_team_preds["team_code"]==team) & (defcon_team_preds["fix_id"]==fix_id)].copy()["defcon_prediction"].values[0]
 
                 
                 value = (
