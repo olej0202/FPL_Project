@@ -49,7 +49,7 @@ Samuel_Iling-Junior,Iling Jr,Unknown for understat,,no-match,,['SUB'],[1.0],1
 Bradley_Burrowes,Burrowes,Bradley Burrowes,100.0,name-strict,Bradley Burrowes,['SUB'],[1.0],1
 George_Hemmings,George Hemmings,George Hemmings,100.0,name-strict,George Hemmings,['SUB'],[1.0],1
 Alysson_Edward Franco da Rocha dos Santos,Alysson,Alysson Edward,90.0,name-relaxed,Alysson Edward,['SUB'],[1.0],1
-Johan_Manzambi,Manzambi,Unknown for understat,,no-match,,['SUB'],[1.0],1
+Johan_Manzambi,Manzambi,Unknown for understat,,no-match,,['AMC'],[1.0],1
 Joao_Gomes,Gomes,João Gomes,100.0,name-strict,João Gomes,"['MC', 'DM']","[0.8888888888888888, 0.1111111111111111]",1
 Ollie_Watkins,Watkins,Ollie Watkins,100.0,name-strict,Ollie Watkins,['FW'],[1.0],1
 Tammy_Abraham,Abraham,Tammy Abraham,100.0,name-strict,Tammy Abraham,['FW'],[1.0],1
@@ -554,3 +554,4 @@ Djiamgone_Jocelin Ta Bi,Jocelin.T,Djiamgone Jocelin Ta Bi,100.0,name-strict,Djia
 Nilson_Angulo,Angulo,Nilson Angulo,100.0,name-strict,Nilson Angulo,"['LW', 'RW']","[0.8, 0.2]",1
 Brian_Brobbey,Brobbey,Brian Brobbey,100.0,name-strict,Brian Brobbey,['FW'],[1.0],1
 Wilson_Isidor,Isidor,Wilson Isidor,100.0,name-strict,Wilson Isidor,['FW'],[1.0],1
+Christos_Tzolis,Christos_Tzolis,Christos Tzolis,100.0,name-strict,Wilson Isidor,['LW'],[1.0],1
