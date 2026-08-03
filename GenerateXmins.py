@@ -860,7 +860,7 @@ def GetXmins(current_players, n_future, scenarios=None, position_slots=None):
     )
     out["Adjustement"] = np.where(
         valid_weight_mask,
-        (1100 - out["GW_team_Final_minutes_Adjusted_sum"]) * out["GW_adjustement_weight"],
+        (1050 - out["GW_team_Final_minutes_Adjusted_sum"]) * out["GW_adjustement_weight"],
         0.0,
     )
     out["Adjustement"] = np.clip(

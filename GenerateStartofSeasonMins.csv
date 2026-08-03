@@ -53,7 +53,7 @@ team_code,name,type,value
 2,Noah_Okafor,const,0.0
 2,Sean_Longstaff,const,31.67481880546758
 2,Sebastiaan_Bornauw,const,38.0996294959153
-2,Tanaka_Ao,const,64.59325686307005
+2,Tanaka_Ao,const,54.59325686307005
 2,Tarik_Muharemović,const,90.0
 2,Wilfried_Gnonto,const,28.12953170840899
 3,Benjamin_White,const,0.0
@@ -105,7 +105,7 @@ team_code,name,type,value
 4,Sean_Steur,const,0.0
 4,Sven_Botman,const,75.835062
 4,Tino_Livramento,const,0.0
-4,William_Osula,const,70.55722163518976
+4,William_Osula,const,60.55722163518976
 4,Yoane_Wissa,const,40.94259360107887
 6,Andrew_Robertson,const,0.0
 6,Antonín_Kinský,const,90.0
@@ -120,7 +120,7 @@ team_code,name,type,value
 6,Dejan_Kulusevski,const,0.0
 6,Destiny_Udogie,const,27.534283915976683
 6,Djed_Spence,const,90.0
-6,Dominic_Solanke-Mitchell,const,90.0
+6,Dominic_Solanke-Mitchell,const,78.0
 6,Guglielmo_Vicario,const,0.0
 6,James_Maddison,const,70.527684839895315
 6,James_Rowswell,const,2.46259589
@@ -263,7 +263,7 @@ team_code,name,type,value
 14,Dominik_Szoboszlai,const,90.0
 14,Endo_Wataru,const,5.12204285
 14,Federico_Chiesa,const,0.0
-14,Florian_Wirtz,const,77.10826
+14,Florian_Wirtz,const,80.10826
 14,Freddie_Woodman,const,8.180433419749601
 14,Giorgi_Mamardashvili,const,0.6599128
 14,Giovanni_Leoni,const,0.0
@@ -358,7 +358,7 @@ team_code,name,type,value
 36,Jason_Steele,const,18.40513310138393
 36,João_Pedro Loureiro da Costa,const,0.0
 36,Lewis_Dunk,const,82.642732
-36,Luka_Vušković,const,0.0
+36,Luka_Vušković,const,70.0
 36,Mats_Wieffer,const,70.78052399848069
 36,Matt_O'Riley,const,0.6911055728685724
 36,Maxim_De Cuyper,const,48.673625459612346
@@ -411,7 +411,7 @@ team_code,name,type,value
 43,Jack_Grealish,const,0.0
 43,James_Trafford,const,8.21827028250237
 43,Jeremy_Monga,const,6.473999999999999
-43,Joško_Gvardiol,const,75.90363038281616
+43,Joško_Gvardiol,const,79.90363038281616
 43,Jérémy_Doku,const,30.520719636267103
 43,Kalvin_Phillips,const,0.0
 43,Marc_Guéhi,const,90.0

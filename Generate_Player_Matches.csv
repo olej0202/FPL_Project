@@ -135,7 +135,7 @@ Stefanos_Tzimas,Tzimas,Stefanos Tzimas,100.0,name-strict,Stefanos Tzimas,['FW'],
 Charalampos_Kostoulas,Kostoulas,Charalampos Kostoulas,100.0,name-strict,Charalampos Kostoulas,['FW'],[1.0],1
 Evan_Ferguson,Ferguson,Evan Ferguson,100.0,name-strict,Evan Ferguson,['FW'],[1.0],1
 Pascal_Struijk,Struijk,Pascal Struijk,100.0,name-strict,Pascal Struijk,['CB'],[1.0],1
-Luka_Vušković,Vuskovic,Unknown for understat,,no-match,,['SUB'],[1.0],1
+Luka_Vušković,Vuskovic,Unknown for understat,,no-match,,['CB'],[1.0],1
 Morgan_Rogers,Rogers,Morgan Rogers,100.0,name-strict,Morgan Rogers,"['LW', 'AMC', 'RW']","[0.6, 0.3, 0.1]",1
 Robert_Sánchez,Sánchez,Robert Sánchez,100.0,name-strict,Robert Sánchez,['GK'],[1.0],1
 Filip_Jörgensen,Jörgensen,Filip Jorgensen,100.0,name-strict,Filip Jorgensen,['GK'],[1.0],1
@@ -330,7 +330,7 @@ Jayden_Bogle,Bogle,Jayden Bogle,100.0,name-strict,Jayden Bogle,"['DR', 'RW']","[
 Gabriel_Gudmundsson,Gudmundsson,Gabriel Gudmundsson,100.0,name-strict,Gabriel Gudmundsson,"['DL', 'LW']","[0.9, 0.1]",1
 James_Justin,Justin,James Justin,100.0,name-strict,James Justin,"['DL', 'CB', 'LW', 'RW', 'DR']","[0.4, 0.3, 0.1, 0.1, 0.1]",1
 Sebastiaan_Bornauw,Bornauw,Sebastiaan Bornauw,100.0,name-strict,Sebastiaan Bornauw,['CB'],[1.0],1
-Tarik_Muharemović,Muharemović,Unknown for understat,,no-match,,['SUB'],[1.0],1
+Tarik_Muharemović,Muharemović,Unknown for understat,,no-match,,['CB'],[1.0],1
 Anton_Stach,Stach,Anton Stach,100.0,name-strict,Anton Stach,"['MC', 'RW', 'AMC']","[0.6, 0.2, 0.2]",1
 Noah_Okafor,Okafor,Noah Okafor,100.0,name-strict,Noah Okafor,"['AMC', 'FW']","[0.6666666666666666, 0.3333333333333333]",1
 Brenden_Aaronson,Aaronson,Brenden Aaronson,100.0,name-strict,Brenden Aaronson,"['AMC', 'FW', 'MC', 'LW']","[0.5555555555555556, 0.2222222222222222, 0.1111111111111111, 0.1111111111111111]",1
