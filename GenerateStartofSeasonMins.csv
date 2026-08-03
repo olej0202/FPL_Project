@@ -225,7 +225,7 @@ team_code,name,type,value
 9,Miguel_Brau,const,0.0
 9,Milan_van Ewijk,const,90.0
 9,Norman_Bassette,const,0.0
-9,Oliver_Dovin,const,90.0
+9,Oliver_Dovin,const,0.0
 9,Raphael_Borges Rodrigues,const,0.0
 9,Tatsuhiro_Sakamoto,const,90.0
 9,Victor_Torp,const,0.0
@@ -269,7 +269,7 @@ team_code,name,type,value
 14,Giovanni_Leoni,const,0.0
 14,Harvey_Davies,const,0.0
 14,Harvey_Elliott,const,0.0
-14,Hugo_Ekitiké,const,71.71143877780037
+14,Hugo_Ekitiké,const,0.71143877780037
 14,James_McConnell,const,0.0
 14,Jayden_Danns,const,0.0
 14,Jeremie_Frimpong,const,46.72701626990487
@@ -381,6 +381,7 @@ team_code,name,type,value
 40,Ben_Johnson,const,66.26821561617382
 40,Chiedozie_Ogbene,const,3.903
 40,Christian_Walton,const,75.97921561617383
+40,Kjell_Scherpen,const,90
 40,Chuba_Akpom,const,0.0
 40,Cédric_Kipré,const,0.0
 40,Dara_O'Shea,const,90.97921561617383
@@ -394,7 +395,7 @@ team_code,name,type,value
 40,Jacob_Greaves,const,74.89621561617382
 40,Jaden_Philogene,const,80.27721561617382
 40,Kasey_McAteer,const,72.68821561617382
-40,Kayne_van Oevelen,const,90.0
+40,Kayne_van Oevelen,const,0.0
 40,Leif_Davis,const,90.87521561617382
 40,Marcelino_Núñez,const,0.0
 40,Sam_Szmodics,const,9.213

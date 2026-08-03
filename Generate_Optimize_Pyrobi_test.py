@@ -89,6 +89,38 @@ def safe_value(x):
     return 0.0 if v is None else float(v)
 
 
+def normalize_chip_gws(raw_value: Any) -> list[int]:
+    if raw_value is None:
+        return []
+
+    if isinstance(raw_value, (list, tuple, set, np.ndarray, pd.Series)):
+        values = list(raw_value)
+    else:
+        values = [raw_value]
+
+    normalized: list[int] = []
+    seen: set[int] = set()
+
+    for value in values:
+        if value is None:
+            continue
+
+        text = str(value).strip()
+        if not text:
+            continue
+
+        try:
+            gw_int = int(float(text))
+        except (TypeError, ValueError):
+            continue
+
+        if gw_int not in seen:
+            normalized.append(gw_int)
+            seen.add(gw_int)
+
+    return normalized
+
+
 # ============================================================
 # Main optimizer
 # ============================================================
@@ -221,21 +253,30 @@ def optimize_my_team(
         gw_str = str(int(gw_abs))
         return GW_list.index(gw_str) if gw_str in GW_list else None
 
-    wildcard_round_rel = gw_index(wildcard_round)
+    wildcard_gw_inputs = normalize_chip_gws(wildcard_round)
+    freehit_gw_inputs = normalize_chip_gws(free_hit_round)
+
+    wildcard_week_rels = {
+        rel_t
+        for rel_t in (gw_index(gw_abs) for gw_abs in wildcard_gw_inputs)
+        if rel_t is not None and rel_t >= 1
+    }
     bench_points_gw = gw_index(bb_round)
-    freehit_round_rel = gw_index(free_hit_round)
+    freehit_week_rels = {
+        rel_t
+        for rel_t in (gw_index(gw_abs) for gw_abs in freehit_gw_inputs)
+        if rel_t is not None and rel_t >= 1
+    }
 
     optimize_range = len(GW_list)
     gameweeks = list(range(optimize_range))
 
-    use_freehit = (freehit_round_rel is not None) and (freehit_round_rel >= 1)
+    use_freehit = bool(freehit_week_rels)
 
-    if wildcard_round_rel is not None and wildcard_round_rel < 1:
-        wildcard_round_rel = 40
     if bench_points_gw is not None and bench_points_gw < 1:
-        bench_points_gw = 40
+        bench_points_gw = None
     if is_first:
-        wildcard_round_rel = 1
+        wildcard_week_rels.add(1)
 
     # ---------------- Load data ----------------
     data = pd.read_csv("Model_Optimizer.csv")
@@ -473,16 +514,16 @@ def optimize_my_team(
     m.transfers_used = pyo.Var(m.T, domain=pyo.NonNegativeIntegers, bounds=(0, 5))
     m.money_in_bank = pyo.Var(m.T, domain=pyo.NonNegativeReals)
 
-    fh_t = freehit_round_rel if use_freehit else None
     if use_freehit:
-        m.fh_x = pyo.Var(m.I, domain=pyo.Binary)
-        m.fh_bench = pyo.Var(m.I, domain=pyo.Binary)
-        m.fh_bench_slot = pyo.Var(m.I, m.BS, domain=pyo.Binary)
-        m.fh_y = pyo.Var(m.I, domain=pyo.Binary)
-        m.fh_c = pyo.Var(m.I, domain=pyo.Binary)
-        m.fh_in = pyo.Var(m.I, domain=pyo.Binary)
-        m.fh_out = pyo.Var(m.I, domain=pyo.Binary)
-        m.fh_bank = pyo.Var(domain=pyo.NonNegativeReals)
+        m.FH_T = pyo.Set(initialize=sorted(freehit_week_rels))
+        m.fh_x = pyo.Var(m.I, m.FH_T, domain=pyo.Binary)
+        m.fh_bench = pyo.Var(m.I, m.FH_T, domain=pyo.Binary)
+        m.fh_bench_slot = pyo.Var(m.I, m.FH_T, m.BS, domain=pyo.Binary)
+        m.fh_y = pyo.Var(m.I, m.FH_T, domain=pyo.Binary)
+        m.fh_c = pyo.Var(m.I, m.FH_T, domain=pyo.Binary)
+        m.fh_in = pyo.Var(m.I, m.FH_T, domain=pyo.Binary)
+        m.fh_out = pyo.Var(m.I, m.FH_T, domain=pyo.Binary)
+        m.fh_bank = pyo.Var(m.FH_T, domain=pyo.NonNegativeReals)
 
     # ---------------- Initial squad ----------------
     m.init_con = pyo.ConstraintList()
@@ -494,16 +535,16 @@ def optimize_my_team(
     risk_expr = 0
 
     for t in T:
-        if use_freehit and t == fh_t:
+        if t in freehit_week_rels:
             points_expr += sum(
-                (m.fh_y[i] + m.fh_c[i]) * m.pred[i, t]
+                (m.fh_y[i, t] + m.fh_c[i, t]) * m.pred[i, t]
                 for i in I
             )
             points_expr += sum(
-                bench_slot_weights[s] * m.fh_bench_slot[i, s] * m.pred[i, t]
+                bench_slot_weights[s] * m.fh_bench_slot[i, t, s] * m.pred[i, t]
                 for i in I for s in m.BS
             )
-            risk_expr += sum(m.fh_x[i] * m.risk[i] for i in I)
+            risk_expr += sum(m.fh_x[i, t] * m.risk[i] for i in I)
         else:
             points_expr += sum(
                 (m.y[i, t] + m.c[i, t]) * m.pred[i, t]
@@ -524,9 +565,9 @@ def optimize_my_team(
 
     bench_boost_expr = 0
     if bench_points_gw in T:
-        if use_freehit and bench_points_gw == fh_t:
+        if bench_points_gw in freehit_week_rels:
             bench_boost_expr += sum(
-                bench_slot_bb_extra[s] * m.fh_bench_slot[i, s] * m.pred[i, bench_points_gw]
+                bench_slot_bb_extra[s] * m.fh_bench_slot[i, bench_points_gw, s] * m.pred[i, bench_points_gw]
                 for i in I for s in m.BS
             )
         else:
@@ -567,61 +608,64 @@ def optimize_my_team(
     # ---------------- Free hit ----------------
     if use_freehit:
         m.fh_con = pyo.ConstraintList()
-        m.fh_con.add(sum(m.fh_x[i] for i in I) == 15)
-        m.fh_con.add(sum(m.fh_x[i] for i in m.DEF) == 5)
-        m.fh_con.add(sum(m.fh_x[i] for i in m.GK) == 2)
-        m.fh_con.add(sum(m.fh_x[i] for i in m.MID) == 5)
-        m.fh_con.add(sum(m.fh_x[i] for i in m.FWD) == 3)
+        for fh_t in sorted(freehit_week_rels):
+            m.fh_con.add(sum(m.fh_x[i, fh_t] for i in I) == 15)
+            m.fh_con.add(sum(m.fh_x[i, fh_t] for i in m.DEF) == 5)
+            m.fh_con.add(sum(m.fh_x[i, fh_t] for i in m.GK) == 2)
+            m.fh_con.add(sum(m.fh_x[i, fh_t] for i in m.MID) == 5)
+            m.fh_con.add(sum(m.fh_x[i, fh_t] for i in m.FWD) == 3)
 
-        for team, indices in team_to_indices.items():
-            m.fh_con.add(sum(m.fh_x[i] for i in indices) <= 3)
+            for team, indices in team_to_indices.items():
+                m.fh_con.add(sum(m.fh_x[i, fh_t] for i in indices) <= 3)
 
-        prev_t = fh_t - 1
+            prev_t = fh_t - 1
 
-        for i in I:
-            m.fh_con.add(m.fh_out[i] <= m.x[i, prev_t])
-            m.fh_con.add(m.fh_in[i] <= 1 - m.x[i, prev_t])
-            m.fh_con.add(m.fh_x[i] == m.x[i, prev_t] - m.fh_out[i] + m.fh_in[i])
+            for i in I:
+                m.fh_con.add(m.fh_out[i, fh_t] <= m.x[i, prev_t])
+                m.fh_con.add(m.fh_in[i, fh_t] <= 1 - m.x[i, prev_t])
+                m.fh_con.add(
+                    m.fh_x[i, fh_t] == m.x[i, prev_t] - m.fh_out[i, fh_t] + m.fh_in[i, fh_t]
+                )
 
-        m.fh_con.add(
-            m.fh_bank == (
-                m.money_in_bank[prev_t]
-                + sum(m.fh_out[i] * m.sell[i] for i in I)
-                - sum(m.fh_in[i] * m.cost[i] for i in I)
+            m.fh_con.add(
+                m.fh_bank[fh_t] == (
+                    m.money_in_bank[prev_t]
+                    + sum(m.fh_out[i, fh_t] * m.sell[i] for i in I)
+                    - sum(m.fh_in[i, fh_t] * m.cost[i] for i in I)
+                )
             )
-        )
-        m.fh_con.add(m.fh_bank <= budget_amount)
+            m.fh_con.add(m.fh_bank[fh_t] <= budget_amount)
 
     # ---------------- Starting XI / bench / captain ----------------
     m.lineup_con = pyo.ConstraintList()
     for t in T:
-        if use_freehit and t == fh_t:
-            m.lineup_con.add(sum(m.fh_y[i] for i in I) == 11)
-            m.lineup_con.add(sum(m.fh_y[i] for i in m.GK) == 1)
-            m.lineup_con.add(sum(m.fh_y[i] for i in m.DEF) >= 3)
-            m.lineup_con.add(sum(m.fh_y[i] for i in m.DEF) <= 5)
-            m.lineup_con.add(sum(m.fh_y[i] for i in m.MID) >= 2)
-            m.lineup_con.add(sum(m.fh_y[i] for i in m.MID) <= 5)
-            m.lineup_con.add(sum(m.fh_y[i] for i in m.FWD) >= 1)
-            m.lineup_con.add(sum(m.fh_y[i] for i in m.FWD) <= 3)
+        if t in freehit_week_rels:
+            m.lineup_con.add(sum(m.fh_y[i, t] for i in I) == 11)
+            m.lineup_con.add(sum(m.fh_y[i, t] for i in m.GK) == 1)
+            m.lineup_con.add(sum(m.fh_y[i, t] for i in m.DEF) >= 3)
+            m.lineup_con.add(sum(m.fh_y[i, t] for i in m.DEF) <= 5)
+            m.lineup_con.add(sum(m.fh_y[i, t] for i in m.MID) >= 2)
+            m.lineup_con.add(sum(m.fh_y[i, t] for i in m.MID) <= 5)
+            m.lineup_con.add(sum(m.fh_y[i, t] for i in m.FWD) >= 1)
+            m.lineup_con.add(sum(m.fh_y[i, t] for i in m.FWD) <= 3)
 
             # Bench slots: 0 is GK2, 1/2/3 are outfield bench order.
-            m.lineup_con.add(sum(m.fh_bench_slot[i, 0] for i in m.GK) == 1)
-            m.lineup_con.add(sum(m.fh_bench_slot[i, 0] for i in m.OUT) == 0)
+            m.lineup_con.add(sum(m.fh_bench_slot[i, t, 0] for i in m.GK) == 1)
+            m.lineup_con.add(sum(m.fh_bench_slot[i, t, 0] for i in m.OUT) == 0)
             for s in [1, 2, 3]:
-                m.lineup_con.add(sum(m.fh_bench_slot[i, s] for i in m.OUT) == 1)
-                m.lineup_con.add(sum(m.fh_bench_slot[i, s] for i in m.GK) == 0)
+                m.lineup_con.add(sum(m.fh_bench_slot[i, t, s] for i in m.OUT) == 1)
+                m.lineup_con.add(sum(m.fh_bench_slot[i, t, s] for i in m.GK) == 0)
 
             for i in I:
-                m.lineup_con.add(sum(m.fh_bench_slot[i, s] for s in m.BS) == m.fh_bench[i])
-                m.lineup_con.add(m.fh_bench[i] <= m.fh_x[i])
-                m.lineup_con.add(m.fh_y[i] <= m.fh_x[i])
-                m.lineup_con.add(m.fh_y[i] <= 1 - m.fh_bench[i])
-                m.lineup_con.add(m.fh_y[i] >= m.fh_x[i] - m.fh_bench[i])
+                m.lineup_con.add(sum(m.fh_bench_slot[i, t, s] for s in m.BS) == m.fh_bench[i, t])
+                m.lineup_con.add(m.fh_bench[i, t] <= m.fh_x[i, t])
+                m.lineup_con.add(m.fh_y[i, t] <= m.fh_x[i, t])
+                m.lineup_con.add(m.fh_y[i, t] <= 1 - m.fh_bench[i, t])
+                m.lineup_con.add(m.fh_y[i, t] >= m.fh_x[i, t] - m.fh_bench[i, t])
 
-            m.lineup_con.add(sum(m.fh_c[i] for i in I) == 1)
+            m.lineup_con.add(sum(m.fh_c[i, t] for i in I) == 1)
             for i in I:
-                m.lineup_con.add(m.fh_c[i] <= m.fh_y[i])
+                m.lineup_con.add(m.fh_c[i, t] <= m.fh_y[i, t])
             continue
 
         m.lineup_con.add(sum(m.y[i, t] for i in I) == 11)
@@ -682,7 +726,7 @@ def optimize_my_team(
     m.transfer_con = pyo.ConstraintList()
 
     for t in T[1:]:
-        if use_freehit and t == fh_t:
+        if t in freehit_week_rels:
             m.transfer_con.add(m.transfers_used[t] == 0)
             m.transfer_con.add(m.hit[t] == 0)
             for i in I:
@@ -691,7 +735,7 @@ def optimize_my_team(
                 m.transfer_con.add(m.transfer_out[i, t] == 0)
             continue
 
-        if t == wildcard_round_rel:
+        if t in wildcard_week_rels:
             for i in I:
                 m.transfer_con.add(m.x[i, t] >= m.x[i, t - 1] - m.transfer_out[i, t])
                 m.transfer_con.add(m.x[i, t] <= m.x[i, t - 1] + m.transfer_in[i, t])
@@ -722,7 +766,7 @@ def optimize_my_team(
         if not live_gws:
             raise ValueError("No future gameweeks available for forced transfer-ins.")
         first_live_t = min(live_gws)
-        next_week_is_freehit = bool(use_freehit and fh_t == first_live_t)
+        next_week_is_freehit = first_live_t in freehit_week_rels
 
         initial_squad_set = set(initial_squad)
         m.forced_transfer_in_con = pyo.ConstraintList()
@@ -730,7 +774,7 @@ def optimize_my_team(
             if next_week_is_freehit:
                 # If next GW is Free Hit, lock player into the free-hit STARTING XI.
                 m.forced_transfer_in_con.add(
-                    m.fh_y[i] == 1
+                    m.fh_y[i, first_live_t] == 1
                 )
             else:
                 # Otherwise, lock player into first live GW squad.
@@ -747,10 +791,10 @@ def optimize_my_team(
     m.saved_con = pyo.ConstraintList()
 
     for t in T[1:]:
-        if t == wildcard_round_rel:
+        if t in wildcard_week_rels:
             m.saved_con.add(m.saved_transfers[t] == m.saved_transfers[t - 1])
         else:
-            if use_freehit and t == fh_t:
+            if t in freehit_week_rels:
                 m.saved_con.add(m.saved_transfers[t] == m.saved_transfers[t - 1])
             else:
                 if abs_gw_num.get(t) == 40:
@@ -812,17 +856,17 @@ def optimize_my_team(
         total = 0.0
 
         for t in T:
-            if use_freehit and t == fh_t:
+            if t in freehit_week_rels:
                 for i in I:
                     pts = float(predicted_points[i][t])
-                    total += safe_value(m.fh_y[i]) * pts
-                    total += safe_value(m.fh_c[i]) * pts
+                    total += safe_value(m.fh_y[i, t]) * pts
+                    total += safe_value(m.fh_c[i, t]) * pts
                     for s in m.BS:
-                        total += bench_slot_weights[int(s)] * safe_value(m.fh_bench_slot[i, s]) * pts
+                        total += bench_slot_weights[int(s)] * safe_value(m.fh_bench_slot[i, t, s]) * pts
 
                     if bench_points_gw in T and t == bench_points_gw:
                         for s in m.BS:
-                            total += bench_slot_bb_extra[int(s)] * safe_value(m.fh_bench_slot[i, s]) * pts
+                            total += bench_slot_bb_extra[int(s)] * safe_value(m.fh_bench_slot[i, t, s]) * pts
             else:
                 for i in I:
                     pts = float(predicted_points[i][t])
@@ -840,8 +884,8 @@ def optimize_my_team(
     def compute_total_risk_score() -> float:
         total_risk = 0.0
         for t in T:
-            if use_freehit and t == fh_t:
-                total_risk += sum(safe_value(m.fh_x[i]) * float(risk_score[i]) for i in I)
+            if t in freehit_week_rels:
+                total_risk += sum(safe_value(m.fh_x[i, t]) * float(risk_score[i]) for i in I)
             else:
                 total_risk += sum(safe_value(m.y[i, t]) * float(risk_score[i]) for i in I)
         return float(total_risk)
@@ -858,8 +902,8 @@ def optimize_my_team(
             for t in T:
                 if t == 0 or t > horizon_max_t:
                     continue
-                if use_freehit and t == fh_t:
-                    terms.append((m.fh_y[i], int(round(safe_value(m.fh_y[i])))))
+                if t in freehit_week_rels:
+                    terms.append((m.fh_y[i, t], int(round(safe_value(m.fh_y[i, t])))))
                 else:
                     terms.append((m.y[i, t], int(round(safe_value(m.y[i, t])))))
         return terms
@@ -870,8 +914,8 @@ def optimize_my_team(
             return terms
 
         for i in I:
-            if use_freehit and t == fh_t:
-                terms.append((m.fh_y[i], int(round(safe_value(m.fh_y[i])))))
+            if t in freehit_week_rels:
+                terms.append((m.fh_y[i, t], int(round(safe_value(m.fh_y[i, t])))))
             else:
                 terms.append((m.y[i, t], int(round(safe_value(m.y[i, t])))))
         return terms
@@ -887,16 +931,16 @@ def optimize_my_team(
             weight = decay ** (t - 1)
             gw_points = 0.0
 
-            if use_freehit and t == fh_t:
+            if t in freehit_week_rels:
                 for i in I:
                     pts = float(predicted_points[i][t])
-                    gw_points += safe_value(m.fh_y[i]) * pts
-                    gw_points += safe_value(m.fh_c[i]) * pts
+                    gw_points += safe_value(m.fh_y[i, t]) * pts
+                    gw_points += safe_value(m.fh_c[i, t]) * pts
                     for s in m.BS:
-                        gw_points += bench_slot_weights[int(s)] * safe_value(m.fh_bench_slot[i, s]) * pts
+                        gw_points += bench_slot_weights[int(s)] * safe_value(m.fh_bench_slot[i, t, s]) * pts
                     if bench_points_gw in T and t == bench_points_gw:
                         for s in m.BS:
-                            gw_points += bench_slot_bb_extra[int(s)] * safe_value(m.fh_bench_slot[i, s]) * pts
+                            gw_points += bench_slot_bb_extra[int(s)] * safe_value(m.fh_bench_slot[i, t, s]) * pts
             else:
                 for i in I:
                     pts = float(predicted_points[i][t])
@@ -940,15 +984,16 @@ def optimize_my_team(
             sol["fh_c"] = {}
             sol["fh_in"] = {}
             sol["fh_out"] = {}
-            for i in I:
-                sol["fh_x"][i] = int(round(safe_value(m.fh_x[i])))
-                sol["fh_y"][i] = int(round(safe_value(m.fh_y[i])))
-                sol["fh_bench"][i] = int(round(safe_value(m.fh_bench[i])))
-                for s in m.BS:
-                    sol["fh_bench_slot"][(i, int(s))] = int(round(safe_value(m.fh_bench_slot[i, s])))
-                sol["fh_c"][i] = int(round(safe_value(m.fh_c[i])))
-                sol["fh_in"][i] = int(round(safe_value(m.fh_in[i])))
-                sol["fh_out"][i] = int(round(safe_value(m.fh_out[i])))
+            for t in sorted(freehit_week_rels):
+                for i in I:
+                    sol["fh_x"][(i, t)] = int(round(safe_value(m.fh_x[i, t])))
+                    sol["fh_y"][(i, t)] = int(round(safe_value(m.fh_y[i, t])))
+                    sol["fh_bench"][(i, t)] = int(round(safe_value(m.fh_bench[i, t])))
+                    for s in m.BS:
+                        sol["fh_bench_slot"][(i, t, int(s))] = int(round(safe_value(m.fh_bench_slot[i, t, s])))
+                    sol["fh_c"][(i, t)] = int(round(safe_value(m.fh_c[i, t])))
+                    sol["fh_in"][(i, t)] = int(round(safe_value(m.fh_in[i, t])))
+                    sol["fh_out"][(i, t)] = int(round(safe_value(m.fh_out[i, t])))
 
         return sol
 
@@ -976,27 +1021,27 @@ def optimize_my_team(
                 m.transfer_out[i, t].value = val
 
         if use_freehit:
-            for i, val in sol.get("fh_x", {}).items():
-                if i in I:
-                    m.fh_x[i].value = val
-            for i, val in sol.get("fh_y", {}).items():
-                if i in I:
-                    m.fh_y[i].value = val
-            for i, val in sol.get("fh_bench", {}).items():
-                if i in I:
-                    m.fh_bench[i].value = val
-            for (i, s), val in sol.get("fh_bench_slot", {}).items():
-                if i in I and s in m.BS:
-                    m.fh_bench_slot[i, s].value = val
-            for i, val in sol.get("fh_c", {}).items():
-                if i in I:
-                    m.fh_c[i].value = val
-            for i, val in sol.get("fh_in", {}).items():
-                if i in I:
-                    m.fh_in[i].value = val
-            for i, val in sol.get("fh_out", {}).items():
-                if i in I:
-                    m.fh_out[i].value = val
+            for (i, t), val in sol.get("fh_x", {}).items():
+                if i in I and t in freehit_week_rels:
+                    m.fh_x[i, t].value = val
+            for (i, t), val in sol.get("fh_y", {}).items():
+                if i in I and t in freehit_week_rels:
+                    m.fh_y[i, t].value = val
+            for (i, t), val in sol.get("fh_bench", {}).items():
+                if i in I and t in freehit_week_rels:
+                    m.fh_bench[i, t].value = val
+            for (i, t, s), val in sol.get("fh_bench_slot", {}).items():
+                if i in I and t in freehit_week_rels and s in m.BS:
+                    m.fh_bench_slot[i, t, s].value = val
+            for (i, t), val in sol.get("fh_c", {}).items():
+                if i in I and t in freehit_week_rels:
+                    m.fh_c[i, t].value = val
+            for (i, t), val in sol.get("fh_in", {}).items():
+                if i in I and t in freehit_week_rels:
+                    m.fh_in[i, t].value = val
+            for (i, t), val in sol.get("fh_out", {}).items():
+                if i in I and t in freehit_week_rels:
+                    m.fh_out[i, t].value = val
 
         if not force_difference:
             return False
@@ -1006,15 +1051,15 @@ def optimize_my_team(
         for t in T:
             if t == 0:
                 continue
-            if use_freehit and t == fh_t:
-                starters = [i for i in I if safe_value(m.fh_y[i]) > 0.5]
-                old_caps = [i for i in I if safe_value(m.fh_c[i]) > 0.5]
+            if t in freehit_week_rels:
+                starters = [i for i in I if safe_value(m.fh_y[i, t]) > 0.5]
+                old_caps = [i for i in I if safe_value(m.fh_c[i, t]) > 0.5]
                 if old_caps and len(starters) >= 2:
                     old_cap = old_caps[0]
                     new_cap = next((i for i in starters if i != old_cap), None)
                     if new_cap is not None:
-                        m.fh_c[old_cap].value = 0
-                        m.fh_c[new_cap].value = 1
+                        m.fh_c[old_cap, t].value = 0
+                        m.fh_c[new_cap, t].value = 1
                         return True
             else:
                 starters = [i for i in I if safe_value(m.y[i, t]) > 0.5]
@@ -1038,10 +1083,10 @@ def optimize_my_team(
         # Debug squad per GW
         for t in range(1, optimize_range):
             print(f"\nSolution {solution_no} | Gameweek {t+1} Squad:")
-            if use_freehit and t == fh_t:
+            if t in freehit_week_rels:
                 for i in I:
-                    if safe_value(m.fh_x[i]) > 0.5:
-                        status = "Bench" if safe_value(m.fh_bench[i]) > 0.5 else "Playing"
+                    if safe_value(m.fh_x[i, t]) > 0.5:
+                        status = "Bench" if safe_value(m.fh_bench[i, t]) > 0.5 else "Playing"
                         print(f"- {players[i]} ({positions[i]}) - {status} [FREE HIT]")
             else:
                 for i in I:
@@ -1086,16 +1131,16 @@ def optimize_my_team(
         # Include the full future horizon so the final GW has a pitch lineup.
         for t in range(1, optimize_range):
             gw = GW_list[t]
-            if use_freehit and t == fh_t:
+            if t in freehit_week_rels:
                 for i in I:
-                    if safe_value(m.fh_x[i]) > 0.5:
+                    if safe_value(m.fh_x[i, t]) > 0.5:
                         name = players[i]
                         player_row_code, web_name = get_player_meta(name)
                         if player_row_code is None:
                             continue
                         pos = positions[i]
-                        status = "benched" if safe_value(m.fh_bench[i]) > 0.5 else "playing"
-                        is_capt = bool(safe_value(m.fh_c[i]) > 0.5)
+                        status = "benched" if safe_value(m.fh_bench[i, t]) > 0.5 else "playing"
+                        is_capt = bool(safe_value(m.fh_c[i, t]) > 0.5)
                         solution_rows.append({
                             "Name": name,
                             "status": status,
@@ -1265,14 +1310,16 @@ def optimize_my_team(
 
         # If a chip GW is present, force that GW to differ by at least 3.
         chip_gw_rels: list[int] = []
-        if use_freehit and fh_t is not None and fh_t in T and fh_t > 0:
-            chip_gw_rels.append(int(fh_t))
-        if (
-            wildcard_round_rel is not None
-            and wildcard_round_rel in T
-            and wildcard_round_rel > 0
-        ):
-            chip_gw_rels.append(int(wildcard_round_rel))
+        chip_gw_rels.extend(
+            int(t)
+            for t in sorted(freehit_week_rels)
+            if t in T and t > 0
+        )
+        chip_gw_rels.extend(
+            int(t)
+            for t in sorted(wildcard_week_rels)
+            if t in T and t > 0
+        )
 
         for chip_t in sorted(set(chip_gw_rels)):
             chip_terms = extract_single_gw_pattern_terms(chip_t)

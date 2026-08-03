@@ -1170,7 +1170,8 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
                 
                 value = (
                     defcon_team_preds_val
-                    *(df["Share_of_Defcon"].values[h]*0.7+0.3*df["Share_of_Defcon_Short"].values[h])
+                    *((df["Share_of_Defcon"].values[h]*0.7+0.3*df["Share_of_Defcon_Short"].values[h])*0.3
+                      +0.7*df["Defcon_Weight_Share"].values[h])
                     * min(80, df["average_minutes"].values[h]) / 80
                 )
                 if position == "DEF":
