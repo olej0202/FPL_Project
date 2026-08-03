@@ -2082,7 +2082,7 @@ def Generate_simulator(
     current_teams,
     GW_list,
     match_id=None,
-    n_simulations=500,
+    n_simulations=800,
     random_seed=42,
     parallel_workers=1,
 ):

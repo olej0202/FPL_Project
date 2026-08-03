@@ -966,9 +966,9 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
         defcon_model, sigma, results, historical_predictions = (
             train_defcon_ensemble_model(
             path="TestML4.csv",
-            svr_weight=0.45,
-            xgb_weight=0.4,
-            elastic_net_weight=0.15,
+            svr_weight=0.4,
+            xgb_weight=0.2,
+            elastic_net_weight=0.4,
             elastic_net_alpha=0.01,
             elastic_net_l1_ratio=0.5
             )   
@@ -1856,13 +1856,32 @@ def Generate_point_predictions(GW_list):
     minutes_simulation=pd.read_csv("SImulator\MinutesSimulator_player_predictions.csv").sort_values(by=["event", "fix_id"])
 
     from sklearn.linear_model import LogisticRegression
+    from sklearn.utils.class_weight import compute_class_weight
+    import numpy as np
+
     bpsdf = pd.read_csv("testML4.csv")[["bonus", "bps"]].dropna()
     X = bpsdf[["bps"]]
     y = bpsdf["bonus"].astype(int)
+    classes = np.sort(y.unique())
+
+    balanced_weights = compute_class_weight(
+        class_weight="balanced",
+        classes=classes,
+        y=y
+    )
+    
+    # 0.0 = ingen balansering
+    # 1.0 = full "balanced"
+    balance_strength = 0.4
+    
+    class_weights = {
+        cls: 1 + balance_strength * (w - 1)
+        for cls, w in zip(classes, balanced_weights)
+    }
     model = LogisticRegression(
         solver="lbfgs",
         max_iter=2000,
-        class_weight="balanced"
+        class_weight=class_weights
     )
     model.fit(X, y)
     
@@ -2011,18 +2030,18 @@ def Generate_point_predictions(GW_list):
         player_preds["Goal_pred"] = (
             (
                 (player_preds["xgb_goals_75"] * 0.5 + 0.5 * player_preds["xgb_goals_25"]) * 0.0
-                + player_preds["sim3_goals_pred"] * 0.35
-                + player_preds["sim2_goals_pred"] * 0.15
-                + player_preds["stat_goals_pred"] * 0.5
+                + player_preds["sim3_goals_pred"] * 0.2
+                + player_preds["sim2_goals_pred"] * 0.1
+                + player_preds["stat_goals_pred"] * 0.7
             ) * overscore
         )
 
         player_preds["Assist_pred"] = (
             (
                 (player_preds["xgb_assist_75"] * 0.5 + 0.5 * player_preds["xgb_assist_25"]) * 0.0
-                + player_preds["sim_assists_pred"] * 0.35
-                + player_preds["sim2_assists_pred"] * 0.15
-                + player_preds["stat_assist_pred"] * 0.5
+                + player_preds["sim_assists_pred"] * 0.2
+                + player_preds["sim2_assists_pred"] * 0.1
+                + player_preds["stat_assist_pred"] * 0.7
                 + historic_Assist * 0
             ) 
         )
