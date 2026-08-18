@@ -1170,14 +1170,14 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
                 
                 value = (
                     defcon_team_preds_val
-                    *((df["Share_of_Defcon"].values[h]*0.7+0.3*df["Share_of_Defcon_Short"].values[h])*0.3
-                      +0.7*df["Defcon_Weight_Share"].values[h])
+                    *((df["Share_of_Defcon"].values[h]*0.7+0.3*df["Share_of_Defcon_Short"].values[h])*0.5
+                      +0.5*df["Defcon_Weight_Share"].values[h])
                     * min(80, df["average_minutes"].values[h]) / 80
                 )
                 if position == "DEF":
-                    cbi_pred = 1 - norm.cdf(9.5, loc=pred*0.5+0.5*value, scale=2.4)
+                    cbi_pred = 1 - norm.cdf(9.5, loc=pred*0.7+0.3*value, scale=2.4)
                 else:
-                    cbi_pred = 1 - norm.cdf(11.5, loc=pred*0.5+0.5*value, scale=2.4)
+                    cbi_pred = 1 - norm.cdf(11.5, loc=pred*0.7+0.3*value, scale=2.4)
 
                 player_preds.append(cbi_pred)
        

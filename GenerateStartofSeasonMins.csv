@@ -1,10 +1,10 @@
 team_code,name,type,value
 1,Altay_Bayındır,const,0.0
-1,Amad_Diallo,const,53.374209379186633
+1,Amad_Diallo,const,63.374209379186633
 1,Andrey_Nascimento dos Santos,const,0.0
 1,Ayden_Heaven,const,0.0
 1,Bendito_Mantato,const,4.644074833
-1,Benjamin_Sesko,const,40.153002671098875
+1,Benjamin_Sesko,const,30.153002671098875
 1,Bruno_Borges Fernandes,const,89.59799999999998
 1,Bryan_Mbeumo,const,80.46437580374258
 1,Chido_Obi,const,0.1364914589650414
@@ -23,7 +23,7 @@ team_code,name,type,value
 1,Mason_Mount,const,0.0
 1,Matheus_Santos Carneiro Da Cunha,const,80.1647948
 1,Matthijs_de Ligt,const,0.0
-1,Noussair_Mazraoui,const,0.0
+1,Noussair_Mazraoui,const,30.0
 1,Patrick_Dorgu,const,60.98577360050609
 1,Senne_Lammens,const,90.0
 1,Shea_Lacey,const,9.229516346
@@ -45,7 +45,7 @@ team_code,name,type,value
 2,James_Justin,const,83.00699999999999
 2,Jayden_Bogle,const,50.433819493846975
 2,Joe_Gelhardt,const,40.0
-2,Joe_Rodon,const,79.75758499999999
+2,Joe_Rodon,const,89.75758499999999
 2,Joël_Piroe,const,6.350032499999999
 2,Lucas_Estella Perri,const,90.18992275345123
 2,Lukas_Nmecha,const,41.265677297666265
@@ -57,11 +57,11 @@ team_code,name,type,value
 2,Tarik_Muharemović,const,90.0
 2,Wilfried_Gnonto,const,28.12953170840899
 3,Benjamin_White,const,0.0
-3,Bukayo_Saka,const,80.98524368646423
-3,Christian_Nørgaard,const,6.46454154
+3,Bukayo_Saka,const,65.98524368646423
+3,Christian_Nørgaard,const,75.46454154
 3,Cristhian_Mosquera,const,90.0
 3,David_Raya Martin,const,90.0
-3,Declan_Rice,const,89.532
+3,Declan_Rice,const,0.532
 3,Eberechi_Eze,const,50.2698384863391
 3,Ethan_Nwaneri,const,0.0
 3,Fábio_Ferreira Vieira,const,0.0
@@ -70,9 +70,10 @@ team_code,name,type,value
 3,Gabriel_dos Santos Magalhães,const,88.476
 3,Illan_Meslier,const,0.0
 3,Jurriën_Timber,const,0.0
-3,Kai_Havertz,const,22.666512629358603
+3,Kai_Havertz,const,72.666512629358603
+3,Christos_Tzolis,const,80
 3,Kepa_Arrizabalaga,const,16.258848435757162
-3,Martin_Ødegaard,const,66.70410636374784
+3,Martin_Ødegaard,const,86.70410636374784
 3,Martín_Zubimendi Ibáñez,const,44.40969947224707
 3,Max_Dowman,const,4.22218687544868
 3,Mikel_Merino Zazón,const,5.625173048303568
@@ -231,7 +232,7 @@ team_code,name,type,value
 9,Victor_Torp,const,0.0
 11,Adam_Aznou,const,0.0
 11,Carlos_Alcaraz Durán,const,9.69659629076266
-11,Dwight_McNeil,const,21.8379075554824
+11,Dwight_McNeil,const,70.8379075554824
 11,Harrison_Armstrong,const,4.909331364672232
 11,Hayden_Hackney,const,0.0
 11,Iliman_Ndiaye,const,89.925
@@ -245,21 +246,21 @@ team_code,name,type,value
 11,Merlin_Röhl,const,55.47584745466979
 11,Michael_Keane,const,54.966
 11,Nathan_Patterson,const,4.672723862796131
-11,Norberto_Bercique Gomes Betuncal,const,50.51518272144055
+11,Norberto_Bercique Gomes Betuncal,const,30.51518272144055
 11,Thierno_Barry,const,32.11484172867585
 11,Tim_Iroegbunam,const,58.63705277252613
 11,Tom_King,const,1.07130802
 11,Tyler_Dibling,const,7.17081561
 11,Tyrique_George,const,8.593502042719805
 11,Vitalii_Mykolenko,const,90.0
-14,Alexander_Isak,const,70.35194330705359
+14,Alexander_Isak,const,80.35194330705359
 14,Alexis_Mac Allister,const,81.44340299999999
 14,Alisson_Ramses Becker,const,90.0
 14,Armin_Pecsi,const,0.0
 14,Calvin_Ramsay,const,0.0
 14,Cody_Gakpo,const,70.3810675
 14,Conor_Bradley,const,0.0
-14,Curtis_Jones,const,76.956642
+14,Curtis_Jones,const,0.956642
 14,Dominik_Szoboszlai,const,90.0
 14,Endo_Wataru,const,5.12204285
 14,Federico_Chiesa,const,0.0
@@ -277,7 +278,7 @@ team_code,name,type,value
 14,Joe_Gomez,const,5.27858578820501
 14,Kostas_Tsimikas,const,20.49387528954997
 14,Lewis_Koumas,const,30.0
-14,Milos_Kerkez,const,60.57615356870272
+14,Milos_Kerkez,const,80.57615356870272
 14,Rio_Ngumoha,const,34.92503745125426
 14,Ryan_Gravenberch,const,78.821592
 14,Stefan_Bajčetić Maquieira,const,0.0
@@ -347,7 +348,7 @@ team_code,name,type,value
 36,Charalampos_Kostoulas,const,4.862636163612804
 36,Danny_Welbeck,const,75.45410604532366
 36,Diego_Coppola,const,0.0
-36,Diego_Gómez Amarilla,const,28.39102581863473
+36,Diego_Gómez Amarilla,const,78.39102581863473
 36,Evan_Ferguson,const,0.0
 36,Facundo_Buonanotte,const,0.87181913
 36,Ferdi_Kadıoğlu,const,90.0
@@ -358,10 +359,10 @@ team_code,name,type,value
 36,Jason_Steele,const,18.40513310138393
 36,João_Pedro Loureiro da Costa,const,0.0
 36,Lewis_Dunk,const,82.642732
-36,Luka_Vušković,const,70.0
+36,Luka_Vušković,const,90.0
 36,Mats_Wieffer,const,70.78052399848069
 36,Matt_O'Riley,const,0.6911055728685724
-36,Maxim_De Cuyper,const,48.673625459612346
+36,Maxim_De Cuyper,const,78.673625459612346
 36,Michael_Svoboda,const,0.0
 36,Mitoma_Kaoru,const,70.0
 36,Nehemiah_Oriola,const,0.507876046
@@ -412,24 +413,24 @@ team_code,name,type,value
 43,James_Trafford,const,8.21827028250237
 43,Jeremy_Monga,const,6.473999999999999
 43,Joško_Gvardiol,const,79.90363038281616
-43,Jérémy_Doku,const,30.520719636267103
+43,Jérémy_Doku,const,80.520719636267103
 43,Kalvin_Phillips,const,0.0
-43,Marc_Guéhi,const,90.0
+43,Marc_Guéhi,const,70.0
 43,Marcus_Bettinelli,const,0.0
-43,Mateo_Kovačić,const,0.0
-43,Matheus_Nunes,const,87.4010749999999
+43,Mateo_Kovačić,const,40.0
+43,Matheus_Nunes,const,75.4010749999999
 43,Max_Alleyne,const,0.347245955
 43,Nico_González Iglesias,const,0.0
 43,Nico_O'Reilly,const,75.0
-43,Omar_Marmoush,const,60.0
-43,Phil_Foden,const,51.73734715689079
+43,Omar_Marmoush,const,30.0
+43,Phil_Foden,const,81.73734715689079
 43,Rayan_Aït-Nouri,const,5.184717309575959
-43,Rayan_Cherki,const,70.418831708151105
+43,Rayan_Cherki,const,50.418831708151105
 43,Rico_Lewis,const,0.0
-43,Rodrigo_Hernandez,const,75.0
+43,Rodrigo_Hernandez,const,0.0
 43,Rúben_Gato Alves Dias,const,83.653352
-43,Sávio_'Savinho' Moreira de Oliveira,const,5.99184982828282
-43,Tijjani_Reijnders,const,40.0
+43,Sávio_'Savinho' Moreira de Oliveira,const,30.99184982828282
+43,Tijjani_Reijnders,const,0.0
 43,Vitor_de Oliveira Nunes dos Reis,const,0.0
 54,Alex_Iwobi,const,90.0
 54,Alfie_McNally,const,0.0
@@ -446,7 +447,7 @@ team_code,name,type,value
 54,Kenny_Tete,const,28.35203889109077
 54,Kevin_Santos Lopes de Macedo,const,31.16028372352904
 54,Oscar_Bobb,const,37.04391915895234
-54,Rodrigo_Muniz Carvalho,const,75.9386347708218
+54,Rodrigo_Muniz Carvalho,const,30.9386347708218
 54,Ryan_Sessegnon,const,30.564312062366408
 54,Sander_Berge,const,45.45967665809943
 54,Saša_Lukić,const,72.79234437567624
@@ -461,10 +462,10 @@ team_code,name,type,value
 56,Djiamgone_Jocelin Ta Bi,const,3.695720976998496
 56,Enzo_Le Fée,const,90.0
 56,Granit_Xhaka,const,87.17999999999999
-56,Habib_Diarra,const,62.47986462623916
+56,Habib_Diarra,const,72.47986462623916
 56,Jenson_Seelt,const,0.0
 56,Leo_Fuhr Hjelde,const,0.0
-56,Luke_O'Nien,const,41.25632413852215
+56,Luke_O'Nien,const,51.25632413852215
 56,Melker_Ellborg,const,32.93605985724088
 56,Nilson_Angulo,const,47.66868975215789
 56,Noah_Sadiki,const,80.051533
@@ -473,7 +474,7 @@ team_code,name,type,value
 56,Reinildo_Mandava,const,76.93874199999999
 56,Robin_Roefs,const,90.0
 56,Romaine_Mundle,const,0.0
-56,Simon_Adingra,const,0.0
+56,Simon_Adingra,const,40.0
 56,Thomas_Meunier,const,90.0
 56,Trai_Hume,const,77.00896399999999
 56,Wilson_Isidor,const,50.477928917992374
@@ -519,7 +520,7 @@ team_code,name,type,value
 91,Julio_Soler Barreto,const,4.944157021
 91,Julián_Araujo Zúñiga,const,0.0
 91,Junior_Kroupi,const,0.4553035
-91,Justin_Kluivert,const,55.73945045540235
+91,Justin_Kluivert,const,75.73945045540235
 91,Lewis_Cook,const,1.365153974546935
 91,Marcus_Tavernier,const,83.652118
 91,Rayan_Vitor Simplício Rocha,const,75.82504970751552
@@ -546,12 +547,12 @@ team_code,name,type,value
 94,Keane_Lewis-Potter,const,79.035
 94,Kevin_Schade,const,80.49981486037902
 94,Kim_Ji-soo,const,0.0
-94,Kristoffer_Ajer,const,80.807782200069685
+94,Kristoffer_Ajer,const,85.807782200069685
 94,Mathias_Jensen,const,82.74381299999999
 94,Michael_Kayode,const,90.0
 94,Mikkel_Damsgaard,const,56.74331399086113
 94,Nathan_Collins,const,88.014
 94,Rico_Henry,const,0.0
-94,Sepp_van den Berg,const,84.83129399999999
+94,Sepp_van den Berg,const,0.83129399999999
 94,Vitaly_Janelt,const,9.66047184764863
 94,Yehor_Yarmoliuk,const,83.217278
