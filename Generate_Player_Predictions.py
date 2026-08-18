@@ -1174,10 +1174,38 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
                       +0.5*df["Defcon_Weight_Share"].values[h])
                     * min(80, df["average_minutes"].values[h]) / 80
                 )
+                """
                 if position == "DEF":
                     cbi_pred = 1 - norm.cdf(9.5, loc=pred*0.7+0.3*value, scale=2.4)
                 else:
-                    cbi_pred = 1 - norm.cdf(11.5, loc=pred*0.7+0.3*value, scale=2.4)
+                    cbi_pred = 1 - norm.cdf(11.5, loc=pred*0.7+0.3*value, scale=2.4)"""
+                    
+                from scipy.stats import gennorm
+                from scipy.special import gamma
+
+                # Generalized normal
+                beta = 4.0
+                std = 2.7
+
+                # Convert desired standard deviation to scipy's scale parameter
+                scale = std * np.sqrt(gamma(1 / beta) / gamma(3 / beta))
+
+                mu = pred * 0.6 + 0.4 * value
+
+                if position == "DEF":
+                    cbi_pred = 1 - gennorm.cdf(
+                        9.5,
+                        beta,
+                        loc=mu,
+                        scale=scale
+                    )
+                else:
+                    cbi_pred = 1 - gennorm.cdf(
+                        11.5,
+                        beta,
+                        loc=mu,
+                        scale=scale
+                    )
 
                 player_preds.append(cbi_pred)
        
