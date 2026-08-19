@@ -49,9 +49,9 @@ class DefconEnsemble:
         svr_model,
         xgb_model,
         elastic_net_model,
-        svr_weight=0.4,
-        xgb_weight=0.2,
-        elastic_net_weight=0.4
+        svr_weight=0.3,
+        xgb_weight=0.4,
+        elastic_net_weight=0.3
     ):
         weights = np.array(
             [
@@ -124,9 +124,9 @@ class DefconEnsemble:
 
 def train_defcon_ensemble_model(
     path="TestML4.csv",
-    svr_weight=0.4,
-    xgb_weight=0.2,
-    elastic_net_weight=0.4,
+    svr_weight=0.3,
+    xgb_weight=0.4,
+    elastic_net_weight=0.3,
     elastic_net_alpha=0.01,
     elastic_net_l1_ratio=0.5
 ):
@@ -935,6 +935,7 @@ def setup_dataset():
 
     time_df.to_csv("ML_training2.csv")
 def Stat_preds(is_pred, pred_variable,column_list,horizon):
+    import numpy as np
     horizon=horizon
     data=pd.read_csv("Player_Prediction_set.csv").iloc[:,1:]
     team_data=pd.read_csv("Team_prediction.csv").iloc[:,1:]
@@ -966,9 +967,9 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
         defcon_model, sigma, results, historical_predictions = (
             train_defcon_ensemble_model(
             path="TestML4.csv",
-            svr_weight=0.4,
-            xgb_weight=0.2,
-            elastic_net_weight=0.4,
+            svr_weight=0.3,
+            xgb_weight=0.4,
+            elastic_net_weight=0.3,
             elastic_net_alpha=0.01,
             elastic_net_l1_ratio=0.5
             )   
@@ -1084,10 +1085,10 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
                 * np.minimum(1, subset["average_minutes"] / 80)
                 ).sum()
                
-               stat_pred=np.minimum(0.35,(df['Assist_Index'].values[h]* np.minimum(1, df["average_minutes"].values[h] / 80))/assist_sum)
+               stat_pred=np.minimum(0.35,(df['Assist_Weight_Share'].values[h]))
                stat_pred_share=df['Assist_Index_Share'].values[h]
                player_model.append(pred)
-               pred=(pred*0.33+0.33*stat_pred+0.33*stat_pred_share)*0.8+0.2*df['Opp_Assist_Threat_Pos'].values[h]
+               pred=(pred*0.5+0.3*stat_pred+0.2*stat_pred_share)*0.8+0.2*df['Opp_Assist_Threat_Pos'].values[h]
                player_preds.append(pred*team_xg*0.85)
                
                eta=-5.23+0.425*team_xg+4.92*(df["Rolling_adjusted_XA_per90"].values[h]*0.33+(df["Rolling_adjusted_creativity_per90"].values[h]/100)*0.33+df["rolling_Assist_min"].values[h]*0.33)+0.019*90
@@ -1172,7 +1173,6 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
                     defcon_team_preds_val
                     *((df["Share_of_Defcon"].values[h]*0.7+0.3*df["Share_of_Defcon_Short"].values[h])*0.5
                       +0.5*df["Defcon_Weight_Share"].values[h])
-                    * min(80, df["average_minutes"].values[h]) / 80
                 )
                 """
                 if position == "DEF":
@@ -1180,32 +1180,34 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
                 else:
                     cbi_pred = 1 - norm.cdf(11.5, loc=pred*0.7+0.3*value, scale=2.4)"""
                     
-                from scipy.stats import gennorm
-                from scipy.special import gamma
+                import numpy as np
+                from scipy.stats import skewnorm
 
-                # Generalized normal
-                beta = 4.0
-                std = 2.7
+                def skew_probability(mu, threshold=10.0):
+                    # Fitted parameters
+                    shape = -3.43
+                    std = 3.0
 
-                # Convert desired standard deviation to scipy's scale parameter
-                scale = std * np.sqrt(gamma(1 / beta) / gamma(3 / beta))
+                    delta = shape / np.sqrt(1 + shape**2)
 
-                mu = pred * 0.6 + 0.4 * value
+                    # Convert desired standard deviation to scipy skewnorm scale
+                    scale = std / np.sqrt(1 - 2 * delta**2 / np.pi)
+
+                    # Adjust loc so that E[X] = mu
+                    loc = mu - scale * delta * np.sqrt(2 / np.pi)
+
+                    return skewnorm.sf(
+                        threshold,
+                        shape,
+                        loc=loc,
+                        scale=scale
+                    )
+                mu = pred * 0.7 + 0.3 * value
 
                 if position == "DEF":
-                    cbi_pred = 1 - gennorm.cdf(
-                        9.5,
-                        beta,
-                        loc=mu,
-                        scale=scale
-                    )
+                    cbi_pred = skew_probability(mu, threshold=10.0)
                 else:
-                    cbi_pred = 1 - gennorm.cdf(
-                        11.5,
-                        beta,
-                        loc=mu,
-                        scale=scale
-                    )
+                    cbi_pred = skew_probability(mu, threshold=12.0)
 
                 player_preds.append(cbi_pred)
        
@@ -2120,7 +2122,7 @@ def Generate_point_predictions(GW_list):
                 )
             summary_dataset["Points_prediction"]=((1*likelihood_of_60+1*likelihood_of_0)+summary_dataset["Goal_pred"]*POINTS_RULES[position]["goal"]
                                                   +summary_dataset["Assist_pred"]*POINTS_RULES[position]["assist"]
-                                                  +summary_dataset["Bonus_pred"]
+                                                  +summary_dataset["Bonus_pred"]*0.8
                                                   -summary_dataset["Card_pred"] )+summary_dataset["CBI_pred"]*2
             
             summary_dataset["Risk_share"]=(summary_dataset["Goal_pred"]*5.2+summary_dataset["Assist_pred"]*3.4)/summary_dataset["Points_prediction"]
@@ -2132,7 +2134,7 @@ def Generate_point_predictions(GW_list):
                 )
             summary_dataset["Points_prediction"]=((1*likelihood_of_60+1*likelihood_of_0)+summary_dataset["Goal_pred"]*POINTS_RULES[position]["goal"]
                                                   +summary_dataset["Assist_pred"]*POINTS_RULES[position]["assist"]
-                                                  +summary_dataset["Bonus_pred"]
+                                                  +summary_dataset["Bonus_pred"]*0.8
                                                   +summary_dataset["GC_pred"]*POINTS_RULES[position]["cs"]*likelihood_of_60
                                                   -summary_dataset["Card_pred"])+summary_dataset["CBI_pred"]*2
 
@@ -2140,7 +2142,7 @@ def Generate_point_predictions(GW_list):
             
         elif(position=="GKP"):
             summary_dataset["Bonus_pred"]=summary_dataset["Bonus_pred2"]*0.7+0.3*expected_bonus(
-                summary_dataset["Bonus_pred"]+
+                summary_dataset["Bonus_pred"]*0.8+
                 summary_dataset["Goal_pred"]*POSITION_EVENT_BONUS[position]["goal"]+
                 summary_dataset["Assist_pred"]*POSITION_EVENT_BONUS[position]["assist"]+
                 summary_dataset["GC_pred"]*POSITION_EVENT_BONUS[position]["cs"]*likelihood_of_60
@@ -2156,7 +2158,7 @@ def Generate_point_predictions(GW_list):
 
         else:
             summary_dataset["Bonus_pred"]=summary_dataset["Bonus_pred2"]*0.7+0.3*expected_bonus(
-                summary_dataset["Bonus_pred"]+
+                summary_dataset["Bonus_pred"]*0.8+
                 summary_dataset["Goal_pred"]*POSITION_EVENT_BONUS[position]["goal"]+
                 summary_dataset["Assist_pred"]*POSITION_EVENT_BONUS[position]["assist"]+
                 summary_dataset["GC_pred"]*POSITION_EVENT_BONUS[position]["cs"]*likelihood_of_60
