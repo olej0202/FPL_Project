@@ -141,7 +141,7 @@ def Generate_Player_Historical():
 
     merged_df.drop(columns=['opponent_code','code' ], inplace=True)
     
-    merged_df.columns = ['Name', 'Position', 'Kickoff time', 'Season','Assists','Bonus',"Expected Assists", "Expected Goals", "Goals Scored", "Minutes", "Fantasy Points", "ICT", "Adjusted XG", "Adjusted XA",'Defcon Hit','Opponent Name','bps','defcon','minutes','saves','Rolling_adjusted_BPS2']
+    merged_df.columns = ['Name', 'Position', 'Kickoff time', 'Season','Assists','Bonus',"Expected Assists", "Expected Goals", "Goals Scored", "Minutes", "Fantasy Points", "ICT", "Adjusted XG", "Adjusted XA",'Defcon Hit','bps','defcon','minutes','saves','Rolling_adjusted_BPS2','Opponent Name']
     merged_df.to_csv("player_history.csv")
     
 import pandas as pd
