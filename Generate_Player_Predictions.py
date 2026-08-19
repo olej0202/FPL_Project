@@ -244,58 +244,164 @@ def train_defcon_ensemble_model(
     X = df_train[features]
     y = df_train["defcon"]
 
+    def _build_svr_model():
+        return Pipeline([
+            (
+                "scaler",
+                StandardScaler()
+            ),
+            (
+                "svr",
+                SVR(
+                    kernel="rbf",
+                    C=1.0,
+                    epsilon=0.1
+                )
+            )
+        ])
+
+    def _build_xgb_model():
+        return XGBRegressor(
+            n_estimators=200,
+            max_depth=5,
+            learning_rate=0.05,
+            subsample=0.8,
+            colsample_bytree=0.8,
+            objective="reg:squarederror",
+            eval_metric="rmse",
+            random_state=42,
+            n_jobs=-1
+        )
+
+    def _build_elastic_net_model():
+        return Pipeline([
+            (
+                "scaler",
+                StandardScaler()
+            ),
+            (
+                "elastic_net",
+                ElasticNet(
+                    alpha=elastic_net_alpha,
+                    l1_ratio=elastic_net_l1_ratio,
+                    max_iter=10000,
+                    random_state=42
+                )
+            )
+        ])
+
+    # ---------------------------------------------------------
+    # 3b. Residualer for trening/test
+    # ---------------------------------------------------------
+    residual_export_cols = [
+        "dataset_split",
+        "name",
+        "kickoff_time",
+        "Team_defcon",
+        "defcon"
+    ] + features + [
+        "svr_pred",
+        "xgb_pred",
+        "elastic_net_pred",
+        "ensemble_pred",
+        "svr_error",
+        "xgb_error",
+        "elastic_net_error",
+        "ensemble_error"
+    ]
+
+    df_eval = df_train.sort_values(
+        ["kickoff_time", "name"]
+    ).reset_index(drop=True)
+
+    if len(df_eval) == 1:
+        eval_train = df_eval.copy()
+        eval_test = df_eval.iloc[0:0].copy()
+    else:
+        split_idx = max(
+            1,
+            min(int(len(df_eval) * 0.8), len(df_eval) - 1)
+        )
+        eval_train = df_eval.iloc[:split_idx].copy()
+        eval_test = df_eval.iloc[split_idx:].copy()
+
+    X_eval_train = eval_train[features]
+    y_eval_train = eval_train["defcon"]
+
+    residual_frames = []
+
+    svr_eval_model = _build_svr_model()
+    xgb_eval_model = _build_xgb_model()
+    elastic_net_eval_model = _build_elastic_net_model()
+
+    svr_eval_model.fit(X_eval_train, y_eval_train)
+    xgb_eval_model.fit(X_eval_train, y_eval_train)
+    elastic_net_eval_model.fit(X_eval_train, y_eval_train)
+
+    ensemble_eval_model = DefconEnsemble(
+        svr_model=svr_eval_model,
+        xgb_model=xgb_eval_model,
+        elastic_net_model=elastic_net_eval_model,
+        svr_weight=svr_weight,
+        xgb_weight=xgb_weight,
+        elastic_net_weight=elastic_net_weight
+    )
+
+    for split_name, split_df in [
+        ("train", eval_train),
+        ("test", eval_test)
+    ]:
+        if split_df.empty:
+            continue
+
+        split_predictions = ensemble_eval_model.predict_components(
+            split_df[features]
+        )
+        split_out = split_df.copy()
+        split_out["dataset_split"] = split_name
+        split_out["svr_pred"] = split_predictions["svr_pred"]
+        split_out["xgb_pred"] = split_predictions["xgb_pred"]
+        split_out["elastic_net_pred"] = split_predictions["elastic_net_pred"]
+        split_out["ensemble_pred"] = split_predictions["ensemble_pred"]
+        split_out["svr_error"] = (
+            split_out["defcon"] - split_out["svr_pred"]
+        )
+        split_out["xgb_error"] = (
+            split_out["defcon"] - split_out["xgb_pred"]
+        )
+        split_out["elastic_net_error"] = (
+            split_out["defcon"] - split_out["elastic_net_pred"]
+        )
+        split_out["ensemble_error"] = (
+            split_out["defcon"] - split_out["ensemble_pred"]
+        )
+        residual_frames.append(
+            split_out[residual_export_cols]
+        )
+
+    pd.concat(
+        residual_frames,
+        ignore_index=True
+    ).to_csv(
+        "Defcon_Players_residuals.csv",
+        index=False
+    )
+
     # ---------------------------------------------------------
     # 4. SVR
     # ---------------------------------------------------------
-    svr_model = Pipeline([
-        (
-            "scaler",
-            StandardScaler()
-        ),
-        (
-            "svr",
-            SVR(
-                kernel="rbf",
-                C=1.0,
-                epsilon=0.1
-            )
-        )
-    ])
+    svr_model = _build_svr_model()
 
     # ---------------------------------------------------------
     # 5. XGBoost
     # ---------------------------------------------------------
-    xgb_model = XGBRegressor(
-        n_estimators=200,
-        max_depth=5,
-        learning_rate=0.05,
-        subsample=0.8,
-        colsample_bytree=0.8,
-        objective="reg:squarederror",
-        eval_metric="rmse",
-        random_state=42,
-        n_jobs=-1
-    )
+    xgb_model = _build_xgb_model()
 
     # ---------------------------------------------------------
     # 6. Elastic Net
     # ---------------------------------------------------------
     # Elastic Net er følsom for skala, så StandardScaler brukes.
-    elastic_net_model = Pipeline([
-        (
-            "scaler",
-            StandardScaler()
-        ),
-        (
-            "elastic_net",
-            ElasticNet(
-                alpha=elastic_net_alpha,
-                l1_ratio=elastic_net_l1_ratio,
-                max_iter=10000,
-                random_state=42
-            )
-        )
-    ])
+    elastic_net_model = _build_elastic_net_model()
 
     # ---------------------------------------------------------
     # 7. Tren alle modellene
@@ -424,6 +530,10 @@ def train_defcon_ensemble_model(
     )
 
     print("\nEnsemble sigma:", round(sigma, 4))
+    print(
+        "Lagret spiller-residualer til "
+        "Defcon_Players_residuals.csv"
+    )
 
     return (
         ensemble_model,
@@ -487,10 +597,54 @@ def Generate_Defensive_Contribution_Models(
     )
     model.fit(X_train, train[target])
 
+    train_pred = model.predict(X_train)
     p = model.predict(X_test)
     print(f"XGBoost | MAE {mean_absolute_error(test[target], p):.4f} | "
           f"RMSE {np.sqrt(mean_squared_error(test[target], p)):.4f} | "
           f"R² {r2_score(test[target], p):.4f}")
+
+    team_residual_base_cols = [
+        col
+        for col in [
+            "kickoff_time",
+            "name",
+            "code",
+            "opponent",
+            target
+        ]
+        if col in df.columns
+    ]
+
+    train_residuals = train[
+        team_residual_base_cols + features
+    ].copy()
+    train_residuals["dataset_split"] = "train"
+    train_residuals["prediction"] = train_pred
+    train_residuals["residual"] = (
+        train_residuals[target]
+        - train_residuals["prediction"]
+    )
+
+    test_residuals = test[
+        team_residual_base_cols + features
+    ].copy()
+    test_residuals["dataset_split"] = "test"
+    test_residuals["prediction"] = p
+    test_residuals["residual"] = (
+        test_residuals[target]
+        - test_residuals["prediction"]
+    )
+
+    pd.concat(
+        [train_residuals, test_residuals],
+        ignore_index=True
+    ).to_csv(
+        "Defcon_Teams_residuals.csv",
+        index=False
+    )
+    print(
+        "Saved residuals to Defcon_Teams_residuals.csv"
+    )
 
     # Refit all history
     X_all = imputer.fit_transform(df[features])
@@ -963,9 +1117,9 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
         defcon_model, sigma, results, historical_predictions = (
             train_defcon_ensemble_model(
             path="TestML4.csv",
-            svr_weight=0.3,
-            xgb_weight=0.4,
-            elastic_net_weight=0.3,
+            svr_weight=0.4,
+            xgb_weight=0.25,
+            elastic_net_weight=0.35,
             elastic_net_alpha=0.01,
             elastic_net_l1_ratio=0.5
             )   
@@ -1175,32 +1329,28 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
                 import numpy as np
                 from scipy.stats import skewnorm
 
-                def skew_probability(mu, threshold=10.0):
-                    # Fitted parameters
-                    shape = -3.43
-                    std = 3.0
-
-                    delta = shape / np.sqrt(1 + shape**2)
-
-                    # Convert desired standard deviation to scipy skewnorm scale
-                    scale = std / np.sqrt(1 - 2 * delta**2 / np.pi)
-
-                    # Adjust loc so that E[X] = mu
-                    loc = mu - scale * delta * np.sqrt(2 / np.pi)
-
-                    return skewnorm.sf(
+                from scipy.stats import t
+                
+                # Fitted residual distribution
+                DF = 5.445239499991924
+                BIAS = -0.22988589029028356
+                SCALE = 2.338754898323116
+                
+                def probability(mu, threshold):
+                    return t.sf(
                         threshold,
-                        shape,
-                        loc=loc,
-                        scale=scale
+                        df=DF,
+                        loc=mu + BIAS,   # equivalent to mu - 0.229885...
+                        scale=SCALE
                     )
+                
                 mu = pred * 0.7 + 0.3 * value
-
+                
                 if position == "DEF":
-                    cbi_pred = skew_probability(mu, threshold=10.0)
+                    cbi_pred = probability(mu, threshold=10.0)
                 else:
-                    cbi_pred = skew_probability(mu, threshold=12.0)
-
+                    cbi_pred = probability(mu, threshold=12.0)
+                
                 player_preds.append(cbi_pred)
        
                 """

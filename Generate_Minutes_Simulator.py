@@ -3105,6 +3105,7 @@ def Generate_simulator(
         Award 3, 2 and 1 bonus points based on BPS.
 
         Ties share the points for the positions occupied.
+        Players within 1 BPS of each other are treated as tied.
 
         Examples
         --------
@@ -3136,6 +3137,8 @@ def Generate_simulator(
         player_index = 0
         ranking_position = 0
 
+        tie_tolerance = 1.0
+
         while (
             player_index < len(sorted_players)
             and ranking_position < 3
@@ -3148,14 +3151,12 @@ def Generate_simulator(
 
             while (
                 player_index < len(sorted_players)
-                and np.isclose(
+                and abs(
                     sorted_players[
                         player_index
-                    ]["bps"],
-                    current_bps,
-                    rtol=1e-9,
-                    atol=1e-9,
-                )
+                    ]["bps"]
+                    - current_bps
+                ) <= tie_tolerance
             ):
                 tied_players.append(
                     sorted_players[player_index]

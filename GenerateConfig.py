@@ -94,8 +94,8 @@ Manual_Player_Adjustments={
     "Bobby_Thomas":["Jaydee_Canvot"],
     "Tarik_Muharemović":["Jaydee_Canvot"],
     "Gonzalo_García": ["Rodrigo_Muniz Carvalho"],
-    "Mamadou_Sangaré":["Elliot_Anderson"]
-    
+    "Mamadou_Sangaré":["Elliot_Anderson"],
+    "Mamadou_Sangaré":["Gabriel_Martinelli Silva"]
     
     
         

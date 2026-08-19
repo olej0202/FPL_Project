@@ -146,6 +146,7 @@ def Data_Predictions(
     player_history_path = Path(player_history_path_25)
     fixtures_expanded_path = Path(fixtures_expanded_path_25)
     gw_list = _normalize_time_list(time_list)
+
     if not gw_list:
         raise ValueError("time_list er tom/ugyldig i Data_Predictions.")
 
@@ -250,6 +251,7 @@ def Data_Predictions(
     )
     
     Generate_Minutes_Simulator(current_team_path,gw_list)
+    """
 
     GenerateTeamPredictions(
         str(filtered_fixture_path),
@@ -257,7 +259,7 @@ def Data_Predictions(
         len(gw_list),
         time_list=gw_list,
         standings_fixture_path=str(fixture_path),
-    )"""
+    )
     Make_Predictions()
     Generate_point_predictions(time_list)
     #make_predictions2(horizon=len(time_list), gw_list=time_list)
