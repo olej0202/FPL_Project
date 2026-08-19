@@ -1051,10 +1051,10 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
                 * np.minimum(1, subset["average_minutes"] / 80)
                 ).sum()
                
-               stat_pred=np.minimum(0.35,(df['Goal_Index'].values[h]* np.minimum(1, df["average_minutes"].values[h] / 80))/goal_sum)
+               stat_pred=np.minimum(0.35,(df['Goal_Weight_Share'].values[h]))
                stat_pred_share=df['Goal_Index_Share'].values[h]
                player_model.append(pred)
-               pred=(pred*0.33+0.33*stat_pred+0.33*stat_pred_share)*0.8+0.2*df['Opp_Goal_Threat_Pos'].values[h]
+               pred=(pred*0.5+0.3*stat_pred+0.2*stat_pred_share)*0.8+0.2*df['Opp_Goal_Threat_Pos'].values[h]
                
 
         
