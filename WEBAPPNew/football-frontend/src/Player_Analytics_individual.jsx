@@ -326,9 +326,11 @@ export default function PlayerAnalyticsIndividual() {
     { value: "Assists", label: "Assists" },
     { value: "Fantasy Points", label: "Fantasy Points" },
     { value: "Bonus", label: "Bonus" },
-    { value: "Adjusted XG", label: "Adjusted XG" },
-    { value: "Adjusted XA", label: "Adjusted XA" },
-    { value: "Defcon Hit", label: "Defcon Hit" },
+    { value: "bps", label: "Bonus Points" },
+    { value: "defcon", label: "Defcons" },
+    { value: "minutes", label: "Minutes" },
+    { value: "saves", label: "Saves" },
+    { value: "Rolling_adjusted_BPS2", label: "Ground Bonus Index" },
   ];
 
   const handleAddAnalysis = (name) => {

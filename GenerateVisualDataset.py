@@ -135,13 +135,13 @@ def Generate_Player_Historical():
     unique_players=relevant_players["name"].unique()
     
     filtered_data=data[data["name"].isin(unique_players)]
-    Cols_to_include=["name", "position", "kickoff_time", "opponent_code", "season", "assists", "bonus", "expected_assists", "expected_goals", "goals_scored", "minutes", "total_points", "ICT", "Adjusted_XG", "Adjusted_XA","defcon_hit_rate"]
+    Cols_to_include=["name", "position", "kickoff_time", "opponent_code", "season", "assists", "bonus", "expected_assists", "expected_goals", "goals_scored", "minutes", "total_points", "ICT", "Adjusted_XG", "Adjusted_XA","defcon_hit_rate",'bps','defcon','minutes','saves','Rolling_adjusted_BPS2']
     filtered_data=filtered_data[Cols_to_include]
     merged_df = filtered_data.merge(team_code, how='left', left_on='opponent_code', right_on='code')
 
     merged_df.drop(columns=['opponent_code','code' ], inplace=True)
     
-    merged_df.columns = ['Name', 'Position', 'Kickoff time', 'Season','Assists','Bonus',"Expected Assists", "Expected Goals", "Goals Scored", "Minutes", "Fantasy Points", "ICT", "Adjusted XG", "Adjusted XA",'Defcon Hit','Opponent Name']
+    merged_df.columns = ['Name', 'Position', 'Kickoff time', 'Season','Assists','Bonus',"Expected Assists", "Expected Goals", "Goals Scored", "Minutes", "Fantasy Points", "ICT", "Adjusted XG", "Adjusted XA",'Defcon Hit','Opponent Name','bps','defcon','minutes','saves','Rolling_adjusted_BPS2']
     merged_df.to_csv("player_history.csv")
     
 import pandas as pd

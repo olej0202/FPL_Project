@@ -191,20 +191,12 @@ def train_defcon_ensemble_model(
         "Share_of_Defcon_Short",
         "Share_of_Defcon",
         "defcon_avg",
-        "defcon_avg_hit_rate",
-        "defcon_avg_hit_rate_T3",
-        "defcon_avg_hit_rate_T0",
-        "defcon_avg_hit_rate_T1"
     ]
 
     features = [
         "Share_of_Defcon_Short",
         "Share_of_Defcon",
         "defcon_avg",
-        "defcon_avg_hit_rate",
-        "defcon_avg_hit_rate_T3",
-        "defcon_avg_hit_rate_T0",
-        "defcon_avg_hit_rate_T1",
         "minutes",
         "Rolling_Defcon_For",
         "Opponent_defcon"
@@ -1134,10 +1126,6 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
                     df["Share_of_Defcon_Short"].values[h],
                     df["Share_of_Defcon"].values[h],
                     df["defcon_avg"].values[h],
-                    df["defcon_avg_hit_rate"].values[h],
-                    df["defcon_avg_hit_rate_T3"].values[h],
-                    df["defcon_avg_hit_rate_T0"].values[h],
-                    df["defcon_avg_hit_rate_T1"].values[h],
                     df["average_minutes"].values[h],
                     df["Rolling_Team_Defcon"].values[h],
                     df["Opp_defcon"].values[h]
@@ -1145,10 +1133,6 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
                     "Share_of_Defcon_Short",
                     "Share_of_Defcon",
                     "defcon_avg",
-                    "defcon_avg_hit_rate",
-                    "defcon_avg_hit_rate_T3",
-                    "defcon_avg_hit_rate_T0",
-                    "defcon_avg_hit_rate_T1",
                     "minutes",
                     "Rolling_Defcon_For",
                     "Opponent_defcon"
