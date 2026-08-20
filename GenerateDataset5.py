@@ -2021,6 +2021,17 @@ def main_Transform():
             player_df.loc[mask, "Adjusted_BPS"] -= (
                     player_df.loc[mask, "defcon"] * 0.17
             )
+            
+            
+            player_df.loc[
+                (player_df["minutes"] > 1),
+                "Adjusted_BPS"
+            ] -= 2
+
+            player_df.loc[
+                player_df["minutes"] > 60,
+                "Adjusted_BPS"
+            ] -= 4
 
             player_df["Rolling_adjusted_BPS"]=(player_df['Adjusted_BPS'].clip(upper=22).rolling(window=15, min_periods=1).sum()/player_df["minutes"].clip(lower=15).rolling(window=15, min_periods=1).sum()) * 90    
             player_df["rolling_bps_historic"] = player_df['Adjusted_BPS'].clip(upper=22).rolling(window=30, min_periods=1).mean()

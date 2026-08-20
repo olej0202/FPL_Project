@@ -20,6 +20,7 @@ from torch.utils.data import TensorDataset, DataLoader
 import joblib
 from GenerateConfig import date_filter as config_date_filter
 from GenerateConfig import POSITION_EVENT_BONUS,POINTS_RULES
+from GenerateStatSimulator import run_fpl_simulation_from_csv
 from scipy.stats import poisson
 from sklearn.impute import SimpleImputer
 
@@ -1330,12 +1331,12 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
                 from scipy.stats import skewnorm
 
                 from scipy.stats import t
-                
+
                 # Fitted residual distribution
                 DF = 5.445239499991924
                 BIAS = -0.22988589029028356
                 SCALE = 2.338754898323116
-                
+
                 def probability(mu, threshold):
                     return t.sf(
                         threshold,
@@ -1343,14 +1344,14 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
                         loc=mu + BIAS,   # equivalent to mu - 0.229885...
                         scale=SCALE
                     )
-                
+
                 mu = pred * 0.7 + 0.3 * value
-                
+
                 if position == "DEF":
                     cbi_pred = probability(mu, threshold=10.0)
                 else:
                     cbi_pred = probability(mu, threshold=12.0)
-                
+
                 player_preds.append(cbi_pred)
        
                 """
@@ -2027,7 +2028,34 @@ def Generate_point_predictions(GW_list):
     simulation=pd.read_csv("SImulator\simtest_player_outcomes_upcoming.csv").sort_values(by=["event", "fixture_code"])
     simulation2=pd.read_csv("SImulator\Full_simulator_player.csv").sort_values(by=["gameweek", "fixture_code"])
     minutes_simulation=pd.read_csv("SImulator\MinutesSimulator_player_predictions.csv").sort_values(by=["event", "fix_id"])
+    
+    stat_simulation = pd.read_csv("Stat_simulator_Players.csv")
 
+
+    stat_simulation = (
+        stat_simulation
+        .groupby(
+            ["name", "team_code", "fixture_code"],
+            as_index=False
+        )
+        .agg(
+            goals=("goals", "mean"),
+            assists=("assists", "mean"),
+            defcon_prob=("defcon_prob", "mean"),
+            calculated_BPS=("calculated_BPS", "mean"),
+            GC_penalty=("GC_penalty", "mean"),
+            Fantasy_points=("Fantasy_points", "mean"),
+        )
+        .rename(columns={"fixture_code": "fix_id"})
+        .sort_values(
+            by=["fix_id", "name"]
+        )
+    )
+
+    stat_simulation.to_csv(
+        "Stat_simulator_Players_Agg.csv",
+        index=False
+    )
     from sklearn.linear_model import LogisticRegression
     from sklearn.utils.class_weight import compute_class_weight
     import numpy as np
@@ -2183,6 +2211,37 @@ def Generate_point_predictions(GW_list):
             how="left",
         )
         
+        player_preds = player_preds.merge(
+            _prepare_source(stat_simulation[stat_simulation["name"]==player], "goals").rename(columns={"goals": "stat_sim_goals"}),
+            on=merge_keys,
+            how="left",
+        )
+        player_preds = player_preds.merge(
+            _prepare_source(stat_simulation[stat_simulation["name"]==player], "assists").rename(columns={"assists": "stat_sim_assist"}),
+            on=merge_keys,
+            how="left",
+        )
+        player_preds = player_preds.merge(
+            _prepare_source(stat_simulation[stat_simulation["name"]==player], "defcon_prob").rename(columns={"defcon_prob": "stat_sim_defcon_prob"}),
+            on=merge_keys,
+            how="left",
+        )
+        player_preds = player_preds.merge(
+            _prepare_source(stat_simulation[stat_simulation["name"]==player], "calculated_BPS").rename(columns={"calculated_BPS": "stat_sim_calculated_BPS"}),
+            on=merge_keys,
+            how="left",
+        )
+        
+        player_preds = player_preds.merge(
+            _prepare_source(stat_simulation[stat_simulation["name"]==player], "GC_penalty").rename(columns={"GC_penalty": "stat_sim_GC_penalty"}),
+            on=merge_keys,
+            how="left",
+        )
+        player_preds = player_preds.merge(
+            _prepare_source(stat_simulation[stat_simulation["name"]==player], "Fantasy_points").rename(columns={"Fantasy_points": "stat_sim_Fantasy_points"}),
+            on=merge_keys,
+            how="left",
+        )        
         
         
 
@@ -2204,43 +2263,44 @@ def Generate_point_predictions(GW_list):
             (
                 (player_preds["xgb_goals_75"] * 0.5 + 0.5 * player_preds["xgb_goals_25"]) * 0.0
                 + player_preds["sim3_goals_pred"] * 0.2
-                + player_preds["sim2_goals_pred"] * 0.1
-                + player_preds["stat_goals_pred"] * 0.7
+                + player_preds["stat_sim_goals"] * 0.3
+                + player_preds["stat_goals_pred"] * 0.5
             ) * overscore
         )
 
         player_preds["Assist_pred"] = (
             (
                 (player_preds["xgb_assist_75"] * 0.5 + 0.5 * player_preds["xgb_assist_25"]) * 0.0
-                + player_preds["sim_assists_pred"] * 0.2
-                + player_preds["sim2_assists_pred"] * 0.1
-                + player_preds["stat_assist_pred"] * 0.7
+                + player_preds["sim3_assists_pred"] * 0.2
+                + player_preds["stat_sim_assist"] * 0.3
+                + player_preds["stat_assist_pred"] * 0.5
                 + historic_Assist * 0
             ) 
         )
-        player_preds["Bonus_pred2"] = player_preds["sim2_bonus_pred"]*0.3+player_preds["sim3_bonus_pred"]*0.7
+        player_preds["Bonus_pred2"] = player_preds["stat_sim_calculated_BPS"]*0.7+player_preds["sim3_bonus_pred"]*0.3
         player_preds["Bonus_pred"] = player_preds["stat_bps"]
         player_preds["GC_pred"] = player_preds["stat_gc_pred"]
         player_preds["Fantasy_pred"] = player_preds["xgb_fantasy_pred"]
-        player_preds["CBI_pred"] = player_preds["stat_cbi_pred"]
+        player_preds["CBI_pred"] = player_preds["stat_cbi_pred"]*0.5+0.5*player_preds["stat_sim_defcon_prob"]
         player_preds["Card_pred"] = player_preds["stat_card_pred"]
         player_preds["Save_pred"] = player_preds["stat_saves_pred"]
+        player_preds["GC_Penalty"]=player_preds["stat_sim_GC_penalty"]
 
         columns_to_include=["name","position", "GW","fix_id","Rolling_adjusted_BPS", "Rolling_adjusted_XG", "Rolling_adjusted_XA","played_XGC","average_minutes","fix_percentage"]
             
         New_dataset=player_data[columns_to_include].copy()
         New_dataset = New_dataset.merge(
-            player_preds[["Name", "GW", "fix_id", "Goal_pred", "Assist_pred", "Bonus_pred","Bonus_pred2", "GC_pred", "Fantasy_pred", "CBI_pred", "Card_pred", "Save_pred"]],
+            player_preds[["Name", "GW", "fix_id", "Goal_pred", "Assist_pred", "Bonus_pred","Bonus_pred2", "GC_pred", "Fantasy_pred", "CBI_pred", "Card_pred", "Save_pred","GC_Penalty"]],
             left_on=["name", "GW", "fix_id"],
             right_on=["Name", "GW", "fix_id"],
             how="left",
         ).drop(columns=["Name"])
-        pred_fill_cols = ["Goal_pred", "Assist_pred", "Bonus_pred", "Bonus_pred2","GC_pred", "Fantasy_pred", "CBI_pred", "Card_pred", "Save_pred"]
+        pred_fill_cols = ["Goal_pred", "Assist_pred", "Bonus_pred", "Bonus_pred2","GC_pred", "Fantasy_pred", "CBI_pred", "Card_pred", "Save_pred","GC_Penalty"]
         New_dataset[pred_fill_cols] = New_dataset[pred_fill_cols].fillna(0)
         
         
 
-        summary_dataset = New_dataset.groupby(columns_to_include)[["Goal_pred", "Assist_pred", "Bonus_pred","Bonus_pred2", "GC_pred", "Fantasy_pred", "CBI_pred","Card_pred","Save_pred"]].sum().reset_index()
+        summary_dataset = New_dataset.groupby(columns_to_include)[["Goal_pred", "Assist_pred", "Bonus_pred","Bonus_pred2", "GC_pred", "Fantasy_pred", "CBI_pred","Card_pred","Save_pred","GC_Penalty"]].sum().reset_index()
         summary_dataset["Average_Overscore"]=player_data["Average_Overscore"].values[0]
         summary_dataset["Point_STD"]=player_data["TP_std_20"].values[0]
         summary_dataset = summary_dataset.fillna(0)
@@ -2257,7 +2317,7 @@ def Generate_point_predictions(GW_list):
         likelihood_of_0 = 1 / (1 + np.exp(-z0))
             
         if(position=="FWD"):
-            summary_dataset["Bonus_pred"]=summary_dataset["Bonus_pred2"]*0.7+0.3*expected_bonus(
+            summary_dataset["Bonus_pred"]=summary_dataset["Bonus_pred2"]*1+0*expected_bonus(
                 summary_dataset["Bonus_pred"]+
                 summary_dataset["Goal_pred"]*POSITION_EVENT_BONUS[position]["goal"]+
                 summary_dataset["Assist_pred"]*POSITION_EVENT_BONUS[position]["assist"]
@@ -2269,7 +2329,7 @@ def Generate_point_predictions(GW_list):
             
             summary_dataset["Risk_share"]=(summary_dataset["Goal_pred"]*5.2+summary_dataset["Assist_pred"]*3.4)/summary_dataset["Points_prediction"]
         elif(position=="MID"):
-            summary_dataset["Bonus_pred"]=summary_dataset["Bonus_pred2"]*0.7+0.3*expected_bonus(
+            summary_dataset["Bonus_pred"]=summary_dataset["Bonus_pred2"]*1+0*expected_bonus(
                 summary_dataset["Bonus_pred"]+
                 summary_dataset["Goal_pred"]*POSITION_EVENT_BONUS[position]["goal"]+
                 summary_dataset["Assist_pred"]*POSITION_EVENT_BONUS[position]["assist"]
@@ -2283,7 +2343,7 @@ def Generate_point_predictions(GW_list):
             summary_dataset["Risk_share"]=(summary_dataset["Goal_pred"]*5.5+summary_dataset["Assist_pred"]*3.4+summary_dataset["GC_pred"]*0.8)/summary_dataset["Points_prediction"]
             
         elif(position=="GKP"):
-            summary_dataset["Bonus_pred"]=summary_dataset["Bonus_pred2"]*0.7+0.3*expected_bonus(
+            summary_dataset["Bonus_pred"]=summary_dataset["Bonus_pred2"]*1+0*expected_bonus(
                 summary_dataset["Bonus_pred"]*0.8+
                 summary_dataset["Goal_pred"]*POSITION_EVENT_BONUS[position]["goal"]+
                 summary_dataset["Assist_pred"]*POSITION_EVENT_BONUS[position]["assist"]+
@@ -2299,7 +2359,7 @@ def Generate_point_predictions(GW_list):
             summary_dataset["Risk_share"]=(summary_dataset["GC_pred"]*5)/summary_dataset["Points_prediction"]
 
         else:
-            summary_dataset["Bonus_pred"]=summary_dataset["Bonus_pred2"]*0.7+0.3*expected_bonus(
+            summary_dataset["Bonus_pred"]=summary_dataset["Bonus_pred2"]*1+0*expected_bonus(
                 summary_dataset["Bonus_pred"]*0.8+
                 summary_dataset["Goal_pred"]*POSITION_EVENT_BONUS[position]["goal"]+
                 summary_dataset["Assist_pred"]*POSITION_EVENT_BONUS[position]["assist"]+
@@ -2352,6 +2412,7 @@ def Make_Predictions ():
         XGB_pred=pd.DataFrame()
         position_filter=positions[y]
         Stat_preds(is_pred, position_filter,column_list,predlength)
+    run_fpl_simulation_from_csv()
 
         #pred2=XGB(position_filter,"FWD",column_list,predlength)        
         #Generate_LSTM_preds(position_filter,column_list,predlength)
