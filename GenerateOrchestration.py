@@ -112,7 +112,7 @@ def Data_Extraction(season,is_new_season,has_been_error):
 
 
 def Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos,Understat_path,Understat_shots_path):
-    #main_Transform()
+    main_Transform()
     #Generate_Understat_dataset(current_player_path,run_player_pos)
     #Generate_Shots_data(Understat_path,Understat_shots_path,current_player_path,current_team_path)
     #team_data(current_team_path)
@@ -133,6 +133,7 @@ def Data_Predictions(
     full_simulator_team_output_path_25,
     full_simulator_player_output_path_25,
 ):
+    
     # Run both simulation engines first
     sim_output_dir = Path("SImulator")
     sim_output_dir.mkdir(parents=True, exist_ok=True)
@@ -250,8 +251,8 @@ def Data_Predictions(
         paths=fs2_paths,
     )
     
-    Generate_Minutes_Simulator(current_team_path,gw_list)
-    """
+    Generate_Minutes_Simulator(current_team_path,gw_list)"""
+    
 
     GenerateTeamPredictions(
         str(filtered_fixture_path),

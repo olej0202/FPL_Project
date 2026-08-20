@@ -2052,6 +2052,29 @@ def Generate_point_predictions(GW_list):
         )
     )
 
+    fixture_gw_map = (
+        players[["GW", "fix_id"]]
+        .copy()
+        .assign(
+            GW=lambda df: pd.to_numeric(
+                df["GW"],
+                errors="coerce"
+            ),
+            fix_id=lambda df: pd.to_numeric(
+                df["fix_id"],
+                errors="coerce"
+            ),
+        )
+        .dropna(subset=["GW", "fix_id"])
+        .drop_duplicates(subset=["fix_id"], keep="last")
+    )
+
+    stat_simulation = stat_simulation.merge(
+        fixture_gw_map,
+        on="fix_id",
+        how="left",
+    )
+
     stat_simulation.to_csv(
         "Stat_simulator_Players_Agg.csv",
         index=False
