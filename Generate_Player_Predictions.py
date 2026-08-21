@@ -2045,7 +2045,11 @@ def Generate_point_predictions(GW_list):
             calculated_BPS=("calculated_BPS", "mean"),
             GC_penalty=("GC_penalty", "mean"),
             Fantasy_points=("Fantasy_points", "mean"),
+            Clean_sheets=("CS", "mean"),
+            Over_2=("GC_2", "mean"),
+            Over_4=("GC_4", "mean")
         )
+    
         .rename(columns={"fixture_code": "fix_id"})
         .sort_values(
             by=["fix_id", "name"]
@@ -2264,8 +2268,18 @@ def Generate_point_predictions(GW_list):
             _prepare_source(stat_simulation[stat_simulation["name"]==player], "Fantasy_points").rename(columns={"Fantasy_points": "stat_sim_Fantasy_points"}),
             on=merge_keys,
             how="left",
-        )        
-        
+        )
+        player_preds = player_preds.merge(
+            _prepare_source(stat_simulation[stat_simulation["name"]==player], "Clean_sheets").rename(columns={"Clean_sheets": "stat_sim_Clean_sheets"}),
+            on=merge_keys,
+            how="left",
+        )
+        player_preds = player_preds.merge(
+            _prepare_source(stat_simulation[stat_simulation["name"]==player], "Over_2").rename(columns={"Over_2": "stat_sim_Over_2"}),
+            on=merge_keys,
+            how="left",
+        )              
+
         
 
         
@@ -2302,8 +2316,8 @@ def Generate_point_predictions(GW_list):
         )
         player_preds["Bonus_pred2"] = player_preds["stat_sim_calculated_BPS"]*0.7+player_preds["sim3_bonus_pred"]*0.3
         player_preds["Bonus_pred"] = player_preds["stat_bps"]
-        player_preds["GC_pred"] = player_preds["stat_gc_pred"]
-        player_preds["Fantasy_pred"] = player_preds["xgb_fantasy_pred"]
+        player_preds["GC_pred"] = player_preds["stat_gc_pred"]*0.7+0.3*player_preds["stat_sim_Clean_sheets"]
+        player_preds["Fantasy_pred"] = player_preds["stat_sim_Fantasy_points"]
         player_preds["CBI_pred"] = player_preds["stat_cbi_pred"]*0.5+0.5*player_preds["stat_sim_defcon_prob"]
         player_preds["Card_pred"] = player_preds["stat_card_pred"]
         player_preds["Save_pred"] = player_preds["stat_saves_pred"]
@@ -2374,8 +2388,7 @@ def Generate_point_predictions(GW_list):
                 )
             summary_dataset["Points_prediction"]=((1*likelihood_of_60+1*likelihood_of_0)
                                                   +summary_dataset["Save_pred"]
-                                                  + 0.5 * ((30 - np.minimum(30, summary_dataset["GC_pred"] * 100)) / -15
-                                                           - (1 - summary_dataset["GC_pred"] * (1 - np.log(summary_dataset["GC_pred"]))))
+                                                  -summary_dataset["GC_Penalty"]*0.8*likelihood_of_60
                                                   +summary_dataset["GC_pred"]*POINTS_RULES[position]["cs"]*likelihood_of_60
                                                   +summary_dataset["Bonus_pred"] )
 
@@ -2387,6 +2400,7 @@ def Generate_point_predictions(GW_list):
                 summary_dataset["Goal_pred"]*POSITION_EVENT_BONUS[position]["goal"]+
                 summary_dataset["Assist_pred"]*POSITION_EVENT_BONUS[position]["assist"]+
                 summary_dataset["GC_pred"]*POSITION_EVENT_BONUS[position]["cs"]*likelihood_of_60
+                
                 )
             
             POINTS_RULES[position]["goal"]
@@ -2397,8 +2411,7 @@ def Generate_point_predictions(GW_list):
                                                   +summary_dataset["Assist_pred"]*POINTS_RULES[position]["assist"]
                                                   +summary_dataset["Bonus_pred"]
                                                   +summary_dataset["GC_pred"]*POINTS_RULES[position]["cs"]*likelihood_of_60
-                                                  + 0.5 * prediction_mins/90*((30 - np.minimum(30, summary_dataset["GC_pred"] * 100)) / -15
-                                                           - (1 - summary_dataset["GC_pred"] * (1 - np.log(summary_dataset["GC_pred"]))))
+                                                  -summary_dataset["GC_Penalty"]*0.8*likelihood_of_60
                                                   -summary_dataset["Card_pred"])+summary_dataset["CBI_pred"]*2
             summary_dataset["Risk_share"]=(summary_dataset["Goal_pred"]*6.5+summary_dataset["Assist_pred"]*3.4+summary_dataset["GC_pred"]*3.5)/summary_dataset["Points_prediction"]
      
