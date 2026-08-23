@@ -163,8 +163,8 @@ def ShotsData(shots_path):
 # -------------------------
 
 def load_current_players_with_team(
-    players_path="Raw_Data_25/current_players.csv",
-    teams_path="Raw_Data_25/current_teams.csv",
+    players_path="Raw_Data_26/current_players.csv",
+    teams_path="Raw_Data_26/current_teams.csv",
 ):
     players = pd.read_csv(players_path)
     teams = pd.read_csv(teams_path)
@@ -197,8 +197,8 @@ def build_player_match_table(
     mapping: dict,
     min_score: float = 0.70,
     prefer_recall: bool = True,
-    player_path: str="Raw_Data_25/current_players.csv",
-    team_path:str="Raw_Data_25/current_teams.csv"
+    player_path: str="Raw_Data_26/current_players.csv",
+    team_path:str="Raw_Data_26/current_teams.csv"
 ) -> pd.DataFrame:
 
 
@@ -329,8 +329,8 @@ def attach_codes_via_match_table(shots_df: pd.DataFrame, match_best: pd.DataFram
 def apply_forced_to_match_best(
     match_best: pd.DataFrame,
     forced_map: dict,
-    players_path="Raw_Data_25/current_players.csv",
-    teams_path="Raw_Data_25/current_teams.csv",
+    players_path="Raw_Data_26/current_players.csv",
+    teams_path="Raw_Data_26/current_teams.csv",
 ) -> pd.DataFrame:
     """
     forced_map: { understat_player_id : current_players.code }

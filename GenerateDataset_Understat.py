@@ -257,7 +257,7 @@ def Generate_Understat_dataset(current_players, run_player_pos):
         return pd.DataFrame(rows)
 
     def attach_fpl_names_to_understat(df_understat: pd.DataFrame,
-                                     current_players_csv: str = "Raw_Data_25/current_players.csv",
+                                     current_players_csv: str = "Raw_Data_26/current_players.csv",
                                      strict: int = 95,
                                      relaxed: int = 90,
                                      aliases: dict | None = None):
@@ -788,6 +788,6 @@ def Generate_Understat_dataset(current_players, run_player_pos):
 if __name__ == "__main__":
     # You pass these in your environment; keeping your signature
     # current_players is used only if run_player_pos==1
-    current_players = "Raw_Data_25/current_players.csv"
+    current_players = "Raw_Data_26/current_players.csv"
     run_player_pos = 0
     Generate_Understat_dataset(current_players, run_player_pos)

@@ -104,19 +104,19 @@ def _filter_fixtures_by_timelist(
 
 
 def Data_Extraction(season,is_new_season,has_been_error):
-    #main_Extract(season, is_new_season, has_been_error)
+    main_Extract(season, is_new_season, has_been_error)
     current_players(season)
     current_teams(season)
     fixtures(season)
-    #main_Extract_Understat(season)
+    main_Extract_Understat(season)
 
 
 def Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos,Understat_path,Understat_shots_path):
-    #main_Transform()
-    #Generate_Understat_dataset(current_player_path,run_player_pos)
-    #Generate_Shots_data(Understat_path,Understat_shots_path,current_player_path,current_team_path)
-    #team_data(current_team_path)
-    #GetXmins(current_player_path, time_list, scenarios=Manual_min)
+    main_Transform()
+    Generate_Understat_dataset(current_player_path,run_player_pos)
+    Generate_Shots_data(Understat_path,Understat_shots_path,current_player_path,current_team_path)
+    team_data(current_team_path)
+    GetXmins(current_player_path, time_list, scenarios=Manual_min)
     GeneratePlayerData(time_list, current_fixture_path,current_player_path,current_team_path)
 
     
@@ -163,7 +163,6 @@ def Data_Predictions(
         sim_output_dir / "fixtures_expanded_filtered_by_timelist.csv",
         force_unfinished=True,
     )
-    """
     # Trigger full simulator parameter optimization with all read paths passed in.
     full_sim_control = FullSimulatorControlConfig(
         team_history_path=team_history_path,
@@ -251,7 +250,7 @@ def Data_Predictions(
         paths=fs2_paths,
     )
     
-    Generate_Minutes_Simulator(current_team_path,gw_list)"""
+    Generate_Minutes_Simulator(current_team_path,gw_list)
     
 
     GenerateTeamPredictions(
@@ -296,7 +295,7 @@ def Get_times(current_fixture_path,n_points_in_future):
 def Main_Orchestration():
     season=26
     is_new_season=1
-    has_been_error=0
+    has_been_error=1
     n_points_in_future=8
     budget=100
     ownership=0.9
@@ -324,11 +323,11 @@ def Main_Orchestration():
     
     
     #EXTARCT DATA
-    #Data_Extraction(season,is_new_season,has_been_error)
+    Data_Extraction(season,is_new_season,has_been_error)
     
     
     #Transform data
-    #Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos,Understat_path,Understat_shots_path)
+    Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos,Understat_path,Understat_shots_path)
     
     #Predict data
     Data_Predictions(

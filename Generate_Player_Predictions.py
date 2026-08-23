@@ -2420,7 +2420,7 @@ def Generate_point_predictions(GW_list):
         full_df=pd.concat([full_df, summary_dataset], axis=0, ignore_index=True)
         
 
-    summed_metrics = ["Goal_pred", "Assist_pred", "Bonus_pred", "GC_pred", "Fantasy_pred", "CBI_pred","Card_pred","Points_prediction"]  # <- put your "sum" columns here
+    summed_metrics = ["Goal_pred", "Assist_pred", "Bonus_pred", "GC_pred", "Fantasy_pred", "CBI_pred","Card_pred","GC_Penalty","Points_prediction"]  # <- put your "sum" columns here
     full_df["fix_percentage"] = pd.to_numeric(full_df["fix_percentage"], errors="coerce").fillna(1.0)
 
     full_df[summed_metrics] = full_df[summed_metrics].mul(full_df["fix_percentage"], axis=0)

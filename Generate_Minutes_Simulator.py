@@ -3818,6 +3818,17 @@ def Generate_simulator(
                     },
                 )
 
+                conceded_goals = 0
+                if position in {"DEF", "GKP"}:
+                    if str(player["Team"]) == str(
+                        fixture_job["home_code"]
+                    ):
+                        conceded_goals = goal_acc_a
+                    elif str(player["Team"]) == str(
+                        fixture_job["away_code"]
+                    ):
+                        conceded_goals = goal_acc_h
+
                 player["bps"] = (
                     player["base_bps"]
                     + player["goals"]
@@ -3827,6 +3838,9 @@ def Generate_simulator(
                     + player["clean_sheet"]
                     * player["likelihood_of_60"]
                     * position_rules["cs"]
+                    - conceded_goals
+                    * 4.0
+                    * player["likelihood_of_60"]
                 )
 
             simulation_player_state = (

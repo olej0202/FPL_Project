@@ -382,6 +382,8 @@ def XP_new(df,home,n_matches):
     return XP
 def get_understat(player_df,Own_team_name,pos,element_list,season_list,position):
     
+    directory_path26 = 'Raw_Data_26/Understat_data_with_element.csv'
+    
     directory_path25 = 'Raw_Data_25/Understat_data_with_element.csv'
     
     directory_path24 = 'Raw_Data_24/Understat_data_with_element.csv'
@@ -410,13 +412,20 @@ def get_understat(player_df,Own_team_name,pos,element_list,season_list,position)
     
     filtered_df=pd.DataFrame()
     try:
-        season_df=player_df[player_df["season"]=='26']
+        season_df=player_df[player_df["season"]=='27']
         element=season_df["code_x"].values[0]
-        data_25 = pd.read_csv(directory_path25)
-        filtered_df=data_25[data_25["element"]==element]
+        data_26 = pd.read_csv(directory_path26)
+        filtered_df=data_26[data_26["element"]==element]
     except:
         filtered_df=pd.DataFrame()
-    
+    if(len(filtered_df)<1):
+        try:
+            season_df=player_df[player_df["season"]=='26']
+            element=season_df["element"].values[0]
+            data_25 = pd.read_csv(directory_path25)
+            filtered_df=data_25[data_25["element"]==element]
+        except:
+            filtered_df=pd.DataFrame()    
     if(len(filtered_df)<1):
         try:
             season_df=player_df[player_df["season"]=='25']
@@ -501,11 +510,13 @@ def rolling_mode(series):
     return  m.mode  # Return the first mode value
 
 def Generate_team_data():
+    df_27=pd.read_csv("Raw_Data_26/Fantasy_season_2026_data.csv")
     df_26=pd.read_csv("Raw_Data_25/Fantasy_season_2025_data.csv")
     df_25=pd.read_csv("Raw_Data_24/Fantasy_season_2024_data.csv")
     df_24=pd.read_csv("Raw_Data_23/Fantasy_season_2023_data.csv")
     df_23=pd.read_csv("Raw_Data_22/Fantasy_season_2022_data.csv")
     
+    team_27=pd.read_csv("Raw_Data_26/current_teams.csv")
     team_26=pd.read_csv("Raw_Data_25/current_teams.csv")
     team_25=pd.read_csv("Fantasy-Premier-League/Fantasy-Premier-League/data/2024-25/teams2.csv")
     team_24=pd.read_csv("Fantasy-Premier-League/Fantasy-Premier-League/data/2023-24/teams2.csv")
@@ -516,7 +527,7 @@ def Generate_team_data():
     XGCAs=[]
     XGCHs=[]
     full_team_data=pd.DataFrame()
-    for i in range(4):
+    for i in range(5):
         if(i==0):
             data=df_23
             code_data=team_23
@@ -526,9 +537,12 @@ def Generate_team_data():
         elif(i==2):
             data=df_25
             code_data=team_25
-        else:
+        elif(i==3):
             data=df_26
             code_data=team_26
+        else:
+            data=df_27
+            code_data=team_27
             
         teams=data["team"].unique()
 
@@ -1678,7 +1692,9 @@ def main_Transform():
     Generate_team_data()
     team_transformed2()
     Understat_teams()
-    
+    df_27=pd.read_csv("Raw_Data_26/Fantasy_season_2026_data.csv").iloc[:,1:]
+    df_27["name"]=df_27["first_name"]+" "+df_27["second_name"]
+    df_27["season"]='27'    
     df_26=pd.read_csv("Raw_Data_25/Fantasy_season_2025_data.csv").iloc[:,1:]
     df_26["name"]=df_26["first_name"]+" "+df_26["second_name"]
     df_26["season"]='26'
@@ -1691,7 +1707,7 @@ def main_Transform():
     df_23=pd.read_csv("Raw_Data_22/Fantasy_season_2022_data.csv").iloc[:,1:]
     df_23["season"]='23'
 
-    df_all = pd.concat([df_26,df_25,df_24, df_23], ignore_index=True)
+    df_all = pd.concat([df_27,df_26,df_25,df_24, df_23], ignore_index=True)
     df_all["name"] = df_all["name"].str.replace(" ", "_", n=1, regex=False)
     
     
@@ -2033,9 +2049,9 @@ def main_Transform():
                 "Adjusted_BPS"
             ] -= 5
 
-            player_df["Rolling_adjusted_BPS"]=(player_df['Adjusted_BPS'].clip(upper=22).rolling(window=15, min_periods=1).sum()/player_df["minutes"].clip(lower=15).rolling(window=15, min_periods=1).sum()) * 90    
-            player_df["rolling_bps_historic"] = player_df['Adjusted_BPS'].clip(upper=22).rolling(window=30, min_periods=1).mean()
-            player_df["Rolling_adjusted_BPS_2"]=(player_df['Adjusted_BPS'].clip(upper=22).rolling(window=30, min_periods=1).sum()/player_df["minutes"].clip(lower=15).rolling(window=30, min_periods=1).sum()) * 90    
+            player_df["Rolling_adjusted_BPS"]=(player_df['Adjusted_BPS'].clip(upper=18).rolling(window=15, min_periods=1).sum()/player_df["minutes"].clip(lower=15).rolling(window=15, min_periods=1).sum()) * 90    
+            player_df["rolling_bps_historic"] = player_df['Adjusted_BPS'].clip(upper=18).rolling(window=30, min_periods=1).mean()
+            player_df["Rolling_adjusted_BPS_2"]=(player_df['Adjusted_BPS'].clip(upper=18).rolling(window=30, min_periods=1).sum()/player_df["minutes"].clip(lower=15).rolling(window=30, min_periods=1).sum()) * 90    
             #player_df["Rolling_adjusted_BPS"]=adjust_measure(player_df, 'bps')
             player_df["Adjusted_Fantasy"] = np.where(
                     player_df["was_home"] == 1,  # Condition: if was_home is 1
