@@ -320,7 +320,7 @@ def optimize_my_team(
 
     # ---------------- Team / budget ----------------
     if is_first:
-        initial_saved = 1
+        initial_saved = 0
         team_df = pd.read_csv("Free_hit_team.csv")
         if "name" not in team_df.columns and "Name" in team_df.columns:
             team_df["name"] = team_df["Name"].astype(str)
@@ -570,7 +570,10 @@ def optimize_my_team(
     m.transfer_in = pyo.Var(m.I, m.T, domain=pyo.Binary)
     m.transfer_out = pyo.Var(m.I, m.T, domain=pyo.Binary)
 
-    m.saved_transfers = pyo.Var(m.T, domain=pyo.NonNegativeIntegers, bounds=(0, 5))
+    # saved_transfers stores extra free transfers beyond the base 1.
+    # It can be -1 at t=0 when the manager has already used the base FT
+    # before the optimizer runs mid-GW.
+    m.saved_transfers = pyo.Var(m.T, domain=pyo.Integers, bounds=(-1, 5))
     m.transfers_used = pyo.Var(m.T, domain=pyo.NonNegativeIntegers, bounds=(0, 5))
     m.money_in_bank = pyo.Var(m.T, domain=pyo.NonNegativeReals)
 

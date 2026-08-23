@@ -1,6 +1,6 @@
 import requests
 import pandas as pd
-from typing import Optional
+from typing import Optional, Dict, Any
 from GenerateConfig import current_season
 
 BASE_URL = "https://fantasy.premierleague.com/api"
@@ -55,6 +55,20 @@ def choose_event(events):
     return gw
 
 
+def choose_planning_event(events):
+    """
+    Choose the GW the manager can currently make changes for.
+
+    - If a next GW exists, that is the active planning target.
+    - Otherwise fall back to the current GW.
+    - As a final fallback, use the last listed event.
+    """
+    gw = next((e for e in events if e.get("is_next")), None)
+    if gw is None:
+        gw = next((e for e in events if e.get("is_current")), events[-1])
+    return gw
+
+
 def get_most_recent_finished_event_id(events, before_event_id: int) -> Optional[int]:
     finished_prior = [e["id"] for e in events if e["id"] < before_event_id and e.get("finished")]
     return max(finished_prior) if finished_prior else None
@@ -69,15 +83,20 @@ def resolve_squad_event_id(entry_id: int, event_id: int, events, include_freehit
     active_chip = picks_data.get("active_chip")
 
     if active_chip == "freehit" and not include_freehit_team:
+        current_event = next((e for e in events if e.get("is_current")), None)
+        current_event_id = None if current_event is None else int(current_event["id"])
+
+        # If the next GW is a Free Hit while the current GW is in progress,
+        # the underlying squad to restore to is the current GW squad.
+        if current_event_id is not None and int(event_id) > current_event_id:
+            return current_event_id
+
         prev_finished = get_most_recent_finished_event_id(events, event_id)
         if prev_finished is not None:
             return prev_finished
         return max(1, event_id )
 
     return event_id
-
-
-from typing import Optional, Dict, Any
 
 def compute_free_transfers(
     history_current,
@@ -88,7 +107,7 @@ def compute_free_transfers(
     """
     Your requested rules:
 
-    - event_start for the first event is 1 (i.e., free_start[first_event] = 1)
+    - event_start for the first played event is 1
     - For each round:
         free_end = min(
             5,
@@ -108,12 +127,12 @@ def compute_free_transfers(
     if not history_sorted:
         return result
 
-    first_event = history_sorted[0]["event"]
+    first_event = int(history_sorted[0]["event"])
 
     prev_free_end = 0  # free_end from previous event
 
     for row in history_sorted:
-        event_id = row["event"]
+        event_id = int(row["event"])
         event_transfers = int(row.get("event_transfers", 0) or 0)
         chip_name = chips_by_event.get(event_id)
 
@@ -128,7 +147,11 @@ def compute_free_transfers(
             free_start = max_ft
 
         # --- free_end for this GW ---
-        if chip_name in ("wildcard", "freehit"):
+        if event_id == first_event:
+            # Before the first deadline, transfers are free and do not create a
+            # carried transfer for the following GW.
+            free_end = 0
+        elif chip_name in ("wildcard", "freehit"):
             free_end = free_start - 1
         else:
             free_end = free_start - event_transfers
@@ -141,6 +164,76 @@ def compute_free_transfers(
         prev_free_end = free_end
 
     return result
+
+
+def count_confirmed_transfers_for_event(
+    transfers,
+    event_id: int,
+) -> int:
+    count = 0
+    for tr in transfers:
+        tr_event = tr.get("event")
+        if tr_event is None:
+            continue
+        if int(tr_event) != int(event_id):
+            continue
+        if tr.get("chip") in ("wildcard", "freehit"):
+            continue
+        count += 1
+    return count
+
+
+def compute_planning_transfer_state(
+    history_current,
+    chips_by_event,
+    transfers,
+    target_event_id: int,
+    active_chip: Optional[str] = None,
+    max_ft: int = 5,
+    afcon_topup_event: Optional[int] = 16,
+) -> Dict[str, Any]:
+    ft_info = compute_free_transfers(
+        history_current,
+        chips_by_event,
+        max_ft=max_ft,
+        afcon_topup_event=afcon_topup_event,
+    )
+
+    target_event_id = int(target_event_id)
+    history_events = sorted(int(row["event"]) for row in history_current)
+
+    if target_event_id in ft_info:
+        free_start = int(ft_info[target_event_id]["free_start"])
+    elif history_events:
+        previous_event = max((ev for ev in history_events if ev < target_event_id), default=None)
+        if previous_event is None:
+            free_start = 1
+        else:
+            free_start = min(max_ft, int(ft_info[previous_event]["free_end"]) + 1)
+    else:
+        free_start = 1
+
+    if afcon_topup_event is not None and target_event_id == afcon_topup_event:
+        free_start = max_ft
+
+    chip_name = active_chip or chips_by_event.get(target_event_id)
+    if chip_name in ("wildcard", "freehit"):
+        pending_transfers = 0
+        free_remaining = free_start
+    else:
+        pending_transfers = count_confirmed_transfers_for_event(transfers, target_event_id)
+        free_remaining = max(0, free_start - pending_transfers)
+
+    optimizer_saved_transfers = max(-1, min(4, free_remaining - 1))
+
+    return {
+        "free_start": int(free_start),
+        "free_remaining": int(free_remaining),
+        "pending_transfers": int(pending_transfers),
+        "saved_transfers": int(optimizer_saved_transfers),
+        "chip_name": chip_name,
+        "ft_info": ft_info,
+    }
 
 
 def reconstruct_purchase_prices_for_season(
@@ -212,8 +305,8 @@ def build_team_dataframe(entry_id: int, include_freehit_team: bool = False) -> p
     # Global data
     bootstrap = get_bootstrap()
     elements, teams, positions, events, events_by_id = build_lookups(bootstrap)
-    current_gw = choose_event(events)
-    event_id = current_gw["id"]
+    planning_gw = choose_planning_event(events)
+    event_id = int(planning_gw["id"])
 
     # Entry history
     history = get_entry_history(entry_id)
@@ -234,43 +327,40 @@ def build_team_dataframe(entry_id: int, include_freehit_team: bool = False) -> p
     benchboost_gws = [c["event"] for c in chips_list if c["name"] == "bboost"]
     tc_gws = [c["event"] for c in chips_list if c["name"] == "3xc"]
 
-    # Row for this GW
-    hist_row = next((h for h in history_current if h["event"] == event_id), None)
-    if hist_row is None:
-        raise RuntimeError(
-            f"No history row for event {event_id}. This can happen very early pre-season."
-        )
+    transfers = get_entry_transfers(entry_id)
+    planning_picks_data = get_entry_picks(entry_id, event_id)
+    active_chip = planning_picks_data.get("active_chip")
 
-    bank_tenths = hist_row["bank"]
+    # Row for this GW, if it already exists in entry history.
+    hist_row = next((h for h in history_current if h["event"] == event_id), None)
+    planning_entry_history = planning_picks_data.get("entry_history") or {}
+    if hist_row is not None:
+        bank_tenths = hist_row["bank"]
+    elif "bank" in planning_entry_history and planning_entry_history["bank"] is not None:
+        bank_tenths = planning_entry_history["bank"]
+    elif history_current:
+        bank_tenths = sorted(history_current, key=lambda r: int(r["event"]))[-1]["bank"]
+    else:
+        raise RuntimeError(
+            f"No history row or planning entry history found for event {event_id}."
+        )
     bank_million = bank_tenths / 10.0
 
-    # Free transfers
-    ft_info = compute_free_transfers(
+    transfer_state = compute_planning_transfer_state(
         history_current,
         chips_by_event,
+        transfers,
+        event_id,
+        active_chip=active_chip,
         max_ft=5,
         afcon_topup_event=16,
     )
-    print(ft_info)
-    this_ft = ft_info[event_id]
-
-    # NOTE: your original code used free_end as "start". That looked inverted.
-    # We'll use free_start as "FTs available at start of GW".
-    free_start = this_ft["free_end"]
-
-    # keep your original saved_transfers shape
-
-    saved_transfers = min(max(free_start, 0), 4)
-    
-    if(free_start==0):
-        saved_transfers=0
-    elif(free_start==1):
-        saved_transfers=1
-    
-    
+    print(transfer_state["ft_info"])
+    saved_transfers = int(transfer_state["saved_transfers"])
+    free_transfers_available = int(transfer_state["free_remaining"])
+    pending_transfers = int(transfer_state["pending_transfers"])
 
     # Transfer history to reconstruct purchase prices (ignore FH transfers)
-    transfers = get_entry_transfers(entry_id)
     team_purchase_prices = reconstruct_purchase_prices_for_season(
         entry_id,
         history_current,
@@ -318,12 +408,14 @@ def build_team_dataframe(entry_id: int, include_freehit_team: bool = False) -> p
                 "squad_gw_used": squad_event_id, # the GW used for picks
                 "money_in_bank_m": bank_million,
                 "saved_transfers": saved_transfers,
+                "free_transfers_available": free_transfers_available,
+                "pending_transfers": pending_transfers,
                 "rank_progress": rank_progress,
                 "wildcard_gws": wildcard_gws,
                 "freehit_gws": freehit_gws,
                 "benchboost_gws": benchboost_gws,
                 "tc_gws": tc_gws,
-                "active_chip_view_gw": get_entry_picks(entry_id, event_id).get("active_chip"),
+                "active_chip_view_gw": active_chip,
             }
         )
 
