@@ -1,6 +1,7 @@
 import requests
 import pandas as pd
 from typing import Optional
+from GenerateConfig import current_season
 
 BASE_URL = "https://fantasy.premierleague.com/api"
 
@@ -332,7 +333,7 @@ def build_team_dataframe(entry_id: int, include_freehit_team: bool = False) -> p
 
 
 def enrich(df: pd.DataFrame) -> pd.DataFrame:
-    enrich_df = pd.read_csv("Raw_Data_25/current_players.csv")[
+    enrich_df = pd.read_csv(f"Raw_Data_{current_season}/current_players.csv")[
         ["id", "name", "code", "now_cost", "selected_by_percent", "web_name", "news"]
     ]
 

@@ -1,4 +1,6 @@
 from typing import Optional, Dict, Any, Callable
+import re
+import unicodedata
 import numpy as np
 import pandas as pd
 import pyomo.environ as pyo
@@ -121,6 +123,16 @@ def normalize_chip_gws(raw_value: Any) -> list[int]:
     return normalized
 
 
+def normalize_player_key(name: Any) -> str:
+    text = str(name or "").strip().lower()
+    if not text:
+        return ""
+    text = unicodedata.normalize("NFKD", text)
+    text = "".join(ch for ch in text if not unicodedata.combining(ch))
+    text = re.sub(r"[\s_]+", "_", text)
+    return text.strip("_")
+
+
 # ============================================================
 # Main optimizer
 # ============================================================
@@ -144,14 +156,29 @@ def prefilter_players_by_horizon_points(
     df = data.copy()
     df["name"] = df["name"].astype(str)
 
-    team_names = set(team_df["name"].astype(str).tolist())
+    team_names_norm = {
+        normalize_player_key(name)
+        for name in team_df["name"].astype(str).tolist()
+        if normalize_player_key(name)
+    }
     forced_keep_names = forced_keep_names or []
     forced_keep_norm = {
-        str(name).strip().lower()
+        normalize_player_key(name)
         for name in forced_keep_names
-        if str(name).strip()
+        if normalize_player_key(name)
     }
-    name_norm = df["name"].astype(str).str.strip().str.lower()
+    name_norm = df["name"].map(normalize_player_key)
+    keep_mask = pd.Series(False, index=df.index)
+
+    if "id" in df.columns and "player_id" in team_df.columns:
+        df_ids = pd.to_numeric(df["id"], errors="coerce")
+        team_ids = pd.to_numeric(team_df["player_id"], errors="coerce")
+        team_id_set = {
+            int(player_id)
+            for player_id in team_ids.dropna().astype(int).tolist()
+        }
+        if team_id_set:
+            keep_mask |= df_ids.isin(team_id_set)
 
     # Exclude GW "0" from horizon filtering
     horizon_cols = [gw for gw in gw_list if gw != "0"]
@@ -166,11 +193,9 @@ def prefilter_players_by_horizon_points(
     horizon_threshold = len(horizon_cols) * float(min_points_per_gw)
     horizon_sum = df[horizon_cols].sum(axis=1)
 
-    keep_mask = (
-        df["name"].isin(team_names)
-        | name_norm.isin(forced_keep_norm)
-        | (horizon_sum >= horizon_threshold)
-    )
+    keep_mask |= name_norm.isin(team_names_norm)
+    keep_mask |= name_norm.isin(forced_keep_norm)
+    keep_mask |= horizon_sum >= horizon_threshold
 
     filtered = df.loc[keep_mask].copy()
 
@@ -197,7 +222,7 @@ def optimize_my_team(
     banned_list: Optional[list[str]] = None,
     GW_list: Optional[list[str]] = None,
     n_hits: int = 0,
-    current_player_path: str = "Raw_Data_25/current_players.csv",
+    current_player_path: str = f"Raw_Data_{current_season}/current_players.csv",
     players_override: Optional[pd.DataFrame] = None,
     risk_factor: float = 0.0,
     transval: float = 0.5,
@@ -341,10 +366,30 @@ def optimize_my_team(
     )
     
     # Verify all team_df names are still present after filtering
-    team_names = set(team_df["name"].astype(str).str.strip())
-    filtered_names = set(data["name"].astype(str).str.strip())
+    filtered_name_norm = {
+        normalize_player_key(name)
+        for name in data["name"].astype(str).tolist()
+        if normalize_player_key(name)
+    }
+    filtered_id_set: set[int] = set()
+    if "id" in data.columns:
+        filtered_id_set = {
+            int(player_id)
+            for player_id in pd.to_numeric(data["id"], errors="coerce").dropna().astype(int).tolist()
+        }
 
-    missing_names = sorted(team_names - filtered_names)
+    missing_names: list[str] = []
+    for _, row in team_df.iterrows():
+        player_name = str(row.get("name", ""))
+        player_key = normalize_player_key(player_name)
+        player_id = pd.to_numeric(pd.Series([row.get("player_id")]), errors="coerce").iloc[0]
+
+        id_found = pd.notna(player_id) and int(player_id) in filtered_id_set
+        name_found = bool(player_key) and player_key in filtered_name_norm
+        if not id_found and not name_found:
+            missing_names.append(player_name)
+
+    missing_names = sorted(set(missing_names))
 
     if missing_names:
         print("ERROR: These team_df players are missing after filtering:")
@@ -362,15 +407,23 @@ def optimize_my_team(
 
     name_to_player_idx: dict[str, int] = {}
     for idx, player_name in enumerate(players):
-        key = player_name.strip().lower()
+        key = normalize_player_key(player_name)
         if key and key not in name_to_player_idx:
             name_to_player_idx[key] = idx
+
+    player_id_to_idx: dict[int, int] = {}
+    if "id" in data.columns:
+        for idx, player_id in enumerate(pd.to_numeric(data["id"], errors="coerce")):
+            if pd.notna(player_id):
+                player_id_int = int(player_id)
+                if player_id_int not in player_id_to_idx:
+                    player_id_to_idx[player_id_int] = idx
 
     forced_transfer_indices: list[int] = []
     missing_forced_players: list[str] = []
     seen_forced = set()
     for forced_name in force_in_list:
-        key = forced_name.strip().lower()
+        key = normalize_player_key(forced_name)
         if not key or key in seen_forced:
             continue
         seen_forced.add(key)
@@ -387,10 +440,17 @@ def optimize_my_team(
         )
 
     initial_squad = []
-    for t in range(len(team_df)):
-        name = str(team_df["name"].values[t])
-        if name in players:
-            initial_squad.append(players.index(name))
+    seen_initial_indices: set[int] = set()
+    for _, row in team_df.iterrows():
+        idx = None
+        player_id = pd.to_numeric(pd.Series([row.get("player_id")]), errors="coerce").iloc[0]
+        if pd.notna(player_id):
+            idx = player_id_to_idx.get(int(player_id))
+        if idx is None:
+            idx = name_to_player_idx.get(normalize_player_key(row.get("name", "")))
+        if idx is not None and idx not in seen_initial_indices:
+            initial_squad.append(idx)
+            seen_initial_indices.add(idx)
 
     list1 = costs.copy()
 
@@ -843,12 +903,22 @@ def optimize_my_team(
     player_meta = (
         current_players[["name", "code", "web_name"]]
         .drop_duplicates(subset=["name"])
-        .set_index("name")
+        .assign(name_key=lambda d: d["name"].map(normalize_player_key))
+    )
+    player_meta_by_name = player_meta.set_index("name")
+    player_meta_by_key = (
+        player_meta[player_meta["name_key"].astype(str) != ""]
+        .drop_duplicates(subset=["name_key"], keep="first")
+        .set_index("name_key")
     )
 
     def get_player_meta(player_name: str) -> tuple[Optional[int], str]:
-        if player_name in player_meta.index:
-            row = player_meta.loc[player_name]
+        if player_name in player_meta_by_name.index:
+            row = player_meta_by_name.loc[player_name]
+            return int(row["code"]), str(row["web_name"])
+        player_key = normalize_player_key(player_name)
+        if player_key in player_meta_by_key.index:
+            row = player_meta_by_key.loc[player_key]
             return int(row["code"]), str(row["web_name"])
         return None, player_name
 
