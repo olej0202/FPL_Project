@@ -30,6 +30,16 @@ def get_entry_picks(entry_id: int, event_id: int):
     return fetch_json(f"{BASE_URL}/entry/{entry_id}/event/{event_id}/picks/")
 
 
+def try_get_entry_picks(entry_id: int, event_id: int):
+    try:
+        return get_entry_picks(entry_id, event_id)
+    except requests.HTTPError as exc:
+        response = getattr(exc, "response", None)
+        if response is not None and response.status_code == 404:
+            return None
+        raise
+
+
 def get_element_summary(element_id: int):
     return fetch_json(f"{BASE_URL}/element-summary/{element_id}/")
 
@@ -74,12 +84,28 @@ def get_most_recent_finished_event_id(events, before_event_id: int) -> Optional[
     return max(finished_prior) if finished_prior else None
 
 
-def resolve_squad_event_id(entry_id: int, event_id: int, events, include_freehit_team: bool) -> int:
+def resolve_squad_event_id(
+    entry_id: int,
+    event_id: int,
+    events,
+    include_freehit_team: bool,
+    picks_data: Optional[Dict[str, Any]] = None,
+) -> int:
     """
     If this GW is a Free Hit GW and include_freehit_team=False, return the last
     finished GW before it (the underlying squad). Otherwise return event_id.
     """
-    picks_data = get_entry_picks(entry_id, event_id)
+    if picks_data is None:
+        picks_data = try_get_entry_picks(entry_id, event_id)
+    if picks_data is None:
+        current_event = next((e for e in events if e.get("is_current")), None)
+        if current_event is not None:
+            return int(current_event["id"])
+        prev_finished = get_most_recent_finished_event_id(events, event_id)
+        if prev_finished is not None:
+            return prev_finished
+        return max(1, int(event_id))
+
     active_chip = picks_data.get("active_chip")
 
     if active_chip == "freehit" and not include_freehit_team:
@@ -307,6 +333,9 @@ def build_team_dataframe(entry_id: int, include_freehit_team: bool = False) -> p
     elements, teams, positions, events, events_by_id = build_lookups(bootstrap)
     planning_gw = choose_planning_event(events)
     event_id = int(planning_gw["id"])
+    current_event = next((e for e in events if e.get("is_current")), None)
+    current_event_id = None if current_event is None else int(current_event["id"])
+    fallback_event_id = current_event_id if current_event_id is not None else event_id
 
     # Entry history
     history = get_entry_history(entry_id)
@@ -328,8 +357,18 @@ def build_team_dataframe(entry_id: int, include_freehit_team: bool = False) -> p
     tc_gws = [c["event"] for c in chips_list if c["name"] == "3xc"]
 
     transfers = get_entry_transfers(entry_id)
-    planning_picks_data = get_entry_picks(entry_id, event_id)
+    planning_picks_data = try_get_entry_picks(entry_id, event_id)
+    planning_picks_event_id = event_id
+    if planning_picks_data is None and fallback_event_id != event_id:
+        planning_picks_data = get_entry_picks(entry_id, fallback_event_id)
+        planning_picks_event_id = fallback_event_id
+    if planning_picks_data is None:
+        raise RuntimeError(
+            f"Could not fetch picks for planning event {event_id} or fallback event {fallback_event_id}."
+        )
     active_chip = planning_picks_data.get("active_chip")
+    if planning_picks_event_id != event_id:
+        active_chip = chips_by_event.get(event_id)
 
     # Row for this GW, if it already exists in entry history.
     hist_row = next((h for h in history_current if h["event"] == event_id), None)
@@ -370,7 +409,13 @@ def build_team_dataframe(entry_id: int, include_freehit_team: bool = False) -> p
     )
 
     # Decide which picks to use (FH vs underlying)
-    squad_event_id = resolve_squad_event_id(entry_id, event_id, events, include_freehit_team)
+    squad_event_id = resolve_squad_event_id(
+        entry_id,
+        event_id,
+        events,
+        include_freehit_team,
+        picks_data=planning_picks_data if planning_picks_event_id == event_id else None,
+    )
 
     picks_data = get_entry_picks(entry_id, squad_event_id)
     picks = picks_data["picks"]
