@@ -69,6 +69,7 @@ const MEASURE_LABELS = {
   Points: "Predicted Points",
   Goal_Scored: "Predicted Goals",
   Assists: "Predicted Assists",
+  Bonus_Pred: "Predicted Bonus",
   Avg_Minutes: "Predicted Minutes",
   CBI_Predictions: "Predicted Defcon",
   Save_Pred: "Predicted Saves",
@@ -78,6 +79,7 @@ const MODAL_METRIC_OPTIONS = [
   { value: "points", label: "Points" },
   { value: "goals", label: "Goals" },
   { value: "assists", label: "Assists" },
+  { value: "bonus", label: "Bonus" },
   { value: "saves", label: "Saves" },
   { value: "defcon", label: "Defcon" },
 ];
@@ -88,7 +90,9 @@ const BREAKDOWN_SERIES = [
   { key: "assist", label: "Assist", color: "#0f766e" },
   { key: "defcon", label: "Defcon", color: "#7c3aed" },
   { key: "cs", label: "CS", color: "#059669" },
-  { key: "saves", label: "Saves", color: "#d97706" },
+  { key: "bonus", label: "Bonus", color: "#d97706" },
+  { key: "card", label: "Cards", color: "#dc2626" },
+  { key: "gc", label: "GC Penalty", color: "#9333ea" },
 ];
 
 const POSITION_EVENT_BONUS = {
@@ -140,6 +144,8 @@ function getMeasureMeta(measure) {
       return { label: MEASURE_LABELS.Goal_Scored, icon: CircleDot, short: "Goals", emoji: "\u26BD" };
     case "Assists":
       return { label: MEASURE_LABELS.Assists, icon: Footprints, short: "Assists", emoji: "\uD83E\uDD7E" };
+    case "Bonus_Pred":
+      return { label: MEASURE_LABELS.Bonus_Pred, icon: Sparkles, short: "Bonus", emoji: "\u2728" };
     case "Avg_Minutes":
       return { label: MEASURE_LABELS.Avg_Minutes, icon: Clock3, short: "Minutes", emoji: "\uD83D\uDD52" };
     case "CBI_Predictions":
@@ -730,6 +736,7 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
     return {
       Goal_Scored: 0,
       Assists: 0,
+      Bonus_Pred: 0,
       Save_Pred: 0,
       Points: 0,
       Avg_Minutes: 0,
@@ -741,7 +748,9 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
         assist: 0,
         defcon: 0,
         cs: 0,
-        saves: 0,
+        bonus: 0,
+        card: 0,
+        gc: 0,
         total: 0,
       },
     };
@@ -838,6 +847,7 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
   return {
     Goal_Scored: goalScored,
     Assists: assists,
+    Bonus_Pred: bonusPoints,
     Save_Pred: savePred,
     Points: points,
     Avg_Minutes: avgMin * matchCount,
@@ -848,8 +858,10 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
       goal: goalPoints,
       assist: assistPoints,
       defcon: defconPointsTerm,
-      cs: csPoints + bonusPoints + cardPoints + gcPenaltyPoints,
-      saves: 0,
+      cs: csPoints,
+      bonus: bonusPoints,
+      card: cardPoints,
+      gc: gcPenaltyPoints,
       total: points,
     },
   };
@@ -862,10 +874,21 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
     const fixtures = Fixtures?.current || [];
     const optionsById = new Map();
 
+    const normalizeFixtureOptions = (options) => {
+      const byGw = new Map();
+      for (const opt of options || []) {
+        const gw = Number(opt?.gw);
+        const p = Number(opt?.p);
+        if (!Number.isFinite(gw) || !Number.isFinite(p) || p <= 0) continue;
+        byGw.set(gw, (byGw.get(gw) || 0) + p);
+      }
+      return Array.from(byGw.entries()).map(([gw, p]) => ({ gw, p }));
+    };
+
     for (const fx of fixtures) {
       optionsById.set(
         fx.id,
-        (fx.options || []).map((o) => ({ gw: Number(o.gw), p: Number(o.p) }))
+        normalizeFixtureOptions((fx.options || []).map((o) => ({ gw: Number(o.gw), p: Number(o.p) })))
       );
     }
 
@@ -885,6 +908,7 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
       });
     };
 
+    const seenSourceRows = new Set();
     for (const r of teamsRows) {
       const code = r.team_code;
       const gw0 = Number(r.GW);
@@ -895,6 +919,16 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
       const rowCS = Number(r.CS) || 0;
 
       const id = fixtureIdFromRow({ ...r, Opponent_team: r.Opponent_team });
+      const sourceKey = [
+        String(code),
+        String(r.fixture_code ?? id ?? ""),
+        String(gw0),
+        String(r.Home ?? ""),
+        String(r.Opponent_team ?? ""),
+      ].join("|");
+      if (seenSourceRows.has(sourceKey)) continue;
+      seenSourceRows.add(sourceKey);
+
       const dist =
         optionsById.get(id)?.length ? optionsById.get(id) : [{ gw: gw0, p: 1 }];
 
@@ -1077,6 +1111,7 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
   calc_points: measures.Points,
   calc_goals: measures.Goal_Scored,
   calc_assists: measures.Assists,
+  calc_bonus: measures.Bonus_Pred,
   calc_saves: measures.Save_Pred,
   calc_minutes: measures.Avg_Minutes,
   calc_cbi: measures.CBI_Predictions,
@@ -1142,6 +1177,7 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
   Points: Number(row.calc_points) || 0,
   Goal_Scored: Number(row.calc_goals) || 0,
   Assists: Number(row.calc_assists) || 0,
+  Bonus_Pred: Number(row.calc_bonus) || 0,
   Save_Pred: Number(row.calc_saves) || 0,
   Avg_Minutes: Number(row.calc_minutes) || 0,
   CBI_Predictions: Number(row.calc_cbi) || 0,
@@ -1281,6 +1317,7 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
         points: measures.Points,
         goals: measures.Goal_Scored,
         assists: measures.Assists,
+        bonus: measures.Bonus_Pred,
         saves: measures.Save_Pred,
         defcon: measures.CBI_Predictions,
       };
@@ -1655,6 +1692,7 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
         points: measures.Points,
         goals: measures.Goal_Scored,
         assists: measures.Assists,
+        bonus: measures.Bonus_Pred,
         saves: measures.Save_Pred,
         minutes: measures.Avg_Minutes,
         defcon: measures.CBI_Predictions,
@@ -1709,7 +1747,9 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
         assist: Number(breakdown.assist) || 0,
         defcon: Number(breakdown.defcon) || 0,
         cs: Number(breakdown.cs) || 0,
-        saves: Number(breakdown.saves) || 0,
+        bonus: Number(breakdown.bonus) || 0,
+        card: Number(breakdown.card) || 0,
+        gc: Number(breakdown.gc) || 0,
         total: Number(breakdown.total) || 0,
         compareTotal: comparisonBreakdownByGw.has(GW)
           ? Number(comparisonBreakdownByGw.get(GW)) || 0
@@ -1741,6 +1781,13 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
           label: "Assists",
           emptyText: "No assist data for this player.",
           helper: "Projected assists update live as you change minutes and shares.",
+          format: (v) => Number(v).toFixed(2),
+        };
+      case "bonus":
+        return {
+          label: "Bonus",
+          emptyText: "No bonus data for this player.",
+          helper: "Projected bonus updates from the BPS-style formula.",
           format: (v) => Number(v).toFixed(2),
         };
       case "saves":
@@ -2445,6 +2492,7 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
   <option value="Points"> Points</option>
   <option value="Goal_Scored">Goals</option>
   <option value="Assists"> Assists</option>
+  <option value="Bonus_Pred"> Bonus</option>
   <option value="Save_Pred"> Saves</option>
   <option value="Avg_Minutes">Minutes</option>
   <option value="CBI_Predictions"> Defcon %</option>
@@ -3072,7 +3120,7 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
                     </h3>
                   </div>
                   <div className="mb-2 text-xs" style={{ color: PALETTE.muted }}>
-                    Base, goal, assist, defcon, CS and saves are stacked, with total shown as an overlay line.
+                    Base, goal, assist, defcon, CS, bonus, cards and goals-conceded penalty are stacked, with total shown as an overlay line.
                   </div>
                   {modalBreakdownChartData.length === 0 ? (
                     <div className="text-sm">No calculated point breakdown data for this player.</div>
