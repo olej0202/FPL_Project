@@ -26,6 +26,15 @@ import {
   Zap,
   Lock,
 } from "lucide-react";
+import {
+  CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import pitch from "./assets/Pitch4.png";
 import { useMyteamData } from "./Contexts/MyTeamContext";
 import { useAdjustmentData } from "./Contexts/AdjustmentsContext";
@@ -61,6 +70,30 @@ const normalizePlayerKey = (s) =>
     .trim()
     .toLowerCase()
     .replace(/\s+/g, " ");
+
+const getPlayerIdentityCandidates = (value) => {
+  if (value == null) return [];
+  if (typeof value === "string" || typeof value === "number") {
+    const text = String(value).trim();
+    return text ? [text] : [];
+  }
+
+  return Array.from(
+    new Set(
+      [
+        value?.Name,
+        value?.name,
+        value?.web_name,
+        value?.player_name,
+        value?.full_name,
+        value?.id,
+        value?.element,
+      ]
+        .filter((v) => v != null && String(v).trim() !== "")
+        .map((v) => String(v))
+    )
+  );
+};
 
 const playerGwKey = (name, gw) => `${normalizePlayerKey(name)}__${Number(gw)}`;
 const teamGwKey = (team, gw) => `${normalizeTeamKey(team)}__${Number(gw)}`;
@@ -614,6 +647,94 @@ export default function MyTeamOptimize() {
       (row) => Number(row?.solution || 1) === Number(targetSolution)
     );
   }, [data, selectedSolution, solutionNumbers]);
+
+  const projectionSourceBuckets = useMemo(() => {
+    return modelType === "statistical"
+      ? [activeSolutionData, Playerdata?.current, PlayersData?.current, data]
+      : [activeSolutionData, PlayersData?.current, Playerdata?.current, data];
+  }, [modelType, activeSolutionData, Playerdata, PlayersData, data]);
+
+  const projectionRowLookup = useMemo(() => {
+    const map = new Map();
+
+    projectionSourceBuckets.forEach((rows, priority) => {
+      if (!Array.isArray(rows)) return;
+
+      rows.forEach((row) => {
+        const gw = Number(row?.GW);
+        if (!isValidGW(gw)) return;
+
+        const candidates = getPlayerIdentityCandidates(row);
+        if (!candidates.length) return;
+
+        const hasPts = Number.isFinite(getRowPredictedPoints(row));
+        candidates.forEach((candidate) => {
+          const key = playerGwKey(candidate, gw);
+          const prev = map.get(key);
+          const shouldReplace =
+            !prev ||
+            priority < prev.priority ||
+            (priority === prev.priority && !prev.hasPts && hasPts);
+
+          if (shouldReplace) {
+            map.set(key, { row, priority, hasPts });
+          }
+        });
+      });
+    });
+
+    return map;
+  }, [projectionSourceBuckets]);
+
+  const getProjectionRowForPlayer = useCallback(
+    (playerLike, gw) => {
+      const candidates = getPlayerIdentityCandidates(playerLike);
+      for (const candidate of candidates) {
+        const hit = projectionRowLookup.get(playerGwKey(candidate, gw));
+        if (hit?.row) return hit.row;
+      }
+      return null;
+    },
+    [projectionRowLookup]
+  );
+
+  const buildTransferProjectionData = useCallback(
+    (outP, inP, transferGW) => {
+      if (!availableGWs.length) return [];
+
+      const startGW = isValidGW(Number(transferGW)) ? Number(transferGW) : availableGWs[0];
+
+      return availableGWs
+        .filter((gw) => gw >= startGW)
+        .map((gw) => {
+          const outRow = getProjectionRowForPlayer(outP, gw);
+          const inRow = getProjectionRowForPlayer(inP, gw);
+          const outMeta = outRow ? getOpponentMeta(outRow) : null;
+          const inMeta = inRow ? getOpponentMeta(inRow) : null;
+          const outPoints = outRow ? getRowPredictedPoints(outRow) : null;
+          const inPoints = inRow ? getRowPredictedPoints(inRow) : null;
+
+          return {
+            gw,
+            label: `GW ${gw}`,
+            outPoints: Number.isFinite(outPoints) ? Number(outPoints) : null,
+            inPoints: Number.isFinite(inPoints) ? Number(inPoints) : null,
+            outOpponent: outMeta?.full || "N/A",
+            inOpponent: inMeta?.full || "N/A",
+            outOpponentShort: outMeta?.display || "N/A",
+            inOpponentShort: inMeta?.display || "N/A",
+          };
+        })
+        .filter(
+          (row) =>
+            Number.isFinite(row.outPoints) ||
+            Number.isFinite(row.inPoints) ||
+            row.outOpponent !== "N/A" ||
+            row.inOpponent !== "N/A"
+        );
+    },
+    [availableGWs, getOpponentMeta, getProjectionRowForPlayer]
+  );
 
   const lockCandidates = useMemo(() => {
     const fallbackPhoto =
@@ -1919,6 +2040,8 @@ export default function MyTeamOptimize() {
                               navigate={navigate}
                               toggleBan={toggleBan}
                               bannedList={bannedList}
+                              transferGW={grp.GW}
+                              buildTransferProjectionData={buildTransferProjectionData}
                             />
                           ))}
                         </div>
@@ -2330,7 +2453,33 @@ function PlayerChip({ p, side, navigate, toggleBan, bannedList }) {
   );
 }
 
-function TransferRow({ outP, inP, navigate, toggleBan, bannedList }) {
+function TransferRow({
+  outP,
+  inP,
+  navigate,
+  toggleBan,
+  bannedList,
+  transferGW,
+  buildTransferProjectionData,
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const chartData = useMemo(
+    () => (typeof buildTransferProjectionData === "function" ? buildTransferProjectionData(outP, inP, transferGW) : []),
+    [buildTransferProjectionData, outP, inP, transferGW]
+  );
+  const hasChartData = chartData.some(
+    (row) => Number.isFinite(row.inPoints) || Number.isFinite(row.outPoints)
+  );
+  const totalIn = chartData.reduce(
+    (sum, row) => sum + (Number.isFinite(row.inPoints) ? row.inPoints : 0),
+    0
+  );
+  const totalOut = chartData.reduce(
+    (sum, row) => sum + (Number.isFinite(row.outPoints) ? row.outPoints : 0),
+    0
+  );
+  const swing = totalIn - totalOut;
+
   return (
     <div className="px-4 py-3 hover:bg-white/[0.02] transition-colors">
       <div className="grid grid-cols-12 items-center gap-3">
@@ -2361,6 +2510,136 @@ function TransferRow({ outP, inP, navigate, toggleBan, bannedList }) {
           <div className="mt-1">
             <PlayerChip p={inP} side="in" navigate={navigate} toggleBan={toggleBan} bannedList={bannedList} />
           </div>
+        </div>
+      </div>
+
+      <div className="mt-3 flex items-center justify-between gap-3">
+        <div className="text-[11px]" style={{ color: PALETTE.muted }}>
+          From GW {transferGW}
+          {hasChartData ? (
+            <span style={{ color: swing >= 0 ? PALETTE.success : PALETTE.danger }}>
+              {` · swing ${swing >= 0 ? "+" : ""}${swing.toFixed(2)} pts`}
+            </span>
+          ) : (
+            " · chart unavailable"
+          )}
+        </div>
+
+        <button
+          type="button"
+          onClick={() => hasChartData && setExpanded((v) => !v)}
+          disabled={!hasChartData}
+          className="gold-ring inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[11px] font-semibold transition"
+          style={{
+            border: `1px solid ${hasChartData ? PALETTE.gold : PALETTE.border}`,
+            background: hasChartData ? "rgba(95,143,123,0.08)" : "rgba(248,250,252,0.8)",
+            color: hasChartData ? PALETTE.gold : PALETTE.muted,
+            cursor: hasChartData ? "pointer" : "not-allowed",
+          }}
+          aria-expanded={expanded}
+        >
+          {expanded ? "Hide chart" : "Show chart"}
+          <ChevronDown
+            size={14}
+            className="lucide-icon"
+            style={{ transform: expanded ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 160ms ease" }}
+          />
+        </button>
+      </div>
+
+      {expanded && hasChartData && (
+        <div
+          className="mt-3 rounded-[20px] p-3 sm:p-4"
+          style={{
+            border: `1px solid ${PALETTE.border}`,
+            background: "linear-gradient(145deg, rgba(255,255,255,0.96), rgba(241,245,249,0.9))",
+          }}
+        >
+          <div className="mb-3 flex flex-wrap items-center gap-2 text-[11px]" style={{ color: PALETTE.muted }}>
+            <span className="inline-flex items-center gap-1.5 rounded-full px-2 py-1" style={{ background: "rgba(34,197,94,0.08)", color: PALETTE.success }}>
+              <span className="inline-block h-2 w-2 rounded-full" style={{ background: PALETTE.success }} />
+              {inP.web_name}
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full px-2 py-1" style={{ background: "rgba(239,68,68,0.08)", color: PALETTE.danger }}>
+              <span className="inline-block h-2 w-2 rounded-full" style={{ background: PALETTE.danger }} />
+              {outP.web_name}
+            </span>
+          </div>
+
+          <div className="h-[220px] sm:h-[250px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={chartData} margin={{ top: 8, right: 12, left: -18, bottom: 8 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.24)" />
+                <XAxis
+                  dataKey="gw"
+                  tick={{ fill: PALETTE.muted, fontSize: 11 }}
+                  axisLine={{ stroke: "rgba(148,163,184,0.32)" }}
+                  tickLine={{ stroke: "rgba(148,163,184,0.32)" }}
+                />
+                <YAxis
+                  tick={{ fill: PALETTE.muted, fontSize: 11 }}
+                  axisLine={{ stroke: "rgba(148,163,184,0.32)" }}
+                  tickLine={{ stroke: "rgba(148,163,184,0.32)" }}
+                  width={34}
+                />
+                <Tooltip content={<TransferChartTooltip />} />
+                <Line
+                  type="monotone"
+                  dataKey="inPoints"
+                  name={inP.web_name}
+                  stroke={PALETTE.success}
+                  strokeWidth={2.5}
+                  dot={{ r: 3 }}
+                  activeDot={{ r: 5 }}
+                  connectNulls
+                />
+                <Line
+                  type="monotone"
+                  dataKey="outPoints"
+                  name={outP.web_name}
+                  stroke={PALETTE.danger}
+                  strokeWidth={2.5}
+                  dot={{ r: 3 }}
+                  activeDot={{ r: 5 }}
+                  connectNulls
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TransferChartTooltip({ active, payload, label }) {
+  if (!active || !Array.isArray(payload) || payload.length === 0) return null;
+
+  const row = payload[0]?.payload;
+  if (!row) return null;
+
+  return (
+    <div
+      className="rounded-2xl px-3 py-2 text-xs shadow-xl"
+      style={{
+        background: "rgba(255,255,255,0.98)",
+        border: `1px solid ${PALETTE.border}`,
+        color: PALETTE.text,
+      }}
+    >
+      <div className="font-semibold mb-1">GW {label}</div>
+      <div className="flex items-start gap-2" style={{ color: PALETTE.success }}>
+        <span className="mt-[5px] inline-block h-2 w-2 rounded-full" style={{ background: PALETTE.success }} />
+        <div>
+          <div>{payload.find((x) => x.dataKey === "inPoints")?.name}: {Number.isFinite(row.inPoints) ? row.inPoints.toFixed(2) : "-"}</div>
+          <div style={{ color: PALETTE.muted }}>Opposition: {row.inOpponent || "N/A"}</div>
+        </div>
+      </div>
+      <div className="mt-2 flex items-start gap-2" style={{ color: PALETTE.danger }}>
+        <span className="mt-[5px] inline-block h-2 w-2 rounded-full" style={{ background: PALETTE.danger }} />
+        <div>
+          <div>{payload.find((x) => x.dataKey === "outPoints")?.name}: {Number.isFinite(row.outPoints) ? row.outPoints.toFixed(2) : "-"}</div>
+          <div style={{ color: PALETTE.muted }}>Opposition: {row.outOpponent || "N/A"}</div>
         </div>
       </div>
     </div>

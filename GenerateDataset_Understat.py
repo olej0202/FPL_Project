@@ -20,6 +20,15 @@ from GenerateConfig import NEW_TEAMS_NAME,Understat_Team_MAP
 # ============================================================
 # Helper: LOCF shares for any value columns
 # ============================================================
+def canonicalize_team_name(value):
+    if pd.isna(value):
+        return value
+    text = str(value).strip()
+    if not text:
+        return text
+    return Understat_Team_MAP.get(text, text)
+
+
 def add_locf_shares(
     df: pd.DataFrame,
     team_col: str,
@@ -460,10 +469,8 @@ def Generate_Understat_dataset(current_players, run_player_pos):
     df = df.dropna(subset=["player_team"])
 
     # name mapping
-    mapping = Understat_Team_MAP
-
-    df["player_team"] = df["player_team"].astype(str).str.strip().replace(mapping)
-    df["opponent"] = df["opponent"].astype(str).str.strip().replace(mapping)
+    df["player_team"] = df["player_team"].apply(canonicalize_team_name)
+    df["opponent"] = df["opponent"].apply(canonicalize_team_name)
 
     if run_player_pos == 1:
         attach_fpl_names_to_understat(df, current_players)
@@ -494,6 +501,7 @@ def Generate_Understat_dataset(current_players, run_player_pos):
     df_penalty.loc[games_per_team < 16, "Penalty"] = 0.10
 
     team_dataset_newest = pd.read_csv("Team_data_newest2.csv", usecols=["name", "code"])
+    team_dataset_newest["name"] = team_dataset_newest["name"].apply(canonicalize_team_name)
     latest_penalty_df = (
         df_penalty.drop_duplicates(subset=["player_team"], keep="last")
           .sort_values(["player_team"])
@@ -590,6 +598,8 @@ def Generate_Understat_dataset(current_players, run_player_pos):
 
     needed_for = ["date", "name", "XG_avg", "Rolling_Threat", "code"]
     needed_against = ["date", "name", "XGC_avg", "Rolling_Threat_Against"]
+
+    team_dataset["name"] = team_dataset["name"].apply(canonicalize_team_name)
 
     for col in needed_for + needed_against:
         if col not in team_dataset.columns:

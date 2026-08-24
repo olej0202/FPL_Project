@@ -2,7 +2,16 @@ import pandas as pd
 import joblib
 import numpy as np
 from scipy.stats import poisson
-from GenerateConfig import Player_picture_url,PLAYER_NAME_MAP
+from GenerateConfig import Player_picture_url,PLAYER_NAME_MAP,Understat_Team_MAP
+
+
+def canonicalize_team_name(value):
+    if pd.isna(value):
+        return value
+    text = str(value).strip()
+    if not text:
+        return text
+    return Understat_Team_MAP.get(text, text)
 
 
 
@@ -79,6 +88,8 @@ def Generate_Lineups():
     # ── Load & prep ────────────────────────────────────────────────────────────────
     df = pd.read_csv("Understat_transformed.csv")
     df = df[["player_name","player_team","opponent","pos_group","date"]].copy()
+    df["player_team"] = df["player_team"].apply(canonicalize_team_name)
+    df["opponent"] = df["opponent"].apply(canonicalize_team_name)
     df["date"] = pd.to_datetime(df["date"], errors="coerce")
     
     # ── Latest lineup per team (drop SUB) ─────────────────────────────────────────
