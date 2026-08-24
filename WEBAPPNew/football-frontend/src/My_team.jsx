@@ -71,6 +71,16 @@ const normalizePlayerKey = (s) =>
     .toLowerCase()
     .replace(/\s+/g, " ");
 
+const normalizeLoosePlayerKey = (s) =>
+  String(s || "")
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[_-]+/g, " ")
+    .replace(/[^\p{L}\p{N}\s]/gu, "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ");
+
 const getPlayerIdentityCandidates = (value) => {
   if (value == null) return [];
   if (typeof value === "string" || typeof value === "number") {
@@ -96,6 +106,7 @@ const getPlayerIdentityCandidates = (value) => {
 };
 
 const playerGwKey = (name, gw) => `${normalizePlayerKey(name)}__${Number(gw)}`;
+const loosePlayerGwKey = (name, gw) => `${normalizeLoosePlayerKey(name)}__${Number(gw)}`;
 const teamGwKey = (team, gw) => `${normalizeTeamKey(team)}__${Number(gw)}`;
 
 const getTeamShort = (teamNameOrCode) => {
@@ -749,16 +760,19 @@ export default function MyTeamOptimize() {
 
         const hasPts = Number.isFinite(getRowPredictedPoints(row));
         candidates.forEach((candidate) => {
-          const key = playerGwKey(candidate, gw);
-          const prev = map.get(key);
-          const shouldReplace =
-            !prev ||
-            priority < prev.priority ||
-            (priority === prev.priority && !prev.hasPts && hasPts);
+          const keys = [playerGwKey(candidate, gw), loosePlayerGwKey(candidate, gw)];
 
-          if (shouldReplace) {
-            map.set(key, { row, priority, hasPts });
-          }
+          keys.forEach((key) => {
+            const prev = map.get(key);
+            const shouldReplace =
+              !prev ||
+              priority < prev.priority ||
+              (priority === prev.priority && !prev.hasPts && hasPts);
+
+            if (shouldReplace) {
+              map.set(key, { row, priority, hasPts });
+            }
+          });
         });
       });
     });
@@ -770,7 +784,9 @@ export default function MyTeamOptimize() {
     (playerLike, gw) => {
       const candidates = getPlayerIdentityCandidates(playerLike);
       for (const candidate of candidates) {
-        const hit = projectionRowLookup.get(playerGwKey(candidate, gw));
+        const hit =
+          projectionRowLookup.get(playerGwKey(candidate, gw)) ||
+          projectionRowLookup.get(loosePlayerGwKey(candidate, gw));
         if (hit?.row) return hit.row;
       }
       return null;
