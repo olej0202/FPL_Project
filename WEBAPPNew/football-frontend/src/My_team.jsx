@@ -648,6 +648,86 @@ export default function MyTeamOptimize() {
     );
   }, [data, selectedSolution, solutionNumbers]);
 
+  const lockCandidates = useMemo(() => {
+    const fallbackPhoto =
+      "https://d2kq0urxkarztv.cloudfront.net/51812cad594df29a1a0003f0/661303/upload-643ff5d9-840e-4bbb-b099-07c26ef505c9.png?w=578";
+    const map = new Map();
+
+    const addRow = (row) => {
+      const name =
+        row?.name ??
+        row?.Name ??
+        row?.player_name ??
+        row?.full_name ??
+        row?.web_name;
+      if (!name) return;
+      const key = String(name);
+      const web_name =
+        row?.web_name ??
+        row?.name ??
+        row?.Name ??
+        row?.player_name ??
+        key;
+      const code = row?.code;
+      const computedPhoto = code
+        ? `https://resources.premierleague.com/premierleague25/photos/players/500x500/${code}.png`
+        : null;
+      const photo = row?.photo || computedPhoto || fallbackPhoto;
+
+      const existing = map.get(key);
+      if (!existing) {
+        map.set(key, { Name: key, web_name, photo });
+        return;
+      }
+
+      if (
+        existing.photo === fallbackPhoto &&
+        photo &&
+        photo !== fallbackPhoto
+      ) {
+        map.set(key, { ...existing, photo });
+      }
+    };
+
+    [PlayersData?.current, Playerdata?.current, data].forEach((rows) => {
+      if (!Array.isArray(rows)) return;
+      rows.forEach(addRow);
+    });
+
+    return Array.from(map.values()).sort((a, b) =>
+      String(a.web_name).localeCompare(String(b.web_name))
+    );
+  }, [PlayersData, Playerdata, data]);
+
+  const filteredLockCandidates = useMemo(() => {
+    const q = String(lockSearch || "").trim().toLowerCase();
+    const lockedSet = new Set((lockedInList || []).map((x) => String(x)));
+    return lockCandidates
+      .filter((p) => !lockedSet.has(String(p.Name)))
+      .filter((p) => {
+        if (!q) return true;
+        return (
+          String(p.Name).toLowerCase().includes(q) ||
+          String(p.web_name || "").toLowerCase().includes(q)
+        );
+      })
+      .slice(0, 8);
+  }, [lockCandidates, lockSearch, lockedInList]);
+
+  const availableGWs = useMemo(() => {
+    if (!Array.isArray(activeSolutionData) || activeSolutionData.length === 0) {
+      return [];
+    }
+
+    return Array.from(
+      new Set(
+        activeSolutionData
+          .map((p) => Number(p.GW))
+          .filter((n) => isValidGW(n))
+      )
+    ).sort((a, b) => a - b);
+  }, [activeSolutionData]);
+
   const projectionSourceBuckets = useMemo(() => {
     return modelType === "statistical"
       ? [activeSolutionData, Playerdata?.current, PlayersData?.current, data]
@@ -735,86 +815,6 @@ export default function MyTeamOptimize() {
     },
     [availableGWs, getOpponentMeta, getProjectionRowForPlayer]
   );
-
-  const lockCandidates = useMemo(() => {
-    const fallbackPhoto =
-      "https://d2kq0urxkarztv.cloudfront.net/51812cad594df29a1a0003f0/661303/upload-643ff5d9-840e-4bbb-b099-07c26ef505c9.png?w=578";
-    const map = new Map();
-
-    const addRow = (row) => {
-      const name =
-        row?.name ??
-        row?.Name ??
-        row?.player_name ??
-        row?.full_name ??
-        row?.web_name;
-      if (!name) return;
-      const key = String(name);
-      const web_name =
-        row?.web_name ??
-        row?.name ??
-        row?.Name ??
-        row?.player_name ??
-        key;
-      const code = row?.code;
-      const computedPhoto = code
-        ? `https://resources.premierleague.com/premierleague25/photos/players/500x500/${code}.png`
-        : null;
-      const photo = row?.photo || computedPhoto || fallbackPhoto;
-
-      const existing = map.get(key);
-      if (!existing) {
-        map.set(key, { Name: key, web_name, photo });
-        return;
-      }
-
-      if (
-        existing.photo === fallbackPhoto &&
-        photo &&
-        photo !== fallbackPhoto
-      ) {
-        map.set(key, { ...existing, photo });
-      }
-    };
-
-    [PlayersData?.current, Playerdata?.current, data].forEach((rows) => {
-      if (!Array.isArray(rows)) return;
-      rows.forEach(addRow);
-    });
-
-    return Array.from(map.values()).sort((a, b) =>
-      String(a.web_name).localeCompare(String(b.web_name))
-    );
-  }, [PlayersData, Playerdata, data]);
-
-  const filteredLockCandidates = useMemo(() => {
-    const q = String(lockSearch || "").trim().toLowerCase();
-    const lockedSet = new Set((lockedInList || []).map((x) => String(x)));
-    return lockCandidates
-      .filter((p) => !lockedSet.has(String(p.Name)))
-      .filter((p) => {
-        if (!q) return true;
-        return (
-          String(p.Name).toLowerCase().includes(q) ||
-          String(p.web_name || "").toLowerCase().includes(q)
-        );
-      })
-      .slice(0, 8);
-  }, [lockCandidates, lockSearch, lockedInList]);
-
-  const availableGWs = useMemo(() => {
-    if (!Array.isArray(activeSolutionData) || activeSolutionData.length === 0) {
-      return [];
-    }
-
-    return Array.from(
-      new Set(
-        activeSolutionData
-          .map((p) => Number(p.GW))
-          .filter((n) => isValidGW(n))
-      )
-    ).sort((a, b) => a - b);
-  }, [activeSolutionData]);
 
   useEffect(() => {
     if (!availableGWs.length) {
