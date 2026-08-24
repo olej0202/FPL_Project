@@ -56,6 +56,9 @@ Understat_Team_MAP={
         "Tottenham": "Spurs",
         "Tottenham Hotspur": "Spurs",
         "Wolverhampton Wanderers": "Wolves",
+        "Hull": "Hull City",
+        "Ipswich": "Ipswich Town",
+        "Coventry": "Coventry City",
     }
 
 Player_picture_url="https://resources.premierleague.com/premierleague25/photos/players/500x500/"
