@@ -109,6 +109,11 @@ const BREAKDOWN_TOTAL_SERIES = {
 };
 
 const clamp01 = (x) => Math.max(0, Math.min(1, Number.isFinite(x) ? x : 0));
+const poissonGc2PlusFromCs = (csProb) => {
+  const safeCs = Math.max(1e-6, Math.min(0.999999, Number(csProb) || 0));
+  const lambda = -Math.log(safeCs);
+  return 1 - Math.exp(-lambda) * (1 + lambda);
+};
 const canonicalPosition = (value) => {
   const key = String(value || "").toUpperCase();
   if (key === "GK") return "GKP";
@@ -775,18 +780,8 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
   const bps = Number(playerRow.BPS) || 0;
   const goalFactor = Number(playerRow.Goal_factor) || 0;
   const assistFactor = Number(playerRow.Assist_factor) || 0;
+  const csFactor = Number(playerRow.CS_factor) || 0;
   const cards = firstFinite(playerRow.Cards, playerRow.Card_pred, playerRow.card, 0) || 0;
-  const predictedGc =
-    Math.max(
-      0,
-      firstFinite(
-        playerRow.GC_pred,
-        playerRow.Goals_Conceded,
-        playerRow.goals_conceded,
-        playerRow.GC,
-        0
-      ) || 0
-    );
 
   const xg = Number(teamRow.XG) || 0;
   const cs = Number(teamRow.CS) || 0;
@@ -817,19 +812,21 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
   const groundPoints = (likelihoodOf0 + likelihoodOf60) * matchCount;
   const goalPoints = goalScored * goalFactor;
   const assistPoints = assists * assistFactor;
-  const csPoints = cs * likelihoodOf60;
+  const bonusCsBase = cs * likelihoodOf60;
+  const csPoints = bonusCsBase * csFactor;
   const bonusPoints =
     0.035 *
     (
       bps
       + goalScored * bonusWeights.goal
       + assists * bonusWeights.assist
-      + csPoints * bonusWeights.cs
+      + bonusCsBase * bonusWeights.cs
     );
   const cardPoints = -cards;
+  const gc2PlusProb = poissonGc2PlusFromCs(cs);
   const gcPenaltyPoints =
     positionKey === "GKP" || positionKey === "DEF"
-      ? -3 * predictedGc
+      ? -3 * gc2PlusProb * likelihoodOf60
       : 0;
 
   const points = Math.max(
