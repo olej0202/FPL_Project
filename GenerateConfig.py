@@ -71,14 +71,14 @@ def normalize_player_name(name):
 
 Manual_team_offensive_adjustments = { 
         #example 90:1.1 bedre off,  90:0.95 dårligere off
-        8:1.1,6:1.1,88:0.9,14:1.1
+        8:1.1,6:1.05,88:0.9
 }
     
     
     
 Manual_team_defensive_adjustments = {
         #example 90:1.1 dårligere def,  90:0.95 bedre def
-        8:0.9,88:1.15,14:0.95
+        8:0.9,88:1.15
 }
 
 
@@ -95,7 +95,7 @@ Manual_Player_Adjustments={
     "Tarik_Muharemović":["Jaydee_Canvot"],
     "Gonzalo_García": ["Rodrigo_Muniz Carvalho"],
     "Mamadou_Sangaré":["Elliot_Anderson"],
-    "Mamadou_Sangaré":["Gabriel_Martinelli Silva"]
+    "Christos_Tzolis":["Gabriel_Martinelli Silva"]
     
     
         
@@ -104,7 +104,7 @@ Manual_Player_Adjustments={
 
 Manual_Player_Risk={
         # exemple"Alexander_Isak":0.6,
-        "Christos_Tzolis": 0.9,
+        "Christos_Tzolis": 0.8,
         "Bruno_Guimarães Rodriguez Moura": 0.6
        
 }

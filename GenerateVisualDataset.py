@@ -394,36 +394,11 @@ def Player_adjustements(current_player_path):
     risk_adj_minutes_factor = np.maximum(1, 80 / (df["average_minutes"]+0.01))
     # alternatively: df["average_minutes"].rdiv(75).clip(lower=1)
 
-    df["Goal_share"] = (
-        (df["Goal_Statistics_share"] * 0.35 + df["Rolling_adjusted_Threat_per90_share"]*0.2)
-        * risk_adj_minutes_factor
-        + (df["Big_Chances"] / 3) * 0.1
-        + (df["Rolling_adjusted_XG"]) * 0.1
-        + (df["Share_of_XG"]*0.7+0.3*df["Share_of_XG_Short"]) * 0.25
-    )
-
-    df["Goal_share"] = (df["Goal_share"]
-            
-        * (1 - df["player_risiko"])
-        + df["player_risiko"] * df["Understat_POSXG_Share"]
-    )   
+    df["Goal_share"] = df["Goal_Weight_Share"] 
     
     df["Pos_Goal_Threat"]=df["Opp_Goal_Threat_Pos"]
     df["Pos_Assist_Threat"]=df["Opp_Assist_Threat_Pos"]
-    df["Assist_share"] = (
-        (df["Assist_Statistics_share"] * 0.4 + df["Rolling_adjusted_creativity_per90_share"]*0.15)
-        * risk_adj_minutes_factor
-        + (df["Big_Chances_Created"] / 3) * 0.1
-        + (df["Rolling_adjusted_XA"]) * 0.1
-        + (df["Share_of_XA"]*0.7+0.3*df["Share_of_XA_Short"]) * 0.25
-    )
-
-    df["Assist_share"] = (df["Assist_share"]
-            
-        * (1 - df["player_risiko"])
-        + df["player_risiko"] * df["Understat_POSXA_Share"]
-    )
-
+    df["Assist_share"] = df["Assist_Weight_Share"]
 
 
     # Cap overscore/overassist factors per player in [0.9, 1.15]
@@ -469,8 +444,9 @@ def Player_adjustements(current_player_path):
     # Logistic transformation → probability
     df["CBI_Percent"]= 1 / (1 + np.exp(-z))
 
-    bps_scaled = np.maximum(4, df["Rolling_adjusted_BPS"]*0.4+df["Rolling_adjusted_BPS_2"]*0.6) 
-    df["BPS"]=bps_scaled*0.015-np.minimum(0.4, df["Rolling_cards"]) 
+    bps_scaled = np.maximum(1, df["Rolling_adjusted_BPS"]*0.4+df["Rolling_adjusted_BPS_2"]*0.6) 
+    df["BPS"]=bps_scaled
+    df["Cards"]=df["Rolling_cards"]
     pred = np.exp(
             -0.435141
             + 0.3 * df["Opp_Saves_Against"]
@@ -488,7 +464,7 @@ def Player_adjustements(current_player_path):
     final_cols = [
         "name", "position", "GW", "Team", "average_minutes",
         "Goal_share", "Assist_share", "Pen_data", "CBI_Percent",
-        "BPS", "Save_Pred", "Pos_Goal_Threat", "Pos_Assist_Threat"
+        "BPS", "Save_Pred", "Pos_Goal_Threat", "Pos_Assist_Threat","Cards"
     ]
 
     df = df[final_cols]
@@ -503,9 +479,9 @@ def Player_adjustements(current_player_path):
             df["position"] == "DEF",
         ],
         [
-            5.2,  # FWD
-            5.7,  # MID
-            6.5,  # DEF
+            4,  # FWD
+            5,  # MID
+            6,  # DEF
         ],
         default=0,
     )
@@ -518,9 +494,9 @@ def Player_adjustements(current_player_path):
             df["position"] == "DEF",
         ],
         [
-            3.4,   # FWD
-            3.4,   # MID
-            3.4,   # DEF
+            3,   # FWD
+            3,   # MID
+            3,   # DEF
         ],
         default=0,
     )
@@ -534,10 +510,10 @@ def Player_adjustements(current_player_path):
         ],
         [
             0.0,   # FWD
-            0.8,   # MID
-            5,   # DEF
+            1,   # MID
+            4,   # DEF
         ],
-        default=5.0,  # "else"
+        default=4.0,  # "else"
     )
 
     df["default_points"] = np.select(
@@ -549,7 +525,7 @@ def Player_adjustements(current_player_path):
         [
             2,   # FWD
             2,   # MID
-            1,   # DEF
+            2,   # DEF
         ],
         default=1,  # "else"
     )

@@ -91,6 +91,13 @@ const BREAKDOWN_SERIES = [
   { key: "saves", label: "Saves", color: "#d97706" },
 ];
 
+const POSITION_EVENT_BONUS = {
+  GKP: { goal: 12.0, assist: 9.0, cs: 12.0 },
+  DEF: { goal: 12.0, assist: 9.0, cs: 12.0 },
+  MID: { goal: 18.0, assist: 9.0, cs: 0.0 },
+  FWD: { goal: 24.0, assist: 9.0, cs: 0.0 },
+};
+
 const BREAKDOWN_TOTAL_SERIES = {
   key: "total",
   label: "Total",
@@ -98,6 +105,12 @@ const BREAKDOWN_TOTAL_SERIES = {
 };
 
 const clamp01 = (x) => Math.max(0, Math.min(1, Number.isFinite(x) ? x : 0));
+const canonicalPosition = (value) => {
+  const key = String(value || "").toUpperCase();
+  if (key === "GK") return "GKP";
+  if (key === "FOR") return "FWD";
+  return key || "MID";
+};
 const firstFinite = (...vals) => {
   for (const v of vals) {
     const n = Number(v);
@@ -747,20 +760,33 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
   const oppGoalThreat = Number(playerRow.Pos_Goal_Threat) || 0;
   const oppAssistThreat = Number(playerRow.Pos_Assist_Threat) || 0;
 
-  const bps = Number(playerRow.BPS) || 0;
-  const defaultPoints = Number(playerRow.default_points) || 0;
+  const positionKey = canonicalPosition(playerRow.position);
+  const bonusWeights = POSITION_EVENT_BONUS[positionKey] || POSITION_EVENT_BONUS.MID;
 
+  const bps = Number(playerRow.BPS) || 0;
   const goalFactor = Number(playerRow.Goal_factor) || 0;
   const assistFactor = Number(playerRow.Assist_factor) || 0;
-  const csFactor = Number(playerRow.CS_factor) || 0;
+  const cards = firstFinite(playerRow.Cards, playerRow.Card_pred, playerRow.card, 0) || 0;
+  const predictedGc =
+    Math.max(
+      0,
+      firstFinite(
+        playerRow.GC_pred,
+        playerRow.Goals_Conceded,
+        playerRow.goals_conceded,
+        playerRow.GC,
+        0
+      ) || 0
+    );
 
   const xg = Number(teamRow.XG) || 0;
   const cs = Number(teamRow.CS) || 0;
 
   const minutesAdj = avgMin ? Math.min(1, avgMin / 80) : 0;
-  const csPerMatch = matchCount > 0 ? cs / matchCount : 0;
-  const csNonlinear =
-    csFactor > 1 ? ((30 - Math.min(30, csPerMatch * 100)) / -15) * matchCount : 0;
+  const z60 = -3.045855 + 0.056203 * avgMin;
+  const likelihoodOf60 = 1 / (1 + Math.exp(-z60));
+  const z0 = -1.855427 + 0.056741 * avgMin;
+  const likelihoodOf0 = 1 / (1 + Math.exp(-z0));
 
   const goalScored =
     ((goalShare * 0.9 + 0.1 * oppGoalThreat) * xg + penData * 0.5 * matchCount) *
@@ -778,24 +804,35 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
 
   const defconPointsTerm = cbi01 * minutesAdj * matchCount * 2;
 
-  // new
   const savePred = savePredRaw * minutesAdj * matchCount;
-
-  const baseOnlyPoints = (defaultPoints + bps) * minutesAdj * matchCount;
+  const groundPoints = (likelihoodOf0 + likelihoodOf60) * matchCount;
   const goalPoints = goalScored * goalFactor;
   const assistPoints = assists * assistFactor;
-  const csPoints = cs * csFactor * minutesAdj + csNonlinear;
-
-  const basePoints =
-    baseOnlyPoints + defconPointsTerm;
+  const csPoints = cs * likelihoodOf60;
+  const bonusPoints =
+    0.035 *
+    (
+      bps
+      + goalScored * bonusWeights.goal
+      + assists * bonusWeights.assist
+      + csPoints * bonusWeights.cs
+    );
+  const cardPoints = -cards;
+  const gcPenaltyPoints =
+    positionKey === "GKP" || positionKey === "DEF"
+      ? -3 * predictedGc
+      : 0;
 
   const points = Math.max(
     0,
-    basePoints +
+    groundPoints +
       goalPoints +
       assistPoints +
+      defconPointsTerm +
       csPoints +
-      savePred
+      bonusPoints +
+      cardPoints +
+      gcPenaltyPoints
   );
 
   return {
@@ -807,12 +844,12 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
     CBI_Predictions: cbi01,
     _CBI01_Raw: rawCbi01,
     _Breakdown: {
-      base: baseOnlyPoints,
+      base: groundPoints,
       goal: goalPoints,
       assist: assistPoints,
       defcon: defconPointsTerm,
-      cs: csPoints,
-      saves: savePred,
+      cs: csPoints + bonusPoints + cardPoints + gcPenaltyPoints,
+      saves: 0,
       total: points,
     },
   };
