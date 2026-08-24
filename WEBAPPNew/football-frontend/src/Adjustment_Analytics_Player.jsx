@@ -814,6 +814,11 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
   const assistPoints = assists * assistFactor;
   const bonusCsBase = cs * likelihoodOf60;
   const csPoints = bonusCsBase * csFactor;
+  const gc2PlusProb = poissonGc2PlusFromCs(cs);
+  const gcPenaltyBonusBase =
+    positionKey === "GKP" || positionKey === "DEF"
+      ? -3 * gc2PlusProb * likelihoodOf60
+      : 0;
   const bonusPoints =
     0.035 *
     (
@@ -821,12 +826,12 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
       + goalScored * bonusWeights.goal
       + assists * bonusWeights.assist
       + bonusCsBase * bonusWeights.cs
+      + gcPenaltyBonusBase
     );
   const cardPoints = -cards;
-  const gc2PlusProb = poissonGc2PlusFromCs(cs);
   const gcPenaltyPoints =
     positionKey === "GKP" || positionKey === "DEF"
-      ? -3 * gc2PlusProb * likelihoodOf60
+      ? -gc2PlusProb * likelihoodOf60
       : 0;
 
   const points = Math.max(
