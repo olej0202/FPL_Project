@@ -10,28 +10,28 @@
 8,Arsenal,Martin Odegaard,AMC,2,5,40.0
 9,Arsenal,Myles Lewis-Skelly,DM,4,5,80.0
 10,Arsenal,Riccardo Calafiori,DL,5,5,100.0
-11,Aston Villa,Andrés García,DR,1,5,20.0
-12,Aston Villa,Douglas Luiz,DM,1,5,20.0
-13,Aston Villa,Emiliano Buendía,LW,3,5,60.0
-14,Aston Villa,Ian Maatsen,DL,3,5,60.0
-15,Aston Villa,Lamare Bogarde,DM,3,5,60.0
-16,Aston Villa,Leon Bailey,RW,1,5,20.0
-17,Aston Villa,Marco Bizot,GK,1,5,20.0
-18,Aston Villa,Ollie Watkins,FW,4,5,80.0
-19,Aston Villa,Ross Barkley,AMC,3,5,60.0
-20,Aston Villa,Tyrone Mings,CB,3,5,60.0
-21,Aston Villa,Victor Lindelöf,CB,4,5,80.0
-22,Bournemouth,Adam Smith,DR,3,5,60.0
+11,Aston Villa,Boubacar Kamara,DM,1,5,20.0
+12,Aston Villa,Emiliano Buendía,FW,3,5,60.0
+13,Aston Villa,George Hemmings,LW,1,5,20.0
+14,Aston Villa,Ian Maatsen,DL,4,5,80.0
+15,Aston Villa,John McGinn,RW,3,5,60.0
+16,Aston Villa,João Gomes,DM,1,5,20.0
+17,Aston Villa,Marco Bizot,GK,2,5,40.0
+18,Aston Villa,Matthew Cash,DR,4,5,80.0
+19,Aston Villa,Pau Torres,CB,2,5,40.0
+20,Aston Villa,Ross Barkley,AMC,4,5,80.0
+21,Aston Villa,Victor Lindelöf,CB,5,5,100.0
+22,Bournemouth,Adam Smith,DR,4,5,80.0
 23,Bournemouth,Adrien Truffert,DL,5,5,100.0
-24,Bournemouth,Alex Tóth,DM,1,5,20.0
-25,Bournemouth,Djordje Petrovic,GK,5,5,100.0
-26,Bournemouth,Eli Junior Kroupi,AMC,5,5,100.0
+24,Bournemouth,Alex Scott,DM,4,5,80.0
+25,Bournemouth,António Silva,CB,1,5,20.0
+26,Bournemouth,Djordje Petrovic,GK,5,5,100.0
 27,Bournemouth,Evanilson,FW,5,5,100.0
 28,Bournemouth,James Hill,CB,5,5,100.0
-29,Bournemouth,Marcos Senesi,CB,5,5,100.0
-30,Bournemouth,Marcus Tavernier,LW,5,5,100.0
-31,Bournemouth,Rayan,RW,4,5,80.0
-32,Bournemouth,Tyler Adams,DM,3,5,60.0
+29,Bournemouth,Justin Kluivert,AMC,1,5,20.0
+30,Bournemouth,Lewis Cook,DM,1,5,20.0
+31,Bournemouth,Marcus Tavernier,LW,5,5,100.0
+32,Bournemouth,Rayan,RW,5,5,100.0
 33,Brentford,Caoimhin Kelleher,GK,5,5,100.0
 34,Brentford,Dango Ouattara,RW,4,5,80.0
 35,Brentford,Keane Lewis-Potter,DL,5,5,100.0
@@ -44,16 +44,16 @@
 42,Brentford,Thiago,FW,5,5,100.0
 43,Brentford,Vitaly Janelt,DM,3,5,60.0
 44,Brighton,Bart Verbruggen,GK,5,5,100.0
-45,Brighton,Danny Welbeck,FW,4,5,80.0
-46,Brighton,Diego Gómez,RW,1,5,20.0
-47,Brighton,Ferdi Kadioglu,DL,5,5,100.0
-48,Brighton,Jack Hinshelwood,AMC,5,5,100.0
-49,Brighton,James Milner,DM,1,5,20.0
-50,Brighton,Jan Paul van Hecke,CB,5,5,100.0
-51,Brighton,Lewis Dunk,CB,3,5,60.0
-52,Brighton,Mats Wieffer,DR,3,5,60.0
-53,Brighton,Maxim De Cuyper,LW,3,5,60.0
-54,Brighton,Pascal Groß,DM,5,5,100.0
+45,Brighton,Diego Gómez,RW,2,5,40.0
+46,Brighton,Georginio Rutter,FW,1,5,20.0
+47,Brighton,Jack Hinshelwood,AMC,5,5,100.0
+48,Brighton,Lewis Dunk,CB,4,5,80.0
+49,Brighton,Luka Vuskovic,CB,1,5,20.0
+50,Brighton,Mats Wieffer,DR,3,5,60.0
+51,Brighton,Maxim De Cuyper,LW,4,5,80.0
+52,Brighton,Olivier Boscagli,DL,2,5,40.0
+53,Brighton,Pascal Groß,DM,5,5,100.0
+54,Brighton,Yasin Ayari,DM,1,5,20.0
 55,Burnley,Axel Tuanzebe,CB,3,5,60.0
 56,Burnley,Bashir Humphreys,CB,3,5,60.0
 57,Burnley,Chimuanya Ugochukwu,DM,3,5,60.0
@@ -164,16 +164,16 @@
 162,Leicester,Patson Daka,FW,1,5,20.0
 163,Leicester,Victor Kristiansen,LW,1,5,20.0
 164,Leicester,Wout Faes,CB,5,5,100.0
-165,Liverpool,Alexis Mac Allister,DM,5,5,100.0
-166,Liverpool,Alisson,GK,1,5,20.0
-167,Liverpool,Andrew Robertson,DL,3,5,60.0
-168,Liverpool,Cody Gakpo,FW,5,5,100.0
-169,Liverpool,Curtis Jones,DR,5,5,100.0
-170,Liverpool,Dominik Szoboszlai,AMC,5,5,100.0
-171,Liverpool,Ibrahima Konaté,CB,5,5,100.0
-172,Liverpool,Mohamed Salah,RW,2,5,40.0
-173,Liverpool,Rio Ngumoha,LW,3,5,60.0
-174,Liverpool,Ryan Gravenberch,DM,4,5,80.0
+165,Liverpool,Alexander Isak,FW,1,5,20.0
+166,Liverpool,Alisson,GK,2,5,40.0
+167,Liverpool,Cody Gakpo,LW,5,5,100.0
+168,Liverpool,Dominik Szoboszlai,DM,5,5,100.0
+169,Liverpool,Florian Wirtz,AMC,2,5,40.0
+170,Liverpool,Jeremie Frimpong,DR,3,5,60.0
+171,Liverpool,Jérémy Jacquet,CB,1,5,20.0
+172,Liverpool,Milos Kerkez,DL,3,5,60.0
+173,Liverpool,Rio Ngumoha,RW,4,5,80.0
+174,Liverpool,Ryan Gravenberch,DM,5,5,100.0
 175,Liverpool,Virgil van Dijk,CB,5,5,100.0
 176,Luton,Albert Sambi Lokonga,MC,5,5,100.0
 177,Luton,Alfie Doughty,DL,5,5,100.0
@@ -186,17 +186,17 @@
 184,Luton,Tahith Chong,LW,5,5,100.0
 185,Luton,Teden Mengi,CB,5,5,100.0
 186,Luton,Thomas Kaminski,GK,5,5,100.0
-187,Man City,Antoine Semenyo,AMC,4,5,80.0
-188,Man City,Bernardo Silva,DM,5,5,100.0
-189,Man City,James Trafford,GK,1,5,20.0
-190,Man City,John Stones,CB,1,5,20.0
-191,Man City,Nathan Aké,DL,2,5,40.0
-192,Man City,Nico González,DM,2,5,40.0
-193,Man City,Phil Foden,FW,2,5,40.0
-194,Man City,Rico Lewis,DR,1,5,20.0
-195,Man City,Rúben Dias,CB,1,5,20.0
-196,Man City,Sávio,AMC,2,5,40.0
-197,Man City,Tijjani Reijnders,FW,2,5,40.0
+187,Man City,Abduqodir Khusanov,CB,3,5,60.0
+188,Man City,Antoine Semenyo,LW,4,5,80.0
+189,Man City,Elliot Anderson,DM,1,5,20.0
+190,Man City,Erling Haaland,FW,3,5,60.0
+191,Man City,Gianluigi Donnarumma,GK,4,5,80.0
+192,Man City,Josko Gvardiol,DL,2,5,40.0
+193,Man City,Marc Guehi,DM,3,5,60.0
+194,Man City,Nico O&#039;Reilly,AMC,3,5,60.0
+195,Man City,Phil Foden,RW,3,5,60.0
+196,Man City,Rico Lewis,DR,2,5,40.0
+197,Man City,Rúben Dias,CB,2,5,40.0
 198,Man Utd,Andrey Santos,DM,1,5,20.0
 199,Man Utd,Ayden Heaven,CB,2,5,40.0
 200,Man Utd,Bruno Fernandes,AMC,5,5,100.0
@@ -208,17 +208,17 @@
 206,Man Utd,Patrick Dorgu,LW,2,5,40.0
 207,Man Utd,Senne Lammens,GK,5,5,100.0
 208,Man Utd,Youri Tielemans,DM,1,5,20.0
-209,Newcastle,Bruno Guimarães,MC,5,5,100.0
-210,Newcastle,Dan Burn,CB,4,5,80.0
-211,Newcastle,Jacob Murphy,DR,4,5,80.0
-212,Newcastle,Jacob Ramsey,MC,3,5,60.0
-213,Newcastle,Joe Willock,MC,3,5,60.0
-214,Newcastle,Lewis Hall,DL,3,5,60.0
+209,Newcastle,Amar Dedic,DR,1,5,20.0
+210,Newcastle,Anthony Elanga,RW,1,5,20.0
+211,Newcastle,Harvey Barnes,LW,2,5,40.0
+212,Newcastle,Lewis Hall,DL,4,5,80.0
+213,Newcastle,Lewis Miley,DM,2,5,40.0
+214,Newcastle,Lukás Hornícek,GK,1,5,20.0
 215,Newcastle,Malick Thiaw,CB,5,5,100.0
-216,Newcastle,Nick Pope,GK,5,5,100.0
-217,Newcastle,Nick Woltemade,FW,3,5,60.0
-218,Newcastle,Sven Botman,CB,5,5,100.0
-219,Newcastle,William Osula,FW,5,5,100.0
+216,Newcastle,Sean Steur,DM,1,5,20.0
+217,Newcastle,Sven Botman,CB,5,5,100.0
+218,Newcastle,William Osula,FW,5,5,100.0
+219,Newcastle,Yoane Wissa,AMC,1,5,20.0
 220,Nott'm Forest,Dan Ndoye,AMC,1,5,20.0
 221,Nott'm Forest,Ibrahim Sangare,MC,2,5,40.0
 222,Nott'm Forest,Igor Jesus,FW,5,5,100.0

@@ -953,6 +953,7 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
             ]
             .sort_values("kickoff_time_parsed", ascending=False)
         )
+        filtered["minutes"] = pd.to_numeric(filtered["minutes"], errors="coerce").fillna(0.0)
 
         defcon_rows = filtered["defcon_avg"].notna().sum()
         defcon_columns = [
@@ -965,12 +966,17 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
             "Share_of_Defcon",
             "Share_of_Defcon_Short",
         ]
+        own_defcon_means = filtered[defcon_columns].apply(pd.to_numeric, errors="coerce").mean()
+        sum_minutes = filtered["minutes"].sum()
+        own_data_weight = min(1.0, sum_minutes / (90 * 7))
 
-        if defcon_rows < 4:
+        if sum_minutes < (90 * 7):
             if team_code in NEW_TEAMS:
                 reference_team_codes = [13, 90, 102, 40, 49, 2, 20, 39, 56, 11, 54] 
+                select_players=10
             else:
                 reference_team_codes = [team_code]
+                select_players=5
 
 
             position_values = ["GK", "GKP"] if position in ["GK", "GKP"] else [position]
@@ -980,23 +986,30 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
             ].copy()
             candidate_rows["minutes"] = pd.to_numeric(candidate_rows["minutes"], errors="coerce").fillna(0.0)
             candidate_rows = candidate_rows.sort_values("kickoff_time_parsed", ascending=False)
-
+            latest_candidate_rows = candidate_rows.drop_duplicates(subset=["name"], keep="first")
             eligible_names = (
-                candidate_rows
-                .groupby("name", group_keys=False)
-                .head(10)
-                .groupby("name")["minutes"]
-                .sum()
+                latest_candidate_rows
+                .sort_values(["minutes", "kickoff_time_parsed"], ascending=[False, False])
+                .head(select_players)["name"]
+                .tolist()
             )
-            eligible_names = eligible_names[eligible_names > 800].index.tolist()
 
             if eligible_names:
                 defcon_source = history_data[
                     (history_data["name"].isin(eligible_names))
                 ]
                 defcon_means = defcon_source[defcon_columns].apply(pd.to_numeric, errors="coerce").mean()
-                player_row[defcon_columns] = defcon_means.reindex(defcon_columns).values
-                
+                if sum_minutes < (90 * 7):
+                    blended_defcon = (
+                        own_data_weight * own_defcon_means.reindex(defcon_columns) +
+                        (1 - own_data_weight) * defcon_means.reindex(defcon_columns)
+                    )
+                    fill_values = defcon_means.reindex(defcon_columns)
+                    blended_defcon = blended_defcon.where(blended_defcon.notna(), fill_values)
+                    player_row[defcon_columns] = blended_defcon.values
+                else:
+                    player_row[defcon_columns] = own_defcon_means.reindex(defcon_columns).values
+                 
 
         if name in new_team_cluster:
             members = new_team_cluster[name]
@@ -1008,7 +1021,7 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
         if len(history_player) <= 6:
             overscore = 1
             overassist = 1
-        elif len(history_player) <= 15:
+        elif len(history_player) <= 10:
             overscore = 1
             overassist = 1
             rolling_cards = player_row["Rolling_cards"].values[0]
