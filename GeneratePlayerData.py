@@ -1263,6 +1263,31 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
         df["Defcon_Weight"] / defcon_weight_sum,
         0.0,
     )
+    
+    df["Goal_Weight_Share_Minutes_90"] =np.where(
+        goal_weight_sum > 0, (
+        pd.to_numeric(
+            df["Goal_Index"],
+            errors="coerce",
+        ).fillna(0.0)
+        / goal_weight_sum
+    ), 0.0)
+    df["Assist_Weight_Share_Minutes_90"] =np.where(
+        assist_weight_sum > 0, (
+        pd.to_numeric(
+            df["Assist_Index"],
+            errors="coerce",
+        ).fillna(0.0)
+        / assist_weight_sum
+    ), 0.0)
+    df["Defcon_Weight_Share_Minutes_90"] =np.where(
+        defcon_weight_sum > 0, (
+        pd.to_numeric(
+            df["Defcon_Index"],
+            errors="coerce",
+        ).fillna(0.0)
+        / defcon_weight_sum
+    ), 0.0)
     df = df.drop(columns=["_minutes_factor"])
 
                

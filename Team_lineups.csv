@@ -65,17 +65,17 @@
 63,Burnley,Lucas Pires,DL,3,5,60.0
 64,Burnley,Max Weiss,GK,3,5,60.0
 65,Burnley,Zian Flemming,FW,5,5,100.0
-66,Chelsea,Cole Palmer,AMC,4,5,80.0
-67,Chelsea,Enzo Fernández,MC,5,5,100.0
-68,Chelsea,Jorrel Hato,CB,4,5,80.0
-69,Chelsea,João Pedro,FW,3,5,60.0
-70,Chelsea,Levi Colwill,CB,2,5,40.0
-71,Chelsea,Malo Gusto,RW,4,5,80.0
-72,Chelsea,Marc Cucurella,LW,5,5,100.0
-73,Chelsea,Moisés Caicedo,MC,5,5,100.0
-74,Chelsea,Pedro Neto,FW,3,5,60.0
+66,Chelsea,Cole Palmer,AMC,5,5,100.0
+67,Chelsea,Jorrel Hato,DL,4,5,80.0
+68,Chelsea,Josh Acheampong,CB,2,5,40.0
+69,Chelsea,João Pedro,FW,4,5,80.0
+70,Chelsea,Levi Colwill,CB,3,5,60.0
+71,Chelsea,Malo Gusto,DR,4,5,80.0
+72,Chelsea,Maxence Lacroix,CB,1,5,20.0
+73,Chelsea,Morgan Rogers,AMC,1,5,20.0
+74,Chelsea,Reece James,MC,1,5,20.0
 75,Chelsea,Robert Sánchez,GK,4,5,80.0
-76,Chelsea,Wesley Fofana,CB,4,5,80.0
+76,Chelsea,Romeo Lavia,MC,2,5,40.0
 77,Coventry City,Aurèle Amenda,CB,1,1,100.0
 78,Coventry City,Bobby Thomas,CB,1,1,100.0
 79,Coventry City,Brandon Thomas-Asante,LW,1,1,100.0
@@ -109,15 +109,15 @@
 107,Everton,Thierno Barry,FW,2,5,40.0
 108,Everton,Tyrique George,LW,1,5,20.0
 109,Everton,Vitalii Mykolenko,DL,5,5,100.0
-110,Fulham,Alex Iwobi,DM,2,5,40.0
-111,Fulham,Antonee Robinson,DL,4,5,80.0
+110,Fulham,Alex Iwobi,DM,3,5,60.0
+111,Fulham,Antonee Robinson,DL,5,5,100.0
 112,Fulham,Bernd Leno,GK,5,5,100.0
 113,Fulham,Calvin Bassey,CB,5,5,100.0
-114,Fulham,Emile Smith-Rowe,AMC,5,5,100.0
-115,Fulham,Issa Diop,CB,2,5,40.0
-116,Fulham,Kevin,LW,1,5,20.0
-117,Fulham,Oscar Bobb,RW,2,5,40.0
-118,Fulham,Rodrigo Muniz,FW,3,5,60.0
+114,Fulham,César Palacios,LW,1,5,20.0
+115,Fulham,Gonzalo García,FW,1,5,20.0
+116,Fulham,Jorge Cuenca,CB,1,5,20.0
+117,Fulham,Joshua King,AMC,1,5,20.0
+118,Fulham,Oscar Bobb,RW,3,5,60.0
 119,Fulham,Sander Berge,DM,3,5,60.0
 120,Fulham,Timothy Castagne,DR,5,5,100.0
 121,Hull City,Elliot Stroud,LW,1,1,100.0
