@@ -162,10 +162,14 @@ const getRowPredictedPoints = (row) =>
   toFiniteNumber(
     row?.Points,
     row?.calc_points,
+    row?.Points_prediction,
+    row?.Fantasy_pred,
+    row?.Fantasy_Pred,
     row?.predicted_points,
     row?.Predicted_points,
     row?.point_prediction,
-    row?.Point_prediction
+    row?.Point_prediction,
+    row?.points_prediction
   );
 
 const getTeamNameFromStrengthRow = (row) => {
@@ -366,6 +370,22 @@ export default function MyTeamOptimize() {
     if (!Array.isArray(arr) || arr.length === 0) return false;
     return arr.some((p) => p && p.calc_points != null && Number.isFinite(Number(p.calc_points)));
   }, [Playerdata, dataVersion]);
+
+  const statisticalPlayersPayload = useMemo(() => {
+    if (!hasStatisticalData) return [];
+    const arr = Playerdata?.current;
+    if (!Array.isArray(arr) || arr.length === 0) return [];
+    return arr.map((p) => ({
+      ...p,
+      calc_points: Number.isFinite(Number(p.calc_points)) ? Number(p.calc_points) : 0,
+      Points: Number.isFinite(Number(p.calc_points)) ? Number(p.calc_points) : 0,
+    }));
+  }, [Playerdata, hasStatisticalData, dataVersion]);
+
+  const aiProjectionRows = useMemo(() => {
+    const arr = PlayersData?.current;
+    return Array.isArray(arr) ? arr : [];
+  }, [PlayersData]);
 
   const clampRisk = (v) => Math.max(-1, Math.min(1, v));
   const clampValTrans = (v) => Math.max(0, Math.min(1, v));
@@ -741,9 +761,9 @@ export default function MyTeamOptimize() {
 
   const projectionSourceBuckets = useMemo(() => {
     return modelType === "statistical"
-      ? [activeSolutionData, Playerdata?.current, PlayersData?.current, data]
-      : [activeSolutionData, PlayersData?.current, Playerdata?.current, data];
-  }, [modelType, activeSolutionData, Playerdata, PlayersData, data]);
+      ? [statisticalPlayersPayload]
+      : [aiProjectionRows];
+  }, [modelType, statisticalPlayersPayload, aiProjectionRows]);
 
   const projectionRowLookup = useMemo(() => {
     const map = new Map();
@@ -983,20 +1003,9 @@ export default function MyTeamOptimize() {
     });
   }, [activeSolutionData, transfersWithFH]);
 
-  const getStatisticalPlayersPayload = () => {
-    if (!hasStatisticalData) return null;
-    const arr = Playerdata?.current;
-    if (!Array.isArray(arr) || arr.length === 0) return null;
-    return arr.map((p) => ({
-      ...p,
-      calc_points: Number.isFinite(Number(p.calc_points)) ? Number(p.calc_points) : 0,
-      Points: Number.isFinite(Number(p.calc_points)) ? Number(p.calc_points) : 0,
-    }));
-  };
-
   const handleOptimizeClick = () => {
     const useStatistical = modelType === "statistical" && hasStatisticalData;
-    const playersPayload = useStatistical ? getStatisticalPlayersPayload() : null;
+    const playersPayload = useStatistical ? statisticalPlayersPayload : null;
     setSelectedSolution(1);
 
     fetchTeam({
