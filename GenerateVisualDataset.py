@@ -405,11 +405,11 @@ def Player_adjustements(current_player_path):
     risk_adj_minutes_factor = np.maximum(1, 80 / (df["average_minutes"]+0.01))
     # alternatively: df["average_minutes"].rdiv(75).clip(lower=1)
 
-    df["Goal_share"] = df["Goal_Weight_Share"] 
+    df["Goal_share"] = df["Goal_Weight_Share_Minutes_90"] 
     
     df["Pos_Goal_Threat"]=df["Opp_Goal_Threat_Pos"]
     df["Pos_Assist_Threat"]=df["Opp_Assist_Threat_Pos"]
-    df["Assist_share"] = df["Assist_Weight_Share"]
+    df["Assist_share"] = df["Assist_Weight_Share_Minutes_90"]
 
 
     # Cap overscore/overassist factors per player in [0.9, 1.15]

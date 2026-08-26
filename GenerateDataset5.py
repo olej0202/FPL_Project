@@ -1986,8 +1986,8 @@ def main_Transform():
                     .sum()
             ) * 90   
             
-            player_df["Goal_Statistics"]=player_df["Rolling_adjusted_XG_per90_both"]*0.6+0.0025*(player_df["Rolling_adjusted_Threat_per90"]*0.7+0.3*player_df["Rolling_adjusted_Threat_per90_Short"])+0.15*player_df["rolling_Goal_min"]
-            player_df["Assist_Statistics"]=player_df["Rolling_adjusted_XA_per90_both"]*0.65+0.0015*(player_df["Rolling_adjusted_creativity_per90"]*0.7+0.3*player_df["Rolling_adjusted_creativity_per90_Short"])+0.2*player_df["rolling_Assist_min"]
+            player_df["Goal_Statistics"]=player_df["Rolling_adjusted_XG_per90_both"]*0.7+0.002*(player_df["Rolling_adjusted_Threat_per90"]*0.7+0.3*player_df["Rolling_adjusted_Threat_per90_Short"])+0.1*player_df["rolling_Goal_min"]
+            player_df["Assist_Statistics"]=player_df["Rolling_adjusted_XA_per90_both"]*0.7+0.0015*(player_df["Rolling_adjusted_creativity_per90"]*0.7+0.3*player_df["Rolling_adjusted_creativity_per90_Short"])+0.15*player_df["rolling_Assist_min"]
                
             
             
@@ -2048,6 +2048,8 @@ def main_Transform():
                 player_df["minutes"] > 60,
                 "Adjusted_BPS"
             ] -= 5
+            
+            player_df["Adjusted_BPS"] = player_df["Adjusted_BPS"].clip(lower=-2)
 
             player_df["Rolling_adjusted_BPS"]=(player_df['Adjusted_BPS'].clip(upper=18).rolling(window=15, min_periods=1).sum()/player_df["minutes"].clip(lower=15).rolling(window=15, min_periods=1).sum()) * 90    
             player_df["rolling_bps_historic"] = player_df['Adjusted_BPS'].clip(upper=18).rolling(window=30, min_periods=1).mean()
