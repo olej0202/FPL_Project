@@ -93,7 +93,6 @@ export default function App() {
       { to: "/Season_Analysis", label: "Season Analytics" },
       { to: "/Weekly_Review", label: "Weekly Review" },
       { to: "/Personal_Analysis", label: "Personal Analysis" },
-      { to: "/Matches", label: "Matches" },
     ],
     []
   );
@@ -659,14 +658,22 @@ export default function App() {
 
             <Route
               path="/Matches"
-              element={routeElement("matches", <Matches />, "Matches")}
+              element={<Navigate to="/Season_Analysis/Season_Matches" replace />}
             />
 
             <Route
               path="/Season_Analysis"
               element={routeElement("seasonAnalyticsShell", <SeasonAnalytics />, "Season Analysis")}
             >
-              <Route index element={<Navigate to="Season_Players" replace />} />
+              <Route index element={<Navigate to="Season_Matches" replace />} />
+              <Route
+                path="Season_Matches"
+                element={routeElement(
+                  "matches",
+                  <Matches />,
+                  "Season Analytics Matches"
+                )}
+              />
               <Route
                 path="Season_Teams"
                 element={routeElement(
