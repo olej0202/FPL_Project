@@ -2334,8 +2334,19 @@ def Generate_point_predictions(GW_list):
         player_preds["GC_Penalty"]=player_preds["stat_sim_GC_penalty"]
 
         columns_to_include=["name","position", "GW","fix_id","Rolling_adjusted_BPS", "Rolling_adjusted_XG", "Rolling_adjusted_XA","played_XGC","average_minutes","fix_percentage"]
-            
+             
         New_dataset=player_data[columns_to_include].copy()
+        numeric_group_cols = [
+            "Rolling_adjusted_BPS",
+            "Rolling_adjusted_XG",
+            "Rolling_adjusted_XA",
+            "played_XGC",
+            "average_minutes",
+            "fix_percentage",
+        ]
+        for col in numeric_group_cols:
+            New_dataset[col] = pd.to_numeric(New_dataset[col], errors="coerce").fillna(0.0)
+        New_dataset["position"] = New_dataset["position"].fillna("UNK")
         New_dataset = New_dataset.merge(
             player_preds[["Name", "GW", "fix_id", "Goal_pred", "Assist_pred", "Bonus_pred","Bonus_pred2", "GC_pred", "Fantasy_pred", "CBI_pred", "Card_pred", "Save_pred","GC_Penalty"]],
             left_on=["name", "GW", "fix_id"],
@@ -2344,10 +2355,13 @@ def Generate_point_predictions(GW_list):
         ).drop(columns=["Name"])
         pred_fill_cols = ["Goal_pred", "Assist_pred", "Bonus_pred", "Bonus_pred2","GC_pred", "Fantasy_pred", "CBI_pred", "Card_pred", "Save_pred","GC_Penalty"]
         New_dataset[pred_fill_cols] = New_dataset[pred_fill_cols].fillna(0)
-        
+
         
 
-        summary_dataset = New_dataset.groupby(columns_to_include)[["Goal_pred", "Assist_pred", "Bonus_pred","Bonus_pred2", "GC_pred", "Fantasy_pred", "CBI_pred","Card_pred","Save_pred","GC_Penalty"]].sum().reset_index()
+        summary_dataset = New_dataset.groupby(
+            columns_to_include,
+            dropna=False
+        )[["Goal_pred", "Assist_pred", "Bonus_pred","Bonus_pred2", "GC_pred", "Fantasy_pred", "CBI_pred","Card_pred","Save_pred","GC_Penalty"]].sum().reset_index()
         summary_dataset["Average_Overscore"]=player_data["Average_Overscore"].values[0]
         summary_dataset["Point_STD"]=player_data["TP_std_20"].values[0]
         summary_dataset = summary_dataset.fillna(0)

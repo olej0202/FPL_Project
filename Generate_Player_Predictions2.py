@@ -701,6 +701,17 @@ def combine_measure_datasets_to_model_predictions(gw_list=None) -> pd.DataFrame:
 
     core_cols = ["name", "position", "GW", "fix_id", "Rolling_adjusted_BPS", "Rolling_adjusted_XG", "Rolling_adjusted_XA", "played_XGC", "average_minutes", "fix_percentage"]
     combined = players[core_cols].copy()
+    numeric_core_cols = [
+        "Rolling_adjusted_BPS",
+        "Rolling_adjusted_XG",
+        "Rolling_adjusted_XA",
+        "played_XGC",
+        "average_minutes",
+        "fix_percentage",
+    ]
+    for col in numeric_core_cols:
+        combined[col] = pd.to_numeric(combined[col], errors="coerce").fillna(0.0)
+    combined["position"] = combined["position"].fillna("UNK")
 
     for metric, pred_col in metric_to_col.items():
         ds = _safe_read_csv(f"DATASET_{metric}.csv", required_cols=["Name", "GW", "fix_id", "final_pred"])
@@ -713,7 +724,7 @@ def combine_measure_datasets_to_model_predictions(gw_list=None) -> pd.DataFrame:
 
     grouped_cols = ["name", "position", "GW", "Rolling_adjusted_BPS", "Rolling_adjusted_XG", "Rolling_adjusted_XA", "played_XGC", "average_minutes", "fix_percentage"]
     pred_cols = list(metric_to_col.values())
-    summary = combined.groupby(grouped_cols, as_index=False)[pred_cols].sum()
+    summary = combined.groupby(grouped_cols, as_index=False, dropna=False)[pred_cols].sum()
 
     overscore = players.groupby("name", as_index=False)["Average_Overscore"].first()
     pstd = players.groupby("name", as_index=False)["TP_std_20"].first()

@@ -935,6 +935,21 @@ const PlayerRow = React.memo(function PlayerRow({
         {Number.isFinite(row.selected) ? `${row.selected.toFixed(1)}%` : "-"}
       </td>
 
+      <td
+        className="px-4 py-3 text-right font-semibold"
+        style={{
+          borderBottom: "1px solid #e2e8f0",
+          color:
+            row.priceChangePercent > 0
+              ? "#15803d"
+              : row.priceChangePercent < 0
+                ? "#b91c1c"
+                : "#64748b",
+        }}
+      >
+        {Number.isFinite(row.priceChangePercent) ? `${row.priceChangePercent.toFixed(1)}%` : "-"}
+      </td>
+
       {displayedGWs.map((gw) => {
         const cell = row.gwMeasures[gw]?.[selectedMeasure] ?? 0;
         return (
@@ -955,7 +970,7 @@ const PlayerRow = React.memo(function PlayerRow({
 });
 
 export default function Player_analytics_rankings() {
-  const { fetchIfNeeded, loading, PlayersData, TeamData, dataVersion } = useStatsData();
+  const { fetchIfNeeded, loading, PlayersData, TeamData, PriceChangesData, dataVersion } = useStatsData();
   const { fetchIfNeeded: fetchOtherIfNeeded, FixtureData, dataVersion: otherVersion } = useOtherData();
 
   const [showFilters, setShowFilters] = useState(false);
@@ -996,6 +1011,11 @@ export default function Player_analytics_rankings() {
     [FixtureData, otherVersion]
   );
 
+  const priceChangeRows = useMemo(
+    () => (Array.isArray(PriceChangesData?.current) ? PriceChangesData.current : []),
+    [PriceChangesData, dataVersion]
+  );
+
   const allGWs = useMemo(() => {
     const set = new Set();
     for (const row of playerRows) {
@@ -1026,6 +1046,17 @@ export default function Player_analytics_rankings() {
   }, [playerRows, teamRows]);
 
   const fixtureMetaById = useMemo(() => buildFixtureMetaById(fixtureRows), [fixtureRows]);
+
+  const priceChangesByFullName = useMemo(() => {
+    const lookup = new Map();
+    for (const row of priceChangeRows) {
+      const fullName = norm(row?.full_name);
+      if (fullName && !lookup.has(fullName)) {
+        lookup.set(fullName, row);
+      }
+    }
+    return lookup;
+  }, [priceChangeRows]);
 
   const {
     playerTableRowsBase,
@@ -1064,6 +1095,10 @@ export default function Player_analytics_rankings() {
       const position = latest?.position ? String(latest.position) : "";
       const displayName = latest?.web_name || latest?.name || "Unknown";
       const playerId = firstText(latest?.id, latest?.element, latest?.code, latest?.nameKey, nameKey);
+      const priceChangeRow =
+        priceChangesByFullName.get(norm(latest?.name)) ||
+        priceChangesByFullName.get(norm(latest?.Name)) ||
+        null;
 
       positions.add(position);
       minValue = Math.min(minValue, value);
@@ -1125,6 +1160,7 @@ export default function Player_analytics_rankings() {
         teamName,
         value,
         selected,
+        priceChangePercent: firstFinite(priceChangeRow?.price_change_percent),
         gwMeasures,
         gwDetails,
         seriesRows: sortedRows,
@@ -1159,7 +1195,7 @@ export default function Player_analytics_rankings() {
       globalMinSelected: minSelected === Infinity ? 0 : minSelected,
       globalMaxSelected: maxSelected === -Infinity ? 100 : maxSelected,
     };
-  }, [playerRows, teamNamesByCode]);
+  }, [playerRows, priceChangesByFullName, teamNamesByCode]);
 
   useEffect(() => {
     if (!allGWs.length) return;
@@ -1940,6 +1976,13 @@ export default function Player_analytics_rankings() {
                     Selected %
                   </th>
 
+                  <th
+                    className="px-4 py-3 text-right"
+                    style={{ background: "#ffffff", borderBottom: `1px solid ${PALETTE.gold}` }}
+                  >
+                    Price Change %
+                  </th>
+
                   {displayedGWs.map((gw) => {
                     const isSorted = sortConfig.type === "gw" && sortConfig.gw === gw;
                     return (
@@ -2002,7 +2045,7 @@ export default function Player_analytics_rankings() {
                 {filteredPlayerRows.length === 0 && (
                   <tr>
                     <td
-                      colSpan={6 + displayedGWs.length}
+                      colSpan={7 + displayedGWs.length}
                       className="px-4 py-8 text-center"
                       style={{ color: "#64748b" }}
                     >

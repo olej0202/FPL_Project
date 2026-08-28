@@ -8,6 +8,7 @@ import {
   useNavigate,
 } from "react-router-dom";
 import {
+  ArrowUpDown,
   BarChart2,
   Brain,
   ChevronDown,
@@ -238,7 +239,7 @@ export default function App() {
       icon: Trophy,
       label: "Score Predictions",
     },
-    { type: "link", to: "/Price_Changes", icon: Search, label: "Price Changes" },
+    { type: "link", to: "/Price_Changes", icon: ArrowUpDown, label: "Price Changes" },
   ];
 
   const desktopLinkClass = ({ isActive }) =>

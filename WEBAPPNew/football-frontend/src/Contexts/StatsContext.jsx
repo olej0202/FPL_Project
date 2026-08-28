@@ -1,4 +1,5 @@
 import React, { createContext, useCallback, useContext, useRef, useState } from "react";
+import { API_BASE_URL } from "../config/apiBase";
 
 const StatsDataContext = createContext();
 
@@ -9,6 +10,7 @@ export function StatsDataProvider({ children }) {
   const TeamRef = useRef(null);
   const TeamThreatRef = useRef(null);
   const TeamLineupsRef = useRef(null);
+  const PriceChangesRef = useRef(null);
   const inFlightRef = useRef(null);
   const [loading, setLoading] = useState(false);
   const [dataVersion, setDataVersion] = useState(0);
@@ -22,22 +24,34 @@ export function StatsDataProvider({ children }) {
   };
 
   const fetchIfNeeded = useCallback(async () => {
-    if (PlayersRef.current && TeamRef.current && TeamThreatRef.current && TeamLineupsRef.current) return;
+    if (
+      PlayersRef.current &&
+      TeamRef.current &&
+      TeamThreatRef.current &&
+      TeamLineupsRef.current &&
+      PriceChangesRef.current
+    ) {
+      return;
+    }
     if (inFlightRef.current) return inFlightRef.current;
 
     const request = (async () => {
       setLoading(true);
       try {
-        const [PlayersRes, TeamRes, TeamThreat, TeamLineups] = await Promise.all([
-          fetch("https://fpl-project-t5e9.onrender.com/Player_rankings").then((res) => res.json()),
-          fetch("https://fpl-project-t5e9.onrender.com/Team_current").then((res) => res.json()),
-          fetch("https://fpl-project-t5e9.onrender.com/Team_Threat").then((res) => res.json()),
-          fetch("https://fpl-project-t5e9.onrender.com/Team_Lineups").then((res) => res.json()),
+        const [PlayersRes, TeamRes, TeamThreat, TeamLineups, PriceChangesRes] = await Promise.all([
+          fetch(`${API_BASE_URL}/Player_rankings`).then((res) => res.json()),
+          fetch(`${API_BASE_URL}/Team_current`).then((res) => res.json()),
+          fetch(`${API_BASE_URL}/Team_Threat`).then((res) => res.json()),
+          fetch(`${API_BASE_URL}/Team_Lineups`).then((res) => res.json()),
+          fetch(`${API_BASE_URL}/Price_Changes`)
+            .then((res) => (res.ok ? res.json() : []))
+            .catch(() => []),
         ]);
         PlayersRef.current = PlayersRes;
         TeamRef.current = TeamRes;
         TeamThreatRef.current = TeamThreat;
         TeamLineupsRef.current = TeamLineups;
+        PriceChangesRef.current = Array.isArray(PriceChangesRes) ? PriceChangesRes : [];
         setDataVersion((v) => v + 1);
       } catch (err) {
         console.error("Failed fetching AI team data:", err);
@@ -61,6 +75,7 @@ export function StatsDataProvider({ children }) {
         TeamData: TeamRef,
         TeamThreatData: TeamThreatRef,
         TeamLineupsData:TeamLineupsRef,
+        PriceChangesData: PriceChangesRef,
         analyses,
         addAnalysis,
         removeAnalysis,

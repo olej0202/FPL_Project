@@ -1087,10 +1087,13 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
             
             
     #New Players        
-    column_dummy=[]
-    for t in range(len(Players_without_history[0])):
-        column_dummy.append(str(t))
-    missing_players_df=pd.DataFrame(Players_without_history, columns=column_dummy)
+    if Players_without_history:
+        column_dummy=[]
+        for t in range(len(Players_without_history[0])):
+            column_dummy.append(str(t))
+        missing_players_df=pd.DataFrame(Players_without_history, columns=column_dummy)
+    else:
+        missing_players_df = pd.DataFrame()
     missing_players_df.to_csv("Player_without_history.csv")
     for player in Players_without_history:
         name=player[0]
@@ -1122,6 +1125,15 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
         player_row = Future_dataframe.head(1).copy()
         columns_to_average = [col for col in player_row.columns if col not in exclude_columns]
         player_row[columns_to_average] = player_cluster[columns_to_average].mean()
+        if player_cluster.empty:
+            numeric_defaults = player_row[columns_to_average].apply(pd.to_numeric, errors="coerce")
+            player_row[columns_to_average] = numeric_defaults.fillna(0.0)
+        else:
+            player_row[columns_to_average] = (
+                player_row[columns_to_average]
+                .apply(pd.to_numeric, errors="coerce")
+                .fillna(0.0)
+            )
         
         if name in new_team_cluster:
             members = new_team_cluster[name]
@@ -1147,6 +1159,7 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
         player_row["name"] = name
         player_row["Team"] = team_code
         player_row["position"] = position
+        player_row["gamepos"] = main_pos if pd.notna(main_pos) and str(main_pos).strip() else position
         player_row["Average_Overscore"] = 1
         player_row["Average_OverAssist"] = 1
         player_row["TP_std_20"] = 3
@@ -1159,6 +1172,26 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
         player_row["player_risiko"] = player_risiko
         player_row["Player_code"] = player_code
         player_row["Rolling_cards"] = 0.1
+        def _safe_scalar(value, default=0.0):
+            scalar = pd.to_numeric(pd.Series([value]), errors="coerce").iloc[0]
+            return default if pd.isna(scalar) else float(scalar)
+
+        player_row["Goal_Statistics"] = _safe_scalar(player_row.get("Goal_Statistics"))
+        player_row["Assist_Statistics"] = _safe_scalar(player_row.get("Assist_Statistics"))
+        player_row["defcon_avg"] = _safe_scalar(player_row.get("defcon_avg"))
+        player_row["Understat_POSXG"] = _safe_scalar(player_row.get("Understat_POSXG"))
+        player_row["Understat_POSXA"] = _safe_scalar(player_row.get("Understat_POSXA"))
+        player_row["Understat_POSXG_Share"] = _safe_scalar(player_row.get("Understat_POSXG_Share"))
+        player_row["Understat_POSXA_Share"] = _safe_scalar(player_row.get("Understat_POSXA_Share"))
+        player_row["Share_of_XG"] = _safe_scalar(player_row.get("Share_of_XG"))
+        player_row["Share_of_XA"] = _safe_scalar(player_row.get("Share_of_XA"))
+        player_row["Share_of_XG_Short"] = _safe_scalar(player_row.get("Share_of_XG_Short"))
+        player_row["Share_of_XA_Short"] = _safe_scalar(player_row.get("Share_of_XA_Short"))
+        player_row["Rolling_adjusted_Threat_per90_share"] = _safe_scalar(player_row.get("Rolling_adjusted_Threat_per90_share"))
+        player_row["Rolling_adjusted_creativity_per90_share"] = _safe_scalar(player_row.get("Rolling_adjusted_creativity_per90_share"))
+        player_row["Goal_Index"] = 0.0
+        player_row["Assist_Index"] = 0.0
+        player_row["Defcon_Index"] = 0.0
         
         print(minutes)
         for i in range(len(clusters)):
@@ -1200,6 +1233,32 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
     add_team_share_per90()
     
     df = pd.read_csv("Player_Prediction_set.csv")
+    required_zero_cols = [
+        "Understat_POSXG",
+        "Understat_POSXA",
+        "Understat_POSXG_Share",
+        "Understat_POSXA_Share",
+        "Goal_Statistics",
+        "Assist_Statistics",
+        "Goal_Statistics_share",
+        "Assist_Statistics_share",
+        "Rolling_adjusted_XG",
+        "Rolling_adjusted_XA",
+        "Rolling_adjusted_Threat_per90",
+        "Rolling_adjusted_creativity_per90",
+        "Rolling_adjusted_Threat_per90_share",
+        "Rolling_adjusted_creativity_per90_share",
+        "Share_of_XG",
+        "Share_of_XA",
+        "Share_of_XG_Short",
+        "Share_of_XA_Short",
+        "defcon_avg",
+        "player_risiko",
+    ]
+    for col in required_zero_cols:
+        if col not in df.columns:
+            df[col] = 0.0
+        df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0.0)
     df["Goal_Index"] = df["Understat_POSXG"] * df["player_risiko"] + (1 - df["player_risiko"]) * (df["Goal_Statistics"]*0.5+df["Rolling_adjusted_XG"]*0.25+0.25*df['Rolling_adjusted_Threat_per90']*0.01)
     df["Assist_Index"] = df["Understat_POSXA"] * df["player_risiko"] + (1 - df["player_risiko"]) * (df["Assist_Statistics"]*0.55+df["Rolling_adjusted_XA"]*0.3+0.15*df['Rolling_adjusted_creativity_per90']*0.01)
     df["Goal_Index_Share"] = df["Understat_POSXG_Share"] * df["player_risiko"] + (1 - df["player_risiko"]) * (df["Goal_Statistics_share"]*0.1+df["Share_of_XG"]*0.55+0.25*df['Share_of_XG_Short']+0.1*df['Rolling_adjusted_Threat_per90_share'])
