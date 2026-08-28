@@ -1728,15 +1728,47 @@ def get_price_changes():
 
 @app.get("/Matches_Fixtures")
 def get_matches_fixtures():
-    df = load_and_transform("Matches_Fixtures")
-    return _json_safe_records(df, fill_value=0)
+    try:
+        df = load_and_transform("Matches_Fixtures")
+        return JSONResponse(
+            content=_json_safe_records(df, fill_value=0),
+            headers={"Access-Control-Allow-Origin": "*"},
+        )
+    except HTTPException as exc:
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={"detail": exc.detail},
+            headers={"Access-Control-Allow-Origin": "*"},
+        )
+    except Exception as exc:
+        return JSONResponse(
+            status_code=500,
+            content={"detail": str(exc)},
+            headers={"Access-Control-Allow-Origin": "*"},
+        )
 
 @app.get("/Matches")
 def get_matches(fix_id: int = Query(..., title="Fixture id")):
-    df = load_and_transform("Matches")
-    df["Fix_ID"] = pd.to_numeric(df["Fix_ID"], errors="coerce")
-    filtered = df[df["Fix_ID"] == fix_id].copy()
-    return _json_safe_records(filtered, fill_value=0)
+    try:
+        df = load_and_transform("Matches")
+        df["Fix_ID"] = pd.to_numeric(df["Fix_ID"], errors="coerce")
+        filtered = df[df["Fix_ID"] == fix_id].copy()
+        return JSONResponse(
+            content=_json_safe_records(filtered, fill_value=0),
+            headers={"Access-Control-Allow-Origin": "*"},
+        )
+    except HTTPException as exc:
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={"detail": exc.detail},
+            headers={"Access-Control-Allow-Origin": "*"},
+        )
+    except Exception as exc:
+        return JSONResponse(
+            status_code=500,
+            content={"detail": str(exc)},
+            headers={"Access-Control-Allow-Origin": "*"},
+        )
 
 @app.get("/wildcard")
 def get_data():
