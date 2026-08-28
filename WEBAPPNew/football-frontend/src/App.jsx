@@ -15,7 +15,6 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
-  Newspaper,
   Search,
   Settings,
   Trophy,
@@ -92,7 +91,6 @@ export default function App() {
       { to: "/Season_Analysis", label: "Season Analytics" },
       { to: "/Weekly_Review", label: "Weekly Review" },
       { to: "/Personal_Analysis", label: "Personal Analysis" },
-      { to: "/Price_Changes", label: "Price Changes" },
     ],
     []
   );
@@ -240,7 +238,7 @@ export default function App() {
       icon: Trophy,
       label: "Score Predictions",
     },
-    { type: "link", to: "/News", icon: Newspaper, label: "PL News" },
+    { type: "link", to: "/Price_Changes", icon: Search, label: "Price Changes" },
   ];
 
   const desktopLinkClass = ({ isActive }) =>

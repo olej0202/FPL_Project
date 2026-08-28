@@ -3,17 +3,10 @@ import { ArrowDown, ArrowUp, ArrowUpDown, RefreshCw, Search } from "lucide-react
 import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "./config/apiBase";
 
-const MODE_OPTIONS = [
-  { key: "all", label: "All movers" },
-  { key: "risers", label: "Price risers" },
-  { key: "fallers", label: "Price fallers" },
-];
-
 const SORTABLE_COLUMNS = {
   name: "Name",
   team_name: "Team",
   price_change_percent: "Price Change %",
-  price_change_projections: "Projection",
   price: "Price",
   is_locked: "Locked",
 };
@@ -29,8 +22,8 @@ function formatPercent(value, digits = 2) {
 }
 
 function formatPrice(value) {
-  if (!Number.isFinite(value)) return "£0.0";
-  return `£${value.toFixed(1)}`;
+  if (!Number.isFinite(value)) return "0.0";
+  return value.toFixed(1);
 }
 
 function compareValues(left, right) {
@@ -48,7 +41,6 @@ export default function PriceChanges() {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [mode, setMode] = useState("all");
   const [nameFilter, setNameFilter] = useState("");
   const [teamFilter, setTeamFilter] = useState("All");
   const [sortConfig, setSortConfig] = useState({
@@ -64,12 +56,18 @@ export default function PriceChanges() {
     try {
       const response = await fetch(`${API_BASE_URL}/Price_Changes`);
       if (!response.ok) {
-        throw new Error(`Price data request failed (${response.status}).`);
+        let detail = "";
+        try {
+          const payload = await response.json();
+          detail = payload?.detail ? ` ${payload.detail}` : "";
+        } catch {
+          detail = "";
+        }
+        throw new Error(`Price data request failed (${response.status}).${detail}`);
       }
 
       const payload = await response.json();
-      const nextRows = Array.isArray(payload) ? payload : [];
-      setRows(nextRows);
+      setRows(Array.isArray(payload) ? payload : []);
       setUpdatedAt(new Date().toLocaleString());
     } catch (fetchError) {
       setError(fetchError?.message || "Could not load price changes.");
@@ -82,30 +80,24 @@ export default function PriceChanges() {
     loadData();
   }, [loadData]);
 
-  const teamOptions = useMemo(() => {
-    return [
+  const teamOptions = useMemo(
+    () => [
       "All",
       ...Array.from(new Set(rows.map((row) => row.team_name).filter(Boolean))).sort((a, b) =>
         String(a).localeCompare(String(b))
       ),
-    ];
-  }, [rows]);
+    ],
+    [rows]
+  );
 
   const filteredRows = useMemo(() => {
     const search = nameFilter.trim().toLowerCase();
-
     return rows.filter((row) => {
       const matchName = !search || String(row.name ?? "").toLowerCase().includes(search);
       const matchTeam = teamFilter === "All" || row.team_name === teamFilter;
-      const projection = toNumber(row.price_change_projections);
-      const matchMode =
-        mode === "all" ||
-        (mode === "risers" && projection > 0) ||
-        (mode === "fallers" && projection < 0);
-
-      return matchName && matchTeam && matchMode;
+      return matchName && matchTeam;
     });
-  }, [rows, nameFilter, teamFilter, mode]);
+  }, [rows, nameFilter, teamFilter]);
 
   const sortedRows = useMemo(() => {
     const data = [...filteredRows];
@@ -115,33 +107,22 @@ export default function PriceChanges() {
     data.sort((a, b) => {
       const primary = compareValues(a[key], b[key]) * dir;
       if (primary !== 0) return primary;
-
-      if (mode === "fallers") {
-        const tieBreak = compareValues(a.price_change_projections, b.price_change_projections);
-        if (tieBreak !== 0) return tieBreak;
-      } else {
-        const tieBreak = compareValues(b.price_change_projections, a.price_change_projections);
-        if (tieBreak !== 0) return tieBreak;
-      }
-
       return compareValues(a.name, b.name);
     });
 
     return data;
-  }, [filteredRows, sortConfig, mode]);
+  }, [filteredRows, sortConfig]);
 
   const summary = useMemo(() => {
     let risers = 0;
     let fallers = 0;
     let locked = 0;
-
     for (const row of rows) {
-      const projection = toNumber(row.price_change_projections);
-      if (projection > 0) risers += 1;
-      if (projection < 0) fallers += 1;
+      const pct = toNumber(row.price_change_percent);
+      if (pct > 0) risers += 1;
+      if (pct < 0) fallers += 1;
       if (row.is_locked) locked += 1;
     }
-
     return { total: rows.length, risers, fallers, locked };
   }, [rows]);
 
@@ -153,35 +134,10 @@ export default function PriceChanges() {
           direction: current.direction === "asc" ? "desc" : "asc",
         };
       }
-
-      if (key === "price_change_percent" || key === "price_change_projections") {
-        return {
-          key,
-          direction: mode === "fallers" ? "asc" : "desc",
-        };
-      }
-
-      return { key, direction: "asc" };
-    });
-  }
-
-  function handleModeChange(nextMode) {
-    setMode(nextMode);
-    setSortConfig((current) => {
-      if (current.key === "price_change_percent" || current.key === "price_change_projections") {
-        return {
-          ...current,
-          direction: nextMode === "fallers" ? "asc" : "desc",
-        };
-      }
-      return current;
-    });
-  }
-
-  function openPlayer(row) {
-    if (!row?.full_name) return;
-    navigate("/Player_Analytics/Individual", {
-      state: { selectedPlayer: row.full_name },
+      return {
+        key,
+        direction: key === "price_change_percent" ? "desc" : "asc",
+      };
     });
   }
 
@@ -192,6 +148,13 @@ export default function PriceChanges() {
     ) : (
       <ArrowDown size={15} className="text-sky-700" />
     );
+  }
+
+  function openPlayer(row) {
+    if (!row?.full_name) return;
+    navigate("/Player_Analytics/Individual", {
+      state: { selectedPlayer: row.full_name },
+    });
   }
 
   return (
@@ -206,8 +169,8 @@ export default function PriceChanges() {
               Price Changes
             </h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-cyan-50/88 sm:text-base">
-              Current risers and fallers from FPL, with quick filtering by player and team and one-click
-              navigation into the individual player page.
+              Current price movement watchlist with player photos, sortable columns, team filtering,
+              and quick links into the player page.
             </p>
           </div>
 
@@ -234,7 +197,7 @@ export default function PriceChanges() {
 
       <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div className="grid flex-1 gap-3 md:grid-cols-3">
+          <div className="grid flex-1 gap-3 md:grid-cols-2">
             <label className="space-y-2">
               <span className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
                 Search Name
@@ -266,32 +229,6 @@ export default function PriceChanges() {
                 ))}
               </select>
             </label>
-
-            <div className="space-y-2">
-              <span className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
-                View
-              </span>
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                {MODE_OPTIONS.map((option) => {
-                  const active = mode === option.key;
-                  return (
-                    <button
-                      key={option.key}
-                      type="button"
-                      onClick={() => handleModeChange(option.key)}
-                      className={[
-                        "rounded-2xl border px-3 py-2 text-sm font-semibold transition",
-                        active
-                          ? "border-sky-200 bg-sky-50 text-sky-800"
-                          : "border-slate-200 bg-white text-slate-600 hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700",
-                      ].join(" ")}
-                    >
-                      {option.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
@@ -349,13 +286,24 @@ export default function PriceChanges() {
               ) : sortedRows.length ? (
                 sortedRows.map((row) => (
                   <tr key={row.id ?? `${row.name}_${row.team_name}`} className="transition hover:bg-slate-50/80">
-                    <td className="whitespace-nowrap px-4 py-3 text-sm">
+                    <td className="px-4 py-3 text-sm">
                       <button
                         type="button"
                         onClick={() => openPlayer(row)}
-                        className="font-semibold text-sky-700 transition hover:text-sky-900 hover:underline"
+                        className="inline-flex items-center gap-3 font-semibold text-sky-700 transition hover:text-sky-900 hover:underline"
                       >
-                        {row.name}
+                        {row.photo ? (
+                          <img
+                            src={row.photo}
+                            alt={row.name}
+                            className="h-9 w-9 rounded-full border border-slate-200 object-cover bg-slate-100"
+                          />
+                        ) : (
+                          <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-slate-100 text-xs text-slate-500">
+                            N/A
+                          </span>
+                        )}
+                        <span className="whitespace-nowrap">{row.name}</span>
                       </button>
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-700">
@@ -372,18 +320,6 @@ export default function PriceChanges() {
                       ].join(" ")}
                     >
                       {formatPercent(toNumber(row.price_change_percent))}
-                    </td>
-                    <td
-                      className={[
-                        "whitespace-nowrap px-4 py-3 text-sm font-semibold",
-                        toNumber(row.price_change_projections) > 0
-                          ? "text-emerald-700"
-                          : toNumber(row.price_change_projections) < 0
-                            ? "text-rose-700"
-                            : "text-slate-600",
-                      ].join(" ")}
-                    >
-                      {toNumber(row.price_change_projections).toFixed(2)}
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-slate-700">
                       {formatPrice(toNumber(row.price))}

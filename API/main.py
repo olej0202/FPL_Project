@@ -1053,6 +1053,19 @@ def fetch_price_changes_data() -> list[dict[str, Any]]:
         except (TypeError, ValueError):
             return default
 
+    def _projection_text(value: Any) -> str:
+        if value is None:
+            return ""
+        if isinstance(value, str):
+            return value.strip()
+        if isinstance(value, (list, tuple)):
+            text_parts = [str(item).strip() for item in value if isinstance(item, str) and str(item).strip()]
+            if text_parts:
+                return " | ".join(text_parts)
+            scalar_parts = [str(item).strip() for item in value if item is not None and str(item).strip()]
+            return " | ".join(scalar_parts)
+        return str(value).strip()
+
     try:
         resp = requests.get(
             bootstrap_url,
@@ -1092,6 +1105,7 @@ def fetch_price_changes_data() -> list[dict[str, Any]]:
                 "team_name": team_info.get("team_name", ""),
                 "team_short_name": team_info.get("team_short_name", ""),
                 "price_change_projections": _safe_float(player.get("price_change_projections")),
+                "price_change_projection_text": _projection_text(player.get("price_change_projections")),
                 "price_change_percent": _safe_float(player.get("price_change_percent")),
                 "price": _safe_float(player.get("now_cost")) / 10.0,
                 "selected_by_percent": _safe_float(player.get("selected_by_percent")),
