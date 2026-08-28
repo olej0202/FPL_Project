@@ -894,31 +894,30 @@ function getBarRange(values) {
   };
 }
 
-function getBarPercent(value, range) {
+function getBarIntensity(value, range) {
   const numericValue = Number(value);
   if (!Number.isFinite(numericValue) || !range) return 0;
 
-  const span = range.max - range.min;
-  if (span <= 0) {
-    return numericValue > 0 ? 100 : 0;
+  const maxValue = Number(range.max);
+  if (!Number.isFinite(maxValue) || maxValue <= 0) {
+    return 0;
   }
 
-  return Math.max(0, Math.min(100, ((numericValue - range.min) / span) * 100));
+  return Math.max(0, Math.min(1, numericValue / maxValue));
 }
 
-function MeasureBarCell({ value, text, range, emphasize = false }) {
-  const width = getBarPercent(value, range);
+function MeasureBarCell({ value, text, range }) {
+  const intensity = getBarIntensity(value, range);
+  const boostedIntensity = Math.min(1, Math.pow(intensity, 2.2) * 1.5);
+  const alpha = 0.015 + boostedIntensity * 0.52;
 
   return (
     <div className="relative overflow-hidden rounded-lg px-2 py-1">
       <div
-        className="absolute inset-y-1 left-1 rounded-md"
+        className="absolute inset-0 rounded-lg"
         style={{
-          width: `${width}%`,
-          background: emphasize
-            ? "linear-gradient(90deg, rgba(118,175,160,0.18), rgba(118,175,160,0.42))"
-            : "linear-gradient(90deg, rgba(118,175,160,0.10), rgba(118,175,160,0.26))",
-          transition: "width 180ms ease",
+          background: `rgba(22, 163, 74, ${alpha})`,
+          transition: "background-color 180ms ease",
         }}
       />
       <span className="relative z-[1]">{text}</span>
@@ -935,7 +934,7 @@ const PlayerRow = React.memo(function PlayerRow({
   onOpen,
   pointBarRanges,
 }) {
-  const showPointBars = selectedMeasure === "Points_prediction" && pointBarRanges;
+  const showPredictionShading = Boolean(pointBarRanges);
 
   return (
     <tr
@@ -1004,7 +1003,7 @@ const PlayerRow = React.memo(function PlayerRow({
         const cell = row.gwMeasures[gw]?.[selectedMeasure] ?? 0;
         return (
           <td key={gw} className="px-4 py-3 text-right" style={{ borderBottom: "1px solid #e2e8f0" }}>
-            {showPointBars ? (
+            {showPredictionShading ? (
               <MeasureBarCell
                 value={cell}
                 text={formatter(cell)}
@@ -1021,16 +1020,7 @@ const PlayerRow = React.memo(function PlayerRow({
         className="px-4 py-3 text-right font-semibold"
         style={{ borderBottom: "1px solid #e2e8f0", color: PALETTE.gold }}
       >
-        {showPointBars ? (
-          <MeasureBarCell
-            value={row.totalMeasure}
-            text={formatter(row.totalMeasure)}
-            range={pointBarRanges.total}
-            emphasize
-          />
-        ) : (
-          formatter(row.totalMeasure)
-        )}
+        {formatter(row.totalMeasure)}
       </td>
     </tr>
   );
@@ -1380,13 +1370,9 @@ export default function Player_analytics_rankings() {
   ]);
 
   const pointBarRanges = useMemo(() => {
-    if (selectedMeasure !== "Points_prediction") return null;
-
     const gwValues = [];
-    const totalValues = [];
 
     for (const row of filteredPlayerRows) {
-      totalValues.push(row.totalMeasure);
       for (const gw of displayedGWs) {
         gwValues.push(row.gwMeasures[gw]?.[selectedMeasure] ?? 0);
       }
@@ -1394,7 +1380,6 @@ export default function Player_analytics_rankings() {
 
     return {
       gw: getBarRange(gwValues),
-      total: getBarRange(totalValues),
     };
   }, [displayedGWs, filteredPlayerRows, selectedMeasure]);
 

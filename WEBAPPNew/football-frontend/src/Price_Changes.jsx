@@ -7,6 +7,8 @@ const SORTABLE_COLUMNS = {
   name: "Name",
   team_name: "Team",
   price_change_percent: "Price Change %",
+  projection_percent: "Projected %",
+  projection_likelihood: "Likelihood",
   price: "Price",
   is_locked: "Locked",
 };
@@ -24,6 +26,23 @@ function formatPercent(value, digits = 2) {
 function formatPrice(value) {
   if (!Number.isFinite(value)) return "0.0";
   return value.toFixed(1);
+}
+
+function likelihoodLabel(value) {
+  switch (Number(value)) {
+    case 5:
+      return "Predicted Rise";
+    case 4:
+      return "Close to rise";
+    case 3:
+      return "Unlikely to change";
+    case 2:
+      return "Close to fall";
+    case 1:
+      return "Predicted to fall";
+    default:
+      return "-";
+  }
 }
 
 function compareValues(left, right) {
@@ -169,8 +188,7 @@ export default function PriceChanges() {
               Price Changes
             </h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-cyan-50/88 sm:text-base">
-              Current price movement watchlist with player photos, sortable columns, team filtering,
-              and quick links into the player page.
+
             </p>
           </div>
 
@@ -320,6 +338,23 @@ export default function PriceChanges() {
                       ].join(" ")}
                     >
                       {formatPercent(toNumber(row.price_change_percent))}
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-slate-700">
+                      {Number.isFinite(Number(row.projection_percent))
+                        ? formatPercent(Number(row.projection_percent), 1)
+                        : "-"}
+                    </td>
+                    <td
+                      className={[
+                        "whitespace-nowrap px-4 py-3 text-sm font-medium",
+                        Number(row.projection_likelihood) >= 4
+                          ? "text-emerald-700"
+                          : Number(row.projection_likelihood) <= 2 && Number(row.projection_likelihood) > 0
+                            ? "text-rose-700"
+                            : "text-slate-700",
+                      ].join(" ")}
+                    >
+                      {likelihoodLabel(row.projection_likelihood)}
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-slate-700">
                       {formatPrice(toNumber(row.price))}

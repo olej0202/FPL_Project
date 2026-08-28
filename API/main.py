@@ -19,6 +19,7 @@ from GenerateConfig import fixtures_config,Player_picture_url,current_season
 from queue import Queue
 from threading import Thread, Lock, BoundedSemaphore
 import traceback
+import ast
 from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 import psycopg2
@@ -1070,6 +1071,36 @@ def fetch_price_changes_data() -> list[dict[str, Any]]:
             return " | ".join(scalar_parts)
         return str(value).strip()
 
+    def _projection_items(value: Any) -> list[dict[str, Any]]:
+        if value is None:
+            return []
+        if isinstance(value, dict):
+            return [value]
+        if isinstance(value, (list, tuple)):
+            items: list[dict[str, Any]] = []
+            for item in value:
+                items.extend(_projection_items(item))
+            return items
+        if isinstance(value, str):
+            text = value.strip()
+            if not text:
+                return []
+            try:
+                parsed = json.loads(text)
+            except json.JSONDecodeError:
+                try:
+                    parsed = ast.literal_eval(text)
+                except (ValueError, SyntaxError):
+                    return []
+            return _projection_items(parsed)
+        return []
+
+    def _projection_field(value: Any, field_name: str, default: Any = None) -> Any:
+        for item in _projection_items(value):
+            if field_name in item and item.get(field_name) is not None:
+                return item.get(field_name)
+        return default
+
     try:
         resp = requests.get(
             bootstrap_url,
@@ -1110,6 +1141,23 @@ def fetch_price_changes_data() -> list[dict[str, Any]]:
                 "team_short_name": team_info.get("team_short_name", ""),
                 "price_change_projections": _safe_float(player.get("price_change_projections")),
                 "price_change_projection_text": _projection_text(player.get("price_change_projections")),
+                "projection_percent": _safe_float(
+                    _projection_field(player.get("price_change_projections"), "projected_percent"),
+                    default=None,
+                ),
+                "projection_likelihood": (
+                    int(
+                        _safe_float(
+                            _projection_field(player.get("price_change_projections"), "likelihood"),
+                            default=None,
+                        )
+                    )
+                    if _safe_float(
+                        _projection_field(player.get("price_change_projections"), "likelihood"),
+                        default=None,
+                    ) is not None
+                    else None
+                ),
                 "price_change_percent": _safe_float(player.get("price_change_percent")),
                 "price": _safe_float(player.get("now_cost")) / 10.0,
                 "selected_by_percent": _safe_float(player.get("selected_by_percent")),

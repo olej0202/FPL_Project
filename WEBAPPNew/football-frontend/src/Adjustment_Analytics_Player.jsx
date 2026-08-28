@@ -521,11 +521,59 @@ function TeamColorDot({ teamName }) {
   );
 }
 
+function getBarRange(values) {
+  const finiteValues = values
+    .map((value) => Number(value))
+    .filter((value) => Number.isFinite(value));
+
+  if (finiteValues.length === 0) {
+    return { min: 0, max: 0 };
+  }
+
+  return {
+    min: Math.min(...finiteValues),
+    max: Math.max(...finiteValues),
+  };
+}
+
+function getBarIntensity(value, range) {
+  const numericValue = Number(value);
+  if (!Number.isFinite(numericValue) || !range) return 0;
+
+  const maxValue = Number(range.max);
+  if (!Number.isFinite(maxValue) || maxValue <= 0) {
+    return 0;
+  }
+
+  return Math.max(0, Math.min(1, numericValue / maxValue));
+}
+
+function MeasureBarCell({ value, text, range }) {
+  const intensity = getBarIntensity(value, range);
+  const boostedIntensity = Math.min(1, Math.pow(intensity, 2.2) * 1.5);
+  const alpha = 0.015 + boostedIntensity * 0.52;
+
+  return (
+    <div className="relative overflow-hidden rounded-lg px-2 py-1">
+      <div
+        className="absolute inset-0 rounded-lg"
+        style={{
+          background: `rgba(22, 163, 74, ${alpha})`,
+          transition: "background-color 180ms ease",
+        }}
+      />
+      <span className="relative z-[1]">{text}</span>
+    </div>
+  );
+}
+
 const PlayerRow = React.memo(function PlayerRow({
   row,
   idx,
   displayedGWs,
   onOpen,
+  selectedMeasure,
+  measureBarRange,
 }) {
   return (
     <tr
@@ -596,12 +644,18 @@ const PlayerRow = React.memo(function PlayerRow({
 
       {displayedGWs.map((gw) => {
         const cell = row.gwMeasures[gw];
-        const displayValue = cell ? cell[row.selectedMeasure] : 0;
+        const displayValue = cell ? cell[selectedMeasure] : 0;
         return (
           <td key={gw} className="px-4 py-3 text-right" style={{ borderBottom: "1px solid #e2e8f0" }}>
-            {displayValue != null && !Number.isNaN(displayValue)
-              ? Number(displayValue).toFixed(2)
-              : "0.00"}
+            <MeasureBarCell
+              value={displayValue}
+              text={
+                displayValue != null && !Number.isNaN(displayValue)
+                  ? Number(displayValue).toFixed(2)
+                  : "0.00"
+              }
+              range={measureBarRange}
+            />
           </td>
         );
       })}
@@ -1527,6 +1581,18 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
     globalMaxValue,
     sortConfig,
   ]);
+
+  const measureBarRange = useMemo(() => {
+    const gwValues = [];
+
+    for (const row of filteredPlayerRows) {
+      for (const gw of displayedGWs) {
+        gwValues.push(row.gwMeasures[gw]?.[selectedMeasure] ?? 0);
+      }
+    }
+
+    return getBarRange(gwValues);
+  }, [displayedGWs, filteredPlayerRows, selectedMeasure]);
 
   const handleSortByGW = useCallback((gw) => {
     setSortConfig((prev) => {
@@ -2620,6 +2686,8 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
                     idx={idx}
                     displayedGWs={displayedGWs}
                     onOpen={openPlayerModal}
+                    selectedMeasure={selectedMeasure}
+                    measureBarRange={measureBarRange}
                   />
                 ))}
 
