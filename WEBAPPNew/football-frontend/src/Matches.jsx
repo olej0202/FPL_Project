@@ -64,6 +64,8 @@ function TeamBadge({ name }) {
 }
 
 function PlayerTable({ title, rows, measure, onOpenPlayer }) {
+  const measureLabel = MEASURE_OPTIONS.find((opt) => opt.value === measure)?.label || measure;
+
   return (
     <div className="rounded-3xl border border-slate-200 bg-white shadow-sm">
       <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
@@ -77,10 +79,7 @@ function PlayerTable({ title, rows, measure, onOpenPlayer }) {
             <tr>
               <th className="px-4 py-3 text-left">Name</th>
               <th className="px-4 py-3 text-right">Min</th>
-              <th className="px-4 py-3 text-right">Pts</th>
-              <th className="px-4 py-3 text-right">
-                {MEASURE_OPTIONS.find((opt) => opt.value === measure)?.label || measure}
-              </th>
+              <th className="px-4 py-3 text-right">{measureLabel}</th>
             </tr>
           </thead>
           <tbody>
@@ -96,13 +95,12 @@ function PlayerTable({ title, rows, measure, onOpenPlayer }) {
                   </button>
                 </td>
                 <td className="px-4 py-3 text-right text-slate-600">{toNumber(row.minutes)}</td>
-                <td className="px-4 py-3 text-right text-slate-600">{formatMeasure(row.total_points)}</td>
                 <td className="px-4 py-3 text-right font-semibold text-slate-900">{formatMeasure(row[measure])}</td>
               </tr>
             ))}
             {rows.length === 0 ? (
               <tr>
-                <td colSpan={4} className="px-4 py-6 text-center text-sm text-slate-500">
+                <td colSpan={3} className="px-4 py-6 text-center text-sm text-slate-500">
                   No players in this group.
                 </td>
               </tr>
