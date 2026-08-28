@@ -24,6 +24,7 @@ HOST = "127.0.0.1"
 PORT = 8765
 CSV_PATH = Path(__file__).resolve().parent / "GenerateXmins2.csv"
 BACKUP_PATH = CSV_PATH.with_name(f"{CSV_PATH.stem}.backup{CSV_PATH.suffix}")
+SNAPSHOT_PATH = CSV_PATH.with_name(f"{CSV_PATH.stem}.weekly_snapshot.json")
 
 
 HTML_PAGE = """<!DOCTYPE html>
@@ -142,6 +143,13 @@ HTML_PAGE = """<!DOCTYPE html>
       border-color: var(--line);
     }
 
+    .mini-btn {
+      min-height: 30px;
+      padding: 5px 10px;
+      font-size: 12px;
+      border-radius: 999px;
+    }
+
     .statusbar {
       margin-top: 16px;
       display: flex;
@@ -219,6 +227,38 @@ HTML_PAGE = """<!DOCTYPE html>
       border-color: #d3a92f;
     }
 
+    .cell-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .cell-meta {
+      font-size: 11px;
+      line-height: 1.2;
+      color: var(--muted);
+      min-height: 14px;
+      white-space: nowrap;
+    }
+
+    .name-cell {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      align-items: flex-start;
+    }
+
+    .name-title {
+      font-weight: 700;
+    }
+
+    .row-actions {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
     .empty {
       padding: 32px;
       text-align: center;
@@ -250,6 +290,14 @@ HTML_PAGE = """<!DOCTYPE html>
       </div>
 
       <div class="field">
+        <button id="apply-current-team-btn" class="secondary">Use Current Team</button>
+      </div>
+
+      <div class="field">
+        <button id="apply-last-team-btn" class="secondary">Use Last Week Team</button>
+      </div>
+
+      <div class="field">
         <button id="save-btn" class="primary" disabled>Save Changes</button>
       </div>
     </section>
@@ -257,6 +305,7 @@ HTML_PAGE = """<!DOCTYPE html>
     <div class="statusbar">
       <span id="status-text">Loading...</span>
       <span id="dirty-count">0 pending edits</span>
+      <span id="snapshot-text">No saved weekly edit yet.</span>
     </div>
 
     <section class="table-wrap">
@@ -272,6 +321,7 @@ HTML_PAGE = """<!DOCTYPE html>
       gws: [],
       dirty: new Map(),
       nameFilter: "",
+      snapshotLabel: "No saved weekly edit yet.",
     };
 
     function setStatus(message) {
@@ -282,6 +332,17 @@ HTML_PAGE = """<!DOCTYPE html>
       const count = state.dirty.size;
       document.getElementById("dirty-count").textContent = `${count} pending edit${count === 1 ? "" : "s"}`;
       document.getElementById("save-btn").disabled = count === 0;
+    }
+
+    function updateSnapshotText() {
+      document.getElementById("snapshot-text").textContent = state.snapshotLabel;
+    }
+
+    function updateTeamButtons() {
+      const hasRows = state.rows.length > 0;
+      const hasLastWeek = state.rows.some(row => row.last_week_available);
+      document.getElementById("apply-current-team-btn").disabled = !hasRows;
+      document.getElementById("apply-last-team-btn").disabled = !hasLastWeek;
     }
 
     async function fetchJson(url, options = {}) {
@@ -296,6 +357,8 @@ HTML_PAGE = """<!DOCTYPE html>
     async function loadMeta() {
       const meta = await fetchJson("/api/meta");
       state.meta = meta;
+      state.snapshotLabel = meta.snapshot?.label || "No saved weekly edit yet.";
+      updateSnapshotText();
       const teamSelect = document.getElementById("team-select");
       teamSelect.innerHTML = "";
       for (const team of meta.teams) {
@@ -318,7 +381,68 @@ HTML_PAGE = """<!DOCTYPE html>
       state.rows = payload.rows;
       state.gws = payload.gws;
       renderTable();
+      updateTeamButtons();
       setStatus(`Loaded team ${state.currentTeam}.`);
+    }
+
+    function applyCellValue(row, gw, targetValue) {
+      const key = `${state.currentTeam}||${row.name}||${gw}`;
+      const baseValue = row.values[gw];
+      if (targetValue === null || targetValue === undefined || targetValue === "" || Number(targetValue) === Number(baseValue)) {
+        state.dirty.delete(key);
+        return;
+      }
+      state.dirty.set(key, Number(targetValue));
+    }
+
+    function applyRowSource(row, source) {
+      for (const gw of state.gws) {
+        const key = `${state.currentTeam}||${row.name}||${gw}`;
+        if (source === "current") {
+          state.dirty.delete(key);
+          continue;
+        }
+
+        const shiftedValue = row.last_week_values?.[gw];
+        if (shiftedValue === null || shiftedValue === undefined) {
+          state.dirty.delete(key);
+          continue;
+        }
+        applyCellValue(row, gw, shiftedValue);
+      }
+
+      renderTable();
+      setStatus(
+        source === "current"
+          ? `Kept current xmins values for ${row.name}.`
+          : `Applied shifted last-week edit for ${row.name}.`
+      );
+    }
+
+    function applyTeamSource(source) {
+      for (const row of state.rows) {
+        for (const gw of state.gws) {
+          const key = `${state.currentTeam}||${row.name}||${gw}`;
+          if (source === "current") {
+            state.dirty.delete(key);
+            continue;
+          }
+
+          const shiftedValue = row.last_week_values?.[gw];
+          if (shiftedValue === null || shiftedValue === undefined) {
+            state.dirty.delete(key);
+            continue;
+          }
+          applyCellValue(row, gw, shiftedValue);
+        }
+      }
+
+      renderTable();
+      setStatus(
+        source === "current"
+          ? `Kept current xmins values for all players in team ${state.currentTeam}.`
+          : `Applied shifted last-week edit for team ${state.currentTeam}.`
+      );
     }
 
     function renderTable() {
@@ -353,11 +477,40 @@ HTML_PAGE = """<!DOCTYPE html>
         const tr = document.createElement("tr");
 
         const nameTd = document.createElement("td");
-        nameTd.textContent = row.name;
+        const nameWrap = document.createElement("div");
+        nameWrap.className = "name-cell";
+
+        const nameTitle = document.createElement("div");
+        nameTitle.className = "name-title";
+        nameTitle.textContent = row.name;
+        nameWrap.appendChild(nameTitle);
+
+        const rowActions = document.createElement("div");
+        rowActions.className = "row-actions";
+
+        const currentBtn = document.createElement("button");
+        currentBtn.type = "button";
+        currentBtn.className = "secondary mini-btn";
+        currentBtn.textContent = "Use current";
+        currentBtn.addEventListener("click", () => applyRowSource(row, "current"));
+        rowActions.appendChild(currentBtn);
+
+        const lastWeekBtn = document.createElement("button");
+        lastWeekBtn.type = "button";
+        lastWeekBtn.className = "secondary mini-btn";
+        lastWeekBtn.textContent = "Use last week";
+        lastWeekBtn.disabled = !row.last_week_available;
+        lastWeekBtn.addEventListener("click", () => applyRowSource(row, "lastWeek"));
+        rowActions.appendChild(lastWeekBtn);
+
+        nameWrap.appendChild(rowActions);
+        nameTd.appendChild(nameWrap);
         tr.appendChild(nameTd);
 
         for (const gw of state.gws) {
           const td = document.createElement("td");
+          const stack = document.createElement("div");
+          stack.className = "cell-stack";
           const input = document.createElement("input");
           input.type = "number";
           input.step = "0.01";
@@ -381,7 +534,19 @@ HTML_PAGE = """<!DOCTYPE html>
             }
             updateDirtyCount();
           });
-          td.appendChild(input);
+
+          const meta = document.createElement("div");
+          meta.className = "cell-meta";
+          const lastWeekValue = row.last_week_values?.[gw];
+          if (lastWeekValue !== null && lastWeekValue !== undefined) {
+            meta.textContent = `Last: ${lastWeekValue}`;
+          } else {
+            meta.textContent = "";
+          }
+
+          stack.appendChild(input);
+          stack.appendChild(meta);
+          td.appendChild(stack);
           tr.appendChild(td);
         }
 
@@ -410,6 +575,7 @@ HTML_PAGE = """<!DOCTYPE html>
 
       state.dirty.clear();
       updateDirtyCount();
+      await loadMeta();
       await loadTable();
       setStatus("Saved changes to GenerateXmins2.csv.");
     }
@@ -443,6 +609,8 @@ HTML_PAGE = """<!DOCTYPE html>
     });
 
     document.getElementById("save-btn").addEventListener("click", saveChanges);
+    document.getElementById("apply-current-team-btn").addEventListener("click", () => applyTeamSource("current"));
+    document.getElementById("apply-last-team-btn").addEventListener("click", () => applyTeamSource("lastWeek"));
 
     initialize();
   </script>
@@ -473,6 +641,68 @@ def load_csv() -> pd.DataFrame:
     return df
 
 
+def save_weekly_snapshot(df: pd.DataFrame) -> None:
+    snapshot_df = df[["team_code", "name", "GW", "Final_minutes_Adjusted"]].copy()
+    snapshot_df = snapshot_df.dropna(subset=["GW"]).copy()
+    snapshot_df["team_code"] = snapshot_df["team_code"].astype(str)
+    snapshot_df["name"] = snapshot_df["name"].astype(str)
+    snapshot_df["GW"] = pd.to_numeric(snapshot_df["GW"], errors="coerce")
+    snapshot_df["Final_minutes_Adjusted"] = pd.to_numeric(
+        snapshot_df["Final_minutes_Adjusted"],
+        errors="coerce",
+    )
+    snapshot_df = snapshot_df.dropna(subset=["GW", "Final_minutes_Adjusted"]).copy()
+    snapshot_df["GW"] = snapshot_df["GW"].astype(int)
+
+    payload = {
+        "generated_at": datetime.now().isoformat(timespec="seconds"),
+        "csv_name": CSV_PATH.name,
+        "rows": [
+            {
+                "team_code": row["team_code"],
+                "name": row["name"],
+                "GW": int(row["GW"]),
+                "Final_minutes_Adjusted": round(float(row["Final_minutes_Adjusted"]), 6),
+            }
+            for _, row in snapshot_df.iterrows()
+        ],
+    }
+    SNAPSHOT_PATH.write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+
+
+def load_shifted_snapshot() -> tuple[dict[tuple[str, str, str], float], dict[str, Any] | None]:
+    if not SNAPSHOT_PATH.exists():
+        return {}, None
+
+    payload = json.loads(SNAPSHOT_PATH.read_text(encoding="utf-8"))
+    shifted: dict[tuple[str, str, str], float] = {}
+    for row in payload.get("rows", []):
+        gw = pd.to_numeric(row.get("GW"), errors="coerce")
+        value = pd.to_numeric(row.get("Final_minutes_Adjusted"), errors="coerce")
+        if pd.isna(gw) or pd.isna(value):
+            continue
+
+        shifted_key = (
+            str(row.get("team_code", "")),
+            str(row.get("name", "")),
+            str(int(gw) + 1),
+        )
+        shifted[shifted_key] = round(float(value), 6)
+
+    return shifted, {
+        "generated_at": payload.get("generated_at"),
+        "label": (
+            f"Last week edit loaded from {payload.get('generated_at')} "
+            f"and shifted +1 GW."
+            if payload.get("generated_at")
+            else "Last week edit loaded and shifted +1 GW."
+        ),
+    }
+
+
 def build_meta(df: pd.DataFrame) -> dict[str, Any]:
     grouped = (
         df.dropna(subset=["GW"])
@@ -483,16 +713,23 @@ def build_meta(df: pd.DataFrame) -> dict[str, Any]:
     )
     return {
         "teams": grouped.to_dict(orient="records"),
+        "snapshot": load_shifted_snapshot()[1],
     }
 
 
 def build_pivot(df: pd.DataFrame, team_code: str) -> dict[str, Any]:
+    shifted_snapshot, snapshot_meta = load_shifted_snapshot()
     filtered = df[df["team_code"] == str(team_code)].copy()
     filtered = filtered.dropna(subset=["GW"]).copy()
     filtered["GW"] = filtered["GW"].astype(int)
 
     if filtered.empty:
-        return {"team_code": str(team_code), "gws": [], "rows": []}
+        return {
+            "team_code": str(team_code),
+            "gws": [],
+            "rows": [],
+            "snapshot": snapshot_meta,
+        }
 
     gws = sorted(filtered["GW"].unique().tolist())
     pivot = (
@@ -509,15 +746,30 @@ def build_pivot(df: pd.DataFrame, team_code: str) -> dict[str, Any]:
     rows: list[dict[str, Any]] = []
     for player_name, row in pivot.iterrows():
         values = {}
+        last_week_values = {}
         for gw in gws:
             val = row.get(gw)
             values[str(gw)] = None if pd.isna(val) else round(float(val), 6)
-        rows.append({"name": str(player_name), "values": values})
+            last_week_values[str(gw)] = shifted_snapshot.get(
+                (str(team_code), str(player_name), str(gw))
+            )
+
+        rows.append(
+            {
+                "name": str(player_name),
+                "values": values,
+                "last_week_values": last_week_values,
+                "last_week_available": any(
+                    value is not None for value in last_week_values.values()
+                ),
+            }
+        )
 
     return {
         "team_code": str(team_code),
         "gws": [str(gw) for gw in gws],
         "rows": rows,
+        "snapshot": snapshot_meta,
     }
 
 
@@ -547,6 +799,7 @@ def save_changes(changes: list[dict[str, Any]]) -> dict[str, Any]:
             updated += int(mask.sum())
 
     df.to_csv(CSV_PATH, index=False)
+    save_weekly_snapshot(df)
 
     removed_legacy_backups = 0
     for legacy_backup in CSV_PATH.parent.glob(f"{CSV_PATH.stem}.backup_*.csv"):

@@ -29,6 +29,7 @@ export const SITE_AVAILABILITY = {
   statisticalModelSimulator: true,
 
   news: true,
+  priceChanges: true,
 };
 
 export const isSiteAvailable = (siteKey) => SITE_AVAILABILITY[siteKey] !== false;

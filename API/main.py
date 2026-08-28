@@ -1028,6 +1028,65 @@ def _verify_google_credential(id_token: str) -> dict:
     return payload
 
 
+def fetch_price_changes_data() -> list[dict[str, Any]]:
+    bootstrap_url = "https://fantasy.premierleague.com/api/bootstrap-static/"
+
+    try:
+        resp = requests.get(
+            bootstrap_url,
+            timeout=30,
+            headers={"User-Agent": "Mozilla/5.0"},
+        )
+        resp.raise_for_status()
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Failed to fetch FPL bootstrap data: {exc}")
+
+    payload = resp.json()
+    team_lookup = {
+        int(team.get("id")): {
+            "team_name": str(team.get("name") or ""),
+            "team_short_name": str(team.get("short_name") or ""),
+        }
+        for team in payload.get("teams", [])
+        if team.get("id") is not None
+    }
+
+    generated_at = datetime.now(timezone.utc).isoformat()
+    rows: list[dict[str, Any]] = []
+    for player in payload.get("elements", []):
+        team_id = int(player.get("team") or 0)
+        team_info = team_lookup.get(team_id, {})
+        code = player.get("code")
+        first_name = str(player.get("first_name") or "").strip()
+        second_name = str(player.get("second_name") or "").strip()
+        full_name = "_".join(part for part in [first_name, second_name] if part)
+
+        rows.append(
+            {
+                "id": player.get("id"),
+                "code": code,
+                "name": str(player.get("web_name") or ""),
+                "full_name": full_name,
+                "team_name": team_info.get("team_name", ""),
+                "team_short_name": team_info.get("team_short_name", ""),
+                "price_change_projections": float(player.get("price_change_projections") or 0.0),
+                "price_change_percent": float(player.get("price_change_percent") or 0.0),
+                "price": float(player.get("now_cost") or 0.0) / 10.0,
+                "selected_by_percent": float(player.get("selected_by_percent") or 0.0),
+                "price_change_locked_until": player.get("price_change_locked_until"),
+                "is_locked": bool(player.get("price_change_locked_until")),
+                "photo": (
+                    f"https://resources.premierleague.com/premierleague25/photos/players/500x500/{code}.png"
+                    if code
+                    else ""
+                ),
+                "generated_at": generated_at,
+            }
+        )
+
+    return rows
+
+
 def _upsert_google_user(google_payload: dict) -> dict:
     google_sub = str(google_payload.get("sub", "")).strip()
     if not google_sub:
@@ -1605,6 +1664,10 @@ def get_data():
 def get_data():
     df = load_and_transform("Team_result_adjust")
     return _json_safe_records(df, fill_value=0)
+
+@app.get("/Price_Changes")
+def get_price_changes():
+    return fetch_price_changes_data()
 
 @app.get("/wildcard")
 def get_data():

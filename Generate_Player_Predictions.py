@@ -2045,6 +2045,7 @@ def Generate_point_predictions(GW_list):
             calculated_BPS=("calculated_BPS", "mean"),
             GC_penalty=("GC_penalty", "mean"),
             Fantasy_points=("Fantasy_points", "mean"),
+            STD_Fantasy_points=("Fantasy_points", "std"),
             Clean_sheets=("CS", "mean"),
             Over_2=("GC_2", "mean"),
             Over_4=("GC_4", "mean")
@@ -2055,6 +2056,7 @@ def Generate_point_predictions(GW_list):
             by=["fix_id", "name"]
         )
     )
+    
 
     fixture_gw_map = (
         players[["GW", "fix_id"]]
@@ -2077,6 +2079,14 @@ def Generate_point_predictions(GW_list):
         fixture_gw_map,
         on="fix_id",
         how="left",
+    )
+    
+    std_min = stat_simulation["STD_Fantasy_points"].min()
+    std_max = stat_simulation["STD_Fantasy_points"].max()
+
+    stat_simulation["STD_MINMAX"] = (
+        (stat_simulation["STD_Fantasy_points"] - std_min)
+        / (std_max - std_min)
     )
 
     stat_simulation.to_csv(
