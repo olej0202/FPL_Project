@@ -1031,6 +1031,28 @@ def _verify_google_credential(id_token: str) -> dict:
 def fetch_price_changes_data() -> list[dict[str, Any]]:
     bootstrap_url = "https://fantasy.premierleague.com/api/bootstrap-static/"
 
+    def _safe_float(value: Any, default: float = 0.0) -> float:
+        if value is None:
+            return default
+        if isinstance(value, (list, tuple)):
+            for item in value:
+                parsed = _safe_float(item, default=None)
+                if parsed is not None:
+                    return parsed
+            return default
+        if isinstance(value, str):
+            cleaned = value.strip().replace("%", "").replace(",", "")
+            if cleaned == "":
+                return default
+            try:
+                return float(cleaned)
+            except ValueError:
+                return default
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return default
+
     try:
         resp = requests.get(
             bootstrap_url,
@@ -1069,10 +1091,10 @@ def fetch_price_changes_data() -> list[dict[str, Any]]:
                 "full_name": full_name,
                 "team_name": team_info.get("team_name", ""),
                 "team_short_name": team_info.get("team_short_name", ""),
-                "price_change_projections": float(player.get("price_change_projections") or 0.0),
-                "price_change_percent": float(player.get("price_change_percent") or 0.0),
-                "price": float(player.get("now_cost") or 0.0) / 10.0,
-                "selected_by_percent": float(player.get("selected_by_percent") or 0.0),
+                "price_change_projections": _safe_float(player.get("price_change_projections")),
+                "price_change_percent": _safe_float(player.get("price_change_percent")),
+                "price": _safe_float(player.get("now_cost")) / 10.0,
+                "selected_by_percent": _safe_float(player.get("selected_by_percent")),
                 "price_change_locked_until": player.get("price_change_locked_until"),
                 "is_locked": bool(player.get("price_change_locked_until")),
                 "photo": (
@@ -1667,7 +1689,24 @@ def get_data():
 
 @app.get("/Price_Changes")
 def get_price_changes():
-    return fetch_price_changes_data()
+    try:
+        rows = fetch_price_changes_data()
+        return JSONResponse(
+            content=rows,
+            headers={"Access-Control-Allow-Origin": "*"},
+        )
+    except HTTPException as exc:
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={"detail": exc.detail},
+            headers={"Access-Control-Allow-Origin": "*"},
+        )
+    except Exception as exc:
+        return JSONResponse(
+            status_code=500,
+            content={"detail": str(exc)},
+            headers={"Access-Control-Allow-Origin": "*"},
+        )
 
 @app.get("/wildcard")
 def get_data():
