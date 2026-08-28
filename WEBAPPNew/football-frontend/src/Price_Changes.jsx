@@ -34,14 +34,12 @@ function likelihoodLabel(value) {
       return "Predicted Rise";
     case 4:
       return "Close to rise";
-    case 3:
-      return "Unlikely to change";
-    case 2:
+    case -4:
       return "Close to fall";
-    case 1:
+    case -5:
       return "Predicted to fall";
     default:
-      return "-";
+      return "Unlikely to change";
   }
 }
 
@@ -349,7 +347,7 @@ export default function PriceChanges() {
                         "whitespace-nowrap px-4 py-3 text-sm font-medium",
                         Number(row.projection_likelihood) >= 4
                           ? "text-emerald-700"
-                          : Number(row.projection_likelihood) <= 2 && Number(row.projection_likelihood) > 0
+                          : Number(row.projection_likelihood) <= -4
                             ? "text-rose-700"
                             : "text-slate-700",
                       ].join(" ")}
