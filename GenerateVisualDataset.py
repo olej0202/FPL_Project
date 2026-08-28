@@ -3,6 +3,7 @@ import joblib
 import numpy as np
 from scipy.stats import poisson
 from GenerateConfig import Player_picture_url,PLAYER_NAME_MAP,Understat_Team_MAP
+from pathlib import Path
 
 
 def canonicalize_team_name(value):
@@ -311,6 +312,255 @@ def Generate_season_data(current_player_path, current_season_path):
     season_with_teams.to_csv("Season_analysis.csv")
 
 
+def Generate_matches_dataset(current_teams_path, current_player_path, current_season_path):
+    season_df = pd.read_csv(current_season_path)
+    if season_df.columns[0].startswith("Unnamed"):
+        season_df = season_df.iloc[:, 1:]
+
+    players_current = pd.read_csv(current_player_path)
+    if players_current.columns[0].startswith("Unnamed"):
+        players_current = players_current.iloc[:, 1:]
+
+    teams_df = pd.read_csv(current_teams_path)
+    if teams_df.columns[0].startswith("Unnamed"):
+        teams_df = teams_df.iloc[:, 1:]
+
+    name_map = PLAYER_NAME_MAP
+    season_df["Full_Name"] = season_df["Full_Name"].apply(lambda n: name_map.get(n, n))
+
+    player_lookup_cols = [
+        "name",
+        "web_name",
+        "photo",
+        "team_code",
+        "id",
+        "code",
+    ]
+    player_lookup_cols = [col for col in player_lookup_cols if col in players_current.columns]
+    player_lookup = (
+        players_current[player_lookup_cols]
+        .drop_duplicates(subset=["code"])
+        .rename(columns={
+            "id": "player_id",
+            "code": "player_code",
+            "team_code": "current_team_code",
+            "name": "current_full_name",
+        })
+    )
+
+    merged = season_df.merge(
+        player_lookup,
+        left_on="code_x",
+        right_on="player_code",
+        how="left",
+        suffixes=("", "_current"),
+    )
+
+    missing_web_name_mask = merged["web_name"].isna() if "web_name" in merged.columns else pd.Series(False, index=merged.index)
+    if missing_web_name_mask.any():
+        name_lookup = (
+            players_current[[col for col in ["name", "web_name", "photo", "team_code", "id", "code"] if col in players_current.columns]]
+            .drop_duplicates(subset=["name"])
+            .rename(columns={
+                "id": "player_id_name_fallback",
+                "code": "player_code_name_fallback",
+                "team_code": "current_team_code_name_fallback",
+                "photo": "photo_name_fallback",
+                "web_name": "web_name_name_fallback",
+            })
+        )
+        fallback_merge = season_df.loc[missing_web_name_mask, ["Full_Name"]].merge(
+            name_lookup,
+            left_on="Full_Name",
+            right_on="name",
+            how="left",
+        )
+        merged.loc[missing_web_name_mask, "web_name"] = fallback_merge["web_name_name_fallback"].values
+        merged.loc[missing_web_name_mask, "photo"] = fallback_merge["photo_name_fallback"].values
+        merged.loc[missing_web_name_mask, "current_team_code"] = fallback_merge["current_team_code_name_fallback"].values
+        merged.loc[missing_web_name_mask, "player_id"] = fallback_merge["player_id_name_fallback"].values
+        merged.loc[missing_web_name_mask, "player_code"] = fallback_merge["player_code_name_fallback"].values
+
+    merged["minutes"] = pd.to_numeric(merged["minutes"], errors="coerce").fillna(0.0)
+    merged["Fix_ID"] = pd.to_numeric(merged["fixture"], errors="coerce").astype("Int64")
+    merged["GW"] = pd.to_numeric(merged["round"], errors="coerce").astype("Int64")
+    merged["Started"] = (merged["minutes"] > 60).astype(int)
+    merged["Sub"] = ((merged["minutes"] >= 1) & (merged["minutes"] <= 59)).astype(int)
+
+    merged["DisplayName"] = merged["web_name"].fillna(merged["Full_Name"])
+
+    output_columns = {
+        "DisplayName": "Name",
+        "Full_Name": "Full_Name",
+        "Fix_ID": "Fix_ID",
+        "GW": "GW",
+        "team_name": "TeamName",
+        "minutes": "minutes",
+        "goals_scored": "goals_scored",
+        "total_points": "total_points",
+        "saves": "saves",
+        "assists": "assists",
+        "yellow_cards": "yellow_cards",
+        "red_cards": "red_cards",
+        "bonus": "bonus",
+        "bps": "bps",
+        "defensive_contribution": "defensive_contribution",
+        "expected_goals": "expected_goals",
+        "expected_assists": "expected_assists",
+        "position": "position",
+        "Started": "Started",
+        "Sub": "Sub",
+        "photo": "photo",
+        "opponent_name": "OpponentName",
+        "was_home": "was_home",
+        "current_team_code": "TeamCode",
+        "player_id": "PlayerID",
+        "player_code": "PlayerCode",
+    }
+
+    for column in output_columns:
+        if column not in merged.columns:
+            merged[column] = np.nan
+
+    matches = merged[list(output_columns.keys())].rename(columns=output_columns)
+
+    numeric_cols = [
+        "Fix_ID",
+        "GW",
+        "minutes",
+        "goals_scored",
+        "total_points",
+        "saves",
+        "assists",
+        "yellow_cards",
+        "red_cards",
+        "bonus",
+        "bps",
+        "defensive_contribution",
+        "expected_goals",
+        "expected_assists",
+        "Started",
+        "Sub",
+        "TeamCode",
+        "PlayerID",
+        "PlayerCode",
+    ]
+    for col in numeric_cols:
+        matches[col] = pd.to_numeric(matches[col], errors="coerce")
+
+    matches["TeamName"] = matches["TeamName"].fillna("")
+    matches["OpponentName"] = matches["OpponentName"].fillna("")
+    matches["position"] = matches["position"].fillna("")
+    matches["Name"] = matches["Name"].fillna(matches["Full_Name"])
+    matches["photo"] = matches["photo"].fillna("")
+    matches["was_home"] = matches["was_home"].fillna(False).astype(bool)
+    matches = matches.sort_values(["GW", "Fix_ID", "TeamName", "Started", "minutes", "Name"], ascending=[True, True, True, False, False, True])
+    matches.to_csv("Matches.csv", index=False)
+
+    fixture_path = None
+    season_path_obj = Path(current_season_path)
+    if season_path_obj.name.endswith("_data.csv"):
+        candidate = season_path_obj.with_name(season_path_obj.name.replace("_data.csv", "_Fixtures.csv"))
+        if candidate.exists():
+            fixture_path = candidate
+
+    team_lookup = (
+        teams_df[["id", "code", "name", "short_name"]]
+        .drop_duplicates(subset=["id"])
+        .rename(columns={
+            "id": "team_id",
+            "code": "team_code",
+            "name": "team_name_lookup",
+            "short_name": "team_short_name",
+        })
+    )
+
+    if fixture_path is not None:
+        fixtures_df = pd.read_csv(fixture_path)
+        if fixtures_df.columns[0].startswith("Unnamed"):
+            fixtures_df = fixtures_df.iloc[:, 1:]
+
+        summary = fixtures_df.rename(columns={"code": "Fix_ID", "event": "GW"})
+        summary["Fix_ID"] = pd.to_numeric(summary["Fix_ID"], errors="coerce").astype("Int64")
+        summary["GW"] = pd.to_numeric(summary["GW"], errors="coerce").astype("Int64")
+        summary = summary.merge(
+            team_lookup.rename(columns={
+                "team_id": "team_h",
+                "team_code": "HomeTeamCode",
+                "team_name_lookup": "HomeTeam",
+                "team_short_name": "HomeShortName",
+            }),
+            on="team_h",
+            how="left",
+        )
+        summary = summary.merge(
+            team_lookup.rename(columns={
+                "team_id": "team_a",
+                "team_code": "AwayTeamCode",
+                "team_name_lookup": "AwayTeam",
+                "team_short_name": "AwayShortName",
+            }),
+            on="team_a",
+            how="left",
+        )
+        summary = summary[[
+            "Fix_ID",
+            "GW",
+            "kickoff_time",
+            "started",
+            "finished",
+            "team_h_score",
+            "team_a_score",
+            "HomeTeam",
+            "AwayTeam",
+            "HomeTeamCode",
+            "AwayTeamCode",
+            "HomeShortName",
+            "AwayShortName",
+        ]].copy()
+    else:
+        match_core = matches.dropna(subset=["Fix_ID", "GW"]).copy()
+        home_rows = match_core[match_core["was_home"] == True].sort_values(["Fix_ID", "minutes"], ascending=[True, False])
+        away_rows = match_core[match_core["was_home"] == False].sort_values(["Fix_ID", "minutes"], ascending=[True, False])
+        home_lookup = (
+            home_rows.drop_duplicates(subset=["Fix_ID"])[["Fix_ID", "GW", "TeamName", "TeamCode"]]
+            .rename(columns={"TeamName": "HomeTeam", "TeamCode": "HomeTeamCode"})
+        )
+        away_lookup = (
+            away_rows.drop_duplicates(subset=["Fix_ID"])[["Fix_ID", "TeamName", "TeamCode"]]
+            .rename(columns={"TeamName": "AwayTeam", "TeamCode": "AwayTeamCode"})
+        )
+        summary = home_lookup.merge(away_lookup, on="Fix_ID", how="outer")
+        summary["kickoff_time"] = pd.NaT
+        summary["started"] = np.nan
+        summary["finished"] = np.nan
+        summary["team_h_score"] = np.nan
+        summary["team_a_score"] = np.nan
+        code_to_short = team_lookup.set_index("team_code")["team_short_name"].to_dict()
+        summary["HomeShortName"] = summary["HomeTeamCode"].map(code_to_short)
+        summary["AwayShortName"] = summary["AwayTeamCode"].map(code_to_short)
+        summary = summary[[
+            "Fix_ID",
+            "GW",
+            "kickoff_time",
+            "started",
+            "finished",
+            "team_h_score",
+            "team_a_score",
+            "HomeTeam",
+            "AwayTeam",
+            "HomeTeamCode",
+            "AwayTeamCode",
+            "HomeShortName",
+            "AwayShortName",
+        ]].copy()
+
+    summary["Fix_ID"] = pd.to_numeric(summary["Fix_ID"], errors="coerce").astype("Int64")
+    summary["GW"] = pd.to_numeric(summary["GW"], errors="coerce").astype("Int64")
+    summary = summary.sort_values(["GW", "Fix_ID"]).reset_index(drop=True)
+    summary.to_csv("Matches_Fixtures.csv", index=False)
+
+
 def Generate_Team_Adjustments():
     df = pd.read_csv("Team_prediction.csv").iloc[:, 2:]
 
@@ -615,6 +865,7 @@ def Generate_ALL_datasets(current_teams,current_player_path,current_season_path)
     Generate_Player_Historical()
     Generate_Player_Rankings(current_teams)
     Generate_Lineups()
+    Generate_matches_dataset(current_teams, current_player_path, current_season_path)
     Visual_Teams_history()
     Generate_season_data(current_player_path, current_season_path)
     Generate_Team_Adjustments()

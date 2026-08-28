@@ -912,6 +912,10 @@ def load_and_transform(endpoint):
         csv_path = os.path.join(parent_dir, "Visual_adjust_Team_results.csv") 
     elif endpoint=="Player_result_adjust":
         csv_path=os.path.join(parent_dir,"Player_Adjusted_data.csv")
+    elif endpoint=="Matches":
+        csv_path=os.path.join(parent_dir,"Matches.csv")
+    elif endpoint=="Matches_Fixtures":
+        csv_path=os.path.join(parent_dir,"Matches_Fixtures.csv")
         
     elif endpoint=="Table_Prediction":
         csv_path=os.path.join(parent_dir,"Final_Table_Prediction_All_GW.csv")
@@ -922,7 +926,7 @@ def load_and_transform(endpoint):
         raise ValueError(f"Unknown endpoint: {endpoint}")
         
     # Load the CSV
-    if endpoint in ["Team_Threat","Table_Prediction","Player_rankings"] :
+    if endpoint in ["Team_Threat","Table_Prediction","Player_rankings", "Matches", "Matches_Fixtures"] :
         df = pd.read_csv(csv_path)
 
     
@@ -1721,6 +1725,18 @@ def get_price_changes():
             content={"detail": str(exc)},
             headers={"Access-Control-Allow-Origin": "*"},
         )
+
+@app.get("/Matches_Fixtures")
+def get_matches_fixtures():
+    df = load_and_transform("Matches_Fixtures")
+    return _json_safe_records(df, fill_value=0)
+
+@app.get("/Matches")
+def get_matches(fix_id: int = Query(..., title="Fixture id")):
+    df = load_and_transform("Matches")
+    df["Fix_ID"] = pd.to_numeric(df["Fix_ID"], errors="coerce")
+    filtered = df[df["Fix_ID"] == fix_id].copy()
+    return _json_safe_records(filtered, fill_value=0)
 
 @app.get("/wildcard")
 def get_data():

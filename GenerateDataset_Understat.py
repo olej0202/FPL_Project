@@ -773,8 +773,6 @@ def Generate_Understat_dataset(current_players, run_player_pos):
                  .reset_index(drop=True)
     )
 
-    # flatten newly promoted teams
-    teams_to_flatten = NEW_TEAMS_NAME
     cols_to_avg = [
         "XGIndex", "XAIndex",
         "Rolling_XG_Share", "Rolling_XA_Share",
@@ -782,9 +780,41 @@ def Generate_Understat_dataset(current_players, run_player_pos):
         "Rolling_Shots_Share", "Rolling_KeyPasses_Share",
     ]
 
-    mask = latest["player_team"].isin(teams_to_flatten)
-    pos_group_means = latest.groupby("pos_group")[cols_to_avg].transform("mean")
-    latest.loc[mask, cols_to_avg] = pos_group_means.loc[mask, cols_to_avg]
+    history_counts = (
+        agg_enriched
+        .dropna(subset=["player_team", "pos_group", "date"])
+        .groupby(["player_team", "pos_group"])
+        .size()
+        .rename("history_len")
+        .reset_index()
+    )
+    latest = latest.merge(history_counts, on=["player_team", "pos_group"], how="left")
+    latest["history_len"] = pd.to_numeric(latest["history_len"], errors="coerce").fillna(0.0)
+    latest["_own_weight"] = (latest["history_len"] / 10.0).clip(lower=0.0, upper=1.0)
+
+    for col in cols_to_avg:
+        latest[col] = pd.to_numeric(latest[col], errors="coerce")
+
+    for pos_group_value in latest["pos_group"].dropna().unique():
+        pos_mask = latest["pos_group"] == pos_group_value
+        pos_rows = latest.loc[pos_mask].copy()
+        if pos_rows.empty:
+            continue
+
+        league_pos_mean = pos_rows[cols_to_avg].mean(numeric_only=True)
+
+        for idx, row in pos_rows.iterrows():
+            own_weight = float(row["_own_weight"])
+            other_rows = pos_rows[pos_rows["player_team"] != row["player_team"]]
+            other_mean = other_rows[cols_to_avg].mean(numeric_only=True) if not other_rows.empty else league_pos_mean
+            blend_target = other_mean.where(other_mean.notna(), league_pos_mean)
+            own_values = pd.to_numeric(row[cols_to_avg], errors="coerce")
+            latest.loc[idx, cols_to_avg] = (
+                own_weight * own_values
+                + (1.0 - own_weight) * blend_target
+            ).values
+
+    latest = latest.drop(columns=["history_len", "_own_weight"])
 
     latest.to_csv("Team_Positions_transformed_Newest.csv", index=False)
 

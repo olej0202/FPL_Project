@@ -879,6 +879,53 @@ function TeamColorDot({ teamName }) {
   );
 }
 
+function getBarRange(values) {
+  const finiteValues = values
+    .map((value) => Number(value))
+    .filter((value) => Number.isFinite(value));
+
+  if (finiteValues.length === 0) {
+    return { min: 0, max: 0 };
+  }
+
+  return {
+    min: Math.min(...finiteValues),
+    max: Math.max(...finiteValues),
+  };
+}
+
+function getBarPercent(value, range) {
+  const numericValue = Number(value);
+  if (!Number.isFinite(numericValue) || !range) return 0;
+
+  const span = range.max - range.min;
+  if (span <= 0) {
+    return numericValue > 0 ? 100 : 0;
+  }
+
+  return Math.max(0, Math.min(100, ((numericValue - range.min) / span) * 100));
+}
+
+function MeasureBarCell({ value, text, range, emphasize = false }) {
+  const width = getBarPercent(value, range);
+
+  return (
+    <div className="relative overflow-hidden rounded-lg px-2 py-1">
+      <div
+        className="absolute inset-y-1 left-1 rounded-md"
+        style={{
+          width: `${width}%`,
+          background: emphasize
+            ? "linear-gradient(90deg, rgba(118,175,160,0.18), rgba(118,175,160,0.42))"
+            : "linear-gradient(90deg, rgba(118,175,160,0.10), rgba(118,175,160,0.26))",
+          transition: "width 180ms ease",
+        }}
+      />
+      <span className="relative z-[1]">{text}</span>
+    </div>
+  );
+}
+
 const PlayerRow = React.memo(function PlayerRow({
   row,
   idx,
@@ -886,7 +933,10 @@ const PlayerRow = React.memo(function PlayerRow({
   selectedMeasure,
   formatter,
   onOpen,
+  pointBarRanges,
 }) {
+  const showPointBars = selectedMeasure === "Points_prediction" && pointBarRanges;
+
   return (
     <tr
       onClick={() => onOpen(row.nameKey)}
@@ -954,7 +1004,15 @@ const PlayerRow = React.memo(function PlayerRow({
         const cell = row.gwMeasures[gw]?.[selectedMeasure] ?? 0;
         return (
           <td key={gw} className="px-4 py-3 text-right" style={{ borderBottom: "1px solid #e2e8f0" }}>
-            {formatter(cell)}
+            {showPointBars ? (
+              <MeasureBarCell
+                value={cell}
+                text={formatter(cell)}
+                range={pointBarRanges.gw}
+              />
+            ) : (
+              formatter(cell)
+            )}
           </td>
         );
       })}
@@ -963,7 +1021,16 @@ const PlayerRow = React.memo(function PlayerRow({
         className="px-4 py-3 text-right font-semibold"
         style={{ borderBottom: "1px solid #e2e8f0", color: PALETTE.gold }}
       >
-        {formatter(row.totalMeasure)}
+        {showPointBars ? (
+          <MeasureBarCell
+            value={row.totalMeasure}
+            text={formatter(row.totalMeasure)}
+            range={pointBarRanges.total}
+            emphasize
+          />
+        ) : (
+          formatter(row.totalMeasure)
+        )}
       </td>
     </tr>
   );
@@ -1311,6 +1378,25 @@ export default function Player_analytics_rankings() {
     sortConfig,
     valueRange,
   ]);
+
+  const pointBarRanges = useMemo(() => {
+    if (selectedMeasure !== "Points_prediction") return null;
+
+    const gwValues = [];
+    const totalValues = [];
+
+    for (const row of filteredPlayerRows) {
+      totalValues.push(row.totalMeasure);
+      for (const gw of displayedGWs) {
+        gwValues.push(row.gwMeasures[gw]?.[selectedMeasure] ?? 0);
+      }
+    }
+
+    return {
+      gw: getBarRange(gwValues),
+      total: getBarRange(totalValues),
+    };
+  }, [displayedGWs, filteredPlayerRows, selectedMeasure]);
 
   const activePlayerSummary = useMemo(
     () => playerTableRowsBase.find((row) => row.nameKey === activePlayerKey) || null,
@@ -2039,6 +2125,7 @@ export default function Player_analytics_rankings() {
                     selectedMeasure={selectedMeasure}
                     formatter={currentMeasureMeta.format}
                     onOpen={handleOpenPlayerCard}
+                    pointBarRanges={pointBarRanges}
                   />
                 ))}
 

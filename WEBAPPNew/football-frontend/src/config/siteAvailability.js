@@ -30,6 +30,7 @@ export const SITE_AVAILABILITY = {
 
   news: true,
   priceChanges: true,
+  matches: true,
 };
 
 export const isSiteAvailable = (siteKey) => SITE_AVAILABILITY[siteKey] !== false;

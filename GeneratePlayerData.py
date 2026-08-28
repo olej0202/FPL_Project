@@ -345,6 +345,18 @@ def add_team_share_per90(
     # Work on a copy
     out = df.copy()
 
+    # Remove previously-generated share columns so reruns stay idempotent.
+    generated_cols = []
+    for metric in metrics:
+        share_col = f"{metric}{share_suffix}"
+        generated_cols.extend([share_col, f"{share_col}_x", f"{share_col}_y"])
+        if add_percent:
+            pct_col = f"{metric}{percent_suffix}"
+            generated_cols.extend([pct_col, f"{pct_col}_x", f"{pct_col}_y"])
+    existing_generated_cols = [col for col in generated_cols if col in out.columns]
+    if existing_generated_cols:
+        out = out.drop(columns=existing_generated_cols)
+
     # Minutes sanity
     out[minutes_col] = pd.to_numeric(out[minutes_col], errors="coerce").fillna(0.0)
     # Avoid divide-by-zero
@@ -514,7 +526,60 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
             return np.array([1.0], dtype=float)
         return w / s
 
-    def _weighted_understat_for_player(name, team_code, understat_pos, understat_team):
+    def _default_pos_pairs_for_fpl_position(fpl_position):
+        position_map = {
+            "GKP": [("GK", 1.0)],
+            "DEF": [("CB", 0.45), ("DL", 0.275), ("DR", 0.275)],
+            "MID": [("MC", 0.35), ("AMC", 0.2), ("DM", 0.15), ("LW", 0.15), ("RW", 0.15)],
+            "FWD": [("FW", 0.85), ("AMC", 0.15)],
+        }
+        return position_map.get(str(fpl_position).upper(), [("SUB", 1.0)])
+
+    def _candidate_understat_positions(main_pos, fpl_position):
+        pairs = _default_pos_pairs_for_fpl_position(fpl_position)
+        candidate_positions = []
+
+        if pd.notna(main_pos):
+            main_pos_str = str(main_pos).strip().upper()
+            if main_pos_str and main_pos_str != "SUB":
+                candidate_positions.append(main_pos_str)
+
+        for pos_value, _ in pairs:
+            pos_str = str(pos_value).strip().upper()
+            if pos_str and pos_str not in candidate_positions:
+                candidate_positions.append(pos_str)
+
+        return candidate_positions or ["SUB"]
+
+    def _select_no_history_profile_cluster(profile_source, team_code, position, main_pos):
+        source = profile_source.copy()
+        if source.empty:
+            return source
+
+        if "average_minutes" in source.columns:
+            source["average_minutes"] = pd.to_numeric(source["average_minutes"], errors="coerce").fillna(0.0)
+            active_source = source[source["average_minutes"] > 0].copy()
+            if not active_source.empty:
+                source = active_source
+
+        understat_positions = _candidate_understat_positions(main_pos, position)
+        position_values = ["GK", "GKP"] if position in ["GK", "GKP"] else [position]
+
+        candidate_masks = [
+            (source["Team"] == team_code) & (source["Understat_pos"].astype(str).str.upper().isin(understat_positions)),
+            (source["Team"] == team_code) & (source["position"].isin(position_values)),
+            source["Understat_pos"].astype(str).str.upper().isin(understat_positions),
+            source["position"].isin(position_values),
+        ]
+
+        for mask in candidate_masks:
+            cluster = source[mask].copy()
+            if not cluster.empty:
+                return cluster
+
+        return source.iloc[0:0].copy()
+
+    def _weighted_understat_for_player(name, team_code, understat_pos, understat_team, fpl_position=None):
         """
         Returns:
           main_pos (str),
@@ -530,8 +595,9 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
         ]
 
         if pos_row.empty:
-            pos_list = ["SUB"]
-            pct_list = [1.0]
+            fallback_pairs = _default_pos_pairs_for_fpl_position(fpl_position)
+            pos_list = [p for p, _ in fallback_pairs]
+            pct_list = [w for _, w in fallback_pairs]
         else:
             pos_list = _as_list(pos_row["Matched_Pos_List"].iloc[0], ["SUB"])
             pct_list = _as_list(pos_row["Matched_Pos_Pct_List"].iloc[0], [1.0])
@@ -543,7 +609,10 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
         ]
 
         if not pairs:
-            pairs = [("SUB", 1.0)]
+            fallback_pairs = _default_pos_pairs_for_fpl_position(fpl_position)
+            pairs = [(p, w) for p, w in fallback_pairs if str(p).upper() != "SUB"]
+            if not pairs:
+                pairs = [("SUB", 1.0)]
 
         pos_list, pct_list = zip(*pairs)
         pos_list = list(pos_list)
@@ -868,7 +937,8 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
             name=name,
             team_code=team_code,
             understat_pos=understat_pos,
-            understat_team=understat_team
+            understat_team=understat_team,
+            fpl_position=position,
         )
 
         if len(player_row) < 1:
@@ -1095,6 +1165,7 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
     else:
         missing_players_df = pd.DataFrame()
     missing_players_df.to_csv("Player_without_history.csv")
+    no_history_profile_source = Future_dataframe.copy()
     for player in Players_without_history:
         name=player[0]
         print(name)
@@ -1110,21 +1181,27 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
         
         exclude_columns = ["kickoff_time", "season", "position", "Team", "name", "gamepos", "GW","Understat_pos"]
         
-        if(team_code in NEW_TEAMS):
-            player_cluster = Future_dataframe[
-                    (Future_dataframe["Understat_pos"] == main_pos)
-                ]
-            
-            
-        else:
-            player_cluster = Future_dataframe[
-                    (Future_dataframe["Understat_pos"] == main_pos) &
-                    (Future_dataframe["Team"] == team_code)
-                ]
-        player_cluster = player_cluster.replace([np.inf, -np.inf], 0).fillna(0)
-        player_row = Future_dataframe.head(1).copy()
-        columns_to_average = [col for col in player_row.columns if col not in exclude_columns]
-        player_row[columns_to_average] = player_cluster[columns_to_average].mean()
+        player_cluster = _select_no_history_profile_cluster(
+            no_history_profile_source,
+            team_code,
+            position,
+            main_pos,
+        )
+        all_profile_columns = list(dict.fromkeys(list(no_history_profile_source.columns) + list(Future_dataframe.columns)))
+        player_cluster = (
+            player_cluster
+            .reindex(columns=all_profile_columns)
+            .replace([np.inf, -np.inf], 0)
+            .fillna(0)
+        )
+        player_row = no_history_profile_source.head(1).copy().reindex(columns=all_profile_columns)
+        columns_to_average = [col for col in all_profile_columns if col not in exclude_columns]
+        for col in columns_to_average:
+            if col not in player_cluster.columns:
+                player_cluster[col] = np.nan
+            if col not in player_row.columns:
+                player_row[col] = np.nan
+        player_row[columns_to_average] = player_cluster[columns_to_average].mean(numeric_only=True).reindex(columns_to_average)
         if player_cluster.empty:
             numeric_defaults = player_row[columns_to_average].apply(pd.to_numeric, errors="coerce")
             player_row[columns_to_average] = numeric_defaults.fillna(0.0)
@@ -1137,8 +1214,8 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
         
         if name in new_team_cluster:
             members = new_team_cluster[name]
-            cluster_df = Future_dataframe[Future_dataframe["name"].isin(members)]
-            cluster_means = cluster_df[columns_to_average].mean()
+            cluster_df = Future_dataframe[Future_dataframe["name"].isin(members)].reindex(columns=all_profile_columns)
+            cluster_means = cluster_df[columns_to_average].mean(numeric_only=True).reindex(columns_to_average)
             player_row[columns_to_average] = 0.5 * player_row[columns_to_average] + 0.5 * cluster_means
 
         
@@ -1164,6 +1241,13 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
         player_row["Average_OverAssist"] = 1
         player_row["TP_std_20"] = 3
         player_row["Understat_pos"] = main_pos
+        main_pos, posxg, posxg_share, posxa, posxa_share = _weighted_understat_for_player(
+            name=name,
+            team_code=team_code,
+            understat_pos=understat_pos,
+            understat_team=understat_team,
+            fpl_position=position,
+        )
         player_row["Team_Pen_Data"] = player_team_pen_data
         player_row["Pen_Number"] = pen_number
         player_risiko=0.8
@@ -1176,21 +1260,49 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
             scalar = pd.to_numeric(pd.Series([value]), errors="coerce").iloc[0]
             return default if pd.isna(scalar) else float(scalar)
 
-        player_row["Goal_Statistics"] = _safe_scalar(player_row.get("Goal_Statistics"))
-        player_row["Assist_Statistics"] = _safe_scalar(player_row.get("Assist_Statistics"))
-        player_row["defcon_avg"] = _safe_scalar(player_row.get("defcon_avg"))
-        player_row["Understat_POSXG"] = _safe_scalar(player_row.get("Understat_POSXG"))
-        player_row["Understat_POSXA"] = _safe_scalar(player_row.get("Understat_POSXA"))
-        player_row["Understat_POSXG_Share"] = _safe_scalar(player_row.get("Understat_POSXG_Share"))
-        player_row["Understat_POSXA_Share"] = _safe_scalar(player_row.get("Understat_POSXA_Share"))
-        player_row["Share_of_XG"] = _safe_scalar(player_row.get("Share_of_XG"))
-        player_row["Share_of_XA"] = _safe_scalar(player_row.get("Share_of_XA"))
-        player_row["Share_of_XG_Short"] = _safe_scalar(player_row.get("Share_of_XG_Short"))
-        player_row["Share_of_XA_Short"] = _safe_scalar(player_row.get("Share_of_XA_Short"))
-        player_row["Rolling_adjusted_Threat_per90_share"] = _safe_scalar(player_row.get("Rolling_adjusted_Threat_per90_share"))
-        player_row["Rolling_adjusted_creativity_per90_share"] = _safe_scalar(player_row.get("Rolling_adjusted_creativity_per90_share"))
-        player_row["Goal_Index"] = 0.0
-        player_row["Assist_Index"] = 0.0
+        goal_statistics = _safe_scalar(player_row.get("Goal_Statistics"))
+        assist_statistics = _safe_scalar(player_row.get("Assist_Statistics"))
+        defcon_avg = _safe_scalar(player_row.get("defcon_avg"))
+        player_row["Understat_pos"] = main_pos
+        understat_posxg = float(posxg)
+        understat_posxa = float(posxa)
+        understat_posxg_share = float(posxg_share)
+        understat_posxa_share = float(posxa_share)
+        share_of_xg = _safe_scalar(player_row.get("Share_of_XG"))
+        share_of_xa = _safe_scalar(player_row.get("Share_of_XA"))
+        share_of_xg_short = _safe_scalar(player_row.get("Share_of_XG_Short"))
+        share_of_xa_short = _safe_scalar(player_row.get("Share_of_XA_Short"))
+        rolling_threat_share = _safe_scalar(player_row.get("Rolling_adjusted_Threat_per90_share"))
+        rolling_creativity_share = _safe_scalar(player_row.get("Rolling_adjusted_creativity_per90_share"))
+
+        if share_of_xg <= 0 and understat_posxg_share > 0:
+            share_of_xg = understat_posxg_share
+        if share_of_xa <= 0 and understat_posxa_share > 0:
+            share_of_xa = understat_posxa_share
+        if share_of_xg_short <= 0 and understat_posxg_share > 0:
+            share_of_xg_short = understat_posxg_share
+        if share_of_xa_short <= 0 and understat_posxa_share > 0:
+            share_of_xa_short = understat_posxa_share
+        if goal_statistics <= 0 and understat_posxg > 0:
+            goal_statistics = understat_posxg
+        if assist_statistics <= 0 and understat_posxa > 0:
+            assist_statistics = understat_posxa
+
+        player_row["Goal_Statistics"] = goal_statistics
+        player_row["Assist_Statistics"] = assist_statistics
+        player_row["defcon_avg"] = defcon_avg
+        player_row["Understat_POSXG"] = understat_posxg
+        player_row["Understat_POSXA"] = understat_posxa
+        player_row["Understat_POSXG_Share"] = understat_posxg_share
+        player_row["Understat_POSXA_Share"] = understat_posxa_share
+        player_row["Share_of_XG"] = share_of_xg
+        player_row["Share_of_XA"] = share_of_xa
+        player_row["Share_of_XG_Short"] = share_of_xg_short
+        player_row["Share_of_XA_Short"] = share_of_xa_short
+        player_row["Rolling_adjusted_Threat_per90_share"] = rolling_threat_share
+        player_row["Rolling_adjusted_creativity_per90_share"] = rolling_creativity_share
+        player_row["Goal_Index"] = understat_posxg * player_risiko + (1 - player_risiko) * goal_statistics
+        player_row["Assist_Index"] = understat_posxa * player_risiko + (1 - player_risiko) * assist_statistics
         player_row["Defcon_Index"] = 0.0
         
         print(minutes)
@@ -1262,7 +1374,7 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
     df["Goal_Index"] = df["Understat_POSXG"] * df["player_risiko"] + (1 - df["player_risiko"]) * (df["Goal_Statistics"]*0.5+df["Rolling_adjusted_XG"]*0.25+0.25*df['Rolling_adjusted_Threat_per90']*0.01)
     df["Assist_Index"] = df["Understat_POSXA"] * df["player_risiko"] + (1 - df["player_risiko"]) * (df["Assist_Statistics"]*0.55+df["Rolling_adjusted_XA"]*0.3+0.15*df['Rolling_adjusted_creativity_per90']*0.01)
     df["Goal_Index_Share"] = df["Understat_POSXG_Share"] * df["player_risiko"] + (1 - df["player_risiko"]) * (df["Goal_Statistics_share"]*0.1+df["Share_of_XG"]*0.55+0.25*df['Share_of_XG_Short']+0.1*df['Rolling_adjusted_Threat_per90_share'])
-    df["Assist_Index_Share"] = df["Understat_POSXA"] * df["player_risiko"] + (1 - df["player_risiko"]) * (df["Assist_Statistics_share"]*0.1+df["Share_of_XA"]*0.55+0.25*df['Share_of_XA_Short']+0.1*df['Rolling_adjusted_creativity_per90_share'])
+    df["Assist_Index_Share"] = df["Understat_POSXA_Share"] * df["player_risiko"] + (1 - df["player_risiko"]) * (df["Assist_Statistics_share"]*0.1+df["Share_of_XA"]*0.55+0.25*df['Share_of_XA_Short']+0.1*df['Rolling_adjusted_creativity_per90_share'])
     df["Defcon_Index"] = df["defcon_avg"]
 
     df["average_minutes"] = pd.to_numeric(

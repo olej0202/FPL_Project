@@ -36,6 +36,7 @@ import Player_analytics_rankings from "./Player_Analytics_rankings";
 import PlayerAnalyticsIndividual from "./Player_Analytics_individual";
 import NewsBlog from "./News";
 import PriceChanges from "./Price_Changes";
+import Matches from "./Matches";
 import TeamPredictionsFuture from "./Fixture_Ticker";
 import WeeklyReview from "./Weekly_Review";
 import PersonalAnalysis from "./Personal_Analysis";
@@ -92,6 +93,7 @@ export default function App() {
       { to: "/Season_Analysis", label: "Season Analytics" },
       { to: "/Weekly_Review", label: "Weekly Review" },
       { to: "/Personal_Analysis", label: "Personal Analysis" },
+      { to: "/Matches", label: "Matches" },
     ],
     []
   );
@@ -653,6 +655,11 @@ export default function App() {
             <Route
               path="/Price_Changes"
               element={routeElement("priceChanges", <PriceChanges />, "Price Changes")}
+            />
+
+            <Route
+              path="/Matches"
+              element={routeElement("matches", <Matches />, "Matches")}
             />
 
             <Route
