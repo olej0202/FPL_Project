@@ -63,6 +63,62 @@ function TeamBadge({ name }) {
   );
 }
 
+function TopMeasureChart({ rows, measure }) {
+  const rankedRows = useMemo(() => {
+    const sorted = [...rows].sort(
+      (a, b) =>
+        toNumber(b?.[measure]) - toNumber(a?.[measure]) ||
+        toNumber(b?.total_points) - toNumber(a?.total_points) ||
+        toNumber(b?.minutes) - toNumber(a?.minutes)
+    );
+    return sorted.slice(0, 14);
+  }, [measure, rows]);
+
+  const maxValue = useMemo(
+    () => Math.max(1, ...rankedRows.map((row) => toNumber(row?.[measure], 0))),
+    [measure, rankedRows]
+  );
+
+  if (rankedRows.length === 0) return null;
+
+  return (
+    <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+      <div className="mb-4 flex items-center gap-2">
+        <Shield size={16} className="text-sky-700" />
+        <h3 className="text-sm font-semibold text-slate-900">
+          Ranking by {MEASURE_OPTIONS.find((opt) => opt.value === measure)?.label || measure}
+        </h3>
+      </div>
+
+      <div className="space-y-3">
+        {rankedRows.map((row, index) => {
+          const value = toNumber(row?.[measure], 0);
+          const width = Math.max(0, Math.min(100, (value / maxValue) * 100));
+          return (
+            <div key={`${row.Full_Name}-${row.TeamName}-${index}`} className="space-y-1">
+              <div className="flex items-center justify-between gap-3 text-sm">
+                <div className="min-w-0">
+                  <span className="font-semibold text-slate-900">
+                    {index + 1}. {row.Name || row.Full_Name}
+                  </span>
+                  <span className="ml-2 text-slate-500">{row.TeamName}</span>
+                </div>
+                <span className="shrink-0 font-semibold text-sky-700">{formatMeasure(value)}</span>
+              </div>
+              <div className="h-2.5 overflow-hidden rounded-full bg-slate-100">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-sky-500 to-cyan-400"
+                  style={{ width: `${width}%` }}
+                />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function PlayerTable({ title, rows, measure, onOpenPlayer }) {
   return (
     <div className="rounded-3xl border border-slate-200 bg-white shadow-sm">
@@ -134,7 +190,7 @@ export default function Matches() {
         throw new Error(`Match fixtures request failed (${response.status})`);
       }
       const payload = await response.json();
-      const rows = Array.isArray(payload) ? payload : [];
+      const rows = (Array.isArray(payload) ? payload : []).filter((row) => Boolean(row?.finished));
       rows.sort((a, b) => toNumber(a.GW) - toNumber(b.GW) || toNumber(a.Fix_ID) - toNumber(b.Fix_ID));
       setFixtures(rows);
       if (rows.length > 0) {
@@ -279,7 +335,7 @@ export default function Matches() {
             </div>
             <div className="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur">
               <p className="text-xs uppercase tracking-[0.22em] text-cyan-100/80">Selected GW</p>
-              <p className="mt-2 text-2xl font-bold">{selectedGw === "All" ? "All" : `GW ${selectedGw}`}</p>
+              <p className="mt-2 text-2xl font-bold">{selectedGw === "All" ? "-" : `GW ${selectedGw}`}</p>
             </div>
           </div>
         </div>
@@ -292,13 +348,6 @@ export default function Matches() {
               Filter gameweek
             </div>
             <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => setSelectedGw("All")}
-                className={`rounded-full px-3 py-2 text-sm font-semibold transition ${selectedGw === "All" ? "bg-sky-700 text-white" : "bg-slate-100 text-slate-700 hover:bg-sky-50 hover:text-sky-700"}`}
-              >
-                All
-              </button>
               {gwOptions.map((gw) => (
                 <button
                   key={gw}
@@ -475,6 +524,8 @@ export default function Matches() {
                     ) : null}
                   </div>
                 ))}
+
+                <TopMeasureChart rows={matchRows} measure={selectedMeasure} />
 
                 {teamSections.length === 0 ? (
                   <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6 text-center text-sm text-slate-500">

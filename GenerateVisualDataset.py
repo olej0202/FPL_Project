@@ -325,6 +325,19 @@ def Generate_matches_dataset(current_teams_path, current_player_path, current_se
     if teams_df.columns[0].startswith("Unnamed"):
         teams_df = teams_df.iloc[:, 1:]
 
+    fixture_path = None
+    season_path_obj = Path(current_season_path)
+    if season_path_obj.name.endswith("_data.csv"):
+        candidate = season_path_obj.with_name(season_path_obj.name.replace("_data.csv", "_Fixtures.csv"))
+        if candidate.exists():
+            fixture_path = candidate
+
+    fixtures_df = None
+    if fixture_path is not None:
+        fixtures_df = pd.read_csv(fixture_path)
+        if fixtures_df.columns[0].startswith("Unnamed"):
+            fixtures_df = fixtures_df.iloc[:, 1:]
+
     name_map = PLAYER_NAME_MAP
     season_df["Full_Name"] = season_df["Full_Name"].apply(lambda n: name_map.get(n, n))
 
@@ -381,9 +394,36 @@ def Generate_matches_dataset(current_teams_path, current_player_path, current_se
         merged.loc[missing_web_name_mask, "player_id"] = fallback_merge["player_id_name_fallback"].values
         merged.loc[missing_web_name_mask, "player_code"] = fallback_merge["player_code_name_fallback"].values
 
+    merged["FixtureRowID"] = pd.to_numeric(merged["fixture"], errors="coerce").astype("Int64")
+    if fixtures_df is not None:
+        fixture_lookup = fixtures_df[[
+            "id",
+            "code",
+            "event",
+            "kickoff_time",
+            "started",
+            "finished",
+            "team_h_score",
+            "team_a_score",
+        ]].copy()
+        fixture_lookup["id"] = pd.to_numeric(fixture_lookup["id"], errors="coerce").astype("Int64")
+        fixture_lookup["code"] = pd.to_numeric(fixture_lookup["code"], errors="coerce").astype("Int64")
+        fixture_lookup["event"] = pd.to_numeric(fixture_lookup["event"], errors="coerce").astype("Int64")
+        fixture_lookup = fixture_lookup.rename(columns={
+            "id": "FixtureRowID",
+            "code": "Fix_ID",
+            "event": "GW_from_fixture",
+        })
+        merged = merged.merge(fixture_lookup, on="FixtureRowID", how="left")
+
     merged["minutes"] = pd.to_numeric(merged["minutes"], errors="coerce").fillna(0.0)
-    merged["Fix_ID"] = pd.to_numeric(merged["fixture"], errors="coerce").astype("Int64")
-    merged["GW"] = pd.to_numeric(merged["round"], errors="coerce").astype("Int64")
+    if "Fix_ID" not in merged.columns:
+        merged["Fix_ID"] = merged["FixtureRowID"]
+    merged["Fix_ID"] = pd.to_numeric(merged["Fix_ID"], errors="coerce").astype("Int64")
+    if "GW_from_fixture" in merged.columns:
+        merged["GW"] = pd.to_numeric(merged["GW_from_fixture"], errors="coerce").astype("Int64")
+    else:
+        merged["GW"] = pd.to_numeric(merged["round"], errors="coerce").astype("Int64")
     merged["Started"] = (merged["minutes"] > 60).astype(int)
     merged["Sub"] = ((merged["minutes"] >= 1) & (merged["minutes"] <= 59)).astype(int)
 
@@ -416,6 +456,10 @@ def Generate_matches_dataset(current_teams_path, current_player_path, current_se
         "current_team_code": "TeamCode",
         "player_id": "PlayerID",
         "player_code": "PlayerCode",
+        "kickoff_time": "kickoff_time",
+        "finished": "finished",
+        "team_h_score": "team_h_score",
+        "team_a_score": "team_a_score",
     }
 
     for column in output_columns:
@@ -457,13 +501,6 @@ def Generate_matches_dataset(current_teams_path, current_player_path, current_se
     matches = matches.sort_values(["GW", "Fix_ID", "TeamName", "Started", "minutes", "Name"], ascending=[True, True, True, False, False, True])
     matches.to_csv("Matches.csv", index=False)
 
-    fixture_path = None
-    season_path_obj = Path(current_season_path)
-    if season_path_obj.name.endswith("_data.csv"):
-        candidate = season_path_obj.with_name(season_path_obj.name.replace("_data.csv", "_Fixtures.csv"))
-        if candidate.exists():
-            fixture_path = candidate
-
     team_lookup = (
         teams_df[["id", "code", "name", "short_name"]]
         .drop_duplicates(subset=["id"])
@@ -475,11 +512,7 @@ def Generate_matches_dataset(current_teams_path, current_player_path, current_se
         })
     )
 
-    if fixture_path is not None:
-        fixtures_df = pd.read_csv(fixture_path)
-        if fixtures_df.columns[0].startswith("Unnamed"):
-            fixtures_df = fixtures_df.iloc[:, 1:]
-
+    if fixtures_df is not None:
         summary = fixtures_df.rename(columns={"code": "Fix_ID", "event": "GW"})
         summary["Fix_ID"] = pd.to_numeric(summary["Fix_ID"], errors="coerce").astype("Int64")
         summary["GW"] = pd.to_numeric(summary["GW"], errors="coerce").astype("Int64")
