@@ -1,0 +1,611 @@
+Name,Full_Name,Fix_ID,GW,TeamName,minutes,goals_scored,total_points,saves,assists,yellow_cards,red_cards,bonus,bps,defensive_contribution,expected_goals,expected_assists,position,Started,Sub,photo,OpponentName,was_home,TeamCode,PlayerID,PlayerCode
+Gabriel,Gabriel_dos Santos Magalhães,1,1,Arsenal,90.0,0.0,5.0,0.0,0.0,1.0,0.0,0.0,21.0,4.0,0.05,0.01,DEF,1,0,226597.jpg,Coventry City,True,3,4,226597
+Havertz,Kai_Havertz,1,1,Arsenal,90.0,1.0,6.0,0.0,0.0,0.0,0.0,0.0,34.0,2.0,0.26,0.03,FWD,1,0,219847.jpg,Coventry City,True,3,26,219847
+Lewis-Skelly,Myles_Lewis-Skelly,1,1,Arsenal,90.0,0.0,3.0,0.0,0.0,0.0,0.0,0.0,15.0,7.0,0.06,0.11,MID,1,0,499169.jpg,Coventry City,True,3,7,499169
+Mosquera,Cristhian_Mosquera,1,1,Arsenal,90.0,0.0,6.0,0.0,0.0,0.0,0.0,0.0,27.0,6.0,0.0,0.0,DEF,1,0,500040.jpg,Coventry City,True,3,11,500040
+Raya,David_Raya Martin,1,1,Arsenal,90.0,0.0,6.0,1.0,0.0,0.0,0.0,0.0,24.0,0.0,0.0,0.0,GKP,1,0,154561.jpg,Coventry City,True,3,1,154561
+White,Benjamin_White,1,1,Arsenal,90.0,0.0,11.0,0.0,1.0,0.0,0.0,2.0,37.0,5.0,0.18,0.21,DEF,1,0,198869.jpg,Coventry City,True,3,10,198869
+Calafiori,Riccardo_Calafiori,1,1,Arsenal,80.0,0.0,9.0,0.0,1.0,0.0,0.0,0.0,31.0,5.0,0.04,0.09,DEF,1,0,466075.jpg,Coventry City,True,3,8,466075
+Tzolis,Christos_Tzolis,1,1,Arsenal,75.0,0.0,6.0,0.0,1.0,0.0,0.0,0.0,30.0,6.0,0.19,0.14,MID,1,0,439509.jpg,Coventry City,True,3,557,439509
+Ødegaard,Martin_Ødegaard,1,1,Arsenal,75.0,1.0,11.0,0.0,0.0,0.0,0.0,3.0,41.0,8.0,0.21,0.1,MID,1,0,184029.jpg,Coventry City,True,3,15,184029
+Rice,Declan_Rice,1,1,Arsenal,67.0,0.0,3.0,0.0,0.0,0.0,0.0,0.0,10.0,6.0,0.07,0.08,MID,1,0,204480.jpg,Coventry City,True,3,13,204480
+Saka,Bukayo_Saka,1,1,Arsenal,67.0,1.0,9.0,0.0,0.0,0.0,0.0,1.0,36.0,7.0,0.64,0.08,MID,1,0,223340.jpg,Coventry City,True,3,12,223340
+Madueke,Noni_Madueke,1,1,Arsenal,22.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,8.0,2.0,0.0,0.04,MID,0,1,248857.jpg,Coventry City,True,3,16,248857
+Zubimendi,Martín_Zubimendi Ibáñez,1,1,Arsenal,22.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,3.0,3.0,0.0,0.02,MID,0,1,481655.jpg,Coventry City,True,3,19,481655
+Eze,Eberechi_Eze,1,1,Arsenal,14.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,4.0,2.0,0.04,0.0,MID,0,1,232413.jpg,Coventry City,True,3,14,232413
+Merino,Mikel_Merino Zazón,1,1,Arsenal,14.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,5.0,2.0,0.14,0.02,MID,0,1,195384.jpg,Coventry City,True,3,17,195384
+Hincapie,Piero_Hincapié,1,1,Arsenal,9.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,3.0,0.0,0.0,0.0,DEF,0,1,448104.jpg,Coventry City,True,3,9,448104
+Arrizabalaga,Kepa_Arrizabalaga,1,1,Arsenal,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,GKP,0,0,109745.jpg,Coventry City,True,3,2,109745
+Bruno G.,Bruno_Guimarães Rodriguez Moura,1,1,Arsenal,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,208706.jpg,Coventry City,True,3,452,208706
+Dowman,Max_Dowman,1,1,Arsenal,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,616077.jpg,Coventry City,True,3,20,616077
+Fábio Vieira,Fábio_Ferreira Vieira,1,1,Arsenal,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,438098.jpg,Coventry City,True,3,23,438098
+G.Jesus,Gabriel_Fernando de Jesus,1,1,Arsenal,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,FWD,0,0,205651.jpg,Coventry City,True,3,27,205651
+Gyökeres,Viktor_Gyökeres,1,1,Arsenal,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,FWD,0,0,224117.jpg,Coventry City,True,3,25,224117
+J.Timber,Jurriën_Timber,1,1,Arsenal,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,445122.jpg,Coventry City,True,3,5,445122
+Konsa,Ezri_Konsa Ngoyo,1,1,Arsenal,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,199798.jpg,Coventry City,True,3,31,199798
+Martinelli,Gabriel_Martinelli Silva,1,1,Arsenal,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,444145.jpg,Coventry City,True,3,18,444145
+Meslier,Illan_Meslier,1,1,Arsenal,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,GKP,0,0,437495.jpg,Coventry City,True,3,3,437495
+Nelson,Reiss_Nelson,1,1,Arsenal,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,200641.jpg,Coventry City,True,3,24,200641
+Nwaneri,Ethan_Nwaneri,1,1,Arsenal,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,499175.jpg,Coventry City,True,3,22,499175
+Saliba,William_Saliba,1,1,Arsenal,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,462424.jpg,Coventry City,True,3,6,462424
+Amenda,Aurèle_Amenda,1,1,Coventry City,90.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,1.0,9.0,0.0,0.01,DEF,1,0,539142.jpg,Arsenal,False,9,182,539142
+Dasilva,Jay_Dasilva,1,1,Coventry City,90.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,-4.0,6.0,0.0,0.02,DEF,1,0,173878.jpg,Arsenal,False,9,176,173878
+Grimes,Matt_Grimes,1,1,Coventry City,90.0,0.0,2.0,0.0,0.0,0.0,0.0,0.0,14.0,7.0,0.0,0.01,MID,1,0,168144.jpg,Arsenal,False,9,184,168144
+Onyeka,Frank_Onyeka,1,1,Coventry City,90.0,0.0,2.0,0.0,0.0,0.0,0.0,0.0,8.0,9.0,0.0,0.01,MID,1,0,428580.jpg,Arsenal,False,9,104,428580
+Rushworth,Carl_Rushworth,1,1,Coventry City,90.0,0.0,1.0,2.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.01,GKP,1,0,472739.jpg,Arsenal,False,9,110,472739
+Thomas,Bobby_Thomas,1,1,Coventry City,90.0,0.0,3.0,0.0,0.0,0.0,0.0,0.0,11.0,10.0,0.02,0.01,DEF,1,0,461102.jpg,Arsenal,False,9,173,461102
+van Ewijk,Milan_van Ewijk,1,1,Coventry City,90.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,-8.0,7.0,0.0,0.01,DEF,1,0,451284.jpg,Arsenal,False,9,175,451284
+Tchaouna,Loum_Tchaouna,1,1,Coventry City,81.0,0.0,2.0,0.0,0.0,0.0,0.0,0.0,11.0,8.0,0.04,0.02,MID,1,0,469272.jpg,Arsenal,False,9,190,469272
+Simms,Ellis_Simms,1,1,Coventry City,69.0,0.0,2.0,0.0,0.0,0.0,0.0,0.0,7.0,3.0,0.0,0.01,FWD,1,0,218997.jpg,Arsenal,False,9,195,218997
+Thomas-Asante,Brandon_Thomas-Asante,1,1,Coventry City,69.0,0.0,2.0,0.0,0.0,0.0,0.0,0.0,9.0,6.0,0.0,0.02,FWD,1,0,230730.jpg,Arsenal,False,9,194,230730
+Yirenkyi,Caleb_Yirenkyi,1,1,Coventry City,61.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,2.0,3.0,0.0,0.0,MID,1,0,661888.jpg,Arsenal,False,9,575,661888
+Torp,Victor_Torp,1,1,Coventry City,28.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,8.0,1.0,0.0,0.11,MID,0,1,226965.jpg,Arsenal,False,9,188,226965
+Awoniyi,Taiwo_Awoniyi,1,1,Coventry City,20.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,4.0,1.0,0.0,0.0,FWD,0,1,210156.jpg,Arsenal,False,9,492,210156
+Rudoni,Jack_Rudoni,1,1,Coventry City,20.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,3.0,5.0,0.15,0.0,MID,0,1,480457.jpg,Arsenal,False,9,183,480457
+Hamer,Gustavo_Hamer,1,1,Coventry City,8.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,3.0,1.0,0.0,0.0,MID,0,1,196100.jpg,Arsenal,False,9,584,196100
+Andrews,Kaine_Andrews,1,1,Coventry City,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,629397.jpg,Arsenal,False,9,192,629397
+Bassette,Norman_Bassette,1,1,Coventry City,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,FWD,0,0,549653.jpg,Arsenal,False,9,197,549653
+Bidwell,Jake_Bidwell,1,1,Coventry City,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,80178.jpg,Arsenal,False,9,178,80178
+Borges Rodrigues,Raphael_Borges Rodrigues,1,1,Coventry City,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,492498.jpg,Arsenal,False,9,191,492498
+Brau,Miguel_Brau,1,1,Coventry City,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,577411.jpg,Arsenal,False,9,181,577411
+Cherif,Sidiki_Cherif,1,1,Coventry City,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,FWD,0,0,627221.jpg,Arsenal,False,9,599,627221
+Dovin,Oliver_Dovin,1,1,Coventry City,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,GKP,0,0,484389.jpg,Arsenal,False,9,171,484389
+Eccles,Josh_Eccles,1,1,Coventry City,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,439668.jpg,Arsenal,False,9,187,439668
+Kesler-Hayden,Kaine_Kesler-Hayden,1,1,Coventry City,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,465390.jpg,Arsenal,False,9,177,465390
+Kitching,Liam_Kitching,1,1,Coventry City,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,436761.jpg,Arsenal,False,9,174,436761
+Latibeaudiere,Joel_Latibeaudiere,1,1,Coventry City,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,204813.jpg,Arsenal,False,9,179,204813
+Markelo,Jahnoah_Markelo,1,1,Coventry City,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,FWD,0,0,551262.jpg,Arsenal,False,9,196,551262
+Mason-Clark,Ephron_Mason-Clark,1,1,Coventry City,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,241293.jpg,Arsenal,False,9,186,241293
+Sakamoto,Tatsuhiro_Sakamoto,1,1,Coventry City,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,501459.jpg,Arsenal,False,9,185,501459
+Shepherd,George_Shepherd,1,1,Coventry City,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,684268.jpg,Arsenal,False,9,189,684268
+Wilson,Ben_Wilson,1,1,Coventry City,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,GKP,0,0,110690.jpg,Arsenal,False,9,172,110690
+Woolfenden,Luke_Woolfenden,1,1,Coventry City,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,220583.jpg,Arsenal,False,9,180,220583
+Wright,Haji_Wright,1,1,Coventry City,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,FWD,0,0,176412.jpg,Arsenal,False,9,193,176412
+Ajer,Kristoffer_Ajer,2,1,Brentford,90.0,0.0,8.0,0.0,0.0,0.0,0.0,0.0,29.0,10.0,0.11,0.02,DEF,1,0,191866.jpg,Spurs,True,94,87,191866
+Collins,Nathan_Collins,2,1,Brentford,90.0,0.0,6.0,0.0,0.0,0.0,0.0,0.0,21.0,3.0,0.34,0.04,DEF,1,0,432830.jpg,Spurs,True,94,84,432830
+Janelt,Vitaly_Janelt,2,1,Brentford,90.0,1.0,9.0,0.0,0.0,1.0,0.0,0.0,35.0,13.0,0.39,0.17,MID,1,0,204580.jpg,Spurs,True,94,98,204580
+Kelleher,Caoimhín_Kelleher,2,1,Brentford,90.0,0.0,7.0,4.0,0.0,0.0,0.0,0.0,34.0,0.0,0.0,0.01,GKP,1,0,200720.jpg,Spurs,True,94,82,200720
+Lewis-Potter,Keane_Lewis-Potter,2,1,Brentford,90.0,1.0,10.0,0.0,0.0,0.0,0.0,2.0,37.0,10.0,0.77,0.12,MID,1,0,249231.jpg,Spurs,True,94,86,249231
+Schade,Kevin_Schade,2,1,Brentford,90.0,0.0,3.0,0.0,0.0,0.0,0.0,0.0,17.0,9.0,0.52,0.01,MID,1,0,513418.jpg,Spurs,True,94,94,513418
+Thiago,Igor_Thiago Nascimento Rodrigues,2,1,Brentford,82.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,-3.0,5.0,1.0,0.08,FWD,1,0,502500.jpg,Spurs,True,94,106,502500
+Kayode,Michael_Kayode,2,1,Brentford,75.0,1.0,13.0,0.0,0.0,0.0,0.0,1.0,36.0,4.0,0.5,0.0,DEF,1,0,607464.jpg,Spurs,True,94,88,607464
+M.Sangaré,Mamadou_Sangaré,2,1,Brentford,75.0,0.0,14.0,0.0,2.0,0.0,0.0,3.0,41.0,13.0,0.05,0.33,MID,1,0,513545.jpg,Spurs,True,94,565,513545
+Jensen,Mathias_Jensen,2,1,Brentford,66.0,0.0,6.0,0.0,1.0,0.0,0.0,0.0,22.0,5.0,0.08,0.34,MID,1,0,207283.jpg,Spurs,True,94,97,207283
+O.Dango,Dango_Ouattara,2,1,Brentford,66.0,0.0,3.0,0.0,0.0,0.0,0.0,0.0,6.0,6.0,0.05,0.29,MID,1,0,533463.jpg,Spurs,True,94,95,533463
+Anthony,Jaidon_Anthony,2,1,Brentford,23.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,9.0,8.0,0.03,0.35,MID,0,1,444180.jpg,Spurs,True,94,105,444180
+Yarmoliuk,Yehor_Yarmoliuk,2,1,Brentford,23.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,7.0,6.0,0.04,0.0,MID,0,1,508395.jpg,Spurs,True,94,102,508395
+Damsgaard,Mikkel_Damsgaard,2,1,Brentford,14.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,6.0,4.0,0.0,0.11,MID,0,1,440089.jpg,Spurs,True,94,96,440089
+Hickey,Aaron_Hickey,2,1,Brentford,14.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,2.0,0.0,0.0,0.0,DEF,0,1,472713.jpg,Spurs,True,94,90,472713
+Wilson,Callum_Wilson,2,1,Brentford,7.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,4.0,0.0,0.03,0.04,FWD,0,1,75115.jpg,Spurs,True,94,108,75115
+Carvalho,Fábio_Freitas Gouveia Carvalho,2,1,Brentford,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,244858.jpg,Spurs,True,94,100,244858
+Dasilva,Josh_Dasilva,2,1,Brentford,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,183656.jpg,Spurs,True,94,103,183656
+Furo,Kaye_Furo,2,1,Brentford,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,FWD,0,0,593174.jpg,Spurs,True,94,107,593174
+Henry,Rico_Henry,2,1,Brentford,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,194010.jpg,Spurs,True,94,89,194010
+Ji-soo,Kim_Ji-soo,2,1,Brentford,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,570241.jpg,Spurs,True,94,92,570241
+Milambo,Antoni_Milambo,2,1,Brentford,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,543295.jpg,Spurs,True,94,99,543295
+Pinnock,Ethan_Pinnock,2,1,Brentford,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,231065.jpg,Spurs,True,94,91,231065
+Schuster,Jannik_Schuster,2,1,Brentford,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,513086.jpg,Spurs,True,94,93,513086
+Valdimarsson,Hákon Rafn_Valdimarsson,2,1,Brentford,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,GKP,0,0,507433.jpg,Spurs,True,94,83,507433
+Van den Berg,Sepp_van den Berg,2,1,Brentford,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,444765.jpg,Spurs,True,94,85,444765
+Kinsky,Antonín_Kinský,2,1,Spurs,90.0,0.0,2.0,5.0,0.0,0.0,0.0,0.0,15.0,0.0,0.0,0.0,GKP,1,0,485055.jpg,Brentford,False,6,496,485055
+Robertson,Andrew_Robertson,2,1,Spurs,90.0,0.0,3.0,0.0,0.0,0.0,0.0,0.0,13.0,11.0,0.0,0.06,DEF,1,0,122798.jpg,Brentford,False,6,502,122798
+Senesi,Marcos_Senesi,2,1,Spurs,90.0,0.0,3.0,0.0,0.0,0.0,0.0,0.0,10.0,16.0,0.0,0.02,DEF,1,0,221466.jpg,Brentford,False,6,498,221466
+Tel,Mathys_Tel,2,1,Spurs,90.0,0.0,2.0,0.0,0.0,0.0,0.0,0.0,17.0,8.0,0.06,0.06,MID,1,0,511499.jpg,Brentford,False,6,514,511499
+Tonali,Sandro_Tonali,2,1,Spurs,90.0,0.0,2.0,0.0,0.0,0.0,0.0,0.0,14.0,4.0,0.04,0.06,MID,1,0,432422.jpg,Brentford,False,6,455,432422
+Van Hecke,Jan Paul_van Hecke,2,1,Spurs,90.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,3.0,9.0,0.0,0.03,DEF,1,0,469142.jpg,Brentford,False,6,112,469142
+Gray,Archie_Gray,2,1,Spurs,85.0,0.0,2.0,0.0,0.0,0.0,0.0,0.0,15.0,5.0,0.0,0.01,MID,1,0,547701.jpg,Brentford,False,6,522,547701
+Moore,Mikey_Moore,2,1,Spurs,67.0,0.0,2.0,0.0,0.0,0.0,0.0,0.0,10.0,2.0,0.38,0.02,MID,1,0,499721.jpg,Brentford,False,6,523,499721
+Richarlison,Richarlison_de Andrade,2,1,Spurs,67.0,0.0,2.0,0.0,0.0,0.0,0.0,0.0,6.0,1.0,0.0,0.0,FWD,1,0,212319.jpg,Brentford,False,6,527,212319
+Bentancur,Rodrigo_Bentancur,2,1,Spurs,45.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,8.0,5.0,0.0,0.01,MID,0,1,202993.jpg,Brentford,False,6,516,202993
+Bergvall,Lucas_Bergvall,2,1,Spurs,45.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,2.0,8.0,0.0,0.01,MID,0,1,570526.jpg,Brentford,False,6,520,570526
+Fernandes,Mateus_Fernandes,2,1,Spurs,45.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,16.0,2.0,0.0,0.06,MID,0,1,551226.jpg,Brentford,False,6,525,551226
+Gallagher,Conor_Gallagher,2,1,Spurs,45.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,1.0,3.0,0.02,0.06,MID,0,1,232787.jpg,Brentford,False,6,519,232787
+Maddison,James_Maddison,2,1,Spurs,22.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,6.0,2.0,0.0,0.01,MID,0,1,172780.jpg,Brentford,False,6,515,172780
+Solanke,Dominic_Solanke-Mitchell,2,1,Spurs,22.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,3.0,0.0,0.07,0.0,FWD,0,1,154566.jpg,Brentford,False,6,526,154566
+Udogie,Destiny_Udogie,2,1,Spurs,4.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,3.0,0.0,0.0,0.02,DEF,0,1,487053.jpg,Brentford,False,6,506,487053
+Austin,Brandon_Austin,2,1,Spurs,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,GKP,0,0,214572.jpg,Brentford,False,6,495,214572
+Byfield,Jun'ai_Byfield,2,1,Spurs,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,640419.jpg,Brentford,False,6,509,640419
+Danso,Kevin_Danso,2,1,Spurs,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,135720.jpg,Brentford,False,6,501,135720
+Davies,Ben_Davies,2,1,Spurs,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,115556.jpg,Brentford,False,6,508,115556
+Dubravka,Martin_Dubravka,2,1,Spurs,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,GKP,0,0,67089.jpg,Brentford,False,6,497,67089
+Kudus,Mohammed_Kudus,2,1,Spurs,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,460842.jpg,Brentford,False,6,512,460842
+Kulusevski,Dejan_Kulusevski,2,1,Spurs,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,445044.jpg,Brentford,False,6,521,445044
+Odobert,Wilson_Odobert,2,1,Spurs,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,550839.jpg,Brentford,False,6,517,550839
+Olusesi,Callum_Olusesi,2,1,Spurs,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,499726.jpg,Brentford,False,6,524,499726
+P.M.Sarr,Pape Matar_Sarr,2,1,Spurs,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,482442.jpg,Brentford,False,6,518,482442
+Pedro Porro,Pedro_Porro,2,1,Spurs,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,441164.jpg,Brentford,False,6,499,441164
+Phillips,Ashley_Phillips,2,1,Spurs,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,548308.jpg,Brentford,False,6,507,548308
+Romero,Cristian_Romero,2,1,Spurs,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,221632.jpg,Brentford,False,6,500,221632
+Rowswell,James_Rowswell,2,1,Spurs,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,499716.jpg,Brentford,False,6,510,499716
+Scarlett,Dane_Scarlett,2,1,Spurs,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,FWD,0,0,490145.jpg,Brentford,False,6,528,490145
+Souza,João Victor_de Souza Menezes,2,1,Spurs,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,616221.jpg,Brentford,False,6,511,616221
+Spence,Djed_Spence,2,1,Spurs,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,232859.jpg,Brentford,False,6,505,232859
+Van de Ven,Micky_van de Ven,2,1,Spurs,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,491279.jpg,Brentford,False,6,503,491279
+Vicario,Guglielmo_Vicario,2,1,Spurs,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,GKP,0,0,184254.jpg,Brentford,False,6,494,184254
+Williams-Barnett,Luca_Williams-Barnett,2,1,Spurs,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,611917.jpg,Brentford,False,6,601,611917
+Xavi,Xavi_Simons,2,1,Spurs,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,493362.jpg,Brentford,False,6,513,493362
+Canvot,Jaydee_Canvot,3,1,Crystal Palace,90.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,9.0,8.0,0.05,0.01,DEF,1,0,651426.jpg,Everton,False,31,203,651426
+Henderson,Dean_Henderson,3,1,Crystal Palace,90.0,0.0,2.0,3.0,0.0,0.0,0.0,0.0,14.0,0.0,0.0,0.0,GKP,1,0,172649.jpg,Everton,False,31,198,172649
+Kamada,Daichi_Kamada,3,1,Crystal Palace,90.0,0.0,3.0,0.0,0.0,1.0,0.0,0.0,25.0,14.0,0.0,0.27,MID,1,0,209400.jpg,Everton,False,31,214,209400
+Mitchell,Tyrick_Mitchell,3,1,Crystal Palace,90.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,9.0,5.0,0.0,0.01,DEF,1,0,244723.jpg,Everton,False,31,204,244723
+Richards,Chris_Richards,3,1,Crystal Palace,90.0,0.0,3.0,0.0,0.0,0.0,0.0,0.0,13.0,16.0,0.0,0.0,DEF,1,0,427623.jpg,Everton,False,31,202,427623
+Wharton,Adam_Wharton,3,1,Crystal Palace,90.0,0.0,4.0,0.0,0.0,0.0,0.0,0.0,20.0,14.0,0.0,0.24,MID,1,0,496221.jpg,Everton,False,31,210,496221
+Chadi Riad,Chadi_Riad Dnanou,3,1,Crystal Palace,72.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,7.0,7.0,0.0,0.01,DEF,1,0,515621.jpg,Everton,False,31,206,515621
+Mateta,Jean-Philippe_Mateta,3,1,Crystal Palace,62.0,0.0,2.0,0.0,0.0,0.0,0.0,0.0,-3.0,5.0,0.7,0.02,FWD,1,0,231747.jpg,Everton,False,31,223,231747
+McNeil,Dwight_McNeil,3,1,Crystal Palace,62.0,0.0,2.0,0.0,0.0,0.0,0.0,0.0,11.0,5.0,0.05,0.02,MID,1,0,433154.jpg,Everton,False,31,241,433154
+Nketiah,Eddie_Nketiah,3,1,Crystal Palace,55.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,12.0,3.0,0.6,0.58,FWD,0,1,205533.jpg,Everton,False,31,224,205533
+Muñoz,Daniel_Muñoz,3,1,Crystal Palace,54.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,-4.0,4.0,0.23,0.01,DEF,0,1,247348.jpg,Everton,False,31,201,247348
+Khalaili,Anan_Khalaili,3,1,Crystal Palace,35.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,12.0,9.0,0.0,0.16,DEF,0,1,570794.jpg,Everton,False,31,588,570794
+Yeremy,Yéremy_Pino Santos,3,1,Crystal Palace,35.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,4.0,5.0,0.06,0.02,MID,0,1,488024.jpg,Everton,False,31,211,488024
+Guessand,Evann_Guessand,3,1,Crystal Palace,27.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,3.0,1.0,0.03,0.02,MID,0,1,485337.jpg,Everton,False,31,42,485337
+Strand Larsen,Jørgen_Strand Larsen,3,1,Crystal Palace,27.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,3.0,0.0,0.25,0.01,FWD,0,1,247412.jpg,Everton,False,31,222,247412
+Tomiyasu,Takehiro_Tomiyasu,3,1,Crystal Palace,18.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,3.0,1.0,0.0,0.01,DEF,0,1,223723.jpg,Everton,False,31,577,223723
+Benitez,Walter_Benítez,3,1,Crystal Palace,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,GKP,0,0,121709.jpg,Everton,False,31,199,121709
+Cardines,Rio_Cardines,3,1,Crystal Palace,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,590014.jpg,Everton,False,31,220,590014
+Devenny,Justin_Devenny,3,1,Crystal Palace,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,489706.jpg,Everton,False,31,215,489706
+Doucouré,Cheick_Doucouré,3,1,Crystal Palace,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,438464.jpg,Everton,False,31,218,438464
+Drakes-Thomas,Joél_Drakes-Thomas,3,1,Crystal Palace,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,672492.jpg,Everton,False,31,221,672492
+Esse,Romain_Esse,3,1,Crystal Palace,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,606921.jpg,Everton,False,31,216,606921
+Gozo,Zavier_Gozo,3,1,Crystal Palace,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,559152.jpg,Everton,False,31,595,559152
+Hughes,Will_Hughes,3,1,Crystal Palace,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,108413.jpg,Everton,False,31,212,108413
+J.Rak-Sakyi,Jesurun_Rak-Sakyi,3,1,Crystal Palace,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,450542.jpg,Everton,False,31,219,450542
+Lerma,Jefferson_Lerma Solís,3,1,Crystal Palace,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,152551.jpg,Everton,False,31,213,152551
+M.França,Matheus_França de Oliveira,3,1,Crystal Palace,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,536694.jpg,Everton,False,31,217,536694
+Matthews,Remi_Matthews,3,1,Crystal Palace,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,GKP,0,0,169593.jpg,Everton,False,31,555,169593
+Mingueza,Oscar_Mingueza,3,1,Crystal Palace,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,242313.jpg,Everton,False,31,207,242313
+Sarr,Ismaïla_Sarr,3,1,Crystal Palace,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,232185.jpg,Everton,False,31,208,232185
+Sosa,Borna_Sosa,3,1,Crystal Palace,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,218364.jpg,Everton,False,31,205,218364
+Uche,Christantus_Uche,3,1,Crystal Palace,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,FWD,0,0,660392.jpg,Everton,False,31,225,660392
+Armstrong,Harrison_Armstrong,3,1,Everton,90.0,0.0,8.0,0.0,1.0,0.0,0.0,0.0,25.0,16.0,0.0,0.04,MID,1,0,609873.jpg,Crystal Palace,True,11,244,609873
+Branthwaite,Jarrad_Branthwaite,3,1,Everton,90.0,0.0,6.0,0.0,0.0,0.0,0.0,0.0,27.0,8.0,0.0,0.01,DEF,1,0,480455.jpg,Crystal Palace,True,11,230,480455
+Dewsbury-Hall,Kiernan_Dewsbury-Hall,3,1,Everton,90.0,1.0,11.0,0.0,0.0,0.0,0.0,3.0,40.0,8.0,0.12,0.17,MID,1,0,215413.jpg,Crystal Palace,True,11,236,215413
+Mykolenko,Vitalii_Mykolenko,3,1,Everton,90.0,0.0,6.0,0.0,0.0,0.0,0.0,0.0,27.0,4.0,0.0,0.05,DEF,1,0,224967.jpg,Crystal Palace,True,11,233,224967
+Ndiaye,Iliman_Ndiaye,3,1,Everton,90.0,0.0,9.0,0.0,1.0,0.0,0.0,1.0,36.0,12.0,0.24,0.32,MID,1,0,440993.jpg,Crystal Palace,True,11,237,440993
+Pickford,Jordan_Pickford,3,1,Everton,90.0,0.0,7.0,4.0,0.0,0.0,0.0,0.0,34.0,0.0,0.0,0.02,GKP,1,0,111234.jpg,Crystal Palace,True,11,226,111234
+Röhl,Merlin_Röhl,3,1,Everton,90.0,0.0,3.0,0.0,0.0,0.0,0.0,0.0,12.0,9.0,0.0,0.06,MID,1,0,513466.jpg,Crystal Palace,True,11,246,513466
+Tarkowski,James_Tarkowski,3,1,Everton,90.0,0.0,6.0,0.0,0.0,0.0,0.0,0.0,25.0,9.0,0.05,0.0,DEF,1,0,17761.jpg,Crystal Palace,True,11,229,17761
+George,Tyrique_George,3,1,Everton,83.0,0.0,3.0,0.0,0.0,0.0,0.0,0.0,13.0,7.0,0.18,0.08,MID,1,0,550615.jpg,Crystal Palace,True,11,242,550615
+Barry,Thierno_Barry,3,1,Everton,78.0,1.0,8.0,0.0,0.0,0.0,0.0,2.0,37.0,3.0,0.45,0.09,FWD,1,0,586309.jpg,Crystal Palace,True,11,249,586309
+Hackney,Hayden_Hackney,3,1,Everton,78.0,0.0,3.0,0.0,0.0,0.0,0.0,0.0,16.0,7.0,0.01,0.01,MID,1,0,244860.jpg,Crystal Palace,True,11,247,244860
+Beto,Norberto Bercique_Gomes Betuncal,3,1,Everton,11.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,3.0,0.0,0.05,0.0,FWD,0,1,486385.jpg,Crystal Palace,True,11,248,486385
+Garner,James_Garner,3,1,Everton,11.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,6.0,1.0,0.0,0.03,MID,0,1,232928.jpg,Crystal Palace,True,11,239,232928
+Johnson,Brennan_Johnson,3,1,Everton,6.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,3.0,2.0,0.0,0.0,MID,0,1,242898.jpg,Crystal Palace,True,11,209,242898
+Alcaraz,Carlos_Alcaraz Durán,3,1,Everton,1.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,7.0,3.0,0.02,0.0,MID,0,1,502697.jpg,Crystal Palace,True,11,243,502697
+Aznou,Adam_Aznou,3,1,Everton,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,499300.jpg,Crystal Palace,True,11,235,499300
+Dibling,Tyler_Dibling,3,1,Everton,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,496661.jpg,Crystal Palace,True,11,245,496661
+Iroegbunam,Tim_Iroegbunam,3,1,Everton,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,490094.jpg,Crystal Palace,True,11,240,490094
+Keane,Michael_Keane,3,1,Everton,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,106611.jpg,Crystal Palace,True,11,231,106611
+King,Tom_King,3,1,Everton,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,GKP,0,0,138001.jpg,Crystal Palace,True,11,228,138001
+Nørgaard,Christian_Nørgaard,3,1,Everton,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,128295.jpg,Crystal Palace,True,11,21,128295
+O'Brien,Jake_O'Brien,3,1,Everton,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,512462.jpg,Crystal Palace,True,11,232,512462
+Patterson,Nathan_Patterson,3,1,Everton,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,243571.jpg,Crystal Palace,True,11,234,243571
+Travers,Mark_Travers,3,1,Everton,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,GKP,0,0,229600.jpg,Crystal Palace,True,11,227,229600
+Belloumi,Mohamed_Belloumi,4,1,Hull City,90.0,0.0,3.0,0.0,0.0,0.0,0.0,0.0,8.0,10.0,0.05,0.03,MID,1,0,540324.jpg,Man Utd,True,88,286,540324
+Crooks,Matt_Crooks,4,1,Hull City,90.0,0.0,2.0,0.0,0.0,1.0,0.0,0.0,9.0,9.0,0.0,0.0,MID,1,0,101282.jpg,Man Utd,True,88,289,101282
+Egan,John_Egan,4,1,Hull City,90.0,0.0,8.0,0.0,0.0,0.0,0.0,0.0,27.0,21.0,0.0,0.0,DEF,1,0,108416.jpg,Man Utd,True,88,277,108416
+McBurnie,Oli_McBurnie,4,1,Hull City,90.0,0.0,5.0,0.0,1.0,0.0,0.0,0.0,21.0,5.0,0.16,0.01,FWD,1,0,169432.jpg,Man Utd,True,88,295,169432
+Slater,Regan_Slater,4,1,Hull City,90.0,0.0,6.0,0.0,1.0,0.0,0.0,0.0,20.0,3.0,0.0,0.44,MID,1,0,243413.jpg,Man Utd,True,88,290,243413
+Tzolakis,Konstantinos_Tzolakis,4,1,Hull City,90.0,0.0,10.0,5.0,0.0,0.0,0.0,3.0,41.0,0.0,0.0,0.0,GKP,1,0,473284.jpg,Man Utd,True,88,572,473284
+Giles,Ryan_Giles,4,1,Hull City,84.0,0.0,6.0,0.0,0.0,0.0,0.0,0.0,24.0,6.0,0.02,0.07,DEF,1,0,232351.jpg,Man Utd,True,88,282,232351
+Stroud,Elliot_Stroud,4,1,Hull City,70.0,0.0,3.0,0.0,0.0,0.0,0.0,0.0,11.0,6.0,0.0,0.03,MID,1,0,608227.jpg,Man Utd,True,88,576,608227
+Coyle,Lewie_Coyle,4,1,Hull City,69.0,0.0,6.0,0.0,0.0,0.0,0.0,0.0,23.0,2.0,0.0,0.01,DEF,1,0,193278.jpg,Man Utd,True,88,280,193278
+Ajayi,Semi_Ajayi,4,1,Hull City,63.0,1.0,14.0,0.0,0.0,0.0,0.0,2.0,39.0,7.0,0.52,0.0,DEF,1,0,146426.jpg,Man Utd,True,88,279,146426
+Mendy,Nobel_Mendy,4,1,Hull City,63.0,1.0,15.0,0.0,0.0,0.0,0.0,1.0,35.0,13.0,0.28,0.0,DEF,1,0,606930.jpg,Man Utd,True,88,586,606930
+Herrington,Lucas_Herrington,4,1,Hull City,26.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,4.0,4.0,0.0,0.0,DEF,0,1,597462.jpg,Man Utd,True,88,585,597462
+McNair,Paddy_McNair,4,1,Hull City,26.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,3.0,2.0,0.0,0.0,DEF,0,1,160817.jpg,Man Utd,True,88,285,160817
+Drameh,Cody_Drameh,4,1,Hull City,20.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,4.0,3.0,0.05,0.0,DEF,0,1,433590.jpg,Man Utd,True,88,281,433590
+Millar,Liam_Millar,4,1,Hull City,19.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,2.0,3.0,0.0,0.0,MID,0,1,232905.jpg,Man Utd,True,88,287,232905
+Targett,Matt_Targett,4,1,Hull City,5.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,3.0,0.0,0.0,0.0,DEF,0,1,169359.jpg,Man Utd,True,88,556,169359
+Akintola,David_Akintola,4,1,Hull City,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,213292.jpg,Man Utd,True,88,296,213292
+Burstow,Mason_Burstow,4,1,Hull City,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,FWD,0,0,534392.jpg,Man Utd,True,88,299,534392
+Butland,Jack_Butland,4,1,Hull City,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,GKP,0,0,105666.jpg,Man Utd,True,88,274,105666
+Cartwright,Harvey_Cartwright,4,1,Hull City,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,GKP,0,0,494950.jpg,Man Utd,True,88,275,494950
+Destan,Enis_Destan,4,1,Hull City,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,FWD,0,0,500957.jpg,Man Utd,True,88,298,500957
+Dowell,Kieran_Dowell,4,1,Hull City,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,171270.jpg,Man Utd,True,88,288,171270
+Gelhardt,Joe_Gelhardt,4,1,Hull City,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,462635.jpg,Man Utd,True,88,340,462635
+Gourna-Douath,Lucas_Gourna-Douath,4,1,Hull City,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,469266.jpg,Man Utd,True,88,589,469266
+Gyabi,Darko_Gyabi,4,1,Hull City,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,470294.jpg,Man Utd,True,88,297,470294
+Hjertø-Dahl,Jens_Hjertø-Dahl,4,1,Hull City,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,552946.jpg,Man Utd,True,88,574,552946
+Hughes,Charlie_Hughes,4,1,Hull City,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,501902.jpg,Man Utd,True,88,278,501902
+Jacob,Matty_Jacob,4,1,Hull City,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,449428.jpg,Man Utd,True,88,283,449428
+Kamara,Abu_Kamara,4,1,Hull City,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,490161.jpg,Man Utd,True,88,293,490161
+Lo-Tutala,Thimothée_Lo-Tutala,4,1,Hull City,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,GKP,0,0,444307.jpg,Man Utd,True,88,276,444307
+Matazo,Eliot_Matazo,4,1,Hull City,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,465525.jpg,Man Utd,True,88,291,465525
+McCarthy,Cathal_McCarthy,4,1,Hull City,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,661800.jpg,Man Utd,True,88,284,661800
+Morita,Hidemasa_Morita,4,1,Hull City,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,445028.jpg,Man Utd,True,88,563,445028
+Phillips,Dillon_Phillips,4,1,Hull City,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,GKP,0,0,167825.jpg,Man Utd,True,88,273,167825
+Zambrano,Óscar_Zambrano,4,1,Hull City,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,553783.jpg,Man Utd,True,88,294,553783
+Ömür,Abdülkadir_Ömür,4,1,Hull City,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,208481.jpg,Man Utd,True,88,292,208481
+B.Fernandes,Bruno_Borges Fernandes,4,1,Man Utd,90.0,0.0,2.0,0.0,0.0,0.0,0.0,0.0,18.0,6.0,0.08,0.26,MID,1,0,141746.jpg,Hull City,False,1,426,141746
+Heaven,Ayden_Heaven,4,1,Man Utd,90.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,5.0,2.0,0.12,0.04,DEF,1,0,606745.jpg,Hull City,False,1,421,606745
+Lammens,Senne_Lammens,4,1,Man Utd,90.0,0.0,1.0,2.0,0.0,0.0,0.0,0.0,7.0,0.0,0.0,0.0,GKP,1,0,465247.jpg,Hull City,False,1,412,465247
+Maguire,Harry_Maguire,4,1,Man Utd,90.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,15.0,4.0,0.04,0.4,DEF,1,0,95658.jpg,Hull City,False,1,418,95658
+Mbeumo,Bryan_Mbeumo,4,1,Man Utd,90.0,0.0,2.0,0.0,0.0,0.0,0.0,0.0,12.0,4.0,0.5,0.23,MID,1,0,446008.jpg,Hull City,False,1,427,446008
+Shaw,Luke_Shaw,4,1,Man Utd,90.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,13.0,4.0,0.0,0.26,DEF,1,0,106760.jpg,Hull City,False,1,423,106760
+Cunha,Matheus_Santos Carneiro Da Cunha,4,1,Man Utd,79.0,0.0,2.0,0.0,0.0,0.0,0.0,0.0,14.0,3.0,0.24,0.21,MID,1,0,430871.jpg,Hull City,False,1,428,430871
+Mazraoui,Noussair_Mazraoui,4,1,Man Utd,79.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,8.0,5.0,0.22,0.05,DEF,1,0,230001.jpg,Hull City,False,1,422,230001
+Andrey Santos,Andrey_Nascimento dos Santos,4,1,Man Utd,66.0,0.0,2.0,0.0,0.0,0.0,0.0,0.0,17.0,9.0,0.0,0.23,MID,1,0,532605.jpg,Hull City,False,1,162,532605
+Tielemans,Youri_Tielemans,4,1,Man Utd,66.0,0.0,2.0,0.0,0.0,0.0,0.0,0.0,13.0,5.0,0.04,0.11,MID,1,0,166989.jpg,Hull City,False,1,43,166989
+Dorgu,Patrick_Dorgu,4,1,Man Utd,45.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,-11.0,1.0,0.47,0.03,MID,0,1,596777.jpg,Hull City,False,1,415,596777
+Rashford,Marcus_Rashford,4,1,Man Utd,45.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,9.0,1.0,0.0,0.1,MID,0,1,176297.jpg,Hull City,False,1,429,176297
+Mainoo,Kobbie_Mainoo,4,1,Man Utd,23.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,7.0,1.0,0.07,0.01,MID,0,1,516895.jpg,Hull City,False,1,432,516895
+Šeško,Benjamin_Sesko,4,1,Man Utd,23.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,2.0,0.0,0.04,0.0,FWD,0,1,485711.jpg,Hull City,False,1,439,485711
+Dalot,Diogo_Dalot Teixeira,4,1,Man Utd,10.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,6.0,3.0,0.0,0.0,DEF,0,1,216051.jpg,Hull City,False,1,417,216051
+Lacey,Shea_Lacey,4,1,Man Utd,10.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,3.0,1.0,0.0,0.0,MID,0,1,576628.jpg,Hull City,False,1,435,576628
+Amad,Amad_Diallo,4,1,Man Utd,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,493250.jpg,Hull City,False,1,431,493250
+Amass,Harry_Amass,4,1,Man Utd,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,577974.jpg,Hull City,False,1,424,577974
+Bayindir,Altay_Bayındır,4,1,Man Utd,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,GKP,0,0,451302.jpg,Hull City,False,1,413,451302
+Bendito Mantato,Bendito_Mantato,4,1,Man Utd,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,576620.jpg,Hull City,False,1,437,576620
+Collyer,Toby_Collyer,4,1,Man Utd,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,490881.jpg,Hull City,False,1,436,490881
+Darlow,Karl_Darlow,4,1,Man Utd,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,GKP,0,0,59735.jpg,Hull City,False,1,325,59735
+De Ligt,Matthijs_de Ligt,4,1,Man Utd,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,209365.jpg,Hull City,False,1,416,209365
+Fletcher,Tyler_Fletcher,4,1,Man Utd,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,519913.jpg,Hull City,False,1,438,519913
+Fredricson,Tyler_Fredricson,4,1,Man Utd,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,547676.jpg,Hull City,False,1,425,547676
+Heaton,Tom_Heaton,4,1,Man Utd,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,GKP,0,0,21205.jpg,Hull City,False,1,414,21205
+J.Fletcher,Jack_Fletcher,4,1,Man Utd,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,547037.jpg,Hull City,False,1,434,547037
+Martinez,Lisandro_Martínez,4,1,Man Utd,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,221820.jpg,Hull City,False,1,419,221820
+Mount,Mason_Mount,4,1,Man Utd,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,184341.jpg,Hull City,False,1,430,184341
+Obi,Chido_Obi,4,1,Man Utd,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,FWD,0,0,596047.jpg,Hull City,False,1,441,596047
+Ugarte,Manuel_Ugarte Ribeiro,4,1,Man Utd,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,232112.jpg,Hull City,False,1,433,232112
+Yoro,Leny_Yoro,4,1,Man Utd,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,550864.jpg,Hull City,False,1,420,550864
+Zirkzee,Joshua_Zirkzee,4,1,Man Utd,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,FWD,0,0,458249.jpg,Hull City,False,1,440,458249
+Davis,Leif_Davis,5,1,Ipswich Town,90.0,0.0,2.0,0.0,0.0,0.0,0.0,0.0,10.0,7.0,0.0,0.01,DEF,1,0,455084.jpg,Sunderland,True,40,305,455084
+Diop,Issa_Diop,5,1,Ipswich Town,90.0,0.0,2.0,0.0,0.0,0.0,0.0,0.0,7.0,5.0,0.0,0.01,DEF,1,0,219924.jpg,Sunderland,True,40,259,219924
+Greaves,Jacob_Greaves,5,1,Ipswich Town,90.0,0.0,2.0,0.0,0.0,0.0,0.0,0.0,12.0,7.0,0.0,0.0,DEF,1,0,449429.jpg,Sunderland,True,40,306,449429
+Lukić,Saša_Lukić,5,1,Ipswich Town,90.0,0.0,5.0,0.0,1.0,0.0,0.0,0.0,22.0,6.0,0.0,0.02,MID,1,0,212314.jpg,Sunderland,True,40,267,212314
+O'Shea,Dara_O'Shea,5,1,Ipswich Town,90.0,0.0,4.0,0.0,0.0,0.0,0.0,0.0,16.0,18.0,0.0,0.16,DEF,1,0,216616.jpg,Sunderland,True,40,304,216616
+Scherpen,Kjell_Scherpen,5,1,Ipswich Town,90.0,0.0,2.0,2.0,0.0,0.0,0.0,0.0,12.0,0.0,0.0,0.0,GKP,1,0,240514.jpg,Sunderland,True,40,564,240514
+Maeda,Daizen_Maeda,5,1,Ipswich Town,79.0,0.0,2.0,0.0,0.0,0.0,0.0,0.0,7.0,9.0,0.61,0.0,MID,1,0,442967.jpg,Sunderland,True,40,562,442967
+Núñez,Marcelino_Núñez,5,1,Ipswich Town,79.0,0.0,4.0,0.0,0.0,0.0,0.0,0.0,26.0,12.0,0.03,0.03,MID,1,0,501390.jpg,Sunderland,True,40,309,501390
+Enciso,Julio_Enciso,5,1,Ipswich Town,70.0,0.0,5.0,0.0,1.0,0.0,0.0,0.0,24.0,8.0,0.23,0.31,MID,1,0,474120.jpg,Sunderland,True,40,591,474120
+Emersonn,Emersonn_Correia da Silva,5,1,Ipswich Town,65.0,1.0,9.0,0.0,0.0,0.0,0.0,3.0,41.0,3.0,0.82,0.06,FWD,1,0,543968.jpg,Sunderland,True,40,316,543968
+Fatawu,Abdul_Fatawu,5,1,Ipswich Town,65.0,0.0,2.0,0.0,0.0,0.0,0.0,0.0,22.0,7.0,0.0,0.41,MID,1,0,531442.jpg,Sunderland,True,40,315,531442
+Akpom,Chuba_Akpom,5,1,Ipswich Town,24.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,3.0,3.0,0.0,0.0,FWD,0,1,147675.jpg,Sunderland,True,40,320,147675
+McAteer,Kasey_McAteer,5,1,Ipswich Town,24.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,4.0,3.0,0.0,0.0,MID,0,1,461587.jpg,Sunderland,True,40,323,461587
+Clarke,Jack_Clarke,5,1,Ipswich Town,19.0,1.0,7.0,0.0,0.0,0.0,0.0,1.0,27.0,2.0,0.1,0.0,MID,0,1,443261.jpg,Sunderland,True,40,313,443261
+Ouattara,Abdoul_Ouattara,5,1,Ipswich Town,10.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,4.0,2.0,0.0,0.0,DEF,0,1,572584.jpg,Sunderland,True,40,592,572584
+Walle Egeli,Sindre_Walle Egeli,5,1,Ipswich Town,10.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,3.0,0.0,0.0,0.0,FWD,0,1,557012.jpg,Sunderland,True,40,321,557012
+Al-Hamadi,Ali_Al-Hamadi,5,1,Ipswich Town,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,FWD,0,0,462387.jpg,Sunderland,True,40,322,462387
+Burns,Wes_Burns,5,1,Ipswich Town,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,149929.jpg,Sunderland,True,40,311,149929
+Button,David_Button,5,1,Ipswich Town,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,GKP,0,0,50093.jpg,Sunderland,True,40,302,50093
+Florentino,Florentino Ibrain_Morris Luís,5,1,Ipswich Town,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,216055.jpg,Sunderland,True,40,571,216055
+Furlong,Darnell_Furlong,5,1,Ipswich Town,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,176420.jpg,Sunderland,True,40,308,176420
+Hirst,George_Hirst,5,1,Ipswich Town,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,FWD,0,0,222625.jpg,Sunderland,True,40,317,222625
+Humphreys,Cameron_Humphreys,5,1,Ipswich Town,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,524180.jpg,Sunderland,True,40,602,524180
+Johnson,Ben_Johnson,5,1,Ipswich Town,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,222018.jpg,Sunderland,True,40,307,222018
+Kipré,Cédric_Kipré,5,1,Ipswich Town,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,183015.jpg,Sunderland,True,40,303,183015
+Matusiwa,Azor_Matusiwa,5,1,Ipswich Town,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,241117.jpg,Sunderland,True,40,310,241117
+Mehmeti,Anis_Mehmeti,5,1,Ipswich Town,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,232457.jpg,Sunderland,True,40,324,232457
+Ogbene,Chiedozie_Ogbene,5,1,Ipswich Town,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,229164.jpg,Sunderland,True,40,314,229164
+Palmer,Alex_Palmer,5,1,Ipswich Town,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,GKP,0,0,112520.jpg,Sunderland,True,40,301,112520
+Philogene,Jaden_Philogene,5,1,Ipswich Town,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,481624.jpg,Sunderland,True,40,318,481624
+Szmodics,Sam_Szmodics,5,1,Ipswich Town,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,172453.jpg,Sunderland,True,40,319,172453
+Taylor,Jack_Taylor,5,1,Ipswich Town,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,231899.jpg,Sunderland,True,40,312,231899
+Van Oevelen,Kayne_van Oevelen,5,1,Ipswich Town,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,GKP,0,0,546600.jpg,Sunderland,True,40,554,546600
+Walton,Christian_Walton,5,1,Ipswich Town,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,GKP,0,0,108813.jpg,Sunderland,True,40,300,108813
+Ballard,Daniel_Ballard,5,1,Sunderland,90.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,4.0,9.0,0.0,0.01,DEF,1,0,223827.jpg,Ipswich Town,False,56,532,223827
+Meunier,Thomas_Meunier,5,1,Sunderland,90.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,5.0,4.0,0.08,0.08,DEF,1,0,93605.jpg,Ipswich Town,False,56,541,93605
+Reinildo,Reinildo_Mandava,5,1,Sunderland,90.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,9.0,8.0,0.0,0.29,DEF,1,0,434399.jpg,Ipswich Town,False,56,536,434399
+Roefs,Robin_Roefs,5,1,Sunderland,90.0,0.0,1.0,1.0,0.0,0.0,0.0,0.0,7.0,0.0,0.0,0.0,GKP,1,0,498016.jpg,Ipswich Town,False,56,529,498016
+Sadiki,Noah_Sadiki,5,1,Sunderland,90.0,0.0,2.0,0.0,0.0,0.0,0.0,0.0,18.0,2.0,0.06,0.03,MID,1,0,577669.jpg,Ipswich Town,False,56,545,577669
+Xhaka,Granit_Xhaka,5,1,Sunderland,90.0,0.0,9.0,0.0,1.0,0.0,0.0,2.0,31.0,13.0,0.0,0.09,MID,1,0,84450.jpg,Ipswich Town,False,56,544,84450
+E.Le Fée,Enzo_Le Fée,5,1,Sunderland,79.0,0.0,2.0,0.0,0.0,0.0,0.0,0.0,13.0,2.0,0.0,0.03,MID,1,0,484420.jpg,Ipswich Town,False,56,542,484420
+Hume,Trai_Hume,5,1,Sunderland,79.0,0.0,2.0,0.0,0.0,0.0,0.0,0.0,14.0,4.0,0.04,0.27,DEF,1,0,487676.jpg,Ipswich Town,False,56,534,487676
+Brobbey,Brian_Brobbey,5,1,Sunderland,66.0,0.0,2.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0,0.3,0.0,FWD,1,0,441264.jpg,Ipswich Town,False,56,552,441264
+O'Nien,Luke_O'Nien,5,1,Sunderland,66.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,1.0,5.0,0.01,0.01,DEF,1,0,167512.jpg,Ipswich Town,False,56,539,167512
+Angulo,Nilson_Angulo,5,1,Sunderland,58.0,1.0,5.0,0.0,0.0,1.0,0.0,0.0,23.0,7.0,0.15,0.01,MID,0,1,536661.jpg,Ipswich Town,False,56,551,536661
+Talbi,Chemsdine_Talbi,5,1,Sunderland,31.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,1.0,2.0,0.0,0.0,MID,0,1,549912.jpg,Ipswich Town,False,56,549,549912
+Alderete,Omar_Alderete,5,1,Sunderland,23.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,2.0,0.0,0.0,0.01,DEF,0,1,201895.jpg,Ipswich Town,False,56,535,201895
+Isidor,Wilson_Isidor,5,1,Sunderland,23.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,3.0,0.0,0.0,0.0,FWD,0,1,437505.jpg,Ipswich Town,False,56,553,437505
+Diarra,Habib_Diarra,5,1,Sunderland,10.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,3.0,0.0,0.03,0.0,MID,0,1,547027.jpg,Ipswich Town,False,56,543,547027
+Rigg,Chris_Rigg,5,1,Sunderland,10.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,3.0,1.0,0.0,0.0,MID,0,1,554197.jpg,Ipswich Town,False,56,548,554197
+Adingra,Simon_Adingra,5,1,Sunderland,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,535818.jpg,Ipswich Town,False,56,546,535818
+Ellborg,Melker_Ellborg,5,1,Sunderland,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,GKP,0,0,515046.jpg,Ipswich Town,False,56,531,515046
+Hjelde,Leo Fuhr_Hjelde,5,1,Sunderland,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,477547.jpg,Ipswich Town,False,56,538,477547
+Jocelin.T,Djiamgone Jocelin Ta_Bi,5,1,Sunderland,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,699989.jpg,Ipswich Town,False,56,550,699989
+Masuaku,Arthur_Masuaku,5,1,Sunderland,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,105717.jpg,Ipswich Town,False,56,540,105717
+Mukiele,Nordi_Mukiele,5,1,Sunderland,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,200834.jpg,Ipswich Town,False,56,533,200834
+Mundle,Romaine_Mundle,5,1,Sunderland,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,461199.jpg,Ipswich Town,False,56,547,461199
+Patterson,Anthony_Patterson,5,1,Sunderland,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,GKP,0,0,232571.jpg,Ipswich Town,False,56,530,232571
+Seelt,Jenson_Seelt,5,1,Sunderland,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,519634.jpg,Ipswich Town,False,56,537,519634
+Ampadu,Ethan_Ampadu,6,1,Leeds,90.0,0.0,5.0,0.0,0.0,0.0,0.0,0.0,18.0,13.0,0.0,0.04,MID,1,0,199598.jpg,Nott'm Forest,False,2,338,199598
+Bijol,Jaka_Bijol,6,1,Leeds,90.0,0.0,10.0,0.0,0.0,0.0,0.0,2.0,28.0,12.0,0.11,0.0,DEF,1,0,434752.jpg,Nott'm Forest,False,2,327,434752
+Bogle,Jayden_Bogle,6,1,Leeds,90.0,0.0,6.0,0.0,0.0,0.0,0.0,0.0,24.0,3.0,0.0,0.0,DEF,1,0,226182.jpg,Nott'm Forest,False,2,330,226182
+Calvert-Lewin,Dominic_Calvert-Lewin,6,1,Leeds,90.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,-2.0,2.0,0.13,0.0,FWD,1,0,177815.jpg,Nott'm Forest,False,2,346,177815
+Justin,James_Justin,6,1,Leeds,90.0,0.0,10.0,0.0,0.0,0.0,0.0,2.0,28.0,12.0,0.0,0.01,DEF,1,0,220627.jpg,Nott'm Forest,False,2,332,220627
+Muharemović,Tarik_Muharemović,6,1,Leeds,90.0,0.0,6.0,0.0,0.0,0.0,0.0,0.0,25.0,7.0,0.09,0.0,DEF,1,0,522047.jpg,Nott'm Forest,False,2,334,522047
+Rodon,Joe_Rodon,6,1,Leeds,90.0,0.0,6.0,0.0,0.0,0.0,0.0,0.0,21.0,7.0,0.03,0.06,DEF,1,0,214225.jpg,Nott'm Forest,False,2,329,214225
+Stach,Anton_Stach,6,1,Leeds,90.0,1.0,13.0,0.0,0.0,0.0,0.0,3.0,37.0,16.0,0.1,0.05,MID,1,0,466525.jpg,Nott'm Forest,False,2,335,466525
+Trafford,James_Trafford,6,1,Leeds,90.0,0.0,9.0,3.0,0.0,0.0,0.0,2.0,28.0,0.0,0.0,0.0,GKP,1,0,432720.jpg,Nott'm Forest,False,2,385,432720
+Aaronson,Brenden_Aaronson,6,1,Leeds,81.0,0.0,3.0,0.0,0.0,0.0,0.0,0.0,16.0,7.0,0.01,0.01,MID,1,0,427637.jpg,Nott'm Forest,False,2,337,427637
+Wilson,Harry_Wilson,6,1,Leeds,65.0,0.0,3.0,0.0,0.0,0.0,0.0,0.0,8.0,2.0,0.0,0.02,MID,1,0,153682.jpg,Nott'm Forest,False,2,260,153682
+Okafor,Noah_Okafor,6,1,Leeds,24.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,10.0,5.0,0.0,0.16,MID,0,1,435997.jpg,Nott'm Forest,False,2,336,435997
+Longstaff,Sean_Longstaff,6,1,Leeds,8.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,3.0,0.0,0.0,0.0,MID,0,1,180135.jpg,Nott'm Forest,False,2,339,180135
+Bornauw,Sebastiaan_Bornauw,6,1,Leeds,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,437738.jpg,Nott'm Forest,False,2,333,437738
+Cresswell,Alfie_Cresswell,6,1,Leeds,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,592740.jpg,Nott'm Forest,False,2,604,592740
+Elvedi,Nico_Elvedi,6,1,Leeds,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,173774.jpg,Nott'm Forest,False,2,598,173774
+Gnonto,Wilfried_Gnonto,6,1,Leeds,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,492859.jpg,Nott'm Forest,False,2,341,492859
+Gruev,Ilia_Gruev,6,1,Leeds,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,486520.jpg,Nott'm Forest,False,2,344,486520
+Gudmundsson,Gabriel_Gudmundsson,6,1,Leeds,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,243526.jpg,Nott'm Forest,False,2,331,243526
+Harrison,Jack_Harrison,6,1,Leeds,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,221399.jpg,Nott'm Forest,False,2,342,221399
+James,Daniel_James,6,1,Leeds,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,200617.jpg,Nott'm Forest,False,2,343,200617
+Lienou,Jayden_Lienou,6,1,Leeds,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,643970.jpg,Nott'm Forest,False,2,603,643970
+Mateo Joseph,Mateo_Joseph Fernández-Regatillo,6,1,Leeds,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,FWD,0,0,565297.jpg,Nott'm Forest,False,2,349,565297
+Nmecha,Lukas_Nmecha,6,1,Leeds,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,FWD,0,0,174594.jpg,Nott'm Forest,False,2,347,174594
+Perri,Lucas Estella_Perri,6,1,Leeds,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,GKP,0,0,201595.jpg,Nott'm Forest,False,2,326,201595
+Piroe,Joël_Piroe,6,1,Leeds,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,FWD,0,0,235826.jpg,Nott'm Forest,False,2,348,235826
+Tanaka,Tanaka_Ao,6,1,Leeds,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,248056.jpg,Nott'm Forest,False,2,345,248056
+Gibbs-White,Morgan_Gibbs-White,6,1,Nott'm Forest,90.0,0.0,2.0,0.0,0.0,0.0,0.0,0.0,10.0,3.0,0.13,0.06,MID,1,0,222531.jpg,Leeds,True,17,480,222531
+I.Sangaré,Ibrahim_Sangaré,6,1,Nott'm Forest,90.0,0.0,2.0,0.0,0.0,0.0,0.0,0.0,10.0,6.0,0.03,0.01,MID,1,0,210462.jpg,Leeds,True,17,488,210462
+Igor Jesus,Igor Jesus_Maciel da Cruz,6,1,Nott'm Forest,90.0,0.0,2.0,0.0,0.0,0.0,0.0,0.0,8.0,3.0,0.22,0.02,FWD,1,0,482973.jpg,Leeds,True,17,491,482973
+Jair Cunha,Jair_Paula da Cunha Filho,6,1,Nott'm Forest,90.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,5.0,8.0,0.0,0.0,DEF,1,0,575458.jpg,Leeds,True,17,474,575458
+Milenković,Nikola_Milenković,6,1,Nott'm Forest,90.0,0.0,2.0,0.0,0.0,0.0,0.0,0.0,4.0,7.0,0.11,0.02,DEF,1,0,227444.jpg,Leeds,True,17,471,227444
+Murillo,Murillo_Costa dos Santos,6,1,Nott'm Forest,90.0,0.0,4.0,0.0,0.0,0.0,0.0,0.0,15.0,14.0,0.0,0.28,DEF,1,0,575476.jpg,Leeds,True,17,472,575476
+N.Williams,Neco_Williams,6,1,Nott'm Forest,90.0,0.0,2.0,0.0,0.0,0.0,0.0,0.0,13.0,6.0,0.0,0.02,DEF,1,0,215136.jpg,Leeds,True,17,469,215136
+Sels,Matz_Sels,6,1,Nott'm Forest,90.0,0.0,2.0,2.0,0.0,0.0,0.0,0.0,11.0,0.0,0.0,0.0,GKP,1,0,85633.jpg,Leeds,True,17,467,85633
+Aina,Ola_Aina,6,1,Nott'm Forest,73.0,0.0,5.0,0.0,0.0,1.0,0.0,0.0,24.0,2.0,0.04,0.17,DEF,1,0,159506.jpg,Leeds,True,17,473,159506
+McAtee,James_McAtee,6,1,Nott'm Forest,73.0,0.0,3.0,0.0,0.0,0.0,0.0,0.0,18.0,8.0,0.0,0.16,MID,1,0,432714.jpg,Leeds,True,17,486,432714
+Ndoye,Dan_Ndoye,6,1,Nott'm Forest,61.0,0.0,3.0,0.0,0.0,0.0,0.0,0.0,5.0,3.0,0.0,0.0,MID,1,0,456512.jpg,Leeds,True,17,483,456512
+Wood,Chris_Wood,6,1,Nott'm Forest,28.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,3.0,1.0,0.12,0.01,FWD,0,1,60689.jpg,Leeds,True,17,490,60689
+Netz,Luca_Netz,6,1,Nott'm Forest,16.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,-2.0,0.0,0.0,0.0,DEF,0,1,470315.jpg,Leeds,True,17,478,470315
+Schlager,Xaver_Schlager,6,1,Nott'm Forest,16.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,3.0,1.0,0.0,0.0,MID,0,1,204561.jpg,Leeds,True,17,558,204561
+Kalimuendo,Arnaud_Kalimuendo,6,1,Nott'm Forest,1.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,3.0,0.0,0.0,0.0,FWD,0,1,465680.jpg,Leeds,True,17,493,465680
+Abbott,Zach_Abbott,6,1,Nott'm Forest,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,549067.jpg,Leeds,True,17,477,549067
+Bakwa,Dilane_Bakwa,6,1,Nott'm Forest,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,476887.jpg,Leeds,True,17,485,476887
+Benda,Steven_Benda,6,1,Nott'm Forest,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,GKP,0,0,428971.jpg,Leeds,True,17,590,428971
+Bindon,Tyler_Bindon,6,1,Nott'm Forest,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,538638.jpg,Leeds,True,17,479,538638
+Diomande,Ousmane_Diomande,6,1,Nott'm Forest,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,568420.jpg,Leeds,True,17,581,568420
+Dominguez,Nicolás_Domínguez,6,1,Nott'm Forest,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,250199.jpg,Leeds,True,17,487,250199
+Hudson-Odoi,Callum_Hudson-Odoi,6,1,Nott'm Forest,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,209046.jpg,Leeds,True,17,482,209046
+Hutchinson,Omari_Hutchinson,6,1,Nott'm Forest,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,503301.jpg,Leeds,True,17,484,503301
+John,John Victor_Maciel Furtado,6,1,Nott'm Forest,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,GKP,0,0,221389.jpg,Leeds,True,17,468,221389
+Morato,Felipe_Rodrigues da Silva,6,1,Nott'm Forest,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,485047.jpg,Leeds,True,17,470,485047
+O.Richards,Omar_Richards,6,1,Nott'm Forest,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,204822.jpg,Leeds,True,17,476,204822
+Savona,Nicolò_Savona,6,1,Nott'm Forest,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,500151.jpg,Leeds,True,17,475,500151
+Yates,Ryan_Yates,6,1,Nott'm Forest,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,204968.jpg,Leeds,True,17,489,204968
+Cash,Matty_Cash,7,1,Aston Villa,90.0,0.0,-1.0,0.0,0.0,1.0,0.0,0.0,-8.0,7.0,0.0,0.0,DEF,1,0,199796.jpg,Brighton,False,7,32,199796
+George Hemmings,George_Hemmings,7,1,Aston Villa,90.0,0.0,2.0,0.0,0.0,0.0,0.0,0.0,12.0,5.0,0.0,0.0,MID,1,0,577285.jpg,Brighton,False,7,51,577285
+Kamara,Boubacar_Kamara,7,1,Aston Villa,90.0,0.0,2.0,0.0,0.0,0.0,0.0,0.0,9.0,7.0,0.0,0.0,MID,1,0,226944.jpg,Brighton,False,7,47,226944
+Lindelöf,Victor_Lindelöf,7,1,Aston Villa,90.0,0.0,-2.0,0.0,0.0,0.0,0.0,0.0,-13.0,3.0,0.0,0.0,DEF,1,0,184667.jpg,Brighton,False,7,37,184667
+M.Bizot,Marco_Bizot,7,1,Aston Villa,90.0,0.0,1.0,3.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,GKP,1,0,72147.jpg,Brighton,False,7,29,72147
+Buendía,Emiliano_Buendía Stati,7,1,Aston Villa,85.0,0.0,2.0,0.0,0.0,0.0,0.0,0.0,4.0,7.0,0.13,0.09,MID,1,0,195546.jpg,Brighton,False,7,41,195546
+Maatsen,Ian_Maatsen,7,1,Aston Villa,81.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,-9.0,9.0,0.03,0.0,DEF,1,0,441302.jpg,Brighton,False,7,36,441302
+McGinn,John_McGinn,7,1,Aston Villa,81.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,8.0,6.0,0.04,0.01,MID,1,0,122806.jpg,Brighton,False,7,45,122806
+Barkley,Ross_Barkley,7,1,Aston Villa,73.0,0.0,2.0,0.0,0.0,0.0,0.0,0.0,11.0,1.0,0.1,0.02,MID,1,0,88894.jpg,Brighton,False,7,46,88894
+Pau,Pau_Torres,7,1,Aston Villa,73.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,-14.0,5.0,0.0,0.0,DEF,1,0,244954.jpg,Brighton,False,7,34,244954
+Gomes,Joao_Gomes,7,1,Aston Villa,39.0,0.0,-2.0,0.0,0.0,0.0,1.0,0.0,-2.0,7.0,0.0,0.01,MID,0,1,448089.jpg,Brighton,False,7,54,448089
+Bogarde,Lamare_Bogarde,7,1,Aston Villa,16.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,3.0,1.0,0.0,0.0,MID,0,1,515597.jpg,Brighton,False,7,35,515597
+Mings,Tyrone_Mings,7,1,Aston Villa,16.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,5.0,1.0,0.0,0.0,DEF,0,1,149484.jpg,Brighton,False,7,33,149484
+Alysson,Alysson Edward Franco_da Rocha dos Santos,7,1,Aston Villa,8.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,5.0,3.0,0.0,0.0,MID,0,1,653481.jpg,Brighton,False,7,52,653481
+Ruggeri,Matteo_Ruggeri,7,1,Aston Villa,8.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,3.0,2.0,0.0,0.0,DEF,0,1,487992.jpg,Brighton,False,7,596,487992
+Garnacho,Alejandro_Garnacho,7,1,Aston Villa,4.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,2.0,0.0,0.0,0.0,MID,0,1,493105.jpg,Brighton,False,7,160,493105
+A.García,Andrés_García,7,1,Aston Villa,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,606798.jpg,Brighton,False,7,38,606798
+Abraham,Tammy_Abraham,7,1,Aston Villa,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,FWD,0,0,173879.jpg,Brighton,False,7,56,173879
+Bailey,Leon_Bailey,7,1,Aston Villa,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,215711.jpg,Brighton,False,7,44,215711
+Burrowes,Bradley_Burrowes,7,1,Aston Villa,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,645618.jpg,Brighton,False,7,50,645618
+Digne,Lucas_Digne,7,1,Aston Villa,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,101188.jpg,Brighton,False,7,30,101188
+Iling Jr,Samuel_Iling-Junior,7,1,Aston Villa,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,469247.jpg,Brighton,False,7,49,469247
+Lynch,Luka_Lynch,7,1,Aston Villa,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,571380.jpg,Brighton,False,7,607,571380
+Madjo,Brian_Madjo,7,1,Aston Villa,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,FWD,0,0,690838.jpg,Brighton,False,7,582,690838
+Manzambi,Johan_Manzambi,7,1,Aston Villa,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,614071.jpg,Brighton,False,7,53,614071
+Martinez,Emiliano_Martínez Romero,7,1,Aston Villa,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,GKP,0,0,98980.jpg,Brighton,False,7,28,98980
+Nedeljkovic,Kosta_Nedeljkovic,7,1,Aston Villa,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,578545.jpg,Brighton,False,7,39,578545
+Onana,Amadou_Onana,7,1,Aston Villa,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,449871.jpg,Brighton,False,7,48,449871
+Rowe,Triston_Rowe,7,1,Aston Villa,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,569577.jpg,Brighton,False,7,606,569577
+Suzuki,Zion_Suzuki,7,1,Aston Villa,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,GKP,0,0,433969.jpg,Brighton,False,7,597,433969
+Watkins,Ollie_Watkins,7,1,Aston Villa,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,FWD,0,0,178301.jpg,Brighton,False,7,55,178301
+Boscagli,Olivier_Boscagli,7,1,Brighton,90.0,0.0,6.0,0.0,0.0,0.0,0.0,0.0,29.0,6.0,0.0,0.04,DEF,1,0,204120.jpg,Aston Villa,True,36,114,204120
+Dunk,Lewis_Dunk,7,1,Brighton,90.0,0.0,6.0,0.0,0.0,0.0,0.0,0.0,24.0,2.0,0.0,0.04,DEF,1,0,83299.jpg,Aston Villa,True,36,116,83299
+Georginio,Georginio_Rutter,7,1,Brighton,90.0,0.0,5.0,0.0,1.0,0.0,0.0,0.0,22.0,7.0,0.08,0.44,FWD,1,0,463067.jpg,Aston Villa,True,36,125,463067
+Groß,Pascal_Groß,7,1,Brighton,90.0,0.0,2.0,0.0,0.0,1.0,0.0,0.0,18.0,5.0,0.0,0.27,MID,1,0,60307.jpg,Aston Villa,True,36,124,60307
+Verbruggen,Bart_Verbruggen,7,1,Brighton,90.0,0.0,6.0,0.0,0.0,0.0,0.0,0.0,25.0,0.0,0.0,0.0,GKP,1,0,489639.jpg,Aston Villa,True,36,109,489639
+Vuskovic,Luka_Vušković,7,1,Brighton,90.0,0.0,6.0,0.0,0.0,0.0,0.0,0.0,19.0,4.0,0.13,0.03,DEF,1,0,610799.jpg,Aston Villa,True,36,504,610799
+Gomez,Diego_Gómez Amarilla,7,1,Brighton,85.0,0.0,6.0,0.0,1.0,0.0,0.0,0.0,27.0,6.0,0.18,0.48,MID,1,0,514254.jpg,Aston Villa,True,36,127,514254
+De Cuyper,Maxim_De Cuyper,7,1,Brighton,77.0,1.0,17.0,0.0,1.0,0.0,0.0,2.0,46.0,4.0,1.47,0.21,DEF,1,0,465730.jpg,Aston Villa,True,36,115,465730
+Wieffer,Mats_Wieffer,7,1,Brighton,77.0,0.0,7.0,0.0,0.0,0.0,0.0,1.0,32.0,8.0,0.09,0.05,DEF,1,0,467779.jpg,Aston Villa,True,36,130,467779
+Ayari,Yasin_Ayari,7,1,Brighton,63.0,0.0,2.0,0.0,0.0,1.0,0.0,0.0,8.0,4.0,0.11,0.03,MID,1,0,509416.jpg,Aston Villa,True,36,129,509416
+Hinshelwood,Jack_Hinshelwood,7,1,Brighton,63.0,2.0,16.0,0.0,0.0,0.0,0.0,3.0,54.0,3.0,1.41,0.02,MID,1,0,532529.jpg,Aston Villa,True,36,123,532529
+Costinha,João Pedro_Loureiro da Costa,7,1,Brighton,26.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,7.0,4.0,0.12,0.0,DEF,0,1,451490.jpg,Aston Villa,True,36,119,451490
+Kostoulas,Charalampos_Kostoulas,7,1,Brighton,26.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,-1.0,2.0,0.18,0.0,FWD,0,1,647850.jpg,Aston Villa,True,36,138,647850
+Osman,Ibrahim_Osman,7,1,Brighton,12.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,7.0,2.0,0.0,0.05,MID,0,1,612855.jpg,Aston Villa,True,36,600,612855
+Yohanna,Zadok_Yohanna,7,1,Brighton,12.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,3.0,0.0,0.0,0.03,MID,0,1,700308.jpg,Aston Villa,True,36,135,700308
+Yalcouyé,Malick_Yalcouyé,7,1,Brighton,4.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,3.0,0.0,0.0,0.01,MID,0,1,611695.jpg,Aston Villa,True,36,605,611695
+Baleba,Carlos_Baleba,7,1,Brighton,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,535301.jpg,Aston Villa,True,1,131,535301
+Buonanotte,Facundo_Buonanotte,7,1,Brighton,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,536916.jpg,Aston Villa,True,36,128,536916
+Coppola,Diego_Coppola,7,1,Brighton,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,550090.jpg,Aston Villa,True,36,117,550090
+David,Promise_David,7,1,Brighton,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,FWD,0,0,538007.jpg,Aston Villa,True,36,594,538007
+F.Kadıoğlu,Ferdi_Kadıoğlu,7,1,Brighton,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,231416.jpg,Aston Villa,True,36,113,231416
+Ferguson,Evan_Ferguson,7,1,Brighton,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,FWD,0,0,487117.jpg,Aston Villa,True,36,139,487117
+Howell,Harry_Howell,7,1,Brighton,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,597320.jpg,Aston Villa,True,36,132,597320
+Igor,Igor Julio_dos Santos de Paulo,7,1,Brighton,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,223434.jpg,Aston Villa,True,36,118,223434
+Minteh,Yankuba_Minteh,7,1,Brighton,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,592031.jpg,Aston Villa,True,36,122,592031
+Mitoma,Mitoma_Kaoru,7,1,Brighton,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,451340.jpg,Aston Villa,True,36,121,451340
+O'Riley,Matt_O'Riley,7,1,Brighton,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,219249.jpg,Aston Villa,True,36,126,219249
+Oriola,Nehemiah_Oriola,7,1,Brighton,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,556637.jpg,Aston Villa,True,36,134,556637
+Steele,Jason_Steele,7,1,Brighton,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,GKP,0,0,49262.jpg,Aston Villa,True,36,111,49262
+Struijk,Pascal_Struijk,7,1,Brighton,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,222694.jpg,Aston Villa,True,36,328,222694
+Svoboda,Michael_Svoboda,7,1,Brighton,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,454490.jpg,Aston Villa,True,36,120,454490
+Tzimas,Stefanos_Tzimas,7,1,Brighton,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,FWD,0,0,608181.jpg,Aston Villa,True,36,137,608181
+Watson,Tom_Watson,7,1,Brighton,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,549074.jpg,Aston Villa,True,36,133,549074
+Hill,James_Hill,8,1,Bournemouth,90.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,6.0,0.0,0.0,DEF,1,0,463981.jpg,Man City,False,91,60,463981
+Petrović,Đorđe_Petrović,8,1,Bournemouth,90.0,0.0,2.0,4.0,0.0,0.0,0.0,0.0,13.0,0.0,0.0,0.0,GKP,1,0,457569.jpg,Man City,False,91,57,457569
+Scott,Alex_Scott,8,1,Bournemouth,90.0,0.0,2.0,0.0,0.0,0.0,0.0,0.0,17.0,11.0,0.0,0.01,MID,1,0,503139.jpg,Man City,False,91,69,503139
+Silva,António João_Pereira de Albuquerque Tavares da Silva,8,1,Bournemouth,90.0,0.0,2.0,0.0,0.0,1.0,0.0,0.0,5.0,13.0,0.0,0.0,DEF,1,0,483067.jpg,Man City,False,91,566,483067
+Smith,Adam_Smith,8,1,Bournemouth,90.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,4.0,5.0,0.0,0.0,DEF,1,0,54469.jpg,Man City,False,91,64,54469
+Tavernier,Marcus_Tavernier,8,1,Bournemouth,90.0,1.0,10.0,0.0,0.0,0.0,0.0,3.0,32.0,8.0,0.4,0.08,MID,1,0,201658.jpg,Man City,False,91,68,201658
+Truffert,Adrien_Truffert,8,1,Bournemouth,90.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,7.0,0.0,0.0,DEF,1,0,494521.jpg,Man City,False,91,61,494521
+Rayan,Rayan Vitor_Simplício Rocha,8,1,Bournemouth,88.0,0.0,2.0,0.0,0.0,0.0,0.0,0.0,9.0,1.0,0.04,0.03,MID,1,0,499604.jpg,Man City,False,91,67,499604
+Cook,Lewis_Cook,8,1,Bournemouth,75.0,0.0,3.0,0.0,0.0,0.0,0.0,0.0,8.0,7.0,0.0,0.0,MID,1,0,155408.jpg,Man City,False,91,71,155408
+Evanilson,Francisco_Evanilson de Lima Barbosa,8,1,Bournemouth,74.0,0.0,4.0,0.0,1.0,1.0,0.0,0.0,17.0,8.0,0.0,0.21,FWD,1,0,444102.jpg,Man City,False,91,79,444102
+Kluivert,Justin_Kluivert,8,1,Bournemouth,74.0,0.0,3.0,0.0,0.0,0.0,0.0,0.0,15.0,9.0,0.11,0.0,MID,1,0,222683.jpg,Man City,False,91,70,222683
+Adams,Tyler_Adams,8,1,Bournemouth,15.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,4.0,3.0,0.0,0.0,MID,0,1,200785.jpg,Man City,False,91,73,200785
+Jebbison,Daniel_Jebbison,8,1,Bournemouth,15.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,6.0,1.0,0.1,0.0,FWD,0,1,523700.jpg,Man City,False,91,608,523700
+Tóth.A,Alex_Tóth,8,1,Bournemouth,15.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,5.0,2.0,0.0,0.0,MID,0,1,614574.jpg,Man City,False,91,76,614574
+Gannon-Doak,Ben_Gannon-Doak,8,1,Bournemouth,1.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,3.0,1.0,0.0,0.0,MID,0,1,496208.jpg,Man City,False,91,72,496208
+Adli,Amine_Adli,8,1,Bournemouth,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,489888.jpg,Man City,False,91,77,489888
+Brooks,David_Brooks,8,1,Bournemouth,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,111317.jpg,Man City,False,91,74,111317
+Christie,Ryan_Christie,8,1,Bournemouth,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,158499.jpg,Man City,False,91,75,158499
+Dennis,Will_Dennis,8,1,Bournemouth,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,GKP,0,0,444172.jpg,Man City,False,91,59,444172
+Diakité,Bafodé_Diakité,8,1,Bournemouth,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,242882.jpg,Man City,False,91,62,242882
+Enes Ünal,Enes_Ünal,8,1,Bournemouth,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,FWD,0,0,168636.jpg,Man City,False,91,80,168636
+Forster,Fraser_Forster,8,1,Bournemouth,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,GKP,0,0,40383.jpg,Man City,False,91,58,40383
+J.Araujo,Julián_Araujo Zúñiga,8,1,Bournemouth,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,436893.jpg,Man City,False,91,65,436893
+Kroupi.Jr,Junior_Kroupi,8,1,Bournemouth,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,560262.jpg,Man City,False,91,78,560262
+Milosavljević,Veljko_Milosavljevic,8,1,Bournemouth,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,620487.jpg,Man City,False,91,63,620487
+Rodríguez,Álvaro_Rodríguez,8,1,Bournemouth,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,FWD,0,0,561245.jpg,Man City,False,91,81,561245
+Sanchez,Juanlu_Sánchez,8,1,Bournemouth,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,494928.jpg,Man City,False,91,573,494928
+Soler,Julio_Soler Barreto,8,1,Bournemouth,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,575901.jpg,Man City,False,91,66,575901
+Donnarumma,Gianluigi_Donnarumma,8,1,Man City,90.0,0.0,3.0,3.0,0.0,0.0,0.0,0.0,12.0,0.0,0.0,0.0,GKP,1,0,204936.jpg,Bournemouth,True,43,384,204936
+Guéhi,Marc_Guéhi,8,1,Man City,90.0,1.0,10.0,0.0,0.0,0.0,0.0,2.0,31.0,4.0,0.89,0.32,DEF,1,0,209036.jpg,Bournemouth,True,43,388,209036
+Gvardiol,Joško_Gvardiol,8,1,Man City,90.0,1.0,9.0,0.0,0.0,0.0,0.0,1.0,28.0,7.0,0.19,0.05,DEF,1,0,477424.jpg,Bournemouth,True,43,391,477424
+Haaland,Erling_Haaland,8,1,Man City,90.0,0.0,2.0,0.0,0.0,0.0,0.0,0.0,6.0,3.0,0.74,0.02,FWD,1,0,223094.jpg,Bournemouth,True,43,411,223094
+Khusanov,Abdukodir_Khusanov,8,1,Man City,90.0,0.0,2.0,0.0,0.0,0.0,0.0,0.0,14.0,4.0,0.0,0.02,DEF,1,0,578153.jpg,Bournemouth,True,43,393,578153
+Rúben,Rúben_Gato Alves Dias,8,1,Man City,90.0,0.0,2.0,0.0,0.0,0.0,0.0,0.0,11.0,6.0,0.0,0.14,DEF,1,0,171314.jpg,Bournemouth,True,43,390,171314
+Semenyo,Antoine_Semenyo,8,1,Man City,90.0,0.0,2.0,0.0,0.0,0.0,0.0,0.0,16.0,5.0,0.06,0.02,MID,1,0,437730.jpg,Bournemouth,True,43,397,437730
+Foden,Phil_Foden,8,1,Man City,81.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,15.0,6.0,0.12,0.4,MID,1,0,209244.jpg,Bournemouth,True,43,398,209244
+Anderson,Elliot_Anderson,8,1,Man City,62.0,0.0,2.0,0.0,0.0,0.0,0.0,0.0,14.0,6.0,0.0,0.25,MID,1,0,215379.jpg,Bournemouth,True,43,481,215379
+O'Reilly,Nico_O'Reilly,8,1,Man City,62.0,0.0,2.0,0.0,0.0,0.0,0.0,0.0,5.0,2.0,0.07,0.41,DEF,1,0,472769.jpg,Bournemouth,True,43,387,472769
+Lewis,Rico_Lewis,8,1,Man City,56.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,-1.0,2.0,0.17,0.02,DEF,0,1,477064.jpg,Bournemouth,True,43,395,477064
+Matheus N.,Matheus_Nunes,8,1,Man City,33.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,4.0,1.0,0.0,0.04,DEF,0,1,465351.jpg,Bournemouth,True,43,389,465351
+Cherki,Rayan_Cherki,8,1,Man City,27.0,0.0,8.0,0.0,2.0,0.0,0.0,1.0,28.0,0.0,0.0,0.5,MID,0,1,466052.jpg,Bournemouth,True,43,399,466052
+Kovačić,Mateo_Kovačić,8,1,Man City,27.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,3.0,2.0,0.0,0.01,MID,0,1,91651.jpg,Bournemouth,True,43,406,91651
+Grealish,Jack_Grealish,8,1,Man City,8.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,2.0,1.0,0.0,0.0,MID,0,1,114283.jpg,Bournemouth,True,43,238,114283
+Alleyne,Max_Alleyne,8,1,Man City,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,494307.jpg,Bournemouth,True,43,394,494307
+Aït-Nouri,Rayan_Aït-Nouri,8,1,Man City,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,448514.jpg,Bournemouth,True,43,392,448514
+Bettinelli,Marcus_Bettinelli,8,1,Man City,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,GKP,0,0,122074.jpg,Bournemouth,True,43,386,122074
+Doku,Jérémy_Doku,8,1,Man City,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,248875.jpg,Bournemouth,True,43,400,248875
+Echeverri,Claudio_Echeverri,8,1,Man City,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,575204.jpg,Bournemouth,True,43,407,575204
+Marmoush,Omar_Marmoush,8,1,Man City,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,FWD,0,0,438234.jpg,Bournemouth,True,43,401,438234
+Monga,Jeremy_Monga,8,1,Man City,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,649208.jpg,Bournemouth,True,43,410,649208
+Mukasa,Divine_Mukasa,8,1,Man City,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,590039.jpg,Bournemouth,True,43,409,590039
+N.Gonzalez,Nico_González Iglesias,8,1,Man City,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,465694.jpg,Bournemouth,True,43,405,465694
+Phillips,Kalvin_Phillips,8,1,Man City,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,155405.jpg,Bournemouth,True,43,408,155405
+Reijnders,Tijjani_Reijnders,8,1,Man City,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,433036.jpg,Bournemouth,True,43,404,433036
+Rodrigo,Rodrigo 'Rodri'_Hernandez Cascante,8,1,Man City,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,220566.jpg,Bournemouth,True,43,402,220566
+Rulli,Gerónimo_Rulli,8,1,Man City,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,GKP,0,0,106921.jpg,Bournemouth,True,43,587,106921
+Vitor Reis,Vitor_de Oliveira Nunes dos Reis,8,1,Man City,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,616222.jpg,Bournemouth,True,43,396,616222
+Sávio,Sávio_'Savinho' Moreira de Oliveira,8,1,Spurs,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,510281.jpg,Bournemouth,True,6,403,510281
+A.Becker,Alisson_Ramses Becker,9,1,Liverpool,90.0,0.0,2.0,3.0,0.0,0.0,0.0,0.0,7.0,0.0,0.0,0.0,GKP,1,0,116535.jpg,Newcastle,False,14,350,116535
+Frimpong,Jeremie_Frimpong,9,1,Liverpool,90.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,3.0,2.0,0.01,0.09,DEF,1,0,216094.jpg,Newcastle,False,14,357,216094
+Gakpo,Cody_Gakpo,9,1,Liverpool,90.0,1.0,12.0,0.0,0.0,0.0,0.0,3.0,33.0,12.0,0.3,0.15,MID,1,0,243298.jpg,Newcastle,False,14,367,243298
+Isak,Alexander_Isak,9,1,Liverpool,90.0,0.0,2.0,0.0,0.0,0.0,0.0,0.0,6.0,1.0,1.09,0.01,FWD,1,0,219168.jpg,Newcastle,False,14,379,219168
+Kerkez,Milos_Kerkez,9,1,Liverpool,90.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,3.0,7.0,0.02,0.02,DEF,1,0,544877.jpg,Newcastle,False,14,358,544877
+Szoboszlai,Dominik_Szoboszlai,9,1,Liverpool,90.0,1.0,8.0,0.0,0.0,0.0,0.0,1.0,29.0,7.0,0.85,0.27,MID,1,0,424876.jpg,Newcastle,False,14,368,424876
+Virgil,Virgil_van Dijk,9,1,Liverpool,90.0,0.0,2.0,0.0,0.0,1.0,0.0,0.0,8.0,11.0,0.25,0.01,DEF,1,0,97032.jpg,Newcastle,False,14,356,97032
+Gravenberch,Ryan_Gravenberch,9,1,Liverpool,77.0,0.0,5.0,0.0,1.0,0.0,0.0,0.0,26.0,11.0,0.06,0.05,MID,1,0,441266.jpg,Newcastle,False,14,371,441266
+Jacquet,Jeremy_Jacquet,9,1,Liverpool,69.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,9.0,3.0,0.0,0.02,DEF,1,0,606702.jpg,Newcastle,False,14,362,606702
+Ngumoha,Rio_Ngumoha,9,1,Liverpool,62.0,0.0,2.0,0.0,0.0,0.0,0.0,0.0,9.0,3.0,0.04,0.02,MID,1,0,611922.jpg,Newcastle,False,14,369,611922
+Wirtz,Florian_Wirtz,9,1,Liverpool,62.0,0.0,2.0,0.0,0.0,0.0,0.0,0.0,16.0,5.0,0.26,0.04,MID,1,0,494595.jpg,Newcastle,False,14,366,494595
+Mac Allister,Alexis_Mac Allister,9,1,Liverpool,27.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,9.0,3.0,0.0,0.01,MID,0,1,243016.jpg,Newcastle,False,14,372,243016
+Munoz,Victor_Munoz,9,1,Liverpool,27.0,0.0,4.0,0.0,1.0,0.0,0.0,0.0,15.0,0.0,0.1,0.04,MID,0,1,551499.jpg,Newcastle,False,14,377,551499
+Araujo,Ronald_Araujo,9,1,Liverpool,20.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,3.0,4.0,0.0,0.03,DEF,0,1,445087.jpg,Newcastle,False,14,579,445087
+Koumas,Lewis_Koumas,9,1,Liverpool,12.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,4.0,1.0,0.03,0.0,MID,0,1,514514.jpg,Newcastle,False,14,381,514514
+Bajcetic,Stefan_Bajčetić Maquieira,9,1,Liverpool,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,535928.jpg,Newcastle,False,14,376,535928
+Bradley,Conor_Bradley,9,1,Liverpool,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,492777.jpg,Newcastle,False,14,360,492777
+C.Jones,Curtis_Jones,9,1,Liverpool,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,206915.jpg,Newcastle,False,14,373,206915
+Chiesa,Federico_Chiesa,9,1,Liverpool,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,223541.jpg,Newcastle,False,14,370,223541
+Danns,Jayden_Danns,9,1,Liverpool,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,FWD,0,0,500058.jpg,Newcastle,False,14,382,500058
+Davies,Harvey_Davies,9,1,Liverpool,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,GKP,0,0,464353.jpg,Newcastle,False,14,355,464353
+Ekitiké,Hugo_Ekitiké,9,1,Liverpool,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,FWD,0,0,510663.jpg,Newcastle,False,14,380,510663
+Elliott,Harvey_Elliott,9,1,Liverpool,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,444884.jpg,Newcastle,False,14,383,444884
+Endo,Endo_Wataru,9,1,Liverpool,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,158983.jpg,Newcastle,False,14,374,158983
+Gomez,Joe_Gomez,9,1,Liverpool,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,171287.jpg,Newcastle,False,14,359,171287
+Jaros,Vitezslav_Jaros,9,1,Liverpool,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,GKP,0,0,432987.jpg,Newcastle,False,14,354,432987
+Leoni,Giovanni_Leoni,9,1,Liverpool,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,647681.jpg,Newcastle,False,14,363,647681
+Lucky,Wellity_Lucky,9,1,Liverpool,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,519440.jpg,Newcastle,False,14,361,519440
+Mamardashvili,Giorgi_Mamardashvili,9,1,Liverpool,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,GKP,0,0,449027.jpg,Newcastle,False,14,351,449027
+McConnell,James_McConnell,9,1,Liverpool,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,491501.jpg,Newcastle,False,14,378,491501
+Nyoni,Trey_Nyoni,9,1,Liverpool,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,591386.jpg,Newcastle,False,14,375,591386
+Pecsi,Armin_Pecsi,9,1,Liverpool,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,GKP,0,0,586268.jpg,Newcastle,False,14,353,586268
+Ramsay,Calvin_Ramsay,9,1,Liverpool,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,489580.jpg,Newcastle,False,14,365,489580
+Tsimikas,Kostas_Tsimikas,9,1,Liverpool,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,214285.jpg,Newcastle,False,14,364,214285
+Woodman,Freddie_Woodman,9,1,Liverpool,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,GKP,0,0,155503.jpg,Newcastle,False,14,352,155503
+Barnes,Harvey_Barnes,9,1,Newcastle,90.0,0.0,2.0,0.0,0.0,0.0,0.0,0.0,12.0,8.0,0.07,0.02,MID,1,0,201666.jpg,Liverpool,True,4,453,201666
+Botman,Sven_Botman,9,1,Newcastle,90.0,0.0,3.0,0.0,0.0,0.0,0.0,0.0,4.0,10.0,0.0,0.01,DEF,1,0,220237.jpg,Liverpool,True,4,447,220237
+Dedić,Amar_Dedic,9,1,Newcastle,90.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,-1.0,9.0,0.03,0.0,DEF,1,0,463726.jpg,Liverpool,True,4,593,463726
+Hall,Lewis_Hall,9,1,Newcastle,90.0,0.0,3.0,0.0,0.0,0.0,0.0,0.0,8.0,11.0,0.0,0.35,DEF,1,0,487838.jpg,Liverpool,True,4,449,487838
+Horníček,Lukás_Hornícek,9,1,Newcastle,90.0,0.0,1.0,5.0,0.0,1.0,0.0,0.0,12.0,0.0,0.0,0.0,GKP,1,0,470551.jpg,Liverpool,True,4,567,470551
+Thiaw,Malick_Thiaw,9,1,Newcastle,90.0,0.0,3.0,0.0,0.0,0.0,0.0,0.0,0.0,15.0,0.0,0.0,DEF,1,0,465642.jpg,Liverpool,True,4,445,465642
+Wissa,Yoane_Wissa,9,1,Newcastle,90.0,0.0,4.0,0.0,1.0,1.0,0.0,0.0,7.0,8.0,1.0,0.02,FWD,1,0,216646.jpg,Liverpool,True,4,464,216646
+Elanga,Anthony_Elanga,9,1,Newcastle,75.0,1.0,9.0,0.0,0.0,0.0,0.0,2.0,31.0,2.0,0.22,0.01,MID,1,0,449434.jpg,Liverpool,True,4,454,449434
+L.Miley,Lewis_Miley,9,1,Newcastle,75.0,0.0,3.0,0.0,0.0,1.0,0.0,0.0,13.0,13.0,0.05,0.01,MID,1,0,547719.jpg,Liverpool,True,4,459,547719
+Osula,William_Osula,9,1,Newcastle,55.0,0.0,4.0,0.0,1.0,0.0,0.0,0.0,18.0,5.0,0.06,0.14,FWD,0,1,538207.jpg,Liverpool,True,4,465,538207
+Steur,Sean_Steur,9,1,Newcastle,55.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,3.0,2.0,0.0,0.0,MID,0,1,636852.jpg,Liverpool,True,4,462,636852
+J.Ramsey,Jacob_Ramsey,9,1,Newcastle,34.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,1.0,6.0,0.06,0.01,MID,0,1,232653.jpg,Liverpool,True,4,456,232653
+Willock,Joe_Willock,9,1,Newcastle,34.0,1.0,6.0,0.0,0.0,0.0,0.0,0.0,28.0,3.0,0.09,0.17,MID,0,1,200089.jpg,Liverpool,True,4,460,200089
+Bamba,Aladji_Bamba,9,1,Newcastle,14.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,5.0,2.0,0.0,0.0,MID,0,1,632794.jpg,Liverpool,True,4,559,632794
+J.Murphy,Jacob_Murphy,9,1,Newcastle,14.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,-1.0,2.0,0.0,0.0,MID,0,1,114243.jpg,Liverpool,True,4,457,114243
+Schär,Fabian_Schär,9,1,Newcastle,1.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,-1.0,0.0,0.0,0.0,DEF,0,1,119471.jpg,Liverpool,True,4,446,119471
+A.Murphy,Alex_Murphy,9,1,Newcastle,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,545477.jpg,Liverpool,True,4,451,545477
+Burn,Dan_Burn,9,1,Newcastle,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,78916.jpg,Liverpool,True,4,448,78916
+Gillespie,Mark_Gillespie,9,1,Newcastle,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,GKP,0,0,81441.jpg,Liverpool,True,4,443,81441
+Jaouen,Ewen_Jaouen,9,1,Newcastle,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,GKP,0,0,554578.jpg,Liverpool,True,4,444,554578
+Joelinton,Joelinton Cássio_Apolinário de Lira,9,1,Newcastle,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,180974.jpg,Liverpool,True,4,458,180974
+Livramento,Tino_Livramento,9,1,Newcastle,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,441191.jpg,Liverpool,True,4,450,441191
+Neave,Sean_Neave,9,1,Newcastle,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,FWD,0,0,599303.jpg,Liverpool,True,4,466,599303
+Pope,Nick_Pope,9,1,Newcastle,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,GKP,0,0,98747.jpg,Liverpool,True,4,442,98747
+Shahar,Leo_Shahar,9,1,Newcastle,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,553746.jpg,Liverpool,True,4,609,553746
+Touré,Bazoumana_Touré,9,1,Newcastle,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,611665.jpg,Liverpool,True,4,461,611665
+Woltemade,Nick_Woltemade,9,1,Newcastle,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,FWD,0,0,470313.jpg,Liverpool,True,4,463,470313
+Acheampong,Josh_Acheampong,10,1,Chelsea,90.0,0.0,3.0,0.0,0.0,0.0,0.0,0.0,13.0,15.0,0.0,0.01,DEF,1,0,577016.jpg,Fulham,False,8,151,577016
+Colwill,Levi_Colwill,10,1,Chelsea,90.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,6.0,4.0,0.01,0.03,DEF,1,0,460028.jpg,Fulham,False,8,149,460028
+James,Reece_James,10,1,Chelsea,90.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,5.0,6.0,0.1,0.07,DEF,1,0,225796.jpg,Fulham,False,8,142,225796
+João Pedro,João_Pedro Junqueira de Jesus,10,1,Chelsea,90.0,1.0,11.0,0.0,1.0,0.0,0.0,2.0,45.0,3.0,0.63,0.06,FWD,1,0,475168.jpg,Fulham,False,8,165,475168
+Lacroix,Maxence_Lacroix,10,1,Chelsea,90.0,0.0,6.0,0.0,1.0,0.0,0.0,0.0,25.0,12.0,0.0,0.2,DEF,1,0,437499.jpg,Fulham,False,8,200,437499
+Sánchez,Robert_Sánchez,10,1,Chelsea,90.0,0.0,2.0,4.0,0.0,0.0,0.0,0.0,6.0,0.0,0.0,0.01,GKP,1,0,215059.jpg,Fulham,False,8,140,215059
+Palmer,Cole_Palmer,10,1,Chelsea,82.0,1.0,13.0,0.0,1.0,0.0,0.0,3.0,60.0,9.0,0.28,0.19,MID,1,0,244851.jpg,Fulham,False,8,154,244851
+Rogers,Morgan_Rogers,10,1,Chelsea,81.0,1.0,8.0,0.0,0.0,0.0,0.0,1.0,37.0,7.0,0.96,0.1,MID,1,0,244850.jpg,Fulham,False,8,40,244850
+Gusto,Malo_Gusto,10,1,Chelsea,75.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,2.0,3.0,0.0,0.03,DEF,1,0,482609.jpg,Fulham,False,8,144,482609
+Hato,Jorrel_Hato,10,1,Chelsea,64.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,5.0,3.0,0.01,0.03,DEF,1,0,551210.jpg,Fulham,False,8,148,551210
+Lavia,Roméo_Lavia,10,1,Chelsea,64.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,8.0,9.0,0.21,0.03,MID,1,0,514356.jpg,Fulham,False,8,161,514356
+Chavarria,Pep_Chavarría,10,1,Chelsea,25.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,3.0,1.0,0.0,0.0,DEF,0,1,498444.jpg,Fulham,False,8,583,498444
+Enzo,Enzo_Fernández,10,1,Chelsea,25.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,6.0,3.0,0.0,0.02,MID,0,1,448047.jpg,Fulham,False,8,155,448047
+Neto,Pedro_Lomba Neto,10,1,Chelsea,14.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,9.0,4.0,0.03,0.07,MID,0,1,247632.jpg,Fulham,False,8,156,247632
+Quenda,Geovany_Quenda,10,1,Chelsea,8.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,2.0,1.0,0.0,0.0,MID,0,1,593117.jpg,Fulham,False,8,164,593117
+Estêvão,Estêvão_Almeida de Oliveira Gonçalves,10,1,Chelsea,7.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,3.0,1.0,0.0,0.0,MID,0,1,624773.jpg,Fulham,False,8,157,624773
+Anselmino,Aaron_Anselmino,10,1,Chelsea,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,622758.jpg,Fulham,False,8,561,622758
+B.Badiashile,Benoît_Badiashile Mukinayi,10,1,Chelsea,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,242880.jpg,Fulham,False,8,146,242880
+Barco,Valentín_Barco,10,1,Chelsea,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,543158.jpg,Fulham,False,8,568,543158
+Caicedo,Moisés_Caicedo Corozo,10,1,Chelsea,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,486672.jpg,Fulham,False,8,159,486672
+Chalobah,Trevoh_Chalobah,10,1,Chelsea,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,180736.jpg,Fulham,False,8,143,180736
+D.Essugo,Dário_Luís Essugo,10,1,Chelsea,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,491007.jpg,Fulham,False,8,163,491007
+Delap,Liam_Delap,10,1,Chelsea,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,FWD,0,0,463034.jpg,Fulham,False,8,167,463034
+Disasi,Axel_Disasi,10,1,Chelsea,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,220362.jpg,Fulham,False,8,153,220362
+Emegha,Emmanuel_Emegha,10,1,Chelsea,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,FWD,0,0,503037.jpg,Fulham,False,8,170,503037
+Fofana,Wesley_Fofana,10,1,Chelsea,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,444463.jpg,Fulham,False,8,145,444463
+Gittens,Jamie_Bynoe-Gittens,10,1,Chelsea,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,463936.jpg,Fulham,False,8,158,463936
+Henderson,Jordan_Henderson,10,1,Chelsea,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,56979.jpg,Fulham,False,8,101,56979
+Jörgensen,Filip_Jörgensen,10,1,Chelsea,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,GKP,0,0,508479.jpg,Fulham,False,8,141,508479
+M.Sarr,Mamadou_Sarr,10,1,Chelsea,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,574458.jpg,Fulham,False,8,150,574458
+Marc Guiu,Marc_Guiu Paz,10,1,Chelsea,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,FWD,0,0,499309.jpg,Fulham,False,8,168,499309
+Mheuka,Shumaira_Mheuka,10,1,Chelsea,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,FWD,0,0,567119.jpg,Fulham,False,8,169,567119
+Mudryk,Mykhailo_Mudryk,10,1,Chelsea,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,465920.jpg,Fulham,False,8,578,465920
+N.Jackson,Nicolas_Jackson,10,1,Chelsea,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,FWD,0,0,517052.jpg,Fulham,False,8,166,517052
+Palestra,Marco_Palestra,10,1,Chelsea,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,620109.jpg,Fulham,False,8,152,620109
+Penders,Mike_Penders,10,1,Chelsea,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,GKP,0,0,549939.jpg,Fulham,False,8,560,549939
+Tosin,Tosin_Adarabioyo,10,1,Chelsea,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,109646.jpg,Fulham,False,8,147,109646
+Welbeck,Danny_Welbeck,10,1,Chelsea,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,FWD,0,0,50175.jpg,Fulham,False,8,136,50175
+Bassey,Calvin_Bassey,10,1,Fulham,90.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,1.0,4.0,0.02,0.02,DEF,1,0,232892.jpg,Chelsea,True,54,257,232892
+Castagne,Timothy_Castagne,10,1,Fulham,90.0,0.0,6.0,0.0,2.0,1.0,0.0,0.0,21.0,6.0,0.09,0.18,DEF,1,0,166477.jpg,Chelsea,True,54,258,166477
+Gonzalo,Gonzalo_García,10,1,Fulham,90.0,1.0,6.0,0.0,0.0,0.0,0.0,0.0,33.0,2.0,0.73,0.01,FWD,1,0,551466.jpg,Chelsea,True,54,569,551466
+Iwobi,Alex_Iwobi,10,1,Fulham,90.0,0.0,2.0,0.0,0.0,0.0,0.0,0.0,17.0,10.0,0.0,0.04,MID,1,0,153133.jpg,Chelsea,True,54,261,153133
+J.Cuenca,Jorge_Cuenca Barreno,10,1,Fulham,90.0,0.0,3.0,0.0,0.0,0.0,0.0,0.0,7.0,10.0,0.0,0.03,DEF,1,0,246301.jpg,Chelsea,True,54,255,246301
+King,Josh_King,10,1,Fulham,90.0,1.0,7.0,0.0,0.0,0.0,0.0,0.0,34.0,8.0,0.17,0.04,MID,1,0,577725.jpg,Chelsea,True,54,268,577725
+Leno,Bernd_Leno,10,1,Fulham,90.0,0.0,2.0,3.0,0.0,0.0,0.0,0.0,11.0,0.0,0.0,0.0,GKP,1,0,80201.jpg,Chelsea,True,54,250,80201
+Robinson,Antonee_Robinson,10,1,Fulham,81.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,4.0,7.0,0.13,0.04,DEF,1,0,169528.jpg,Chelsea,True,54,254,169528
+Berge,Sander_Berge,10,1,Fulham,72.0,0.0,2.0,0.0,0.0,0.0,0.0,0.0,14.0,4.0,0.03,0.03,MID,1,0,207189.jpg,Chelsea,True,54,265,207189
+Palacios,César_Palacios,10,1,Fulham,72.0,0.0,2.0,0.0,0.0,0.0,0.0,0.0,10.0,4.0,0.16,0.01,MID,1,0,571779.jpg,Chelsea,True,54,570,571779
+Bobb,Oscar_Bobb,10,1,Fulham,66.0,0.0,2.0,0.0,0.0,0.0,0.0,0.0,10.0,6.0,0.0,0.26,MID,1,0,477555.jpg,Chelsea,True,54,264,477555
+Charles,Shea_Charles,10,1,Fulham,23.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,5.0,3.0,0.0,0.0,MID,0,1,463210.jpg,Chelsea,True,54,580,463210
+Kevin,Kevin_Santos Lopes de Macedo,10,1,Fulham,17.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,2.0,3.0,0.0,0.01,MID,0,1,560552.jpg,Chelsea,True,54,263,560552
+Sessegnon,Ryan_Sessegnon,10,1,Fulham,17.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,7.0,1.0,0.03,0.0,DEF,0,1,184349.jpg,Chelsea,True,54,269,184349
+Muniz,Rodrigo_Muniz Carvalho,10,1,Fulham,8.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,6.0,1.0,0.02,0.0,FWD,0,1,244042.jpg,Chelsea,True,54,271,244042
+Andersen,Joachim_Andersen,10,1,Fulham,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,174874.jpg,Chelsea,True,54,253,174874
+Cairney,Tom_Cairney,10,1,Fulham,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,76357.jpg,Chelsea,True,54,266,76357
+De Fougerolles,Luc_De Fougerolles,10,1,Fulham,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,547686.jpg,Chelsea,True,54,610,547686
+Kusi-Asare,Jonah_Kusi-Asare,10,1,Fulham,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,FWD,0,0,631786.jpg,Chelsea,True,54,272,631786
+Lecomte,Benjamin_Lecomte,10,1,Fulham,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,GKP,0,0,86873.jpg,Chelsea,True,54,251,86873
+McNally,Alfie_McNally,10,1,Fulham,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,GKP,0,0,505079.jpg,Chelsea,True,54,252,505079
+Reed,Harrison_Reed,10,1,Fulham,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,153366.jpg,Chelsea,True,54,270,153366
+Smith Rowe,Emile_Smith Rowe,10,1,Fulham,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,MID,0,0,209289.jpg,Chelsea,True,54,262,209289
+Tete,Kenny_Tete,10,1,Fulham,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,DEF,0,0,167074.jpg,Chelsea,True,54,256,167074
