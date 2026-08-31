@@ -25,6 +25,7 @@ PORT = 8765
 CSV_PATH = Path(__file__).resolve().parent / "GenerateXmins2.csv"
 BACKUP_PATH = CSV_PATH.with_name(f"{CSV_PATH.stem}.backup{CSV_PATH.suffix}")
 SNAPSHOT_PATH = CSV_PATH.with_name(f"{CSV_PATH.stem}.weekly_snapshot.json")
+PREVIOUS_SNAPSHOT_PATH = CSV_PATH.with_name(f"{CSV_PATH.stem}.weekly_snapshot_prev.json")
 
 
 HTML_PAGE = """<!DOCTYPE html>
@@ -673,11 +674,31 @@ def save_weekly_snapshot(df: pd.DataFrame) -> None:
     )
 
 
-def load_shifted_snapshot() -> tuple[dict[tuple[str, str, str], float], dict[str, Any] | None]:
-    if not SNAPSHOT_PATH.exists():
+def _load_snapshot_payload(path: Path) -> dict[str, Any] | None:
+    if not path.exists():
+        return None
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _snapshot_gws(payload: dict[str, Any] | None) -> list[int]:
+    if not payload:
+        return []
+    gws = pd.to_numeric(
+        pd.Series([row.get("GW") for row in payload.get("rows", [])]),
+        errors="coerce",
+    ).dropna()
+    if gws.empty:
+        return []
+    return sorted(gws.astype(int).unique().tolist())
+
+
+def _shifted_snapshot_from_payload(
+    payload: dict[str, Any] | None,
+    source_name: str,
+) -> tuple[dict[tuple[str, str, str], float], dict[str, Any] | None]:
+    if not payload:
         return {}, None
 
-    payload = json.loads(SNAPSHOT_PATH.read_text(encoding="utf-8"))
     shifted: dict[tuple[str, str, str], float] = {}
     for row in payload.get("rows", []):
         gw = pd.to_numeric(row.get("GW"), errors="coerce")
@@ -694,13 +715,66 @@ def load_shifted_snapshot() -> tuple[dict[tuple[str, str, str], float], dict[str
 
     return shifted, {
         "generated_at": payload.get("generated_at"),
+        "source_name": source_name,
+        "source_gws": _snapshot_gws(payload),
         "label": (
-            f"Last week edit loaded from {payload.get('generated_at')} "
+            f"Last week edit loaded from {payload.get('generated_at')} ({source_name}) "
             f"and shifted +1 GW."
             if payload.get("generated_at")
-            else "Last week edit loaded and shifted +1 GW."
+            else f"Last week edit loaded from {source_name} and shifted +1 GW."
         ),
     }
+
+
+def load_shifted_snapshot(current_gws: list[int] | None = None) -> tuple[dict[tuple[str, str, str], float], dict[str, Any] | None]:
+    current_payload = _load_snapshot_payload(SNAPSHOT_PATH)
+    previous_payload = _load_snapshot_payload(PREVIOUS_SNAPSHOT_PATH)
+
+    candidates: list[tuple[dict[tuple[str, str, str], float], dict[str, Any] | None]] = []
+    if previous_payload:
+        candidates.append(_shifted_snapshot_from_payload(previous_payload, PREVIOUS_SNAPSHOT_PATH.name))
+    if current_payload:
+        candidates.append(_shifted_snapshot_from_payload(current_payload, SNAPSHOT_PATH.name))
+
+    if not candidates:
+        return {}, None
+
+    if not current_gws:
+        return candidates[-1]
+
+    current_gw_set = {int(gw) for gw in current_gws}
+
+    def overlap_score(candidate: tuple[dict[tuple[str, str, str], float], dict[str, Any] | None]) -> tuple[int, int]:
+        _, meta = candidate
+        source_gws = meta.get("source_gws", []) if meta else []
+        shifted_gws = {int(gw) + 1 for gw in source_gws}
+        overlap = len(current_gw_set.intersection(shifted_gws))
+        source_len = len(source_gws)
+        return overlap, source_len
+
+    return max(candidates, key=overlap_score)
+
+
+def maybe_archive_snapshot_for_new_week(df: pd.DataFrame) -> None:
+    current_payload = _load_snapshot_payload(SNAPSHOT_PATH)
+    if not current_payload:
+        return
+
+    existing_gws = _snapshot_gws(current_payload)
+    current_gws = (
+        pd.to_numeric(df["GW"], errors="coerce")
+        .dropna()
+        .astype(int)
+        .unique()
+        .tolist()
+    )
+    current_gws = sorted(current_gws)
+
+    if existing_gws and current_gws and existing_gws != current_gws:
+        PREVIOUS_SNAPSHOT_PATH.write_text(
+            json.dumps(current_payload, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
 
 
 def build_meta(df: pd.DataFrame) -> dict[str, Any]:
@@ -711,17 +785,25 @@ def build_meta(df: pd.DataFrame) -> dict[str, Any]:
         .rename(columns={"name": "players"})
         .sort_values("team_code")
     )
+    current_gws = (
+        pd.to_numeric(df["GW"], errors="coerce")
+        .dropna()
+        .astype(int)
+        .unique()
+        .tolist()
+    )
     return {
         "teams": grouped.to_dict(orient="records"),
-        "snapshot": load_shifted_snapshot()[1],
+        "snapshot": load_shifted_snapshot(sorted(current_gws))[1],
     }
 
 
 def build_pivot(df: pd.DataFrame, team_code: str) -> dict[str, Any]:
-    shifted_snapshot, snapshot_meta = load_shifted_snapshot()
     filtered = df[df["team_code"] == str(team_code)].copy()
     filtered = filtered.dropna(subset=["GW"]).copy()
     filtered["GW"] = filtered["GW"].astype(int)
+    current_gws = sorted(filtered["GW"].unique().tolist()) if not filtered.empty else []
+    shifted_snapshot, snapshot_meta = load_shifted_snapshot(current_gws)
 
     if filtered.empty:
         return {
@@ -799,6 +881,7 @@ def save_changes(changes: list[dict[str, Any]]) -> dict[str, Any]:
             updated += int(mask.sum())
 
     df.to_csv(CSV_PATH, index=False)
+    maybe_archive_snapshot_for_new_week(df)
     save_weekly_snapshot(df)
 
     removed_legacy_backups = 0

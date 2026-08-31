@@ -816,7 +816,7 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
     Players_without_history=[]
 
     for name in names:
-        player_risiko = 0.4
+        player_risiko = 0.25
         print(name)
         
         
@@ -1024,8 +1024,10 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
             .sort_values("kickoff_time_parsed", ascending=False)
         )
         filtered["minutes"] = pd.to_numeric(filtered["minutes"], errors="coerce").fillna(0.0)
+        filtered["defcon_avg_numeric"] = pd.to_numeric(filtered["defcon_avg"], errors="coerce")
 
         defcon_rows = filtered["defcon_avg"].notna().sum()
+        positive_defcon_rows = int((filtered["defcon_avg_numeric"].fillna(0.0) > 0).sum())
         defcon_columns = [
             "defcon_avg",
             "defcon_avg_hit_rate",
@@ -1086,6 +1088,18 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
             cluster_df = current_data[current_data["name"].isin(members)]
             cluster_means = cluster_df[columns_to_average].mean()
             player_row[columns_to_average] = 0.5 * player_row[columns_to_average] + 0.5 * cluster_means
+
+        if positive_defcon_rows < 6:
+            current_defcon_avg = pd.to_numeric(
+                pd.Series([
+                    player_row["defcon_avg"].iloc[0] if "defcon_avg" in player_row.columns and not player_row.empty else np.nan
+                ]),
+                errors="coerce",
+            ).iloc[0]
+            if position == "DEF" and pd.notna(current_defcon_avg):
+                player_row["defcon_avg"] = min(float(current_defcon_avg), 10.0)
+            elif position == "MID" and pd.notna(current_defcon_avg):
+                player_row["defcon_avg"] = min(float(current_defcon_avg), 12.0)
 
         rolling_cards = 0.1
         if len(history_player) <= 6:
