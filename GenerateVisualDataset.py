@@ -424,8 +424,8 @@ def Generate_matches_dataset(current_teams_path, current_player_path, current_se
         merged["GW"] = pd.to_numeric(merged["GW_from_fixture"], errors="coerce").astype("Int64")
     else:
         merged["GW"] = pd.to_numeric(merged["round"], errors="coerce").astype("Int64")
-    merged["Started"] = (merged["minutes"] > 60).astype(int)
-    merged["Sub"] = ((merged["minutes"] >= 1) & (merged["minutes"] <= 59)).astype(int)
+    merged["Started"] = (merged["minutes"] > 50).astype(int)
+    merged["Sub"] = ((merged["minutes"] >= 1) & (merged["minutes"] <= 49)).astype(int)
 
     merged["DisplayName"] = merged["web_name"].fillna(merged["Full_Name"])
 

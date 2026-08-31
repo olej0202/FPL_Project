@@ -190,7 +190,7 @@ export default function Matches() {
         throw new Error(`Match fixtures request failed (${response.status})`);
       }
       const payload = await response.json();
-      const rows = (Array.isArray(payload) ? payload : []).filter((row) => Boolean(row?.finished));
+      const rows = (Array.isArray(payload) ? payload : []).filter((row) => Boolean(row?.started));
       rows.sort((a, b) => toNumber(a.GW) - toNumber(b.GW) || toNumber(a.Fix_ID) - toNumber(b.Fix_ID));
       setFixtures(rows);
 
@@ -331,13 +331,13 @@ export default function Matches() {
                 Matches
               </h1>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
-                Browse finished fixtures by gameweek, open a match, and compare starters and subs by your chosen player measure.
+                Browse started fixtures by gameweek, open a match, and compare starters and subs by your chosen player measure.
               </p>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <p className="text-xs uppercase tracking-[0.22em] text-slate-500">Finished fixtures</p>
+                <p className="text-xs uppercase tracking-[0.22em] text-slate-500">Started fixtures</p>
                 <p className="mt-2 text-2xl font-bold text-slate-900">{fixtures.length}</p>
               </div>
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
@@ -454,9 +454,7 @@ export default function Matches() {
 
                             <div className="shrink-0 text-right">
                               <div className="text-sm font-semibold text-slate-900">
-                                {fixture.finished && fixture.team_h_score !== "" && fixture.team_a_score !== ""
-                                  ? `${toNumber(fixture.team_h_score)} - ${toNumber(fixture.team_a_score)}`
-                                  : "Open"}
+                                {`${toNumber(fixture.team_h_score)} - ${toNumber(fixture.team_a_score)}`}
                               </div>
                               <div className="mt-1 text-xs text-slate-500">
                                 {fixture.finished ? "Finished" : fixture.started ? "Live or started" : "Upcoming"}

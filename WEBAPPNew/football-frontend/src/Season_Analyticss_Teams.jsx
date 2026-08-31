@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Box from "@mui/material/Box";
 import Slider from "@mui/material/Slider";
 import TextField from "@mui/material/TextField";
@@ -15,18 +15,10 @@ import {
   Scatter,
   ZAxis,
   ReferenceLine,
+  Cell,
 } from "recharts";
 import { useOtherData } from "./Contexts/OtherContext";
-
-/**
- * TeamMeasureAveragesChart (JS/JSX)
- * - Colors points based on "good/bad" thresholds for BOTH measures
- * - Draws threshold guide lines on X and Y axes
- * - Aggregation: Average | Total over selected GW range
- * - In Total mode, thresholds are multiplied by the number of selected GWs
- */
-
-/* -------------------------- Config/options -------------------------- */
+import teamLogos from "./utils/team_logos";
 
 const MEASURE_OPTIONS = [
   { key: "total_points", label: "Total FPL Points" },
@@ -36,13 +28,12 @@ const MEASURE_OPTIONS = [
   { key: "goals_conceded", label: "Goals Conceded" },
   { key: "GOALSCONCEEDED-XGOALSCONCEEDED", label: "Goals Conceded - XGC" },
   { key: "defcon_hit", label: "Defcon Hit" },
-  { key: "GOALS-XG", label: "GOALS - XG" },
+  { key: "GOALS-XG", label: "Goals - XG" },
   { key: "saves", label: "Saves" },
   { key: "yellow_cards", label: "Yellow Cards" },
   { key: "clean_sheets", label: "Clean Sheets" },
 ];
 
-// Metrics where "lower is better"
 const LOW_IS_GOOD = new Set([
   "expected_goals_conceded",
   "goals_conceded",
@@ -50,38 +41,29 @@ const LOW_IS_GOOD = new Set([
   "yellow_cards",
 ]);
 
-// Manual thresholds; if missing, auto-derive from quartiles
 const THRESHOLDS = {
-  // High is good
-  expected_goals: { direction: "high", good: 1.7, bad: 0.9 }, // per-GW example
+  expected_goals: { direction: "high", good: 1.7, bad: 0.9 },
   goals_scored: { direction: "high", good: 1.7, bad: 0.91 },
   total_points: { direction: "high", good: 50.0, bad: 30.0 },
   saves: { direction: "high", good: 3.3, bad: 2.0 },
   clean_sheets: { direction: "high", good: 0.51, bad: 0.2 },
   defcon_hit: { direction: "high", good: 2, bad: 1 },
   "GOALS-XG": { direction: "low", good: -0.3, bad: 0.3 },
-
-  // Low is good
   expected_goals_conceded: { direction: "low", good: 0.95, bad: 1.6 },
   goals_conceded: { direction: "low", good: 0.95, bad: 1.6 },
   "GOALSCONCEEDED-XGOALSCONCEEDED": { direction: "high", good: 0.3, bad: -0.3 },
   yellow_cards: { direction: "low", good: 1.3, bad: 2.3 },
-
-  // Fallbacks (used internally)
   defaultHigh: { direction: "high", good: null, bad: null },
   defaultLow: { direction: "low", good: null, bad: null },
 };
 
 const COLORS = {
-  bothGood: "#76AFA0", // green
-  bothBad: "#ef4444", // red
-  mixed: "#f59e0b", // amber
-  neutral: "#60a5fa", // blue
+  bothGood: "#76AFA0",
+  bothBad: "#ef4444",
+  mixed: "#f59e0b",
+  neutral: "#60a5fa",
 };
 
-/* ---------------------------- Utilities ---------------------------- */
-
-// Derive per-GW thresholds (manual first, otherwise quartiles)
 function deriveThresholds(key, rows, valueSelector) {
   const dir = LOW_IS_GOOD.has(key) ? "low" : "high";
   const manual =
@@ -89,78 +71,265 @@ function deriveThresholds(key, rows, valueSelector) {
 
   if (manual.good != null && manual.bad != null) return manual;
 
-  const vals = rows
-    .map((r) => valueSelector(r))
-    .filter((v) => Number.isFinite(v))
+  const values = rows
+    .map((row) => valueSelector(row))
+    .filter((value) => Number.isFinite(value))
     .sort((a, b) => a - b);
-  if (!vals.length) return manual;
+
+  if (!values.length) return manual;
 
   const q = (p) => {
-    const idx = (vals.length - 1) * p;
+    const idx = (values.length - 1) * p;
     const lo = Math.floor(idx);
     const hi = Math.ceil(idx);
-    return lo === hi ? vals[lo] : vals[lo] + (vals[hi] - vals[lo]) * (idx - lo);
+    return lo === hi ? values[lo] : values[lo] + (values[hi] - values[lo]) * (idx - lo);
   };
 
-  // 75th/25th percentiles as auto thresholds
   return dir === "high"
     ? { direction: "high", good: q(0.75), bad: q(0.25) }
     : { direction: "low", good: q(0.25), bad: q(0.75) };
 }
 
-function zoneOf(val, t) {
-  if (!t) return "neutral";
-  if (!Number.isFinite(val) || t.good == null || t.bad == null) return "neutral";
-  if (t.direction === "high") {
-    if (val >= t.good) return "good";
-    if (val <= t.bad) return "bad";
-    return "neutral";
-  } else {
-    if (val <= t.good) return "good";
-    if (val >= t.bad) return "bad";
+function zoneOf(value, threshold) {
+  if (!threshold) return "neutral";
+  if (!Number.isFinite(value) || threshold.good == null || threshold.bad == null) return "neutral";
+  if (threshold.direction === "high") {
+    if (value >= threshold.good) return "good";
+    if (value <= threshold.bad) return "bad";
     return "neutral";
   }
+  if (value <= threshold.good) return "good";
+  if (value >= threshold.bad) return "bad";
+  return "neutral";
 }
 
-const labelOf = (key) => MEASURE_OPTIONS.find((m) => m.key === key)?.label || key;
-
-// Scale per-GW thresholds by GW count in Total mode
-function scaleThreshold(t, factor, isTotalMode) {
-  if (!t) return t;
-  if (!isTotalMode) return t;
+function scaleThreshold(threshold, factor, isTotalMode) {
+  if (!threshold || !isTotalMode) return threshold;
   return {
-    ...t,
-    good: t.good == null ? null : t.good * factor,
-    bad: t.bad == null ? null : t.bad * factor,
+    ...threshold,
+    good: threshold.good == null ? null : threshold.good * factor,
+    bad: threshold.bad == null ? null : threshold.bad * factor,
   };
 }
 
-/* ---------------------------- Component ---------------------------- */
+function labelOf(key) {
+  return MEASURE_OPTIONS.find((measure) => measure.key === key)?.label || key;
+}
 
-const PlayerMeasureAveragesChart_TEAMS = () => {
+function formatMetric(value) {
+  const num = Number(value);
+  if (!Number.isFinite(num)) return "-";
+  if (Math.abs(num) >= 10 || Number.isInteger(num)) return num.toFixed(1).replace(/\.0$/, "");
+  return num.toFixed(2);
+}
+
+function getTeamKey(row) {
+  return String(row?.Full_Name ?? row?.full_name ?? row?.name ?? row?.team_name ?? "").trim();
+}
+
+function getTeamDisplayName(row) {
+  const candidates = [row?.web_name, row?.name, row?.team_name, row?.Full_Name];
+  for (const candidate of candidates) {
+    const value = String(candidate ?? "").trim();
+    if (value && value !== "0") return value;
+  }
+  return getTeamKey(row);
+}
+
+function getTeamCellColor(value, minValue, maxValue) {
+  if (!Number.isFinite(value)) return "rgba(248, 250, 252, 0.9)";
+  if (!Number.isFinite(minValue) || !Number.isFinite(maxValue) || Math.abs(maxValue - minValue) < 1e-9) {
+    return "hsl(55 92% 84%)";
+  }
+  const t = Math.max(0, Math.min(1, (value - minValue) / (maxValue - minValue)));
+  const hue = 6 + t * 114;
+  const lightness = 93 - t * 20;
+  return `hsl(${hue} 88% ${lightness}%)`;
+}
+
+function TeamIdentity({ row }) {
+  const logo = teamLogos[row.name] || "";
+
+  return (
+    <div className="flex min-w-0 items-center gap-3">
+      {logo ? (
+        <img
+          src={logo}
+          alt={row.name}
+          className="h-9 w-9 shrink-0 rounded-full border border-slate-200 bg-white object-contain p-1"
+        />
+      ) : (
+        <div className="h-9 w-9 shrink-0 rounded-full border border-slate-200 bg-slate-100" />
+      )}
+      <div className="min-w-0">
+        <div className="truncate font-semibold text-slate-900">{row.name}</div>
+      </div>
+    </div>
+  );
+}
+
+function BarChartNameTick({ x, y, payload, teamMetaMap }) {
+  const value = String(payload?.value ?? "");
+  const row = teamMetaMap.get(value);
+  const logo = row ? teamLogos[row.name] || "" : "";
+
+  return (
+    <g transform={`translate(${x},${y})`}>
+      {logo ? (
+        <image
+          href={logo}
+          x={-108}
+          y={-14}
+          width={24}
+          height={24}
+          preserveAspectRatio="xMidYMid meet"
+        />
+      ) : null}
+      <text
+        x={logo ? -78 : -108}
+        y={0}
+        dy={4}
+        textAnchor="start"
+        fill="#334155"
+        fontSize={12}
+        fontWeight={600}
+      >
+        {value}
+      </text>
+    </g>
+  );
+}
+
+function RankedTeamList({ rows, mode, selectedMeasure }) {
+  if (!rows.length) return null;
+
+  return (
+    <div className="mt-5 overflow-hidden rounded-2xl border border-slate-200">
+      <div className="grid grid-cols-[minmax(0,1.5fr)_110px_90px] gap-3 bg-slate-50 px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+        <div>Team</div>
+        <div className="text-right">{mode === "average" ? "Average" : "Total"}</div>
+        <div className="text-right">{labelOf(selectedMeasure)}</div>
+      </div>
+      <div className="divide-y divide-slate-100 bg-white">
+        {rows.map((row) => {
+          const metricValue = mode === "average" ? row.avg : row.total;
+          return (
+            <div
+              key={row.id}
+              className="grid grid-cols-[minmax(0,1.5fr)_110px_90px] gap-3 px-4 py-3 text-sm"
+            >
+              <TeamIdentity row={row} />
+              <div className="self-center text-right text-slate-600">{formatMetric(metricValue)}</div>
+              <div className="self-center text-right font-semibold text-slate-900">{formatMetric(metricValue)}</div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function MatrixTable({ rows, gws, selectedMeasure, mode }) {
+  const heatRange = useMemo(() => {
+    const values = rows
+      .flatMap((row) => row.gwValues.map((value) => Number(value)))
+      .filter(Number.isFinite);
+    if (!values.length) {
+      return { min: 0, max: 0 };
+    }
+    return {
+      min: Math.min(...values),
+      max: Math.max(...values),
+    };
+  }, [rows]);
+
+  if (!rows.length) {
+    return <div className="py-10 text-center text-slate-500">No data after filters.</div>;
+  }
+
+  return (
+    <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
+      <table className="min-w-full border-collapse text-sm">
+        <thead className="bg-slate-50 text-slate-500">
+          <tr>
+            <th className="sticky left-0 z-20 min-w-[220px] border-b border-r border-slate-200 bg-slate-50 px-4 py-3 text-left">
+              Team
+            </th>
+            <th className="border-b border-r border-slate-200 px-3 py-3 text-right">
+              {mode === "average" ? "Avg" : "Total"}
+            </th>
+            {gws.map((gw) => (
+              <th
+                key={gw}
+                className="min-w-[92px] border-b border-r border-slate-200 px-3 py-3 text-center"
+              >
+                GW {gw}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr key={row.id} className="border-b border-slate-100">
+              <td className="sticky left-0 z-10 border-r border-slate-200 bg-white px-4 py-3">
+                <TeamIdentity row={row} />
+              </td>
+              <td className="border-r border-slate-200 px-3 py-3 text-right font-semibold text-slate-900">
+                {formatMetric(mode === "average" ? row.avg : row.total)}
+              </td>
+              {row.gwValues.map((value, index) => (
+                <td
+                  key={`${row.id}-${gws[index]}`}
+                  className="border-r border-slate-200 px-2 py-3 text-center font-semibold text-slate-800"
+                  style={{
+                    background: getTeamCellColor(
+                      Number.isFinite(Number(value)) ? Number(value) : null,
+                      heatRange.min,
+                      heatRange.max
+                    ),
+                  }}
+                  title={`GW ${gws[index]} ${labelOf(selectedMeasure)}: ${formatMetric(value)}`}
+                >
+                  {formatMetric(value)}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+const SeasonAnalyticsTeams = () => {
   const { fetchIfNeeded, SeasonData } = useOtherData() || {};
 
   const [rowsRaw, setRowsRaw] = useState([]);
   const [selectedMeasure, setSelectedMeasure] = useState(MEASURE_OPTIONS[0].key);
-  const [selectedMeasure2, setSelectedMeasure2] = useState(""); // empty = disabled
-
+  const [selectedMeasure2, setSelectedMeasure2] = useState("");
   const [GWRange, setGWRange] = useState([1, 38]);
   const [minGW, setMinGW] = useState(null);
   const [maxGW, setMaxGW] = useState(null);
-
   const [topX, setTopX] = useState(20);
-  const [mode, setMode] = useState("average"); // 'average' | 'total'
-  const [posFilter, setPosFilter] = useState(new Set());
-
+  const [mode, setMode] = useState("average");
+  const [singleView, setSingleView] = useState("chart");
+  const [teamFilter, setTeamFilter] = useState(new Set());
   const [rankDirection, setRankDirection] = useState("top");
+
   const bottomEligibleKeys = new Set(["GOALS-XG", "GOALSCONCEEDED-XGOALSCONCEEDED"]);
   const bottomEligible = bottomEligibleKeys.has(selectedMeasure);
+  const isDoubleMeasure = !!selectedMeasure2 && selectedMeasure2 !== selectedMeasure;
 
   useEffect(() => {
     if (!bottomEligible) setRankDirection("top");
   }, [bottomEligible]);
 
-  // Load data
+  useEffect(() => {
+    if (isDoubleMeasure) {
+      setSingleView("chart");
+    }
+  }, [isDoubleMeasure]);
+
   useEffect(() => {
     (async () => {
       await fetchIfNeeded?.();
@@ -179,7 +348,6 @@ const PlayerMeasureAveragesChart_TEAMS = () => {
     })();
   }, [fetchIfNeeded, SeasonData]);
 
-  // GW count in current range
   const gwCount = useMemo(() => {
     if (
       Array.isArray(GWRange) &&
@@ -191,90 +359,81 @@ const PlayerMeasureAveragesChart_TEAMS = () => {
     return 1;
   }, [GWRange]);
 
-  // Distinct positions (not shown for teams usually, but kept from original)
-  const allPositions = useMemo(() => {
-    const s = new Set();
-    for (const r of rowsRaw) {
-      const p = r?.position ?? r?.Position;
-      if (p !== undefined && p !== null && String(p) !== "") s.add(String(p));
+  const allTeams = useMemo(() => {
+    const teams = new Set();
+    for (const row of rowsRaw) {
+      const type = String((row?.Type ?? row?.type) ?? "").toLowerCase();
+      if (type !== "teams") continue;
+      const teamName = getTeamDisplayName(row);
+      if (teamName) teams.add(teamName);
     }
-    return Array.from(s).sort((a, b) => a.localeCompare(b));
+    return Array.from(teams).sort((a, b) => a.localeCompare(b));
   }, [rowsRaw]);
 
-  const togglePos = (p) => {
-    setPosFilter((prev) => {
-      const n = new Set(prev);
-      n.has(p) ? n.delete(p) : n.add(p);
-      return n;
+  const toggleTeam = (teamName) => {
+    setTeamFilter((prev) => {
+      const next = new Set(prev);
+      if (next.has(teamName)) next.delete(teamName);
+      else next.add(teamName);
+      return next;
     });
   };
 
-  // Filter: teams only + GW + position
   const filtered = useMemo(() => {
     const [gmin, gmax] = GWRange;
-    return rowsRaw.filter((r) => {
-      const type = String((r?.Type ?? r?.type) ?? "").toLowerCase();
+    return rowsRaw.filter((row) => {
+      const type = String((row?.Type ?? row?.type) ?? "").toLowerCase();
       if (type !== "teams") return false;
 
-      const gw = Number(r?.GW);
-      if (!Number.isFinite(gw)) return false;
-      if (gw < gmin || gw > gmax) return false;
+      const gw = Number(row?.GW);
+      if (!Number.isFinite(gw) || gw < gmin || gw > gmax) return false;
 
-      if (posFilter.size > 0) {
-        const p = String((r?.position ?? r?.Position) ?? "");
-        if (!posFilter.has(p)) return false;
-      }
+      const teamName = getTeamDisplayName(row);
+      if (teamFilter.size > 0 && !teamFilter.has(teamName)) return false;
+
       return true;
     });
-  }, [rowsRaw, GWRange, posFilter]);
+  }, [rowsRaw, GWRange, teamFilter]);
 
-  // Aggregate helper
-  const aggregateByTeam = React.useCallback(
+  const aggregateByTeam = useCallback(
     (metricKey) => {
       const acc = new Map();
 
-      for (const r of filtered) {
-        const fullName = String(
-          (r?.Full_Name ?? r?.full_name ?? r?.name ?? r?.team_name ?? "")
-        ).trim();
-        if (!fullName) continue;
+      for (const row of filtered) {
+        const id = getTeamKey(row);
+        if (!id) continue;
 
-        const val = Number(r?.[metricKey]);
-        if (!Number.isFinite(val)) continue;
+        const value = Number(row?.[metricKey]);
+        if (!Number.isFinite(value)) continue;
 
-        if (!acc.has(fullName)) {
-          acc.set(fullName, {
-            id: fullName,
-            name:
-              typeof r?.web_name === "string" && r.web_name !== "0"
-                ? r.web_name
-                : fullName,
+        if (!acc.has(id)) {
+          acc.set(id, {
+            id,
+            name: getTeamDisplayName(row),
             sum: 0,
             samples: 0,
           });
         }
-        const e = acc.get(fullName);
-        e.sum += val;
-        e.samples += 1;
+
+        const current = acc.get(id);
+        current.sum += value;
+        current.samples += 1;
       }
 
       const out = [];
-      for (const e of acc.values()) {
-        if (e.samples <= 0) continue;
-        const avg = e.sum / e.samples;
+      for (const team of acc.values()) {
+        if (team.samples <= 0) continue;
         out.push({
-          id: e.id,
-          name: e.name,
-          avg,
-          total: e.sum,
-          samples: e.samples,
+          ...team,
+          avg: team.sum / team.samples,
+          total: team.sum,
         });
       }
 
       out.sort((a, b) => {
-        const va = mode === "average" ? a.avg : a.total;
-        const vb = mode === "average" ? b.avg : b.total;
-        return vb - va || a.name.localeCompare(b.name);
+        const aValue = mode === "average" ? a.avg : a.total;
+        const bValue = mode === "average" ? b.avg : b.total;
+        return bValue - aValue || a.name.localeCompare(b.name);
       });
 
       return out;
@@ -282,75 +441,61 @@ const PlayerMeasureAveragesChart_TEAMS = () => {
     [filtered, mode]
   );
 
-  // Aggregation for primary measure (A)
-  const groupedA = useMemo(
-    () => aggregateByTeam(selectedMeasure),
-    [aggregateByTeam, selectedMeasure]
-  );
-
-  // Rank & trim A
-  const rankedRows = useMemo(() => {
-    const n = Math.max(1, Math.min(200, Number(topX) || 10));
-    if (bottomEligible && rankDirection === "bottom") {
-      const asc = [...groupedA].reverse(); // lowest first
-      return asc.slice(0, n);
-    }
-    return groupedA.slice(0, n);
-  }, [groupedA, topX, bottomEligible, rankDirection]);
-
-  // Bar data (single measure)
-  const chartData = useMemo(
-    () =>
-      rankedRows.map((r) => ({
-        name: r.name,
-        Value: Number((mode === "average" ? r.avg : r.total).toFixed(3)),
-      })),
-    [rankedRows, mode]
-  );
-
-  // Double measure enabled?
-  const isDoubleMeasure = !!selectedMeasure2 && selectedMeasure2 !== selectedMeasure;
-
-  // Aggregation for second measure (B)
+  const groupedA = useMemo(() => aggregateByTeam(selectedMeasure), [aggregateByTeam, selectedMeasure]);
   const groupedB = useMemo(
     () => (isDoubleMeasure ? aggregateByTeam(selectedMeasure2) : []),
-    [aggregateByTeam, selectedMeasure2, isDoubleMeasure]
+    [aggregateByTeam, isDoubleMeasure, selectedMeasure2]
   );
 
+  const rankedRows = useMemo(() => {
+    const limit = Math.max(1, Math.min(200, Number(topX) || 10));
+    if (bottomEligible && rankDirection === "bottom") {
+      return [...groupedA].reverse().slice(0, limit);
+    }
+    return groupedA.slice(0, limit);
+  }, [bottomEligible, groupedA, rankDirection, topX]);
+
+  const chartData = useMemo(
+    () =>
+      rankedRows.map((row) => ({
+        id: row.id,
+        name: row.name,
+        Value: Number((mode === "average" ? row.avg : row.total).toFixed(3)),
+      })),
+    [mode, rankedRows]
+  );
+
+  const teamMetaMap = useMemo(() => {
+    const next = new Map();
+    for (const row of rankedRows) {
+      next.set(row.name, row);
+    }
+    return next;
+  }, [rankedRows]);
+
   const mapB = useMemo(() => {
-    const m = new Map();
-    for (const r of groupedB) m.set(r.id, r);
-    return m;
+    const next = new Map();
+    for (const row of groupedB) next.set(row.id, row);
+    return next;
   }, [groupedB]);
 
   const valueForMode = (row) => (mode === "average" ? row.avg : row.total);
 
-  // Scatter data + thresholds + colors (with total-mode scaling)
   const scatterData = useMemo(() => {
     if (!isDoubleMeasure) return [];
 
-    // 1) derive per-GW thresholds
-    const txBase = deriveThresholds(selectedMeasure, rankedRows, (a) =>
-      Number(valueForMode(a))
-    );
-    const tyBase = deriveThresholds(
-      selectedMeasure2,
-      Array.from(mapB.values()),
-      (b) => Number(valueForMode(b))
-    );
-
-    // 2) scale to totals if needed
+    const txBase = deriveThresholds(selectedMeasure, rankedRows, (row) => Number(valueForMode(row)));
+    const tyBase = deriveThresholds(selectedMeasure2, Array.from(mapB.values()), (row) => Number(valueForMode(row)));
     const tx = scaleThreshold(txBase, gwCount, mode === "total");
     const ty = scaleThreshold(tyBase, gwCount, mode === "total");
-    
 
     const data = [];
-    for (const a of rankedRows) {
-      const b = mapB.get(a.id);
-      if (!b) continue;
+    for (const row of rankedRows) {
+      const other = mapB.get(row.id);
+      if (!other) continue;
 
-      const x = Number(valueForMode(a));
-      const y = Number(valueForMode(b));
+      const x = Number(valueForMode(row));
+      const y = Number(valueForMode(other));
       if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
 
       const zx = zoneOf(x, tx);
@@ -359,30 +504,105 @@ const PlayerMeasureAveragesChart_TEAMS = () => {
       let fill = COLORS.neutral;
       if (zx === "good" && zy === "good") fill = COLORS.bothGood;
       else if (zx === "bad" && zy === "bad") fill = COLORS.bothBad;
-      else if (
-        (zx === "good" && zy === "bad") ||
-        (zx === "bad" && zy === "good")
-      )
-        fill = COLORS.mixed;
+      else if ((zx === "good" && zy === "bad") || (zx === "bad" && zy === "good")) fill = COLORS.mixed;
 
-      data.push({ id: a.id, name: a.name, x, y, fill, zx, zy });
+      data.push({ id: row.id, name: row.name, x, y, fill });
     }
 
-    // keep thresholds for lines/caption
     return Object.assign(data, { _tx: tx, _ty: ty });
-  }, [
-    isDoubleMeasure,
-    rankedRows,
-    mapB,
-    selectedMeasure,
-    selectedMeasure2,
-    mode,
-    gwCount,
-  ]);
+  }, [gwCount, isDoubleMeasure, mapB, mode, rankedRows, selectedMeasure, selectedMeasure2]);
 
-  // pull thresholds for rendering
   const tX = scatterData?._tx || null;
   const tY = scatterData?._ty || null;
+
+  const { xDomain, yDomain } = useMemo(() => {
+    if (!Array.isArray(scatterData) || scatterData.length === 0) {
+      return { xDomain: ["auto", "auto"], yDomain: ["auto", "auto"] };
+    }
+
+    const xs = scatterData.map((d) => Number(d.x)).filter(Number.isFinite);
+    const ys = scatterData.map((d) => Number(d.y)).filter(Number.isFinite);
+    if (tX && Number.isFinite(Number(tX.good))) xs.push(Number(tX.good));
+    if (tX && Number.isFinite(Number(tX.bad))) xs.push(Number(tX.bad));
+    if (tY && Number.isFinite(Number(tY.good))) ys.push(Number(tY.good));
+    if (tY && Number.isFinite(Number(tY.bad))) ys.push(Number(tY.bad));
+
+    let minX = Math.min(...xs);
+    let maxX = Math.max(...xs);
+    let minY = Math.min(...ys);
+    let maxY = Math.max(...ys);
+
+    const padX = Math.max((maxX - minX) * 0.05, 0.05);
+    const padY = Math.max((maxY - minY) * 0.05, 0.05);
+
+    if (!Number.isFinite(minX) || !Number.isFinite(maxX)) {
+      minX = 0;
+      maxX = 1;
+    } else if (maxX === minX) {
+      minX -= 0.5;
+      maxX += 0.5;
+    }
+
+    if (!Number.isFinite(minY) || !Number.isFinite(maxY)) {
+      minY = 0;
+      maxY = 1;
+    } else if (maxY === minY) {
+      minY -= 0.5;
+      maxY += 0.5;
+    }
+
+    return {
+      xDomain: [minX - padX, maxX + padX],
+      yDomain: [minY - padY, maxY + padY],
+    };
+  }, [scatterData, tX, tY]);
+
+  const gwColumns = useMemo(() => {
+    return Array.from(
+      new Set(filtered.map((row) => Number(row?.GW)).filter(Number.isFinite))
+    ).sort((a, b) => a - b);
+  }, [filtered]);
+
+  const teamGwMeasureMap = useMemo(() => {
+    const acc = new Map();
+
+    for (const row of filtered) {
+      const id = getTeamKey(row);
+      const gw = Number(row?.GW);
+      const value = Number(row?.[selectedMeasure]);
+      if (!id || !Number.isFinite(gw) || !Number.isFinite(value)) continue;
+
+      if (!acc.has(id)) acc.set(id, new Map());
+      const teamGwMap = acc.get(id);
+      const current = teamGwMap.get(gw) ?? { sum: 0, samples: 0 };
+      current.sum += value;
+      current.samples += 1;
+      teamGwMap.set(gw, current);
+    }
+
+    const resolved = new Map();
+    for (const [id, gwMap] of acc.entries()) {
+      const finalGwMap = new Map();
+      for (const [gw, value] of gwMap.entries()) {
+        finalGwMap.set(gw, mode === "average" ? value.sum / value.samples : value.sum);
+      }
+      resolved.set(id, finalGwMap);
+    }
+    return resolved;
+  }, [filtered, mode, selectedMeasure]);
+
+  const matrixRows = useMemo(() => {
+    return rankedRows.map((row) => {
+      const gwMap = teamGwMeasureMap.get(row.id) ?? new Map();
+      return {
+        ...row,
+        gwValues: gwColumns.map((gw) => {
+          const value = gwMap.get(gw);
+          return Number.isFinite(Number(value)) ? Number(value) : null;
+        }),
+      };
+    });
+  }, [gwColumns, rankedRows, teamGwMeasureMap]);
 
   const NameLabel = ({ x, y, value }) => {
     if (typeof x !== "number" || typeof y !== "number" || typeof value !== "string") return null;
@@ -399,110 +619,61 @@ const PlayerMeasureAveragesChart_TEAMS = () => {
       </text>
     );
   };
-  // Axis domains: fit to data (+ thresholds) with a small pad
-const { xDomain, yDomain } = useMemo(() => {
-  if (!Array.isArray(scatterData) || scatterData.length === 0) {
-    return { xDomain: ["auto", "auto"], yDomain: ["auto", "auto"] };
-  }
-
-  // collect values
-  const xs = scatterData.map(d => Number(d.x)).filter(Number.isFinite);
-  const ys = scatterData.map(d => Number(d.y)).filter(Number.isFinite);
-
-  // include thresholds if present
-  if (tX && Number.isFinite(Number(tX.good))) xs.push(Number(tX.good));
-  if (tX && Number.isFinite(Number(tX.bad)))  xs.push(Number(tX.bad));
-  if (tY && Number.isFinite(Number(tY.good))) ys.push(Number(tY.good));
-  if (tY && Number.isFinite(Number(tY.bad)))  ys.push(Number(tY.bad));
-
-  let minX = Math.min(...xs);
-  let maxX = Math.max(...xs);
-  let minY = Math.min(...ys);
-  let maxY = Math.max(...ys);
-
-  // add 5% padding (fallback to small absolute pad if range is tiny)
-  const padX = Math.max((maxX - minX) * 0.05, 0.05);
-  const padY = Math.max((maxY - minY) * 0.05, 0.05);
-
-  // handle flat ranges
-  if (!Number.isFinite(minX) || !Number.isFinite(maxX)) {
-    minX = 0; maxX = 1;
-  } else if (maxX === minX) {
-    minX -= 0.5; maxX += 0.5;
-  }
-  if (!Number.isFinite(minY) || !Number.isFinite(maxY)) {
-    minY = 0; maxY = 1;
-  } else if (maxY === minY) {
-    minY -= 0.5; maxY += 0.5;
-  }
-
-  return {
-    xDomain: [minX - padX, maxX + padX],
-    yDomain: [minY - padY, maxY + padY],
-  };
-}, [scatterData, tX, tY]);
-
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 text-slate-800">
-      <div className="mx-auto max-w-7xl px-3 sm:px-4 py-6 sm:py-10">
-        {/* Header */}
-        <header className="mb-6 sm:mb-8 text-center">
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+      <div className="mx-auto max-w-7xl px-3 py-6 sm:px-4 sm:py-10">
+        <header className="mb-6 text-center sm:mb-8">
+          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
             Current Season Team Analysis
           </h1>
         </header>
 
-        {/* Controls */}
-        <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-6">
-          {/* Measure A */}
+        <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-6">
           <div className="col-span-1">
-            <label className="block uppercase tracking-wide text-slate-500 mb-1 text-[clamp(0.75rem,0.6vw+0.6rem,1rem)]">
+            <label className="mb-1 block text-[clamp(0.75rem,0.6vw+0.6rem,1rem)] uppercase tracking-wide text-slate-500">
               Measure A
             </label>
             <select
               value={selectedMeasure}
-              onChange={(e) => setSelectedMeasure(e.target.value)}
-              className="w-full rounded-md border border-slate-200 bg-slate-50 text-slate-800 px-3 outline-slate-300 focus:outline-none ring-slate-300 focus:ring-2 text-[clamp(0.875rem,0.7vw+0.7rem,1.125rem)] h-[clamp(2.5rem,1vw+2.2rem,3rem)]"
-              style={{ colorScheme: "dark" }}
+              onChange={(event) => setSelectedMeasure(event.target.value)}
+              className="h-[clamp(2.5rem,1vw+2.2rem,3rem)] w-full rounded-md border border-slate-200 bg-slate-50 px-3 text-[clamp(0.875rem,0.7vw+0.7rem,1.125rem)] text-slate-800 outline-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-300"
             >
-              {MEASURE_OPTIONS.map((m) => (
-                <option key={m.key} value={m.key} className="bg-white text-slate-800">
-                  {m.label}
+              {MEASURE_OPTIONS.map((measure) => (
+                <option key={measure.key} value={measure.key} className="bg-white text-slate-800">
+                  {measure.label}
                 </option>
               ))}
             </select>
           </div>
 
-          {/* Measure B */}
           <div className="col-span-1">
-            <label className="block uppercase tracking-wide text-slate-500 mb-1 text-[clamp(0.75rem,0.6vw+0.6rem,1rem)]">
+            <label className="mb-1 block text-[clamp(0.75rem,0.6vw+0.6rem,1rem)] uppercase tracking-wide text-slate-500">
               Second Measure
             </label>
             <select
               value={selectedMeasure2}
-              onChange={(e) => setSelectedMeasure2(e.target.value)}
-              className="w-full rounded-md border border-slate-200 bg-slate-50 text-slate-800 px-3 outline-slate-300 focus:outline-none ring-slate-300 focus:ring-2 text-[clamp(0.875rem,0.7vw+0.7rem,1.125rem)] h-[clamp(2.5rem,1vw+2.2rem,3rem)]"
+              onChange={(event) => setSelectedMeasure2(event.target.value)}
+              className="h-[clamp(2.5rem,1vw+2.2rem,3rem)] w-full rounded-md border border-slate-200 bg-slate-50 px-3 text-[clamp(0.875rem,0.7vw+0.7rem,1.125rem)] text-slate-800 outline-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-300"
             >
-              <option value="">— None —</option>
-              {MEASURE_OPTIONS.map((m) => (
-                <option key={m.key} value={m.key} className="bg-white text-slate-800">
-                  {m.label}
+              <option value="">-- None --</option>
+              {MEASURE_OPTIONS.map((measure) => (
+                <option key={measure.key} value={measure.key} className="bg-white text-slate-800">
+                  {measure.label}
                 </option>
               ))}
             </select>
           </div>
 
-          {/* Aggregation */}
           <div className="col-span-1">
-            <label className="block text-xs uppercase tracking-wide text-slate-500 mb-1">
+            <label className="mb-1 block text-xs uppercase tracking-wide text-slate-500">
               Aggregation
             </label>
-            <div className="flex h-10 rounded-md overflow-hidden border border-slate-200">
+            <div className="flex h-10 overflow-hidden rounded-md border border-slate-200">
               <button
                 type="button"
                 onClick={() => setMode("average")}
-                className={`flex-1 text-sm px-3 ${
+                className={`flex-1 px-3 text-sm ${
                   mode === "average"
                     ? "bg-emerald-100 text-emerald-700"
                     : "bg-slate-50 text-slate-700 hover:bg-slate-100"
@@ -513,7 +684,7 @@ const { xDomain, yDomain } = useMemo(() => {
               <button
                 type="button"
                 onClick={() => setMode("total")}
-                className={`flex-1 text-sm px-3 ${
+                className={`flex-1 px-3 text-sm ${
                   mode === "total"
                     ? "bg-emerald-100 text-emerald-700"
                     : "bg-slate-50 text-slate-700 hover:bg-slate-100"
@@ -524,9 +695,8 @@ const { xDomain, yDomain } = useMemo(() => {
             </div>
           </div>
 
-          {/* Top/Bottom X */}
           <div className="col-span-1">
-            <label className="block text-xs uppercase tracking-wide text-slate-500 mb-1">
+            <label className="mb-1 block text-xs uppercase tracking-wide text-slate-500">
               {bottomEligible && rankDirection === "bottom" ? "Bottom X" : "Top X"}
             </label>
             <TextField
@@ -534,16 +704,16 @@ const { xDomain, yDomain } = useMemo(() => {
               size="small"
               inputProps={{ min: 1, max: 200 }}
               value={topX}
-              onChange={(e) => setTopX(e.target.value)}
+              onChange={(event) => setTopX(event.target.value)}
               fullWidth
               sx={{ input: { color: "#334155" } }}
             />
-            {bottomEligible && (
-              <div className="mt-2 flex rounded-md overflow-hidden border border-slate-200">
+            {bottomEligible ? (
+              <div className="mt-2 flex overflow-hidden rounded-md border border-slate-200">
                 <button
                   type="button"
                   onClick={() => setRankDirection("top")}
-                  className={`flex-1 text-xs px-2 py-1 ${
+                  className={`flex-1 px-2 py-1 text-xs ${
                     rankDirection === "top"
                       ? "bg-emerald-100 text-emerald-700"
                       : "bg-slate-50 text-slate-700 hover:bg-slate-100"
@@ -554,7 +724,7 @@ const { xDomain, yDomain } = useMemo(() => {
                 <button
                   type="button"
                   onClick={() => setRankDirection("bottom")}
-                  className={`flex-1 text-xs px-2 py-1 ${
+                  className={`flex-1 px-2 py-1 text-xs ${
                     rankDirection === "bottom"
                       ? "bg-emerald-100 text-emerald-700"
                       : "bg-slate-50 text-slate-700 hover:bg-slate-100"
@@ -563,157 +733,283 @@ const { xDomain, yDomain } = useMemo(() => {
                   Bottom
                 </button>
               </div>
-            )}
+            ) : null}
           </div>
 
-          {/* GW Slider */}
           <div className="col-span-2">
-            {minGW !== null && maxGW !== null && (
+            {minGW !== null && maxGW !== null ? (
               <Box sx={{ width: "100%" }}>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs uppercase tracking-wide text-slate-500">
-                    GW Range
-                  </span>
+                <div className="mb-1 flex items-center justify-between">
+                  <span className="text-xs uppercase tracking-wide text-slate-500">GW Range</span>
                   <span className="text-xs text-slate-600">
-                    {GWRange[0]} – {GWRange[1]}
+                    {GWRange[0]} - {GWRange[1]}
                   </span>
                 </div>
                 <Slider
                   value={GWRange}
                   min={minGW}
                   max={maxGW}
-                  onChange={(_, v) => setGWRange(v)}
+                  onChange={(_, value) => setGWRange(value)}
                   valueLabelDisplay="auto"
                   step={1}
                   sx={{ color: "#76AFA0" }}
                 />
               </Box>
-            )}
+            ) : null}
           </div>
         </div>
 
-        {/* Chart */}
+        {!isDoubleMeasure ? (
+          <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="text-xs uppercase tracking-[0.22em] text-slate-500">Display</div>
+              <button
+                type="button"
+                onClick={() => setSingleView("chart")}
+                className={`rounded-full px-3 py-1.5 text-sm font-semibold transition ${
+                  singleView === "chart"
+                    ? "bg-sky-100 text-sky-800"
+                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                }`}
+              >
+                Barchart
+              </button>
+              <button
+                type="button"
+                onClick={() => setSingleView("matrix")}
+                className={`rounded-full px-3 py-1.5 text-sm font-semibold transition ${
+                  singleView === "matrix"
+                    ? "bg-amber-100 text-amber-800"
+                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                }`}
+              >
+                Matrix
+              </button>
+            </div>
+          </div>
+        ) : null}
+
+        <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-3">
+          <div className="mb-2 text-xs uppercase tracking-wide text-slate-500">Filter - Team</div>
+          <details className="group relative">
+            <summary className="flex cursor-pointer list-none items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 transition hover:border-sky-200 hover:bg-sky-50">
+              <span className="truncate">
+                {teamFilter.size === 0
+                  ? "All teams"
+                  : teamFilter.size === 1
+                    ? Array.from(teamFilter)[0]
+                    : `${teamFilter.size} teams selected`}
+              </span>
+              <span className="ml-3 text-xs uppercase tracking-[0.18em] text-slate-500">
+                Select
+              </span>
+            </summary>
+
+            <div className="absolute left-0 right-0 z-20 mt-2 rounded-2xl border border-slate-200 bg-white p-3 shadow-xl">
+              <div className="mb-2 flex items-center justify-between">
+                <div className="text-xs uppercase tracking-[0.18em] text-slate-500">Teams</div>
+                <button
+                  type="button"
+                  onClick={() => setTeamFilter(new Set())}
+                  className="text-xs font-semibold text-sky-700 hover:text-sky-900"
+                >
+                  Clear
+                </button>
+              </div>
+
+              <div className="max-h-64 space-y-1 overflow-y-auto pr-1">
+                {allTeams.map((teamName) => {
+                  const active = teamFilter.has(teamName);
+                  const logo = teamLogos[teamName] || "";
+                  return (
+                    <label
+                      key={teamName}
+                      className={`flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2 text-sm transition ${
+                        active ? "bg-sky-50 text-sky-900" : "hover:bg-slate-50 text-slate-700"
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={active}
+                        onChange={() => toggleTeam(teamName)}
+                        className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                      />
+                      {logo ? (
+                        <img
+                          src={logo}
+                          alt={teamName}
+                          className="h-6 w-6 shrink-0 rounded-full border border-slate-200 bg-white object-contain p-0.5"
+                        />
+                      ) : null}
+                      <span>{teamName}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+          </details>
+
+          {teamFilter.size > 0 ? (
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              {Array.from(teamFilter).sort((a, b) => a.localeCompare(b)).map((teamName) => (
+                <button
+                  key={teamName}
+                  type="button"
+                  onClick={() => toggleTeam(teamName)}
+                  className="rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-800"
+                >
+                  {teamName} ×
+                </button>
+              ))}
+            </div>
+          ) : null}
+
+          {teamFilter.size > 0 ? (
+            <button
+              type="button"
+              onClick={() => setTeamFilter(new Set())}
+              className="mt-3 text-xs text-slate-700 underline hover:text-slate-500"
+            >
+              Clear team filter
+            </button>
+          ) : null}
+        </div>
+
         <div className="rounded-2xl border border-slate-200 bg-white p-3">
-          {/* Single-measure BarChart */}
-          {!isDoubleMeasure && chartData.length > 0 && (
-            <div style={{ width: "100%", height: Math.max(200, rankedRows.length * 50) }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData} layout="vertical" margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                  <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" />
-                  <YAxis dataKey="name" type="category" width={110} tick={{ fontSize: 12, fill: "#475569" }} />
-                  <XAxis type="number" tick={{ fontSize: 12, fill: "#475569" }} />
-                  <Tooltip
-                    formatter={(v) => Number(v).toFixed(3)}
-                    labelFormatter={(l) => l}
-                    contentStyle={{ backgroundColor: "#ffffff", border: "1px solid #cbd5e1", color: "#1e293b" }}
-                  />
-                  <Bar dataKey="Value" fill="#76AFA0">
-                    <LabelList dataKey="Value" position="right" formatter={(v) => Number(v).toFixed(1)} fill="#334155" />
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-
-          {/* Double-measure Scatter with threshold coloring */}
-          {isDoubleMeasure && scatterData.length > 0 && (
-            <div style={{ width: "100%", height: 520 }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <ScatterChart margin={{ top: 10, right: 20, left: 10, bottom: 20 }}>
-                  <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" />
-
-                  <XAxis
-  dataKey="x"
-  type="number"
-  name={labelOf(selectedMeasure)}
-  domain={xDomain}
-  allowDataOverflow
-  tick={{ fill: "#475569" }}
-  tickFormatter={(v) => Number(v).toFixed(1)}
-  label={{ value: labelOf(selectedMeasure), position: "insideBottom", offset: -10, fill: "#64748b" }}
-/>
-
-<YAxis
-  dataKey="y"
-  type="number"
-  name={labelOf(selectedMeasure2)}
-  domain={yDomain}
-  allowDataOverflow
-  tick={{ fill: "#475569" }}
-  tickFormatter={(v) => Number(v).toFixed(1)}
-  label={{ value: labelOf(selectedMeasure2), angle: -90, position: "insideLeft", fill: "#64748b" }}
-/>
-
-
-                  {/* Threshold lines (already scaled in Total mode) */}
-                  {tX && Number.isFinite(Number(tX.good)) && (
-                    <ReferenceLine
-                      x={Number(tX.good)}
-                      stroke="#16a34a"
-                      strokeDasharray="4 2"
-                      label={{  fill: "#16a34a", position: "top" }}
+          {!isDoubleMeasure && singleView === "chart" && chartData.length > 0 ? (
+            <>
+              <div style={{ width: "100%", height: Math.max(220, rankedRows.length * 50) }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={chartData}
+                    layout="vertical"
+                    margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                  >
+                    <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" />
+                    <YAxis
+                      dataKey="name"
+                      type="category"
+                      width={150}
+                      tick={(props) => <BarChartNameTick {...props} teamMetaMap={teamMetaMap} />}
                     />
-                  )}
-                  {tX && Number.isFinite(Number(tX.bad)) && (
-                    <ReferenceLine
-                      x={Number(tX.bad)}
-                      stroke="#dc2626"
-                      strokeDasharray="4 2"
-                      label={{ fill: "#dc2626", position: "top" }}
+                    <XAxis type="number" tick={{ fontSize: 12, fill: "#475569" }} />
+                    <Tooltip
+                      formatter={(value) => Number(value).toFixed(3)}
+                      labelFormatter={(label) => label}
+                      contentStyle={{
+                        backgroundColor: "#ffffff",
+                        border: "1px solid #cbd5e1",
+                        color: "#1e293b",
+                      }}
                     />
-                  )}
-                  {tY && Number.isFinite(Number(tY.good)) && (
-                    <ReferenceLine
-                      y={Number(tY.good)}
-                      stroke="#16a34a"
-                      strokeDasharray="4 2"
-                      label={{  fill: "#16a34a", position: "left" }}
+                    <Bar dataKey="Value" fill="#76AFA0">
+                      <LabelList
+                        dataKey="Value"
+                        position="right"
+                        formatter={(value) => Number(value).toFixed(1)}
+                        fill="#334155"
+                      />
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              <RankedTeamList rows={rankedRows} mode={mode} selectedMeasure={selectedMeasure} />
+            </>
+          ) : null}
+
+          {!isDoubleMeasure && singleView === "matrix" ? (
+            <MatrixTable
+              rows={matrixRows}
+              gws={gwColumns}
+              selectedMeasure={selectedMeasure}
+              mode={mode}
+            />
+          ) : null}
+
+          {isDoubleMeasure && scatterData.length > 0 ? (
+            <>
+              <div style={{ width: "100%", height: 520 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <ScatterChart margin={{ top: 10, right: 20, left: 10, bottom: 20 }}>
+                    <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" />
+
+                    <XAxis
+                      dataKey="x"
+                      type="number"
+                      name={labelOf(selectedMeasure)}
+                      domain={xDomain}
+                      allowDataOverflow
+                      tick={{ fill: "#475569" }}
+                      tickFormatter={(value) => Number(value).toFixed(1)}
+                      label={{
+                        value: labelOf(selectedMeasure),
+                        position: "insideBottom",
+                        offset: -10,
+                        fill: "#64748b",
+                      }}
                     />
-                  )}
-                  {tY && Number.isFinite(Number(tY.bad)) && (
-                    <ReferenceLine
-                      y={Number(tY.bad)}
-                      stroke="#dc2626"
-                      strokeDasharray="4 2"
-                      label={{  fill: "#dc2626", position: "left" }}
+
+                    <YAxis
+                      dataKey="y"
+                      type="number"
+                      name={labelOf(selectedMeasure2)}
+                      domain={yDomain}
+                      allowDataOverflow
+                      tick={{ fill: "#475569" }}
+                      tickFormatter={(value) => Number(value).toFixed(1)}
+                      label={{
+                        value: labelOf(selectedMeasure2),
+                        angle: -90,
+                        position: "insideLeft",
+                        fill: "#64748b",
+                      }}
                     />
-                  )}
 
-                  <Tooltip
-                    cursor={{ strokeDasharray: "3 3" }}
-                    contentStyle={{ backgroundColor: "#ffffff", border: "1px solid #cbd5e1" }}
-                    labelStyle={{ color: "#1e293b" }}
-                    itemStyle={{ color: "#1e293b" }}
-                    formatter={(v, n) => [Number(v).toFixed(3), n]}
-                    labelFormatter={(_, payload) => payload?.[0]?.payload?.name ?? ""}
-                  />
+                    {tX && Number.isFinite(Number(tX.good)) ? (
+                      <ReferenceLine x={Number(tX.good)} stroke="#16a34a" strokeDasharray="4 2" />
+                    ) : null}
+                    {tX && Number.isFinite(Number(tX.bad)) ? (
+                      <ReferenceLine x={Number(tX.bad)} stroke="#dc2626" strokeDasharray="4 2" />
+                    ) : null}
+                    {tY && Number.isFinite(Number(tY.good)) ? (
+                      <ReferenceLine y={Number(tY.good)} stroke="#16a34a" strokeDasharray="4 2" />
+                    ) : null}
+                    {tY && Number.isFinite(Number(tY.bad)) ? (
+                      <ReferenceLine y={Number(tY.bad)} stroke="#dc2626" strokeDasharray="4 2" />
+                    ) : null}
 
-                  {/* Each point uses its datum's `fill` */}
-                  <Scatter data={scatterData}>
-                    <LabelList dataKey="name" content={<NameLabel />} />
-                    <ZAxis dataKey={null} range={[80, 80]} />
-                  </Scatter>
-                </ScatterChart>
-              </ResponsiveContainer>
+                    <Tooltip
+                      cursor={{ strokeDasharray: "3 3" }}
+                      contentStyle={{ backgroundColor: "#ffffff", border: "1px solid #cbd5e1" }}
+                      labelStyle={{ color: "#1e293b" }}
+                      itemStyle={{ color: "#1e293b" }}
+                      formatter={(value, name) => [Number(value).toFixed(3), name]}
+                      labelFormatter={(_, payload) => payload?.[0]?.payload?.name ?? ""}
+                    />
 
-              
+                    <Scatter data={scatterData}>
+                      {scatterData.map((entry) => (
+                        <Cell key={entry.id} fill={entry.fill} />
+                      ))}
+                      <LabelList dataKey="name" content={<NameLabel />} />
+                      <ZAxis dataKey={null} range={[80, 80]} />
+                    </Scatter>
+                  </ScatterChart>
+                </ResponsiveContainer>
+              </div>
+              <RankedTeamList rows={rankedRows} mode={mode} selectedMeasure={selectedMeasure} />
+            </>
+          ) : null}
 
-              
-            </div>
-          )}
-
-          {/* Empty state */}
-          {((!isDoubleMeasure && chartData.length === 0) ||
-            (isDoubleMeasure && scatterData.length === 0)) && (
-            <div className="text-center text-slate-500 py-10">No data after filters.</div>
-          )}
+          {((!isDoubleMeasure && singleView === "chart" && chartData.length === 0) ||
+            (!isDoubleMeasure && singleView === "matrix" && matrixRows.length === 0) ||
+            (isDoubleMeasure && scatterData.length === 0)) ? (
+            <div className="py-10 text-center text-slate-500">No data after filters.</div>
+          ) : null}
         </div>
       </div>
     </div>
   );
 };
 
-export default PlayerMeasureAveragesChart_TEAMS;
-
-
-
+export default SeasonAnalyticsTeams;
