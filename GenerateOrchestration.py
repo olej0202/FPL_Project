@@ -319,13 +319,13 @@ def Main_Orchestration():
     GW_list_wildcard=time_list
     GW_list_freehit=[time_list[0]]
     
-    run_player_pos=1
+    run_player_pos=0
     
     print(time_list)
     
     
     #EXTARCT DATA
-    Data_Extraction(season,is_new_season,has_been_error)
+    #Data_Extraction(season,is_new_season,has_been_error)
     
     
     #Transform data

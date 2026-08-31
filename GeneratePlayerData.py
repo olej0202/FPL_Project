@@ -1387,8 +1387,8 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
         df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0.0)
     df["Goal_Index"] = df["Understat_POSXG"] * df["player_risiko"] + (1 - df["player_risiko"]) * (df["Goal_Statistics"]*0.5+df["Rolling_adjusted_XG"]*0.25+0.25*df['Rolling_adjusted_Threat_per90']*0.01)
     df["Assist_Index"] = df["Understat_POSXA"] * df["player_risiko"] + (1 - df["player_risiko"]) * (df["Assist_Statistics"]*0.55+df["Rolling_adjusted_XA"]*0.3+0.15*df['Rolling_adjusted_creativity_per90']*0.01)
-    df["Goal_Index_Share"] = df["Understat_POSXG_Share"] * df["player_risiko"] + (1 - df["player_risiko"]) * (df["Goal_Statistics_share"]*0.1+df["Share_of_XG"]*0.55+0.25*df['Share_of_XG_Short']+0.1*df['Rolling_adjusted_Threat_per90_share'])
-    df["Assist_Index_Share"] = df["Understat_POSXA_Share"] * df["player_risiko"] + (1 - df["player_risiko"]) * (df["Assist_Statistics_share"]*0.1+df["Share_of_XA"]*0.55+0.25*df['Share_of_XA_Short']+0.1*df['Rolling_adjusted_creativity_per90_share'])
+    df["Goal_Index_Share"] = df["Understat_POSXG_Share"] * df["player_risiko"] + (1 - df["player_risiko"]) * (df["Goal_Statistics_share"]*0+df["Share_of_XG"]*0.7+0.3*df['Share_of_XG_Short']+0*df['Rolling_adjusted_Threat_per90_share'])
+    df["Assist_Index_Share"] = df["Understat_POSXA_Share"] * df["player_risiko"] + (1 - df["player_risiko"]) * (df["Assist_Statistics_share"]*0+df["Share_of_XA"]*0.7+0.3*df['Share_of_XA_Short']+0*df['Rolling_adjusted_creativity_per90_share'])
     df["Defcon_Index"] = df["defcon_avg"]
 
     df["average_minutes"] = pd.to_numeric(
@@ -1437,12 +1437,12 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
         goal_weight_sum > 0,
         df["Goal_Weight"] / goal_weight_sum,
         0.0,
-    )
+    )*0.6+0.4*(df["Goal_Index_Share"]*df["_minutes_factor"])
     df["Assist_Weight_Share"] = np.where(
         assist_weight_sum > 0,
         df["Assist_Weight"] / assist_weight_sum,
         0.0,
-    )
+    )*0.6+0.4*(df["Assist_Index_Share"]*df["_minutes_factor"])
     df["Defcon_Weight_Share"] = np.where(
         defcon_weight_sum > 0,
         df["Defcon_Weight"] / defcon_weight_sum,
@@ -1456,7 +1456,7 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
             errors="coerce",
         ).fillna(0.0)
         / goal_weight_sum
-    ), 0.0)
+    ), 0.0)*0.6+0.4*df["Goal_Index_Share"]
     df["Assist_Weight_Share_Minutes_90"] =np.where(
         assist_weight_sum > 0, (
         pd.to_numeric(
@@ -1464,7 +1464,7 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
             errors="coerce",
         ).fillna(0.0)
         / assist_weight_sum
-    ), 0.0)
+    ), 0.0)*0.6+0.4*df["Assist_Index_Share"]
     df["Defcon_Weight_Share_Minutes_90"] =np.where(
         defcon_weight_sum > 0, (
         pd.to_numeric(

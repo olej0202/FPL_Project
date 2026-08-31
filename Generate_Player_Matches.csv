@@ -48,7 +48,7 @@ Samuel_Iling-Junior,Iling Jr,Unknown for understat,,no-match,,['SUB'],[1.0],1
 Bradley_Burrowes,Burrowes,Bradley Burrowes,100.0,name-strict,Bradley Burrowes,['SUB'],[1.0],1
 George_Hemmings,George Hemmings,George Hemmings,100.0,name-strict,George Hemmings,['LW'],[1.0],1
 Alysson_Edward Franco da Rocha dos Santos,Alysson,Alysson Edward,90.0,name-relaxed,Alysson Edward,['SUB'],[1.0],1
-Johan_Manzambi,Manzambi,Unknown for understat,,no-match,,['SUB'],[1.0],1
+Johan_Manzambi,Manzambi,Unknown for understat,,no-match,,['MC'],[1.0],1
 Joao_Gomes,Gomes,João Gomes,100.0,name-strict,João Gomes,"['MC', 'DM']","[0.8, 0.2]",1
 Ollie_Watkins,Watkins,Ollie Watkins,100.0,name-strict,Ollie Watkins,['FW'],[1.0],1
 Tammy_Abraham,Abraham,Tammy Abraham,100.0,name-strict,Tammy Abraham,['FW'],[1.0],1
@@ -60,7 +60,7 @@ Zion_Suzuki,Suzuki,Unknown for understat,,no-match,,['SUB'],[1.0],1
 Triston_Rowe,Rowe,Emile Smith-Rowe,90.0,web_name-relaxed,Emile Smith-Rowe,['AMC'],[1.0],1
 Luka_Lynch,Lynch,Unknown for understat,,no-match,,['SUB'],[1.0],1
 Aaron_Wan-Bissaka,Wan-Bissaka,Aaron Wan-Bissaka,100.0,name-strict,Aaron Wan-Bissaka,['DR'],[1.0],1
-Leon_Goretzka,Goretzka,Unknown for understat,,no-match,,['SUB'],[1.0],1
+Leon_Goretzka,Goretzka,Unknown for understat,,no-match,,['MC'],[1.0],1
 Đorđe_Petrović,Petrović,Djordje Petrovic,90.0,web_name-relaxed,Djordje Petrovic,['GK'],[1.0],1
 Fraser_Forster,Forster,Fraser Forster,100.0,name-strict,Fraser Forster,['GK'],[1.0],1
 Will_Dennis,Dennis,Emmanuel Dennis,90.0,web_name-relaxed,Emmanuel Dennis,"['AMC', 'LW']","[0.6666666666666666, 0.3333333333333333]",1
@@ -111,7 +111,7 @@ Fábio_Freitas Gouveia Carvalho,Carvalho,Fabio Carvalho,90.0,web_name-relaxed,Fa
 Yehor_Yarmoliuk,Yarmoliuk,Yehor Yarmolyuk,93.33333333333333,name-relaxed,Yehor Yarmolyuk,"['DM', 'RW', 'MC']","[0.7142857142857143, 0.14285714285714285, 0.14285714285714285]",1
 Josh_Dasilva,Dasilva,Josh Dasilva,100.0,name-strict,Josh Dasilva,['SUB'],[1.0],1
 Jaidon_Anthony,Anthony,Jaidon Anthony,100.0,name-strict,Jaidon Anthony,"['LW', 'RW']","[0.8888888888888888, 0.1111111111111111]",1
-Igor_Thiago Nascimento Rodrigues,Thiago,Rodri,90.0,name-relaxed,Rodri,"['DM', 'MC']","[0.8, 0.2]",1
+Igor_Thiago Nascimento Rodrigues,Thiago,Rodri,90.0,name-relaxed,Rodri,"['FW', 'MC']","[1, 0]",1
 Kaye_Furo,Furo,Kaye Furo,100.0,name-strict,Kaye Furo,['SUB'],[1.0],1
 Callum_Wilson,Wilson,Callum Wilson,100.0,name-strict,Callum Wilson,['FW'],[1.0],1
 Mamadou_Sangaré,M.Sangaré,Mamadou Sangaré,100.0,name-strict,Mamadou Sangaré,['DM'],[1.0],1
@@ -124,7 +124,7 @@ Maxim_De Cuyper,De Cuyper,Maxim De Cuyper,100.0,name-strict,Maxim De Cuyper,"['L
 Lewis_Dunk,Dunk,Lewis Dunk,100.0,name-strict,Lewis Dunk,['CB'],[1.0],1
 Diego_Coppola,Coppola,Diego Coppola,100.0,name-strict,Diego Coppola,['CB'],[1.0],1
 Igor_Julio dos Santos de Paulo,Igor,Igor Julio,90.0,name-relaxed,Igor Julio,"['CB', 'DL']","[0.6666666666666666, 0.3333333333333333]",1
-João_Pedro Loureiro da Costa,Costinha,João Pedro,90.0,name-relaxed,João Pedro,['FW'],[1.0],1
+João_Pedro Loureiro da Costa,Costinha,João Pedro,90.0,name-relaxed,João Pedro,['DM'],[1.0],1
 Michael_Svoboda,Svoboda,Unknown for understat,,no-match,,['SUB'],[1.0],1
 Mitoma_Kaoru,Mitoma,Kaoru Mitoma,95.0,name-strict,Kaoru Mitoma,['LW'],[1.0],1
 Yankuba_Minteh,Minteh,Yankuba Minteh,100.0,name-strict,Yankuba Minteh,"['LW', 'RW']","[0.625, 0.375]",1
@@ -151,7 +151,7 @@ Malick_Yalcouyé,Yalcouyé,Malick Yalcouyé,100.0,name-strict,Malick Yalcouyé,[
 Jaouen_Hadjam,Hadjam,Unknown for understat,,no-match,,['SUB'],[1.0],1
 Amario_Cozier-Duberry,Cozier-Duberry,Unknown for understat,,no-match,,['SUB'],[1.0],1
 Emiliano_Martínez Romero,Martinez,Emiliano Martinez,95.0,name-strict,Emiliano Martinez,['GK'],[1.0],1
-Morgan_Rogers,Rogers,Morgan Rogers,100.0,name-strict,Morgan Rogers,"['LW', 'AMC', 'RW']","[0.5, 0.4, 0.1]",1
+Morgan_Rogers,Rogers,Morgan Rogers,100.0,name-strict,Morgan Rogers,"['LW', 'AMC', 'RW']","[0.7, 0.3, 0.0]",1
 Jordan_Henderson,Henderson,Jordan Henderson,100.0,name-strict,Jordan Henderson,"['DM', 'MC']","[0.8333333333333334, 0.16666666666666666]",1
 Danny_Welbeck,Welbeck,Danny Welbeck,100.0,name-strict,Danny Welbeck,['FW'],[1.0],1
 Robert_Sánchez,Sánchez,Robert Sánchez,100.0,name-strict,Robert Sánchez,['GK'],[1.0],1
@@ -166,10 +166,10 @@ Jorrel_Hato,Hato,Jorrel Hato,100.0,name-strict,Jorrel Hato,"['CB', 'DL']","[0.55
 Levi_Colwill,Colwill,Levi Colwill,100.0,name-strict,Levi Colwill,['CB'],[1.0],1
 Mamadou_Sarr,M.Sarr,Mamadou Sarr,100.0,name-strict,Mamadou Sarr,['CB'],[1.0],1
 Josh_Acheampong,Acheampong,Josh Acheampong,100.0,name-strict,Josh Acheampong,"['CB', 'DR']","[0.6666666666666666, 0.3333333333333333]",1
-Marco_Palestra,Palestra,Unknown for understat,,no-match,,['SUB'],[1.0],1
+Marco_Palestra,Palestra,Unknown for understat,,no-match,,['DL'],[1.0],1
 Cole_Palmer,Palmer,Cole Palmer,100.0,name-strict,Cole Palmer,"['AMC', 'RW']","[0.6, 0.4]",1
 Enzo_Fernández,Enzo,Enzo Fernández,100.0,name-strict,Enzo Fernández,"['AMC', 'MC', 'LW', 'DM']","[0.5555555555555556, 0.2222222222222222, 0.1111111111111111, 0.1111111111111111]",1
-Pedro_Lomba Neto,Neto,Neto,90.0,name-relaxed,Neto,['GK'],[1.0],1
+Pedro_Lomba Neto,Neto,Neto,90.0,name-relaxed,Neto,['RW'],[1.0],1
 Estêvão_Almeida de Oliveira Gonçalves,Estêvão,Estêvão,90.0,name-relaxed,Estêvão,['RW'],[1.0],1
 Jamie_Bynoe-Gittens,Gittens,Jamie Bynoe-Gittens,100.0,name-strict,Jamie Bynoe-Gittens,"['LW', 'RW']","[0.6666666666666666, 0.3333333333333333]",1
 Moisés_Caicedo Corozo,Caicedo,Moisés Caicedo,90.0,name-relaxed,Moisés Caicedo,"['DM', 'MC']","[0.7777777777777778, 0.2222222222222222]",1
@@ -192,7 +192,7 @@ Carl_Rushworth,Rushworth,Carl Rushworth,100.0,name-strict,Carl Rushworth,['GK'],
 Oliver_Dovin,Dovin,Unknown for understat,,no-match,,['SUB'],[1.0],1
 Ben_Wilson,Wilson,Callum Wilson,90.0,web_name-relaxed,Callum Wilson,['FW'],[1.0],1
 Bobby_Thomas,Thomas,Bobby Thomas,100.0,name-strict,Bobby Thomas,['CB'],[1.0],1
-Liam_Kitching,Kitching,Unknown for understat,,no-match,,['SUB'],[1.0],1
+Liam_Kitching,Kitching,Unknown for understat,,no-match,,['CB'],[1.0],1
 Milan_van Ewijk,van Ewijk,Milan van Ewijk,100.0,name-strict,Milan van Ewijk,['DR'],[1.0],1
 Jay_Dasilva,Dasilva,Jay Dasilva,100.0,name-strict,Jay Dasilva,['DL'],[1.0],1
 Kaine_Kesler-Hayden,Kesler-Hayden,Unknown for understat,,no-match,,['SUB'],[1.0],1
@@ -211,7 +211,7 @@ George_Shepherd,Shepherd,Unknown for understat,,no-match,,['SUB'],[1.0],1
 Loum_Tchaouna,Tchaouna,Loum Tchaouna,100.0,name-strict,Loum Tchaouna,['RW'],[1.0],1
 Raphael_Borges Rodrigues,Borges Rodrigues,Rodri,90.0,name-relaxed,Rodri,"['DM', 'MC']","[0.8, 0.2]",1
 Kai_Andrews,Andrews,André,90.0,name-relaxed,André,"['MC', 'DM']","[0.9, 0.1]",1
-Haji_Wright,Wright,Unknown for understat,,no-match,,['SUB'],[1.0],1
+Haji_Wright,Wright,Unknown for understat,,no-match,,['FW'],[1.0],1
 Brandon_Thomas-Asante,Thomas-Asante,Brandon Thomas-Asante,100.0,name-strict,Brandon Thomas-Asante,['LW'],[1.0],1
 Ellis_Simms,Simms,Ellis Simms,100.0,name-strict,Ellis Simms,['FW'],[1.0],1
 Jahnoah_Markelo,Markelo,Unknown for understat,,no-match,,['SUB'],[1.0],1
@@ -234,7 +234,7 @@ Chadi_Riad Dnanou,Chadi Riad,Chadi Riad,90.0,name-relaxed,Chadi Riad,['CB'],[1.0
 Oscar_Mingueza,Mingueza,Óscar Mingueza,100.0,name-strict,Óscar Mingueza,['SUB'],[1.0],1
 Ismaïla_Sarr,Sarr,Ismaila Sarr,100.0,name-strict,Ismaila Sarr,['AMC'],[1.0],1
 Adam_Wharton,Wharton,Adam Wharton,100.0,name-strict,Adam Wharton,['MC'],[1.0],1
-Yéremy_Pino Santos,Yeremy,Unknown for understat,,no-match,,['SUB'],[1.0],1
+Yéremy_Pino Santos,Yeremy,Unknown for understat,,no-match,,['AMC'],[1.0],1
 Will_Hughes,Hughes,Will Hughes,100.0,name-strict,Will Hughes,['MC'],[1.0],1
 Jefferson_Lerma Solís,Lerma,Jefferson Lerma,95.0,name-strict,Jefferson Lerma,"['MC', 'CB']","[0.625, 0.375]",1
 Daichi_Kamada,Kamada,Daichi Kamada,100.0,name-strict,Daichi Kamada,['MC'],[1.0],1
@@ -330,7 +330,7 @@ David_Akintola,Akintola,Unknown for understat,,no-match,,['SUB'],[1.0],1
 Darko_Gyabi,Gyabi,Darko Gyabi,100.0,name-strict,Darko Gyabi,['SUB'],[1.0],1
 Enis_Destan,Destan,Unknown for understat,,no-match,,['SUB'],[1.0],1
 Mason_Burstow,Burstow,Mason Burstow,100.0,name-strict,Mason Burstow,['SUB'],[1.0],1
-Joe_Gelhardt,Gelhardt,Joe Gelhardt,100.0,name-strict,Joe Gelhardt,['SUB'],[1.0],1
+Joe_Gelhardt,Gelhardt,Joe Gelhardt,100.0,name-strict,Joe Gelhardt,['FW'],[1.0],1
 Matt_Targett,Targett,Matt Targett,100.0,name-strict,Matt Targett,['DL'],[1.0],1
 Hidemasa_Morita,Morita,Hidemasa Morita,100.0,name-strict,Hidemasa Morita,['MC'],[1.0],1
 Konstantinos_Tzolakis,Tzolakis,Konstantinos Tzolakis,100.0,name-strict,Konstantinos Tzolakis,['GK'],[1.0],1
@@ -384,12 +384,12 @@ Gabriel_Gudmundsson,Gudmundsson,Gabriel Gudmundsson,100.0,name-strict,Gabriel Gu
 James_Justin,Justin,James Justin,100.0,name-strict,James Justin,"['DL', 'CB', 'LW']","[0.6, 0.3, 0.1]",1
 Sebastiaan_Bornauw,Bornauw,Sebastiaan Bornauw,100.0,name-strict,Sebastiaan Bornauw,['CB'],[1.0],1
 Tarik_Muharemović,Muharemović,Tarik Muharemovic,100.0,name-strict,Tarik Muharemovic,['CB'],[1.0],1
-Anton_Stach,Stach,Anton Stach,100.0,name-strict,Anton Stach,"['MC', 'RW']","[0.8, 0.2]",1
+Anton_Stach,Stach,Anton Stach,100.0,name-strict,Anton Stach,"['MC', 'RW']","[0.9, 0.1]",1
 Noah_Okafor,Okafor,Noah Okafor,100.0,name-strict,Noah Okafor,"['AMC', 'FW']","[0.8333333333333334, 0.16666666666666666]",1
 Brenden_Aaronson,Aaronson,Brenden Aaronson,100.0,name-strict,Brenden Aaronson,"['AMC', 'FW', 'MC']","[0.6666666666666666, 0.2222222222222222, 0.1111111111111111]",1
 Ethan_Ampadu,Ampadu,Ethan Ampadu,100.0,name-strict,Ethan Ampadu,['MC'],[1.0],1
-Sean_Longstaff,Longstaff,Sean Longstaff,100.0,name-strict,Sean Longstaff,['SUB'],[1.0],1
-Wilfried_Gnonto,Gnonto,Wilfried Gnonto,100.0,name-strict,Wilfried Gnonto,['SUB'],[1.0],1
+Sean_Longstaff,Longstaff,Sean Longstaff,100.0,name-strict,Sean Longstaff,['MC'],[1.0],1
+Wilfried_Gnonto,Gnonto,Wilfried Gnonto,100.0,name-strict,Wilfried Gnonto,['LW'],[1.0],1
 Jack_Harrison,Harrison,Jack Harrison,100.0,name-strict,Jack Harrison,['LW'],[1.0],1
 Daniel_James,James,Daniel James,100.0,name-strict,Daniel James,['DR'],[1.0],1
 Ilia_Gruev,Gruev,Ilia Gruev,100.0,name-strict,Ilia Gruev,['MC'],[1.0],1
@@ -423,7 +423,7 @@ Florian_Wirtz,Wirtz,Florian Wirtz,100.0,name-strict,Florian Wirtz,"['AMC', 'FW',
 Cody_Gakpo,Gakpo,Cody Gakpo,100.0,name-strict,Cody Gakpo,"['FW', 'LW', 'RW', 'AMC']","[0.5, 0.3, 0.1, 0.1]",1
 Dominik_Szoboszlai,Szoboszlai,Dominik Szoboszlai,100.0,name-strict,Dominik Szoboszlai,"['DM', 'AMC', 'FW', 'MC']","[0.5, 0.3, 0.1, 0.1]",1
 Rio_Ngumoha,Ngumoha,Rio Ngumoha,100.0,name-strict,Rio Ngumoha,"['LW', 'RW']","[0.8333333333333334, 0.16666666666666666]",1
-Federico_Chiesa,Chiesa,Federico Chiesa,100.0,name-strict,Federico Chiesa,['SUB'],[1.0],1
+Federico_Chiesa,Chiesa,Federico Chiesa,100.0,name-strict,Federico Chiesa,['RW'],[1.0],1
 Ryan_Gravenberch,Gravenberch,Ryan Gravenberch,100.0,name-strict,Ryan Gravenberch,['DM'],[1.0],1
 Alexis_Mac Allister,Mac Allister,Alexis Mac Allister,100.0,name-strict,Alexis Mac Allister,"['DM', 'AMC']","[0.8571428571428571, 0.14285714285714285]",1
 Curtis_Jones,C.Jones,Curtis Jones,100.0,name-strict,Curtis Jones,"['DR', 'RW', 'DM']","[0.7142857142857143, 0.14285714285714285, 0.14285714285714285]",1
@@ -437,11 +437,11 @@ Hugo_Ekitiké,Ekitiké,Hugo Ekitike,100.0,name-strict,Hugo Ekitike,['FW'],[1.0],
 Lewis_Koumas,Koumas,Lewis Koumas,100.0,name-strict,Lewis Koumas,['SUB'],[1.0],1
 Jayden_Danns,Danns,Jayden Danns,100.0,name-strict,Jayden Danns,['SUB'],[1.0],1
 Harvey_Elliott,Elliott,Harvey Elliott,100.0,name-strict,Harvey Elliott,['AMC'],[1.0],1
-Ronald_Araujo,Araujo,Ronald Araújo,100.0,name-strict,Ronald Araújo,['SUB'],[1.0],1
+Ronald_Araujo,Araujo,Ronald Araújo,100.0,name-strict,Ronald Araújo,['CB'],[1.0],1
 Jack_Grealish,Grealish,Jack Grealish,100.0,name-strict,Jack Grealish,['LW'],[1.0],1
 Gianluigi_Donnarumma,Donnarumma,Gianluigi Donnarumma,100.0,name-strict,Gianluigi Donnarumma,['GK'],[1.0],1
 Marcus_Bettinelli,Bettinelli,Unknown for understat,,no-match,,['SUB'],[1.0],1
-Nico_O'Reilly,O'Reilly,Nico O&#039;Reilly,95.0,name-strict,Nico O&#039;Reilly,"['DL', 'DM', 'MC', 'AMC']","[0.5, 0.2, 0.2, 0.1]",1
+Nico_O'Reilly,O'Reilly,Nico O&#039;Reilly,95.0,name-strict,Nico O&#039;Reilly,"['DL', 'DM', 'MC', 'AMC']","[0.7, 0.3, 0.0, 0.0]",1
 Marc_Guéhi,Guéhi,Marc Guehi,100.0,name-strict,Marc Guehi,"['CB', 'DM']","[0.9, 0.1]",1
 Matheus_Nunes,Matheus N.,Matheus Nunes,100.0,name-strict,Matheus Nunes,['DR'],[1.0],1
 Rúben_Gato Alves Dias,Rúben,Rúben Neves,90.0,web_name-relaxed,Rúben Neves,"['MC', 'DM']","[0.75, 0.25]",1
@@ -453,7 +453,7 @@ Rico_Lewis,Lewis,Rico Lewis,100.0,name-strict,Rico Lewis,['DR'],[1.0],1
 Vitor_de Oliveira Nunes dos Reis,Vitor Reis,Vitor Reis,100.0,web_name-strict,Vitor Reis,['SUB'],[1.0],1
 Antoine_Semenyo,Semenyo,Antoine Semenyo,100.0,name-strict,Antoine Semenyo,"['RW', 'LW', 'AMC', 'FW']","[0.6, 0.2, 0.1, 0.1]",1
 Phil_Foden,Foden,Phil Foden,100.0,name-strict,Phil Foden,"['RW', 'FW', 'DM']","[0.5, 0.25, 0.25]",1
-Rayan_Cherki,Cherki,Rayan,90.0,name-relaxed,Rayan,['RW'],[1.0],1
+Rayan_Cherki,Cherki,Rayan,90.0,name-relaxed,Rayan,"['RW','AMC']","[0.5,0.5]",1
 Jérémy_Doku,Doku,Jéremy Doku,100.0,name-strict,Jéremy Doku,['LW'],[1.0],1
 Rodrigo_Hernandez,Rodrigo,Rodrigo,90.0,name-relaxed,Rodrigo,"['FW', 'RW', 'AMC']","[0.5, 0.3333333333333333, 0.16666666666666666]",1
 Tijjani_Reijnders,Reijnders,Tijjani Reijnders,100.0,name-strict,Tijjani Reijnders,"['MC', 'FW', 'DM', 'LW']","[0.4, 0.2, 0.2, 0.2]",1
@@ -488,10 +488,10 @@ Harry_Amass,Amass,Harry Amass,100.0,name-strict,Harry Amass,['DL'],[1.0],1
 Tyler_Fredricson,Fredricson,Tyler Fredricson,100.0,name-strict,Tyler Fredricson,['CB'],[1.0],1
 Bruno_Borges Fernandes,B.Fernandes,Bruno Fernandes,95.0,name-strict,Bruno Fernandes,['AMC'],[1.0],1
 Bryan_Mbeumo,Mbeumo,Bryan Mbeumo,100.0,name-strict,Bryan Mbeumo,"['RW', 'FW']","[0.625, 0.375]",1
-Matheus_Santos Carneiro Da Cunha,Cunha,Matheus Cunha,90.0,web_name-relaxed,Matheus Cunha,"['LW', 'FW']","[0.8, 0.2]",1
-Marcus_Rashford,Rashford,Marcus Rashford,100.0,name-strict,Marcus Rashford,"['FW', 'LW']","[0.75, 0.25]",1
+Matheus_Santos Carneiro Da Cunha,Cunha,Matheus Cunha,90.0,web_name-relaxed,Matheus Cunha,"['LW', 'FW']","[0.5, 0.5]",1
+Marcus_Rashford,Rashford,Marcus Rashford,100.0,name-strict,Marcus Rashford,"['FW', 'LW']","[0.25, 0.75]",1
 Mason_Mount,Mount,Mason Mount,100.0,name-strict,Mason Mount,"['DM', 'AMC']","[0.5, 0.5]",1
-Amad_Diallo,Amad,Amadou Diallo,91.66666666666666,name-relaxed,Amadou Diallo,['SUB'],[1.0],1
+Amad_Diallo,Amad,Amadou Diallo,91.66666666666666,name-relaxed,Amadou Diallo,['RW'],[1.0],1
 Kobbie_Mainoo,Mainoo,Kobbie Mainoo,100.0,name-strict,Kobbie Mainoo,['DM'],[1.0],1
 Manuel_Ugarte Ribeiro,Ugarte,Manuel Ugarte,90.0,name-relaxed,Manuel Ugarte,"['DM', 'MC']","[0.75, 0.25]",1
 Jack_Fletcher,J.Fletcher,Jack Fletcher,100.0,name-strict,Jack Fletcher,['SUB'],[1.0],1
@@ -523,7 +523,7 @@ Joe_Willock,Willock,Joe Willock,100.0,name-strict,Joe Willock,"['AMC', 'MC', 'DM
 Bazoumana_Touré,Touré,Bazoumana Touré,100.0,name-strict,Bazoumana Touré,['SUB'],[1.0],1
 Sean_Steur,Steur,Sean Steur,100.0,name-strict,Sean Steur,['DM'],[1.0],1
 Nick_Woltemade,Woltemade,Nick Woltemade,100.0,name-strict,Nick Woltemade,"['AMC', 'FW']","[0.8333333333333334, 0.16666666666666666]",1
-Yoane_Wissa,Wissa,Yoane Wissa,100.0,name-strict,Yoane Wissa,"['FW', 'AMC']","[0.5, 0.5]",1
+Yoane_Wissa,Wissa,Yoane Wissa,100.0,name-strict,Yoane Wissa,"['FW', 'AMC']","[0.8, 0.2]",1
 William_Osula,Osula,William Osula,100.0,name-strict,William Osula,['FW'],[1.0],1
 Sean_Neave,Neave,Sean Neave,100.0,name-strict,Sean Neave,['SUB'],[1.0],1
 Aladji_Bamba,Bamba,Aladji Bamba,100.0,name-strict,Aladji Bamba,['SUB'],[1.0],1
@@ -586,7 +586,7 @@ Mathys_Tel,Tel,Mathys Tel,100.0,name-strict,Mathys Tel,['LW'],[1.0],1
 James_Maddison,Maddison,James Maddison,100.0,name-strict,James Maddison,['MC'],[1.0],1
 Rodrigo_Bentancur,Bentancur,Rodrigo Bentancur,100.0,name-strict,Rodrigo Bentancur,"['DM', 'MC']","[0.8888888888888888, 0.1111111111111111]",1
 Wilson_Odobert,Odobert,Wilson Odobert,100.0,name-strict,Wilson Odobert,"['RW', 'AMC', 'LW']","[0.5, 0.3333333333333333, 0.16666666666666666]",1
-Pape_Matar Sarr,P.M.Sarr,Unknown for understat,,no-match,,['SUB'],[1.0],1
+Pape_Matar Sarr,P.M.Sarr,Unknown for understat,,no-match,,['MC'],[1.0],1
 Conor_Gallagher,Gallagher,Conor Gallagher,100.0,name-strict,Conor Gallagher,"['AMC', 'MC', 'DM']","[0.75, 0.125, 0.125]",1
 Lucas_Bergvall,Bergvall,Lucas Bergvall,100.0,name-strict,Lucas Bergvall,"['DM', 'AMC', 'RW']","[0.3333333333333333, 0.3333333333333333, 0.3333333333333333]",1
 Dejan_Kulusevski,Kulusevski,Dejan Kulusevski,100.0,name-strict,Dejan Kulusevski,"['MC', 'RW', 'FW', 'AMC']","[0.42857142857142855, 0.2857142857142857, 0.14285714285714285, 0.14285714285714285]",1
@@ -601,7 +601,7 @@ Luca_Williams-Barnett,Williams-Barnett,Unknown for understat,,no-match,,['SUB'],
 Robin_Roefs,Roefs,Robin Roefs,100.0,name-strict,Robin Roefs,['GK'],[1.0],1
 Anthony_Patterson,Patterson,Nathan Patterson,90.0,web_name-relaxed,Nathan Patterson,"['DR', 'DL']","[0.8333333333333334, 0.16666666666666666]",1
 Melker_Ellborg,Ellborg,Melker Ellborg,100.0,name-strict,Melker Ellborg,['GK'],[1.0],1
-Daniel_Ballard,Ballard,Dominic Ballard,90.0,web_name-relaxed,Dominic Ballard,['SUB'],[1.0],1
+Daniel_Ballard,Ballard,Dominic Ballard,90.0,web_name-relaxed,Dominic Ballard,['CB'],[1.0],1
 Nordi_Mukiele,Mukiele,Nordi Mukiele,100.0,name-strict,Nordi Mukiele,"['DR', 'CB']","[0.6, 0.4]",1
 Trai_Hume,Hume,Trai Hume,100.0,name-strict,Trai Hume,"['RW', 'DL']","[0.75, 0.25]",1
 Omar_Alderete,Alderete,Omar Alderete,100.0,name-strict,Omar Alderete,['CB'],[1.0],1
@@ -622,6 +622,6 @@ Chemsdine_Talbi,Talbi,Chemsdine Talbi,100.0,name-strict,Chemsdine Talbi,"['LW', 
 Djiamgone_Jocelin Ta Bi,Jocelin.T,Djiamgone Jocelin Ta Bi,100.0,name-strict,Djiamgone Jocelin Ta Bi,['RW'],[1.0],1
 Nilson_Angulo,Angulo,Nilson Angulo,100.0,name-strict,Nilson Angulo,"['LW', 'RW']","[0.8571428571428571, 0.14285714285714285]",1
 Brian_Brobbey,Brobbey,Brian Brobbey,100.0,name-strict,Brian Brobbey,['FW'],[1.0],1
-Wilson_Isidor,Isidor,Wilson Isidor,100.0,name-strict,Wilson Isidor,['SUB'],[1.0],1
+Wilson_Isidor,Isidor,Wilson Isidor,100.0,name-strict,Wilson Isidor,['FW'],[1.0],1
 Dayann_Méthalie,Methalie,Unknown for understat,,no-match,,['SUB'],[1.0],1
 Jules_Ahoka,Ahoka,Unknown for understat,,no-match,,['SUB'],[1.0],1
