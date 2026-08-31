@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Box from "@mui/material/Box";
 import Slider from "@mui/material/Slider";
 import TextField from "@mui/material/TextField";
+import { BarChart3, Grid2x2 } from "lucide-react";
 import {
   ResponsiveContainer,
   BarChart,
@@ -27,6 +28,7 @@ const MEASURE_OPTIONS = [
   { key: "expected_goals_conceded", label: "Expected Goals Conceded" },
   { key: "goals_conceded", label: "Goals Conceded" },
   { key: "GOALSCONCEEDED-XGOALSCONCEEDED", label: "Goals Conceded - XGC" },
+  { key: "defensive_contribution", label: "Defcon" },
   { key: "defcon_hit", label: "Defcon Hit" },
   { key: "GOALS-XG", label: "Goals - XG" },
   { key: "saves", label: "Saves" },
@@ -766,24 +768,28 @@ const SeasonAnalyticsTeams = () => {
               <button
                 type="button"
                 onClick={() => setSingleView("chart")}
+                title="Barchart"
+                aria-label="Barchart"
                 className={`rounded-full px-3 py-1.5 text-sm font-semibold transition ${
                   singleView === "chart"
                     ? "bg-sky-100 text-sky-800"
                     : "bg-slate-100 text-slate-700 hover:bg-slate-200"
                 }`}
               >
-                Barchart
+                <BarChart3 size={18} />
               </button>
               <button
                 type="button"
                 onClick={() => setSingleView("matrix")}
+                title="Matrix"
+                aria-label="Matrix"
                 className={`rounded-full px-3 py-1.5 text-sm font-semibold transition ${
                   singleView === "matrix"
                     ? "bg-amber-100 text-amber-800"
                     : "bg-slate-100 text-slate-700 hover:bg-slate-200"
                 }`}
               >
-                Matrix
+                <Grid2x2 size={18} />
               </button>
             </div>
           </div>
