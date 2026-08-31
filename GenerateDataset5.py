@@ -1843,7 +1843,7 @@ def main_Transform():
             shots_mean_feature=player_df["Shots_Mean"].values[-1]
             
             
-            if(len(player_df)<4):
+            if(len(player_df)<1):
                 unwanted_players.append([name_string, len(player_df),player_df["minutes"].mean() ])
                 continue
             player_df["time"] = range(1, len(player_df) + 1)

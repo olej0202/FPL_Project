@@ -579,6 +579,21 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
 
         return source.iloc[0:0].copy()
 
+    def _mean_numeric_profile(profile_df, columns):
+        if not columns:
+            return pd.Series(dtype=float)
+        if profile_df.empty:
+            return pd.Series(index=columns, dtype=float)
+
+        numeric_profile = (
+            profile_df
+            .reindex(columns=columns)
+            .replace(["nan", "NaN", "None", ""], np.nan)
+            .replace([np.inf, -np.inf], np.nan)
+            .apply(pd.to_numeric, errors="coerce")
+        )
+        return numeric_profile.mean().reindex(columns)
+
     def _weighted_understat_for_player(name, team_code, understat_pos, understat_team, fpl_position=None):
         """
         Returns:
@@ -1215,7 +1230,10 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
                 player_cluster[col] = np.nan
             if col not in player_row.columns:
                 player_row[col] = np.nan
-        player_row[columns_to_average] = player_cluster[columns_to_average].mean(numeric_only=True).reindex(columns_to_average)
+        player_row[columns_to_average] = _mean_numeric_profile(
+            player_cluster,
+            columns_to_average,
+        ).to_numpy()
         if player_cluster.empty:
             numeric_defaults = player_row[columns_to_average].apply(pd.to_numeric, errors="coerce")
             player_row[columns_to_average] = numeric_defaults.fillna(0.0)
@@ -1229,7 +1247,7 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
         if name in new_team_cluster:
             members = new_team_cluster[name]
             cluster_df = Future_dataframe[Future_dataframe["name"].isin(members)].reindex(columns=all_profile_columns)
-            cluster_means = cluster_df[columns_to_average].mean(numeric_only=True).reindex(columns_to_average)
+            cluster_means = _mean_numeric_profile(cluster_df, columns_to_average)
             player_row[columns_to_average] = 0.5 * player_row[columns_to_average] + 0.5 * cluster_means
 
         
