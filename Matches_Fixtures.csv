@@ -9,16 +9,16 @@ Fix_ID,GW,kickoff_time,started,finished,team_h_score,team_a_score,HomeTeam,AwayT
 2645202,1,2026-08-23T13:00:00Z,True,True,2.0,1.0,Man City,Bournemouth,43,91,MCI,BOU
 2645203,1,2026-08-23T15:30:00Z,True,True,2.0,2.0,Newcastle,Liverpool,4,14,NEW,LIV
 2645204,1,2026-08-24T19:00:00Z,True,True,2.0,3.0,Fulham,Chelsea,54,8,FUL,CHE
-2645205,2,2026-08-29T14:00:00Z,True,False,1.0,1.0,Bournemouth,Everton,91,11,BOU,EVE
-2645206,2,2026-08-31T19:00:00Z,False,False,,,Aston Villa,Arsenal,7,3,AVL,ARS
-2645207,2,2026-08-30T13:00:00Z,True,False,4.0,3.0,Chelsea,Brighton,8,36,CHE,BHA
-2645208,2,2026-08-29T14:00:00Z,True,False,0.0,1.0,Coventry City,Hull City,9,88,COV,HUL
-2645209,2,2026-08-28T19:00:00Z,True,False,1.0,4.0,Crystal Palace,Man City,31,43,CRY,MCI
-2645210,2,2026-08-30T13:00:00Z,True,False,1.0,1.0,Leeds,Brentford,2,94,LEE,BRE
-2645211,2,2026-08-29T11:30:00Z,True,False,2.0,2.0,Liverpool,Nott'm Forest,14,17,LIV,NFO
-2645212,2,2026-08-30T15:30:00Z,True,False,5.0,2.0,Man Utd,Ipswich Town,1,40,MUN,IPS
-2645213,2,2026-08-30T13:00:00Z,True,False,1.0,0.0,Sunderland,Fulham,56,54,SUN,FUL
-2645214,2,2026-08-29T16:30:00Z,True,False,0.0,2.0,Spurs,Newcastle,6,4,TOT,NEW
+2645205,2,2026-08-29T14:00:00Z,True,True,1.0,1.0,Bournemouth,Everton,91,11,BOU,EVE
+2645206,2,2026-08-31T19:00:00Z,True,True,0.0,1.0,Aston Villa,Arsenal,7,3,AVL,ARS
+2645207,2,2026-08-30T13:00:00Z,True,True,4.0,3.0,Chelsea,Brighton,8,36,CHE,BHA
+2645208,2,2026-08-29T14:00:00Z,True,True,0.0,1.0,Coventry City,Hull City,9,88,COV,HUL
+2645209,2,2026-08-28T19:00:00Z,True,True,1.0,4.0,Crystal Palace,Man City,31,43,CRY,MCI
+2645210,2,2026-08-30T13:00:00Z,True,True,1.0,1.0,Leeds,Brentford,2,94,LEE,BRE
+2645211,2,2026-08-29T11:30:00Z,True,True,2.0,2.0,Liverpool,Nott'm Forest,14,17,LIV,NFO
+2645212,2,2026-08-30T15:30:00Z,True,True,5.0,2.0,Man Utd,Ipswich Town,1,40,MUN,IPS
+2645213,2,2026-08-30T13:00:00Z,True,True,1.0,0.0,Sunderland,Fulham,56,54,SUN,FUL
+2645214,2,2026-08-29T16:30:00Z,True,True,0.0,2.0,Spurs,Newcastle,6,4,TOT,NEW
 2645215,3,2026-09-06T15:30:00Z,False,False,,,Arsenal,Chelsea,3,8,ARS,CHE
 2645216,3,2026-09-05T14:00:00Z,False,False,,,Brentford,Sunderland,94,56,BRE,SUN
 2645217,3,2026-09-05T14:00:00Z,False,False,,,Brighton,Leeds,36,2,BHA,LEE
@@ -44,7 +44,7 @@ Fix_ID,GW,kickoff_time,started,finished,team_h_score,team_a_score,HomeTeam,AwayT
 2645237,5,2026-09-19T14:00:00Z,False,False,,,Brighton,Arsenal,36,3,BHA,ARS
 2645238,5,2026-09-19T14:00:00Z,False,False,,,Everton,Ipswich Town,11,40,EVE,IPS
 2645239,5,2026-09-20T15:30:00Z,False,False,,,Fulham,Man Utd,54,1,FUL,MUN
-2645240,5,2026-09-19T14:00:00Z,False,False,,,Leeds,Crystal Palace,2,31,LEE,CRY
+2645240,5,2026-09-20T13:00:00Z,False,False,,,Leeds,Crystal Palace,2,31,LEE,CRY
 2645241,5,2026-09-20T13:00:00Z,False,False,,,Man City,Sunderland,43,56,MCI,SUN
 2645242,5,2026-09-19T14:00:00Z,False,False,,,Newcastle,Hull City,4,88,NEW,HUL
 2645243,5,2026-09-19T16:30:00Z,False,False,,,Nott'm Forest,Coventry City,17,9,NFO,COV
@@ -76,11 +76,11 @@ Fix_ID,GW,kickoff_time,started,finished,team_h_score,team_a_score,HomeTeam,AwayT
 2645269,8,2026-10-25T14:00:00Z,False,False,,,Crystal Palace,Newcastle,31,4,CRY,NEW
 2645270,8,2026-10-25T14:00:00Z,False,False,,,Hull City,Brentford,88,94,HUL,BRE
 2645271,8,2026-10-23T19:00:00Z,False,False,,,Ipswich Town,Nott'm Forest,40,17,IPS,NFO
-2645272,8,2026-10-24T14:00:00Z,False,False,,,Liverpool,Brighton,14,36,LIV,BHA
+2645272,8,2026-10-25T14:00:00Z,False,False,,,Liverpool,Brighton,14,36,LIV,BHA
 2645273,8,2026-10-25T14:00:00Z,False,False,,,Man Utd,Bournemouth,1,91,MUN,BOU
 2645274,8,2026-10-25T16:30:00Z,False,False,,,Sunderland,Leeds,56,2,SUN,LEE
 2645275,9,2026-10-31T15:00:00Z,False,False,,,Bournemouth,Leeds,91,2,BOU,LEE
-2645276,9,2026-11-01T14:00:00Z,False,False,,,Aston Villa,Fulham,7,54,AVL,FUL
+2645276,9,2026-10-31T20:00:00Z,False,False,,,Aston Villa,Fulham,7,54,AVL,FUL
 2645277,9,2026-10-31T15:00:00Z,False,False,,,Brentford,Nott'm Forest,94,17,BRE,NFO
 2645278,9,2026-10-31T12:30:00Z,False,False,,,Chelsea,Man Utd,8,1,CHE,MUN
 2645279,9,2026-10-31T15:00:00Z,False,False,,,Coventry City,Sunderland,9,56,COV,SUN

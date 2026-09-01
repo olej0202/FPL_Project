@@ -43,8 +43,8 @@ player_id,understat_player,player_code,match_score,matched_name,matched_from,tea
 9156,Kevin Schade,513418,1.03,Kevin Schade,full_name,brentford
 9040,Conor Gallagher,232787,1.03,Conor Gallagher,full_name,spurs
 9017,Malo Gusto,482609,1.03,Malo Gusto,full_name,chelsea
+8995,Hugo Ekitike,510663,1.03,Hugo Ekitiké,full_name,liverpool
 87,Joelinton,180974,1.03,Joelinton Cássio Apolinário de Lira,web_name,newcastle
-8986,Omar Alderete,201895,1.03,Omar Alderete,full_name,sunderland
 8981,Jéremy Doku,248875,1.03,Jérémy Doku,full_name,man city
 8942,Aaron Hickey,472713,1.03,Aaron Hickey,full_name,brentford
 8941,Jacob Ramsey,232653,1.03,Jacob Ramsey,full_name,newcastle
@@ -145,7 +145,7 @@ player_id,understat_player,player_code,match_score,matched_name,matched_from,tea
 11974,Benjamin Sesko,485711,1.03,Benjamin Sesko,full_name,man utd
 11966,Noah Okafor,435997,1.03,Noah Okafor,full_name,leeds
 8706,Eberechi Eze,232413,1.03,Eberechi Eze,full_name,arsenal
-8995,Hugo Ekitike,510663,1.03,Hugo Ekitiké,full_name,liverpool
+8986,Omar Alderete,201895,1.03,Omar Alderete,full_name,sunderland
 8662,Dan Ndoye,456512,1.03,Dan Ndoye,full_name,nott m forest
 6665,Curtis Jones,206915,1.03,Curtis Jones,full_name,liverpool
 6314,Joachim Andersen,174874,1.03,Joachim Andersen,full_name,fulham
@@ -162,7 +162,7 @@ player_id,understat_player,player_code,match_score,matched_name,matched_from,tea
 6615,Trevoh Chalobah,180736,1.03,Trevoh Chalobah,full_name,chelsea
 6630,Joe Willock,200089,1.03,Joe Willock,full_name,newcastle
 6674,Rayan Ait Nouri,448514,1.03,Rayan Aït-Nouri,full_name,man city
-5552,Nick Pope,98747,1.03,Nick Pope,full_name,newcastle
+5261,Kevin Danso,135720,1.03,Kevin Danso,full_name,spurs
 6681,Harvey Barnes,201666,1.03,Harvey Barnes,full_name,newcastle
 6807,Jaka Bijol,434752,1.03,Jaka Bijol,full_name,leeds
 6818,James Maddison,172780,1.03,James Maddison,full_name,spurs
@@ -180,12 +180,12 @@ player_id,understat_player,player_code,match_score,matched_name,matched_from,tea
 6219,Enes Ünal,168636,1.03,Enes Ünal,full_name,bournemouth
 6174,Nikola Milenkovic,227444,1.03,Nikola Milenković,full_name,nott m forest
 6157,Timothy Castagne,166477,1.03,Timothy Castagne,full_name,fulham
+5553,Declan Rice,204480,1.03,Declan Rice,full_name,arsenal
 5555,Dominic Calvert-Lewin,177815,1.03,Dominic Calvert-Lewin,full_name,leeds
 5590,Tosin Adarabioyo,109646,1.03,Tosin Adarabioyo,full_name,chelsea
 5595,Daniel James,200617,1.03,Daniel James,full_name,leeds
-5261,Kevin Danso,135720,1.03,Kevin Danso,full_name,spurs
-5613,Gabriel,226597,1.03,Gabriel dos Santos Magalhães,web_name,arsenal
 5232,Alexander Isak,219168,1.03,Alexander Isak,full_name,liverpool
+5613,Gabriel,226597,1.03,Gabriel dos Santos Magalhães,web_name,arsenal
 5659,Nordi Mukiele,200834,1.03,Nordi Mukiele,full_name,sunderland
 5221,Leon Bailey,215711,1.03,Leon Bailey,full_name,aston villa
 5675,Ismaila Sarr,232185,1.03,Ismaïla Sarr,full_name,crystal palace
@@ -269,13 +269,12 @@ player_id,understat_player,player_code,match_score,matched_name,matched_from,tea
 910,Harrison Reed,153366,1.03,Harrison Reed,full_name,fulham
 8000,Ilia Gruev,486520,1.03,Ilia Gruev,full_name,leeds
 8006,Evann Guessand,485337,1.03,Evann Guessand,full_name,crystal palace
-5553,Declan Rice,204480,1.03,Declan Rice,full_name,arsenal
+5552,Nick Pope,98747,1.03,Nick Pope,full_name,newcastle
 7752,Gabriel Martinelli,444145,0.9585714285714286,Gabriel Martinelli Silva,full_name,arsenal
 2203,Emiliano Buendía,195546,0.9563157894736842,Emiliano Buendía Stati,full_name,aston villa
 2182,Jefferson Lerma,152551,0.9550000000000001,Jefferson Lerma Solís,full_name,crystal palace
 11297,Carlos Alcaraz,502697,0.953529411764706,Carlos Alcaraz Durán,full_name,everton
 7526,Martín Zubimendi,481655,0.9530769230769232,Martín Zubimendi Ibáñez,full_name,arsenal
-12408,Daniel Muñoz,247348,0.9500000000000001,Daniel Muñoz Mejía,full_name,crystal palace
 5304,Mikel Merino,195384,0.9500000000000001,Mikel Merino Zazón,full_name,arsenal
 9453,Moisés Caicedo,486672,0.9500000000000001,Moisés Caicedo Corozo,full_name,chelsea
 1679,Dominic Solanke,154566,0.9453846153846155,Dominic Solanke-Mitchell,full_name,spurs

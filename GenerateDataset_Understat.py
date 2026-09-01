@@ -132,24 +132,41 @@ def add_locf_shares(
 # ============================================================
 def Generate_Team_threats():
     df = pd.read_csv("Team_AggTest.csv")
-    team_df = df[["opponent", "pos_group", "date", "shots_share", "npxG_share", "xA_share", "key_passes_share","npxG","xA"]].copy()
+    team_df = df[["opponent", "pos_group", "date", "shots_share", "npxG_share", "xA_share", "key_passes_share"]].copy()
+    team_df["npxG"] = pd.to_numeric(
+        df["npxG_sum"] if "npxG_sum" in df.columns else df.get("npxG", 0.0),
+        errors="coerce"
+    )
+    team_df["xA"] = pd.to_numeric(
+        df["xA_sum"] if "xA_sum" in df.columns else df.get("xA", 0.0),
+        errors="coerce"
+    )
 
     team_df["date"] = pd.to_datetime(team_df["date"], errors="coerce")
-    metrics = ["shots_share", "npxG_share", "xA_share", "key_passes_share","npxG","xA"]
+    share_metrics = ["shots_share", "npxG_share", "xA_share", "key_passes_share"]
+    volume_metrics = ["npxG", "xA"]
+    metrics = share_metrics + volume_metrics
     team_df[metrics] = team_df[metrics].apply(pd.to_numeric, errors="coerce")
 
     team_df = team_df.sort_values(["opponent", "pos_group", "date"])
 
     span = 20
-    min_val = 0.05
-    max_val = 0.9
+    min_share_val = 0.05
+    max_share_val = 0.9
 
     ewm_cols = [f"{c}_ewm" for c in metrics]
 
-    team_df[ewm_cols] = (
+    share_ewm_cols = [f"{c}_ewm" for c in share_metrics]
+    team_df[share_ewm_cols] = (
         team_df
-        .groupby(["opponent", "pos_group"])[metrics]
-        .transform(lambda s: s.clip(lower=min_val, upper=max_val).ewm(span=span, adjust=False).mean())
+        .groupby(["opponent", "pos_group"])[share_metrics]
+        .transform(lambda s: s.clip(lower=min_share_val, upper=max_share_val).ewm(span=span, adjust=False).mean())
+    )
+    volume_ewm_cols = [f"{c}_ewm" for c in volume_metrics]
+    team_df[volume_ewm_cols] = (
+        team_df
+        .groupby(["opponent", "pos_group"])[volume_metrics]
+        .transform(lambda s: s.clip(lower=0.0).ewm(span=span, adjust=False).mean())
     )
 
     latest_ewm = (
@@ -524,8 +541,8 @@ def Generate_Understat_dataset(current_players, run_player_pos):
         df.groupby(["pos_group", "date", "player_team"])
           .agg({
               "npg": "mean",
-              "key_passes": "mean",
-              "shots": "mean",
+              "key_passes": ["mean", "sum"],
+              "shots": ["mean", "sum"],
               "goals": "mean",
               "xG": "mean",
               "xA": ["mean", "sum"],
@@ -558,10 +575,13 @@ def Generate_Understat_dataset(current_players, run_player_pos):
     # IMPORTANT: use SUM columns for the "team-total" logic
     # ------------------------------------------------------------
     # Ensure *_sum exist
+    if "shots_sum" not in agg_df.columns:
+        agg_df["shots_sum"] = pd.to_numeric(agg_df.get("shots", 0), errors="coerce").fillna(0.0)
+    if "key_passes_sum" not in agg_df.columns:
+        agg_df["key_passes_sum"] = pd.to_numeric(agg_df.get("key_passes", 0), errors="coerce").fillna(0.0)
     if "npxG_sum" not in agg_df.columns:
         agg_df["npxG_sum"] = pd.to_numeric(agg_df.get("npxG", 0), errors="coerce").fillna(0.0)
     if "xA_sum" not in agg_df.columns:
-        # your rename makes xA_sum. If not, fallback:
         agg_df["xA_sum"] = pd.to_numeric(agg_df.get("xA", 0), errors="coerce").fillna(0.0)
 
     agg_df = add_locf_shares(
@@ -569,12 +589,12 @@ def Generate_Understat_dataset(current_players, run_player_pos):
         team_col="player_team",
         date_col="date",
         pos_col="pos_group",
-        value_cols=["npxG", "xA", "shots", "key_passes"],
+        value_cols=["npxG_sum", "xA_sum", "shots_sum", "key_passes_sum"],
         share_names={
-            "npxG": "npxG_share",
-            "xA": "xA_share",
-            "shots": "shots_share",
-            "key_passes": "key_passes_share",
+            "npxG_sum": "npxG_share",
+            "xA_sum": "xA_share",
+            "shots_sum": "shots_share",
+            "key_passes_sum": "key_passes_share",
         },
         pos_universe=None,
         exclude_pos={"SUB", "GK", "GKP"},

@@ -1,26 +1,26 @@
 ,player_team,player_name,pos_latest,appearances_last5,n_dates,appear_pct_last5
 0,Arsenal,Ben White,DR,3,5,60.0
 1,Arsenal,Bukayo Saka,RW,4,5,80.0
-2,Arsenal,Christos Tzolis,LW,1,5,20.0
-3,Arsenal,Cristhian Mosquera,CB,3,5,60.0
+2,Arsenal,Christos Tzolis,LW,2,5,40.0
+3,Arsenal,Cristhian Mosquera,CB,4,5,80.0
 4,Arsenal,David Raya,GK,4,5,80.0
 5,Arsenal,Declan Rice,DM,4,5,80.0
 6,Arsenal,Gabriel,CB,4,5,80.0
-7,Arsenal,Kai Havertz,FW,2,5,40.0
-8,Arsenal,Martin Odegaard,AMC,2,5,40.0
+7,Arsenal,Kai Havertz,FW,3,5,60.0
+8,Arsenal,Martin Odegaard,AMC,3,5,60.0
 9,Arsenal,Myles Lewis-Skelly,DM,4,5,80.0
 10,Arsenal,Riccardo Calafiori,DL,5,5,100.0
-11,Aston Villa,Boubacar Kamara,DM,1,5,20.0
-12,Aston Villa,Emiliano Buendía,FW,3,5,60.0
-13,Aston Villa,George Hemmings,LW,1,5,20.0
+11,Aston Villa,Boubacar Kamara,DM,2,5,40.0
+12,Aston Villa,Emiliano Buendía,AMC,4,5,80.0
+13,Aston Villa,George Hemmings,LW,2,5,40.0
 14,Aston Villa,Ian Maatsen,DL,4,5,80.0
-15,Aston Villa,John McGinn,RW,3,5,60.0
-16,Aston Villa,João Gomes,DM,1,5,20.0
-17,Aston Villa,Marco Bizot,GK,2,5,40.0
-18,Aston Villa,Matthew Cash,DR,4,5,80.0
-19,Aston Villa,Pau Torres,CB,2,5,40.0
-20,Aston Villa,Ross Barkley,AMC,4,5,80.0
-21,Aston Villa,Victor Lindelöf,CB,5,5,100.0
+15,Aston Villa,John McGinn,RW,4,5,80.0
+16,Aston Villa,Matthew Cash,DR,4,5,80.0
+17,Aston Villa,Nicolas Jackson,FW,1,5,20.0
+18,Aston Villa,Pau Torres,CB,3,5,60.0
+19,Aston Villa,Ross Barkley,DM,4,5,80.0
+20,Aston Villa,Victor Lindelöf,CB,5,5,100.0
+21,Aston Villa,Zion Suzuki,GK,1,5,20.0
 22,Bournemouth,Adam Smith,DR,5,5,100.0
 23,Bournemouth,Adrien Truffert,DL,5,5,100.0
 24,Bournemouth,Alex Scott,DM,4,5,80.0

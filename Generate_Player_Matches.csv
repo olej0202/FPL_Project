@@ -8,7 +8,7 @@ William_Saliba,Saliba,William Saliba,100.0,name-strict,William Saliba,['CB'],[1.
 Myles_Lewis-Skelly,Lewis-Skelly,Myles Lewis-Skelly,100.0,name-strict,Myles Lewis-Skelly,"['DM', 'DL']","[0.6666666666666666, 0.3333333333333333]",1
 Riccardo_Calafiori,Calafiori,Riccardo Calafiori,100.0,name-strict,Riccardo Calafiori,['DL'],[1.0],1
 Piero_Hincapié,Hincapie,Piero Hincapié,100.0,name-strict,Piero Hincapié,"['DL', 'CB']","[0.8571428571428571, 0.14285714285714285]",1
-Benjamin_White,White,Morgan Gibbs-White,90.0,web_name-relaxed,Morgan Gibbs-White,"['AMC', 'LW']","[0.5555555555555556, 0.4444444444444444]",1
+Benjamin_White,White,Morgan Gibbs-White,90.0,web_name-relaxed,Morgan Gibbs-White,"['DR']","[0.99]",1
 Cristhian_Mosquera,Mosquera,Cristhian Mosquera,100.0,name-strict,Cristhian Mosquera,"['CB', 'DR']","[0.6, 0.4]",1
 Bukayo_Saka,Saka,Bukayo Saka,100.0,name-strict,Bukayo Saka,"['RW', 'AMC']","[0.8888888888888888, 0.1111111111111111]",1
 Declan_Rice,Rice,Declan Rice,100.0,name-strict,Declan Rice,"['DM', 'MC']","[0.7, 0.3]",1
@@ -358,7 +358,7 @@ Jack_Taylor,Taylor,Jack Taylor,100.0,name-strict,Jack Taylor,"['DM', 'MC']","[0.
 Jack_Clarke,Clarke,Jack Clarke,100.0,name-strict,Jack Clarke,['LW'],[1.0],1
 Chiedozie_Ogbene,Ogbene,Chiedozie Ogbene,100.0,name-strict,Chiedozie Ogbene,"['RW', 'DR', 'AMC']","[0.42857142857142855, 0.2857142857142857, 0.2857142857142857]",1
 Abdul_Fatawu,Fatawu,Abdul Fatawu,100.0,name-strict,Abdul Fatawu,"['RW', 'LW']","[0.8, 0.2]",1
-Emersonn_Correia da Silva,Emersonn,Emerson,90.0,name-relaxed,Emerson,['DL'],[1.0],1
+Emersonn_Correia da Silva,Emersonn,Emerson,90.0,name-relaxed,Emerson,['FW'],[1.0],1
 George_Hirst,Hirst,George Hirst,100.0,name-strict,George Hirst,['FW'],[1.0],1
 Jaden_Philogene,Philogene,Jaden Philogene-Bidace,95.0,name-strict,Jaden Philogene-Bidace,"['RW', 'DR', 'LW']","[0.6, 0.2, 0.2]",1
 Sam_Szmodics,Szmodics,Sammie Szmodics,90.0,web_name-relaxed,Sammie Szmodics,"['LW', 'RW']","[0.8571428571428571, 0.14285714285714285]",1
@@ -444,7 +444,7 @@ Marcus_Bettinelli,Bettinelli,Unknown for understat,,no-match,,['SUB'],[1.0],1
 Nico_O'Reilly,O'Reilly,Nico O&#039;Reilly,95.0,name-strict,Nico O&#039;Reilly,"['DL', 'DM', 'MC', 'AMC']","[0.7, 0.3, 0.0, 0.0]",1
 Marc_Guéhi,Guéhi,Marc Guehi,100.0,name-strict,Marc Guehi,"['CB', 'DM']","[0.9, 0.1]",1
 Matheus_Nunes,Matheus N.,Matheus Nunes,100.0,name-strict,Matheus Nunes,['DR'],[1.0],1
-Rúben_Gato Alves Dias,Rúben,Rúben Neves,90.0,web_name-relaxed,Rúben Neves,"['MC', 'DM']","[0.75, 0.25]",1
+Rúben_Gato Alves Dias,Rúben,Rúben Neves,90.0,web_name-relaxed,Rúben Neves,"['CB', 'DM']","[0.99, 0.0]",1
 Joško_Gvardiol,Gvardiol,Josko Gvardiol,100.0,name-strict,Josko Gvardiol,"['CB', 'DL']","[0.625, 0.375]",1
 Rayan_Aït-Nouri,Aït-Nouri,Rayan Ait Nouri,100.0,name-strict,Rayan Ait Nouri,"['DL', 'AMC']","[0.875, 0.125]",1
 Abdukodir_Khusanov,Khusanov,Abduqodir Khusanov,94.44444444444444,name-relaxed,Abduqodir Khusanov,"['CB', 'DR']","[0.8888888888888888, 0.1111111111111111]",1
