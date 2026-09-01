@@ -193,7 +193,9 @@ def train_defcon_ensemble_model(
         "Share_of_Defcon",
         "defcon_avg",
         "defcon_avg_hit_rate",
-        "defcon_avg_hit_rate_T0",
+        "defcon_hit_rate_T2",
+        "defcon_hit_rate_T3",
+
     ]
 
     features = [
@@ -201,7 +203,8 @@ def train_defcon_ensemble_model(
         "Share_of_Defcon",
         "defcon_avg",
         "defcon_avg_hit_rate",
-        "defcon_avg_hit_rate_T0",
+        "defcon_hit_rate_T2",
+        "defcon_hit_rate_T3",
         "minutes",
         "Rolling_Defcon_For",
         "Opponent_defcon"
@@ -1560,9 +1563,9 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
         defcon_model, sigma, results, historical_predictions = (
             train_defcon_ensemble_model(
             path="TestML4.csv",
-            svr_weight=0.4,
-            xgb_weight=0.25,
-            elastic_net_weight=0.35,
+            svr_weight=0.3,
+            xgb_weight=0.4,
+            elastic_net_weight=0.3,
             elastic_net_alpha=0.01,
             elastic_net_l1_ratio=0.5
             )   
@@ -1730,16 +1733,19 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
                     df["Share_of_Defcon"].values[h],
                     df["defcon_avg"].values[h],
                     df["defcon_avg_hit_rate"].values[h],
-                    df["defcon_avg_hit_rate_T0"].values[h],
+                    df["defcon_hit_rate_T2"].values[h],
+                    df["defcon_hit_rate_T3"].values[h],
                     df["average_minutes"].values[h],
                     df["Rolling_Team_Defcon"].values[h],
                     df["Opp_defcon"].values[h]
+
                 ]], columns=[
                     "Share_of_Defcon_Short",
                     "Share_of_Defcon",
                     "defcon_avg",
                     "defcon_avg_hit_rate",
-                    "defcon_avg_hit_rate_T0",
+                    "defcon_hit_rate_T2",
+                    "defcon_hit_rate_T3",
                     "minutes",
                     "Rolling_Defcon_For",
                     "Opponent_defcon"

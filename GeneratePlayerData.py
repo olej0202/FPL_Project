@@ -1407,7 +1407,16 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
     df["Assist_Index"] = df["Understat_POSXA"] * df["player_risiko"] + (1 - df["player_risiko"]) * (df["Assist_Statistics"]*0.55+df["Rolling_adjusted_XA"]*0.3+0.15*df['Rolling_adjusted_creativity_per90']*0.01)
     df["Goal_Index_Share"] = df["Understat_POSXG_Share"] * df["player_risiko"] + (1 - df["player_risiko"]) * (df["Goal_Statistics_share"]*0+df["Share_of_XG"]*0.7+0.3*df['Share_of_XG_Short']+0*df['Rolling_adjusted_Threat_per90_share'])
     df["Assist_Index_Share"] = df["Understat_POSXA_Share"] * df["player_risiko"] + (1 - df["player_risiko"]) * (df["Assist_Statistics_share"]*0+df["Share_of_XA"]*0.7+0.3*df['Share_of_XA_Short']+0*df['Rolling_adjusted_creativity_per90_share'])
-    df["Defcon_Index"] = df["defcon_avg"]
+    df["Defcon_Index"] = (
+        df["defcon_avg"] * 0.5
+        + 0.5 * (
+            6.0 * df["defcon_avg_hit_rate_T0"]
+            + 2.0 * df["defcon_avg_hit_rate_T1"]
+            + 2.5 * df["defcon_avg_hit_rate_T2"]
+            + 2.5 * df["defcon_avg_hit_rate_T3"]
+            + 2.0 * df["defcon_avg_hit_rate"]
+        )
+    )
 
     df["average_minutes"] = pd.to_numeric(
         df["average_minutes"],
