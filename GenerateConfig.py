@@ -107,7 +107,8 @@ Manual_Player_Adjustments={
 Manual_Player_Risk={
         # exemple"Alexander_Isak":0.6,
         "Christos_Tzolis": 0.8,
-        "Bruno_Guimarães Rodriguez Moura": 0.6
+        "Bruno_Guimarães Rodriguez Moura": 0.6,
+        "Elliot_Anderson":0.7
        
 }
 

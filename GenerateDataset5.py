@@ -1986,7 +1986,7 @@ def main_Transform():
                     .sum()
             ) * 90   
             
-            player_df["Goal_Statistics"]=player_df["Rolling_adjusted_XG_per90_both"]*0.75+0.0025*(player_df["Rolling_adjusted_Threat_per90"]*0.7+0.3*player_df["Rolling_adjusted_Threat_per90_Short"])
+            player_df["Goal_Statistics"]=player_df["Rolling_adjusted_XG_per90_both"]*0.65+0.0035*(player_df["Rolling_adjusted_Threat_per90"]*0.7+0.3*player_df["Rolling_adjusted_Threat_per90_Short"])
             player_df["Assist_Statistics"]=player_df["Rolling_adjusted_XA_per90_both"]*0.8+0.002*(player_df["Rolling_adjusted_creativity_per90"]*0.7+0.3*player_df["Rolling_adjusted_creativity_per90_Short"])
                
             
