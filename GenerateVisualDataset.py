@@ -724,19 +724,58 @@ def Player_adjustements(current_player_path):
         )
     )
 
-    cbi_scaled = max_score * base * penalty_factor
-    cbi_opp=np.minimum(1.1,1+(df["Opp_defcon"]-79)/30)
+    import numpy as np
+    from scipy.stats import t
 
-    df["CBI_Percent"] = (
-        df["defcon_avg_hit_rate"] * 0.35+df["defcon_avg_hit_rate_T0"] * 0.3+df["defcon_avg_hit_rate_T1"] * 0.1+df["defcon_avg_hit_rate_T2"] * 0.1+df["defcon_avg_hit_rate_T3"] * 0.15
-    )*cbi_opp
-    
-    z = (-7.784197+ 0.25 * df["defcon_avg_hit_rate_T0"]- 0.2 * df["defcon_avg_hit_rate_T1"]
-        + 2.697022 * df["defcon_avg_hit_rate_T2"]- 0.110803 * df["defcon_avg_hit_rate_T3"]+ 1.65 * df["defcon_avg_hit_rate"]+ 0.056152 * df["Opp_defcon"]
+    DF = 5.445239499991924
+    BIAS = -0.22988589029028356
+    SCALE = 2.3387548983231
+
+    def probability(mu, threshold):
+        return t.sf(
+            threshold,
+            df=DF,
+            loc=mu + BIAS,
+            scale=SCALE
         )
 
-    # Logistic transformation → probability
-    df["CBI_Percent"]= 1 / (1 + np.exp(-z))
+    # --------------------------------------------------
+    # Opponent defcon scaling
+    # --------------------------------------------------
+
+    opp_avg = df["Opp_defcon"].mean()
+    opp_min = df["Opp_defcon"].min()
+    opp_max = df["Opp_defcon"].max()
+
+    # Linear scale from 0.9 -> 1.1
+    df["Opp_defcon_scale"] = (
+        0.9
+        + (
+            (df["Opp_defcon"] - opp_min)
+            / (opp_max - opp_min)
+        ) * 0.2
+    )
+
+    # Scale Defcon_Index / mu
+    df["Defcon_Index_scaled"] = (
+        df["Defcon_Index"]
+        * df["Opp_defcon_scale"]
+    )
+
+    # --------------------------------------------------
+    # Position-specific threshold
+    # --------------------------------------------------
+
+    threshold = np.where(
+        df["position"].isin(["DEF", "GKP"]),
+        10.0,
+        12.0
+    )
+
+    # Probability
+    df["CBI_Percent"] = probability(
+        df["Defcon_Index_scaled"].to_numpy(float),
+        threshold)
 
     bps_scaled = np.maximum(1, df["Rolling_adjusted_BPS"]*0.4+df["Rolling_adjusted_BPS_2"]*0.6) 
     df["BPS"]=bps_scaled
