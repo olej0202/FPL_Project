@@ -831,7 +831,7 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
     Players_without_history=[]
 
     for name in names:
-        player_risiko = 0.25
+        player_risiko = 0.35
         print(name)
         
         
