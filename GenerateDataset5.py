@@ -1205,6 +1205,61 @@ def _safe_numeric_mean(series: pd.Series, fallback: float = 1.0) -> float:
     return float(s.mean())
 
 
+def _build_unblended_team_rating_debug(
+    run_result: dict,
+    base_newest: pd.DataFrame,
+    teams,
+    source_label: str,
+) -> pd.DataFrame:
+    """
+    Export the final raw team ratings from a single _run_one_pass call.
+
+    This is intentionally before any later averaging/blending back into
+    XGH/XGA/XGCH/XGCA so the user can inspect the direct function outputs.
+    """
+    base = base_newest.copy()
+    if "code" in base.columns:
+        base["code"] = pd.to_numeric(base["code"], errors="coerce").astype("Int64")
+    if "kickoff_time" in base.columns:
+        base["kickoff_time"] = pd.to_datetime(base["kickoff_time"], errors="coerce")
+
+    rows = []
+    for team in teams:
+        team_rows = base[base["code"] == int(team)].sort_values("kickoff_time")
+        latest = team_rows.tail(1)
+
+        row = {
+            "function_source": source_label,
+            "team_code": int(team),
+            "team_name": latest["name"].iloc[0] if not latest.empty and "name" in latest.columns else np.nan,
+            "latest_kickoff_time": latest["kickoff_time"].iloc[0] if not latest.empty and "kickoff_time" in latest.columns else pd.NaT,
+            "raw_off_rating": float(run_result["off_hist"][team][-1]),
+            "raw_def_rating": float(run_result["def_hist"][team][-1]),
+            "raw_off_home_rating": float(run_result["off_home_hist"][team][-1]),
+            "raw_def_home_rating": float(run_result["def_home_hist"][team][-1]),
+            "raw_off_away_rating": float(run_result["off_away_hist"][team][-1]),
+            "raw_def_away_rating": float(run_result["def_away_hist"][team][-1]),
+            "raw_off_neutral_rating": float(run_result["off_neutral_hist"][team][-1]),
+            "raw_def_neutral_rating": float(run_result["def_neutral_hist"][team][-1]),
+            "raw_xg_pred": float(run_result["xg_preds"][team][-1]),
+            "raw_xgc_pred": float(run_result["xgc_preds"][team][-1]),
+            "raw_elo_rating": float(run_result["elo_hist"][team][-1]),
+        }
+
+        if not latest.empty:
+            for col in [
+                "XG", "XGC", "XG_avg", "XGC_avg",
+                "Offensive_Index", "Defensive_Index",
+                "Rolling_Threat", "Rolling_Threat_Against",
+                "XGH", "XGA", "XGCH", "XGCA",
+            ]:
+                row[f"base_{col}"] = latest[col].iloc[0] if col in latest.columns else np.nan
+
+        rows.append(row)
+
+    return pd.DataFrame(rows)
+
+
 def _add_cluster_history_features(
     team_transformed_df: pd.DataFrame,
     team_transformed_df_newest: pd.DataFrame,
@@ -1468,6 +1523,20 @@ def team_transformed2():
 
     new_team_df = pd.read_csv("Team_data_transformed.csv").iloc[:, 1:].copy()
     new_team_df_newest = pd.read_csv("Team_data_newest.csv").iloc[:, 1:].copy()
+
+    unblended_debug_df = pd.concat(
+        [
+            _build_unblended_team_rating_debug(run1, new_team_df_newest, teams, "function1"),
+            _build_unblended_team_rating_debug(run2, new_team_df_newest, teams, "function2"),
+        ],
+        ignore_index=True,
+    )
+    unblended_debug_df = unblended_debug_df.sort_values(
+        ["team_name", "function_source"],
+        kind="stable",
+    ).reset_index(drop=True)
+    unblended_debug_df.to_csv("Team_rating_indices_unblended_last.csv", index=False)
+
     overall_weight = 0.25
 
     team_transformed_df = pd.DataFrame()

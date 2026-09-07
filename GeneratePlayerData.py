@@ -1410,7 +1410,7 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
     df["Defcon_Index"] = (
         df["defcon_avg"] * 0.5
         + 0.5 * (
-            6.0 * df["defcon_avg_hit_rate_T0"]
+            6.5 * df["defcon_avg_hit_rate_T0"]
             + 2.0 * df["defcon_avg_hit_rate_T1"]
             + 2.5 * df["defcon_avg_hit_rate_T2"]
             + 2.5 * df["defcon_avg_hit_rate_T3"]

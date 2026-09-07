@@ -43,7 +43,8 @@ PLAYER_NAME_MAP = {
         "Alejandro_Garnacho Ferreyra": "Alejandro_Garnacho",
         "Francisco Evanilson_de Lima Barbosa":"Francisco_Evanilson de Lima Barbosa",
         "João Pedro_Junqueira de Jesus": "João_Pedro Junqueira de Jesus",
-        "Igor Thiago_Nascimento Rodrigues":"Igor_Thiago Nascimento Rodrigues"
+        "Igor Thiago_Nascimento Rodrigues":"Igor_Thiago Nascimento Rodrigues",
+        "Mateus_Gonçalo Espanha Fernandes":"Mateus_Fernandes"
     }
 
 
