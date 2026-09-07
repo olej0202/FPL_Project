@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Box from "@mui/material/Box";
 import Slider from "@mui/material/Slider";
 import TextField from "@mui/material/TextField";
+import useMediaQuery from "@mui/material/useMediaQuery";
 import { BarChart3, Grid2x2 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -57,6 +58,14 @@ function formatMetric(value) {
   return num.toFixed(2);
 }
 
+function capMetricValue(value, capValue) {
+  const num = Number(value);
+  const cap = Number(capValue);
+  if (!Number.isFinite(num)) return null;
+  if (!Number.isFinite(cap)) return num;
+  return Math.min(num, cap);
+}
+
 function getPlayerKey(row) {
   return String(row?.Full_Name ?? row?.full_name ?? row?.name ?? "").trim();
 }
@@ -110,16 +119,20 @@ function PlayerIdentity({ row, photoUrl }) {
   );
 }
 
-function BarChartNameTick({ x, y, payload, playerMetaMap, photoMap }) {
+function BarChartNameTick({ x, y, payload, playerMetaMap, photoMap, compact = false }) {
   const value = String(payload?.value ?? "");
   const player = playerMetaMap.get(value);
   const photoUrl = photoMap[player?.id] || PLAYER_PHOTO_FALLBACK;
+  const imageX = compact ? -82 : -108;
+  const textX = compact ? -52 : -78;
+  const maxChars = compact ? 12 : 18;
+  const label = value.length > maxChars ? `${value.slice(0, maxChars - 3)}...` : value;
 
   return (
     <g transform={`translate(${x},${y})`}>
       <image
         href={photoUrl}
-        x={-108}
+        x={imageX}
         y={-14}
         width={24}
         height={24}
@@ -128,7 +141,7 @@ function BarChartNameTick({ x, y, payload, playerMetaMap, photoMap }) {
         preserveAspectRatio="xMidYMid slice"
       />
       <text
-        x={-78}
+        x={textX}
         y={0}
         dy={4}
         textAnchor="start"
@@ -136,7 +149,7 @@ function BarChartNameTick({ x, y, payload, playerMetaMap, photoMap }) {
         fontSize={12}
         fontWeight={600}
       >
-        {value}
+        {label}
       </text>
     </g>
   );
@@ -147,7 +160,7 @@ function RankedPlayerList({ rows, photoMap, mode, selectedMeasure }) {
 
   return (
     <div className="mt-5 overflow-hidden rounded-2xl border border-slate-200">
-      <div className="grid grid-cols-[minmax(0,1.5fr)_110px_90px] gap-3 bg-slate-50 px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+      <div className="grid grid-cols-[minmax(0,1.5fr)_72px_72px] gap-2 bg-slate-50 px-3 py-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500 sm:grid-cols-[minmax(0,1.5fr)_110px_90px] sm:gap-3 sm:px-4 sm:text-xs sm:tracking-[0.18em]">
         <div>Player</div>
         <div className="text-right">{mode === "average" ? "Average" : "Total"}</div>
         <div className="text-right">{labelOf(selectedMeasure)}</div>
@@ -158,7 +171,7 @@ function RankedPlayerList({ rows, photoMap, mode, selectedMeasure }) {
           return (
             <div
               key={row.id}
-              className="grid grid-cols-[minmax(0,1.5fr)_110px_90px] gap-3 px-4 py-3 text-sm"
+              className="grid grid-cols-[minmax(0,1.5fr)_72px_72px] gap-2 px-3 py-3 text-xs sm:grid-cols-[minmax(0,1.5fr)_110px_90px] sm:gap-3 sm:px-4 sm:text-sm"
             >
               <PlayerIdentity row={row} photoUrl={photoMap[row.id]} />
               <div className="self-center text-right text-slate-600">{formatMetric(metricValue)}</div>
@@ -191,19 +204,19 @@ function MatrixTable({ rows, gws, photoMap, selectedMeasure, mode }) {
 
   return (
     <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
-      <table className="min-w-full border-collapse text-sm">
+      <table className="min-w-[620px] border-collapse text-xs sm:min-w-full sm:text-sm">
         <thead className="bg-slate-50 text-slate-500">
           <tr>
-            <th className="sticky left-0 z-20 min-w-[260px] border-b border-r border-slate-200 bg-slate-50 px-4 py-3 text-left">
+            <th className="sticky left-0 z-20 min-w-[190px] border-b border-r border-slate-200 bg-slate-50 px-3 py-3 text-left sm:min-w-[260px] sm:px-4">
               Player
             </th>
-            <th className="border-b border-r border-slate-200 px-3 py-3 text-right">
+            <th className="border-b border-r border-slate-200 px-2 py-3 text-right sm:px-3">
               {mode === "average" ? "Avg" : "Total"}
             </th>
             {gws.map((gw) => (
               <th
                 key={gw}
-                className="min-w-[92px] border-b border-r border-slate-200 px-3 py-3 text-center"
+                className="min-w-[70px] border-b border-r border-slate-200 px-2 py-3 text-center sm:min-w-[92px] sm:px-3"
               >
                 GW {gw}
               </th>
@@ -213,10 +226,10 @@ function MatrixTable({ rows, gws, photoMap, selectedMeasure, mode }) {
         <tbody>
           {rows.map((row) => (
             <tr key={row.id} className="border-b border-slate-100">
-              <td className="sticky left-0 z-10 border-r border-slate-200 bg-white px-4 py-3">
+              <td className="sticky left-0 z-10 border-r border-slate-200 bg-white px-3 py-3 sm:px-4">
                 <PlayerIdentity row={row} photoUrl={photoMap[row.id]} />
               </td>
-              <td className="border-r border-slate-200 px-3 py-3 text-right font-semibold text-slate-900">
+              <td className="border-r border-slate-200 px-2 py-3 text-right font-semibold text-slate-900 sm:px-3">
                 {formatMetric(mode === "average" ? row.avg : row.total)}
               </td>
               {row.gwValues.map((value, index) => (
@@ -245,10 +258,12 @@ function MatrixTable({ rows, gws, photoMap, selectedMeasure, mode }) {
 
 export default function PlayerMeasureAveragesChart_Player() {
   const { fetchIfNeeded, SeasonData } = useOtherData();
+  const isCompact = useMediaQuery("(max-width:640px)");
 
   const [rowsRaw, setRowsRaw] = useState([]);
   const [selectedMeasure, setSelectedMeasure] = useState(MEASURE_OPTIONS[0].key);
   const [selectedMeasure2, setSelectedMeasure2] = useState("");
+  const [capValue, setCapValue] = useState(null);
   const [GWRange, setGWRange] = useState([1, 38]);
   const [minGW, setMinGW] = useState(null);
   const [maxGW, setMaxGW] = useState(null);
@@ -263,6 +278,24 @@ export default function PlayerMeasureAveragesChart_Player() {
   const bottomEligibleKeys = new Set(["GOALS-XG", "Assist-XA", "XGI_delta"]);
   const bottomEligible = bottomEligibleKeys.has(selectedMeasure);
   const isDoubleMeasure = !!selectedMeasure2 && selectedMeasure2 !== selectedMeasure;
+
+  const capMax = useMemo(() => {
+    const values = rowsRaw
+      .filter((row) => String(row?.Type ?? row?.type ?? "").toLowerCase() === "players")
+      .map((row) => Number(row?.[selectedMeasure]))
+      .filter(Number.isFinite);
+    return values.length ? Math.max(...values) : 0;
+  }, [rowsRaw, selectedMeasure]);
+  const capSliderMin = Math.min(0, Number(capMax) || 0);
+  const capSliderMax = Math.max(0, Number(capMax) || 0);
+  const capStep = Math.max(
+    0.1,
+    Math.round((Math.max(1, Math.abs(capSliderMax - capSliderMin)) / 100) * 10) / 10
+  );
+
+  useEffect(() => {
+    setCapValue(Number.isFinite(capMax) ? capMax : 0);
+  }, [capMax, selectedMeasure]);
 
   useEffect(() => {
     if (!bottomEligible) setRankDirection("top");
@@ -361,7 +394,8 @@ export default function PlayerMeasureAveragesChart_Player() {
         if (!id) continue;
 
         const value = Number(row?.[metricKey]);
-        if (!Number.isFinite(value)) continue;
+        const cappedValue = capMetricValue(value, capValue);
+        if (!Number.isFinite(cappedValue)) continue;
 
         if (!acc.has(id)) {
           acc.set(id, {
@@ -375,7 +409,7 @@ export default function PlayerMeasureAveragesChart_Player() {
         }
 
         const current = acc.get(id);
-        current.sum += value;
+        current.sum += cappedValue;
         current.samples += 1;
       }
 
@@ -398,7 +432,7 @@ export default function PlayerMeasureAveragesChart_Player() {
 
       return out;
     },
-    [filtered, mode]
+    [capValue, filtered, mode]
   );
 
   const groupedA = useMemo(() => aggregateByPlayer(selectedMeasure), [aggregateByPlayer, selectedMeasure]);
@@ -469,12 +503,13 @@ export default function PlayerMeasureAveragesChart_Player() {
       const id = getPlayerKey(row);
       const gw = Number(row?.GW);
       const value = Number(row?.[selectedMeasure]);
-      if (!id || !Number.isFinite(gw) || !Number.isFinite(value)) continue;
+      const cappedValue = capMetricValue(value, capValue);
+      if (!id || !Number.isFinite(gw) || !Number.isFinite(cappedValue)) continue;
 
       if (!acc.has(id)) acc.set(id, new Map());
       const playerGwMap = acc.get(id);
       const current = playerGwMap.get(gw) ?? { sum: 0, samples: 0 };
-      current.sum += value;
+      current.sum += cappedValue;
       current.samples += 1;
       playerGwMap.set(gw, current);
     }
@@ -488,7 +523,7 @@ export default function PlayerMeasureAveragesChart_Player() {
       resolved.set(id, finalGwMap);
     }
     return resolved;
-  }, [filtered, mode, selectedMeasure]);
+  }, [capValue, filtered, mode, selectedMeasure]);
 
   const matrixRows = useMemo(() => {
     return rankedRows.map((row) => {
@@ -580,8 +615,8 @@ export default function PlayerMeasureAveragesChart_Player() {
           </h1>
         </header>
 
-        <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-6">
-          <div className="col-span-1">
+        <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-7">
+          <div>
             <label className="mb-1 block text-[clamp(0.75rem,0.6vw+0.6rem,1rem)] uppercase tracking-wide text-slate-500">
               Measure A
             </label>
@@ -598,7 +633,7 @@ export default function PlayerMeasureAveragesChart_Player() {
             </select>
           </div>
 
-          <div className="col-span-1">
+          <div>
             <label className="mb-1 block text-[clamp(0.75rem,0.6vw+0.6rem,1rem)] uppercase tracking-wide text-slate-500">
               Second Measure
             </label>
@@ -616,7 +651,7 @@ export default function PlayerMeasureAveragesChart_Player() {
             </select>
           </div>
 
-          <div className="col-span-1">
+          <div>
             <label className="mb-1 block text-xs uppercase tracking-wide text-slate-500">
               Aggregation
             </label>
@@ -646,7 +681,7 @@ export default function PlayerMeasureAveragesChart_Player() {
             </div>
           </div>
 
-          <div className="col-span-1">
+          <div>
             <label className="mb-1 block text-xs uppercase tracking-wide text-slate-500">
               {bottomEligible && rankDirection === "bottom" ? "Bottom X" : "Top X"}
             </label>
@@ -687,7 +722,7 @@ export default function PlayerMeasureAveragesChart_Player() {
             ) : null}
           </div>
 
-          <div className="col-span-2">
+          <div className="sm:col-span-2 xl:col-span-2">
             {minGW !== null && maxGW !== null ? (
               <Box sx={{ width: "100%" }}>
                 <div className="mb-1 flex items-center justify-between">
@@ -707,6 +742,25 @@ export default function PlayerMeasureAveragesChart_Player() {
                 />
               </Box>
             ) : null}
+          </div>
+
+          <div className="sm:col-span-2 xl:col-span-1">
+            <Box sx={{ width: "100%" }}>
+              <div className="mb-1 flex items-center justify-between">
+                <span className="text-xs uppercase tracking-wide text-slate-500">Cap</span>
+                <span className="text-xs text-slate-600">{formatMetric(capValue)}</span>
+              </div>
+              <Slider
+                value={Number.isFinite(Number(capValue)) ? Number(capValue) : 0}
+                min={capSliderMin}
+                max={capSliderMax}
+                onChange={(_, value) => setCapValue(Array.isArray(value) ? value[0] : value)}
+                valueLabelDisplay="auto"
+                step={capStep}
+                disabled={!Number.isFinite(Number(capMax)) || Math.abs(capSliderMax - capSliderMin) < 1e-9}
+                sx={{ color: "#76AFA0" }}
+              />
+            </Box>
           </div>
         </div>
 
@@ -857,31 +911,33 @@ export default function PlayerMeasureAveragesChart_Player() {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-3">
+        <div className="rounded-2xl border border-slate-200 bg-white p-2 sm:p-3">
           {!isDoubleMeasure && singleView === "chart" && chartData.length > 0 ? (
             <>
-              <div
-                style={{
-                  width: "100%",
-                  height: Math.max(220, rankedRows.length * 50),
-                }}
-              >
-                <ResponsiveContainer width="100%" height="100%">
+              <div className="overflow-x-auto">
+                <div
+                  style={{
+                    width: isCompact ? 520 : "100%",
+                    height: Math.max(220, rankedRows.length * (isCompact ? 42 : 50)),
+                  }}
+                >
+                  <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     data={chartData}
                     layout="vertical"
-                    margin={{ top: 10, right: 0, left: 0, bottom: 10 }}
+                    margin={{ top: 10, right: isCompact ? 8 : 0, left: 0, bottom: 10 }}
                   >
                     <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" />
                     <YAxis
                       dataKey="name"
                       type="category"
-                      width={150}
+                      width={isCompact ? 110 : 150}
                       tick={(props) => (
                         <BarChartNameTick
                           {...props}
                           playerMetaMap={playerMetaMap}
                           photoMap={photoMap}
+                          compact={isCompact}
                         />
                       )}
                     />
@@ -904,7 +960,8 @@ export default function PlayerMeasureAveragesChart_Player() {
                       />
                     </Bar>
                   </BarChart>
-                </ResponsiveContainer>
+                  </ResponsiveContainer>
+                </div>
               </div>
               <RankedPlayerList
                 rows={rankedRows}
@@ -927,8 +984,9 @@ export default function PlayerMeasureAveragesChart_Player() {
 
           {isDoubleMeasure && scatterData.length > 0 ? (
             <>
-              <div style={{ width: "100%", height: 480 }}>
-                <ResponsiveContainer width="100%" height="100%">
+              <div className="overflow-x-auto">
+                <div style={{ width: isCompact ? 560 : "100%", height: isCompact ? 420 : 480 }}>
+                  <ResponsiveContainer width="100%" height="100%">
                   <ScatterChart margin={{ top: 20, right: 20, left: 10, bottom: 10 }}>
                     <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" />
                     <XAxis
@@ -963,7 +1021,8 @@ export default function PlayerMeasureAveragesChart_Player() {
                       <ZAxis dataKey={null} range={[80, 80]} />
                     </Scatter>
                   </ScatterChart>
-                </ResponsiveContainer>
+                  </ResponsiveContainer>
+                </div>
               </div>
               <RankedPlayerList
                 rows={rankedRows}
