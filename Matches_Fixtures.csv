@@ -19,16 +19,16 @@ Fix_ID,GW,kickoff_time,started,finished,team_h_score,team_a_score,HomeTeam,AwayT
 2645212,2,2026-08-30T15:30:00Z,True,True,5.0,2.0,Man Utd,Ipswich Town,1,40,MUN,IPS
 2645213,2,2026-08-30T13:00:00Z,True,True,1.0,0.0,Sunderland,Fulham,56,54,SUN,FUL
 2645214,2,2026-08-29T16:30:00Z,True,True,0.0,2.0,Spurs,Newcastle,6,4,TOT,NEW
-2645215,3,2026-09-06T15:30:00Z,True,False,2.0,1.0,Arsenal,Chelsea,3,8,ARS,CHE
-2645216,3,2026-09-05T14:00:00Z,True,False,1.0,1.0,Brentford,Sunderland,94,56,BRE,SUN
-2645217,3,2026-09-05T14:00:00Z,True,False,1.0,1.0,Brighton,Leeds,36,2,BHA,LEE
-2645218,3,2026-09-06T13:00:00Z,True,False,2.0,2.0,Everton,Man Utd,11,1,EVE,MUN
-2645219,3,2026-09-05T14:00:00Z,True,False,2.0,3.0,Fulham,Crystal Palace,54,31,FUL,CRY
-2645220,3,2026-09-05T16:30:00Z,True,False,0.0,0.0,Hull City,Aston Villa,88,7,HUL,AVL
-2645221,3,2026-09-04T19:00:00Z,True,False,0.0,2.0,Ipswich Town,Liverpool,40,14,IPS,LIV
-2645222,3,2026-09-05T14:00:00Z,True,False,1.0,0.0,Man City,Coventry City,43,9,MCI,COV
-2645223,3,2026-09-05T11:30:00Z,True,False,2.0,2.0,Newcastle,Bournemouth,4,91,NEW,BOU
-2645224,3,2026-09-05T14:00:00Z,True,False,0.0,0.0,Nott'm Forest,Spurs,17,6,NFO,TOT
+2645215,3,2026-09-06T15:30:00Z,True,True,2.0,1.0,Arsenal,Chelsea,3,8,ARS,CHE
+2645216,3,2026-09-05T14:00:00Z,True,True,1.0,1.0,Brentford,Sunderland,94,56,BRE,SUN
+2645217,3,2026-09-05T14:00:00Z,True,True,1.0,1.0,Brighton,Leeds,36,2,BHA,LEE
+2645218,3,2026-09-06T13:00:00Z,True,True,2.0,2.0,Everton,Man Utd,11,1,EVE,MUN
+2645219,3,2026-09-05T14:00:00Z,True,True,2.0,3.0,Fulham,Crystal Palace,54,31,FUL,CRY
+2645220,3,2026-09-05T16:30:00Z,True,True,0.0,0.0,Hull City,Aston Villa,88,7,HUL,AVL
+2645221,3,2026-09-04T19:00:00Z,True,True,0.0,2.0,Ipswich Town,Liverpool,40,14,IPS,LIV
+2645222,3,2026-09-05T14:00:00Z,True,True,1.0,0.0,Man City,Coventry City,43,9,MCI,COV
+2645223,3,2026-09-05T11:30:00Z,True,True,2.0,2.0,Newcastle,Bournemouth,4,91,NEW,BOU
+2645224,3,2026-09-05T14:00:00Z,True,True,0.0,0.0,Nott'm Forest,Spurs,17,6,NFO,TOT
 2645225,4,2026-09-12T14:00:00Z,False,False,,,Bournemouth,Brentford,91,94,BOU,BRE
 2645226,4,2026-09-12T14:00:00Z,False,False,,,Aston Villa,Nott'm Forest,7,17,AVL,NFO
 2645227,4,2026-09-12T14:00:00Z,False,False,,,Chelsea,Hull City,8,88,CHE,HUL

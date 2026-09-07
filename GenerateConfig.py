@@ -82,7 +82,7 @@ Manual_team_offensive_adjustments = {
     
 Manual_team_defensive_adjustments = {
         #example 90:1.1 dårligere def,  90:0.95 bedre def
-        8:0.9,88:1.15,7:1.05
+        88:1.1
 }
 
 
@@ -97,9 +97,7 @@ Manual_Player_Adjustments={
     "Bobby_Thomas":["Jaydee_Canvot"],
     "Tarik_Muharemović":["Jaydee_Canvot"],
     "Gonzalo_García": ["Rodrigo_Muniz Carvalho"],
-    "Mamadou_Sangaré":["Elliot_Anderson"],
-    "Christos_Tzolis":["Gabriel_Martinelli Silva"]
-    
+    "Mamadou_Sangaré":["Elliot_Anderson"],    
     
         
 }
@@ -107,9 +105,10 @@ Manual_Player_Adjustments={
 
 Manual_Player_Risk={
         # exemple"Alexander_Isak":0.6,
-        "Christos_Tzolis": 0.8,
+        "Christos_Tzolis": 0.7,
         "Bruno_Guimarães Rodriguez Moura": 0.6,
-        "Elliot_Anderson":0.7
+        "Elliot_Anderson":0.7,
+        "Iliman_Ndiaye":0.7
        
 }
 
