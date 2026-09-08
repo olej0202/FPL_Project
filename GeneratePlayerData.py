@@ -1396,6 +1396,11 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
         "Share_of_XA",
         "Share_of_XG_Short",
         "Share_of_XA_Short",
+        "xg_share_index_dec",
+        "xa_share_index_dec",
+        "Goal_Statistics_Index_dec",
+        "Assist_Statistics_Index_dec",
+        "Defcon_Statistics_Index_dec",
         "defcon_avg",
         "player_risiko",
     ]
@@ -1403,19 +1408,20 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
         if col not in df.columns:
             df[col] = 0.0
         df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0.0)
-    df["Goal_Index"] = df["Understat_POSXG"] * df["player_risiko"] + (1 - df["player_risiko"]) * (df["Goal_Statistics"]*0.5+df["Rolling_adjusted_XG"]*0.25+0.25*df['Rolling_adjusted_Threat_per90']*0.01)
-    df["Assist_Index"] = df["Understat_POSXA"] * df["player_risiko"] + (1 - df["player_risiko"]) * (df["Assist_Statistics"]*0.55+df["Rolling_adjusted_XA"]*0.3+0.15*df['Rolling_adjusted_creativity_per90']*0.01)
-    df["Goal_Index_Share"] = df["Understat_POSXG_Share"] * df["player_risiko"] + (1 - df["player_risiko"]) * (df["Goal_Statistics_share"]*0+df["Share_of_XG"]*0.7+0.3*df['Share_of_XG_Short']+0*df['Rolling_adjusted_Threat_per90_share'])
-    df["Assist_Index_Share"] = df["Understat_POSXA_Share"] * df["player_risiko"] + (1 - df["player_risiko"]) * (df["Assist_Statistics_share"]*0+df["Share_of_XA"]*0.7+0.3*df['Share_of_XA_Short']+0*df['Rolling_adjusted_creativity_per90_share'])
+    df["Goal_Index"] = df["Understat_POSXG"] * df["player_risiko"] + (1 - df["player_risiko"]) * (df["Goal_Statistics"]*0.4+df["Rolling_adjusted_XG"]*0.2+0.4*df['Goal_Statistics_Index_dec'])
+    df["Assist_Index"] = df["Understat_POSXA"] * df["player_risiko"] + (1 - df["player_risiko"]) * (df["Assist_Statistics"]*0.4+df["Rolling_adjusted_XA"]*0.2+0.4*df['Assist_Statistics_Index_dec'])
+    df["Goal_Index_Share"] = df["Understat_POSXG_Share"] * df["player_risiko"] + (1 - df["player_risiko"]) * (df["xg_share_index_dec"]*0.5+df["Share_of_XG"]*0.35+0.15*df['Share_of_XG_Short']+0*df['Rolling_adjusted_Threat_per90_share'])
+    df["Assist_Index_Share"] = df["Understat_POSXA_Share"] * df["player_risiko"] + (1 - df["player_risiko"]) * (df["xa_share_index_dec"]*0.5+df["Share_of_XA"]*0.35+0.15*df['Share_of_XA_Short']+0*df['Rolling_adjusted_creativity_per90_share'])
     df["Defcon_Index"] = (
-        df["defcon_avg"] * 0.5
-        + 0.5 * (
+        df["defcon_avg"] * 0.333
+        + 0.333 * (
             6.5 * df["defcon_avg_hit_rate_T0"]
             + 2.0 * df["defcon_avg_hit_rate_T1"]
             + 2.5 * df["defcon_avg_hit_rate_T2"]
             + 2.5 * df["defcon_avg_hit_rate_T3"]
             + 2.0 * df["defcon_avg_hit_rate"]
         )
+        +0.333*df["Defcon_Statistics_Index_dec"]
     )
 
     df["average_minutes"] = pd.to_numeric(

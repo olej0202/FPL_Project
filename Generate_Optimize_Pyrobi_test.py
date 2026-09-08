@@ -1323,7 +1323,7 @@ def optimize_my_team(
         # Stage 2: risk optimization with objective floor if requested
         if abs(risk_float) > 0:
             stage1_obj = float(safe_value(m.base_obj_expr))
-            allowed_drop = abs(risk_float) * 0.05 * stage1_obj
+            allowed_drop = abs(risk_float) * 0.1 * stage1_obj
             floor_val = stage1_obj - allowed_drop
 
             m.obj_floor_rhs.value = floor_val

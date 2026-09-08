@@ -21,7 +21,10 @@ const teamShort = {
   "Spurs": "TOT",
   "Sunderland": "SUN",
   "Burnley": "BUR",
-  "Leeds": "LEE"
+  "Leeds": "LEE",
+  "Coventry City": "COV",
+  "Hull City":"HUL",
+  "Ipswich Town": "IPS"
 };
 
 export default teamShort;

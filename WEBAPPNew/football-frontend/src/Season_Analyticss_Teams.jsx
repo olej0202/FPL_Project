@@ -17,7 +17,6 @@ import {
   Scatter,
   ZAxis,
   ReferenceLine,
-  Cell,
 } from "recharts";
 import { useOtherData } from "./Contexts/OtherContext";
 import teamLogos from "./utils/team_logos";
@@ -211,6 +210,43 @@ function BarChartNameTick({ x, y, payload, teamMetaMap, compact = false }) {
       >
         {label}
       </text>
+    </g>
+  );
+}
+
+function TeamLogoScatterPoint({ cx, cy, payload }) {
+  if (!Number.isFinite(Number(cx)) || !Number.isFinite(Number(cy))) return null;
+
+  const logo = teamLogos[payload?.name] || "";
+  const size = 32;
+  const x = Number(cx) - size / 2;
+  const y = Number(cy) - size / 2;
+
+  if (!logo) {
+    return (
+      <circle
+        cx={cx}
+        cy={cy}
+        r={10}
+        fill={payload?.fill || COLORS.neutral}
+        stroke="#ffffff"
+        strokeWidth={2}
+      />
+    );
+  }
+
+  return (
+    <g>
+      <circle cx={cx} cy={cy} r={18} fill="#ffffff" stroke="#cbd5e1" strokeWidth={1.5} />
+      <image
+        href={logo}
+        x={x}
+        y={y}
+        width={size}
+        height={size}
+        preserveAspectRatio="xMidYMid meet"
+        style={{ pointerEvents: "none" }}
+      />
     </g>
   );
 }
@@ -641,22 +677,6 @@ const SeasonAnalyticsTeams = () => {
     });
   }, [gwColumns, rankedRows, teamGwMeasureMap]);
 
-  const NameLabel = ({ x, y, value }) => {
-    if (typeof x !== "number" || typeof y !== "number" || typeof value !== "string") return null;
-    return (
-      <text
-        x={x}
-        y={y - 6}
-        fontSize={11}
-        fill="#334155"
-        textAnchor="middle"
-        style={{ pointerEvents: "none" }}
-      >
-        {value}
-      </text>
-    );
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 text-slate-800">
       <div className="mx-auto max-w-7xl px-3 py-6 sm:px-4 sm:py-10">
@@ -1056,11 +1076,7 @@ const SeasonAnalyticsTeams = () => {
                       labelFormatter={(_, payload) => payload?.[0]?.payload?.name ?? ""}
                     />
 
-                    <Scatter data={scatterData}>
-                      {scatterData.map((entry) => (
-                        <Cell key={entry.id} fill={entry.fill} />
-                      ))}
-                      <LabelList dataKey="name" content={<NameLabel />} />
+                    <Scatter data={scatterData} shape={<TeamLogoScatterPoint />}>
                       <ZAxis dataKey={null} range={[80, 80]} />
                     </Scatter>
                   </ScatterChart>

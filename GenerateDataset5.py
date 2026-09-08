@@ -380,6 +380,212 @@ def XP_new(df,home,n_matches):
         XP.append(xp)
 
     return XP
+
+
+def _robust_form_index(
+    group,
+    value_col,
+    short_half_life=60,
+    long_half_life=360,
+    short_weight=0.30,
+    min_history=1,
+):
+    values = group[value_col].to_numpy(dtype=float)
+    minutes = group["minutes"].to_numpy(dtype=float)
+    dates = group["kickoff_time"]
+    result = np.full(len(group), np.nan)
+
+    for i in range(len(group)):
+        hist_values = values[: i + 1]
+        hist_minutes = minutes[: i + 1]
+        hist_dates = dates.iloc[: i + 1]
+
+        valid = (
+            np.isfinite(hist_values)
+            & np.isfinite(hist_minutes)
+            & (hist_minutes > 0)
+        )
+        hist_values = hist_values[valid]
+        hist_minutes = hist_minutes[valid]
+        hist_dates = hist_dates[valid]
+
+        if len(hist_values) < min_history:
+            continue
+
+        if len(hist_values) >= 5:
+            lower = np.nanquantile(hist_values, 0.08)
+            upper = np.nanquantile(hist_values, 0.92)
+            hist_values = np.clip(hist_values, lower, upper)
+
+        age_days = (
+            dates.iloc[i] - hist_dates
+        ).dt.total_seconds().to_numpy() / 86400
+
+        reliability = np.minimum(hist_minutes, 90) / 90
+        short_decay = np.exp(-np.log(2) * age_days / short_half_life)
+        long_decay = np.exp(-np.log(2) * age_days / long_half_life)
+
+        short_w = short_decay * reliability
+        long_w = long_decay * reliability
+
+        short_form = (
+            np.sum(hist_values * short_w) / np.sum(short_w)
+            if short_w.sum() > 0
+            else np.nan
+        )
+        long_form = (
+            np.sum(hist_values * long_w) / np.sum(long_w)
+            if long_w.sum() > 0
+            else np.nan
+        )
+
+        result[i] = short_weight * short_form + (1 - short_weight) * long_form
+
+    return pd.Series(result, index=group.index)
+
+
+def _grouped_robust_form_index(df, value_col):
+    pieces = [
+        _robust_form_index(group, value_col)
+        for _, group in df.groupby("name", sort=False)
+    ]
+    if not pieces:
+        return pd.Series(index=df.index, dtype=float)
+    return pd.concat(pieces).reindex(df.index)
+
+
+def add_decayed_player_statistics_indexes(df):
+    """
+    Add current-match-inclusive, time-decayed player indexes to testML4 rows.
+
+    The final three columns are:
+    - Goal_Statistics_Index_dec
+    - Assist_Statistics_Index_dec
+    - Defcon_Statistics_Index_dec
+    """
+    if df.empty:
+        return df
+
+    out = df.copy()
+    work = out.copy()
+
+    required_numeric = [
+        "expected_goals",
+        "expected_assists",
+        "minutes",
+        "Threat",
+        "creativity",
+        "XGCH",
+        "XGCA",
+        "Team_XG",
+        "Team_XA",
+        "defcon",
+    ]
+    for col in required_numeric:
+        if col not in work.columns:
+            work[col] = np.nan
+        work[col] = pd.to_numeric(work[col], errors="coerce")
+
+    work["kickoff_time"] = pd.to_datetime(
+        work.get("kickoff_time"),
+        format="mixed",
+        utc=True,
+        errors="coerce",
+    )
+
+    was_home_raw = work.get("was_home", pd.Series(False, index=work.index))
+    was_home_num = pd.to_numeric(was_home_raw, errors="coerce")
+    is_away = (
+        was_home_num.eq(0)
+        | was_home_raw.astype(str).str.lower().isin(["false", "a", "away"])
+    )
+    work["Opponent_def_index"] = np.where(is_away, work["XGCH"], work["XGCA"])
+
+    work = work.sort_values(["name", "kickoff_time"], kind="stable")
+
+    effective_minutes = work["minutes"].clip(lower=10)
+    work["xg_per90"] = (
+        work["expected_goals"] / effective_minutes * 90
+    ).clip(upper=1.7)
+    work["xa_per90"] = (
+        work["expected_assists"] / effective_minutes * 90
+    ).clip(upper=1.7)
+    work["threat_per90"] = (
+        work["Threat"] / effective_minutes * 90
+    ).clip(upper=170)
+    work["creativity_per90"] = (
+        work["creativity"] / effective_minutes * 90
+    ).clip(upper=170)
+    work["defcon_per90"] = (
+        work["defcon"] / effective_minutes * 90
+    ).clip(upper=17)
+
+    work["xg_share"] = np.where(
+        work["Team_XG"] > 0,
+        work["xg_per90"] / work["Team_XG"],
+        np.nan,
+    )
+    work["xg_share"] = work["xg_share"].clip(upper=0.5)
+
+    work["xa_share"] = np.where(
+        work["Team_XA"] > 0,
+        work["xa_per90"] / work["Team_XA"],
+        np.nan,
+    )
+    work["xa_share"] = work["xa_share"].clip(upper=0.5)
+
+    work["adj_xg90"] = np.where(
+        work["Opponent_def_index"] > 0,
+        work["xg_per90"] / work["Opponent_def_index"],
+        np.nan,
+    )
+    work["adj_xa90"] = np.where(
+        work["Opponent_def_index"] > 0,
+        work["xa_per90"] / work["Opponent_def_index"],
+        np.nan,
+    )
+    work["adj_threat90"] = np.where(
+        work["Opponent_def_index"] > 0,
+        work["threat_per90"] / work["Opponent_def_index"],
+        np.nan,
+    )
+    work["adj_creativity90"] = np.where(
+        work["Opponent_def_index"] > 0,
+        work["creativity_per90"] / work["Opponent_def_index"],
+        np.nan,
+    )
+
+    work["xg_form_index"] = _grouped_robust_form_index(work, "adj_xg90")
+    work["xa_form_index"] = _grouped_robust_form_index(work, "adj_xa90")
+    work["threat_form_index"] = _grouped_robust_form_index(work, "adj_threat90")
+    work["creativity_form_index"] = _grouped_robust_form_index(work, "adj_creativity90")
+    work["xg_share_index_dec"] = _grouped_robust_form_index(work, "xg_share")
+    work["xa_share_index_dec"] = _grouped_robust_form_index(work, "xa_share")
+    work["defcon_index"] = _grouped_robust_form_index(work, "defcon_per90")
+
+    work["Goal_Statistics_Index_dec"] = (
+        work["xg_form_index"] * 0.65
+        + 0.35 * work["threat_form_index"] * 0.01
+    )
+    work["Assist_Statistics_Index_dec"] = (
+        work["xa_form_index"] * 0.75
+        + 0.25 * work["creativity_form_index"] * 0.01
+    )
+    work["Defcon_Statistics_Index_dec"] = work["defcon_index"]
+
+    final_cols = [
+        "Goal_Statistics_Index_dec",
+        "Assist_Statistics_Index_dec",
+        "Defcon_Statistics_Index_dec",
+        "xg_share_index_dec",
+        "xa_share_index_dec",
+    ]
+    for col in final_cols:
+        out[col] = work[col].reindex(out.index)
+
+    return out
+
+
 def get_understat(player_df,Own_team_name,pos,element_list,season_list,position):
     
     directory_path26 = 'Raw_Data_26/Understat_data_with_element.csv'
@@ -2331,6 +2537,7 @@ def main_Transform():
                     
                     
             training_df=pd.concat([training_df, player_df], axis=0, ignore_index=True)
+    training_df = add_decayed_player_statistics_indexes(training_df)
     float_cols = [col for col in training_df.select_dtypes(include=['float64']).columns if col not in ["XG_slope","XA_slope","Threat_slope"]]  
     float_cols2 = [col for col in newest_df.select_dtypes(include=['float64']).columns if col not in ["XG_slope","XA_slope","Threat_slope"]]  
     newest_df[float_cols2] = newest_df[float_cols2].round(2)

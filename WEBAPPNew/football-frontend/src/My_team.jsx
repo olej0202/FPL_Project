@@ -1920,6 +1920,8 @@ export default function MyTeamOptimize() {
             bannedList={bannedList}
             navigate={navigate}
             getOpponentMeta={getOpponentMeta}
+            activeGW={activeGW}
+            getProjectionRowForPlayer={getProjectionRowForPlayer}
           />
         </div>
         <div className="flex items-center justify-center min-h-[112px] sm:min-h-[132px]">
@@ -1929,6 +1931,8 @@ export default function MyTeamOptimize() {
             bannedList={bannedList}
             navigate={navigate}
             getOpponentMeta={getOpponentMeta}
+            activeGW={activeGW}
+            getProjectionRowForPlayer={getProjectionRowForPlayer}
           />
         </div>
         <div className="flex items-center justify-center min-h-[112px] sm:min-h-[132px]">
@@ -1938,6 +1942,8 @@ export default function MyTeamOptimize() {
             bannedList={bannedList}
             navigate={navigate}
             getOpponentMeta={getOpponentMeta}
+            activeGW={activeGW}
+            getProjectionRowForPlayer={getProjectionRowForPlayer}
           />
         </div>
         <div className="flex items-center justify-center min-h-[112px] sm:min-h-[132px]">
@@ -1947,6 +1953,8 @@ export default function MyTeamOptimize() {
             bannedList={bannedList}
             navigate={navigate}
             getOpponentMeta={getOpponentMeta}
+            activeGW={activeGW}
+            getProjectionRowForPlayer={getProjectionRowForPlayer}
           />
         </div>
       </div>
@@ -1960,6 +1968,8 @@ export default function MyTeamOptimize() {
             bannedList={bannedList}
             navigate={navigate}
             getOpponentMeta={getOpponentMeta}
+            activeGW={activeGW}
+            getProjectionRowForPlayer={getProjectionRowForPlayer}
           />
         </div>
       )}
@@ -2302,6 +2312,8 @@ function PlayerRow({
   bannedList,
   navigate,
   getOpponentMeta,
+  activeGW,
+  getProjectionRowForPlayer,
 }) {
   const fallback =
     "https://d2kq0urxkarztv.cloudfront.net/51812cad594df29a1a0003f0/661303/upload-643ff5d9-840e-4bbb-b099-07c26ef505c9.png?w=578";
@@ -2342,6 +2354,12 @@ function PlayerRow({
               typeof getOpponentMeta === "function"
                 ? getOpponentMeta(p)
                 : { display: "N/A", full: "N/A", tone: opponentStrengthTone(null) };
+            const projectionRow =
+              typeof getProjectionRowForPlayer === "function" && Number.isFinite(Number(activeGW))
+                ? getProjectionRowForPlayer(p, Number(activeGW))
+                : null;
+            const predictedPoints = getRowPredictedPoints(projectionRow || p);
+            const hasPredictedPoints = Number.isFinite(predictedPoints);
 
             return (
               <>
@@ -2363,6 +2381,9 @@ function PlayerRow({
                   ? "w-[46px] h-[48px] sm:w-[56px] sm:h-[58px]"
                   : "w-[50px] h-[58px] sm:w-[64px] sm:h-[70px]"
               }`}
+              style={{
+                clipPath: "polygon(0 0, 100% 0, 100% 70%, 0 100%)",
+              }}
               onClick={() =>
                 navigate("/Player_Analytics/Individual", {
                   state: { selectedPlayer: p.Name },
@@ -2371,6 +2392,24 @@ function PlayerRow({
               alt={p.web_name}
               role="button"
             />
+
+            {hasPredictedPoints && (
+              <div
+                className={`absolute rounded-full px-1.5 py-[2px] font-bold shadow-sm backdrop-blur ${
+                  isBench ? "bottom-[-3px] text-[8px]" : "bottom-[-4px] text-[9px]"
+                }`}
+                style={{
+                  left: "58%",
+                  transform: "translateX(-50%)",
+                  background: "linear-gradient(135deg, rgba(15,23,42,0.92), rgba(30,41,59,0.82))",
+                  border: `1px solid ${PALETTE.gold}`,
+                  color: "#fef3c7",
+                }}
+                title={`Predicted points GW ${activeGW}`}
+              >
+                {Number(predictedPoints).toFixed(1)}
+              </div>
+            )}
 
             <button
               onClick={() => toggleBan(p.Name)}
