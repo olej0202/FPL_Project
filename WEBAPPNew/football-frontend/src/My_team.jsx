@@ -171,6 +171,27 @@ const getRowPredictedPoints = (row) =>
     row?.Point_prediction,
     row?.points_prediction
   );
+const getRowSelectedPercent = (row) => {
+  const raw = toFiniteNumber(
+    row?.selected_pct,
+    row?.selected_by_percent,
+    row?.ownership,
+    row?.selected
+  );
+  if (!Number.isFinite(raw)) return null;
+  return raw <= 1 ? raw * 100 : raw;
+};
+const getRowPrice = (row) => {
+  const raw = toFiniteNumber(
+    row?.price,
+    row?.value,
+    row?.now_cost,
+    row?.cost,
+    row?.Price
+  );
+  if (!Number.isFinite(raw)) return null;
+  return raw > 20 ? raw / 10 : raw;
+};
 
 const getTeamNameFromStrengthRow = (row) => {
   const raw = row?.name ?? row?.team_name ?? row?.Team ?? row?.team ?? row?.full_name;
@@ -2360,6 +2381,9 @@ function PlayerRow({
                 : null;
             const predictedPoints = getRowPredictedPoints(projectionRow || p);
             const hasPredictedPoints = Number.isFinite(predictedPoints);
+            const selectedPercent = getRowSelectedPercent(projectionRow || p);
+            const hasSelectedPercent = Number.isFinite(selectedPercent);
+            const cardWidthClass = isBench ? "w-[60px] sm:w-[72px]" : "w-[64px] sm:w-[78px]";
 
             return (
               <>
@@ -2429,27 +2453,36 @@ function PlayerRow({
           <div
             className={`mt-1 truncate rounded-full bg-gray-100/90 text-slate-800 mx-auto text-center ${
               isBench
-                ? "w-[60px] sm:w-[72px] text-[9px] sm:text-[10px] px-1 py-[3px]"
-                : "w-[64px] sm:w-[78px] text-[9px] sm:text-[11px] px-1.5 py-[3px]"
+                ? `${cardWidthClass} text-[9px] sm:text-[10px] px-1 py-[3px]`
+                : `${cardWidthClass} text-[9px] sm:text-[11px] px-1.5 py-[3px]`
             }`}
           >
             {p.web_name}
           </div>
 
           <div
-            className={`mt-0.5 truncate rounded-full mx-auto border px-1.5 py-[2px] font-semibold text-center ${
-              isBench
-                ? "w-[60px] sm:w-[72px] text-[8px] sm:text-[9px]"
-                : "w-[64px] sm:w-[78px] text-[8px] sm:text-[9px]"
+            className={`mt-0.5 mx-auto flex items-center justify-between gap-1 rounded-full border px-1 py-[1px] font-semibold ${cardWidthClass} ${
+              isBench ? "text-[7px] sm:text-[8px]" : "text-[7px] sm:text-[8px]"
             }`}
             style={{
               background: oppMeta.tone.badgeBg,
               borderColor: oppMeta.tone.badgeBorder,
               color: oppMeta.tone.badgeText,
             }}
-            title={oppMeta.full}
+            title={`${oppMeta.full}${hasSelectedPercent ? ` | Selected ${selectedPercent.toFixed(1)}%` : ""}`}
           >
-            {oppMeta.display}
+            <span className="min-w-0 flex-1 truncate text-center">{oppMeta.display}</span>
+            {hasSelectedPercent && (
+              <span
+                className="shrink-0 rounded-full px-1.5 py-[1px] tabular-nums"
+                style={{
+                  background: "rgba(15,23,42,0.94)",
+                  color: "#ffffff",
+                }}
+              >
+                {hasSelectedPercent ? `${selectedPercent.toFixed(selectedPercent >= 10 ? 0 : 1)}%` : ""}
+              </span>
+            )}
           </div>
 
               </>
