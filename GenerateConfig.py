@@ -108,7 +108,8 @@ Manual_Player_Risk={
         "Christos_Tzolis": 0.7,
         "Bruno_Guimarães Rodriguez Moura": 0.6,
         "Elliot_Anderson":0.7,
-        "Iliman_Ndiaye":0.7
+        "Iliman_Ndiaye":0.7,
+        "Omar_Marmoush":0.8
        
 }
 

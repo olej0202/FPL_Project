@@ -586,6 +586,57 @@ def add_decayed_player_statistics_indexes(df):
     return out
 
 
+def add_latest_decayed_indexes_to_newest(newest_df, history_df):
+    """Copy player-level decayed indexes from full history onto each newest row."""
+    final_cols = [
+        "Goal_Statistics_Index_dec",
+        "Assist_Statistics_Index_dec",
+        "Defcon_Statistics_Index_dec",
+        "xg_share_index_dec",
+        "xa_share_index_dec",
+    ]
+    if newest_df.empty:
+        return newest_df
+
+    out = newest_df.copy()
+    history = history_df.copy()
+
+    if "name" not in out.columns or "name" not in history.columns:
+        for col in final_cols:
+            if col not in out.columns:
+                out[col] = 0.0
+        return out
+
+    for col in final_cols:
+        if col not in history.columns:
+            history[col] = np.nan
+        history[col] = pd.to_numeric(history[col], errors="coerce")
+
+    history["__name_key"] = history["name"].apply(normalize_player_name).astype(str).str.lower()
+    out["__name_key"] = out["name"].apply(normalize_player_name).astype(str).str.lower()
+
+    history["__kickoff_time"] = pd.to_datetime(
+        history.get("kickoff_time"),
+        format="mixed",
+        utc=True,
+        errors="coerce",
+    )
+    latest = (
+        history
+        .dropna(subset=["__name_key"])
+        .sort_values(["__name_key", "__kickoff_time"], kind="stable")
+        .drop_duplicates(subset=["__name_key"], keep="last")
+        .set_index("__name_key")
+    )
+
+    for col in final_cols:
+        mapped = out["__name_key"].map(latest[col])
+        existing = pd.to_numeric(out[col], errors="coerce") if col in out.columns else pd.Series(np.nan, index=out.index)
+        out[col] = mapped.combine_first(existing).fillna(0.0)
+
+    return out.drop(columns=["__name_key"])
+
+
 def get_understat(player_df,Own_team_name,pos,element_list,season_list,position):
     
     directory_path26 = 'Raw_Data_26/Understat_data_with_element.csv'
@@ -2538,6 +2589,7 @@ def main_Transform():
                     
             training_df=pd.concat([training_df, player_df], axis=0, ignore_index=True)
     training_df = add_decayed_player_statistics_indexes(training_df)
+    newest_df = add_latest_decayed_indexes_to_newest(newest_df, training_df)
     float_cols = [col for col in training_df.select_dtypes(include=['float64']).columns if col not in ["XG_slope","XA_slope","Threat_slope"]]  
     float_cols2 = [col for col in newest_df.select_dtypes(include=['float64']).columns if col not in ["XG_slope","XA_slope","Threat_slope"]]  
     newest_df[float_cols2] = newest_df[float_cols2].round(2)

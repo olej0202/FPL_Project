@@ -728,7 +728,7 @@ def Player_adjustements(current_player_path):
     from scipy.stats import t
 
     DF = 5.445239499991924
-    BIAS = -0.22988589029028356
+    BIAS = -0.022988589029028356
     SCALE = 2.3387548983231
 
     def probability(mu, threshold):

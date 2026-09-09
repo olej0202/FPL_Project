@@ -112,7 +112,7 @@ def Data_Extraction(season,is_new_season,has_been_error):
 
 
 def Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos,Understat_path,Understat_shots_path):
-    #main_Transform()
+    main_Transform()
     Generate_Understat_dataset(current_player_path,run_player_pos)
     Generate_Shots_data(Understat_path,Understat_shots_path,current_player_path,current_team_path)
     team_data(current_team_path)
@@ -179,6 +179,7 @@ def Data_Predictions(
         optimization_best_output_path=sim_output_dir / "simtest_parameter_best.csv",
         write_outputs=True,
     )
+    
     
     print("Running full simulator parameter optimization...")
     run_simulator_control(control_cfg=full_sim_control)
@@ -255,7 +256,7 @@ def Data_Predictions(
     )
     
     Generate_Minutes_Simulator(current_team_path,gw_list)
-    """
+    
 
     GenerateTeamPredictions(
         str(filtered_fixture_path),
@@ -263,7 +264,7 @@ def Data_Predictions(
         len(gw_list),
         time_list=gw_list,
         standings_fixture_path=str(fixture_path),
-    )
+    )"""
     
     Make_Predictions()
     Generate_point_predictions(time_list)
@@ -332,7 +333,7 @@ def Main_Orchestration():
     
     
     #Transform data
-    Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos,Understat_path,Understat_shots_path)
+    #Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos,Understat_path,Understat_shots_path)
     
     #Predict data
     Data_Predictions(

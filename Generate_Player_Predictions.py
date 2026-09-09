@@ -195,6 +195,7 @@ def train_defcon_ensemble_model(
         "defcon_avg_hit_rate",
         "defcon_hit_rate_T2",
         "defcon_hit_rate_T3",
+        "Defcon_Statistics_Index_dec"
 
     ]
 
@@ -205,6 +206,7 @@ def train_defcon_ensemble_model(
         "defcon_avg_hit_rate",
         "defcon_hit_rate_T2",
         "defcon_hit_rate_T3",
+        "Defcon_Statistics_Index_dec",
         "minutes",
         "Rolling_Defcon_For",
         "Opponent_defcon"
@@ -1735,6 +1737,7 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
                     df["defcon_avg_hit_rate"].values[h],
                     df["defcon_hit_rate_T2"].values[h],
                     df["defcon_hit_rate_T3"].values[h],
+                    df["Defcon_Statistics_Index_dec"].values[h],
                     df["average_minutes"].values[h],
                     df["Rolling_Team_Defcon"].values[h],
                     df["Opp_defcon"].values[h]
@@ -1746,6 +1749,7 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
                     "defcon_avg_hit_rate",
                     "defcon_hit_rate_T2",
                     "defcon_hit_rate_T3",
+                    "Defcon_Statistics_Index_dec",
                     "minutes",
                     "Rolling_Defcon_For",
                     "Opponent_defcon"

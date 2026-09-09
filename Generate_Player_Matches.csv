@@ -560,7 +560,7 @@ Xaver_Schlager,Schlager,Xaver Schlager,100.0,name-strict,Xaver Schlager,['MC'],[
 Ousmane_Diomande,Diomande,Unknown for understat,,no-match,,['SUB'],[1.0],1
 Steven_Benda,Benda,Unknown for understat,,no-match,,['SUB'],[1.0],1
 Jan_Paul van Hecke,Van Hecke,Jan Paul van Hecke,100.0,name-strict,Jan Paul van Hecke,['CB'],[1.0],1
-Omar_Marmoush,Marmoush,Omar Marmoush,100.0,name-strict,Omar Marmoush,"['FW', 'LW']","[0.8333333333333334, 0.16666666666666666]",1
+Omar_Marmoush,Marmoush,Omar Marmoush,100.0,name-strict,Omar Marmoush,"['FW', 'LW']","[0.99, 0.00]",1
 Sávio_'Savinho' Moreira de Oliveira,Sávio,Sávio,90.0,name-relaxed,Sávio,['AMC'],[1.0],1
 Sandro_Tonali,Tonali,Sandro Tonali,100.0,name-strict,Sandro Tonali,"['DM', 'MC']","[0.7, 0.3]",1
 Guglielmo_Vicario,Vicario,Guglielmo Vicario,100.0,name-strict,Guglielmo Vicario,['GK'],[1.0],1
