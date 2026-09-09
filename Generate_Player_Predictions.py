@@ -1784,7 +1784,7 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
 
                 # Fitted residual distribution
                 DF = 5.445239499991924
-                BIAS = -0.22988589029028356
+                BIAS = -0.022988589029028356
                 SCALE = 2.338754898323116
 
                 def probability(mu, threshold):

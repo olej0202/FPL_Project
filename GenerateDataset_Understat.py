@@ -482,6 +482,9 @@ def Generate_Understat_dataset(current_players, run_player_pos):
         if c not in df.columns:
             df[c] = 0
         df[c] = pd.to_numeric(df[c], errors="coerce").fillna(0)
+    if "time" not in df.columns:
+        df["time"] = 0
+    df["time"] = pd.to_numeric(df["time"], errors="coerce").fillna(0)
 
     df = df.dropna(subset=["player_team"])
 
@@ -550,6 +553,7 @@ def Generate_Understat_dataset(current_players, run_player_pos):
               "assists": "mean",
               "xGChain": "mean",
               "xGBuildup": "mean",
+              "time": "sum",
               "opponent": most_common,
           })
           .reset_index()
@@ -584,18 +588,29 @@ def Generate_Understat_dataset(current_players, run_player_pos):
     if "xA_sum" not in agg_df.columns:
         agg_df["xA_sum"] = pd.to_numeric(agg_df.get("xA", 0), errors="coerce").fillna(0.0)
 
+    time_col = "time_sum" if "time_sum" in agg_df.columns else "time"
+    share_value_cols = []
+    share_names = {}
+    for source_col, share_col in {
+        "npxG_sum": "npxG_share",
+        "xA_sum": "xA_share",
+        "shots_sum": "shots_share",
+        "key_passes_sum": "key_passes_share",
+    }.items():
+        per90_col = f"{source_col}_per90_for_share"
+        minutes = pd.to_numeric(agg_df[time_col], errors="coerce").fillna(0.0)
+        values = pd.to_numeric(agg_df[source_col], errors="coerce").fillna(0.0)
+        agg_df[per90_col] = np.where(minutes > 0, values / minutes * 90.0, 0.0)
+        share_value_cols.append(per90_col)
+        share_names[per90_col] = share_col
+
     agg_df = add_locf_shares(
         agg_df,
         team_col="player_team",
         date_col="date",
         pos_col="pos_group",
-        value_cols=["npxG_sum", "xA_sum", "shots_sum", "key_passes_sum"],
-        share_names={
-            "npxG_sum": "npxG_share",
-            "xA_sum": "xA_share",
-            "shots_sum": "shots_share",
-            "key_passes_sum": "key_passes_share",
-        },
+        value_cols=share_value_cols,
+        share_names=share_names,
         pos_universe=None,
         exclude_pos={"SUB", "GK", "GKP"},
     )

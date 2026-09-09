@@ -163,6 +163,7 @@ def Data_Predictions(
         sim_output_dir / "fixtures_expanded_filtered_by_timelist.csv",
         force_unfinished=True,
     )
+    """
     
     
     # Trigger full simulator parameter optimization with all read paths passed in.
@@ -254,7 +255,7 @@ def Data_Predictions(
     )
     
     Generate_Minutes_Simulator(current_team_path,gw_list)
-    
+    """
 
     GenerateTeamPredictions(
         str(filtered_fixture_path),
