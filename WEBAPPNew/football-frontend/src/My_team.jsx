@@ -352,8 +352,8 @@ export default function MyTeamOptimize() {
     loadOptimization,
   } = useMyteamData();
 
-  const { Playerdata, Teamdata, dataVersion, fetchIfNeeded: fetchAdjustmentIfNeeded } = useAdjustmentData();
-  const { fetchIfNeeded: fetchStatsIfNeeded, TeamData, PlayersData } = useStatsData();
+  const { Playerdata, Teamdata, dataVersion: adjustmentDataVersion, fetchIfNeeded: fetchAdjustmentIfNeeded } = useAdjustmentData();
+  const { fetchIfNeeded: fetchStatsIfNeeded, TeamData, PlayersData, dataVersion: statsDataVersion } = useStatsData();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -390,7 +390,7 @@ export default function MyTeamOptimize() {
     const arr = Playerdata?.current;
     if (!Array.isArray(arr) || arr.length === 0) return false;
     return arr.some((p) => p && p.calc_points != null && Number.isFinite(Number(p.calc_points)));
-  }, [Playerdata, dataVersion]);
+  }, [Playerdata, adjustmentDataVersion]);
 
   const statisticalPlayersPayload = useMemo(() => {
     if (!hasStatisticalData) return [];
@@ -401,12 +401,12 @@ export default function MyTeamOptimize() {
       calc_points: Number.isFinite(Number(p.calc_points)) ? Number(p.calc_points) : 0,
       Points: Number.isFinite(Number(p.calc_points)) ? Number(p.calc_points) : 0,
     }));
-  }, [Playerdata, hasStatisticalData, dataVersion]);
+  }, [Playerdata, hasStatisticalData, adjustmentDataVersion]);
 
   const aiProjectionRows = useMemo(() => {
     const arr = PlayersData?.current;
     return Array.isArray(arr) ? arr : [];
-  }, [PlayersData]);
+  }, [PlayersData, statsDataVersion]);
 
   const clampRisk = (v) => Math.max(-1, Math.min(1, v));
   const clampValTrans = (v) => Math.max(0, Math.min(1, v));
@@ -414,7 +414,7 @@ export default function MyTeamOptimize() {
   const opponentStrengthLookup = useMemo(() => {
     const rows = Array.isArray(TeamData?.current) ? TeamData.current : [];
     return buildOpponentStrengthLookup(rows);
-  }, [TeamData?.current]);
+  }, [TeamData, statsDataVersion]);
 
   const opponentByPlayerGw = useMemo(() => {
     const map = new Map();
@@ -472,7 +472,7 @@ export default function MyTeamOptimize() {
     });
 
     return out;
-  }, [Playerdata, PlayersData, data, dataVersion]);
+  }, [Playerdata, PlayersData, data, adjustmentDataVersion, statsDataVersion]);
 
   const opponentByTeamGw = useMemo(() => {
     const out = new Map();
@@ -507,7 +507,7 @@ export default function MyTeamOptimize() {
     addRows(TeamData?.current);
 
     return out;
-  }, [Teamdata, TeamData, dataVersion]);
+  }, [Teamdata, TeamData, adjustmentDataVersion, statsDataVersion]);
 
   const getOpponentMeta = useCallback(
     (row) => {
@@ -749,7 +749,7 @@ export default function MyTeamOptimize() {
     return Array.from(map.values()).sort((a, b) =>
       String(a.web_name).localeCompare(String(b.web_name))
     );
-  }, [PlayersData, Playerdata, data]);
+  }, [PlayersData, Playerdata, data, adjustmentDataVersion, statsDataVersion]);
 
   const filteredLockCandidates = useMemo(() => {
     const q = String(lockSearch || "").trim().toLowerCase();

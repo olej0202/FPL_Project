@@ -482,9 +482,9 @@ def _historical_decay_index(
         if value_col in {"XG", "XGC"}:
             hist_values = np.clip(hist_values, None, 4.0)
         elif value_col in {"saves", "Saves_against"}:
-            hist_values = np.clip(hist_values, 0.0, 8.0)
+            hist_values = np.clip(hist_values, 0.0, 9.0)
         elif value_col in {"defensive_contribution_positive", "Defcon_against_positive"}:
-            hist_values = np.clip(hist_values, 45.0, 110.0)
+            hist_values = np.clip(hist_values, 45.0, 120.0)
 
         age_days = (
             dates.iloc[i] - hist_dates
