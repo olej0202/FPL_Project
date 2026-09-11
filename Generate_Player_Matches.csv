@@ -86,7 +86,7 @@ Junior_Kroupi,Kroupi.Jr,Eli Junior Kroupi,95.0,name-strict,Eli Junior Kroupi,['A
 Francisco_Evanilson de Lima Barbosa,Evanilson,Evanilson,90.0,name-relaxed,Evanilson,['FW'],[1.0],1
 Enes_Ünal,Enes Ünal,Enes Ünal,100.0,name-strict,Enes Ünal,['SUB'],[1.0],1
 Álvaro_Rodríguez,Rodríguez,Alvaro Rodríguez,100.0,name-strict,Alvaro Rodríguez,['SUB'],[1.0],1
-António_João Pereira de Albuquerque Tavares da Silva,Silva,Bernardo Silva,90.0,web_name-relaxed,Bernardo Silva,"['DM', 'MC']","[0.7, 0.3]",1
+António_João Pereira de Albuquerque Tavares da Silva,Silva,Bernardo Silva,90.0,web_name-relaxed,Bernardo Silva,"['CB', 'MC']","[1, 0]",1
 Juanlu_Sánchez,Sanchez,Davinson Sánchez,90.0,web_name-relaxed,Davinson Sánchez,['CB'],[1.0],1
 Daniel_Jebbison,Jebbison,Daniel Jebbison,100.0,name-strict,Daniel Jebbison,['SUB'],[1.0],1
 Michele_Di Gregorio,Di Gregorio,Unknown for understat,,no-match,,['SUB'],[1.0],1
@@ -151,7 +151,7 @@ Malick_Yalcouyé,Yalcouyé,Malick Yalcouyé,100.0,name-strict,Malick Yalcouyé,[
 Jaouen_Hadjam,Hadjam,Unknown for understat,,no-match,,['SUB'],[1.0],1
 Amario_Cozier-Duberry,Cozier-Duberry,Unknown for understat,,no-match,,['SUB'],[1.0],1
 Emiliano_Martínez Romero,Martinez,Emiliano Martinez,95.0,name-strict,Emiliano Martinez,['GK'],[1.0],1
-Morgan_Rogers,Rogers,Morgan Rogers,100.0,name-strict,Morgan Rogers,"['LW', 'AMC', 'RW']","[0.7, 0.3, 0.0]",1
+Morgan_Rogers,Rogers,Morgan Rogers,100.0,name-strict,Morgan Rogers,"['LW', 'AMC', 'RW']","[0.6, 0.4, 0.0]",1
 Jordan_Henderson,Henderson,Jordan Henderson,100.0,name-strict,Jordan Henderson,"['DM', 'MC']","[0.8333333333333334, 0.16666666666666666]",1
 Danny_Welbeck,Welbeck,Danny Welbeck,100.0,name-strict,Danny Welbeck,['FW'],[1.0],1
 Robert_Sánchez,Sánchez,Robert Sánchez,100.0,name-strict,Robert Sánchez,['GK'],[1.0],1
