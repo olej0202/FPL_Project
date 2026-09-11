@@ -30,7 +30,7 @@ import Team_Analytics_Analysis from "./Team_Analytics_Analysis";
 import Team_Predictions from "./Team_Predictions";
 import AIChipTeam from "./AI_Chip_Team";
 import AIModel from "./AI_Model";
-import MyTeam from "./My_team";
+import MyTeamTestcase from "./My_team_Testcase";
 import Player_analytics from "./Player_Analytics";
 import Player_analytics_rankings from "./Player_Analytics_rankings";
 import PlayerAnalyticsIndividual from "./Player_Analytics_individual";
@@ -603,7 +603,11 @@ export default function App() {
               />
               <Route
                 path="My_Team"
-                element={routeElement("aiTeamsOptimize", <MyTeam />, "Optimize My Team")}
+                element={routeElement("aiTeamsOptimize", <MyTeamTestcase />, "Optimize")}
+              />
+              <Route
+                path="My_Team_Testcase"
+                element={<Navigate to="/My_Team" replace />}
               />
             </Route>
 

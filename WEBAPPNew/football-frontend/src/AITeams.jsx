@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
-import { Sparkles, Target, Users } from "lucide-react";
+import { Sparkles, Target } from "lucide-react";
 
 const tabClass = ({ isActive }) =>
   [
@@ -30,11 +30,6 @@ export default function AITeams() {
             <NavLink to="My_Team" end className={tabClass}>
               <Target size={16} />
               Optimize
-            </NavLink>
-
-            <NavLink to="Team_Overview" className={tabClass}>
-              <Users size={16} />
-              My Team
             </NavLink>
 
             <NavLink to="Chip_Team" className={tabClass}>
