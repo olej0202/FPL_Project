@@ -496,7 +496,7 @@ def optimize_my_team(
     transfervalue = transval * 2
     risk_transfer_offset = 1.0
 
-    HIT_PENALTY = 3
+    HIT_PENALTY = 3.25
     HIT_MAX = 2
 
     abs_gw_num = {t: (int(GW_list[t]) if str(GW_list[t]).isdigit() else None) for t in gameweeks}

@@ -29,16 +29,16 @@ Fix_ID,GW,kickoff_time,started,finished,team_h_score,team_a_score,HomeTeam,AwayT
 2645222,3,2026-09-05T14:00:00Z,True,True,1.0,0.0,Man City,Coventry City,43,9,MCI,COV
 2645223,3,2026-09-05T11:30:00Z,True,True,2.0,2.0,Newcastle,Bournemouth,4,91,NEW,BOU
 2645224,3,2026-09-05T14:00:00Z,True,True,0.0,0.0,Nott'm Forest,Spurs,17,6,NFO,TOT
-2645225,4,2026-09-12T14:00:00Z,False,False,,,Bournemouth,Brentford,91,94,BOU,BRE
-2645226,4,2026-09-12T14:00:00Z,False,False,,,Aston Villa,Nott'm Forest,7,17,AVL,NFO
-2645227,4,2026-09-12T14:00:00Z,False,False,,,Chelsea,Hull City,8,88,CHE,HUL
-2645228,4,2026-09-13T13:00:00Z,False,False,,,Coventry City,Brighton,9,36,COV,BHA
-2645229,4,2026-09-12T14:00:00Z,False,False,,,Crystal Palace,Ipswich Town,31,40,CRY,IPS
+2645225,4,2026-09-12T14:00:00Z,True,False,2.0,2.0,Bournemouth,Brentford,91,94,BOU,BRE
+2645226,4,2026-09-12T14:00:00Z,True,False,1.0,2.0,Aston Villa,Nott'm Forest,7,17,AVL,NFO
+2645227,4,2026-09-12T14:00:00Z,True,False,2.0,2.0,Chelsea,Hull City,8,88,CHE,HUL
+2645228,4,2026-09-13T13:00:00Z,True,False,0.0,5.0,Coventry City,Brighton,9,36,COV,BHA
+2645229,4,2026-09-12T14:00:00Z,True,False,2.0,3.0,Crystal Palace,Ipswich Town,31,40,CRY,IPS
 2645230,4,2026-09-14T19:00:00Z,False,False,,,Leeds,Newcastle,2,4,LEE,NEW
-2645231,4,2026-09-12T14:00:00Z,False,False,,,Liverpool,Fulham,14,54,LIV,FUL
-2645232,4,2026-09-13T15:30:00Z,False,False,,,Man Utd,Man City,1,43,MUN,MCI
-2645233,4,2026-09-12T19:00:00Z,False,False,,,Sunderland,Arsenal,56,3,SUN,ARS
-2645234,4,2026-09-12T16:30:00Z,False,False,,,Spurs,Everton,6,11,TOT,EVE
+2645231,4,2026-09-12T14:00:00Z,True,False,0.0,0.0,Liverpool,Fulham,14,54,LIV,FUL
+2645232,4,2026-09-13T15:30:00Z,True,False,0.0,1.0,Man Utd,Man City,1,43,MUN,MCI
+2645233,4,2026-09-12T19:00:00Z,True,False,0.0,2.0,Sunderland,Arsenal,56,3,SUN,ARS
+2645234,4,2026-09-12T16:30:00Z,True,False,0.0,0.0,Spurs,Everton,6,11,TOT,EVE
 2645235,5,2026-09-20T13:00:00Z,False,False,,,Bournemouth,Liverpool,91,14,BOU,LIV
 2645236,5,2026-09-18T19:00:00Z,False,False,,,Brentford,Chelsea,94,8,BRE,CHE
 2645237,5,2026-09-19T14:00:00Z,False,False,,,Brighton,Arsenal,36,3,BHA,ARS
