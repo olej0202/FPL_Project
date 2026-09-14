@@ -29,6 +29,37 @@ def canonicalize_team_name(value):
     return Understat_Team_MAP.get(text, text)
 
 
+def add_position_share_metrics(df: pd.DataFrame) -> pd.DataFrame:
+    """Build the common goal/assist positional-share metrics.
+
+    These two columns are the single definition used by both the attacking
+    team-position profile and the opponent positional-threat profile.
+    """
+    out = df.copy()
+    required = [
+        "Rolling_XG_Share",
+        "Rolling_Shots_Share",
+        "Rolling_XG_Share2",
+        "Rolling_XA_Share",
+        "Rolling_KeyPasses_Share",
+        "Rolling_XA_Share2",
+    ]
+    for col in required:
+        if col not in out.columns:
+            out[col] = 0.0
+        out[col] = pd.to_numeric(out[col], errors="coerce").fillna(0.0)
+
+    out["Goal_Position_Share"] = (
+        (out["Rolling_XG_Share"] * 0.8 + out["Rolling_Shots_Share"] * 0.2) * 0.6
+        + out["Rolling_XG_Share2"] * 0.4
+    )
+    out["Assist_Position_Share"] = (
+        (out["Rolling_XA_Share"] * 0.8 + out["Rolling_KeyPasses_Share"] * 0.2) * 0.6
+        + out["Rolling_XA_Share2"] * 0.4
+    )
+    return out
+
+
 def add_locf_shares(
     df: pd.DataFrame,
     team_col: str,
@@ -128,44 +159,45 @@ def add_locf_shares(
 
 
 # ============================================================
-# Team threats (your existing function, unchanged)
+# Opponent positional threats, built from the shared position formula
 # ============================================================
-def Generate_Team_threats():
-    df = pd.read_csv("Team_AggTest.csv")
-    team_df = df[["opponent", "pos_group", "date", "shots_share", "npxG_share", "xA_share", "key_passes_share"]].copy()
+def Generate_Team_threats(position_history: pd.DataFrame | None = None):
+    """Generate opponent-by-position threat using the team-position formula.
+
+    Absolute npxG/xA volumes are retained as diagnostics, but are no longer
+    mixed into Goal_Threat or Assist_Threat.  The threat values therefore use
+    the same units and component weights as the attacking positional shares.
+    """
+    if position_history is None:
+        position_history = pd.read_csv("Team_Positions_transformed.csv")
+
+    df = add_position_share_metrics(position_history)
+    team_df = df[[
+        "opponent",
+        "pos_group",
+        "date",
+        "Goal_Position_Share",
+        "Assist_Position_Share",
+    ]].copy()
     team_df["npxG"] = pd.to_numeric(
         df["npxG_sum"] if "npxG_sum" in df.columns else df.get("npxG", 0.0),
-        errors="coerce"
+        errors="coerce",
     )
     team_df["xA"] = pd.to_numeric(
         df["xA_sum"] if "xA_sum" in df.columns else df.get("xA", 0.0),
-        errors="coerce"
+        errors="coerce",
     )
 
     team_df["date"] = pd.to_datetime(team_df["date"], errors="coerce")
-    share_metrics = ["shots_share", "npxG_share", "xA_share", "key_passes_share"]
-    volume_metrics = ["npxG", "xA"]
-    metrics = share_metrics + volume_metrics
-    team_df[metrics] = team_df[metrics].apply(pd.to_numeric, errors="coerce")
-
+    metrics = ["Goal_Position_Share", "Assist_Position_Share", "npxG", "xA"]
+    team_df[metrics] = team_df[metrics].apply(pd.to_numeric, errors="coerce").fillna(0.0)
     team_df = team_df.sort_values(["opponent", "pos_group", "date"])
 
     span = 20
-    min_share_val = 0.05
-    max_share_val = 0.9
-
     ewm_cols = [f"{c}_ewm" for c in metrics]
-
-    share_ewm_cols = [f"{c}_ewm" for c in share_metrics]
-    team_df[share_ewm_cols] = (
+    team_df[ewm_cols] = (
         team_df
-        .groupby(["opponent", "pos_group"])[share_metrics]
-        .transform(lambda s: s.clip(lower=min_share_val, upper=max_share_val).ewm(span=span, adjust=False).mean())
-    )
-    volume_ewm_cols = [f"{c}_ewm" for c in volume_metrics]
-    team_df[volume_ewm_cols] = (
-        team_df
-        .groupby(["opponent", "pos_group"])[volume_metrics]
+        .groupby(["opponent", "pos_group"])[metrics]
         .transform(lambda s: s.clip(lower=0.0).ewm(span=span, adjust=False).mean())
     )
 
@@ -173,15 +205,16 @@ def Generate_Team_threats():
         team_df.sort_values("date")
         .groupby(["opponent", "pos_group"], as_index=False)
         .tail(1)[["opponent", "pos_group"] + ewm_cols]
+        .rename(columns={
+            "Goal_Position_Share_ewm": "Goal_Threat",
+            "Assist_Position_Share_ewm": "Assist_Threat",
+        })
     )
-
-    latest_ewm["Goal_Threat"] = latest_ewm["npxG_share_ewm"] * 0.8 + 0.2 * latest_ewm["shots_share_ewm"]
-    latest_ewm["Assist_Threat"] = latest_ewm["xA_share_ewm"] * 0.8 + 0.2 * latest_ewm["key_passes_share_ewm"]
-    latest_ewm["Threat"] = latest_ewm["Goal_Threat"] * 0.7 + 0.3 * latest_ewm["npxG_ewm"]
+    latest_ewm["Threat"] = latest_ewm["Goal_Threat"]
 
     pg = latest_ewm["pos_group"].str.upper().str.strip()
     latest_ewm = latest_ewm.loc[~pg.isin(["SUB", "GK", "GKP"]),
-                                ["opponent", "pos_group", "Threat", "Goal_Threat", "Assist_Threat","npxG_ewm","xA_ewm"]]
+                                ["opponent", "pos_group", "Threat", "Goal_Threat", "Assist_Threat", "npxG_ewm", "xA_ewm"]]
 
     latest_ewm.to_csv("Team_threat.csv", index=False)
 
@@ -790,6 +823,7 @@ def Generate_Understat_dataset(current_players, run_player_pos):
         pos_universe=None,
         exclude_pos={"SUB", "GK", "GKP"},
     )
+    agg_enriched = add_position_share_metrics(agg_enriched)
 
     # save full enriched dataset
     agg_enriched.to_csv("Team_Positions_transformed.csv", index=False)
@@ -850,11 +884,12 @@ def Generate_Understat_dataset(current_players, run_player_pos):
             ).values
 
     latest = latest.drop(columns=["history_len", "_own_weight"])
+    latest = add_position_share_metrics(latest)
 
     latest.to_csv("Team_Positions_transformed_Newest.csv", index=False)
 
-    # regenerate team threats from Team_AggTest.csv (now fixed shares)
-    Generate_Team_threats()
+    # Regenerate opponent threats from the same positional-share components.
+    Generate_Team_threats(agg_enriched)
 
 
 # ============================================================

@@ -127,8 +127,12 @@ def next_opp(team, n_future, fixtures,kmeans,team_code,current_teams,position):
                         goal_pos.append(goal)
                         ass_pos.append(assist)
             else:
-                goal_pos.append(opp_threat["Goal_Threat"].values[0]*0.6+0.4*opp_threat["npxG_ewm"].values[0])
-                ass_pos.append(opp_threat["Assist_Threat"].values[0]*0.6+0.4*opp_threat["xA_ewm"].values[0])
+                # Goal_Threat/Assist_Threat already use the exact same
+                # positional-share formula as Team_Positions.  Keep only the
+                # player's main Understat position here; do not mix absolute
+                # npxG/xA volume into a share-valued metric.
+                goal_pos.append(opp_threat["Goal_Threat"].values[0])
+                ass_pos.append(opp_threat["Assist_Threat"].values[0])
         kl+=1
     print(position)
     print(goal_pos)
@@ -771,31 +775,37 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
         posxg = wavg("XGIndex")
         posxa = wavg("XAIndex")
 
-        posxg_share = float(
-            (
+        if "Goal_Position_Share" in team_pos.columns:
+            posxg_share = wavg("Goal_Position_Share")
+        else:
+            posxg_share = float(
                 (
                     (
-                        team_pos["Rolling_XG_Share"].fillna(0.0) * 0.8
-                        + 0.2 * team_pos["Rolling_Shots_Share"].fillna(0.0)
-                    ) * 0.6
-                    + 0.4 * team_pos["Rolling_XG_Share2"].fillna(0.0)
-                )
-                * team_pos["__w"]
-            ).sum() / wsum
-        )
+                        (
+                            team_pos["Rolling_XG_Share"].fillna(0.0) * 0.8
+                            + 0.2 * team_pos["Rolling_Shots_Share"].fillna(0.0)
+                        ) * 0.6
+                        + 0.4 * team_pos["Rolling_XG_Share2"].fillna(0.0)
+                    )
+                    * team_pos["__w"]
+                ).sum() / wsum
+            )
 
-        posxa_share = float(
-            (
+        if "Assist_Position_Share" in team_pos.columns:
+            posxa_share = wavg("Assist_Position_Share")
+        else:
+            posxa_share = float(
                 (
                     (
-                        team_pos["Rolling_XA_Share"].fillna(0.0) * 0.8
-                        + 0.2 * team_pos["Rolling_KeyPasses_Share"].fillna(0.0)
-                    ) * 0.6
-                    + 0.4 * team_pos["Rolling_XA_Share2"].fillna(0.0)
-                )
-                * team_pos["__w"]
-            ).sum() / wsum
-        )
+                        (
+                            team_pos["Rolling_XA_Share"].fillna(0.0) * 0.8
+                            + 0.2 * team_pos["Rolling_KeyPasses_Share"].fillna(0.0)
+                        ) * 0.6
+                        + 0.4 * team_pos["Rolling_XA_Share2"].fillna(0.0)
+                    )
+                    * team_pos["__w"]
+                ).sum() / wsum
+            )
 
         return main_pos, posxg, posxg_share, posxa, posxa_share
 
