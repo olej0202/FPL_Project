@@ -13,6 +13,42 @@ import joblib
 from GenerateConfig import normalize_player_name
 from GenerateConfig import Understat_Team_MAP
 
+
+def add_consecutive_team_totals(
+    player_df,
+    team_col="team_code2",
+    minutes_col="minutes",
+    rows_out="Rolling_Team_Rows",
+    minutes_out="Rolling_Team_Minutes",
+):
+    """Add cumulative totals for the player's current consecutive team stint.
+
+    The input must be chronologically sorted for one player. A new stint starts
+    whenever ``team_col`` differs from the preceding row. Returning to a former
+    team starts a new stint rather than continuing the earlier totals.
+    """
+    out = player_df.copy()
+    if out.empty:
+        out[rows_out] = pd.Series(dtype="int64")
+        out[minutes_out] = pd.Series(dtype="float64")
+        return out
+
+    if team_col not in out.columns:
+        raise ValueError(f"Column '{team_col}' is required for consecutive team totals.")
+    if minutes_col not in out.columns:
+        raise ValueError(f"Column '{minutes_col}' is required for consecutive team totals.")
+
+    numeric_team = pd.to_numeric(out[team_col], errors="coerce")
+    team_key = numeric_team.astype("Int64").astype("string").fillna("__MISSING_TEAM__")
+    team_changed = team_key.ne(team_key.shift()).fillna(True)
+    stint_id = team_changed.cumsum()
+    minutes = pd.to_numeric(out[minutes_col], errors="coerce").fillna(0.0)
+
+    out[rows_out] = out.groupby(stint_id, sort=False).cumcount().add(1).astype("int64")
+    out[minutes_out] = minutes.groupby(stint_id, sort=False).cumsum()
+    return out
+
+
 def make_Kmeans():
 
     teams=pd.read_csv("Team_data_transformed2.csv")[["code","name", "XGH","XGCH","XGA","XGCA"]]
@@ -250,6 +286,9 @@ def process_player_data(player_df, team, team_id2,kmeans):
     df["Team_defcon"]=team_defcon
     df["yellow_cards"]=player_df['yellow_cards'].values
     df["red_cards"]=player_df['red_cards'].values
+    for stint_col in ["Rolling_Team_Rows", "Rolling_Team_Minutes"]:
+        if stint_col in player_df.columns:
+            df[stint_col] = player_df[stint_col].values
 
     return df
 
@@ -2136,6 +2175,7 @@ def main_Transform():
         player_df=df_all[(df_all["name"]==name)]
         player_df["kickoff_time"] = pd.to_datetime(player_df["kickoff_time"])  # Convert to datetime
         player_df = player_df.sort_values(by="kickoff_time")  # Sort by datetime
+        player_df = add_consecutive_team_totals(player_df, team_col="team_code2")
         team = player_df['team_code2'].values[-1]
         team_id=player_df['team_id'].values[-1]
         pos = player_df['position'].values[-1]

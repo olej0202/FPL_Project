@@ -3202,7 +3202,7 @@ export default function MyTeamOptimize() {
               </div>
 
       <div
-  className="w-full max-w-[430px] sm:max-w-[560px] mx-auto bg-no-repeat bg-cover bg-center rounded-[24px] px-1 sm:px-2 py-1 relative overflow-hidden min-h-[760px] sm:min-h-[900px] lg:min-h-[960px]"
+  className="w-full max-w-none mx-auto bg-no-repeat bg-[length:100%_100%] bg-center rounded-[24px] px-1 sm:px-2 py-1 relative overflow-hidden min-h-[760px] sm:min-h-[900px] lg:min-h-[calc(100vh-7rem)]"
   style={{
     backgroundImage: `url(${pitch})`,
     border: `1px solid ${PALETTE.border}`,
@@ -3927,10 +3927,10 @@ function PlayerRow({
     ? [...players].sort((a, b) => positionOrder.indexOf(a.position) - positionOrder.indexOf(b.position))
     : players;
   const dynamicGap = isBench
-    ? "clamp(2px, 0.7vw, 8px)"
+    ? "clamp(2px, 1vw, 16px)"
     : sortedPlayers.length >= 5
-    ? "clamp(2px, 0.9vw, 9px)"
-    : "clamp(4px, 1.2vw, 12px)";
+    ? "clamp(2px, 1.2vw, 18px)"
+    : "clamp(4px, 1.6vw, 24px)";
 
   return (
     <div className="w-full min-w-0 px-0.5">
@@ -3959,13 +3959,17 @@ function PlayerRow({
           const hasSelectedMeasureValue = Number.isFinite(selectedMeasureValue);
           const selectedPercent = getRowSelectedPercent(projectionRow || p);
           const hasSelectedPercent = Number.isFinite(selectedPercent);
-          const cardWidthClass = isBench ? "w-[60px] sm:w-[72px]" : "w-[64px] sm:w-[78px]";
+          const cardWidthClass = isBench
+            ? "w-[60px] sm:w-[72px] lg:w-[96px] xl:w-[112px]"
+            : "w-[64px] sm:w-[78px] lg:w-[110px] xl:w-[128px]";
 
           return (
             <div
               key={p.Name}
               className={`group relative min-w-0 w-full flex flex-col items-center rounded-2xl transition-all duration-150 ${
-                isBench ? "max-w-[62px] sm:max-w-[74px]" : "max-w-[68px] sm:max-w-[82px]"
+                isBench
+                  ? "max-w-[62px] sm:max-w-[74px] lg:max-w-[100px] xl:max-w-[116px]"
+                  : "max-w-[68px] sm:max-w-[82px] lg:max-w-[114px] xl:max-w-[132px]"
               }`}
               draggable={Boolean(onDropOnPlayer)}
               onDragStart={(e) => {
@@ -4022,8 +4026,8 @@ function PlayerRow({
                   }}
                   className={`object-contain drop-shadow cursor-pointer transition-transform hover:scale-[1.07] ${
                     isBench
-                      ? "w-[46px] h-[48px] sm:w-[56px] sm:h-[58px]"
-                      : "w-[50px] h-[58px] sm:w-[64px] sm:h-[70px]"
+                      ? "w-[46px] h-[48px] sm:w-[56px] sm:h-[58px] lg:w-[76px] lg:h-[80px] xl:w-[88px] xl:h-[92px]"
+                      : "w-[50px] h-[58px] sm:w-[64px] sm:h-[70px] lg:w-[88px] lg:h-[96px] xl:w-[104px] xl:h-[112px]"
                   }`}
                   style={{ clipPath: "polygon(0 0, 100% 0, 100% 70%, 0 100%)" }}
                   onClick={() =>
@@ -4038,7 +4042,9 @@ function PlayerRow({
                 {hasSelectedMeasureValue && (
                   <div
                     className={`absolute rounded-full px-1.5 py-[2px] font-bold shadow-sm backdrop-blur ${
-                      isBench ? "bottom-[-3px] text-[8px]" : "bottom-[-4px] text-[9px]"
+                      isBench
+                        ? "bottom-[-3px] text-[8px] lg:text-[10px] xl:text-[11px]"
+                        : "bottom-[-4px] text-[9px] lg:text-[11px] xl:text-xs"
                     }`}
                     style={{
                       left: "58%",
@@ -4069,8 +4075,8 @@ function PlayerRow({
               <div
                 className={`mt-1 truncate rounded-full bg-gray-100/90 text-slate-800 mx-auto text-center ${
                   isBench
-                    ? `${cardWidthClass} text-[9px] sm:text-[10px] px-1 py-[3px]`
-                    : `${cardWidthClass} text-[9px] sm:text-[11px] px-1.5 py-[3px]`
+                    ? `${cardWidthClass} text-[9px] sm:text-[10px] lg:text-xs xl:text-sm px-1 py-[3px] lg:py-1`
+                    : `${cardWidthClass} text-[9px] sm:text-[11px] lg:text-sm xl:text-[15px] px-1.5 py-[3px] lg:py-1`
                 }`}
               >
                 {p.web_name}
@@ -4078,7 +4084,9 @@ function PlayerRow({
 
               <div
                 className={`mt-0.5 mx-auto flex items-center justify-between gap-1 rounded-full border px-1 py-[1px] font-semibold ${cardWidthClass} ${
-                  isBench ? "text-[7px] sm:text-[8px]" : "text-[7px] sm:text-[8px]"
+                  isBench
+                    ? "text-[7px] sm:text-[8px] lg:text-[10px] xl:text-[11px]"
+                    : "text-[7px] sm:text-[8px] lg:text-[10px] xl:text-xs"
                 }`}
                 style={{
                   background: oppMeta.tone.badgeBg,
@@ -4103,7 +4111,9 @@ function PlayerRow({
                   type="button"
                   onClick={() => onTogglePlayerStatus(playerName, isBench ? "playing" : "benched")}
                   className={`mt-1 rounded-full border px-2 py-[2px] font-bold shadow-sm ${
-                    isBench ? "text-[7px] sm:text-[8px]" : "text-[7px] sm:text-[8px]"
+                    isBench
+                      ? "text-[7px] sm:text-[8px] lg:text-[10px]"
+                      : "text-[7px] sm:text-[8px] lg:text-[10px] xl:text-[11px]"
                   }`}
                   style={{
                     borderColor: "rgba(95,143,123,0.35)",
