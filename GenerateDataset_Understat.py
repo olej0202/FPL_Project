@@ -1,7 +1,7 @@
 # understat_pipeline_locf_shares.py
 # ------------------------------------------------------------
 # Full script version of your pipeline with ONE consistent fix:
-# Every "share" (npxG_share, xA_share, shots_share, key_passes_share,
+# Every "share" (npxG_share, xA_share, goals_share, shots_share, key_passes_share,
 # Rolling_XG_Share2, Rolling_XA_Share2) is computed using LOCF totals:
 #   - totals are NOT "sum of rows on that date"
 #   - totals ARE "sum of latest known value per position for that team"
@@ -38,7 +38,7 @@ def add_position_share_metrics(df: pd.DataFrame) -> pd.DataFrame:
     out = df.copy()
     required = [
         "Rolling_XG_Share",
-        "Rolling_Shots_Share",
+        "Rolling_Goals_Share",
         "Rolling_XG_Share2",
         "Rolling_XA_Share",
         "Rolling_KeyPasses_Share",
@@ -50,11 +50,11 @@ def add_position_share_metrics(df: pd.DataFrame) -> pd.DataFrame:
         out[col] = pd.to_numeric(out[col], errors="coerce").fillna(0.0)
 
     out["Goal_Position_Share"] = (
-        (out["Rolling_XG_Share"] * 0.8 + out["Rolling_Shots_Share"] * 0.2) * 0.6
+        (out["Rolling_XG_Share"] * 0.65 + out["Rolling_Goals_Share"] * 0.35) * 0.6
         + out["Rolling_XG_Share2"] * 0.4
     )
     out["Assist_Position_Share"] = (
-        (out["Rolling_XA_Share"] * 0.8 + out["Rolling_KeyPasses_Share"] * 0.2) * 0.6
+        (out["Rolling_XA_Share"] * 0.65 + out["Rolling_KeyPasses_Share"] * 0.35) * 0.6
         + out["Rolling_XA_Share2"] * 0.4
     )
     return out
@@ -579,7 +579,7 @@ def Generate_Understat_dataset(current_players, run_player_pos):
               "npg": "mean",
               "key_passes": ["mean", "sum"],
               "shots": ["mean", "sum"],
-              "goals": "mean",
+              "goals": ["mean", "sum"],
               "xG": "mean",
               "xA": ["mean", "sum"],
               "npxG": ["mean", "sum"],
@@ -614,6 +614,8 @@ def Generate_Understat_dataset(current_players, run_player_pos):
     # Ensure *_sum exist
     if "shots_sum" not in agg_df.columns:
         agg_df["shots_sum"] = pd.to_numeric(agg_df.get("shots", 0), errors="coerce").fillna(0.0)
+    if "goals_sum" not in agg_df.columns:
+        agg_df["goals_sum"] = pd.to_numeric(agg_df.get("goals", 0), errors="coerce").fillna(0.0)
     if "key_passes_sum" not in agg_df.columns:
         agg_df["key_passes_sum"] = pd.to_numeric(agg_df.get("key_passes", 0), errors="coerce").fillna(0.0)
     if "npxG_sum" not in agg_df.columns:
@@ -627,6 +629,7 @@ def Generate_Understat_dataset(current_players, run_player_pos):
     for source_col, share_col in {
         "npxG_sum": "npxG_share",
         "xA_sum": "xA_share",
+        "goals_sum": "goals_share",
         "shots_sum": "shots_share",
         "key_passes_sum": "key_passes_share",
     }.items():
@@ -651,6 +654,7 @@ def Generate_Understat_dataset(current_players, run_player_pos):
     # your caps
     agg_df["npxG_share"] = agg_df["npxG_share"].clip(upper=0.6)
     agg_df["xA_share"] = agg_df["xA_share"].clip(upper=0.6)
+    agg_df["goals_share"] = agg_df["goals_share"].clip(upper=0.6)
     agg_df["shots_share"] = agg_df["shots_share"].clip(upper=0.6)
     agg_df["key_passes_share"] = agg_df["key_passes_share"].clip(upper=0.6)
 
@@ -727,6 +731,10 @@ def Generate_Understat_dataset(current_players, run_player_pos):
     )
     agg_enriched["Rolling_XA_Share"] = (
         agg_enriched.groupby(["player_team", "pos_group"])["xA_share"]
+                    .transform(lambda s: s.rolling(window=20, min_periods=1).mean())
+    )
+    agg_enriched["Rolling_Goals_Share"] = (
+        agg_enriched.groupby(["player_team", "pos_group"])["goals_share"]
                     .transform(lambda s: s.rolling(window=20, min_periods=1).mean())
     )
     agg_enriched["Rolling_Shots_Share"] = (
@@ -846,7 +854,7 @@ def Generate_Understat_dataset(current_players, run_player_pos):
         "XGIndex", "XAIndex",
         "Rolling_XG_Share", "Rolling_XA_Share",
         "Rolling_XG_Share2", "Rolling_XA_Share2",
-        "Rolling_Shots_Share", "Rolling_KeyPasses_Share",
+        "Rolling_Goals_Share", "Rolling_Shots_Share", "Rolling_KeyPasses_Share",
     ]
 
     history_counts = (

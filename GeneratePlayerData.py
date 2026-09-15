@@ -783,7 +783,10 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
                     (
                         (
                             team_pos["Rolling_XG_Share"].fillna(0.0) * 0.8
-                            + 0.2 * team_pos["Rolling_Shots_Share"].fillna(0.0)
+                            + 0.2 * team_pos.get(
+                                "Rolling_Goals_Share",
+                                pd.Series(0.0, index=team_pos.index),
+                            ).fillna(0.0)
                         ) * 0.6
                         + 0.4 * team_pos["Rolling_XG_Share2"].fillna(0.0)
                     )

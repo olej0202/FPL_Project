@@ -146,13 +146,13 @@
 144,Leeds,Ao Tanaka,MC,3,5,60.0
 145,Leeds,Dominic Calvert-Lewin,FW,5,5,100.0
 146,Leeds,Ethan Ampadu,MC,5,5,100.0
-147,Leeds,Gabriel Gudmundsson,DL,1,5,20.0
+147,Leeds,Gabriel Gudmundsson,DL,2,5,40.0
 148,Leeds,James Justin,CB,5,5,100.0
-149,Leeds,James Trafford,GK,3,5,60.0
-150,Leeds,Jayden Bogle,DR,4,5,80.0
-151,Leeds,Nico Elvedi,CB,1,5,20.0
-152,Leeds,Noah Okafor,FW,2,5,40.0
-153,Leeds,Tarik Muharemovic,CB,3,5,60.0
+149,Leeds,James Trafford,GK,4,5,80.0
+150,Leeds,Jayden Bogle,DR,5,5,100.0
+151,Leeds,Nico Elvedi,CB,2,5,40.0
+152,Leeds,Noah Okafor,FW,3,5,60.0
+153,Leeds,Tarik Muharemovic,CB,4,5,80.0
 154,Leicester,Boubakary Soumare,DM,3,5,60.0
 155,Leicester,Conor Coady,CB,5,5,100.0
 156,Leicester,Jakub Stolarczyk,GK,4,5,80.0
@@ -208,17 +208,17 @@
 206,Man Utd,Patrick Dorgu,DL,3,5,60.0
 207,Man Utd,Senne Lammens,GK,5,5,100.0
 208,Man Utd,Youri Tielemans,DM,4,5,80.0
-209,Newcastle,Amar Dedic,DR,3,5,60.0
-210,Newcastle,Anthony Elanga,RW,3,5,60.0
-211,Newcastle,Harvey Barnes,LW,4,5,80.0
-212,Newcastle,Joe Willock,AMC,3,5,60.0
-213,Newcastle,Lewis Hall,DL,5,5,100.0
-214,Newcastle,Lewis Miley,DM,3,5,60.0
-215,Newcastle,Lukás Hornícek,GK,3,5,60.0
-216,Newcastle,Malick Thiaw,CB,5,5,100.0
-217,Newcastle,Nico González,DM,2,5,40.0
+209,Newcastle,Amar Dedic,DR,4,5,80.0
+210,Newcastle,Harvey Barnes,LW,4,5,80.0
+211,Newcastle,Jacob Murphy,RW,2,5,40.0
+212,Newcastle,Lewis Hall,DL,5,5,100.0
+213,Newcastle,Lewis Miley,DM,4,5,80.0
+214,Newcastle,Lukás Hornícek,GK,4,5,80.0
+215,Newcastle,Malick Thiaw,CB,5,5,100.0
+216,Newcastle,Matias Fernandez-Pardo,AMC,1,5,20.0
+217,Newcastle,Nico González,DM,3,5,60.0
 218,Newcastle,Sven Botman,CB,5,5,100.0
-219,Newcastle,Yoane Wissa,FW,3,5,60.0
+219,Newcastle,Yoane Wissa,FW,4,5,80.0
 220,Nott'm Forest,Dan Ndoye,AMC,4,5,80.0
 221,Nott'm Forest,Daniel Muñoz,DR,1,5,20.0
 222,Nott'm Forest,James McAtee,MC,4,5,80.0
