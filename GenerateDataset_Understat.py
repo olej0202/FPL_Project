@@ -1,7 +1,7 @@
 # understat_pipeline_locf_shares.py
 # ------------------------------------------------------------
 # Full script version of your pipeline with ONE consistent fix:
-# Every "share" (npxG_share, xA_share, goals_share, shots_share, key_passes_share,
+# Every "share" (npxG_share, xA_share, shots_share, key_passes_share,
 # Rolling_XG_Share2, Rolling_XA_Share2) is computed using LOCF totals:
 #   - totals are NOT "sum of rows on that date"
 #   - totals ARE "sum of latest known value per position for that team"
@@ -38,7 +38,7 @@ def add_position_share_metrics(df: pd.DataFrame) -> pd.DataFrame:
     out = df.copy()
     required = [
         "Rolling_XG_Share",
-        "Rolling_Goals_Share",
+        "Rolling_Shots_Share",
         "Rolling_XG_Share2",
         "Rolling_XA_Share",
         "Rolling_KeyPasses_Share",
@@ -50,7 +50,7 @@ def add_position_share_metrics(df: pd.DataFrame) -> pd.DataFrame:
         out[col] = pd.to_numeric(out[col], errors="coerce").fillna(0.0)
 
     out["Goal_Position_Share"] = (
-        (out["Rolling_XG_Share"] * 0.65 + out["Rolling_Goals_Share"] * 0.35) * 0.6
+        (out["Rolling_XG_Share"] * 0.65 + out["Rolling_Shots_Share"] * 0.35) * 0.6
         + out["Rolling_XG_Share2"] * 0.4
     )
     out["Assist_Position_Share"] = (
@@ -187,11 +187,20 @@ def Generate_Team_threats(position_history: pd.DataFrame | None = None):
         df["xA_sum"] if "xA_sum" in df.columns else df.get("xA", 0.0),
         errors="coerce",
     )
+    team_df["goals"] = pd.to_numeric(
+        df["goals_sum"] if "goals_sum" in df.columns else df.get("goals", 0.0),
+        errors="coerce",
+    )
 
     team_df["date"] = pd.to_datetime(team_df["date"], errors="coerce")
     metrics = ["Goal_Position_Share", "Assist_Position_Share", "npxG", "xA"]
     team_df[metrics] = team_df[metrics].apply(pd.to_numeric, errors="coerce").fillna(0.0)
+    team_df["goals"] = team_df["goals"].fillna(0.0)
     team_df = team_df.sort_values(["opponent", "pos_group", "date"])
+    team_df["Rolling_Goals_Against_Per_Position_20"] = (
+        team_df.groupby(["opponent", "pos_group"])["goals"]
+        .transform(lambda s: s.clip(lower=0.0).rolling(window=20, min_periods=1).mean())
+    )
 
     span = 20
     ewm_cols = [f"{c}_ewm" for c in metrics]
@@ -204,7 +213,10 @@ def Generate_Team_threats(position_history: pd.DataFrame | None = None):
     latest_ewm = (
         team_df.sort_values("date")
         .groupby(["opponent", "pos_group"], as_index=False)
-        .tail(1)[["opponent", "pos_group"] + ewm_cols]
+        .tail(1)[
+            ["opponent", "pos_group", "Rolling_Goals_Against_Per_Position_20"]
+            + ewm_cols
+        ]
         .rename(columns={
             "Goal_Position_Share_ewm": "Goal_Threat",
             "Assist_Position_Share_ewm": "Assist_Threat",
@@ -214,7 +226,8 @@ def Generate_Team_threats(position_history: pd.DataFrame | None = None):
 
     pg = latest_ewm["pos_group"].str.upper().str.strip()
     latest_ewm = latest_ewm.loc[~pg.isin(["SUB", "GK", "GKP"]),
-                                ["opponent", "pos_group", "Threat", "Goal_Threat", "Assist_Threat", "npxG_ewm", "xA_ewm"]]
+                                ["opponent", "pos_group", "Threat", "Goal_Threat", "Assist_Threat",
+                                 "Rolling_Goals_Against_Per_Position_20", "npxG_ewm", "xA_ewm"]]
 
     latest_ewm.to_csv("Team_threat.csv", index=False)
 
@@ -629,7 +642,6 @@ def Generate_Understat_dataset(current_players, run_player_pos):
     for source_col, share_col in {
         "npxG_sum": "npxG_share",
         "xA_sum": "xA_share",
-        "goals_sum": "goals_share",
         "shots_sum": "shots_share",
         "key_passes_sum": "key_passes_share",
     }.items():
@@ -654,7 +666,6 @@ def Generate_Understat_dataset(current_players, run_player_pos):
     # your caps
     agg_df["npxG_share"] = agg_df["npxG_share"].clip(upper=0.6)
     agg_df["xA_share"] = agg_df["xA_share"].clip(upper=0.6)
-    agg_df["goals_share"] = agg_df["goals_share"].clip(upper=0.6)
     agg_df["shots_share"] = agg_df["shots_share"].clip(upper=0.6)
     agg_df["key_passes_share"] = agg_df["key_passes_share"].clip(upper=0.6)
 
@@ -733,8 +744,8 @@ def Generate_Understat_dataset(current_players, run_player_pos):
         agg_enriched.groupby(["player_team", "pos_group"])["xA_share"]
                     .transform(lambda s: s.rolling(window=20, min_periods=1).mean())
     )
-    agg_enriched["Rolling_Goals_Share"] = (
-        agg_enriched.groupby(["player_team", "pos_group"])["goals_share"]
+    agg_enriched["Rolling_Goals_Per_Position_20"] = (
+        agg_enriched.groupby(["player_team", "pos_group"])["goals_sum"]
                     .transform(lambda s: s.rolling(window=20, min_periods=1).mean())
     )
     agg_enriched["Rolling_Shots_Share"] = (
@@ -854,7 +865,7 @@ def Generate_Understat_dataset(current_players, run_player_pos):
         "XGIndex", "XAIndex",
         "Rolling_XG_Share", "Rolling_XA_Share",
         "Rolling_XG_Share2", "Rolling_XA_Share2",
-        "Rolling_Goals_Share", "Rolling_Shots_Share", "Rolling_KeyPasses_Share",
+        "Rolling_Shots_Share", "Rolling_KeyPasses_Share",
     ]
 
     history_counts = (
