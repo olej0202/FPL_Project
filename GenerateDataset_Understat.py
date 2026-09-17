@@ -137,6 +137,198 @@ def add_position_share_metrics(
     return out
 
 
+UNDERSTAT_POSITION_METRICS = [
+    "NPXG_p_90",
+    "npg_p_90",
+    "Shots_p_90",
+    "xGChain_p_90",
+    "xA_p_90",
+    "assists_p_90",
+    "key_passes_p_90",
+    "xGBuildup_p_90",
+]
+
+
+def build_understat_position_indices(
+    player_matches: pd.DataFrame,
+    entity_col: str = "player_team",
+    counterpart_col: str = "opponent",
+) -> pd.DataFrame:
+    """Build the historical per-player position indices from raw match rows.
+
+    This follows the supplied model: summed player per-90 values per position,
+    historical position-specific P95 clipping, a previous-25-match mean, a
+    logistic time-weighted mean, and a 50/50 blend of the two histories.
+    The current match is excluded from every historical measure.
+
+    ``entity_col='player_team'`` creates attacking position profiles.
+    ``entity_col='opponent'`` creates the corresponding threat conceded by
+    each opponent position-by-position.
+    """
+    required = {
+        "date", entity_col, counterpart_col, "pos_group", "time",
+        "npxG", "npg", "shots", "xGChain", "xA", "assists",
+        "key_passes", "xGBuildup",
+    }
+    missing = required.difference(player_matches.columns)
+    if missing:
+        raise ValueError(f"Missing columns for Understat position indices: {sorted(missing)}")
+
+    work = player_matches.copy()
+    work["pos_group"] = work["pos_group"].astype(str).str.strip()
+    work = work.loc[~work["pos_group"].str.upper().eq("SUB")].copy()
+    work["date"] = pd.to_datetime(work["date"], errors="coerce")
+    work = work.dropna(subset=["date", entity_col, counterpart_col, "pos_group"])
+
+    source_map = {
+        "NPXG_p_90": "npxG",
+        "npg_p_90": "npg",
+        "Shots_p_90": "shots",
+        "xGChain_p_90": "xGChain",
+        "xA_p_90": "xA",
+        "assists_p_90": "assists",
+        "key_passes_p_90": "key_passes",
+        "xGBuildup_p_90": "xGBuildup",
+    }
+    minutes = pd.to_numeric(work["time"], errors="coerce")
+    for output_col, source_col in source_map.items():
+        values = pd.to_numeric(work[source_col], errors="coerce")
+        work[output_col] = np.where(minutes > 0, values / minutes * 90.0, np.nan)
+
+    grouped = (
+        work.groupby(
+            ["date", entity_col, counterpart_col, "pos_group"],
+            as_index=False,
+        )
+        .agg(
+            **{col: (col, "sum") for col in UNDERSTAT_POSITION_METRICS},
+            N_players=("pos_group", "size"),
+        )
+        .sort_values([entity_col, "pos_group", "date"])
+        .reset_index(drop=True)
+    )
+
+    # Match the supplied historical clipping exactly: position-specific P95,
+    # with the current observation shifted out and ten observations required.
+    for col in UNDERSTAT_POSITION_METRICS:
+        p95 = grouped.groupby("pos_group")[col].transform(
+            lambda s: s.shift(1).expanding(min_periods=10).quantile(0.95)
+        )
+        grouped[f"{col}_clipped"] = np.minimum(grouped[col], p95).fillna(grouped[col])
+
+    history_group = [entity_col, "pos_group"]
+    for col in UNDERSTAT_POSITION_METRICS:
+        grouped[f"{col}_rolling25"] = grouped.groupby(history_group)[
+            f"{col}_clipped"
+        ].transform(lambda s: s.shift(1).rolling(window=25, min_periods=1).mean())
+
+    grouped["N_players_rolling25"] = grouped.groupby(history_group)["N_players"].transform(
+        lambda s: s.shift(1).rolling(window=25, min_periods=1).mean()
+    )
+
+    def logistic_history(group: pd.DataFrame, value_col: str) -> np.ndarray:
+        dates = group["date"].to_numpy()
+        values = group[value_col].to_numpy(dtype=float)
+        result = np.full(len(group), np.nan, dtype=float)
+
+        for i in range(1, len(group)):
+            age_days = (dates[i] - dates[:i]).astype("timedelta64[D]").astype(float)
+            exponent = np.clip((age_days - 210.0) / 25.0, -700.0, 700.0)
+            weights = 1.0 / (1.0 + np.exp(exponent))
+            valid = np.isfinite(values[:i]) & np.isfinite(weights)
+            if valid.any() and float(weights[valid].sum()) > 0.0:
+                result[i] = np.average(values[:i][valid], weights=weights[valid])
+        return result
+
+    for col in UNDERSTAT_POSITION_METRICS:
+        output_col = f"{col}_timeweighted"
+        grouped[output_col] = np.nan
+        for _, idx in grouped.groupby(history_group, sort=False).groups.items():
+            group = grouped.loc[idx].sort_values("date")
+            grouped.loc[group.index, output_col] = logistic_history(group, f"{col}_clipped")
+
+    grouped["N_players_timeweighted"] = np.nan
+    for _, idx in grouped.groupby(history_group, sort=False).groups.items():
+        group = grouped.loc[idx].sort_values("date")
+        grouped.loc[group.index, "N_players_timeweighted"] = logistic_history(group, "N_players")
+
+    for col in UNDERSTAT_POSITION_METRICS + ["N_players"]:
+        grouped[f"{col}_avg"] = (
+            0.5 * grouped[f"{col}_timeweighted"]
+            + 0.5 * grouped[f"{col}_rolling25"]
+        )
+
+    grouped["Understat_Goal_Index"] = (
+        grouped["NPXG_p_90_avg"] * 0.60
+        + grouped["npg_p_90_avg"] * 0.25
+        + grouped["Shots_p_90_avg"] / 8.0 * 0.15
+    )
+    grouped["Understat_Assist_Index"] = (
+        grouped["key_passes_p_90_avg"] / 6.0 * 0.25
+        + grouped["assists_p_90_avg"] * 0.25
+        + grouped["xA_p_90_avg"] * 0.50
+    )
+
+    goal_total = grouped.groupby(["date", entity_col])["Understat_Goal_Index"].transform("sum")
+    assist_total = grouped.groupby(["date", entity_col])["Understat_Assist_Index"].transform("sum")
+    player_count = pd.to_numeric(grouped["N_players_avg"], errors="coerce")
+
+    grouped["Understat_Goal_Index_Share"] = np.where(
+        (goal_total != 0) & (player_count > 0),
+        grouped["Understat_Goal_Index"] / goal_total / player_count,
+        np.nan,
+    )
+    grouped["Understat_Assist_Index_Share"] = np.where(
+        (assist_total != 0) & (player_count > 0),
+        grouped["Understat_Assist_Index"] / assist_total / player_count,
+        np.nan,
+    )
+    grouped["Understat_XG"] = np.where(
+        player_count > 0, grouped["Understat_Goal_Index"] / player_count, np.nan
+    )
+    grouped["Understat_XA"] = np.where(
+        player_count > 0, grouped["Understat_Assist_Index"] / player_count, np.nan
+    )
+
+    return grouped.sort_values(["date", entity_col, "pos_group"]).reset_index(drop=True)
+
+
+def blend_small_sample_position_rows(
+    history: pd.DataFrame,
+    entity_col: str,
+    value_cols: list[str],
+    min_history: int = 10,
+) -> pd.DataFrame:
+    """Return latest entity/position rows with the existing small-sample shrinkage."""
+    ordered = history.dropna(subset=[entity_col, "pos_group", "date"]).copy()
+    ordered["date"] = pd.to_datetime(ordered["date"], errors="coerce")
+    ordered = ordered.sort_values([entity_col, "pos_group", "date"])
+    latest = ordered.drop_duplicates([entity_col, "pos_group"], keep="last").copy()
+    counts = ordered.groupby([entity_col, "pos_group"]).size().rename("history_len")
+    latest = latest.merge(counts, on=[entity_col, "pos_group"], how="left")
+    latest["_own_weight"] = (
+        pd.to_numeric(latest["history_len"], errors="coerce").fillna(0.0)
+        / float(min_history)
+    ).clip(0.0, 1.0)
+
+    for col in value_cols:
+        latest[col] = pd.to_numeric(latest[col], errors="coerce")
+
+    for pos, pos_idx in latest.groupby("pos_group", sort=False).groups.items():
+        pos_rows = latest.loc[pos_idx]
+        league_mean = pos_rows[value_cols].mean(numeric_only=True)
+        for idx, row in pos_rows.iterrows():
+            own_weight = float(row["_own_weight"])
+            others = pos_rows.loc[pos_rows[entity_col] != row[entity_col], value_cols]
+            target = others.mean(numeric_only=True) if not others.empty else league_mean
+            target = target.where(target.notna(), league_mean)
+            own = pd.to_numeric(row[value_cols], errors="coerce")
+            own = own.where(own.notna(), target)
+            latest.loc[idx, value_cols] = (own_weight * own + (1.0 - own_weight) * target).values
+
+    return latest.drop(columns=["history_len", "_own_weight"])
+
+
 def add_locf_shares(
     df: pd.DataFrame,
     team_col: str,
@@ -244,13 +436,80 @@ def add_locf_shares(
 # ============================================================
 # Opponent positional threats, built from the shared position formula
 # ============================================================
-def Generate_Team_threats(position_history: pd.DataFrame | None = None):
+def Generate_Team_threats(
+    position_history: pd.DataFrame | None = None,
+    raw_player_history: pd.DataFrame | None = None,
+):
     """Generate opponent-by-position threat using the team-position formula.
 
-    Absolute npxG/xA volumes are retained as diagnostics, but are no longer
-    mixed into Goal_Threat or Assist_Threat.  The threat values therefore use
-    the same units and component weights as the attacking positional shares.
+    When raw player history is available, opponent threat is built with the
+    same P95/rolling-25/logistic/N_players model as the attacking profiles.
+    The older position-history route remains as a compatibility fallback.
     """
+    if raw_player_history is not None:
+        threat_history = build_understat_position_indices(
+            raw_player_history,
+            entity_col="opponent",
+            counterpart_col="player_team",
+        )
+        value_cols = [
+            "Understat_Goal_Index_Share",
+            "Understat_Assist_Index_Share",
+            "Understat_XG",
+            "Understat_XA",
+            "N_players_avg",
+        ]
+        latest = blend_small_sample_position_rows(
+            threat_history,
+            entity_col="opponent",
+            value_cols=value_cols,
+            min_history=10,
+        )
+
+        goals = raw_player_history.copy()
+        goals["date"] = pd.to_datetime(goals["date"], errors="coerce")
+        goals["pos_group"] = goals["pos_group"].astype(str).str.strip()
+        goals["goals"] = pd.to_numeric(goals.get("goals", 0.0), errors="coerce").fillna(0.0)
+        goals = (
+            goals.loc[~goals["pos_group"].str.upper().eq("SUB")]
+            .groupby(["date", "opponent", "pos_group"], as_index=False)["goals"]
+            .sum()
+            .sort_values(["opponent", "pos_group", "date"])
+        )
+        goals["Rolling_Goals_Against_Per_Position_20"] = (
+            goals.groupby(["opponent", "pos_group"])["goals"]
+            .transform(lambda s: s.clip(lower=0.0).rolling(window=20, min_periods=1).mean())
+        )
+        latest_goals = goals.drop_duplicates(["opponent", "pos_group"], keep="last")
+        latest = latest.merge(
+            latest_goals[["opponent", "pos_group", "Rolling_Goals_Against_Per_Position_20"]],
+            on=["opponent", "pos_group"],
+            how="left",
+        )
+
+        latest = latest.rename(columns={
+            "Understat_Goal_Index_Share": "Goal_Threat",
+            "Understat_Assist_Index_Share": "Assist_Threat",
+            "Understat_XG": "Understat_XG_Against",
+            "Understat_XA": "Understat_XA_Against",
+        })
+        latest["Threat"] = latest["Goal_Threat"]
+        # Preserve legacy diagnostic column names for existing readers.
+        latest["npxG_ewm"] = latest["Understat_XG_Against"]
+        latest["xA_ewm"] = latest["Understat_XA_Against"]
+
+        pg = latest["pos_group"].str.upper().str.strip()
+        latest = latest.loc[
+            ~pg.isin(["SUB", "GK", "GKP"]),
+            [
+                "opponent", "pos_group", "Threat", "Goal_Threat", "Assist_Threat",
+                "Understat_XG_Against", "Understat_XA_Against", "N_players_avg",
+                "Rolling_Goals_Against_Per_Position_20", "npxG_ewm", "xA_ewm",
+            ],
+        ]
+        latest.to_csv("Team_threat.csv", index=False)
+        return
+
     if position_history is None:
         position_history = pd.read_csv("Team_Positions_transformed.csv")
 
@@ -670,6 +929,15 @@ def Generate_Understat_dataset(current_players, run_player_pos):
     # save transformed base
     df.to_csv("Understat_transformed.csv", index=False)
 
+    # Historical position model supplied for the four Player_Data inputs.
+    # It is built from raw player-match rows before the legacy team-position
+    # calculations so those remain available as a fallback/diagnostic layer.
+    understat_position_history = build_understat_position_indices(
+        df,
+        entity_col="player_team",
+        counterpart_col="opponent",
+    )
+
     # =========================
     # Aggregate by pos/date/team
     # =========================
@@ -799,6 +1067,29 @@ def Generate_Understat_dataset(current_players, run_player_pos):
 
     agg_enriched = agg_df.merge(team_for, on=["date", "player_team"], how="left") \
                         .merge(team_against, on=["date", "opponent"], how="left")
+
+    position_output_cols = [
+        "N_players_avg",
+        "Understat_Goal_Index_Share",
+        "Understat_Assist_Index_Share",
+        "Understat_XG",
+        "Understat_XA",
+        "NPXG_p_90_avg",
+        "npg_p_90_avg",
+        "Shots_p_90_avg",
+        "xA_p_90_avg",
+        "assists_p_90_avg",
+        "key_passes_p_90_avg",
+    ]
+    position_merge = understat_position_history[
+        ["date", "player_team", "opponent", "pos_group"] + position_output_cols
+    ].copy()
+    position_merge["date"] = pd.to_datetime(position_merge["date"], errors="coerce").dt.date
+    agg_enriched = agg_enriched.merge(
+        position_merge,
+        on=["date", "player_team", "opponent", "pos_group"],
+        how="left",
+    )
 
     agg_enriched["Team_code"] = pd.to_numeric(agg_enriched["Team_code"], errors="coerce").fillna(0).astype(int)
 
@@ -956,6 +1247,8 @@ def Generate_Understat_dataset(current_players, run_player_pos):
         "Rolling_XG_Share", "Rolling_XA_Share",
         "Rolling_XG_Share2", "Rolling_XA_Share2",
         "Rolling_Shots_Share", "Rolling_KeyPasses_Share",
+        "Understat_Goal_Index_Share", "Understat_Assist_Index_Share",
+        "Understat_XG", "Understat_XA",
     ]
 
     history_counts = (
@@ -987,6 +1280,7 @@ def Generate_Understat_dataset(current_players, run_player_pos):
             other_mean = other_rows[cols_to_avg].mean(numeric_only=True) if not other_rows.empty else league_pos_mean
             blend_target = other_mean.where(other_mean.notna(), league_pos_mean)
             own_values = pd.to_numeric(row[cols_to_avg], errors="coerce")
+            own_values = own_values.where(own_values.notna(), blend_target)
             latest.loc[idx, cols_to_avg] = (
                 own_weight * own_values
                 + (1.0 - own_weight) * blend_target
@@ -997,8 +1291,8 @@ def Generate_Understat_dataset(current_players, run_player_pos):
 
     latest.to_csv("Team_Positions_transformed_Newest.csv", index=False)
 
-    # Regenerate opponent threats from the same positional-share components.
-    Generate_Team_threats(agg_enriched)
+    # Regenerate opponent threats from the same raw historical position model.
+    Generate_Team_threats(agg_enriched, raw_player_history=df)
 
 
 # ============================================================

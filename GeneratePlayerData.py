@@ -772,10 +772,15 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
                 ).sum() / wsum
             )
 
-        posxg = wavg("XGIndex")
-        posxa = wavg("XAIndex")
+        # The supplied historical per-position model is now the primary
+        # source. Keep the legacy indices as a compatibility fallback for
+        # previously generated Team_Positions files.
+        posxg = wavg("Understat_XG") if "Understat_XG" in team_pos.columns else wavg("XGIndex")
+        posxa = wavg("Understat_XA") if "Understat_XA" in team_pos.columns else wavg("XAIndex")
 
-        if "Goal_Position_Share" in team_pos.columns:
+        if "Understat_Goal_Index_Share" in team_pos.columns:
+            posxg_share = wavg("Understat_Goal_Index_Share")
+        elif "Goal_Position_Share" in team_pos.columns:
             posxg_share = wavg("Goal_Position_Share")
         else:
             posxg_share = float(
@@ -791,7 +796,9 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
                 ).sum() / wsum
             )
 
-        if "Assist_Position_Share" in team_pos.columns:
+        if "Understat_Assist_Index_Share" in team_pos.columns:
+            posxa_share = wavg("Understat_Assist_Index_Share")
+        elif "Assist_Position_Share" in team_pos.columns:
             posxa_share = wavg("Assist_Position_Share")
         else:
             posxa_share = float(
@@ -1148,12 +1155,16 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
         player_row["Understat_POSXG_Share"] = posxg_share
         player_row["Understat_POSXA"] = posxa
         player_row["Understat_POSXA_Share"] = posxa_share
+        player_row["Understat_XG"] = posxg
+        player_row["Understat_Goal_Index_Share"] = posxg_share
+        player_row["Understat_XA"] = posxa
+        player_row["Understat_Assist_Index_Share"] = posxa_share
 
         player_row["Team_Pen_Data"] = player_team_pen_data
         player_row["Pen_Number"] = pen_number
         player_row["player_risiko"] = player_risiko
-        player_row["Goal_Index"] = player_row["Understat_POSXG"] * player_risiko + (1 - player_risiko) * player_row["Goal_Statistics"]
-        player_row["Assist_Index"] = player_row["Understat_POSXA"] * player_risiko + (1 - player_risiko) * player_row["Assist_Statistics"]
+        player_row["Goal_Index"] = player_row["Understat_XG"] * player_risiko + (1 - player_risiko) * player_row["Goal_Statistics"]
+        player_row["Assist_Index"] = player_row["Understat_XA"] * player_risiko + (1 - player_risiko) * player_row["Assist_Statistics"]
         player_row["Player_code"] = player_code
         
 
@@ -1337,6 +1348,10 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
         player_row["Understat_POSXA"] = understat_posxa
         player_row["Understat_POSXG_Share"] = understat_posxg_share
         player_row["Understat_POSXA_Share"] = understat_posxa_share
+        player_row["Understat_XG"] = understat_posxg
+        player_row["Understat_XA"] = understat_posxa
+        player_row["Understat_Goal_Index_Share"] = understat_posxg_share
+        player_row["Understat_Assist_Index_Share"] = understat_posxa_share
         player_row["Share_of_XG"] = share_of_xg
         player_row["Share_of_XA"] = share_of_xa
         player_row["Share_of_XG_Short"] = share_of_xg_short
@@ -1388,6 +1403,10 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
     
     df = pd.read_csv("Player_Prediction_set.csv")
     required_zero_cols = [
+        "Understat_XG",
+        "Understat_XA",
+        "Understat_Goal_Index_Share",
+        "Understat_Assist_Index_Share",
         "Understat_POSXG",
         "Understat_POSXA",
         "Understat_POSXG_Share",
@@ -1418,10 +1437,10 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
         if col not in df.columns:
             df[col] = 0.0
         df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0.0)
-    df["Goal_Index"] = df["Understat_POSXG"] * df["player_risiko"] + (1 - df["player_risiko"]) * (df["Goal_Statistics"]*0.4+df["Rolling_adjusted_XG"]*0.2+0.4*df['Goal_Statistics_Index_dec'])
-    df["Assist_Index"] = df["Understat_POSXA"] * df["player_risiko"] + (1 - df["player_risiko"]) * (df["Assist_Statistics"]*0.4+df["Rolling_adjusted_XA"]*0.2+0.4*df['Assist_Statistics_Index_dec'])
-    df["Goal_Index_Share"] = df["Understat_POSXG_Share"] * df["player_risiko"] + (1 - df["player_risiko"]) * (df["xg_share_index_dec"]*0.5+df["Share_of_XG"]*0.35+0.15*df['Share_of_XG_Short']+0*df['Rolling_adjusted_Threat_per90_share'])
-    df["Assist_Index_Share"] = df["Understat_POSXA_Share"] * df["player_risiko"] + (1 - df["player_risiko"]) * (df["xa_share_index_dec"]*0.5+df["Share_of_XA"]*0.35+0.15*df['Share_of_XA_Short']+0*df['Rolling_adjusted_creativity_per90_share'])
+    df["Goal_Index"] = df["Understat_XG"] * df["player_risiko"] + (1 - df["player_risiko"]) * (df["Goal_Statistics"]*0.4+df["Rolling_adjusted_XG"]*0.2+0.4*df['Goal_Statistics_Index_dec'])
+    df["Assist_Index"] = df["Understat_XA"] * df["player_risiko"] + (1 - df["player_risiko"]) * (df["Assist_Statistics"]*0.4+df["Rolling_adjusted_XA"]*0.2+0.4*df['Assist_Statistics_Index_dec'])
+    df["Goal_Index_Share"] = df["Understat_Goal_Index_Share"] * df["player_risiko"] + (1 - df["player_risiko"]) * (df["xg_share_index_dec"]*0.5+df["Share_of_XG"]*0.35+0.15*df['Share_of_XG_Short']+0*df['Rolling_adjusted_Threat_per90_share'])
+    df["Assist_Index_Share"] = df["Understat_Assist_Index_Share"] * df["player_risiko"] + (1 - df["player_risiko"]) * (df["xa_share_index_dec"]*0.5+df["Share_of_XA"]*0.35+0.15*df['Share_of_XA_Short']+0*df['Rolling_adjusted_creativity_per90_share'])
     df["Defcon_Index"] = (
         df["defcon_avg"] * 0.333
         + 0.333 * (

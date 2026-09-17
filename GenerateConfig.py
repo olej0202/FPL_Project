@@ -93,8 +93,6 @@ Manual_NewPlayer_Adjustments={
 Manual_Player_Adjustments={
     #exemple Alexander_Isak:["Tammy_Abraham","Yoane_Wissa" ]
     "Milan_van Ewijk":["Lucas_Digne"],
-    "Liam_Kitching":["Jaydee_Canvot"],
-    "Bobby_Thomas":["Jaydee_Canvot"],
     "Tarik_Muharemović":["Jaydee_Canvot"],
     "Gonzalo_García": ["Rodrigo_Muniz Carvalho"],
     "Mamadou_Sangaré":["Elliot_Anderson"],    
