@@ -29,7 +29,77 @@ def canonicalize_team_name(value):
     return Understat_Team_MAP.get(text, text)
 
 
-def add_position_share_metrics(df: pd.DataFrame) -> pd.DataFrame:
+POSITION_SHARE_CAP = 0.35
+
+
+def _capped_simplex(values, cap: float = POSITION_SHARE_CAP):
+    """Normalize to one, cap each value, and redistribute excess proportionally."""
+    arr = np.nan_to_num(np.asarray(values, dtype=float), nan=0.0, posinf=0.0, neginf=0.0)
+    arr = np.clip(arr, 0.0, None)
+    total = float(arr.sum())
+    if total <= 0.0:
+        return arr
+
+    weights = arr / total
+    n = len(weights)
+    if n * cap < 1.0 - 1e-12:
+        raise ValueError(f"Cannot distribute 1.0 across {n} positions with cap={cap}.")
+
+    fixed = np.zeros(n, dtype=bool)
+    result = np.zeros(n, dtype=float)
+
+    while True:
+        remaining = 1.0 - float(result[fixed].sum())
+        candidates = ~fixed
+        if not candidates.any():
+            break
+
+        candidate_weights = weights[candidates]
+        weight_sum = float(candidate_weights.sum())
+        if weight_sum <= 0.0:
+            allocation = np.full(candidates.sum(), remaining / candidates.sum())
+        else:
+            allocation = remaining * candidate_weights / weight_sum
+
+        over_cap = allocation > cap + 1e-12
+        candidate_idx = np.flatnonzero(candidates)
+        if not over_cap.any():
+            result[candidate_idx] = allocation
+            break
+
+        capped_idx = candidate_idx[over_cap]
+        result[capped_idx] = cap
+        fixed[capped_idx] = True
+
+    return result
+
+
+def _normalize_position_columns(
+    df: pd.DataFrame,
+    columns: list[str],
+    group_cols: list[str],
+    pos_col: str = "pos_group",
+    cap: float = POSITION_SHARE_CAP,
+) -> pd.DataFrame:
+    """Apply capped redistribution within each team/opponent position set."""
+    out = df.copy()
+    valid_pos = ~out[pos_col].astype(str).str.upper().str.strip().isin({"SUB", "GK", "GKP"})
+
+    for col in columns:
+        out[col] = pd.to_numeric(out[col], errors="coerce").fillna(0.0)
+        out.loc[~valid_pos, col] = 0.0
+        valid_rows = out.loc[valid_pos]
+        for _, indices in valid_rows.groupby(group_cols, dropna=False, sort=False).groups.items():
+            idx = list(indices)
+            out.loc[idx, col] = _capped_simplex(out.loc[idx, col].to_numpy(float), cap=cap)
+
+    return out
+
+
+def add_position_share_metrics(
+    df: pd.DataFrame,
+    group_cols: list[str] | None = None,
+) -> pd.DataFrame:
     """Build the common goal/assist positional-share metrics.
 
     These two columns are the single definition used by both the attacking
@@ -57,6 +127,13 @@ def add_position_share_metrics(df: pd.DataFrame) -> pd.DataFrame:
         (out["Rolling_XA_Share"] * 0.65 + out["Rolling_KeyPasses_Share"] * 0.35) * 0.6
         + out["Rolling_XA_Share2"] * 0.4
     )
+
+    if group_cols:
+        out = _normalize_position_columns(
+            out,
+            ["Goal_Position_Share", "Assist_Position_Share"],
+            group_cols=group_cols,
+        )
     return out
 
 
@@ -141,6 +218,12 @@ def add_locf_shares(
         full[share_col] = (full[c] / full[tot_col]).replace([np.inf, -np.inf], np.nan).fillna(0.0)
 
     share_cols = [share_names[c] for c in value_cols]
+    full = _normalize_position_columns(
+        full,
+        share_cols,
+        group_cols=[team_col, date_col],
+        pos_col=pos_col,
+    )
 
     # merge shares back to original rows (all positions, including excluded ones will get NaN -> fill 0)
     out = out.merge(
@@ -171,7 +254,10 @@ def Generate_Team_threats(position_history: pd.DataFrame | None = None):
     if position_history is None:
         position_history = pd.read_csv("Team_Positions_transformed.csv")
 
-    df = add_position_share_metrics(position_history)
+    df = add_position_share_metrics(
+        position_history,
+        group_cols=["player_team", "date"],
+    )
     team_df = df[[
         "opponent",
         "pos_group",
@@ -221,6 +307,11 @@ def Generate_Team_threats(position_history: pd.DataFrame | None = None):
             "Goal_Position_Share_ewm": "Goal_Threat",
             "Assist_Position_Share_ewm": "Assist_Threat",
         })
+    )
+    latest_ewm = _normalize_position_columns(
+        latest_ewm,
+        ["Goal_Threat", "Assist_Threat"],
+        group_cols=["opponent"],
     )
     latest_ewm["Threat"] = latest_ewm["Goal_Threat"]
 
@@ -645,12 +736,13 @@ def Generate_Understat_dataset(current_players, run_player_pos):
         "shots_sum": "shots_share",
         "key_passes_sum": "key_passes_share",
     }.items():
-        per90_col = f"{source_col}_per90_for_share"
-        minutes = pd.to_numeric(agg_df[time_col], errors="coerce").fillna(0.0)
         values = pd.to_numeric(agg_df[source_col], errors="coerce").fillna(0.0)
-        agg_df[per90_col] = np.where(minutes > 0, values / minutes * 90.0, 0.0)
-        share_value_cols.append(per90_col)
-        share_names[per90_col] = share_col
+        value_col = f"{source_col}_per90_for_share"
+        minutes = pd.to_numeric(agg_df[time_col], errors="coerce").fillna(0.0)
+        agg_df[value_col] = np.where(minutes > 0, values / minutes * 90.0, 0.0)
+
+        share_value_cols.append(value_col)
+        share_names[value_col] = share_col
 
     agg_df = add_locf_shares(
         agg_df,
@@ -662,12 +754,6 @@ def Generate_Understat_dataset(current_players, run_player_pos):
         pos_universe=None,
         exclude_pos={"SUB", "GK", "GKP"},
     )
-
-    # your caps
-    agg_df["npxG_share"] = agg_df["npxG_share"].clip(upper=0.6)
-    agg_df["xA_share"] = agg_df["xA_share"].clip(upper=0.6)
-    agg_df["shots_share"] = agg_df["shots_share"].clip(upper=0.6)
-    agg_df["key_passes_share"] = agg_df["key_passes_share"].clip(upper=0.6)
 
     agg_df.to_csv("Team_AggTest.csv", index=False)
 
@@ -717,7 +803,8 @@ def Generate_Understat_dataset(current_players, run_player_pos):
     agg_enriched["Team_code"] = pd.to_numeric(agg_enriched["Team_code"], errors="coerce").fillna(0).astype(int)
 
     agg_enriched["xA2"] = agg_enriched["xA"] * 1 + agg_enriched["assists"] * 0
-    agg_enriched["Adjusted_XG"] = agg_enriched["npxG"] / (agg_enriched["opp_Rolling_Threat_Against"] * 0.5 + agg_enriched["opp_XGC_avg"] * 0.5)
+    # Keep the adjusted XG index on the same per-90 basis as npxG_share.
+    agg_enriched["Adjusted_XG"] = agg_enriched["npxG_sum_per90_for_share"] / (agg_enriched["opp_Rolling_Threat_Against"] * 0.5 + agg_enriched["opp_XGC_avg"] * 0.5)
     agg_enriched["Adjusted_XG"] = agg_enriched["Adjusted_XG"].clip(upper=1)
 
     agg_enriched["Adjusted_XA"] = agg_enriched["xA2"] / (agg_enriched["opp_Rolling_Threat_Against"] * 0.5 + agg_enriched["opp_XGC_avg"] * 0.5)
@@ -842,7 +929,10 @@ def Generate_Understat_dataset(current_players, run_player_pos):
         pos_universe=None,
         exclude_pos={"SUB", "GK", "GKP"},
     )
-    agg_enriched = add_position_share_metrics(agg_enriched)
+    agg_enriched = add_position_share_metrics(
+        agg_enriched,
+        group_cols=["player_team", "date"],
+    )
 
     # save full enriched dataset
     agg_enriched.to_csv("Team_Positions_transformed.csv", index=False)
@@ -903,7 +993,7 @@ def Generate_Understat_dataset(current_players, run_player_pos):
             ).values
 
     latest = latest.drop(columns=["history_len", "_own_weight"])
-    latest = add_position_share_metrics(latest)
+    latest = add_position_share_metrics(latest, group_cols=["player_team"])
 
     latest.to_csv("Team_Positions_transformed_Newest.csv", index=False)
 

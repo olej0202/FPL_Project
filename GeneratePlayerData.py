@@ -798,8 +798,8 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
                 (
                     (
                         (
-                            team_pos["Rolling_XA_Share"].fillna(0.0) * 0.8
-                            + 0.2 * team_pos["Rolling_KeyPasses_Share"].fillna(0.0)
+                            team_pos["Rolling_XA_Share"].fillna(0.0) * 0.65
+                            + 0.35 * team_pos["Rolling_KeyPasses_Share"].fillna(0.0)
                         ) * 0.6
                         + 0.4 * team_pos["Rolling_XA_Share2"].fillna(0.0)
                     )
