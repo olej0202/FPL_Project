@@ -1521,6 +1521,15 @@ def post_my_team_optimize(req: OptimizeRequest, request: Request):
     if req.players:
         # turn list[PlayerInput] -> DataFrame
         players_df = pd.DataFrame([p.dict() for p in req.players])
+        players_df["name"] = players_df["name"].astype(str).str.strip()
+        players_df["GW"] = pd.to_numeric(players_df["GW"], errors="coerce")
+        players_df["Points"] = pd.to_numeric(players_df["Points"], errors="coerce")
+        players_df = (
+            players_df
+            .dropna(subset=["name", "GW", "Points"])
+            .drop_duplicates(subset=["name", "GW"], keep="last")
+            .reset_index(drop=True)
+        )
 
     auth_payload = _auth_payload_optional(request)
     if auth_payload and auth_payload.get("provider") == "google" and auth_payload.get("user_id") is not None:
@@ -1701,9 +1710,25 @@ def get_my_team_optimize(
         df = build_team_dataframe(
             team_id
         )
+    except requests.HTTPError as e:
+        upstream_status = getattr(getattr(e, "response", None), "status_code", None)
+        if upstream_status == 404:
+            raise HTTPException(status_code=404, detail="Team not found") from e
+        if upstream_status in {429, 500, 502, 503, 504}:
+            raise HTTPException(
+                status_code=503,
+                detail="The official FPL service is temporarily unavailable. Please try again shortly.",
+            ) from e
+        raise HTTPException(status_code=502, detail="Could not load the team from FPL.") from e
+    except requests.RequestException as e:
+        raise HTTPException(
+            status_code=503,
+            detail="The official FPL service is temporarily unavailable. Please try again shortly.",
+        ) from e
     except ValueError as e:
-        # e.g. if team_id not found or invalid params
-        raise HTTPException(status_code=400, detail=str("Team not found"))
+        raise HTTPException(status_code=400, detail="Team not found") from e
+    except RuntimeError as e:
+        raise HTTPException(status_code=503, detail=str(e)) from e
 
     return df.to_dict(orient="records")
 

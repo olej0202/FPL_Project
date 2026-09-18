@@ -513,6 +513,7 @@ export default function MyTeamOptimize() {
     deleteOptimization,
     loadOptimization,
     teamData,
+    teamError,
     fetchMyTeam,
     teamLoading,
   } = useMyteamData();
@@ -572,13 +573,6 @@ export default function MyTeamOptimize() {
   useEffect(() => {
     fetchAdjustmentIfNeeded();
   }, [fetchAdjustmentIfNeeded]);
-
-  useEffect(() => {
-    if (!teamId || typeof fetchMyTeam !== "function") return;
-    if (Array.isArray(teamData) && teamData.length > 0) return;
-    fetchMyTeam();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [teamId]);
 
   const selectedScenarioPlayers = useMemo(
     () => getScenarioPlayerData(solverScenarioId),
@@ -2154,21 +2148,41 @@ export default function MyTeamOptimize() {
           </div>
           <div className="w-full sm:w-[280px] glass-card rounded-2xl p-3">
             <FieldShell label="Team ID" icon={Users}>
-              <input
-                id="team-id-top"
-                type="number"
-                inputMode="numeric"
-                placeholder="Required"
-                value={teamId}
-                onChange={(e) => setTeamId(e.target.value)}
-                className="gold-ring w-full h-12 px-3 rounded-2xl text-base sm:text-sm outline-none"
-                style={{
-                  fontSize: 16,
-                  border: `1px solid ${PALETTE.border}`,
-                  backgroundColor: "rgba(248,250,252,0.92)",
-                  color: PALETTE.beige,
-                }}
-              />
+              <div className="flex gap-2">
+                <input
+                  id="team-id-top"
+                  type="number"
+                  inputMode="numeric"
+                  placeholder="Required"
+                  value={teamId}
+                  onChange={(e) => setTeamId(e.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" && !teamLoading) {
+                      event.preventDefault();
+                      fetchMyTeam();
+                    }
+                  }}
+                  className="gold-ring min-w-0 flex-1 h-12 px-3 rounded-2xl text-base sm:text-sm outline-none"
+                  style={{
+                    fontSize: 16,
+                    border: `1px solid ${PALETTE.border}`,
+                    backgroundColor: "rgba(248,250,252,0.92)",
+                    color: PALETTE.beige,
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={fetchMyTeam}
+                  disabled={teamLoading || !String(teamId || "").trim()}
+                  className="gold-ring rounded-2xl px-3 text-xs font-semibold disabled:cursor-not-allowed disabled:opacity-50"
+                  style={{ border: `1px solid ${PALETTE.border}`, color: PALETTE.gold }}
+                >
+                  {teamLoading ? "Loading" : "Load"}
+                </button>
+              </div>
+              {teamError ? (
+                <p className="mt-2 text-xs text-rose-600" role="alert">{teamError}</p>
+              ) : null}
             </FieldShell>
           </div>
         </header>

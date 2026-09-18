@@ -9,6 +9,7 @@ import React, {
 } from "react";
 import { API_BASE_URL } from "../config/apiBase";
 import { useUserData } from "./UserContext";
+import { calculatePlayerProjection } from "../utils/playerProjection";
 
 const AdjustmentContext = createContext(null);
 
@@ -396,83 +397,6 @@ const buildProjectedTeamLookup = (teamRows, fixtures) => {
   return lookup;
 };
 
-const computeAlignedMeasures = (playerRow, teamRow, cbi01Override = null) => {
-  if (!teamRow) {
-    return {
-      Goal_Scored: 0,
-      Assists: 0,
-      Save_Pred: 0,
-      Points: 0,
-      Avg_Minutes: 0,
-      CBI_Predictions: 0,
-      _CBI01_Raw: 0,
-    };
-  }
-
-  const matchCount = Math.max(0, Number(teamRow.Matches) || 0);
-  const avgMinRaw = Number(playerRow.average_minutes) || 0;
-  const avgMin = Math.max(0, Math.min(90, avgMinRaw));
-
-  const goalShare = Number(playerRow.Goal_share) || 0;
-  const assistShare = Number(playerRow.Assist_share) || 0;
-  const savePredRaw = Number(playerRow.Save_Pred) || 0;
-
-  const penData = Number(playerRow.Pen_data) || 0;
-  const oppGoalThreat = Number(playerRow.Pos_Goal_Threat) || 0;
-  const oppAssistThreat = Number(playerRow.Pos_Assist_Threat) || 0;
-
-  const bps = Number(playerRow.BPS) || 0;
-  const defaultPoints = Number(playerRow.default_points) || 0;
-
-  const goalFactor = Number(playerRow.Goal_factor) || 0;
-  const assistFactor = Number(playerRow.Assist_factor) || 0;
-  const csFactor = Number(playerRow.CS_factor) || 0;
-
-  const xg = Number(teamRow.XG) || 0;
-  const cs = Number(teamRow.CS) || 0;
-
-  const minutesAdj = avgMin ? Math.min(1, avgMin / 80) : 0;
-  const csPerMatch = matchCount > 0 ? cs / matchCount : 0;
-  const csNonlinear =
-    csFactor > 1 ? ((30 - Math.min(30, csPerMatch * 100)) / -15) * matchCount : 0;
-
-  const goalScored =
-    ((goalShare * 0.9 + 0.1 * oppGoalThreat) * xg + penData * 0.5 * matchCount) *
-    minutesAdj;
-  const assists = ((assistShare * 0.9 + 0.1 * oppAssistThreat) * xg) * minutesAdj;
-
-  const rawCbi01 = clamp01(firstFinite(playerRow?.CBI_Predictions, playerRow?.CBI_Percent, 0) ?? 0);
-  const cbi01 =
-    (typeof cbi01Override === "number" && Number.isFinite(cbi01Override)
-      ? clamp01(cbi01Override)
-      : rawCbi01) * minutesAdj;
-
-  const defconPointsTerm = cbi01 * minutesAdj * matchCount * 2;
-  const savePred = savePredRaw * minutesAdj * matchCount;
-  const basePoints =
-    (defaultPoints + bps) * minutesAdj * matchCount + defconPointsTerm;
-
-  const points = Math.max(
-    0,
-    basePoints +
-      goalScored * goalFactor +
-      assists * assistFactor +
-      cs * csFactor * minutesAdj +
-      csNonlinear +
-      savePred / 3
-  );
-
-  return {
-    Goal_Scored: goalScored,
-    Assists: assists,
-    Save_Pred: savePred,
-    Points: points,
-    Avg_Minutes: avgMin * matchCount,
-    CBI_Predictions: cbi01,
-    _CBI01_Raw: rawCbi01,
-  };
-};
-
 const buildStablePlayerCalcs = (playerRows, teamRows, fixtures) => {
   if (!Array.isArray(playerRows)) return [];
 
@@ -500,7 +424,7 @@ const buildStablePlayerCalcs = (playerRows, teamRows, fixtures) => {
 
     for (const row of rowsForMean) {
       const teamRow = teamLookup.get(`${String(row.Team)}_${Number(row.GW)}`);
-      const base = computeAlignedMeasures(row, teamRow);
+      const base = calculatePlayerProjection(row, teamRow);
       rawSum += clamp01(Number(base._CBI01_Raw));
       rawCount += 1;
     }
@@ -522,19 +446,20 @@ const buildStablePlayerCalcs = (playerRows, teamRows, fixtures) => {
     const meanRaw = meanByPlayer.get(key) ?? 0;
     const newAdj = adjByPlayer.get(key) ?? clamp01(meanRaw);
 
-    const raw = computeAlignedMeasures(row, teamRow);
+    const raw = calculatePlayerProjection(row, teamRow);
     const adjustedCbi01 = scaleRawCbiByAdjustedMean(
       clamp01(Number(raw._CBI01_Raw)),
       meanRaw,
       newAdj
     );
-    const measures = computeAlignedMeasures(row, teamRow, adjustedCbi01);
+    const measures = calculatePlayerProjection(row, teamRow, adjustedCbi01);
 
     return {
       ...row,
       calc_points: measures.Points,
       calc_goals: measures.Goal_Scored,
       calc_assists: measures.Assists,
+      calc_bonus: measures.Bonus_Pred,
       calc_saves: measures.Save_Pred,
       calc_minutes: measures.Avg_Minutes,
       calc_cbi: measures.CBI_Predictions,

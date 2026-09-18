@@ -2,14 +2,37 @@ import requests
 import pandas as pd
 from typing import Optional, Dict, Any
 from GenerateConfig import current_season
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 BASE_URL = "https://fantasy.premierleague.com/api"
+
+FPL_SESSION = requests.Session()
+FPL_SESSION.headers.update({
+    "User-Agent": "FPL-Analytics/1.0 (+https://fpl-project-t5e9.onrender.com)",
+    "Accept": "application/json",
+})
+FPL_SESSION.mount(
+    "https://",
+    HTTPAdapter(
+        max_retries=Retry(
+            total=2,
+            connect=2,
+            read=2,
+            status=2,
+            backoff_factor=0.4,
+            status_forcelist=(429, 500, 502, 503, 504),
+            allowed_methods=frozenset({"GET"}),
+            raise_on_status=False,
+        )
+    ),
+)
 
 
 # ---------- Simple helpers ----------
 
 def fetch_json(url: str):
-    r = requests.get(url)
+    r = FPL_SESSION.get(url, timeout=(5, 20))
     r.raise_for_status()
     return r.json()
 

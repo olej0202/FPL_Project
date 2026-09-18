@@ -36,6 +36,7 @@ import {
 } from "lucide-react";
 import { useAdjustmentData, fixtureIdFromRow } from "./Contexts/AdjustmentsContext";
 import teamColors from "./utils/team_colors";
+import { calculatePlayerProjection } from "./utils/playerProjection";
 import {
   Bar,
   CartesianGrid,
@@ -95,13 +96,6 @@ const BREAKDOWN_SERIES = [
   { key: "gc", label: "GC Penalty", color: "#9333ea" },
 ];
 
-const POSITION_EVENT_BONUS = {
-  GKP: { goal: 12.0, assist: 9.0, cs: 12.0 },
-  DEF: { goal: 12.0, assist: 9.0, cs: 12.0 },
-  MID: { goal: 18.0, assist: 9.0, cs: 0.0 },
-  FWD: { goal: 24.0, assist: 9.0, cs: 0.0 },
-};
-
 const BREAKDOWN_TOTAL_SERIES = {
   key: "total",
   label: "Total",
@@ -109,24 +103,6 @@ const BREAKDOWN_TOTAL_SERIES = {
 };
 
 const clamp01 = (x) => Math.max(0, Math.min(1, Number.isFinite(x) ? x : 0));
-const poissonGc2PlusFromCs = (csProb) => {
-  const safeCs = Math.max(1e-6, Math.min(0.999999, Number(csProb) || 0));
-  const lambda = -Math.log(safeCs);
-  return 1 - Math.exp(-lambda) * (1 + lambda);
-};
-const canonicalPosition = (value) => {
-  const key = String(value || "").toUpperCase();
-  if (key === "GK") return "GKP";
-  if (key === "FOR") return "FWD";
-  return key || "MID";
-};
-const firstFinite = (...vals) => {
-  for (const v of vals) {
-    const n = Number(v);
-    if (Number.isFinite(n)) return n;
-  }
-  return null;
-};
 const parseOptional01 = (value) => {
   if (value == null) return null;
   if (typeof value === "string" && value.trim() === "") return null;
@@ -791,138 +767,7 @@ export default function PlayerAdjustmentsPage() {
     Array.isArray(playersState) &&
     Array.isArray(teamsState);
 
-const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) => {
-  if (!teamRow) {
-    return {
-      Goal_Scored: 0,
-      Assists: 0,
-      Bonus_Pred: 0,
-      Save_Pred: 0,
-      Points: 0,
-      Avg_Minutes: 0,
-      CBI_Predictions: 0,
-      _CBI01_Raw: 0,
-      _Breakdown: {
-        base: 0,
-        goal: 0,
-        assist: 0,
-        defcon: 0,
-        cs: 0,
-        bonus: 0,
-        card: 0,
-        gc: 0,
-        total: 0,
-      },
-    };
-  }
-
-  const matchCount = Math.max(0, Number(teamRow.Matches) || 0);
-
-  const avgMinRaw = Number(playerRow.average_minutes) || 0;
-  const avgMin = Math.max(MIN_MINUTES, Math.min(MAX_MINUTES, avgMinRaw));
-
-  const goalShare = Number(playerRow.Goal_share) || 0;
-  const assistShare = Number(playerRow.Assist_share) || 0;
-  const savePredRaw = Number(playerRow.Save_Pred) || 0;
-
-  const penData = Number(playerRow.Pen_data) || 0;
-  const oppGoalThreat = Number(playerRow.Pos_Goal_Threat) || 0;
-  const oppAssistThreat = Number(playerRow.Pos_Assist_Threat) || 0;
-
-  const positionKey = canonicalPosition(playerRow.position);
-  const bonusWeights = POSITION_EVENT_BONUS[positionKey] || POSITION_EVENT_BONUS.MID;
-
-  const bps = Number(playerRow.BPS) || 0;
-  const goalFactor = Number(playerRow.Goal_factor) || 0;
-  const assistFactor = Number(playerRow.Assist_factor) || 0;
-  const csFactor = Number(playerRow.CS_factor) || 0;
-  const cards = firstFinite(playerRow.Cards, playerRow.Card_pred, playerRow.card, 0) || 0;
-
-  const xg = Number(teamRow.XG) || 0;
-  const cs = Number(teamRow.CS) || 0;
-
-  const minutesAdj = avgMin ? Math.min(1, avgMin / 80) : 0;
-  const z60 = -3.045855 + 0.056203 * avgMin;
-  const likelihoodOf60 = 1 / (1 + Math.exp(-z60));
-  const z0 = -1.855427 + 0.056741 * avgMin;
-  const likelihoodOf0 = 1 / (1 + Math.exp(-z0));
-
-  const goalScored =
-    ((goalShare * 0.9 + 0.1 * oppGoalThreat) * xg + penData * 0.5 * matchCount) *
-    minutesAdj;
-
-  const assists =
-    ((assistShare * 0.9 + 0.1 * oppAssistThreat) * xg) * minutesAdj;
-
-  const rawCbi01 = clamp01(firstFinite(playerRow.CBI_Predictions, playerRow.CBI_Percent, 0));
-
-  const cbi01 =
-    (typeof cbi01Override === "number" && Number.isFinite(cbi01Override)
-      ? clamp01(cbi01Override)
-      : rawCbi01) * minutesAdj;
-
-  const defconPointsTerm = cbi01 * minutesAdj * matchCount * 2;
-
-  const savePred = savePredRaw * minutesAdj * matchCount;
-  const groundPoints = (likelihoodOf0 + likelihoodOf60) * matchCount;
-  const goalPoints = goalScored * goalFactor;
-  const assistPoints = assists * assistFactor;
-  const bonusCsBase = cs * likelihoodOf60;
-  const csPoints = bonusCsBase * csFactor;
-  const gc2PlusProb = poissonGc2PlusFromCs(cs);
-  const gcPenaltyBonusBase =
-    positionKey === "GKP" || positionKey === "DEF"
-      ? -3 * gc2PlusProb * likelihoodOf60
-      : 0;
-  const bonusPoints =
-    0.035 *
-    (
-      bps
-      + goalScored * bonusWeights.goal
-      + assists * bonusWeights.assist
-      + bonusCsBase * bonusWeights.cs
-      + gcPenaltyBonusBase
-    );
-  const cardPoints = -cards;
-  const gcPenaltyPoints =
-    positionKey === "GKP" || positionKey === "DEF"
-      ? -gc2PlusProb * likelihoodOf60
-      : 0;
-
-  const points = Math.max(
-    0,
-    groundPoints +
-      goalPoints +
-      assistPoints +
-      defconPointsTerm +
-      csPoints +
-      bonusPoints +
-      cardPoints +
-      gcPenaltyPoints
-  );
-
-  return {
-    Goal_Scored: goalScored,
-    Assists: assists,
-    Bonus_Pred: bonusPoints,
-    Save_Pred: savePred,
-    Points: points,
-    Avg_Minutes: avgMin * matchCount,
-    CBI_Predictions: cbi01,
-    _CBI01_Raw: rawCbi01,
-    _Breakdown: {
-      base: groundPoints,
-      goal: goalPoints,
-      assist: assistPoints,
-      defcon: defconPointsTerm,
-      cs: csPoints,
-      bonus: bonusPoints,
-      card: cardPoints,
-      gc: gcPenaltyPoints,
-      total: points,
-    },
-  };
-}, []);
+const computeMeasures = useCallback(calculatePlayerProjection, []);
 
   const { teamLookup, teamNamesByCode } = useMemo(() => {
     const names = new Map();
@@ -1739,6 +1584,41 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
       });
   }, [modalBaselineRows, minutesDraft]);
 
+  const allMinutesControl = useMemo(() => {
+    const values = chartDataMinutes
+      .map((row) => Number(row.minutes))
+      .filter((value) => Number.isFinite(value));
+
+    if (values.length === 0) {
+      return { value: MIN_MINUTES, isMixed: false };
+    }
+
+    const first = values[0];
+    const isMixed = values.some((value) => Math.abs(value - first) > 0.001);
+    const mean = values.reduce((sum, value) => sum + value, 0) / values.length;
+
+    return {
+      value: Math.round(isMixed ? mean : first),
+      isMixed,
+    };
+  }, [chartDataMinutes]);
+
+  const handleAllMinutesChange = useCallback((value) => {
+    const nextValue = Math.max(
+      MIN_MINUTES,
+      Math.min(MAX_MINUTES, Math.round(Number(value) || 0))
+    );
+
+    setMinutesDraft((previous) => {
+      const next = { ...previous };
+      modalBaselineRows.forEach((row) => {
+        const gw = Number(row?.GW);
+        if (Number.isFinite(gw) && gw <= 38) next[row.GW] = nextValue;
+      });
+      return next;
+    });
+  }, [modalBaselineRows]);
+
   const chartDataPoints = useMemo(() => {
     if (!modalBaselineRows || modalBaselineRows.length === 0) return [];
 
@@ -1833,6 +1713,16 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
         card: Number(breakdown.card) || 0,
         gc: Number(breakdown.gc) || 0,
         total: Number(breakdown.total) || 0,
+        labelAnchor: [
+          breakdown.base,
+          breakdown.goal,
+          breakdown.assist,
+          breakdown.defcon,
+          breakdown.cs,
+          breakdown.bonus,
+          breakdown.card,
+          breakdown.gc,
+        ].reduce((sum, value) => sum + Math.max(0, Number(value) || 0), 0),
         compareTotal: comparisonBreakdownByGw.has(GW)
           ? Number(comparisonBreakdownByGw.get(GW)) || 0
           : null,
@@ -3068,24 +2958,62 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
                 <div>
                   <h3 className="mb-3 text-base font-semibold">Predicted minutes per GW</h3>
                   <div className="mb-2 text-xs" style={{ color: PALETTE.muted }}>
-                    Drag the dots vertically to update minutes.
+                    Set every GW to one value with the slider, or drag individual dots vertically.
                   </div>
                   {chartDataMinutes.length === 0 ? (
                     <div className="text-sm">No minute data for this player.</div>
                   ) : (
-                    <svg
-                      ref={svgRefMinutes}
-                      width="100%"
-                      height="280"
-                      viewBox="0 0 600 280"
-                      preserveAspectRatio="none"
-                      className="rounded-2xl"
-                      style={{
-                        border: `1px solid ${PALETTE.gold}`,
-                        background: "#ffffff",
-                        touchAction: "none",
-                      }}
-                    >
+                    <>
+                      <div
+                        className="mb-3 rounded-2xl px-4 py-3"
+                        style={{ border: `1px solid ${PALETTE.border}`, background: "#f8fafc" }}
+                      >
+                        <div className="mb-2 flex items-center justify-between gap-3">
+                          <label
+                            htmlFor="all-minutes-slider"
+                            className="text-xs font-semibold"
+                            style={{ color: PALETTE.beige }}
+                          >
+                            All gameweeks
+                          </label>
+                          <span
+                            className="rounded-full px-2.5 py-1 text-xs font-bold tabular-nums"
+                            style={{ background: `${PALETTE.gold}22`, color: PALETTE.gold }}
+                          >
+                            {allMinutesControl.isMixed
+                              ? `Mixed · avg ${allMinutesControl.value}`
+                              : `${allMinutesControl.value} min`}
+                          </span>
+                        </div>
+                        <input
+                          id="all-minutes-slider"
+                          type="range"
+                          min={MIN_MINUTES}
+                          max={MAX_MINUTES}
+                          step="1"
+                          value={allMinutesControl.value}
+                          onChange={(event) => handleAllMinutesChange(event.target.value)}
+                          className="w-full accent-emerald-600"
+                          aria-label="Set predicted minutes for every gameweek"
+                        />
+                        <div className="mt-1 flex justify-between text-[10px]" style={{ color: PALETTE.muted }}>
+                          <span>{MIN_MINUTES}</span>
+                          <span>{MAX_MINUTES}</span>
+                        </div>
+                      </div>
+                      <svg
+                        ref={svgRefMinutes}
+                        width="100%"
+                        height="280"
+                        viewBox="0 0 600 280"
+                        preserveAspectRatio="none"
+                        className="rounded-2xl"
+                        style={{
+                          border: `1px solid ${PALETTE.gold}`,
+                          background: "#ffffff",
+                          touchAction: "none",
+                        }}
+                      >
                       {(() => {
                         const padding = 20;
                         const width = 600;
@@ -3193,7 +3121,8 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
                           </>
                         );
                       })()}
-                    </svg>
+                      </svg>
+                    </>
                   )}
                 </div>
 
@@ -3218,7 +3147,7 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
                     >
                       <div className="h-[280px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
-                          <ComposedChart data={modalBreakdownChartData} margin={{ top: 12, right: 12, left: 0, bottom: 4 }}>
+                          <ComposedChart data={modalBreakdownChartData} margin={{ top: 30, right: 12, left: 0, bottom: 4 }}>
                             <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.24)" />
                             <XAxis
                               dataKey="label"
@@ -3280,6 +3209,33 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
                               strokeWidth={3}
                               dot={{ r: 4, fill: BREAKDOWN_TOTAL_SERIES.color, stroke: "#ffffff", strokeWidth: 1.5 }}
                               activeDot={{ r: 6, fill: BREAKDOWN_TOTAL_SERIES.color, stroke: "#ffffff", strokeWidth: 1.5 }}
+                            />
+                            <Line
+                              type="linear"
+                              dataKey="labelAnchor"
+                              stroke="transparent"
+                              strokeWidth={0}
+                              dot={false}
+                              activeDot={false}
+                              legendType="none"
+                              tooltipType="none"
+                              isAnimationActive={false}
+                              label={({ x, y, index }) => {
+                                const total = Number(modalBreakdownChartData[index]?.total);
+                                if (!Number.isFinite(total)) return null;
+                                return (
+                                  <text
+                                    x={x}
+                                    y={y - 8}
+                                    textAnchor="middle"
+                                    fill={PALETTE.beige}
+                                    fontSize="11"
+                                    fontWeight="700"
+                                  >
+                                    {total.toFixed(2)}
+                                  </text>
+                                );
+                              }}
                             />
                             {comparisonSummary ? (
                               <Line

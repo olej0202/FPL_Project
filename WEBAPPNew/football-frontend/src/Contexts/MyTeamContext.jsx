@@ -1,5 +1,6 @@
 // src/context/DataContext.jsx
 import React, {
+  useCallback,
   createContext,
   useContext,
   useEffect,
@@ -72,7 +73,7 @@ function derivePlayersFromRows(rows, ids) {
 
 export function MyTeamDataContextProvider({ children }) {
   const { authHeaders, recordRecentTeamId, guestTrackingId, hasSession } = useUserData();
-  const [teamId, setTeamId] = useState("");
+  const [teamId, setTeamIdState] = useState("");
   const [bbRound, setBbRound] = useState("");
   const [wildRound, setWildRound] = useState("");
   const [freehitROund, setfreehitROund] = useState("");
@@ -84,6 +85,16 @@ export function MyTeamDataContextProvider({ children }) {
 
   const [data, setData] = useState(null);
   const [teamData, setTeamData] = useState(null);
+  const [teamError, setTeamError] = useState("");
+
+  const setTeamId = useCallback((value) => {
+    setTeamIdState((previous) =>
+      typeof value === "function" ? value(previous) : value
+    );
+    // A changed ID must never keep bank/transfer data from the previous team.
+    setTeamData(null);
+    setTeamError("");
+  }, []);
 
   const [loading, setLoading] = useState(false);
   const [teamLoading, setTeamLoading] = useState(false);
@@ -284,22 +295,39 @@ export function MyTeamDataContextProvider({ children }) {
    * Fetch current team data from Get_My_Team endpoint
    */
   const fetchMyTeam = async () => {
-    if (!teamId) {
-      alert("Team ID is required");
-      return;
+    const cleanTeamId = String(teamId ?? "").trim();
+    if (!/^\d+$/.test(cleanTeamId)) {
+      setTeamError("Enter a valid numeric Team ID.");
+      return false;
     }
 
     setTeamLoading(true);
+    setTeamError("");
     try {
-      const url = `${API_BASE_URL}/Get_My_Team?team_id=${teamId}`;
+      const url = `${API_BASE_URL}/Get_My_Team?team_id=${encodeURIComponent(cleanTeamId)}`;
       const resp = await fetch(url, { headers: { ...authHeaders } });
-      if (!resp.ok) throw new Error(await resp.text());
+      if (!resp.ok) {
+        let detail = "Could not load team data.";
+        const body = await resp.text();
+        try {
+          const payload = JSON.parse(body);
+          if (payload?.detail) detail = String(payload.detail);
+        } catch {
+          if (body) detail = body;
+        }
+        throw new Error(detail);
+      }
       const json = await resp.json();
       setTeamData(json);
-      await recordRecentTeamId(teamId);
+      await recordRecentTeamId(cleanTeamId);
+      return true;
     } catch (err) {
       console.error(err);
-      alert("Error fetching team data: " + err.message);
+      const message = err instanceof TypeError && err.message === "Failed to fetch"
+        ? "Could not reach the team service. Please try again shortly."
+        : err.message || "Could not load team data.";
+      setTeamError(message);
+      return false;
     } finally {
       setTeamLoading(false);
     }
@@ -653,6 +681,7 @@ export function MyTeamDataContextProvider({ children }) {
 
         data,
         teamData,
+        teamError,
 
         loading,
         teamLoading,
