@@ -148,6 +148,15 @@ UNDERSTAT_POSITION_METRICS = [
     "xGBuildup_p_90",
 ]
 
+# Fixed, position-independent caps. Every other per-90 input passes through
+# unchanged.
+UNDERSTAT_FIXED_PER90_CAPS = {
+    "NPXG_p_90": 1.5,
+    "xA_p_90": 1.5,
+    "npg_p_90": 2.0,
+    "assists_p_90": 2.0,
+}
+
 
 def build_understat_position_indices(
     player_matches: pd.DataFrame,
@@ -157,8 +166,9 @@ def build_understat_position_indices(
     """Build the historical per-player position indices from raw match rows.
 
     This follows the supplied model: summed player per-90 values per position,
-    historical position-specific P95 clipping, a previous-25-match mean, a
-    logistic time-weighted mean, and a 50/50 blend of the two histories.
+    fixed position-independent caps for npxG/90, xA/90, non-penalty goals/90,
+    and assists/90, a previous-25-match mean, a logistic time-weighted mean,
+    and a 50/50 blend of the histories.
     The current match is excluded from every historical measure.
 
     ``entity_col='player_team'`` creates attacking position profiles.
@@ -208,13 +218,15 @@ def build_understat_position_indices(
         .reset_index(drop=True)
     )
 
-    # Match the supplied historical clipping exactly: position-specific P95,
-    # with the current observation shifted out and ten observations required.
+    # The fixed caps do not depend on position or the amount of history. Keep
+    # the *_clipped names because downstream rolling/time-weighted logic uses
+    # them.
     for col in UNDERSTAT_POSITION_METRICS:
-        p95 = grouped.groupby("pos_group")[col].transform(
-            lambda s: s.shift(1).expanding(min_periods=10).quantile(0.95)
-        )
-        grouped[f"{col}_clipped"] = np.minimum(grouped[col], p95).fillna(grouped[col])
+        cap = UNDERSTAT_FIXED_PER90_CAPS.get(col)
+        if cap is None:
+            grouped[f"{col}_clipped"] = grouped[col]
+        else:
+            grouped[f"{col}_clipped"] = grouped[col].clip(upper=cap)
 
     history_group = [entity_col, "pos_group"]
     for col in UNDERSTAT_POSITION_METRICS:
@@ -259,8 +271,8 @@ def build_understat_position_indices(
         )
 
     grouped["Understat_Goal_Index"] = (
-        grouped["NPXG_p_90_avg"] * 0.60
-        + grouped["npg_p_90_avg"] * 0.25
+        grouped["NPXG_p_90_avg"] * 0.65
+        + grouped["npg_p_90_avg"] * 0.2
         + grouped["Shots_p_90_avg"] / 8.0 * 0.15
     )
     grouped["Understat_Assist_Index"] = (
@@ -443,7 +455,7 @@ def Generate_Team_threats(
     """Generate opponent-by-position threat using the team-position formula.
 
     When raw player history is available, opponent threat is built with the
-    same P95/rolling-25/logistic/N_players model as the attacking profiles.
+    same fixed-cap/rolling-25/logistic/N_players model as the attacking profiles.
     The older position-history route remains as a compatibility fallback.
     """
     if raw_player_history is not None:
