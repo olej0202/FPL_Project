@@ -1302,6 +1302,10 @@ def optimize_my_team(
         solution_total_expected_points = compute_points_only_objective()
         solution_total_risk_score = compute_total_risk_score()
         solution_weighted_sum = compute_weighted_decay_expected_points()
+        solution_base_objective = float(safe_value(m.base_obj_expr))
+        solution_hit_count = float(sum(safe_value(m.hit[t]) for t in T))
+        solution_hit_penalty = float(-HIT_PENALTY * solution_hit_count)
+        solution_transfer_penalty = float(safe_value(transfer_penalty_expr))
         solution_rows: list[dict[str, Any]] = []
         forced_in_pairs = {
             (int(move["t"]), int(move["in_idx"])) for move in resolved_forced_transfers
@@ -1434,6 +1438,10 @@ def optimize_my_team(
             row["solution_TotalExpectedPoints"] = solution_total_expected_points
             row["solution_total_risk_score"] = solution_total_risk_score
             row["solution_weighted_sum"] = solution_weighted_sum
+            row["solution_base_objective"] = solution_base_objective
+            row["solution_hit_count"] = solution_hit_count
+            row["solution_hit_penalty"] = solution_hit_penalty
+            row["solution_transfer_penalty"] = solution_transfer_penalty
 
         print(
             f"Solution {solution_no}: "

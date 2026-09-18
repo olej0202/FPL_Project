@@ -1061,6 +1061,10 @@ export default function MyTeamOptimize() {
         probability: Number(row?.tree_branch_probability),
         objective: Number(row?.tree_branch_objective),
         expectedObjective: Number(row?.tree_expected_objective),
+        points: Number(row?.tree_branch_expected_points),
+        hits: Number(row?.tree_branch_hit_count),
+        expectedPoints: Number(row?.tree_expected_points),
+        expectedHits: Number(row?.tree_expected_hit_count),
         splitGw: Number(row?.tree_split_gw),
         scenarioId: String(row?.tree_scenario_id || BASE_SCENARIO_ID),
         scenarioPath: String(row?.tree_scenario_path || ""),
@@ -3504,7 +3508,9 @@ export default function MyTeamOptimize() {
                           : "Optimized tree path"}
                       </div>
                       <div className="mt-1 text-[11px]" style={{ color: PALETTE.muted }}>
-                        Expected objective: {Number.isFinite(activeTreeBranch?.expectedObjective) ? activeTreeBranch.expectedObjective.toFixed(2) : "-"}
+                        Expected points: {Number.isFinite(activeTreeBranch?.expectedPoints) ? activeTreeBranch.expectedPoints.toFixed(2) : "-"}
+                        {Number.isFinite(activeTreeBranch?.expectedHits) ? ` · expected hits ${activeTreeBranch.expectedHits.toFixed(2)}` : ""}
+                        {Number.isFinite(activeTreeBranch?.expectedObjective) ? ` · penalized objective ${activeTreeBranch.expectedObjective.toFixed(2)}` : ""}
                       </div>
                     </div>
                     <div className="flex flex-wrap gap-2">
@@ -3525,7 +3531,8 @@ export default function MyTeamOptimize() {
                             <span className="block font-semibold">{branch.label}</span>
                             <span className="block text-[10px] opacity-75">
                               {Number.isFinite(branch.probability) ? `${Math.round(branch.probability * 100)}%` : "-"}
-                              {Number.isFinite(branch.objective) ? ` · ${branch.objective.toFixed(2)} pts` : ""}
+                              {Number.isFinite(branch.points) ? ` · ${branch.points.toFixed(2)} pts` : ""}
+                              {Number.isFinite(branch.hits) && branch.hits > 0 ? ` · ${branch.hits.toFixed(0)} hit` : ""}
                             </span>
                             {modelType === "statistical" && (
                               <span className="mt-0.5 block text-[9px] opacity-70">

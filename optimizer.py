@@ -342,6 +342,9 @@ def _merge_moves(*move_groups: list[dict[str, Any]]) -> list[dict[str, Any]]:
 def _objective_value(result: pd.DataFrame) -> float:
     if result.empty:
         raise ValueError("A tree path returned no feasible optimizer result.")
+    base_objectives = pd.to_numeric(result.get("solution_base_objective"), errors="coerce").dropna()
+    if not base_objectives.empty:
+        return float(base_objectives.iloc[0])
     if "Name" in result.columns:
         obj_rows = result[result["Name"] == "Obj Value"]
         if not obj_rows.empty:
@@ -352,6 +355,13 @@ def _objective_value(result: pd.DataFrame) -> float:
     if values.empty:
         raise ValueError("A tree path result did not contain an objective value.")
     return float(values.iloc[0])
+
+
+def _result_metric(result: pd.DataFrame, column: str, default: float = 0.0) -> float:
+    if column not in result.columns:
+        return float(default)
+    values = pd.to_numeric(result.get(column), errors="coerce").dropna()
+    return float(values.iloc[0]) if not values.empty else float(default)
 
 
 def optimize_scenario_tree(
@@ -478,6 +488,16 @@ def optimize_scenario_tree(
         return best_expected, best_results, best_moves or [], best_counts or {}
 
     expected_objective, leaf_results, _, _ = solve_subtree(root_id, [], {})
+    expected_points = sum(
+        leaf_probabilities[leaf_result.leaf_id]
+        * _result_metric(leaf_result.frame, "solution_TotalExpectedPoints")
+        for leaf_result in leaf_results
+    )
+    expected_hits = sum(
+        leaf_probabilities[leaf_result.leaf_id]
+        * _result_metric(leaf_result.frame, "solution_hit_count")
+        for leaf_result in leaf_results
+    )
     output_frames: list[pd.DataFrame] = []
     for leaf_result in leaf_results:
         path = _path_to_root(leaf_result.leaf_id, nodes)
@@ -489,6 +509,14 @@ def optimize_scenario_tree(
         leaf_df["tree_branch_probability"] = leaf_probabilities[leaf_result.leaf_id]
         leaf_df["tree_branch_objective"] = leaf_result.objective
         leaf_df["tree_expected_objective"] = expected_objective
+        leaf_df["tree_branch_expected_points"] = _result_metric(
+            leaf_result.frame, "solution_TotalExpectedPoints"
+        )
+        leaf_df["tree_branch_hit_count"] = _result_metric(
+            leaf_result.frame, "solution_hit_count"
+        )
+        leaf_df["tree_expected_points"] = expected_points
+        leaf_df["tree_expected_hit_count"] = expected_hits
         split_gws = [nodes[node_id].gw for node_id, child_ids in children.items() if len(child_ids) > 1]
         leaf_df["tree_split_gw"] = min(split_gws) if split_gws else nodes[root_id].gw
         leaf_df["tree_path_node_ids"] = ">".join(node.node_id for node in path)
