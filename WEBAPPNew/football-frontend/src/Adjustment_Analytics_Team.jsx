@@ -78,7 +78,8 @@ function TeamAdjustmentsPage() {
     Teamdata,
     updateTeamData,
     dataVersion,
-    forceRefetch,
+    resetActiveScenario,
+    activeScenarioId,
     Fixtures,
     fixturesVersion,
     trackAdjustmentChanges,
@@ -116,7 +117,6 @@ function TeamAdjustmentsPage() {
 
     const withMetrics = recomputeMetrics(cleaned);
     setData(withMetrics);
-    updateTeamData(withMetrics);
   };
 
 
@@ -129,6 +129,14 @@ function TeamAdjustmentsPage() {
       }
     })();
   }, [fetchIfNeeded, Teamdata, data.length, dataVersion]);
+
+  useEffect(() => {
+    if (!loading && Array.isArray(Teamdata.current)) {
+      initializeFromContext(Teamdata.current);
+    }
+    // Scenario switches must replace the page-local chart/table state.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeScenarioId]);
 
   // Unique team points for scatter (read baseline from data rows)
   const teamPoints = useMemo(() => {
@@ -359,12 +367,12 @@ function TeamAdjustmentsPage() {
     });
   }, [tableData?.gws]);
 
-  // Reset button: refetch and reset
+  // Reset only the active scenario; other scenarios remain untouched.
   const handleReset = async () => {
     try {
       setResetting(true);
       setData([]);
-      await forceRefetch();
+      resetActiveScenario();
     } catch (e) {
       console.error("Failed to reset:", e);
     } finally {

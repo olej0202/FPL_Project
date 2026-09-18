@@ -168,7 +168,7 @@ Mamadou_Sarr,M.Sarr,Mamadou Sarr,100.0,name-strict,Mamadou Sarr,['CB'],[1.0],1
 Josh_Acheampong,Acheampong,Josh Acheampong,100.0,name-strict,Josh Acheampong,"['CB', 'DR']","[0.6666666666666666, 0.3333333333333333]",1
 Marco_Palestra,Palestra,Unknown for understat,,no-match,,['DL'],[1.0],1
 Cole_Palmer,Palmer,Cole Palmer,100.0,name-strict,Cole Palmer,"['AMC', 'RW']","[0.6, 0.4]",1
-Enzo_Fernández,Enzo,Enzo Fernández,100.0,name-strict,Enzo Fernández,"['AMC', 'MC', 'LW', 'DM']","[0.5555555555555556, 0.2222222222222222, 0.1111111111111111, 0.1111111111111111]",1
+Enzo_Fernández,Enzo,Enzo Fernández,100.0,name-strict,Enzo Fernández,"['AMC', 'MC', 'LW', 'DM']","[0.2, 0.6, 0.1, 0.1]",1
 Pedro_Lomba Neto,Neto,Neto,90.0,name-relaxed,Neto,['RW'],[1.0],1
 Estêvão_Almeida de Oliveira Gonçalves,Estêvão,Estêvão,90.0,name-relaxed,Estêvão,['RW'],[1.0],1
 Jamie_Bynoe-Gittens,Gittens,Jamie Bynoe-Gittens,100.0,name-strict,Jamie Bynoe-Gittens,"['LW', 'RW']","[0.6666666666666666, 0.3333333333333333]",1
@@ -463,7 +463,7 @@ Kalvin_Phillips,Phillips,Kalvin Phillips,100.0,name-strict,Kalvin Phillips,['DM'
 Divine_Mukasa,Mukasa,Divine Mukasa,100.0,name-strict,Divine Mukasa,['SUB'],[1.0],1
 Jeremy_Monga,Monga,Jeremy Monga,100.0,name-strict,Jeremy Monga,['SUB'],[1.0],1
 Erling_Haaland,Haaland,Erling Haaland,100.0,name-strict,Erling Haaland,['FW'],[1.0],1
-Elliot_Anderson,Anderson,Elliot Anderson,100.0,name-strict,Elliot Anderson,"['DM', 'MC']","[0.5555555555555556, 0.4444444444444444]",1
+Elliot_Anderson,Anderson,Elliot Anderson,100.0,name-strict,Elliot Anderson,"['DM', 'MC']","[0.8, 0.2]",1
 Gerónimo_Rulli,Rulli,Unknown for understat,,no-match,,['SUB'],[1.0],1
 Ayyoub_Bouaddi,Bouaddi,Ayyoub Bouaddi,100.0,name-strict,Ayyoub Bouaddi,['SUB'],[1.0],1
 Ryan_McAidoo,McAidoo,Ryan McAidoo,100.0,name-strict,Ryan McAidoo,['SUB'],[1.0],1

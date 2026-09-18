@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
-import { CalendarDays, PlayCircle, User, Users } from "lucide-react";
+import { CalendarDays, Check, CopyPlus, PlayCircle, Trash2, User, Users } from "lucide-react";
+import { BASE_SCENARIO_ID, useAdjustmentData } from "./Contexts/AdjustmentsContext";
 
 const tabClass = ({ isActive }) =>
   [
@@ -11,8 +12,121 @@ const tabClass = ({ isActive }) =>
   ].join(" ");
 
 export default function AdjustmentAnalytics() {
+  const {
+    scenarios,
+    activeScenarioId,
+    switchScenario,
+    createScenario,
+    renameScenario,
+    deleteScenario,
+  } = useAdjustmentData();
+  const activeScenario = useMemo(
+    () => scenarios.find((scenario) => scenario.id === activeScenarioId) || scenarios[0],
+    [activeScenarioId, scenarios]
+  );
+  const [newName, setNewName] = useState("");
+  const [renameValue, setRenameValue] = useState(activeScenario?.name || "");
+
+  useEffect(() => {
+    setRenameValue(activeScenario?.name || "");
+  }, [activeScenario?.id, activeScenario?.name]);
+
+  const handleCreate = () => {
+    createScenario(newName);
+    setNewName("");
+  };
+
+  const handleRename = () => {
+    if (activeScenarioId !== BASE_SCENARIO_ID) renameScenario(activeScenarioId, renameValue);
+  };
+
+  const handleDelete = () => {
+    if (activeScenarioId === BASE_SCENARIO_ID) return;
+    if (window.confirm(`Delete scenario “${activeScenario?.name || "Scenario"}”?`)) {
+      deleteScenario(activeScenarioId);
+    }
+  };
+
   return (
     <div className="space-y-4 px-2 py-2 pb-24 text-slate-800 sm:px-3 sm:pb-28">
+      <section className="mx-auto w-full max-w-7xl rounded-2xl border border-slate-300 bg-white/95 p-3 shadow-sm">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+          <div className="min-w-0 flex-1">
+            <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Active statistical scenario
+            </div>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <select
+                value={activeScenarioId}
+                onChange={(event) => switchScenario(event.target.value)}
+                className="h-10 min-w-[190px] rounded-xl border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-sky-400"
+                aria-label="Active adjustment scenario"
+              >
+                {scenarios.map((scenario) => (
+                  <option key={scenario.id} value={scenario.id}>{scenario.name}</option>
+                ))}
+              </select>
+
+              {activeScenarioId !== BASE_SCENARIO_ID && (
+                <div className="flex min-w-0 flex-1 gap-2">
+                  <input
+                    value={renameValue}
+                    onChange={(event) => setRenameValue(event.target.value)}
+                    onKeyDown={(event) => event.key === "Enter" && handleRename()}
+                    maxLength={60}
+                    className="h-10 min-w-0 flex-1 rounded-xl border border-slate-300 px-3 text-sm outline-none focus:border-sky-400"
+                    aria-label="Scenario name"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleRename}
+                    className="inline-flex h-10 items-center gap-1 rounded-xl border border-slate-300 bg-slate-50 px-3 text-sm font-semibold hover:bg-slate-100"
+                  >
+                    <Check size={15} /> Save name
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleDelete}
+                    className="inline-flex h-10 items-center justify-center rounded-xl border border-rose-200 bg-rose-50 px-3 text-rose-700 hover:bg-rose-100"
+                    aria-label="Delete active scenario"
+                    title="Delete scenario"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              )}
+            </div>
+            <p className="mt-1 text-xs text-slate-500">
+              Base is locked against rename/delete. Every new scenario starts as a frozen copy of Base.
+            </p>
+          </div>
+
+          <div className="flex min-w-0 flex-col gap-1 sm:min-w-[340px]">
+            <label htmlFor="new-scenario-name" className="text-xs font-semibold text-slate-500">
+              New scenario
+            </label>
+            <div className="flex gap-2">
+              <input
+                id="new-scenario-name"
+                value={newName}
+                onChange={(event) => setNewName(event.target.value)}
+                onKeyDown={(event) => event.key === "Enter" && handleCreate()}
+                maxLength={60}
+                placeholder={`Scenario ${scenarios.length}`}
+                className="h-10 min-w-0 flex-1 rounded-xl border border-slate-300 px-3 text-sm outline-none focus:border-sky-400"
+              />
+              <button
+                type="button"
+                onClick={handleCreate}
+                className="inline-flex h-10 items-center gap-2 rounded-xl border border-sky-300 bg-sky-50 px-3 text-sm font-semibold text-sky-800 hover:bg-sky-100"
+              >
+                <CopyPlus size={16} /> Create
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <Outlet />
 
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-400 bg-slate-200/95 shadow-lg backdrop-blur">

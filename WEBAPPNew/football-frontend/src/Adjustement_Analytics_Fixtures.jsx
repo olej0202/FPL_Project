@@ -48,7 +48,7 @@ const optionsToPct = (fxOptions, fallbackGw) => {
 };
 
 export default function FixturesPage() {
-  const { fetchIfNeeded, loading, Fixtures, fixturesVersion, updateFixture } =
+  const { fetchIfNeeded, loading, Fixtures, fixturesVersion, updateFixture, activeScenarioId } =
     useAdjustmentData();
 
   useEffect(() => {
@@ -95,6 +95,11 @@ export default function FixturesPage() {
   // Local drafts keyed by fixtureId: { [id]: { options: [{gw,p}], dirty } }
   // Draft options store p as percent 0..100 (NOT 0..1).
   const [drafts, setDrafts] = useState({});
+
+  useEffect(() => {
+    setDrafts({});
+    setSelectedGW(null);
+  }, [activeScenarioId]);
 
   useEffect(() => {
     if (selectedGW != null) return;

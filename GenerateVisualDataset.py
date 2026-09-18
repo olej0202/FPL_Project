@@ -611,8 +611,12 @@ def Generate_Team_Adjustments():
     team_data_away = team_data_home.copy()
 
     # ---------- HOME MERGE (own_ prefix) ----------
-    home_merge = team_data_home[["code", "XG_avg", "XGC_avg", "H_Att_E", "H_def_E"]].rename(
+    # Match the current team name as well as its code. Historical aliases can
+    # share a code ("Ipswich" and "Ipswich Town" both use 40); code-only
+    # merging duplicated every Ipswich fixture and doubled player projections.
+    home_merge = team_data_home[["name", "code", "XG_avg", "XGC_avg", "H_Att_E", "H_def_E"]].rename(
         columns={
+            "name": "own_team_name",
             "XG_avg": "own_XG_avg",
             "XGC_avg": "own_XGC_avg",
             "H_Att_E": "own_H_Att_E",
@@ -623,12 +627,12 @@ def Generate_Team_Adjustments():
     df = df.merge(
         home_merge,
         how="left",
-        left_on="team_code",
-        right_on="code",
+        left_on=["team_code", "team_name"],
+        right_on=["code", "own_team_name"],
     )
 
     # If you don’t need the extra 'code' column from the merge:
-    df = df.drop(columns=["code"])
+    df = df.drop(columns=["code", "own_team_name"])
 
     # ---------- AWAY MERGE (opponent_ prefix) ----------
     away_merge = team_data_away[["name", "XG_avg", "XGC_avg", "H_Att_E", "H_def_E"]].rename(

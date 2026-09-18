@@ -710,6 +710,7 @@ export default function PlayerAdjustmentsPage() {
     Fixtures,
     fixturesVersion,
     trackAdjustmentChanges,
+    resetActiveScenario,
   } = useAdjustmentData();
 
   const [playersState, setPlayersState] = useState(null);
@@ -1178,10 +1179,27 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
   useEffect(() => {
     if (!isDataReady) return;
     if (!Array.isArray(playersWithCalcs)) return;
+
+    // A scenario switch updates the context refs before the local page state.
+    // Do not let a render based on the previous scenario write its calculated
+    // rows back into the newly selected scenario (most visible when returning
+    // to Base). Wait until both local inputs point at the current context rows.
+    const currentPlayers = Playerdata?.current;
+    const currentTeams = Teamdata?.current;
+    const playersAreCurrent =
+      Array.isArray(currentPlayers) &&
+      currentPlayers.length === playersState.length &&
+      playersState.every((row, index) => row === currentPlayers[index]);
+    const teamsAreCurrent =
+      Array.isArray(currentTeams) &&
+      currentTeams.length === teamsState.length &&
+      teamsState.every((row, index) => row === currentTeams[index]);
+    if (!playersAreCurrent || !teamsAreCurrent) return;
+
     if (!playersNeedCalcSync(Playerdata?.current, playersWithCalcs)) return;
 
     updatePlayerData(() => playersWithCalcs);
-  }, [isDataReady, playersWithCalcs, Playerdata, updatePlayerData]);
+  }, [isDataReady, playersState, playersWithCalcs, teamsState, Playerdata, Teamdata, updatePlayerData]);
 
   const {
     playerTableRowsBase,
@@ -1626,15 +1644,11 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
   }, [valueThreshold, valueThresholdDraft, globalMinValue, globalMaxValue]);
 
   const handleResetData = async () => {
-    if (Teamdata) Teamdata.current = null;
-    if (Playerdata) Playerdata.current = null;
-
     setTeamsState(null);
     setPlayersState(null);
     setSortConfig({ type: "total", gw: null, direction: "desc" });
     updateChanges([]);
-
-    await fetchIfNeeded();
+    resetActiveScenario();
   };
 
   const openPlayerModal = useCallback((nameKey) => {
@@ -2246,7 +2260,7 @@ const computeMeasures = useCallback((playerRow, teamRow, cbi01Override = null) =
                 <RotateCcw size={14} />
                 Reset
               </div>
-              <div className="mt-1 text-sm font-semibold">Reload model data</div>
+              <div className="mt-1 text-sm font-semibold">Reset active scenario</div>
             </button>
           </div>
         </header>

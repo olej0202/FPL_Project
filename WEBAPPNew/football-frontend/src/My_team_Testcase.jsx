@@ -38,7 +38,7 @@ import {
 } from "recharts";
 import pitch from "./assets/Pitch4.png";
 import { useMyteamData } from "./Contexts/MyTeamContext";
-import { useAdjustmentData } from "./Contexts/AdjustmentsContext";
+import { BASE_SCENARIO_ID, useAdjustmentData } from "./Contexts/AdjustmentsContext";
 import { useStatsData } from "./Contexts/StatsContext";
 import teamShort from "./utils/team_short";
 
@@ -517,12 +517,21 @@ export default function MyTeamOptimize() {
     teamLoading,
   } = useMyteamData();
 
-  const { Playerdata, Teamdata, dataVersion: adjustmentDataVersion, fetchIfNeeded: fetchAdjustmentIfNeeded } = useAdjustmentData();
+  const {
+    Playerdata,
+    Teamdata,
+    dataVersion: adjustmentDataVersion,
+    fetchIfNeeded: fetchAdjustmentIfNeeded,
+    scenarios: adjustmentScenarios,
+    scenarioVersion,
+    getScenarioPlayerData,
+  } = useAdjustmentData();
   const { fetchIfNeeded: fetchStatsIfNeeded, TeamData, PlayersData, dataVersion: statsDataVersion } = useStatsData();
   const navigate = useNavigate();
   const location = useLocation();
 
   const [modelType, setModelType] = useState("ai");
+  const [solverScenarioId, setSolverScenarioId] = useState(BASE_SCENARIO_ID);
   const [optParamsOpen, setOptParamsOpen] = useState(false);
   const [saveName, setSaveName] = useState("");
   const [saveError, setSaveError] = useState("");
@@ -571,22 +580,39 @@ export default function MyTeamOptimize() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [teamId]);
 
+  const selectedScenarioPlayers = useMemo(
+    () => getScenarioPlayerData(solverScenarioId),
+    [adjustmentDataVersion, getScenarioPlayerData, scenarioVersion, solverScenarioId]
+  );
+
+  const selectedSolverScenario = useMemo(
+    () => adjustmentScenarios.find((scenario) => scenario.id === solverScenarioId)
+      || adjustmentScenarios.find((scenario) => scenario.id === BASE_SCENARIO_ID),
+    [adjustmentScenarios, solverScenarioId]
+  );
+
+  useEffect(() => {
+    if (!adjustmentScenarios.some((scenario) => scenario.id === solverScenarioId)) {
+      setSolverScenarioId(BASE_SCENARIO_ID);
+    }
+  }, [adjustmentScenarios, solverScenarioId]);
+
   const hasStatisticalData = useMemo(() => {
-    const arr = Playerdata?.current;
+    const arr = selectedScenarioPlayers;
     if (!Array.isArray(arr) || arr.length === 0) return false;
     return arr.some((p) => p && p.calc_points != null && Number.isFinite(Number(p.calc_points)));
-  }, [Playerdata, adjustmentDataVersion]);
+  }, [selectedScenarioPlayers]);
 
   const statisticalPlayersPayload = useMemo(() => {
     if (!hasStatisticalData) return [];
-    const arr = Playerdata?.current;
+    const arr = selectedScenarioPlayers;
     if (!Array.isArray(arr) || arr.length === 0) return [];
     return arr.map((p) => ({
       ...p,
       calc_points: Number.isFinite(Number(p.calc_points)) ? Number(p.calc_points) : 0,
       Points: Number.isFinite(Number(p.calc_points)) ? Number(p.calc_points) : 0,
     }));
-  }, [Playerdata, hasStatisticalData, adjustmentDataVersion]);
+  }, [selectedScenarioPlayers, hasStatisticalData, adjustmentDataVersion]);
 
   const aiProjectionRows = useMemo(() => {
     const arr = PlayersData?.current;
@@ -842,7 +868,7 @@ export default function MyTeamOptimize() {
   useEffect(() => {
     sethas_changed(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [teamId, bbRound, wildRound, bannedList, lockedInList, freehitROund, n_hits, modelType, risk, valtrans]);
+  }, [teamId, bbRound, wildRound, bannedList, lockedInList, freehitROund, n_hits, modelType, solverScenarioId, risk, valtrans]);
 
   useEffect(() => {
     if (loading) {
@@ -1903,6 +1929,8 @@ export default function MyTeamOptimize() {
           risk: Number(risk || 0),
           valtrans: Number(valtrans || 0.5),
           modelType,
+          scenarioId: modelType === "statistical" ? solverScenarioId : null,
+          scenarioName: modelType === "statistical" ? selectedSolverScenario?.name || "Base scenario" : null,
           selectedSolution: Number(selectedSolution || 1),
         },
         result: {
@@ -1931,7 +1959,11 @@ export default function MyTeamOptimize() {
           minute: "2-digit",
         })
       : "";
-    const mt = opt?.snapshot?.params?.modelType === "statistical" ? "Statistical" : "AI";
+    const isStatistical = opt?.snapshot?.params?.modelType === "statistical";
+    const savedScenarioName = opt?.snapshot?.params?.scenarioName;
+    const mt = isStatistical
+      ? `Statistical${savedScenarioName ? ` · ${savedScenarioName}` : ""}`
+      : "AI";
     return `${mt}${ts ? ` · ${ts}` : ""}`;
   };
 
@@ -2148,6 +2180,27 @@ export default function MyTeamOptimize() {
                     Statistical
                   </ModelButton>
                 </div>
+                {modelType === "statistical" && (
+                  <div className="mt-3 rounded-2xl border p-3" style={{ borderColor: PALETTE.border, background: "rgba(248,250,252,0.82)" }}>
+                    <label htmlFor="solver-scenario" className="mb-1 block text-[11px] font-semibold uppercase tracking-wide" style={{ color: PALETTE.muted }}>
+                      Prediction scenario
+                    </label>
+                    <select
+                      id="solver-scenario"
+                      value={solverScenarioId}
+                      onChange={(event) => setSolverScenarioId(event.target.value)}
+                      className="h-10 w-full rounded-xl border bg-white px-3 text-sm font-semibold outline-none"
+                      style={{ borderColor: PALETTE.border, color: PALETTE.text }}
+                    >
+                      {adjustmentScenarios.map((scenario) => (
+                        <option key={scenario.id} value={scenario.id}>{scenario.name}</option>
+                      ))}
+                    </select>
+                    <p className="mt-1 text-[11px]" style={{ color: PALETTE.muted }}>
+                      Independent of the scenario currently open in Adjustment Analytics.
+                    </p>
+                  </div>
+                )}
                 <button
                   type="button"
                   onClick={() => navigate("/Adjustment_Analysis/Adjustment_Player")}
@@ -2414,6 +2467,17 @@ export default function MyTeamOptimize() {
                             type="button"
                             onClick={() => {
                               loadOptimization(opt.id);
+                              const savedParams = opt?.snapshot?.params || {};
+                              const savedModel = savedParams.modelType === "statistical" ? "statistical" : "ai";
+                              setModelType(savedModel);
+                              if (savedModel === "statistical") {
+                                const scenarioExists = adjustmentScenarios.some(
+                                  (scenario) => scenario.id === savedParams.scenarioId
+                                );
+                                setSolverScenarioId(
+                                  scenarioExists ? savedParams.scenarioId : BASE_SCENARIO_ID
+                                );
+                              }
                               setActiveSavedId(opt.id);
                               setSaveError("");
                               setSaveHint("");

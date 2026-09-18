@@ -316,6 +316,21 @@ const buildFixturesFromTeamRows = (teamRows, fixturesConfig) => {
   return Array.from(byId.values());
 };
 
+// Keep one row per team perspective per fixture. Upstream aliases can share a
+// team code and otherwise duplicate XG, CS and Matches in player projections.
+// The generator emits the current canonical name after an older alias, so the
+// last matching row is the correct one to retain.
+const dedupeTeamPerspectiveRows = (teamRows) => {
+  const byPerspective = new Map();
+  for (const row of teamRows || []) {
+    const fixtureIdentity = row?.fixture_code ?? fixtureIdFromRow(row);
+    const teamIdentity = row?.team_code ?? row?.team ?? row?.Team ?? row?.team_name;
+    const key = [fixtureIdentity, teamIdentity, row?.GW ?? "", row?.Home ?? ""].join("|");
+    byPerspective.set(key, row);
+  }
+  return Array.from(byPerspective.values());
+};
+
 const playerGroupKey = (p) => p?.name || `${p?.web_name || "unknown"}_${p?.Team || "NA"}`;
 
 const buildProjectedTeamLookup = (teamRows, fixtures) => {
@@ -345,7 +360,7 @@ const buildProjectedTeamLookup = (teamRows, fixtures) => {
     });
   };
 
-  for (const row of teamRows || []) {
+  for (const row of dedupeTeamPerspectiveRows(teamRows)) {
     const code = row?.team_code ?? row?.team ?? row?.Team;
     const gw0 = Number(row?.GW);
     if (code == null || !Number.isFinite(gw0)) continue;
@@ -515,68 +530,204 @@ const buildStablePlayerCalcs = (playerRows, teamRows, fixtures) => {
   });
 };
 
+const SCENARIO_STORAGE_KEY = "fpl_adjustment_scenarios_v1";
+export const BASE_SCENARIO_ID = "base";
+const PLAYER_OVERRIDE_FIELDS = [
+  "Goal_share",
+  "Assist_share",
+  "average_minutes",
+  "defcon_adjust_01",
+];
+const TEAM_OVERRIDE_FIELDS = [
+  "own_XG_avg",
+  "own_XGC_avg",
+  "opponent_XG_avg",
+  "opponent_XGC_avg",
+  "base_own_XG_avg",
+  "base_own_XGC_avg",
+  "XG",
+  "CS",
+];
+
+const emptyBaseScenario = () => ({
+  id: BASE_SCENARIO_ID,
+  name: "Base scenario",
+  createdAt: 0,
+  updatedAt: Date.now(),
+  playerOverrides: {},
+  teamOverrides: {},
+  fixtureOverrides: {},
+});
+
+const cloneJson = (value) => JSON.parse(JSON.stringify(value));
+const playerRowKey = (row, index) =>
+  [
+    row?.element ?? row?.id ?? row?.Player_code ?? row?.name ?? row?.web_name ?? index,
+    row?.Team ?? row?.team ?? row?.team_code ?? "",
+    row?.GW ?? "",
+    row?.fixture_code ?? row?.fixture ?? "",
+  ].join("|");
+const teamRowKey = (row, index) =>
+  [
+    row?.fixture_code ?? row?.fixture ?? "",
+    row?.team_code ?? row?.team ?? row?.team_name ?? index,
+    row?.GW ?? "",
+    row?.Home ?? "",
+    row?.Opponent_team ?? row?.opponent_team ?? "",
+  ].join("|");
+
+const valuesEqual = (a, b) => {
+  if (a == null && b == null) return true;
+  const an = Number(a);
+  const bn = Number(b);
+  if (a !== "" && b !== "" && Number.isFinite(an) && Number.isFinite(bn)) {
+    return Math.abs(an - bn) < 1e-10;
+  }
+  return JSON.stringify(a) === JSON.stringify(b);
+};
+
+const collectOverrides = (rows, sourceRows, fields, keyFn) => {
+  const sourceByKey = new Map(
+    (sourceRows || []).map((row, index) => [keyFn(row, index), row])
+  );
+  const overrides = {};
+  (rows || []).forEach((row, index) => {
+    const key = keyFn(row, index);
+    const source = sourceByKey.get(key) || sourceRows?.[index] || {};
+    const values = {};
+    fields.forEach((field) => {
+      if (!valuesEqual(row?.[field], source?.[field])) values[field] = row?.[field] ?? null;
+    });
+    if (Object.keys(values).length) overrides[key] = { index, values };
+  });
+  return overrides;
+};
+
+const applyOverrides = (sourceRows, overrides, keyFn) =>
+  (sourceRows || []).map((row, index) => {
+    const patch = overrides?.[keyFn(row, index)];
+    return patch ? { ...row, ...patch.values } : { ...row };
+  });
+
+const readScenarioStore = () => {
+  const fallback = { activeScenarioId: BASE_SCENARIO_ID, scenarios: [emptyBaseScenario()] };
+  if (typeof window === "undefined") return fallback;
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem(SCENARIO_STORAGE_KEY) || "null");
+    const incoming = Array.isArray(parsed?.scenarios) ? parsed.scenarios : [];
+    const base = incoming.find((scenario) => scenario?.id === BASE_SCENARIO_ID);
+    const scenarios = [
+      { ...emptyBaseScenario(), ...(base || {}) },
+      ...incoming.filter((scenario) => scenario?.id && scenario.id !== BASE_SCENARIO_ID),
+    ];
+    const activeScenarioId = scenarios.some((scenario) => scenario.id === parsed?.activeScenarioId)
+      ? parsed.activeScenarioId
+      : BASE_SCENARIO_ID;
+    return { activeScenarioId, scenarios };
+  } catch {
+    return fallback;
+  }
+};
+
 export function AdjustmentDataProvider({ children }) {
   const { authHeaders, guestTrackingId } = useUserData();
+  const initialStoreRef = useRef(null);
+  if (!initialStoreRef.current) initialStoreRef.current = readScenarioStore();
+
   const TeamRef = useRef(null);
   const PlayerRef = useRef(null);
-  const ChangesRef = useRef([]);
-  const fetchInFlightRef = useRef(null);
-
-  // NEW: fixtures ref
   const FixturesRef = useRef(null);
-
-  // NEW: fixtures_config ref (from API)
+  const ChangesRef = useRef([]);
+  const SourceTeamRef = useRef(null);
+  const SourcePlayerRef = useRef(null);
+  const SourceFixturesRef = useRef(null);
   const FixturesConfigRef = useRef(null);
+  const fetchInFlightRef = useRef(null);
+  const scenariosRef = useRef(initialStoreRef.current.scenarios);
+  const activeScenarioIdRef = useRef(initialStoreRef.current.activeScenarioId);
 
   const [loading, setLoading] = useState(false);
-
-  // global versions
   const [dataVersion, setDataVersion] = useState(0);
   const [teamVersion, setTeamVersion] = useState(0);
   const [changesVersion, setChangesVersion] = useState(0);
-
-  // NEW: fixtures version
   const [fixturesVersion, setFixturesVersion] = useState(0);
+  const [scenarioVersion, setScenarioVersion] = useState(0);
+  const [scenarios, setScenarios] = useState(initialStoreRef.current.scenarios);
+  const [activeScenarioId, setActiveScenarioId] = useState(initialStoreRef.current.activeScenarioId);
+
+  const persistScenarioStore = useCallback((nextScenarios, nextActiveId) => {
+    scenariosRef.current = nextScenarios;
+    activeScenarioIdRef.current = nextActiveId;
+    setScenarios(nextScenarios);
+    setActiveScenarioId(nextActiveId);
+    if (typeof window !== "undefined") {
+      try {
+        window.localStorage.setItem(
+          SCENARIO_STORAGE_KEY,
+          JSON.stringify({ scenarios: nextScenarios, activeScenarioId: nextActiveId })
+        );
+      } catch (error) {
+        console.warn("Could not save adjustment scenarios in this browser:", error);
+      }
+    }
+    setScenarioVersion((version) => version + 1);
+  }, []);
+
+  const scenarioById = useCallback(
+    (id) => scenariosRef.current.find((scenario) => scenario.id === id) || scenariosRef.current[0],
+    []
+  );
+
+  const materializeScenario = useCallback((id) => {
+    if (!SourceTeamRef.current || !SourcePlayerRef.current || !SourceFixturesRef.current) return null;
+    const scenario = scenarioById(id);
+    const teams = applyOverrides(SourceTeamRef.current, scenario?.teamOverrides, teamRowKey);
+    const fixtures = SourceFixturesRef.current.map((fixture) => {
+      const patch = scenario?.fixtureOverrides?.[fixture.id];
+      return patch ? { ...fixture, options: cloneJson(patch.options || []) } : cloneJson(fixture);
+    });
+    const players = applyOverrides(SourcePlayerRef.current, scenario?.playerOverrides, playerRowKey);
+    return { teams, fixtures, players: buildStablePlayerCalcs(players, teams, fixtures) };
+  }, [scenarioById]);
+
+  const applyMaterializedScenario = useCallback((snapshot) => {
+    if (!snapshot) return;
+    TeamRef.current = snapshot.teams;
+    FixturesRef.current = snapshot.fixtures;
+    PlayerRef.current = snapshot.players;
+    ChangesRef.current = [];
+    setDataVersion((version) => version + 1);
+    setTeamVersion((version) => version + 1);
+    setFixturesVersion((version) => version + 1);
+    setChangesVersion((version) => version + 1);
+  }, []);
+
+  const replaceScenario = useCallback((id, patch) => {
+    const next = scenariosRef.current.map((scenario) =>
+      scenario.id === id ? { ...scenario, ...patch, updatedAt: Date.now() } : scenario
+    );
+    persistScenarioStore(next, activeScenarioIdRef.current);
+  }, [persistScenarioStore]);
 
   const fetchIfNeeded = useCallback(async () => {
-    if (TeamRef.current && PlayerRef.current) return;
+    if (TeamRef.current && PlayerRef.current && FixturesRef.current) return;
     if (fetchInFlightRef.current) return fetchInFlightRef.current;
 
     const request = (async () => {
       setLoading(true);
       try {
-        const [TeamRes, PlayerRes, FixturesConfigRes] = await Promise.all([
-          fetch(`${API_BASE_URL}/Team_result_adjust`, { headers: { ...authHeaders } }).then(
-            (res) => res.json()
-          ),
-          fetch(`${API_BASE_URL}/Player_result_adjust`, { headers: { ...authHeaders } }).then(
-            (res) => res.json()
-          ),
-          fetch(`${API_BASE_URL}/fixtures_config`, { headers: { ...authHeaders } }).then(
-            (res) => res.json()
-          ),
+        const [teamResult, playerResult, fixturesConfigResult] = await Promise.all([
+          fetch(`${API_BASE_URL}/Team_result_adjust`, { headers: { ...authHeaders } }).then((res) => res.json()),
+          fetch(`${API_BASE_URL}/Player_result_adjust`, { headers: { ...authHeaders } }).then((res) => res.json()),
+          fetch(`${API_BASE_URL}/fixtures_config`, { headers: { ...authHeaders } }).then((res) => res.json()),
         ]);
-
-        TeamRef.current = TeamRes;
-        FixturesConfigRef.current = FixturesConfigRes;
-
-        const nextFixtures = buildFixturesFromTeamRows(
-          TeamRes,
-          FixturesConfigRes
-        );
-        if (!FixturesRef.current) {
-          FixturesRef.current = nextFixtures;
-          setFixturesVersion((v) => v + 1);
-        }
-
-        PlayerRef.current = buildStablePlayerCalcs(
-          PlayerRes,
-          TeamRes,
-          FixturesRef.current || nextFixtures
-        );
-
-        setDataVersion((v) => v + 1);
-        setTeamVersion((v) => v + 1);
+        const dedupedTeamResult = dedupeTeamPerspectiveRows(teamResult);
+        const sourceFixtures = buildFixturesFromTeamRows(dedupedTeamResult, fixturesConfigResult);
+        SourceTeamRef.current = cloneJson(dedupedTeamResult);
+        SourceFixturesRef.current = cloneJson(sourceFixtures);
+        SourcePlayerRef.current = buildStablePlayerCalcs(playerResult, dedupedTeamResult, sourceFixtures);
+        FixturesConfigRef.current = fixturesConfigResult;
+        applyMaterializedScenario(materializeScenario(activeScenarioIdRef.current));
       } catch (err) {
         console.error("Failed fetching adjustment data:", err);
       } finally {
@@ -584,119 +735,160 @@ export function AdjustmentDataProvider({ children }) {
         setLoading(false);
       }
     })();
-
     fetchInFlightRef.current = request;
     return request;
-  }, [authHeaders]);
+  }, [applyMaterializedScenario, authHeaders, materializeScenario]);
 
   const forceRefetch = useCallback(async () => {
     TeamRef.current = null;
     PlayerRef.current = null;
     FixturesRef.current = null;
+    SourceTeamRef.current = null;
+    SourcePlayerRef.current = null;
+    SourceFixturesRef.current = null;
     FixturesConfigRef.current = null;
     fetchInFlightRef.current = null;
-
-    setDataVersion((v) => v + 1);
-    setTeamVersion((v) => v + 1);
-    setFixturesVersion((v) => v + 1);
-
     await fetchIfNeeded();
   }, [fetchIfNeeded]);
 
   const updatePlayerData = useCallback((updater) => {
-    if (typeof updater === "function") {
-      PlayerRef.current = updater(PlayerRef.current || []);
-    } else {
-      PlayerRef.current = updater || [];
+    const nextPlayers = typeof updater === "function"
+      ? updater(PlayerRef.current || [])
+      : updater || [];
+    PlayerRef.current = nextPlayers;
+    if (SourcePlayerRef.current) {
+      replaceScenario(activeScenarioIdRef.current, {
+        playerOverrides: collectOverrides(nextPlayers, SourcePlayerRef.current, PLAYER_OVERRIDE_FIELDS, playerRowKey),
+      });
     }
-    setDataVersion((v) => v + 1);
-  }, []);
+    setDataVersion((version) => version + 1);
+  }, [replaceScenario]);
 
   const updateTeamData = useCallback((updater) => {
-    if (typeof updater === "function") {
-      TeamRef.current = updater(TeamRef.current || []);
-    } else {
-      TeamRef.current = updater || [];
-    }
-
-    // If fixtures haven't been initialized (or were reset), build them now.
+    const nextTeams = typeof updater === "function"
+      ? updater(TeamRef.current || [])
+      : updater || [];
+    TeamRef.current = nextTeams;
     if (!FixturesRef.current) {
-      FixturesRef.current = buildFixturesFromTeamRows(
-        TeamRef.current,
-        FixturesConfigRef.current
-      );
-      setFixturesVersion((v) => v + 1);
+      FixturesRef.current = buildFixturesFromTeamRows(nextTeams, FixturesConfigRef.current);
+      setFixturesVersion((version) => version + 1);
     }
-
-    setDataVersion((v) => v + 1);
-    setTeamVersion((v) => v + 1);
-  }, []);
+    if (SourceTeamRef.current) {
+      replaceScenario(activeScenarioIdRef.current, {
+        teamOverrides: collectOverrides(nextTeams, SourceTeamRef.current, TEAM_OVERRIDE_FIELDS, teamRowKey),
+      });
+    }
+    PlayerRef.current = buildStablePlayerCalcs(PlayerRef.current || [], nextTeams, FixturesRef.current || []);
+    setDataVersion((version) => version + 1);
+    setTeamVersion((version) => version + 1);
+  }, [replaceScenario]);
 
   const updateChanges = useCallback((updater) => {
-    if (typeof updater === "function") {
-      ChangesRef.current = updater(ChangesRef.current || []);
-    } else {
-      ChangesRef.current = updater || [];
-    }
-    setChangesVersion((v) => v + 1);
-    setDataVersion((v) => v + 1);
+    ChangesRef.current = typeof updater === "function" ? updater(ChangesRef.current || []) : updater || [];
+    setChangesVersion((version) => version + 1);
+    setDataVersion((version) => version + 1);
   }, []);
 
-  // -------------------------
-  // NEW: fixtures API
-  // -------------------------
+  const persistFixtureOverrides = useCallback((fixtures) => {
+    const sourceById = new Map((SourceFixturesRef.current || []).map((fixture) => [fixture.id, fixture]));
+    const fixtureOverrides = {};
+    (fixtures || []).forEach((fixture) => {
+      const source = sourceById.get(fixture.id);
+      if (!source || !valuesEqual(fixture.options, source.options)) {
+        fixtureOverrides[fixture.id] = { options: cloneJson(fixture.options || []) };
+      }
+    });
+    replaceScenario(activeScenarioIdRef.current, { fixtureOverrides });
+  }, [replaceScenario]);
 
   const setFixtures = useCallback((next) => {
-    FixturesRef.current = next || [];
-    setFixturesVersion((v) => v + 1);
-    setDataVersion((v) => v + 1);
-  }, []);
+    const fixtures = next || [];
+    FixturesRef.current = fixtures;
+    persistFixtureOverrides(fixtures);
+    PlayerRef.current = buildStablePlayerCalcs(PlayerRef.current || [], TeamRef.current || [], fixtures);
+    setFixturesVersion((version) => version + 1);
+    setDataVersion((version) => version + 1);
+  }, [persistFixtureOverrides]);
 
   const updateFixture = useCallback((fixtureId, updater) => {
     const prev = FixturesRef.current || [];
-    const idx = prev.findIndex((f) => f.id === fixtureId);
+    const idx = prev.findIndex((fixture) => fixture.id === fixtureId);
     if (idx === -1) return;
-
     const clone = [...prev];
-    const oldFx = clone[idx];
-    const nextFx = typeof updater === "function" ? updater(oldFx) : updater;
-
-    clone[idx] = nextFx;
+    clone[idx] = typeof updater === "function" ? updater(clone[idx]) : updater;
     FixturesRef.current = clone;
+    persistFixtureOverrides(clone);
+    PlayerRef.current = buildStablePlayerCalcs(PlayerRef.current || [], TeamRef.current || [], clone);
+    setFixturesVersion((version) => version + 1);
+    setDataVersion((version) => version + 1);
+  }, [persistFixtureOverrides]);
 
-    setFixturesVersion((v) => v + 1);
-    setDataVersion((v) => v + 1);
-  }, []);
+  const normalizeFixtureProbabilities = useCallback((fixtureId) => {
+    updateFixture(fixtureId, (fixture) => {
+      const options = (fixture.options || []).map((option) => ({ gw: Number(option.gw), p: Number(option.p) }));
+      const sum = options.reduce((acc, option) => acc + (Number.isFinite(option.p) ? option.p : 0), 0);
+      return {
+        ...fixture,
+        options: sum <= 0
+          ? options.map((option, index) => ({ ...option, p: index === 0 ? 1 : 0 }))
+          : options.map((option) => ({ ...option, p: option.p / sum })),
+      };
+    });
+  }, [updateFixture]);
 
-  const normalizeFixtureProbabilities = useCallback(
-    (fixtureId) => {
-      updateFixture(fixtureId, (fx) => {
-        const options = (fx.options || []).map((o) => ({
-          gw: Number(o.gw),
-          p: Number(o.p),
-        }));
+  const switchScenario = useCallback((id) => {
+    if (!scenariosRef.current.some((scenario) => scenario.id === id)) return false;
+    const snapshot = materializeScenario(id);
+    persistScenarioStore(scenariosRef.current, id);
+    applyMaterializedScenario(snapshot);
+    return true;
+  }, [applyMaterializedScenario, materializeScenario, persistScenarioStore]);
 
-        const sum = options.reduce(
-          (acc, o) => acc + (Number.isFinite(o.p) ? o.p : 0),
-          0
-        );
+  const createScenario = useCallback((name) => {
+    const id = `scenario_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+    const base = scenarioById(BASE_SCENARIO_ID) || emptyBaseScenario();
+    const nextScenario = {
+      ...cloneJson(base),
+      id,
+      name: String(name || "").trim().slice(0, 60) || `Scenario ${scenariosRef.current.length}`,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+    const next = [...scenariosRef.current, nextScenario];
+    persistScenarioStore(next, id);
+    applyMaterializedScenario(materializeScenario(id));
+    return id;
+  }, [applyMaterializedScenario, materializeScenario, persistScenarioStore, scenarioById]);
 
-        // If sum is 0, fall back to first option = 1
-        if (sum <= 0) {
-          return {
-            ...fx,
-            options: options.map((o, i) => ({ ...o, p: i === 0 ? 1 : 0 })),
-          };
-        }
+  const renameScenario = useCallback((id, name) => {
+    const cleanName = String(name || "").trim().slice(0, 60);
+    if (!cleanName || id === BASE_SCENARIO_ID) return false;
+    replaceScenario(id, { name: cleanName });
+    return true;
+  }, [replaceScenario]);
 
-        return {
-          ...fx,
-          options: options.map((o) => ({ ...o, p: o.p / sum })),
-        };
-      });
-    },
-    [updateFixture]
-  );
+  const deleteScenario = useCallback((id) => {
+    if (id === BASE_SCENARIO_ID) return false;
+    const wasActive = activeScenarioIdRef.current === id;
+    const next = scenariosRef.current.filter((scenario) => scenario.id !== id);
+    const nextActive = wasActive ? BASE_SCENARIO_ID : activeScenarioIdRef.current;
+    persistScenarioStore(next, nextActive);
+    if (wasActive) {
+      applyMaterializedScenario(materializeScenario(nextActive));
+    }
+    return true;
+  }, [applyMaterializedScenario, materializeScenario, persistScenarioStore]);
+
+  const resetActiveScenario = useCallback(() => {
+    replaceScenario(activeScenarioIdRef.current, {
+      playerOverrides: {},
+      teamOverrides: {},
+      fixtureOverrides: {},
+    });
+    applyMaterializedScenario(materializeScenario(activeScenarioIdRef.current));
+  }, [applyMaterializedScenario, materializeScenario, replaceScenario]);
+
+  const getScenarioPlayerData = useCallback((id) => materializeScenario(id)?.players || [], [materializeScenario]);
 
   const trackAdjustmentChanges = useCallback(
     async (source, changes) => {
@@ -743,6 +935,17 @@ export function AdjustmentDataProvider({ children }) {
         teamVersion,
         changesVersion,
         fixturesVersion,
+        scenarioVersion,
+
+        // browser-local scenarios
+        scenarios,
+        activeScenarioId,
+        switchScenario,
+        createScenario,
+        renameScenario,
+        deleteScenario,
+        resetActiveScenario,
+        getScenarioPlayerData,
 
         // changes API
         changes: ChangesRef,
