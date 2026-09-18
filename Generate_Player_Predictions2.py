@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import joblib
+from GenerateConfig import MAX_PENALTY_TAKER_SHARE, MAX_TEAM_PENALTY_RATE
 
 try:
     from xgboost import XGBRegressor, XGBClassifier
@@ -176,7 +177,17 @@ def _generate_stat_predictions(metric: str, horizon: int = 2) -> pd.DataFrame:
                 + _series_val(r, "Share_of_XG_Short") * 0.1
             )
             team_data_xg = (_series_val(r, "Understat_POSXG_Share") * 0.65 + 0.35 * _series_val(r, "Opp_Goal_Threat_Pos")) * team_xg
-            pred = ((1 - player_risk) * (stat_share * team_xg) + player_risk * team_data_xg + _series_val(r, "Team_Pen_Data") * _series_val(r, "Pen_Number") * 0.8) * over_goal
+            penalty_rate = np.clip(
+                _series_val(r, "Team_Pen_Data"), 0.0, MAX_TEAM_PENALTY_RATE
+            )
+            penalty_taker_share = np.clip(
+                _series_val(r, "Pen_Number"), 0.0, MAX_PENALTY_TAKER_SHARE
+            )
+            pred = (
+                (1 - player_risk) * (stat_share * team_xg)
+                + player_risk * team_data_xg
+                + penalty_rate * penalty_taker_share * 0.8
+            ) * over_goal
         elif metric == "Assist":
             stat_share = (
                 _series_val(r, "Assist_Statistics_share") * 0.4

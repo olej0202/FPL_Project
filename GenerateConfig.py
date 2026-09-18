@@ -65,6 +65,11 @@ Understat_Team_MAP={
 Player_picture_url="https://resources.premierleague.com/premierleague25/photos/players/500x500/"
 current_season="26"
 
+# Penalty inputs are probabilities/shares, so keep the same limits in every
+# player prediction and simulation path.
+MAX_TEAM_PENALTY_RATE = 0.15
+MAX_PENALTY_TAKER_SHARE = 0.80
+
 
 
 def normalize_player_name(name):

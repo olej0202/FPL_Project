@@ -19,7 +19,7 @@ import torch.nn as nn
 from torch.utils.data import TensorDataset, DataLoader
 import joblib
 from GenerateConfig import date_filter as config_date_filter
-from GenerateConfig import POSITION_EVENT_BONUS,POINTS_RULES
+from GenerateConfig import MAX_PENALTY_TAKER_SHARE, MAX_TEAM_PENALTY_RATE, POSITION_EVENT_BONUS,POINTS_RULES
 from GenerateStatSimulator import run_fpl_simulation_from_csv
 from scipy.stats import poisson
 from sklearn.impute import SimpleImputer
@@ -1658,7 +1658,16 @@ def Stat_preds(is_pred, pred_variable,column_list,horizon):
                
 
         
-               player_preds.append(pred*team_xg+df['Team_Pen_Data'].values[h]*df['Pen_Number'].values[h]*0.8)
+               penalty_rate = np.clip(
+                   df['Team_Pen_Data'].values[h], 0.0, MAX_TEAM_PENALTY_RATE
+               )
+               penalty_taker_share = np.clip(
+                   df['Pen_Number'].values[h], 0.0, MAX_PENALTY_TAKER_SHARE
+               )
+               player_preds.append(
+                   pred * team_xg
+                   + penalty_rate * penalty_taker_share * 0.8
+               )
                
                xgind=df["Rolling_adjusted_XG_per90"].values[h]*0.5+(df["Rolling_adjusted_Threat_per90"].values[h]/100)*0.25+df["rolling_Goal_min"].values[h]*0.25
                eta=-5.2+0.58*team_xg+5.53*xgind+0.018*90

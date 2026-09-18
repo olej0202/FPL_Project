@@ -20,6 +20,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Tuple
 
+from GenerateConfig import MAX_PENALTY_TAKER_SHARE, MAX_TEAM_PENALTY_RATE
+
 
 # =============================
 # Simulator parameters (edit)
@@ -1214,7 +1216,17 @@ def extract_player_feature_values(row: Dict) -> Dict[str, float]:
     feats["risk"] = clamp(first_float(row, ["player_risiko"], 0.0), 0.0, 1.0)
     feats["overscore"] = clamp(first_float(row, ["Average_Overscore"], 1.0), 0.85, 1.18)
     feats["overassist"] = clamp(first_float(row, ["Average_OverAssist"], 1.0), 0.85, 1.16)
-    feats["pen_data"] = max(0.0, first_float(row, ["Team_Pen_Data"], 0.0) * first_float(row, ["Pen_Number"], 0.0))
+    penalty_rate = clamp(
+        first_float(row, ["Team_Pen_Data"], 0.0),
+        0.0,
+        MAX_TEAM_PENALTY_RATE,
+    )
+    penalty_taker_share = clamp(
+        first_float(row, ["Pen_Number"], 0.0),
+        0.0,
+        MAX_PENALTY_TAKER_SHARE,
+    )
+    feats["pen_data"] = penalty_rate * penalty_taker_share
     return feats
 
 

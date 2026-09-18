@@ -2020,8 +2020,170 @@ def team_transformed2():
 
     
     
+def _calculate_understat_team_indices(all_teams):
+    """Calculate pre-match npxG/npxGA indices from the supplied Understat rows."""
+    rolling_long = 25
+    rolling_short = 15
+    metric_cap = 3.8
+    midpoint_days = 210
+    steepness = 25
+    max_age_days = 365
+    long_weight = 0.70
+    short_weight = 0.30
+    metric_cols = ["npxG", "npxGA"]
+
+    team_def = all_teams[["id", "title", "date", "h_a", *metric_cols]].copy()
+    team_def["date"] = pd.to_datetime(team_def["date"], errors="coerce")
+    team_def["h_a"] = team_def["h_a"].astype(str).str.lower().str.strip()
+    team_def[metric_cols] = team_def[metric_cols].apply(pd.to_numeric, errors="coerce")
+    team_def[metric_cols] = team_def[metric_cols].clip(lower=0, upper=metric_cap)
+    team_def = (
+        team_def.dropna(subset=["title", "date"])
+        .sort_values(["title", "date"])
+        .reset_index(drop=True)
+    )
+
+    def logistic_weighted_average(group, col):
+        dates = group["date"].to_numpy()
+        values = group[col].to_numpy(dtype=float)
+        result = np.full(len(group), np.nan, dtype=float)
+
+        for i in range(1, len(group)):
+            past_values = values[:i]
+            age_days = (dates[i] - dates[:i]).astype("timedelta64[D]").astype(float)
+            valid = (
+                ~np.isnan(past_values)
+                & (age_days >= 0)
+                & (age_days <= max_age_days)
+            )
+            if not valid.any():
+                continue
+
+            valid_age_days = age_days[valid]
+            weights = 1 / (
+                1 + np.exp((valid_age_days - midpoint_days) / steepness)
+            )
+            if weights.sum() > 1e-10:
+                result[i] = np.average(past_values[valid], weights=weights)
+
+        return result
+
+    def add_form_indices(data, suffix):
+        result = data.copy()
+        grouped = result.groupby("title", sort=False)
+
+        for col in metric_cols:
+            result[f"{col}_{suffix}_rolling25"] = grouped[col].transform(
+                lambda values: values.shift(1).rolling(
+                    window=rolling_long, min_periods=1
+                ).mean()
+            )
+            result[f"{col}_{suffix}_rolling15"] = grouped[col].transform(
+                lambda values: values.shift(1).rolling(
+                    window=rolling_short, min_periods=1
+                ).mean()
+            )
+
+            timeweighted_col = f"{col}_{suffix}_timeweighted"
+            result[timeweighted_col] = np.nan
+            for _, indices in result.groupby("title", sort=False).groups.items():
+                group = result.loc[indices].sort_values("date")
+                result.loc[group.index, timeweighted_col] = logistic_weighted_average(
+                    group, col
+                )
+
+            long_term = result[
+                [f"{col}_{suffix}_rolling25", timeweighted_col]
+            ].mean(axis=1, skipna=True)
+            short_term = result[f"{col}_{suffix}_rolling15"]
+            result[f"{col}_{suffix}_index"] = (
+                long_weight * long_term + short_weight * short_term
+            )
+
+        return result
+
+    overall = add_form_indices(team_def, "Overall")
+    home = add_form_indices(
+        team_def.loc[team_def["h_a"] == "h"].copy(), "Home"
+    )
+    away = add_form_indices(
+        team_def.loc[team_def["h_a"] == "a"].copy(), "Away"
+    )
+
+    home = home[
+        ["title", "date", "npxG_Home_index", "npxGA_Home_index"]
+    ].sort_values(["date", "title"])
+    away = away[
+        ["title", "date", "npxG_Away_index", "npxGA_Away_index"]
+    ].sort_values(["date", "title"])
+    result = overall.sort_values(["date", "title"])
+    result = pd.merge_asof(
+        result,
+        home,
+        on="date",
+        by="title",
+        direction="backward",
+        allow_exact_matches=True,
+    )
+    result = result.sort_values(["date", "title"])
+    result = pd.merge_asof(
+        result,
+        away,
+        on="date",
+        by="title",
+        direction="backward",
+        allow_exact_matches=True,
+    )
+
+    result["Understat_OffIndex"] = result["npxG_Overall_index"]
+    result["Understat_defIndex"] = result["npxGA_Overall_index"]
+    result["Understat_HA_Off_effect"] = (
+        result["npxG_Home_index"] - result["npxG_Away_index"]
+    )
+    result["Understat_HA_DEF_effect"] = (
+        result["npxGA_Home_index"] - result["npxGA_Away_index"]
+    )
+    result["title"] = result["title"].astype(str).str.strip().replace(
+        Understat_Team_MAP
+    )
+
+    index_cols = [
+        "Understat_OffIndex",
+        "Understat_defIndex",
+        "Understat_HA_Off_effect",
+        "Understat_HA_DEF_effect",
+    ]
+    return result[["title", "date", *index_cols]].sort_values(
+        ["title", "date"]
+    )
+
+
 def Understat_teams():
     from sklearn.preprocessing import MinMaxScaler
+    scale_cols = [
+        "roll10_deep",
+        "roll10_deep_allowed",
+        "roll10_xpts",
+        "roll10_ppda",
+        "roll10_ppda_allowed",
+    ]
+    index_cols = [
+        "Understat_OffIndex",
+        "Understat_defIndex",
+        "Understat_HA_Off_effect",
+        "Understat_HA_DEF_effect",
+    ]
+
+    def remove_previous_understat_output(data, output_cols):
+        # Makes this enrichment safe to rerun on its own previous CSV output.
+        cols_to_remove = [
+            col
+            for col in data.columns
+            if col.startswith("Unnamed:")
+            or any(col == base or col.startswith(f"{base}.") for base in output_cols)
+        ]
+        return data.drop(columns=cols_to_remove, errors="ignore")
+
     dfs = []
 
     for yr in range(22, 26):  # 22, 23, 24, 25
@@ -2030,6 +2192,19 @@ def Understat_teams():
 
         df = pd.read_csv(csv_path).iloc[:,1:]
         dfs.append(df)
+
+    index_dfs = []
+    yr = 22
+    while True:
+        csv_path = f"Raw_Data_{yr}/Understat_Teams.csv"
+        if not os.path.exists(csv_path):
+            break
+        index_dfs.append(pd.read_csv(csv_path))
+        yr += 1
+
+    understat_indices = _calculate_understat_team_indices(
+        pd.concat(index_dfs, ignore_index=True, sort=False)
+    )
 
     # union all
     columns=["title","date","h_a","deep","deep_allowed","xpts","ppda","ppda_allowed"]
@@ -2069,12 +2244,13 @@ def Understat_teams():
 
 
     #Add history DATA
-    history=unioned_df[["title", "date", "roll10prev_deep", "roll10prev_deep_allowed", "roll10prev_xpts", "roll10prev_ppda", "roll10prev_ppda_allowed"]]
+    history=unioned_df[["title", "date", "roll10prev_deep", "roll10prev_deep_allowed", "roll10prev_xpts", "roll10prev_ppda", "roll10prev_ppda_allowed"]].copy()
 
     history["date_only"] = pd.to_datetime(history["date"], errors="coerce").dt.date
     num_cols = history.select_dtypes(include="number").columns.tolist()
 
     team_data = pd.read_csv("Team_data_transformed2.csv").copy()
+    team_data = remove_previous_understat_output(team_data, scale_cols)
     team_data["kickoff_date"] = pd.to_datetime(team_data["kickoff_time"], errors="coerce").dt.date
 
     right = history[["title", "date_only"] + num_cols].rename(columns={"title": "name"})
@@ -2098,18 +2274,18 @@ def Understat_teams():
     }
     History_merged = History_merged.rename(columns=rename_map)
     print(History_merged)
-    scale_cols=["roll10_deep","roll10_deep_allowed","roll10_xpts","roll10_ppda","roll10_ppda_allowed" ]
     scaler_prev = MinMaxScaler().fit(History_merged[scale_cols])
     History_merged[scale_cols] = scaler_prev.transform(History_merged[scale_cols])
 
 
     History_merged.to_csv("Team_data_transformed2.csv")
     #Add New data
-    new_table=unioned_df[["title", "date", "roll10_deep", "roll10_deep_allowed", "roll10_xpts", "roll10_ppda", "roll10_ppda_allowed"]]
+    new_table=unioned_df[["title", "date", "roll10_deep", "roll10_deep_allowed", "roll10_xpts", "roll10_ppda", "roll10_ppda_allowed"]].copy()
     new_table["date_only"] = pd.to_datetime(new_table["date"], errors="coerce").dt.date
     num_cols = new_table.select_dtypes(include="number").columns.tolist()
 
     team_data = pd.read_csv("Team_data_newest2.csv").copy()
+    team_data = remove_previous_understat_output(team_data, scale_cols + index_cols)
     team_data["kickoff_date"] = pd.to_datetime(team_data["kickoff_time"], errors="coerce").dt.date
 
     right = new_table[["title", "date_only"] + num_cols].rename(columns={"title": "name"})
@@ -2121,6 +2297,16 @@ def Understat_teams():
         right_on=["name", "date_only"],
     )
     merged = merged.drop(columns=["date_only"])
+    understat_indices["date_only"] = understat_indices["date"].dt.date
+    index_right = understat_indices[
+        ["title", "date_only", *index_cols]
+    ].rename(columns={"title": "name"})
+    merged = merged.merge(
+        index_right,
+        how="left",
+        left_on=["name", "kickoff_date"],
+        right_on=["name", "date_only"],
+    ).drop(columns=["date_only"])
     rows_any_nan = merged[merged.isna().any(axis=1)]
     New_merged = merged.fillna(merged.mean(numeric_only=True))
     New_merged[scale_cols] = scaler_prev.transform(New_merged[scale_cols])

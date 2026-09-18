@@ -3,7 +3,7 @@ import joblib
 import numpy as np
 from datetime import datetime
 
-from GenerateConfig import Manual_Player_Risk,Manual_team_offensive_adjustments, Manual_team_defensive_adjustments,Manual_Player_Adjustments,NEW_TEAMS,fixtures_config, normalize_player_name
+from GenerateConfig import Manual_Player_Risk,Manual_team_offensive_adjustments, Manual_team_defensive_adjustments,Manual_Player_Adjustments,NEW_TEAMS,fixtures_config, normalize_player_name, MAX_TEAM_PENALTY_RATE, MAX_PENALTY_TAKER_SHARE
 from GenerateConfig import date_filter as config_date_filter
 
 def Xmins(current_players):
@@ -956,9 +956,20 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
         if(len(team_pens)<1):
             player_team_pen_data=0.1
         else:
-            player_team_pen_data = team_pens["Penalty"].values[0]
+            player_team_pen_data = pd.to_numeric(
+                pd.Series([team_pens["Penalty"].values[0]]), errors="coerce"
+            ).fillna(0.1).iloc[0]
+        player_team_pen_data = float(
+            np.clip(player_team_pen_data, 0.0, MAX_TEAM_PENALTY_RATE)
+        )
             
         pen_number = 0 if len(player_pen_takers) == 0 else player_pen_takers["Is_taker"].values[0]
+        pen_number = pd.to_numeric(
+            pd.Series([pen_number]), errors="coerce"
+        ).fillna(0.0).iloc[0]
+        pen_number = float(
+            np.clip(pen_number, 0.0, MAX_PENALTY_TAKER_SHARE)
+        )
 
 
         #Position
