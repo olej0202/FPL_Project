@@ -30,6 +30,7 @@ class TreeNode:
     parent_id: Optional[str]
     probability: float
     chip: str
+    scenario_id: str
 
 
 @dataclass
@@ -45,8 +46,8 @@ def _validate_tree(
     if not isinstance(tree, dict):
         raise ValueError("scenario_tree must be an object.")
     raw_nodes = tree.get("nodes")
-    if not isinstance(raw_nodes, list) or len(raw_nodes) < 3:
-        raise ValueError("A probability tree must contain at least three GW nodes.")
+    if not isinstance(raw_nodes, list) or len(raw_nodes) < 1:
+        raise ValueError("A probability tree must contain at least one GW node.")
 
     nodes: dict[str, TreeNode] = {}
     for index, raw in enumerate(raw_nodes):
@@ -76,6 +77,7 @@ def _validate_tree(
             parent_id=parent_id,
             probability=probability,
             chip=chip,
+            scenario_id=str(raw.get("scenario_id") or "inherit").strip(),
         )
 
     roots = [node.node_id for node in nodes.values() if node.parent_id is None]
@@ -96,9 +98,6 @@ def _validate_tree(
                 f"(GW{parent.gw + 1})."
             )
         children[node.parent_id].append(node.node_id)
-
-    if not any(len(child_ids) > 1 for child_ids in children.values()):
-        raise ValueError("The GW tree must contain at least one split.")
 
     visited: set[str] = set()
     stack = [root_id]
@@ -129,6 +128,7 @@ def _validate_tree(
                 parent_id=node.parent_id,
                 probability=node.probability / total,
                 chip=node.chip,
+                scenario_id=node.scenario_id,
             )
     normalized_nodes[root_id] = TreeNode(
         node_id=nodes[root_id].node_id,
@@ -137,6 +137,7 @@ def _validate_tree(
         parent_id=None,
         probability=1.0,
         chip=nodes[root_id].chip,
+        scenario_id="base",
     )
     nodes = normalized_nodes
 
@@ -182,6 +183,56 @@ def _chip_kwargs(leaf_id: str, nodes: dict[str, TreeNode]) -> dict[str, int]:
         "free_hit_round": chips["freehit"],
         "bb_round": chips["bench_boost"],
     }
+
+
+def _scenario_override_for_leaf(
+    leaf_id: str,
+    nodes: dict[str, TreeNode],
+    base_players: Optional[pd.DataFrame],
+    scenario_players_by_id: dict[str, pd.DataFrame],
+) -> Optional[pd.DataFrame]:
+    if base_players is None or base_players.empty:
+        return base_players
+
+    required = ["name", "GW", "Points"]
+    result = base_players[required].copy()
+    result["name"] = result["name"].astype(str).str.strip()
+    result["GW"] = pd.to_numeric(result["GW"], errors="coerce")
+    result["Points"] = pd.to_numeric(result["Points"], errors="coerce")
+    result = result.dropna(subset=required).drop_duplicates(["name", "GW"], keep="last")
+
+    sources = {"base": result.copy()}
+    for scenario_id, frame in scenario_players_by_id.items():
+        if frame is None or frame.empty:
+            continue
+        source = frame[required].copy()
+        source["name"] = source["name"].astype(str).str.strip()
+        source["GW"] = pd.to_numeric(source["GW"], errors="coerce")
+        source["Points"] = pd.to_numeric(source["Points"], errors="coerce")
+        sources[str(scenario_id)] = (
+            source.dropna(subset=required).drop_duplicates(["name", "GW"], keep="last")
+        )
+
+    result = result.set_index(["name", "GW"])
+    active_scenario = "base"
+    for node in _path_to_root(leaf_id, nodes):
+        requested = str(node.scenario_id or "inherit")
+        if requested == "inherit":
+            continue
+        active_scenario = requested
+        source = sources.get(active_scenario)
+        if source is None:
+            raise ValueError(
+                f"Statistical scenario '{active_scenario}' used by node '{node.label}' "
+                "was not included in the optimizer request."
+            )
+        replacement = source[source["GW"] >= node.gw].set_index(["name", "GW"])
+        result.update(replacement[["Points"]])
+        missing = replacement.index.difference(result.index)
+        if len(missing):
+            result = pd.concat([result, replacement.loc[missing, ["Points"]]])
+
+    return result.reset_index()
 
 
 def _descendant_leaves(node_id: str, children: dict[str, list[str]]) -> list[str]:
@@ -306,6 +357,7 @@ def _objective_value(result: pd.DataFrame) -> float:
 def optimize_scenario_tree(
     *,
     scenario_tree: dict[str, Any],
+    scenario_players_by_id: Optional[dict[str, pd.DataFrame]] = None,
     on_solution: Optional[Callable[[int, list[dict[str, Any]]], None]] = None,
     **base_kwargs: Any,
 ) -> pd.DataFrame:
@@ -314,6 +366,15 @@ def optimize_scenario_tree(
     root_id, nodes, children, leaf_probabilities = _validate_tree(scenario_tree)
     max_candidates = max(1, min(4, int(scenario_tree.get("max_prefix_candidates", 2))))
     base_forced = list(base_kwargs.get("forced_transfers") or [])
+    scenario_players_by_id = scenario_players_by_id or {}
+
+    def players_for_leaf(leaf_id: str) -> Optional[pd.DataFrame]:
+        return _scenario_override_for_leaf(
+            leaf_id,
+            nodes,
+            base_kwargs.get("players_override"),
+            scenario_players_by_id,
+        )
 
     def solve_leaf(
         leaf_id: str,
@@ -325,6 +386,7 @@ def optimize_scenario_tree(
             **_chip_kwargs(leaf_id, nodes),
             forced_transfers=_merge_moves(base_forced, forced_moves),
             locked_transfer_counts_by_gw=dict(locked_counts),
+            players_override=players_for_leaf(leaf_id),
             n_solutions=1,
             on_solution=None,
         )
@@ -349,6 +411,7 @@ def optimize_scenario_tree(
                 **_chip_kwargs(leaf_id, nodes),
                 forced_transfers=_merge_moves(base_forced, forced_moves),
                 locked_transfer_counts_by_gw=dict(locked_counts),
+                players_override=players_for_leaf(leaf_id),
                 n_solutions=1,
                 on_solution=None,
             )
@@ -426,10 +489,17 @@ def optimize_scenario_tree(
         leaf_df["tree_branch_probability"] = leaf_probabilities[leaf_result.leaf_id]
         leaf_df["tree_branch_objective"] = leaf_result.objective
         leaf_df["tree_expected_objective"] = expected_objective
-        leaf_df["tree_split_gw"] = min(
-            nodes[node_id].gw for node_id, child_ids in children.items() if len(child_ids) > 1
-        )
+        split_gws = [nodes[node_id].gw for node_id, child_ids in children.items() if len(child_ids) > 1]
+        leaf_df["tree_split_gw"] = min(split_gws) if split_gws else nodes[root_id].gw
         leaf_df["tree_path_node_ids"] = ">".join(node.node_id for node in path)
+        active_scenario = "base"
+        scenario_path: list[str] = []
+        for node in path:
+            if node.scenario_id != "inherit":
+                active_scenario = node.scenario_id
+            scenario_path.append(f"GW{node.gw}:{active_scenario}")
+        leaf_df["tree_scenario_id"] = active_scenario
+        leaf_df["tree_scenario_path"] = ">".join(scenario_path)
         output_frames.append(leaf_df)
 
     output = pd.concat(output_frames, ignore_index=True)

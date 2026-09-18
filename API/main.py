@@ -52,6 +52,7 @@ class TreeNodeInput(BaseModel):
     parent_id: Optional[str] = None
     probability: float
     chip: Literal["none", "wildcard", "freehit", "bench_boost"] = "none"
+    scenario_id: str = "inherit"
 
 class ScenarioTreeInput(BaseModel):
     nodes: List[TreeNodeInput]
@@ -76,6 +77,7 @@ class OptimizeRequest(BaseModel):
 
     # optional: passed only when model_type == "statistical"
     players: Optional[List[PlayerInput]] = None
+    scenario_players: Optional[Dict[str, List[PlayerInput]]] = None
     forced_transfers: List[ForcedTransferInput] = Field(default_factory=list)
     scenario_tree: Optional[ScenarioTreeInput] = None
     guest_id: Optional[str] = None
@@ -1555,6 +1557,21 @@ def post_my_team_optimize(req: OptimizeRequest, request: Request):
             .reset_index(drop=True)
         )
 
+    scenario_players_by_id: Dict[str, pd.DataFrame] = {}
+    for scenario_id, scenario_rows in (req.scenario_players or {}).items():
+        if not scenario_rows:
+            continue
+        scenario_df = pd.DataFrame([player.dict() for player in scenario_rows])
+        scenario_df["name"] = scenario_df["name"].astype(str).str.strip()
+        scenario_df["GW"] = pd.to_numeric(scenario_df["GW"], errors="coerce")
+        scenario_df["Points"] = pd.to_numeric(scenario_df["Points"], errors="coerce")
+        scenario_players_by_id[str(scenario_id)] = (
+            scenario_df
+            .dropna(subset=["name", "GW", "Points"])
+            .drop_duplicates(subset=["name", "GW"], keep="last")
+            .reset_index(drop=True)
+        )
+
     auth_payload = _auth_payload_optional(request)
     if auth_payload and auth_payload.get("provider") == "google" and auth_payload.get("user_id") is not None:
         try:
@@ -1582,6 +1599,7 @@ def post_my_team_optimize(req: OptimizeRequest, request: Request):
                 "players_count": len(req.players or []),
                 "forced_transfers_count": len(req.forced_transfers or []),
                 "scenario_tree_nodes": len(req.scenario_tree.nodes) if req.scenario_tree else 0,
+                "scenario_player_sets": len(scenario_players_by_id),
             },
         )
     except Exception as e:
@@ -1601,14 +1619,11 @@ def post_my_team_optimize(req: OptimizeRequest, request: Request):
         forced_transfers=[move.dict() for move in (req.forced_transfers or [])],
     )
     tree_nodes = req.scenario_tree.nodes if req.scenario_tree else []
-    child_counts: Dict[str, int] = {}
-    for node in tree_nodes:
-        if node.parent_id:
-            child_counts[node.parent_id] = child_counts.get(node.parent_id, 0) + 1
-    use_scenario_tree = bool(tree_nodes and any(count > 1 for count in child_counts.values()))
+    use_scenario_tree = bool(tree_nodes)
     optimizer_fn = optimize_scenario_tree if use_scenario_tree else optimize_my_team
     if use_scenario_tree:
         optimize_kwargs["scenario_tree"] = req.scenario_tree.dict()
+        optimize_kwargs["scenario_players_by_id"] = scenario_players_by_id
 
     _acquire_optimization_slot()
     if req.stream:

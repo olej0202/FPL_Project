@@ -343,6 +343,7 @@ export function MyTeamDataContextProvider({ children }) {
    *  - playersData: array of player rows
    *  - forcedTransfers: manual out/in moves locked to an absolute GW
    *  - scenarioTree: optional multi-branch probability tree
+   *  - scenarioPlayerSets: statistical player projections keyed by scenario id
    */
   const fetchTeam = async (options = {}) => {
     const {
@@ -350,6 +351,7 @@ export function MyTeamDataContextProvider({ children }) {
       playersData = null,
       forcedTransfers = [],
       scenarioTree = null,
+      scenarioPlayerSets = null,
     } = options;
     const normalizedForcedTransfers = (Array.isArray(forcedTransfers) ? forcedTransfers : [])
       .map((move) => ({
@@ -366,7 +368,7 @@ export function MyTeamDataContextProvider({ children }) {
           move.in_name
       );
     const normalizedScenarioTree =
-      scenarioTree && Array.isArray(scenarioTree.nodes) && scenarioTree.nodes.length > 2
+      scenarioTree && Array.isArray(scenarioTree.nodes) && scenarioTree.nodes.length > 0
         ? scenarioTree
         : null;
 
@@ -555,6 +557,22 @@ export function MyTeamDataContextProvider({ children }) {
             Points: p.calc_points,
           }))
         : null;
+      const slimScenarioPlayers = useStatisticalModel && normalizedScenarioTree && scenarioPlayerSets
+        ? Object.fromEntries(
+            Object.entries(scenarioPlayerSets).map(([scenarioId, rows]) => [
+              scenarioId,
+              (Array.isArray(rows) ? rows : []).map((p) => ({
+                name: p.name,
+                web_name: p.web_name,
+                Team: p.Team,
+                GW: p.GW,
+                position: p.position,
+                value: p.value,
+                Points: p.calc_points ?? p.Points,
+              })),
+            ])
+          )
+        : null;
 
       const body = {
         team_id: Number(teamId),
@@ -568,6 +586,7 @@ export function MyTeamDataContextProvider({ children }) {
         players: slimPlayers,
         forced_transfers: normalizedForcedTransfers,
         scenario_tree: normalizedScenarioTree,
+        scenario_players: slimScenarioPlayers,
         risk: Number(risk) || 0,
         transval: Number(valtrans) || 0.5,
         stream: true,
