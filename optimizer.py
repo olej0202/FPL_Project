@@ -235,6 +235,54 @@ def _scenario_override_for_leaf(
     return result.reset_index()
 
 
+def _projection_diagnostics(
+    base_players: Optional[pd.DataFrame],
+    leaf_players: Optional[pd.DataFrame],
+) -> dict[str, float | int]:
+    """Describe the exact point differences handed to a leaf solve.
+
+    These values are returned with the optimizer result so the UI can verify
+    that two visually different tree branches really used different player
+    projections, instead of only showing their scenario labels.
+    """
+
+    empty = {
+        "changed_rows": 0,
+        "signed_diff": 0.0,
+        "absolute_diff": 0.0,
+        "max_abs_diff": 0.0,
+    }
+    if base_players is None or leaf_players is None or base_players.empty or leaf_players.empty:
+        return empty
+
+    required = ["name", "GW", "Points"]
+
+    def normalized(frame: pd.DataFrame, value_name: str) -> pd.DataFrame:
+        data = frame[required].copy()
+        data["name"] = data["name"].astype(str).str.strip()
+        data["GW"] = pd.to_numeric(data["GW"], errors="coerce")
+        data[value_name] = pd.to_numeric(data.pop("Points"), errors="coerce")
+        return (
+            data.dropna(subset=["name", "GW", value_name])
+            .drop_duplicates(["name", "GW"], keep="last")
+            .set_index(["name", "GW"])
+        )
+
+    base = normalized(base_players, "base_points")
+    leaf = normalized(leaf_players, "leaf_points")
+    comparison = base.join(leaf, how="outer").fillna(0.0)
+    differences = comparison["leaf_points"] - comparison["base_points"]
+    changed = differences[differences.abs() > 1e-9]
+    if changed.empty:
+        return empty
+    return {
+        "changed_rows": int(changed.size),
+        "signed_diff": float(changed.sum()),
+        "absolute_diff": float(changed.abs().sum()),
+        "max_abs_diff": float(changed.abs().max()),
+    }
+
+
 def _descendant_leaves(node_id: str, children: dict[str, list[str]]) -> list[str]:
     if not children[node_id]:
         return [node_id]
@@ -377,14 +425,17 @@ def optimize_scenario_tree(
     max_candidates = max(1, min(4, int(scenario_tree.get("max_prefix_candidates", 2))))
     base_forced = list(base_kwargs.get("forced_transfers") or [])
     scenario_players_by_id = scenario_players_by_id or {}
+    leaf_players_cache: dict[str, Optional[pd.DataFrame]] = {}
 
     def players_for_leaf(leaf_id: str) -> Optional[pd.DataFrame]:
-        return _scenario_override_for_leaf(
-            leaf_id,
-            nodes,
-            base_kwargs.get("players_override"),
-            scenario_players_by_id,
-        )
+        if leaf_id not in leaf_players_cache:
+            leaf_players_cache[leaf_id] = _scenario_override_for_leaf(
+                leaf_id,
+                nodes,
+                base_kwargs.get("players_override"),
+                scenario_players_by_id,
+            )
+        return leaf_players_cache[leaf_id]
 
     def solve_leaf(
         leaf_id: str,
@@ -528,6 +579,14 @@ def optimize_scenario_tree(
             scenario_path.append(f"GW{node.gw}:{active_scenario}")
         leaf_df["tree_scenario_id"] = active_scenario
         leaf_df["tree_scenario_path"] = ">".join(scenario_path)
+        projection_diagnostics = _projection_diagnostics(
+            base_kwargs.get("players_override"),
+            players_for_leaf(leaf_result.leaf_id),
+        )
+        leaf_df["tree_projection_changed_rows"] = projection_diagnostics["changed_rows"]
+        leaf_df["tree_projection_signed_diff"] = projection_diagnostics["signed_diff"]
+        leaf_df["tree_projection_absolute_diff"] = projection_diagnostics["absolute_diff"]
+        leaf_df["tree_projection_max_abs_diff"] = projection_diagnostics["max_abs_diff"]
         output_frames.append(leaf_df)
 
     output = pd.concat(output_frames, ignore_index=True)

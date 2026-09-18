@@ -159,6 +159,38 @@ const buildStatisticalPlayerPayload = (rows) => {
   return Array.from(uniqueByPlayerGw.values());
 };
 
+const compareStatisticalPlayerPayloads = (baseRows, scenarioRows, fromGw = 1) => {
+  const valuesByKey = (rows) => {
+    const values = new Map();
+    (Array.isArray(rows) ? rows : []).forEach((row) => {
+      const name = String(row?.name ?? row?.Name ?? "").trim();
+      const gw = Number(row?.GW);
+      const points = Number(row?.calc_points ?? row?.Points);
+      if (!name || !Number.isFinite(gw) || gw < Number(fromGw) || !Number.isFinite(points)) return;
+      values.set(`${name}__${gw}`, points);
+    });
+    return values;
+  };
+
+  const base = valuesByKey(baseRows);
+  const scenario = valuesByKey(scenarioRows);
+  const keys = new Set([...base.keys(), ...scenario.keys()]);
+  let changedRows = 0;
+  let signedDiff = 0;
+  let absoluteDiff = 0;
+  let maxAbsDiff = 0;
+  keys.forEach((key) => {
+    const difference = (scenario.get(key) || 0) - (base.get(key) || 0);
+    const absolute = Math.abs(difference);
+    if (absolute <= 1e-9) return;
+    changedRows += 1;
+    signedDiff += difference;
+    absoluteDiff += absolute;
+    maxAbsDiff = Math.max(maxAbsDiff, absolute);
+  });
+  return { changedRows, signedDiff, absoluteDiff, maxAbsDiff };
+};
+
 const normalizeTeamKey = (s) =>
   String(s || "")
     .trim()
@@ -1068,6 +1100,10 @@ export default function MyTeamOptimize() {
         splitGw: Number(row?.tree_split_gw),
         scenarioId: String(row?.tree_scenario_id || BASE_SCENARIO_ID),
         scenarioPath: String(row?.tree_scenario_path || ""),
+        projectionChangedRows: Number(row?.tree_projection_changed_rows),
+        projectionSignedDiff: Number(row?.tree_projection_signed_diff),
+        projectionAbsoluteDiff: Number(row?.tree_projection_absolute_diff),
+        projectionMaxAbsDiff: Number(row?.tree_projection_max_abs_diff),
       });
     });
     return Array.from(byId.values());
@@ -1355,6 +1391,19 @@ export default function MyTeamOptimize() {
     treeNodes.forEach(resolve);
     return effective;
   }, [adjustmentScenarios, treeNodes]);
+  const treeScenarioDiagnosticsByNodeId = useMemo(() => {
+    const diagnostics = new Map();
+    const baseRows = statisticalScenarioPlayerSets?.[BASE_SCENARIO_ID] || [];
+    treeNodes.forEach((node) => {
+      const effectiveScenarioId = treeEffectiveScenarioById.get(node.id) || BASE_SCENARIO_ID;
+      const scenarioRows = statisticalScenarioPlayerSets?.[effectiveScenarioId] || [];
+      diagnostics.set(
+        node.id,
+        compareStatisticalPlayerPayloads(baseRows, scenarioRows, Number(node.gw) || 1)
+      );
+    });
+    return diagnostics;
+  }, [statisticalScenarioPlayerSets, treeEffectiveScenarioById, treeNodes]);
   const treeTopologyKey = treeNodes
     .map((node) => `${node.id}:${node.parentId || "root"}:${node.gw}`)
     .sort()
@@ -2317,6 +2366,23 @@ export default function MyTeamOptimize() {
   const handleOptimizeClick = async () => {
     const useStatistical = modelType === "statistical" && hasStatisticalData;
     const playersPayload = useStatistical ? statisticalPlayersPayload : null;
+    if (useStatistical && treeMode) {
+      const ineffectiveScenarioNodes = syncedTreeNodes.filter((node) => {
+        const selectedScenarioId = String(node.scenarioId || "inherit");
+        if (!node.parentId || selectedScenarioId === "inherit" || selectedScenarioId === BASE_SCENARIO_ID) {
+          return false;
+        }
+        return (treeScenarioDiagnosticsByNodeId.get(node.id)?.changedRows || 0) === 0;
+      });
+      if (ineffectiveScenarioNodes.length > 0) {
+        const labels = ineffectiveScenarioNodes.map((node) => `${node.label} (GW${node.gw})`).join(", ");
+        alert(
+          `The selected scenario has no player-prediction differences from Base at or after: ${labels}. ` +
+          "Save a player/team/fixture adjustment in that scenario before optimizing."
+        );
+        return;
+      }
+    }
     const submittedTransfers = Object.values(manualPlan || {})
       .flatMap((plan) => (Array.isArray(plan?.transfers) ? plan.transfers : []));
     const forcedTransfers = submittedTransfers
@@ -2945,6 +3011,8 @@ export default function MyTeamOptimize() {
                         const position = treeNodePositions[node.id] || treeAutoLayout.positions[node.id] || { x: 0, y: 0 };
                         const isLeaf = children.length === 0;
                         const isDragging = draggingTreeNode?.nodeId === node.id;
+                        const effectiveScenarioId = treeEffectiveScenarioById.get(node.id) || BASE_SCENARIO_ID;
+                        const scenarioDiagnostics = treeScenarioDiagnosticsByNodeId.get(node.id);
                         return (
                           <div
                             key={node.id}
@@ -3024,28 +3092,40 @@ export default function MyTeamOptimize() {
                               </label>
 
                               {modelType === "statistical" && (
-                                <label className="mt-2 block text-[10px] font-semibold" style={{ color: PALETTE.muted }}>
-                                  Statistical scenario
-                                  {node.parentId ? (
-                                    <select
-                                      value={String(node.scenarioId || "inherit")}
-                                      onChange={(event) => updateTreeNode(node.id, { scenarioId: event.target.value })}
-                                      className="mt-1 h-8 w-full rounded-lg border bg-white px-2 text-xs outline-none"
-                                      style={{ borderColor: PALETTE.border }}
+                                <div className="mt-2">
+                                  <label className="block text-[10px] font-semibold" style={{ color: PALETTE.muted }}>
+                                    Statistical scenario
+                                    {node.parentId ? (
+                                      <select
+                                        value={String(node.scenarioId || "inherit")}
+                                        onChange={(event) => updateTreeNode(node.id, { scenarioId: event.target.value })}
+                                        className="mt-1 h-8 w-full rounded-lg border bg-white px-2 text-xs outline-none"
+                                        style={{ borderColor: PALETTE.border }}
+                                      >
+                                        <option value="inherit">
+                                          Inherit ({adjustmentScenarios.find((scenario) => scenario.id === treeEffectiveScenarioById.get(node.parentId))?.name || "Base scenario"})
+                                        </option>
+                                        {adjustmentScenarios.map((scenario) => (
+                                          <option key={scenario.id} value={scenario.id}>{scenario.name}</option>
+                                        ))}
+                                      </select>
+                                    ) : (
+                                      <div className="mt-1 flex h-8 items-center rounded-lg border bg-slate-50 px-2 text-xs" style={{ borderColor: PALETTE.border }}>
+                                        Base scenario
+                                      </div>
+                                    )}
+                                  </label>
+                                  {node.parentId && effectiveScenarioId !== BASE_SCENARIO_ID && scenarioDiagnostics && (
+                                    <p
+                                      className="mt-1 text-[9px] font-semibold leading-tight"
+                                      style={{ color: scenarioDiagnostics.changedRows > 0 ? PALETTE.gold : PALETTE.danger }}
                                     >
-                                      <option value="inherit">
-                                        Inherit ({adjustmentScenarios.find((scenario) => scenario.id === treeEffectiveScenarioById.get(node.parentId))?.name || "Base scenario"})
-                                      </option>
-                                      {adjustmentScenarios.map((scenario) => (
-                                        <option key={scenario.id} value={scenario.id}>{scenario.name}</option>
-                                      ))}
-                                    </select>
-                                  ) : (
-                                    <div className="mt-1 flex h-8 items-center rounded-lg border bg-slate-50 px-2 text-xs" style={{ borderColor: PALETTE.border }}>
-                                      Base scenario
-                                    </div>
+                                      {scenarioDiagnostics.changedRows > 0
+                                        ? `${scenarioDiagnostics.changedRows} predictions differ from Base from GW${node.gw} (max ${scenarioDiagnostics.maxAbsDiff.toFixed(2)} pts)`
+                                        : `Warning: this scenario has the same predictions as Base from GW${node.gw}`}
+                                    </p>
                                   )}
-                                </label>
+                                </div>
                               )}
 
                               {isLeaf && Number(node.gw) < 38 && (
@@ -3537,6 +3617,11 @@ export default function MyTeamOptimize() {
                             {modelType === "statistical" && (
                               <span className="mt-0.5 block text-[9px] opacity-70">
                                 {adjustmentScenarios.find((scenario) => scenario.id === branch.scenarioId)?.name || "Base scenario"}
+                                {branch.scenarioId !== BASE_SCENARIO_ID && Number.isFinite(branch.projectionChangedRows)
+                                  ? branch.projectionChangedRows > 0
+                                    ? ` · ${branch.projectionChangedRows} changed predictions · max ${branch.projectionMaxAbsDiff.toFixed(2)} pts`
+                                    : " · no prediction differences from Base"
+                                  : ""}
                               </span>
                             )}
                           </button>
