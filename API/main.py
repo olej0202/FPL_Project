@@ -11,6 +11,7 @@ import numpy as np
 from fastapi import HTTPException
 from fastapi.responses import PlainTextResponse
 from Generate_Optimize_Pyrobi_test import optimize_my_team
+from optimizer import optimize_scenario_tree
 from Generate_Fetch_Myteam import build_team_dataframe
 from typing import List, Optional, Literal, Dict, Any
 from pydantic import BaseModel, Field
@@ -44,6 +45,18 @@ class ForcedTransferInput(BaseModel):
     out_name: str
     in_name: str
 
+class TreeNodeInput(BaseModel):
+    id: str
+    label: str
+    gw: int
+    parent_id: Optional[str] = None
+    probability: float
+    chip: Literal["none", "wildcard", "freehit", "bench_boost"] = "none"
+
+class ScenarioTreeInput(BaseModel):
+    nodes: List[TreeNodeInput]
+    max_prefix_candidates: int = 2
+
 class OptimizeRequest(BaseModel):
     team_id: int
 
@@ -64,6 +77,7 @@ class OptimizeRequest(BaseModel):
     # optional: passed only when model_type == "statistical"
     players: Optional[List[PlayerInput]] = None
     forced_transfers: List[ForcedTransferInput] = Field(default_factory=list)
+    scenario_tree: Optional[ScenarioTreeInput] = None
     guest_id: Optional[str] = None
 
 
@@ -1417,6 +1431,8 @@ def _sse_event(event: str, payload: dict) -> str:
 def _stream_optimization(
     opt_kwargs: dict,
     *,
+    optimizer_fn=optimize_my_team,
+    expected_solutions: int = OPTIMIZER_N_SOLUTIONS,
     optimization_event_id: Optional[int] = None,
     release_slot_on_finish: bool = False,
 ) -> StreamingResponse:
@@ -1439,7 +1455,7 @@ def _stream_optimization(
                     {
                         "solution": int(solution_no),
                         "rows": rows,
-                        "n_solutions": OPTIMIZER_N_SOLUTIONS,
+                        "n_solutions": expected_solutions,
                     },
                 )
             )
@@ -1447,7 +1463,7 @@ def _stream_optimization(
         try:
             solve_kwargs = dict(opt_kwargs)
             solve_kwargs["on_solution"] = _on_solution
-            optimize_my_team(**solve_kwargs)
+            optimizer_fn(**solve_kwargs)
             try:
                 _update_optimization_event_predicted_points(
                     optimization_event_id,
@@ -1459,7 +1475,7 @@ def _stream_optimization(
                 (
                     "done",
                     {
-                        "n_solutions": OPTIMIZER_N_SOLUTIONS,
+                        "n_solutions": expected_solutions,
                         "solutions_found": int(solutions_found["count"]),
                     },
                 )
@@ -1482,7 +1498,7 @@ def _stream_optimization(
         raise
 
     def _generator():
-        yield _sse_event("meta", {"n_solutions": OPTIMIZER_N_SOLUTIONS})
+        yield _sse_event("meta", {"n_solutions": expected_solutions})
         while True:
             event, payload = events.get()
             if event == "__end__":
@@ -1565,6 +1581,7 @@ def post_my_team_optimize(req: OptimizeRequest, request: Request):
                 "force_in_list": req.force_in_list or [],
                 "players_count": len(req.players or []),
                 "forced_transfers_count": len(req.forced_transfers or []),
+                "scenario_tree_nodes": len(req.scenario_tree.nodes) if req.scenario_tree else 0,
             },
         )
     except Exception as e:
@@ -1583,17 +1600,28 @@ def post_my_team_optimize(req: OptimizeRequest, request: Request):
         players_df=players_df,
         forced_transfers=[move.dict() for move in (req.forced_transfers or [])],
     )
+    tree_nodes = req.scenario_tree.nodes if req.scenario_tree else []
+    child_counts: Dict[str, int] = {}
+    for node in tree_nodes:
+        if node.parent_id:
+            child_counts[node.parent_id] = child_counts.get(node.parent_id, 0) + 1
+    use_scenario_tree = bool(tree_nodes and any(count > 1 for count in child_counts.values()))
+    optimizer_fn = optimize_scenario_tree if use_scenario_tree else optimize_my_team
+    if use_scenario_tree:
+        optimize_kwargs["scenario_tree"] = req.scenario_tree.dict()
 
     _acquire_optimization_slot()
     if req.stream:
         return _stream_optimization(
             optimize_kwargs,
+            optimizer_fn=optimizer_fn,
+            expected_solutions=1 if use_scenario_tree else OPTIMIZER_N_SOLUTIONS,
             optimization_event_id=optimization_event_id,
             release_slot_on_finish=True,
         )
 
     try:
-        df = optimize_my_team(**optimize_kwargs)
+        df = optimizer_fn(**optimize_kwargs)
         rows = df.to_dict(orient="records")
         try:
             _update_optimization_event_predicted_points(

@@ -342,12 +342,14 @@ export function MyTeamDataContextProvider({ children }) {
    *  - useStatisticalModel: boolean
    *  - playersData: array of player rows
    *  - forcedTransfers: manual out/in moves locked to an absolute GW
+   *  - scenarioTree: optional multi-branch probability tree
    */
   const fetchTeam = async (options = {}) => {
     const {
       useStatisticalModel = false,
       playersData = null,
       forcedTransfers = [],
+      scenarioTree = null,
     } = options;
     const normalizedForcedTransfers = (Array.isArray(forcedTransfers) ? forcedTransfers : [])
       .map((move) => ({
@@ -363,6 +365,10 @@ export function MyTeamDataContextProvider({ children }) {
           move.out_name &&
           move.in_name
       );
+    const normalizedScenarioTree =
+      scenarioTree && Array.isArray(scenarioTree.nodes) && scenarioTree.nodes.length > 2
+        ? scenarioTree
+        : null;
 
     if (!teamId) {
       alert("Team ID is required");
@@ -371,7 +377,7 @@ export function MyTeamDataContextProvider({ children }) {
     setLoading(true);
     setData(null);
     setOptimizationProgress({
-      expectedSolutions: OPTIMIZATION_SOLUTIONS,
+      expectedSolutions: normalizedScenarioTree ? 1 : OPTIMIZATION_SOLUTIONS,
       receivedSolutions: 0,
       streaming: true,
     });
@@ -391,8 +397,8 @@ export function MyTeamDataContextProvider({ children }) {
           setLockedPlayersData((prev) => mergePlayersData(prev, derivedLocked));
 
           setOptimizationProgress({
-            expectedSolutions: OPTIMIZATION_SOLUTIONS,
-            receivedSolutions: OPTIMIZATION_SOLUTIONS,
+            expectedSolutions: normalizedScenarioTree ? 1 : OPTIMIZATION_SOLUTIONS,
+            receivedSolutions: normalizedScenarioTree ? 1 : OPTIMIZATION_SOLUTIONS,
             streaming: false,
           });
           return receivedRows;
@@ -505,7 +511,11 @@ export function MyTeamDataContextProvider({ children }) {
       };
 
       // --------- AI model: GET query params ---------
-      if (!useStatisticalModel && normalizedForcedTransfers.length === 0) {
+      if (
+        !useStatisticalModel &&
+        normalizedForcedTransfers.length === 0 &&
+        !normalizedScenarioTree
+      ) {
         const params = new URLSearchParams({ team_id: teamId });
 
         if (bbRound) params.append("bb_round", bbRound);
@@ -557,6 +567,7 @@ export function MyTeamDataContextProvider({ children }) {
         model_type: useStatisticalModel ? "statistical" : "ai",
         players: slimPlayers,
         forced_transfers: normalizedForcedTransfers,
+        scenario_tree: normalizedScenarioTree,
         risk: Number(risk) || 0,
         transval: Number(valtrans) || 0.5,
         stream: true,

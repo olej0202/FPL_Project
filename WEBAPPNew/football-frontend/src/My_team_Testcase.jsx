@@ -26,6 +26,7 @@ import {
   CircleDashed,
   Zap,
   Lock,
+  GitBranch,
 } from "lucide-react";
 import {
   CartesianGrid,
@@ -59,6 +60,13 @@ const PALETTE = {
 
 const isValidGW = (gw) =>
   Number.isInteger(gw) && gw >= 1 && gw <= 38;
+
+const DEFAULT_TREE_NODES = [
+  { id: "gw6", label: "GW6", gw: 6, parentId: null, probability: 100, chip: "none" },
+  { id: "gw7", label: "GW7", gw: 7, parentId: "gw6", probability: 100, chip: "none" },
+  { id: "gw8_wc", label: "Wildcard", gw: 8, parentId: "gw7", probability: 40, chip: "wildcard" },
+  { id: "gw8_normal", label: "No Wildcard", gw: 8, parentId: "gw7", probability: 60, chip: "none" },
+];
 
 const normalizeTeamKey = (s) =>
   String(s || "")
@@ -567,6 +575,9 @@ export default function MyTeamOptimize() {
   const [chipPanelOpen, setChipPanelOpen] = useState(false);
   const [selectedGW, setSelectedGW] = useState(null);
   const [selectedSolution, setSelectedSolution] = useState(1);
+  const [treeMode, setTreeMode] = useState(false);
+  const [treeNodes, setTreeNodes] = useState(() => DEFAULT_TREE_NODES.map((node) => ({ ...node })));
+  const [selectedTreeBranchId, setSelectedTreeBranchId] = useState("");
   const [manualPlan, setManualPlan] = useState({});
   const [transferOutName, setTransferOutName] = useState("");
   const [transferInKey, setTransferInKey] = useState("");
@@ -893,7 +904,7 @@ export default function MyTeamOptimize() {
   useEffect(() => {
     sethas_changed(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [teamId, bbRound, wildRound, bannedList, freehitROund, n_hits, modelType, solverScenarioId, risk, valtrans]);
+  }, [teamId, bbRound, wildRound, bannedList, freehitROund, n_hits, modelType, solverScenarioId, risk, valtrans, treeMode, treeNodes]);
 
   useEffect(() => {
     if (loading) {
@@ -937,16 +948,59 @@ export default function MyTeamOptimize() {
     return () => clearTimeout(t);
   }, [loading]);
 
-  const solutionNumbers = useMemo(() => {
+  const treeBranches = useMemo(() => {
     if (!Array.isArray(data) || data.length === 0) return [];
+    const byId = new Map();
+    data.forEach((row) => {
+      const id = String(row?.tree_branch_id || "").trim();
+      if (!id || byId.has(id)) return;
+      byId.set(id, {
+        id,
+        label: String(row?.tree_branch_label || id),
+        probability: Number(row?.tree_branch_probability),
+        objective: Number(row?.tree_branch_objective),
+        expectedObjective: Number(row?.tree_expected_objective),
+        splitGw: Number(row?.tree_split_gw),
+      });
+    });
+    return Array.from(byId.values());
+  }, [data]);
+
+  useEffect(() => {
+    if (!treeBranches.length) {
+      setSelectedTreeBranchId("");
+      return;
+    }
+    setSelectedTreeBranchId((previous) =>
+      treeBranches.some((branch) => branch.id === previous)
+        ? previous
+        : treeBranches[0].id
+    );
+  }, [treeBranches]);
+
+  const branchScopedData = useMemo(() => {
+    if (!Array.isArray(data) || data.length === 0) return [];
+    if (!treeBranches.length) return data;
+    const branchId = treeBranches.some((branch) => branch.id === selectedTreeBranchId)
+      ? selectedTreeBranchId
+      : treeBranches[0].id;
+    return data.filter((row) => String(row?.tree_branch_id || "") === branchId);
+  }, [data, selectedTreeBranchId, treeBranches]);
+
+  const activeTreeBranch = treeBranches.find(
+    (branch) => branch.id === selectedTreeBranchId
+  ) || treeBranches[0] || null;
+
+  const solutionNumbers = useMemo(() => {
+    if (!branchScopedData.length) return [];
     return Array.from(
       new Set(
-        data
+        branchScopedData
           .map((row) => Number(row?.solution || 1))
           .filter((n) => Number.isFinite(n))
       )
     ).sort((a, b) => a - b);
-  }, [data]);
+  }, [branchScopedData]);
 
   useEffect(() => {
     if (!solutionNumbers.length) {
@@ -968,15 +1022,15 @@ export default function MyTeamOptimize() {
   );
 
   const activeSolutionData = useMemo(() => {
-    if (!Array.isArray(data) || data.length === 0) return [];
-    const fallbackSolution = Number(data?.[0]?.solution || 1);
+    if (!branchScopedData.length) return [];
+    const fallbackSolution = Number(branchScopedData?.[0]?.solution || 1);
     const targetSolution = solutionNumbers.includes(selectedSolution)
       ? selectedSolution
       : solutionNumbers[0] ?? fallbackSolution;
-    return data.filter(
+    return branchScopedData.filter(
       (row) => Number(row?.solution || 1) === Number(targetSolution)
     );
-  }, [data, selectedSolution, solutionNumbers]);
+  }, [branchScopedData, selectedSolution, solutionNumbers]);
 
   const loadedTeamPitchRows = useMemo(() => {
     if (!Array.isArray(teamData) || teamData.length === 0) return [];
@@ -1160,9 +1214,97 @@ export default function MyTeamOptimize() {
         .some((transfer) => !transfer?.isLocked),
     [manualPlan]
   );
+  const treeChildrenByParent = useMemo(() => {
+    const children = new Map();
+    treeNodes.forEach((node) => {
+      if (!node.parentId) return;
+      if (!children.has(node.parentId)) children.set(node.parentId, []);
+      children.get(node.parentId).push(node);
+    });
+    return children;
+  }, [treeNodes]);
+  const treeHasSplit = useMemo(
+    () => Array.from(treeChildrenByParent.values()).some((children) => children.length > 1),
+    [treeChildrenByParent]
+  );
+  const treeConfigValid = Boolean(
+    !treeMode ||
+      (
+        treeNodes.filter((node) => !node.parentId).length === 1 &&
+        treeNodes.every((node) => {
+          const parent = node.parentId
+            ? treeNodes.find((candidate) => candidate.id === node.parentId)
+            : null;
+          return (
+            isValidGW(Number(node.gw)) &&
+            Number(node.probability) > 0 &&
+            (!node.parentId || (parent && Number(node.gw) === Number(parent.gw) + 1))
+          );
+        }) &&
+        treeHasSplit
+      )
+  );
+
+  const updateTreeNode = (nodeId, patch) => {
+    setTreeNodes((previous) =>
+      previous.map((node) => (node.id === nodeId ? { ...node, ...patch } : node))
+    );
+  };
+
+  const addTreeChildren = (parentId, split = false) => {
+    setTreeNodes((previous) => {
+      const parent = previous.find((node) => node.id === parentId);
+      if (!parent || Number(parent.gw) >= 38) return previous;
+      const existing = previous.filter((node) => node.parentId === parentId);
+      if (!split && existing.length > 0) return previous;
+
+      const addCount = split && existing.length === 0 ? 2 : 1;
+      const totalChildren = existing.length + addCount;
+      const probability = 100 / totalChildren;
+      const rebalanced = previous.map((node) =>
+        node.parentId === parentId ? { ...node, probability } : node
+      );
+      const timestamp = Date.now();
+      const additions = Array.from({ length: addCount }, (_, index) => ({
+        id: `node_${timestamp}_${index}_${Math.random().toString(16).slice(2)}`,
+        label: `Branch ${existing.length + index + 1}`,
+        gw: Number(parent.gw) + 1,
+        parentId,
+        probability,
+        chip: "none",
+      }));
+      return [...rebalanced, ...additions];
+    });
+  };
+
+  const removeTreeBranch = (nodeId) => {
+    setTreeNodes((previous) => {
+      const removeIds = new Set([nodeId]);
+      let changed = true;
+      while (changed) {
+        changed = false;
+        previous.forEach((node) => {
+          if (node.parentId && removeIds.has(node.parentId) && !removeIds.has(node.id)) {
+            removeIds.add(node.id);
+            changed = true;
+          }
+        });
+      }
+      const kept = previous.filter((node) => !removeIds.has(node.id));
+      const removedNode = previous.find((node) => node.id === nodeId);
+      if (!removedNode?.parentId) return previous;
+      const siblings = kept.filter((node) => node.parentId === removedNode.parentId);
+      if (!siblings.length) return kept;
+      const probability = 100 / siblings.length;
+      return kept.map((node) =>
+        node.parentId === removedNode.parentId ? { ...node, probability } : node
+      );
+    });
+  };
   const canOptimize = Boolean(
     teamId &&
       !optimizationProgress?.streaming &&
+      treeConfigValid &&
       (has_changed || hasPendingManualTransfers)
   );
   const manualStatusOverrides = activeManualPlan.statusOverrides || {};
@@ -1954,6 +2096,7 @@ export default function MyTeamOptimize() {
       submittedTransfers.map((transfer) => transfer?.id).filter(Boolean)
     );
     setSelectedSolution(1);
+    setSelectedTreeBranchId("");
     setHiddenModelTransferKeys([]);
     setTransferOutName("");
     setTransferInKey("");
@@ -1962,6 +2105,19 @@ export default function MyTeamOptimize() {
       useStatisticalModel: useStatistical,
       playersData: playersPayload,
       forcedTransfers,
+      scenarioTree: treeMode
+        ? {
+            max_prefix_candidates: 2,
+            nodes: treeNodes.map((node) => ({
+              id: node.id,
+              label: node.label,
+              gw: Number(node.gw),
+              parent_id: node.parentId || null,
+              probability: Number(node.probability) / 100,
+              chip: node.chip || "none",
+            })),
+          }
+        : null,
     });
     const optimized = optimizationResult === true || optimizationResult?.ok === true;
     const resultRows = Array.isArray(optimizationResult?.rows)
@@ -2095,6 +2251,9 @@ export default function MyTeamOptimize() {
           scenarioId: modelType === "statistical" ? solverScenarioId : null,
           scenarioName: modelType === "statistical" ? selectedSolverScenario?.name || "Base scenario" : null,
           selectedSolution: Number(selectedSolution || 1),
+          treeMode,
+          treeNodes,
+          selectedTreeBranchId,
         },
         result: {
           data,
@@ -2412,6 +2571,165 @@ export default function MyTeamOptimize() {
               </FieldShell>
             )}
 
+            <div
+              className="mt-4 rounded-[24px] p-4"
+              style={{ border: `1px solid ${treeMode ? PALETTE.gold : PALETTE.border}`, background: "rgba(248,250,252,0.88)" }}
+            >
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <div className="inline-flex items-center gap-2 text-sm font-semibold" style={{ color: PALETTE.gold }}>
+                    <GitBranch size={16} className="lucide-icon" />
+                    Decision tree
+                  </div>
+                  <p className="mt-1 text-[11px]" style={{ color: PALETTE.muted }}>
+                    Build GW nodes, split any path, and attach chips to individual nodes.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setTreeMode((enabled) => !enabled)}
+                  className="gold-ring rounded-full px-3 py-1.5 text-xs font-semibold transition"
+                  style={{
+                    border: `1px solid ${treeMode ? PALETTE.gold : PALETTE.border}`,
+                    background: treeMode ? `linear-gradient(135deg, ${PALETTE.gold}, ${PALETTE.goldSoft})` : "white",
+                    color: treeMode ? "#0f172a" : PALETTE.muted,
+                  }}
+                >
+                  {treeMode ? "Tree enabled" : "Enable tree"}
+                </button>
+              </div>
+
+              {treeMode && (
+                <div className="mt-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-[11px]" style={{ color: PALETTE.muted }}>
+                      Child probabilities are conditional and normalized within each split.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setTreeNodes(DEFAULT_TREE_NODES.map((node) => ({ ...node })))}
+                      className="gold-ring shrink-0 rounded-full border bg-white px-3 py-1.5 text-[11px] font-semibold"
+                      style={{ borderColor: PALETTE.border, color: PALETTE.gold }}
+                    >
+                      Reset example
+                    </button>
+                  </div>
+
+                  <div className="mt-3 overflow-x-auto pb-2">
+                    <div className="flex min-w-max items-start gap-4">
+                      {Array.from(new Set(treeNodes.map((node) => Number(node.gw))))
+                        .sort((a, b) => a - b)
+                        .map((gw) => (
+                          <div key={gw} className="w-64 shrink-0">
+                            <div className="mb-2 text-center text-xs font-black" style={{ color: PALETTE.gold }}>
+                              GW{gw}
+                            </div>
+                            <div className="space-y-3">
+                              {treeNodes.filter((node) => Number(node.gw) === gw).map((node) => {
+                                const children = treeChildrenByParent.get(node.id) || [];
+                                const parent = node.parentId
+                                  ? treeNodes.find((candidate) => candidate.id === node.parentId)
+                                  : null;
+                                return (
+                                  <div
+                                    key={node.id}
+                                    className="rounded-2xl border bg-white p-3 shadow-sm"
+                                    style={{ borderColor: node.chip !== "none" ? PALETTE.gold : PALETTE.border }}
+                                  >
+                                    <div className="flex items-center justify-between gap-2">
+                                      <input
+                                        value={node.label}
+                                        onChange={(event) => updateTreeNode(node.id, { label: event.target.value })}
+                                        className="min-w-0 flex-1 rounded-lg border px-2 py-1 text-xs font-semibold outline-none"
+                                        style={{ borderColor: PALETTE.border }}
+                                        aria-label={`Name for GW${gw} node`}
+                                      />
+                                      {node.parentId && (
+                                        <button
+                                          type="button"
+                                          onClick={() => removeTreeBranch(node.id)}
+                                          className="gold-ring rounded-full p-1"
+                                          style={{ color: PALETTE.danger }}
+                                          title="Remove this branch and all nodes after it"
+                                        >
+                                          <X size={13} />
+                                        </button>
+                                      )}
+                                    </div>
+                                    <div className="mt-2 text-[10px]" style={{ color: PALETTE.muted }}>
+                                      {parent ? `From ${parent.label}` : "Tree root"}
+                                    </div>
+                                    {node.parentId && (
+                                      <label className="mt-2 block text-[10px] font-semibold" style={{ color: PALETTE.muted }}>
+                                        Conditional probability (%)
+                                        <input
+                                          type="number"
+                                          min="0.1"
+                                          max="100"
+                                          step="0.1"
+                                          value={Number(node.probability.toFixed?.(2) ?? node.probability)}
+                                          onChange={(event) => updateTreeNode(node.id, { probability: Number(event.target.value) })}
+                                          className="mt-1 h-8 w-full rounded-lg border px-2 text-xs outline-none"
+                                          style={{ borderColor: PALETTE.border }}
+                                        />
+                                      </label>
+                                    )}
+                                    <label className="mt-2 block text-[10px] font-semibold" style={{ color: PALETTE.muted }}>
+                                      Chip at this node
+                                      <select
+                                        value={node.chip}
+                                        onChange={(event) => updateTreeNode(node.id, { chip: event.target.value })}
+                                        className="mt-1 h-8 w-full rounded-lg border bg-white px-2 text-xs outline-none"
+                                        style={{ borderColor: PALETTE.border }}
+                                      >
+                                        <option value="none">No chip</option>
+                                        <option value="wildcard">Wildcard</option>
+                                        <option value="freehit">Free Hit</option>
+                                        <option value="bench_boost">Bench Boost</option>
+                                      </select>
+                                    </label>
+                                    {Number(node.gw) < 38 && (
+                                      <div className="mt-3 flex flex-wrap gap-1.5">
+                                        {children.length === 0 && (
+                                          <button
+                                            type="button"
+                                            onClick={() => addTreeChildren(node.id, false)}
+                                            className="gold-ring rounded-full border px-2 py-1 text-[10px] font-semibold"
+                                            style={{ borderColor: PALETTE.border, color: PALETTE.gold }}
+                                          >
+                                            Add GW{Number(node.gw) + 1}
+                                          </button>
+                                        )}
+                                        <button
+                                          type="button"
+                                          onClick={() => addTreeChildren(node.id, true)}
+                                          className="gold-ring rounded-full border px-2 py-1 text-[10px] font-semibold"
+                                          style={{ borderColor: PALETTE.gold, color: PALETTE.gold }}
+                                        >
+                                          {children.length > 0 ? `Add branch GW${Number(node.gw) + 1}` : `Split to GW${Number(node.gw) + 1}`}
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                  {!treeConfigValid && (
+                    <p className="mt-2 text-xs text-rose-600">
+                      The tree needs one connected root, positive probabilities, consecutive GWs, and at least one split.
+                    </p>
+                  )}
+                  <p className="mt-2 text-[11px]" style={{ color: PALETTE.muted }}>
+                    The optimizer locks all transfers shared before each split, then optimizes every child path using its probability. Standard chip controls below are ignored while tree mode is enabled.
+                  </p>
+                </div>
+              )}
+            </div>
+
             <div className="mt-4 grid grid-cols-1 gap-4">
               <details
                 open={chipsOpen}
@@ -2672,6 +2990,13 @@ export default function MyTeamOptimize() {
                                   scenarioExists ? savedParams.scenarioId : BASE_SCENARIO_ID
                                 );
                               }
+                              setTreeMode(Boolean(savedParams.treeMode));
+                              setTreeNodes(
+                                Array.isArray(savedParams.treeNodes) && savedParams.treeNodes.length > 0
+                                  ? savedParams.treeNodes
+                                  : DEFAULT_TREE_NODES.map((node) => ({ ...node }))
+                              );
+                              setSelectedTreeBranchId(String(savedParams.selectedTreeBranchId || ""));
                               setActiveSavedId(opt.id);
                               setSaveError("");
                               setSaveHint("");
@@ -2819,6 +3144,46 @@ export default function MyTeamOptimize() {
                   );
                 })}
               </div>
+
+              {treeBranches.length > 0 && (
+                <div className="mb-4 rounded-2xl p-3" style={{ border: `1px solid ${PALETTE.gold}`, background: "rgba(95,143,123,0.08)" }}>
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <div className="inline-flex items-center gap-2 text-xs font-semibold" style={{ color: PALETTE.gold }}>
+                        <GitBranch size={14} className="lucide-icon" />
+                        Optimized tree paths · first split after GW{activeTreeBranch?.splitGw}
+                      </div>
+                      <div className="mt-1 text-[11px]" style={{ color: PALETTE.muted }}>
+                        Expected objective: {Number.isFinite(activeTreeBranch?.expectedObjective) ? activeTreeBranch.expectedObjective.toFixed(2) : "-"}
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {treeBranches.map((branch) => {
+                        const active = branch.id === activeTreeBranch?.id;
+                        return (
+                          <button
+                            key={branch.id}
+                            type="button"
+                            onClick={() => setSelectedTreeBranchId(branch.id)}
+                            className="gold-ring rounded-xl px-3 py-2 text-left text-xs transition"
+                            style={{
+                              border: `1px solid ${active ? PALETTE.gold : PALETTE.border}`,
+                              background: active ? `linear-gradient(135deg, ${PALETTE.gold}, ${PALETTE.goldSoft})` : "white",
+                              color: active ? "#0f172a" : PALETTE.text,
+                            }}
+                          >
+                            <span className="block font-semibold">{branch.label}</span>
+                            <span className="block text-[10px] opacity-75">
+                              {Number.isFinite(branch.probability) ? `${Math.round(branch.probability * 100)}%` : "-"}
+                              {Number.isFinite(branch.objective) ? ` · ${branch.objective.toFixed(2)} pts` : ""}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {(activeSolutionData.length > 0 || optimizationProgress?.streaming) && (
               <div className="mb-4 rounded-2xl p-3" style={{ border: `1px solid ${PALETTE.border}`, background: "rgba(248,250,252,0.82)" }}>

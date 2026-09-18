@@ -240,6 +240,7 @@ def optimize_my_team(
     min_solution_distance: int = 12,
     force_in_list: Optional[list[str]] = None,
     forced_transfers: Optional[list[dict[str, Any]]] = None,
+    locked_transfer_counts_by_gw: Optional[dict[int, int]] = None,
     on_solution: Optional[Callable[[int, list[dict[str, Any]]], None]] = None,
 ) -> pd.DataFrame:
 
@@ -249,6 +250,8 @@ def optimize_my_team(
         force_in_list = []
     if forced_transfers is None:
         forced_transfers = []
+    if locked_transfer_counts_by_gw is None:
+        locked_transfer_counts_by_gw = {}
     if GW_list is None:
         GW_list = ["0", "8", "9", "10", "11", "12", "13", "14"]
 
@@ -347,6 +350,23 @@ def optimize_my_team(
 
     optimize_range = len(GW_list)
     gameweeks = list(range(optimize_range))
+
+    locked_transfer_counts_rel: dict[int, int] = {}
+    for raw_gw, raw_count in locked_transfer_counts_by_gw.items():
+        try:
+            abs_gw = int(raw_gw)
+            count = int(raw_count)
+        except (TypeError, ValueError):
+            raise ValueError("Locked transfer counts must use integer GWs and counts.")
+        rel_t = gw_index(abs_gw)
+        if rel_t is None or rel_t < 1:
+            raise ValueError(
+                f"Locked transfer-count GW {abs_gw} is outside the optimization horizon "
+                f"({', '.join(GW_list[1:])})."
+            )
+        if count < 0 or count > 15:
+            raise ValueError(f"Locked transfer count for GW {abs_gw} must be between 0 and 15.")
+        locked_transfer_counts_rel[int(rel_t)] = count
 
     use_freehit = bool(freehit_week_rels)
 
@@ -969,6 +989,17 @@ def optimize_my_team(
                 m.forced_manual_transfer_con.add(m.transfer_in[in_idx, t] == 1)
                 m.forced_manual_transfer_con.add(m.x[out_idx, t] == 0)
                 m.forced_manual_transfer_con.add(m.x[in_idx, t] == 1)
+
+    # Lock the complete shared transfer prefix used by the tree optimizer.
+    # This prevents separate branches from adding different extra transfers
+    # before the uncertainty has been revealed.
+    if locked_transfer_counts_rel:
+        m.locked_transfer_count_con = pyo.ConstraintList()
+        for t, count in locked_transfer_counts_rel.items():
+            if t in freehit_week_rels:
+                m.locked_transfer_count_con.add(sum(m.fh_in[i, t] for i in I) == count)
+            else:
+                m.locked_transfer_count_con.add(sum(m.transfer_in[i, t] for i in I) == count)
 
     # ---------------- Saved transfers ----------------
     m.saved_con = pyo.ConstraintList()
