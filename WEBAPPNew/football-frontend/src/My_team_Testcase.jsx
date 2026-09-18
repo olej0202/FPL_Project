@@ -67,7 +67,7 @@ const DEFAULT_TREE_NODES = [
   { id: "gw8", label: "GW8", gw: 8, parentId: "gw7", probability: 100, chip: "none", scenarioId: "inherit" },
 ];
 const TREE_NODE_WIDTH = 224;
-const TREE_NODE_HEIGHT = 290;
+const TREE_NODE_HEIGHT = 325;
 
 const buildTreeChildrenMap = (nodes) => {
   const children = new Map();
@@ -112,7 +112,7 @@ const buildVerticalTreeLayout = (nodes) => {
   const positions = {};
   let leafIndex = 0;
   const horizontalGap = 290;
-  const verticalGap = 340;
+  const verticalGap = 375;
 
   const place = (node, depth) => {
     const children = childrenByParent.get(node.id) || [];
@@ -1447,28 +1447,49 @@ export default function MyTeamOptimize() {
     );
   };
 
-  const updateTreeLeafProbability = (nodeId, rawProbability) => {
+  const updateTreeSplitProbability = (nodeId, rawProbability) => {
     setTreeNodes((previous) => {
       const synced = syncTreeMasses(previous);
       const children = buildTreeChildrenMap(synced);
-      const leaves = synced.filter((node) => (children.get(node.id) || []).length === 0);
-      if (!leaves.some((node) => node.id === nodeId)) return previous;
-      if (leaves.length === 1) {
-        return syncTreeMasses(synced.map((node) => node.id === nodeId ? { ...node, probability: 100 } : node));
-      }
-      const probability = Math.min(99.9, Math.max(0.1, Number(rawProbability) || 0.1));
-      const otherLeaves = leaves.filter((node) => node.id !== nodeId);
-      const otherTotal = otherLeaves.reduce((sum, node) => sum + Number(node.probability || 0), 0);
-      const remaining = 100 - probability;
+      const node = synced.find((candidate) => candidate.id === nodeId);
+      if (!node?.parentId) return previous;
+      const siblings = children.get(node.parentId) || [];
+      if (siblings.length < 2) return previous;
+
+      const parent = synced.find((candidate) => candidate.id === node.parentId);
+      const parentMass = Number(parent?.probability) || 0;
+      if (parentMass <= 0) return previous;
+
+      const conditionalProbability = Math.min(99.9, Math.max(0.1, Number(rawProbability) || 0.1));
+      const targetMass = parentMass * conditionalProbability / 100;
+      const selectedLeafIds = new Set(getTreeLeafIds(nodeId, children));
+      const siblingLeafIds = new Set(
+        siblings
+          .filter((sibling) => sibling.id !== nodeId)
+          .flatMap((sibling) => getTreeLeafIds(sibling.id, children))
+      );
+      const selectedCurrentMass = Number(node.probability) || 0;
+      const siblingCurrentMass = Math.max(0, parentMass - selectedCurrentMass);
+      const remainingMass = Math.max(0, parentMass - targetMass);
+
       const next = synced.map((node) => {
-        if (node.id === nodeId) return { ...node, probability };
-        if (!otherLeaves.some((leaf) => leaf.id === node.id)) return node;
-        return {
-          ...node,
-          probability: otherTotal > 0
-            ? (Number(node.probability || 0) / otherTotal) * remaining
-            : remaining / otherLeaves.length,
-        };
+        if (selectedLeafIds.has(node.id)) {
+          return {
+            ...node,
+            probability: selectedCurrentMass > 0
+              ? Number(node.probability || 0) * targetMass / selectedCurrentMass
+              : targetMass / selectedLeafIds.size,
+          };
+        }
+        if (siblingLeafIds.has(node.id)) {
+          return {
+            ...node,
+            probability: siblingCurrentMass > 0
+              ? Number(node.probability || 0) * remainingMass / siblingCurrentMass
+              : remainingMass / siblingLeafIds.size,
+          };
+        }
+        return node;
       });
       return syncTreeMasses(next);
     });
@@ -2515,13 +2536,6 @@ export default function MyTeamOptimize() {
     setSaveHint("Team loaded. Run Optimize when you want to apply a solver plan.");
   }, [fetchMyTeam]);
 
-  const handleApplyToPlanner = () => {
-    if (!plannerPayload.length) return;
-    navigate("/Team_Overview", {
-      state: { optimizedTransfers: plannerPayload, applyId: Date.now() },
-    });
-  };
-
   const canSave = !!data && Array.isArray(data) && data.length > 0 && typeof saveOptimization === "function";
 
   const normalizeName = (s) =>
@@ -2795,7 +2809,7 @@ export default function MyTeamOptimize() {
           </div>
         </header>
 
-        <section className="mb-6 grid grid-cols-1 xl:grid-cols-[1.2fr_0.8fr] gap-6">
+        <section className="mb-6 grid grid-cols-1 gap-6">
           <div className="glass-card rounded-[28px] p-4 sm:p-6">
             <button
               type="button"
@@ -3010,6 +3024,12 @@ export default function MyTeamOptimize() {
                         const children = treeChildrenByParent.get(node.id) || [];
                         const position = treeNodePositions[node.id] || treeAutoLayout.positions[node.id] || { x: 0, y: 0 };
                         const isLeaf = children.length === 0;
+                        const siblingNodes = node.parentId ? treeChildrenByParent.get(node.parentId) || [] : [];
+                        const parentMass = node.parentId ? Number(treeMassById.get(node.parentId)) || 0 : 100;
+                        const splitProbability = parentMass > 0
+                          ? Number(node.probability || 0) / parentMass * 100
+                          : 0;
+                        const hasSplitProbability = siblingNodes.length > 1;
                         const isDragging = draggingTreeNode?.nodeId === node.id;
                         const effectiveScenarioId = treeEffectiveScenarioById.get(node.id) || BASE_SCENARIO_ID;
                         const scenarioDiagnostics = treeScenarioDiagnosticsByNodeId.get(node.id);
@@ -3060,20 +3080,35 @@ export default function MyTeamOptimize() {
                                 )}
                               </div>
 
-                              {isLeaf && (
+                              {hasSplitProbability && (
                                 <label className="mt-2 block text-[10px] font-semibold" style={{ color: PALETTE.muted }}>
-                                  Leaf probability (%)
+                                  <span className="flex items-center justify-between gap-2">
+                                    <span>Split probability</span>
+                                    <span className="rounded-full px-2 py-0.5 font-black" style={{ background: "rgba(95,143,123,0.12)", color: PALETTE.gold }}>
+                                      {splitProbability.toFixed(1)}%
+                                    </span>
+                                  </span>
                                   <input
-                                    type="number"
+                                    type="range"
                                     min="0.1"
                                     max="99.9"
                                     step="0.1"
-                                    value={Number(node.probability || 0).toFixed(2)}
-                                    onChange={(event) => updateTreeLeafProbability(node.id, event.target.value)}
-                                    className="mt-1 h-8 w-full rounded-lg border px-2 text-xs outline-none"
-                                    style={{ borderColor: PALETTE.border }}
+                                    value={splitProbability}
+                                    onChange={(event) => updateTreeSplitProbability(node.id, event.target.value)}
+                                    className="mt-2 h-2 w-full cursor-pointer"
+                                    style={{ accentColor: PALETTE.gold }}
+                                    aria-label={`Conditional split probability for ${node.label}`}
                                   />
                                 </label>
+                              )}
+
+                              {isLeaf && (
+                                <div className="mt-2 flex items-center justify-between gap-2 text-[10px] font-semibold" style={{ color: PALETTE.muted }}>
+                                  <span>Implied leaf probability</span>
+                                  <span className="font-black" style={{ color: PALETTE.gold }}>
+                                    {Number(node.probability || 0).toFixed(1)}%
+                                  </span>
+                                </div>
                               )}
 
                               <label className="mt-2 block text-[10px] font-semibold" style={{ color: PALETTE.muted }}>
@@ -3146,7 +3181,7 @@ export default function MyTeamOptimize() {
                   </div>
                   {!treeConfigValid && (
                     <p className="mt-2 text-xs text-rose-600">
-                      The tree needs one connected root, consecutive GWs, and leaf probabilities totaling 100%.
+                      The tree needs one connected root, consecutive GWs, and valid split probabilities.
                     </p>
                   )}
                   <p className="mt-2 text-[11px]" style={{ color: PALETTE.muted }}>
@@ -3520,7 +3555,7 @@ export default function MyTeamOptimize() {
 
         {pitchSourceData.length > 0 && (
           <section ref={pitchSectionRef} className="mb-6 grid grid-cols-1 gap-6 items-start">
-            <div className="glass-card rounded-[28px] p-4 sm:p-5">
+            <div className="glass-card flex flex-col rounded-[28px] p-4 sm:p-5">
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <div className="text-sm font-semibold inline-flex items-center gap-2" style={{ color: PALETTE.gold }}>
@@ -4196,8 +4231,9 @@ export default function MyTeamOptimize() {
               </div>
 
       <div
-  className="w-full max-w-none mx-auto bg-no-repeat bg-[length:100%_100%] bg-center rounded-[24px] px-1 sm:px-2 py-1 relative overflow-hidden min-h-[760px] sm:min-h-[900px] lg:min-h-[calc(100vh-7rem)]"
+  className="mt-4 w-full max-w-none mx-auto bg-no-repeat bg-[length:100%_100%] bg-center rounded-[24px] px-1 sm:px-2 py-1 relative overflow-hidden min-h-[760px] sm:min-h-[900px] lg:min-h-[calc(100vh-7rem)]"
   style={{
+    order: 2,
     backgroundImage: `url(${pitch})`,
     border: `1px solid ${PALETTE.border}`,
     boxShadow: "0 18px 40px rgba(15,23,42,0.12)",
@@ -4328,6 +4364,7 @@ export default function MyTeamOptimize() {
               <div
                 className="mt-4 rounded-[26px] p-3 sm:p-4"
                 style={{
+                  order: 1,
                   border: `1px solid ${PALETTE.border}`,
                   background: "linear-gradient(145deg, rgba(255,255,255,0.96), rgba(248,250,252,0.9))",
                   boxShadow: "0 14px 30px rgba(15,23,42,0.08)",
@@ -4567,29 +4604,6 @@ export default function MyTeamOptimize() {
                         </button>
                       </div>
                     ))}
-                  </div>
-                )}
-              </div>
-              <div className="mt-4 flex flex-col items-center gap-3">
-                <button
-                  type="button"
-                  onClick={handleApplyToPlanner}
-                  disabled={!plannerPayload.length}
-                  className="gold-ring inline-flex items-center gap-2 font-semibold px-6 py-3 rounded-full transition shadow-lg"
-                  style={{
-                    border: `1px solid ${plannerPayload.length ? PALETTE.gold : "#cbd5e1"}`,
-                    background: plannerPayload.length ? `linear-gradient(135deg, ${PALETTE.gold}, ${PALETTE.goldSoft})` : "rgba(248,250,252,0.9)",
-                    color: plannerPayload.length ? "#0f172a" : PALETTE.muted,
-                    cursor: plannerPayload.length ? "pointer" : "not-allowed",
-                  }}
-                >
-                  <Search size={18} className="lucide-icon" />
-                  See transfers on My Team
-                </button>
-
-                {!plannerPayload.length && (
-                  <div className="text-xs" style={{ color: PALETTE.muted }}>
-                    Run an optimization with transfers first.
                   </div>
                 )}
               </div>
