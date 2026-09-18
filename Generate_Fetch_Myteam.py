@@ -471,6 +471,10 @@ def build_team_dataframe(entry_id: int, include_freehit_team: bool = False) -> p
                 "player_id": elem_id,
                 "team": team_name,
                 "position": pos_name,
+                "squad_position": int(pick.get("position", 0) or 0),
+                "is_captain": bool(pick.get("is_captain", False)),
+                "is_vice_captain": bool(pick.get("is_vice_captain", False)),
+                "multiplier": int(pick.get("multiplier", 0) or 0),
                 "selling_price_m": sell_price_m,
                 "gw": event_id,                 # the GW you're "viewing"
                 "squad_gw_used": squad_event_id, # the GW used for picks

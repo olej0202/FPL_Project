@@ -319,6 +319,10 @@ export function MyTeamDataContextProvider({ children }) {
       }
       const json = await resp.json();
       setTeamData(json);
+      // Loading a Team ID is a clean baseline action. Do not keep an older
+      // optimizer solution on top of the newly loaded real squad.
+      setData(null);
+      sethas_changed(false);
       await recordRecentTeamId(cleanTeamId);
       return true;
     } catch (err) {
@@ -337,11 +341,33 @@ export function MyTeamDataContextProvider({ children }) {
    * fetchTeam can optionally take:
    *  - useStatisticalModel: boolean
    *  - playersData: array of player rows
+   *  - forcedTransfers: manual out/in moves locked to an absolute GW
    */
   const fetchTeam = async (options = {}) => {
-    const { useStatisticalModel = false, playersData = null } = options;
+    const {
+      useStatisticalModel = false,
+      playersData = null,
+      forcedTransfers = [],
+    } = options;
+    const normalizedForcedTransfers = (Array.isArray(forcedTransfers) ? forcedTransfers : [])
+      .map((move) => ({
+        gw: Number(move?.gw),
+        out_name: String(move?.out_name || "").trim(),
+        in_name: String(move?.in_name || "").trim(),
+      }))
+      .filter(
+        (move) =>
+          Number.isInteger(move.gw) &&
+          move.gw >= 1 &&
+          move.gw <= 38 &&
+          move.out_name &&
+          move.in_name
+      );
 
-    if (!teamId) return alert("Team ID is required");
+    if (!teamId) {
+      alert("Team ID is required");
+      return false;
+    }
     setLoading(true);
     setData(null);
     setOptimizationProgress({
@@ -351,9 +377,11 @@ export function MyTeamDataContextProvider({ children }) {
     });
 
     try {
+      let receivedRows = [];
       const consumeStreamResponse = async (resp) => {
         if (!resp.body || typeof resp.body.getReader !== "function") {
           const fallbackJson = await resp.json();
+          receivedRows = Array.isArray(fallbackJson) ? fallbackJson : [];
           setData(fallbackJson);
 
           const derivedBanned = derivePlayersFromRows(fallbackJson, bannedList);
@@ -367,7 +395,7 @@ export function MyTeamDataContextProvider({ children }) {
             receivedSolutions: OPTIMIZATION_SOLUTIONS,
             streaming: false,
           });
-          return;
+          return receivedRows;
         }
 
         const reader = resp.body.getReader();
@@ -416,6 +444,7 @@ export function MyTeamDataContextProvider({ children }) {
             const rows = Array.isArray(payload?.rows) ? payload.rows : [];
             if (!rows.length) return;
 
+            receivedRows = mergeRowsBySolution(receivedRows, rows);
             setData((prev) => mergeRowsBySolution(prev, rows));
 
             const derivedBanned = derivePlayersFromRows(rows, bannedList);
@@ -472,17 +501,17 @@ export function MyTeamDataContextProvider({ children }) {
 
         if (buffer.trim()) processEvent(buffer);
         if (!hasShownFirstSolution) setLoading(false);
+        return receivedRows;
       };
 
       // --------- AI model: GET query params ---------
-      if (!useStatisticalModel) {
+      if (!useStatisticalModel && normalizedForcedTransfers.length === 0) {
         const params = new URLSearchParams({ team_id: teamId });
 
         if (bbRound) params.append("bb_round", bbRound);
         if (wildRound) params.append("wildcard_round", wildRound);
         if (freehitROund) params.append("freehit_round", freehitROund);
         (bannedList || []).forEach((id) => params.append("banned_list", id));
-        (lockedInList || []).forEach((id) => params.append("force_in_list", id));
         if (n_hits) params.append("n_hits", n_hits);
 
         params.append("risk", String(Number(risk) || 0));
@@ -493,38 +522,41 @@ export function MyTeamDataContextProvider({ children }) {
         const url = `${API_BASE_URL}/My_Team_Optimize?${params.toString()}`;
         const resp = await fetch(url, { headers: { ...authHeaders } });
         if (!resp.ok) throw new Error(await resp.text());
-        await consumeStreamResponse(resp);
+        const rows = await consumeStreamResponse(resp);
         await recordRecentTeamId(teamId);
 
-        return;
+        return { ok: true, rows };
       }
 
-      // --------- Statistical model: POST JSON body ---------
-      if (!Array.isArray(playersData) || playersData.length === 0) {
+      // --------- POST JSON: statistical model or AI with locked manual moves ---------
+      if (useStatisticalModel && (!Array.isArray(playersData) || playersData.length === 0)) {
         alert("No player data available for statistical model.");
-        return;
+        return false;
       }
 
-      const slimPlayers = playersData.map((p) => ({
-        name: p.name,
-        web_name: p.web_name,
-        Team: p.Team,
-        GW: p.GW,
-        position: p.position,
-        value: p.value,
-        Points: p.calc_points,
-      }));
+      const slimPlayers = useStatisticalModel
+        ? playersData.map((p) => ({
+            name: p.name,
+            web_name: p.web_name,
+            Team: p.Team,
+            GW: p.GW,
+            position: p.position,
+            value: p.value,
+            Points: p.calc_points,
+          }))
+        : null;
 
       const body = {
         team_id: Number(teamId),
         banned_list: bannedList,
-        force_in_list: lockedInList,
+        force_in_list: [],
         bb_round: bbRound ? Number(bbRound) : 40,
         wildcard_round: wildRound ? Number(wildRound) : 40,
         freehit_round: freehitROund ? Number(freehitROund) : 40,
         n_hits: n_hits ? Number(n_hits) : 0,
-        model_type: "statistical",
+        model_type: useStatisticalModel ? "statistical" : "ai",
         players: slimPlayers,
+        forced_transfers: normalizedForcedTransfers,
         risk: Number(risk) || 0,
         transval: Number(valtrans) || 0.5,
         stream: true,
@@ -541,12 +573,14 @@ export function MyTeamDataContextProvider({ children }) {
       );
 
       if (!resp.ok) throw new Error(await resp.text());
-      await consumeStreamResponse(resp);
+      const rows = await consumeStreamResponse(resp);
       await recordRecentTeamId(teamId);
+      return { ok: true, rows };
     } catch (err) {
       console.error(err);
       alert("Error: " + err.message);
       setOptimizationProgress((prev) => ({ ...prev, streaming: false }));
+      return { ok: false, rows: [] };
     } finally {
       setLoading(false);
       setOptimizationProgress((prev) => ({ ...prev, streaming: false }));

@@ -239,6 +239,7 @@ def optimize_my_team(
     solution_decay: float = 0.92,
     min_solution_distance: int = 12,
     force_in_list: Optional[list[str]] = None,
+    forced_transfers: Optional[list[dict[str, Any]]] = None,
     on_solution: Optional[Callable[[int, list[dict[str, Any]]], None]] = None,
 ) -> pd.DataFrame:
 
@@ -246,14 +247,62 @@ def optimize_my_team(
         banned_list = []
     if force_in_list is None:
         force_in_list = []
+    if forced_transfers is None:
+        forced_transfers = []
     if GW_list is None:
         GW_list = ["0", "8", "9", "10", "11", "12", "13", "14"]
 
     force_in_list = [str(name).strip() for name in force_in_list if str(name).strip()]
-    banned_norm = {str(name).strip().lower() for name in banned_list if str(name).strip()}
+    normalized_forced_transfers: list[dict[str, Any]] = []
+    seen_forced_payloads: set[tuple[int, str, str]] = set()
+    forced_players_by_gw: dict[tuple[int, str], str] = {}
+    for move in forced_transfers:
+        try:
+            gw = int(move.get("gw"))
+        except (TypeError, ValueError, AttributeError):
+            raise ValueError("Every forced transfer must have a valid integer GW.")
+        out_name = str(move.get("out_name", "")).strip()
+        in_name = str(move.get("in_name", "")).strip()
+        if not out_name or not in_name:
+            raise ValueError("Every forced transfer must include out_name and in_name.")
+        if normalize_player_key(out_name) == normalize_player_key(in_name):
+            raise ValueError(f"Forced transfer in GW {gw} has the same player in and out.")
+
+        out_key = normalize_player_key(out_name)
+        in_key = normalize_player_key(in_name)
+        payload_key = (gw, out_key, in_key)
+        if payload_key in seen_forced_payloads:
+            continue
+        seen_forced_payloads.add(payload_key)
+
+        for player_key, role in ((out_key, "out"), (in_key, "in")):
+            gw_player_key = (gw, player_key)
+            existing_role = forced_players_by_gw.get(gw_player_key)
+            if existing_role is not None:
+                raise ValueError(
+                    f"Player '{out_name if role == 'out' else in_name}' is used more than "
+                    f"once in the forced transfers for GW {gw}."
+                )
+            forced_players_by_gw[gw_player_key] = role
+
+        normalized_forced_transfers.append(
+            {"gw": gw, "out_name": out_name, "in_name": in_name}
+        )
+    banned_norm = {
+        normalize_player_key(name) for name in banned_list if normalize_player_key(name)
+    }
     conflicting_force_ban = sorted(
-        {name for name in force_in_list if name.lower() in banned_norm}
+        {name for name in force_in_list if normalize_player_key(name) in banned_norm}
     )
+    conflicting_manual_ban = sorted(
+        {
+            move["in_name"]
+            for move in normalized_forced_transfers
+            if normalize_player_key(move["in_name"]) in banned_norm
+        }
+    )
+    conflicting_force_ban.extend(conflicting_manual_ban)
+    conflicting_force_ban = sorted(set(conflicting_force_ban))
     if conflicting_force_ban:
         raise ValueError(
             "Players cannot be both banned and forced in: "
@@ -365,7 +414,9 @@ def optimize_my_team(
         team_df=team_df,
         gw_list=GW_list,
         min_points_per_gw=1.0,
-        forced_keep_names=force_in_list,
+        forced_keep_names=force_in_list + [
+            move["in_name"] for move in normalized_forced_transfers
+        ],
     )
     
     # Verify all team_df names are still present after filtering
@@ -440,6 +491,49 @@ def optimize_my_team(
         raise ValueError(
             "Forced transfer-in player(s) not found in optimization set: "
             + ", ".join(missing_forced_players)
+        )
+
+    resolved_forced_transfers: list[dict[str, int | str]] = []
+    seen_forced_move_keys: set[tuple[int, int, int]] = set()
+    for move in normalized_forced_transfers:
+        rel_t = gw_index(move["gw"])
+        if rel_t is None or rel_t < 1:
+            raise ValueError(
+                f"Forced transfer GW {move['gw']} is outside the optimization horizon "
+                f"({', '.join(GW_list[1:])})."
+            )
+        out_idx = name_to_player_idx.get(normalize_player_key(move["out_name"]))
+        in_idx = name_to_player_idx.get(normalize_player_key(move["in_name"]))
+        missing = []
+        if out_idx is None:
+            missing.append(move["out_name"])
+        if in_idx is None:
+            missing.append(move["in_name"])
+        if missing:
+            raise ValueError(
+                "Forced transfer player(s) not found in optimization set: "
+                + ", ".join(missing)
+            )
+        out_position = str(data.iloc[int(out_idx)]["position"])
+        in_position = str(data.iloc[int(in_idx)]["position"])
+        if out_position != in_position:
+            raise ValueError(
+                f"Forced transfer in GW {move['gw']} must keep the same position: "
+                f"{move['out_name']} is {out_position}, while {move['in_name']} is {in_position}."
+            )
+        move_key = (int(rel_t), int(out_idx), int(in_idx))
+        if move_key in seen_forced_move_keys:
+            continue
+        seen_forced_move_keys.add(move_key)
+        resolved_forced_transfers.append(
+            {
+                "gw": int(move["gw"]),
+                "t": int(rel_t),
+                "out_idx": int(out_idx),
+                "in_idx": int(in_idx),
+                "out_name": move["out_name"],
+                "in_name": move["in_name"],
+            }
         )
 
     initial_squad = []
@@ -853,6 +947,29 @@ def optimize_my_team(
                         m.transfer_in[i, first_live_t] == 1
                     )
 
+    # ---------------- Forced manual transfers by GW ----------------
+    if resolved_forced_transfers:
+        m.forced_manual_transfer_con = pyo.ConstraintList()
+        for move in resolved_forced_transfers:
+            t = int(move["t"])
+            out_idx = int(move["out_idx"])
+            in_idx = int(move["in_idx"])
+
+            if t in freehit_week_rels:
+                m.forced_manual_transfer_con.add(m.x[out_idx, t - 1] == 1)
+                m.forced_manual_transfer_con.add(m.x[in_idx, t - 1] == 0)
+                m.forced_manual_transfer_con.add(m.fh_out[out_idx, t] == 1)
+                m.forced_manual_transfer_con.add(m.fh_in[in_idx, t] == 1)
+                m.forced_manual_transfer_con.add(m.fh_x[out_idx, t] == 0)
+                m.forced_manual_transfer_con.add(m.fh_x[in_idx, t] == 1)
+            else:
+                m.forced_manual_transfer_con.add(m.x[out_idx, t - 1] == 1)
+                m.forced_manual_transfer_con.add(m.x[in_idx, t - 1] == 0)
+                m.forced_manual_transfer_con.add(m.transfer_out[out_idx, t] == 1)
+                m.forced_manual_transfer_con.add(m.transfer_in[in_idx, t] == 1)
+                m.forced_manual_transfer_con.add(m.x[out_idx, t] == 0)
+                m.forced_manual_transfer_con.add(m.x[in_idx, t] == 1)
+
     # ---------------- Saved transfers ----------------
     m.saved_con = pyo.ConstraintList()
 
@@ -1155,6 +1272,19 @@ def optimize_my_team(
         solution_total_risk_score = compute_total_risk_score()
         solution_weighted_sum = compute_weighted_decay_expected_points()
         solution_rows: list[dict[str, Any]] = []
+        forced_in_pairs = {
+            (int(move["t"]), int(move["in_idx"])) for move in resolved_forced_transfers
+        }
+        forced_out_pairs = {
+            (int(move["t"]), int(move["out_idx"])) for move in resolved_forced_transfers
+        }
+        forced_transfer_ids = {
+            (int(move["t"]), int(move[player_key])): (
+                f"{int(move['gw'])}:{int(move['out_idx'])}:{int(move['in_idx'])}"
+            )
+            for move in resolved_forced_transfers
+            for player_key in ("out_idx", "in_idx")
+        }
 
         # Debug squad per GW
         for t in range(1, optimize_range):
@@ -1180,8 +1310,14 @@ def optimize_my_team(
 
                 pos = positions[i]
                 gw = GW_list[t]
+                current_squad_value = (
+                    safe_value(m.fh_x[i, t])
+                    if t in freehit_week_rels
+                    else safe_value(m.x[i, t])
+                )
+                previous_squad_value = safe_value(m.x[i, t - 1])
 
-                if safe_value(m.x[i, t]) > 0.5 and safe_value(m.x[i, t - 1]) < 0.5:
+                if current_squad_value > 0.5 and previous_squad_value < 0.5:
                     solution_rows.append({
                         "Name": name,
                         "status": "transferred_in",
@@ -1189,10 +1325,12 @@ def optimize_my_team(
                         "position": pos,
                         "photo": f"{Player_picture_url}{player_row_code}.png",
                         "Is_captain": False,
+                        "Is_forced_transfer": (t, i) in forced_in_pairs,
+                        "Forced_transfer_id": forced_transfer_ids.get((t, i)),
                         "web_name": web_name,
                     })
 
-                if safe_value(m.x[i, t]) < 0.5 and safe_value(m.x[i, t - 1]) > 0.5:
+                if current_squad_value < 0.5 and previous_squad_value > 0.5:
                     solution_rows.append({
                         "Name": name,
                         "status": "transferred_out",
@@ -1200,6 +1338,8 @@ def optimize_my_team(
                         "position": pos,
                         "photo": f"{Player_picture_url}{player_row_code}.png",
                         "Is_captain": False,
+                        "Is_forced_transfer": (t, i) in forced_out_pairs,
+                        "Forced_transfer_id": forced_transfer_ids.get((t, i)),
                         "web_name": web_name,
                     })
 
@@ -1257,6 +1397,8 @@ def optimize_my_team(
         })
 
         for row in solution_rows:
+            row.setdefault("Is_forced_transfer", False)
+            row.setdefault("Forced_transfer_id", None)
             row["solution"] = solution_no
             row["solution_TotalExpectedPoints"] = solution_total_expected_points
             row["solution_total_risk_score"] = solution_total_risk_score

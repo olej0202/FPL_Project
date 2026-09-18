@@ -343,10 +343,26 @@ const canSwitchPlayerRows = (rows, sourceName, targetName) => {
 
 const buildTransferPairs = (grp) => {
   const remainingIns = [...(grp?.in || [])];
-  const pairs = (grp?.out || []).map((outP) => {
+  const remainingOuts = [...(grp?.out || [])];
+  const pairs = [];
+
+  remainingOuts
+    .filter((outP) => outP?.Forced_transfer_id)
+    .forEach((outP) => {
+      const inIndex = remainingIns.findIndex(
+        (inP) => inP?.Forced_transfer_id === outP.Forced_transfer_id
+      );
+      if (inIndex === -1) return;
+      const outIndex = remainingOuts.indexOf(outP);
+      const inP = remainingIns.splice(inIndex, 1)[0];
+      remainingOuts.splice(outIndex, 1);
+      pairs.push({ outP, inP });
+    });
+
+  remainingOuts.forEach((outP) => {
     const i = remainingIns.findIndex((inP) => normalizePosition(inP.position) === normalizePosition(outP.position));
     const inP = i !== -1 ? remainingIns.splice(i, 1)[0] : null;
-    return { outP, inP };
+    pairs.push({ outP, inP });
   });
   remainingIns.forEach((inP) => pairs.push({ outP: null, inP }));
   return pairs.filter((x) => x.outP && x.inP);
@@ -354,6 +370,12 @@ const buildTransferPairs = (grp) => {
 
 const transferPairKey = (gw, outP, inP) =>
   `${Number(gw)}__${normalizeLoosePlayerKey(getPlayerCanonicalName(outP))}__${normalizeLoosePlayerKey(getPlayerCanonicalName(inP))}`;
+
+const manualTransferMatchesPair = (manualTransfer, pair) =>
+  normalizeLoosePlayerKey(manualTransfer?.outName) ===
+    normalizeLoosePlayerKey(getPlayerCanonicalName(pair?.outP)) &&
+  normalizeLoosePlayerKey(manualTransfer?.inName) ===
+    normalizeLoosePlayerKey(getPlayerCanonicalName(pair?.inP));
 
 const getTeamNameFromStrengthRow = (row) => {
   const raw = row?.name ?? row?.team_name ?? row?.Team ?? row?.team ?? row?.full_name;
@@ -487,7 +509,6 @@ export default function MyTeamOptimize() {
     wildRound,
     setWildRound,
     bannedList,
-    lockedInList,
     freehitROund,
     setfreehitROund,
     data,
@@ -496,12 +517,9 @@ export default function MyTeamOptimize() {
     fetchTeam,
     toggleBan,
     removeBan,
-    toggleLockIn,
-    removeLockIn,
     has_changed,
     sethas_changed,
     bannedPlayersData,
-    lockedPlayersData,
     n_hits,
     setn_hits,
     risk,
@@ -546,11 +564,9 @@ export default function MyTeamOptimize() {
   const [progress, setProgress] = useState(0);
   const [controlsOpen, setControlsOpen] = useState(false);
   const [savedOpen, setSavedOpen] = useState(false);
-  const [locksOpen, setLocksOpen] = useState(false);
   const [chipPanelOpen, setChipPanelOpen] = useState(false);
   const [selectedGW, setSelectedGW] = useState(null);
   const [selectedSolution, setSelectedSolution] = useState(1);
-  const [lockSearch, setLockSearch] = useState("");
   const [manualPlan, setManualPlan] = useState({});
   const [transferOutName, setTransferOutName] = useState("");
   const [transferInKey, setTransferInKey] = useState("");
@@ -565,6 +581,7 @@ export default function MyTeamOptimize() {
   const pitchSectionRef = useRef(null);
   const preferredModelAppliedRef = useRef(false);
   const loadedPlanStorageKeyRef = useRef(null);
+  const pendingSavedManualPlanRef = useRef(null);
 
   useEffect(() => {
     fetchStatsIfNeeded();
@@ -636,10 +653,16 @@ export default function MyTeamOptimize() {
     }
 
     try {
-      const raw = window.localStorage.getItem(manualPlanStorageKey);
-      const parsed = raw ? JSON.parse(raw) : null;
-      setManualPlan(parsed?.manualPlan && typeof parsed.manualPlan === "object" ? parsed.manualPlan : {});
-      setHiddenModelTransferKeys(Array.isArray(parsed?.hiddenModelTransferKeys) ? parsed.hiddenModelTransferKeys : []);
+      if (pendingSavedManualPlanRef.current !== null) {
+        setManualPlan(pendingSavedManualPlanRef.current);
+        pendingSavedManualPlanRef.current = null;
+        setHiddenModelTransferKeys([]);
+      } else {
+        const raw = window.localStorage.getItem(manualPlanStorageKey);
+        const parsed = raw ? JSON.parse(raw) : null;
+        setManualPlan(parsed?.manualPlan && typeof parsed.manualPlan === "object" ? parsed.manualPlan : {});
+        setHiddenModelTransferKeys(Array.isArray(parsed?.hiddenModelTransferKeys) ? parsed.hiddenModelTransferKeys : []);
+      }
     } catch (err) {
       console.warn("Failed loading optimize lab plan:", err);
       setManualPlan({});
@@ -870,7 +893,7 @@ export default function MyTeamOptimize() {
   useEffect(() => {
     sethas_changed(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [teamId, bbRound, wildRound, bannedList, lockedInList, freehitROund, n_hits, modelType, solverScenarioId, risk, valtrans]);
+  }, [teamId, bbRound, wildRound, bannedList, freehitROund, n_hits, modelType, solverScenarioId, risk, valtrans]);
 
   useEffect(() => {
     if (loading) {
@@ -955,85 +978,63 @@ export default function MyTeamOptimize() {
     );
   }, [data, selectedSolution, solutionNumbers]);
 
-  const lockCandidates = useMemo(() => {
-    const fallbackPhoto =
-      "https://d2kq0urxkarztv.cloudfront.net/51812cad594df29a1a0003f0/661303/upload-643ff5d9-840e-4bbb-b099-07c26ef505c9.png?w=578";
-    const map = new Map();
+  const loadedTeamPitchRows = useMemo(() => {
+    if (!Array.isArray(teamData) || teamData.length === 0) return [];
 
-    const addRow = (row) => {
-      const name =
-        row?.name ??
-        row?.Name ??
-        row?.player_name ??
-        row?.full_name ??
-        row?.web_name;
-      if (!name) return;
-      const key = String(name);
-      const web_name =
-        row?.web_name ??
-        row?.name ??
-        row?.Name ??
-        row?.player_name ??
-        key;
-      const code = row?.code;
-      const computedPhoto = code
-        ? `https://resources.premierleague.com/premierleague25/photos/players/500x500/${code}.png`
-        : null;
-      const photo = row?.photo || computedPhoto || fallbackPhoto;
+    const startGw = Number(teamData[0]?.gw ?? teamData[0]?.GW);
+    if (!isValidGW(startGw)) return [];
 
-      const existing = map.get(key);
-      if (!existing) {
-        map.set(key, { Name: key, web_name, photo });
-        return;
-      }
-
-      if (
-        existing.photo === fallbackPhoto &&
-        photo &&
-        photo !== fallbackPhoto
-      ) {
-        map.set(key, { ...existing, photo });
-      }
-    };
-
-    [PlayersData?.current, Playerdata?.current, data].forEach((rows) => {
-      if (!Array.isArray(rows)) return;
-      rows.forEach(addRow);
-    });
-
-    return Array.from(map.values()).sort((a, b) =>
-      String(a.web_name).localeCompare(String(b.web_name))
+    const loadedGws = Array.from(
+      { length: Math.max(0, Math.min(38, startGw + 5) - startGw + 1) },
+      (_, offset) => startGw + offset
     );
-  }, [PlayersData, Playerdata, data, adjustmentDataVersion, statsDataVersion]);
 
-  const filteredLockCandidates = useMemo(() => {
-    const q = String(lockSearch || "").trim().toLowerCase();
-    const lockedSet = new Set((lockedInList || []).map((x) => String(x)));
-    return lockCandidates
-      .filter((p) => !lockedSet.has(String(p.Name)))
-      .filter((p) => {
-        if (!q) return true;
-        return (
-          String(p.Name).toLowerCase().includes(q) ||
-          String(p.web_name || "").toLowerCase().includes(q)
+    return loadedGws.flatMap((gw) =>
+      teamData.map((row, index) => {
+        const squadPosition = toFiniteNumber(
+          row?.squad_position,
+          row?.pick_position,
+          index + 1
         );
+        const name = String(
+          row?.name ?? row?.player_name ?? row?.Name ?? row?.web_name ?? ""
+        ).trim();
+
+        return {
+          ...row,
+          Name: name,
+          name,
+          web_name: row?.web_name ?? row?.player_name ?? name,
+          position: normalizePosition(row?.position),
+          GW: gw,
+          status: Number(squadPosition) > 11 ? "benched" : "playing",
+          Is_captain: Boolean(row?.is_captain),
+          Is_vice_captain: Boolean(row?.is_vice_captain),
+          photo: getPlayerPhoto(row),
+          value: toFiniteNumber(row?.selling_price_m, row?.value),
+          source: "loaded_team",
+        };
       })
-      .slice(0, 8);
-  }, [lockCandidates, lockSearch, lockedInList]);
+    ).filter((row) => row.Name);
+  }, [teamData]);
+
+  const pitchSourceData = activeSolutionData.length > 0
+    ? activeSolutionData
+    : loadedTeamPitchRows;
 
   const availableGWs = useMemo(() => {
-    if (!Array.isArray(activeSolutionData) || activeSolutionData.length === 0) {
+    if (!Array.isArray(pitchSourceData) || pitchSourceData.length === 0) {
       return [];
     }
 
     return Array.from(
       new Set(
-        activeSolutionData
+        pitchSourceData
           .map((p) => Number(p.GW))
           .filter((n) => isValidGW(n))
       )
     ).sort((a, b) => a - b);
-  }, [activeSolutionData]);
+  }, [pitchSourceData]);
 
   const projectionSourceBuckets = useMemo(() => {
     return modelType === "statistical"
@@ -1152,6 +1153,18 @@ export default function MyTeamOptimize() {
   const manualTransfers = Array.isArray(activeManualPlan.transfers)
     ? activeManualPlan.transfers
     : [];
+  const hasPendingManualTransfers = useMemo(
+    () =>
+      Object.values(manualPlan || {})
+        .flatMap((plan) => (Array.isArray(plan?.transfers) ? plan.transfers : []))
+        .some((transfer) => !transfer?.isLocked),
+    [manualPlan]
+  );
+  const canOptimize = Boolean(
+    teamId &&
+      !optimizationProgress?.streaming &&
+      (has_changed || hasPendingManualTransfers)
+  );
   const manualStatusOverrides = activeManualPlan.statusOverrides || {};
   const hiddenModelTransferSet = useMemo(
     () => new Set(hiddenModelTransferKeys),
@@ -1228,8 +1241,8 @@ export default function MyTeamOptimize() {
 
   const getSolutionPlayerRowsForGw = useCallback(
     (gw) => {
-      if (!Array.isArray(activeSolutionData) || !Number.isFinite(Number(gw))) return [];
-      return activeSolutionData.filter((row) => {
+      if (!Array.isArray(pitchSourceData) || !Number.isFinite(Number(gw))) return [];
+      return pitchSourceData.filter((row) => {
         const status = row?.status;
         const name = String(row?.Name ?? row?.name ?? "").trim();
         return (
@@ -1241,7 +1254,7 @@ export default function MyTeamOptimize() {
         );
       });
     },
-    [activeSolutionData]
+    [pitchSourceData]
   );
 
   const buildDisplayRowsForGw = useCallback(
@@ -1292,6 +1305,7 @@ export default function MyTeamOptimize() {
         .filter((tr) => {
           const transferGw = Number(tr?.gw);
           if (!Number.isFinite(transferGw) || transferGw > targetGw) return false;
+          if (tr?.isLocked && activeSolutionData.length > 0) return false;
           return !(Number(freehitROund) === transferGw && targetGw > transferGw);
         })
         .sort((a, b) => Number(a?.gw) - Number(b?.gw));
@@ -1324,6 +1338,7 @@ export default function MyTeamOptimize() {
       });
     },
     [
+      activeSolutionData.length,
       freehitROund,
       getSolutionPlayerRowsForGw,
       hiddenModelTransferSet,
@@ -1462,7 +1477,12 @@ export default function MyTeamOptimize() {
   }, [eligibleTransferCandidates, transferSearch]);
 
   const addManualTransfer = useCallback(() => {
-    if (!Number.isFinite(Number(activeGW)) || !selectedTransferOut || !transferInKey) return;
+    if (
+      optimizationProgress?.streaming ||
+      !Number.isFinite(Number(activeGW)) ||
+      !selectedTransferOut ||
+      !transferInKey
+    ) return;
     const candidate = transferCandidateRows.find((row) => row.key === transferInKey);
     if (!candidate) return;
 
@@ -1482,10 +1502,13 @@ export default function MyTeamOptimize() {
           inPosition: candidate.position,
           inPrice: candidate.price,
           inPlayer: candidate.row,
+          isLocked: false,
         },
       ],
       statusOverrides: prev.statusOverrides || {},
     }));
+    sethas_changed(true);
+    setSaveHint("Manual transfer added. Run Optimize to lock it into the solver plan.");
     setTransferOutName("");
     setTransferInKey("");
     setTransferPickerOpen(false);
@@ -1494,18 +1517,36 @@ export default function MyTeamOptimize() {
     selectedTransferOut,
     transferCandidateRows,
     transferInKey,
+    optimizationProgress?.streaming,
+    sethas_changed,
     updateManualPlanForGw,
   ]);
 
   const removeManualTransfer = useCallback(
-    (transferId) => {
-      updateManualPlanForGw(activeGW, (prev) => ({
+    (transferOrId, transferGw = activeGW) => {
+      const transferId = typeof transferOrId === "object" ? transferOrId?.id : transferOrId;
+      const storedTransfer =
+        typeof transferOrId === "object"
+          ? transferOrId
+          : manualPlan[String(transferGw)]?.transfers?.find((tr) => tr.id === transferId);
+
+      if (storedTransfer?.isLocked) {
+        const key = transferPairKey(
+          transferGw,
+          { Name: storedTransfer.outName },
+          { Name: storedTransfer.inName }
+        );
+        setHiddenModelTransferKeys((prev) => (prev.includes(key) ? prev : [...prev, key]));
+      }
+
+      updateManualPlanForGw(transferGw, (prev) => ({
         ...prev,
         transfers: (prev.transfers || []).filter((tr) => tr.id !== transferId),
         statusOverrides: prev.statusOverrides || {},
       }));
+      sethas_changed(true);
     },
-    [activeGW, updateManualPlanForGw]
+    [activeGW, manualPlan, sethas_changed, updateManualPlanForGw]
   );
 
   const switchManualPlayers = useCallback(
@@ -1655,20 +1696,20 @@ export default function MyTeamOptimize() {
   let transfers = [];
   let gwData = [];
 
-  if (activeSolutionData.length) {
+  if (pitchSourceData.length) {
     if (availableGWs.length) {
       minGW = availableGWs[0];
       maxGW = availableGWs[availableGWs.length - 1];
     }
 
-    gwData = activeSolutionData.filter((p) => Number(p.GW) === activeGW);
+    gwData = pitchSourceData.filter((p) => Number(p.GW) === activeGW);
     starters = gwData.filter((p) => p.status === "playing");
     bench = gwData.filter((p) => p.status === "benched");
 
     transfers = optimizerTransferGroups;
   }
 
-  if (activeSolutionData.length && Number.isFinite(Number(activeGW))) {
+  if (pitchSourceData.length && Number.isFinite(Number(activeGW))) {
     gwData = [
       ...gwData.filter((row) => row?.status !== "playing" && row?.status !== "benched"),
       ...manualDisplayRowsForActiveGw,
@@ -1783,10 +1824,12 @@ export default function MyTeamOptimize() {
 
     availableGWs.forEach((gw) => {
       const modelGroup = visibleTransfersWithFH.find((grp) => Number(grp?.GW) === Number(gw));
-      const modelPairs = buildTransferPairs(modelGroup).map((pair) => ({ ...pair, gw, source: "model" }));
       const manualPairs = Array.isArray(manualPlan[String(gw)]?.transfers)
         ? manualPlan[String(gw)].transfers.map((tr) => ({ ...tr, gw, source: "manual" }))
         : [];
+      const modelPairs = buildTransferPairs(modelGroup)
+        .filter((pair) => !manualPairs.some((manual) => manualTransferMatchesPair(manual, pair)))
+        .map((pair) => ({ ...pair, gw, source: "model" }));
       const isWildcardGw = Number(wildRound) === Number(gw);
       const isFreeHitGw = Number(freehitROund) === Number(gw);
       const isChipTransferGw = isWildcardGw || isFreeHitGw;
@@ -1835,12 +1878,15 @@ export default function MyTeamOptimize() {
 
   const getGwNodeSummary = (gw) => {
     const optimizerGroup = visibleTransfersWithFH.find((grp) => Number(grp?.GW) === Number(gw));
-    const optimizerPairs = buildTransferPairs(optimizerGroup);
+    const manualPairs = Array.isArray(manualPlan[String(gw)]?.transfers)
+      ? manualPlan[String(gw)].transfers
+      : [];
+    const optimizerPairs = buildTransferPairs(optimizerGroup).filter(
+      (pair) => !manualPairs.some((manual) => manualTransferMatchesPair(manual, pair))
+    );
     const optimizerMoves = optimizerPairs.length;
-    const localMoves = Array.isArray(manualPlan[String(gw)]?.transfers)
-      ? manualPlan[String(gw)].transfers.length
-      : 0;
-    const firstManual = manualPlan[String(gw)]?.transfers?.[0];
+    const localMoves = manualPairs.length;
+    const firstManual = manualPairs[0];
     const firstOptimizer = optimizerPairs[0];
 
     return {
@@ -1856,7 +1902,7 @@ export default function MyTeamOptimize() {
       hasBenchBoost: Number(bbRound) === Number(gw),
       isChipTransferGw: Number(wildRound) === Number(gw) || Number(freehitROund) === Number(gw),
       optimizerPairs,
-      manualPairs: manualPlan[String(gw)]?.transfers || [],
+      manualPairs,
     };
   };
 
@@ -1889,26 +1935,117 @@ export default function MyTeamOptimize() {
     });
   }, [activeSolutionData, visibleTransfersWithFH]);
 
-  const handleOptimizeClick = () => {
+  const handleOptimizeClick = async () => {
     const useStatistical = modelType === "statistical" && hasStatisticalData;
     const playersPayload = useStatistical ? statisticalPlayersPayload : null;
+    const submittedTransfers = Object.values(manualPlan || {})
+      .flatMap((plan) => (Array.isArray(plan?.transfers) ? plan.transfers : []));
+    const forcedTransfers = submittedTransfers
+      .map((transfer) => ({
+        gw: Number(transfer?.gw),
+        out_name: String(transfer?.outName || "").trim(),
+        in_name: String(transfer?.inName || "").trim(),
+      }))
+      .filter(
+        (transfer) =>
+          isValidGW(transfer.gw) && transfer.out_name && transfer.in_name
+      );
+    const submittedTransferIds = new Set(
+      submittedTransfers.map((transfer) => transfer?.id).filter(Boolean)
+    );
     setSelectedSolution(1);
-    // A new solver result must not inherit manual transfers/status changes
-    // from an older run; those overlays can duplicate players in later GWs.
-    setManualPlan({});
     setHiddenModelTransferKeys([]);
     setTransferOutName("");
     setTransferInKey("");
 
-    fetchTeam({
+    const optimizationResult = await fetchTeam({
       useStatisticalModel: useStatistical,
       playersData: playersPayload,
+      forcedTransfers,
     });
+    const optimized = optimizationResult === true || optimizationResult?.ok === true;
+    const resultRows = Array.isArray(optimizationResult?.rows)
+      ? optimizationResult.rows.filter((row) => Number(row?.solution || 1) === 1)
+      : [];
+    const confirmedTransferIds = new Set();
 
-    sethas_changed(false);
-    setSaveError("");
-    setSaveHint("");
+    if (optimized) {
+      submittedTransfers.forEach((transfer) => {
+        const gw = Number(transfer?.gw);
+        const outKey = normalizeLoosePlayerKey(transfer?.outName);
+        const inKey = normalizeLoosePlayerKey(transfer?.inName);
+        const findForcedRow = (status, playerKey) =>
+          resultRows.find(
+            (row) =>
+              Number(row?.GW) === gw &&
+              row?.status === status &&
+              Boolean(row?.Is_forced_transfer) &&
+              normalizeLoosePlayerKey(getPlayerCanonicalName(row)) === playerKey
+          );
+        const outRow = findForcedRow("transferred_out", outKey);
+        const inRow = findForcedRow("transferred_in", inKey);
+        if (
+          outRow &&
+          inRow &&
+          outRow.Forced_transfer_id &&
+          outRow.Forced_transfer_id === inRow.Forced_transfer_id
+        ) {
+          confirmedTransferIds.add(transfer.id);
+        }
+      });
+    }
+
+    if (optimized) {
+      setManualPlan((prev) =>
+        Object.fromEntries(
+          Object.entries(prev || {}).map(([gw, plan]) => [
+            gw,
+            {
+              transfers: (plan?.transfers || []).map((transfer) =>
+                submittedTransferIds.has(transfer?.id) && confirmedTransferIds.has(transfer?.id)
+                  ? { ...transfer, isLocked: true }
+                  : submittedTransferIds.has(transfer?.id)
+                  ? { ...transfer, isLocked: false }
+                  : transfer
+              ),
+              statusOverrides: {},
+            },
+          ])
+        )
+      );
+      const unconfirmedCount = submittedTransferIds.size - confirmedTransferIds.size;
+      sethas_changed(unconfirmedCount > 0);
+      setSaveHint(
+        confirmedTransferIds.size > 0
+          ? `${confirmedTransferIds.size} manual transfer${confirmedTransferIds.size === 1 ? "" : "s"} confirmed and locked by the solver.`
+          : ""
+      );
+      setSaveError(
+        unconfirmedCount > 0
+          ? `${unconfirmedCount} manual transfer restriction${unconfirmedCount === 1 ? " was" : "s were"} not confirmed in the solver result. It remains pending; restart the API if it is still running older code.`
+          : ""
+      );
+    } else {
+      sethas_changed(true);
+      setSaveError("Optimization failed. Manual transfers remain pending and were not removed.");
+    }
   };
+
+  const handleLoadTeam = useCallback(async () => {
+    const loaded = await fetchMyTeam();
+    if (!loaded) return;
+
+    // A freshly loaded FPL squad is the untouched baseline. Remove all local
+    // planner overlays so only a later Optimize action can alter the team.
+    setManualPlan({});
+    setHiddenModelTransferKeys([]);
+    setTransferOutName("");
+    setTransferInKey("");
+    setSelectedSolution(1);
+    setActiveSavedId(null);
+    setSaveError("");
+    setSaveHint("Team loaded. Run Optimize when you want to apply a solver plan.");
+  }, [fetchMyTeam]);
 
   const handleApplyToPlanner = () => {
     if (!plannerPayload.length) return;
@@ -1951,7 +2088,6 @@ export default function MyTeamOptimize() {
           wildRound: wildRound || "",
           freehitROund: freehitROund || "",
           bannedList: Array.isArray(bannedList) ? bannedList : [],
-          lockedInList: Array.isArray(lockedInList) ? lockedInList : [],
           n_hits: Number(n_hits || 0),
           risk: Number(risk || 0),
           valtrans: Number(valtrans || 0.5),
@@ -1963,7 +2099,7 @@ export default function MyTeamOptimize() {
         result: {
           data,
           bannedPlayersData: Array.isArray(bannedPlayersData) ? bannedPlayersData : [],
-          lockedPlayersData: Array.isArray(lockedPlayersData) ? lockedPlayersData : [],
+          manualPlan,
         },
       },
     };
@@ -2159,7 +2295,7 @@ export default function MyTeamOptimize() {
                   onKeyDown={(event) => {
                     if (event.key === "Enter" && !teamLoading) {
                       event.preventDefault();
-                      fetchMyTeam();
+                      handleLoadTeam();
                     }
                   }}
                   className="gold-ring min-w-0 flex-1 h-12 px-3 rounded-2xl text-base sm:text-sm outline-none"
@@ -2172,7 +2308,7 @@ export default function MyTeamOptimize() {
                 />
                 <button
                   type="button"
-                  onClick={fetchMyTeam}
+                  onClick={handleLoadTeam}
                   disabled={teamLoading || !String(teamId || "").trim()}
                   className="gold-ring rounded-2xl px-3 text-xs font-semibold disabled:cursor-not-allowed disabled:opacity-50"
                   style={{ border: `1px solid ${PALETTE.border}`, color: PALETTE.gold }}
@@ -2513,10 +2649,19 @@ export default function MyTeamOptimize() {
                           <button
                             type="button"
                             onClick={() => {
-                              setManualPlan({});
+                              const savedParams = opt?.snapshot?.params || {};
+                              const savedManualPlan = opt?.snapshot?.result?.manualPlan;
+                              const restoredManualPlan =
+                                savedManualPlan && typeof savedManualPlan === "object"
+                                  ? savedManualPlan
+                                  : {};
+                              pendingSavedManualPlanRef.current =
+                                String(savedParams.teamId ?? "") !== String(teamId ?? "")
+                                  ? restoredManualPlan
+                                  : null;
+                              setManualPlan(restoredManualPlan);
                               setHiddenModelTransferKeys([]);
                               loadOptimization(opt.id);
-                              const savedParams = opt?.snapshot?.params || {};
                               const savedModel = savedParams.modelType === "statistical" ? "statistical" : "ai";
                               setModelType(savedModel);
                               if (savedModel === "statistical") {
@@ -2568,102 +2713,6 @@ export default function MyTeamOptimize() {
           </div>
         </section>
 
-        <section className="mb-6 glass-card rounded-[28px] p-4 sm:p-5">
-          <button
-            type="button"
-            onClick={() => setLocksOpen((v) => !v)}
-            className="gold-ring w-full flex items-start justify-between gap-3 text-left rounded-2xl px-3 py-3"
-            style={{ background: "rgba(248,250,252,0.9)", border: `1px solid ${PALETTE.border}` }}
-          >
-            <div>
-              <h2 className="text-lg font-semibold inline-flex items-center gap-2">
-                <Lock size={18} className="lucide-icon" style={{ color: PALETTE.gold }} />
-                Locked transfer-ins
-              </h2>
-              <div className="text-xs mt-1" style={{ color: PALETTE.muted }}>
-                Add players here to force them into the optimization transfer plan.
-              </div>
-            </div>
-            <div className="inline-flex items-center gap-2 self-start sm:self-center" style={{ color: PALETTE.muted }}>
-              <span className="text-[11px] px-3 py-1 rounded-full" style={{ color: PALETTE.gold, border: `1px solid rgba(95,143,123,0.35)`, background: "rgba(95,143,123,0.08)" }}>
-                {lockedPlayersData.length} locked
-              </span>
-              <span className="text-xs">{locksOpen ? "Minimize" : "Expand"}</span>
-              {locksOpen ? <ChevronDown size={18} className="lucide-icon" /> : <ChevronRight size={18} className="lucide-icon" />}
-            </div>
-          </button>
-
-          {locksOpen && (
-            <div className="mt-3">
-              <div className="relative mb-3">
-                <Search size={14} className="lucide-icon absolute left-3 top-1/2 -translate-y-1/2" style={{ color: PALETTE.muted }} />
-                <input
-                  value={lockSearch}
-                  onChange={(e) => setLockSearch(e.target.value)}
-                  placeholder="Search players to lock in"
-                  className="gold-ring w-full h-11 pl-9 pr-3 rounded-2xl text-sm outline-none"
-                  style={{ border: `1px solid ${PALETTE.border}`, backgroundColor: "rgba(248,250,252,0.94)", color: PALETTE.beige }}
-                />
-              </div>
-
-              {filteredLockCandidates.length > 0 && (
-                <div className="mb-3 flex flex-wrap gap-2">
-                  {filteredLockCandidates.map((p) => (
-                    <button
-                      key={p.Name}
-                      type="button"
-                      onClick={() => {
-                        toggleLockIn(p.Name, p);
-                        setLockSearch("");
-                      }}
-                      className="gold-ring inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold transition"
-                      style={{ border: `1px solid ${PALETTE.border}`, background: "rgba(248,250,252,0.9)", color: PALETTE.beige }}
-                    >
-                      <Lock size={12} className="lucide-icon" style={{ color: PALETTE.gold }} />
-                      {p.web_name}
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {lockedPlayersData.length > 0 ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
-                  {lockedPlayersData.map((player) => (
-                    <div
-                      key={player.Name}
-                      className="relative flex items-center gap-2 px-2 py-2 rounded-full text-sm transition"
-                      style={{ backgroundColor: "rgba(95,143,123,0.12)", border: "1px solid rgba(95,143,123,0.35)", color: PALETTE.gold }}
-                    >
-                      <img
-                        src={player.photo}
-                        alt={player.web_name}
-                        onError={(e) => {
-                          e.currentTarget.onerror = null;
-                          e.currentTarget.src = "https://d2kq0urxkarztv.cloudfront.net/51812cad594df29a1a0003f0/661303/upload-643ff5d9-840e-4bbb-b099-07c26ef505c9.png?w=578";
-                        }}
-                        className="w-8 h-8 rounded-full object-cover"
-                      />
-                      <span className="truncate max-w-[8rem]">{player.web_name}</span>
-                      <button
-                        onClick={() => removeLockIn(player.Name)}
-                        className="gold-ring absolute -top-1 -right-1 rounded-full p-1"
-                        style={{ backgroundColor: "rgba(248,250,252,0.94)", color: PALETTE.beige }}
-                        aria-label={`Remove ${player.web_name} from locked list`}
-                      >
-                        <X size={12} className="lucide-icon" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-xs" style={{ color: PALETTE.muted }}>
-                  No locked players yet. Search and add players to force them as transfer-ins.
-                </div>
-              )}
-            </div>
-          )}
-        </section>
-
         {bannedPlayersData.length > 0 && (
           <section className="mb-6 glass-card rounded-[28px] p-4 sm:p-5">
             <div className="flex items-center justify-between mb-3 gap-3">
@@ -2712,17 +2761,21 @@ export default function MyTeamOptimize() {
           </section>
         )}
 
-        {Array.isArray(data) && data.length > 0 && (
+        {pitchSourceData.length > 0 && (
           <section ref={pitchSectionRef} className="mb-6 grid grid-cols-1 gap-6 items-start">
             <div className="glass-card rounded-[28px] p-4 sm:p-5">
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <div className="text-sm font-semibold inline-flex items-center gap-2" style={{ color: PALETTE.gold }}>
                     <Trophy size={16} className="lucide-icon" />
-                    Optimized XI - Solution {selectedSolution}
+                    {activeSolutionData.length > 0
+                      ? `Optimized XI - Solution ${selectedSolution}`
+                      : "Loaded FPL team"}
                   </div>
                   <div className="text-xs mt-1" style={{ color: PALETTE.muted }}>
-                    Tap a player to open analytics. Use X to ban and the lock list above to force transfer-ins.
+                    {activeSolutionData.length > 0
+                      ? "Tap a player to open analytics. Use X to ban or add a manual transfer for a specific GW."
+                      : "This is the untouched squad from the Team ID. Run Optimize to apply a solver plan."}
                   </div>
                 </div>
                 <div
@@ -2767,6 +2820,7 @@ export default function MyTeamOptimize() {
                 })}
               </div>
 
+              {(activeSolutionData.length > 0 || optimizationProgress?.streaming) && (
               <div className="mb-4 rounded-2xl p-3" style={{ border: `1px solid ${PALETTE.border}`, background: "rgba(248,250,252,0.82)" }}>
                 <div className="flex flex-col items-center justify-center gap-1 text-center">
                   <div className="text-xs font-semibold" style={{ color: PALETTE.gold }}>
@@ -2808,6 +2862,7 @@ export default function MyTeamOptimize() {
                   })}
                 </div>
               </div>
+              )}
 
               {availableGWs.length > 0 && (
                 <div className="mb-4">
@@ -3001,15 +3056,29 @@ export default function MyTeamOptimize() {
                                 </button>
                               </div>
                             ))}
-                            {!nodeSummary.isChipTransferGw && nodeSummary.manualPairs.map((tr) => (
+                            {nodeSummary.manualPairs.map((tr) => (
                               <div
                                 key={tr.id}
                                 className="flex items-center gap-1 rounded-full px-1.5 py-1 text-[9px]"
                                 style={{ background: "rgba(22,163,74,0.12)", color: isActive ? "#0f172a" : PALETTE.gold }}
                               >
+                                <Lock size={10} className="lucide-icon shrink-0" />
                                 <span className="min-w-0 flex-1 truncate">
-                                  {tr.outDisplay || tr.outName}{" -> "}{tr.inDisplay || tr.inName}
+                                  {tr.isLocked ? "Locked" : "Pending lock"}: {tr.outDisplay || tr.outName}{" -> "}{tr.inDisplay || tr.inName}
                                 </span>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    removeManualTransfer(tr, gw);
+                                  }}
+                                  className="rounded-full p-0.5"
+                                  style={{ color: PALETTE.danger, background: "rgba(255,255,255,0.65)" }}
+                                  aria-label="Remove locked transfer"
+                                  title="Remove locked transfer"
+                                >
+                                  <X size={10} className="lucide-icon" />
+                                </button>
                               </div>
                             ))}
                           </div>
@@ -3260,7 +3329,7 @@ export default function MyTeamOptimize() {
                   <button
                     type="button"
                     onClick={addManualTransfer}
-                    disabled={!selectedTransferOut || !transferInKey}
+                    disabled={optimizationProgress?.streaming || !selectedTransferOut || !transferInKey}
                     className="gold-ring rounded-2xl px-4 py-2 text-sm font-bold transition disabled:opacity-50 lg:self-end"
                     style={{
                       border: `1px solid ${selectedTransferOut && transferInKey ? PALETTE.gold : PALETTE.border}`,
@@ -3301,7 +3370,7 @@ export default function MyTeamOptimize() {
                         </span>
                         <button
                           type="button"
-                          onClick={() => removeManualTransfer(tr.id)}
+                          onClick={() => removeManualTransfer(tr)}
                           className="rounded-full p-1"
                           style={{ color: PALETTE.danger }}
                           aria-label="Remove manual transfer"
@@ -3650,7 +3719,7 @@ export default function MyTeamOptimize() {
                   <button
                     type="button"
                     onClick={addManualTransfer}
-                    disabled={!selectedTransferOut || !transferInKey}
+                    disabled={optimizationProgress?.streaming || !selectedTransferOut || !transferInKey}
                     className="gold-ring rounded-2xl px-4 py-2 text-sm font-bold transition disabled:opacity-50 lg:self-end"
                     style={{
                       border: `1px solid ${selectedTransferOut && transferInKey ? PALETTE.gold : PALETTE.border}`,
@@ -3677,7 +3746,7 @@ export default function MyTeamOptimize() {
                         </span>
                         <button
                           type="button"
-                          onClick={() => removeManualTransfer(tr.id)}
+                          onClick={() => removeManualTransfer(tr)}
                           className="rounded-full p-1"
                           style={{ color: PALETTE.danger }}
                           aria-label="Remove manual transfer"
@@ -3810,12 +3879,12 @@ export default function MyTeamOptimize() {
           </section>
         )}
 
-        {(!Array.isArray(data) || data.length === 0) && (
+        {pitchSourceData.length === 0 && (
           <section className="glass-card rounded-[28px] p-8 text-center">
             <Sparkles size={28} className="lucide-icon mx-auto mb-3" style={{ color: PALETTE.gold }} />
             <div className="text-lg font-semibold">Ready to optimize</div>
             <div className="text-sm mt-2 max-w-xl mx-auto" style={{ color: PALETTE.muted }}>
-              Enter your team ID, choose your chip strategy, and run the optimizer to see your XI and transfer plan.
+              Enter your Team ID and press Load to inspect the unchanged squad, then run the optimizer when ready.
             </div>
           </section>
         )}
@@ -3823,16 +3892,16 @@ export default function MyTeamOptimize() {
         <div className="sticky bottom-24 sm:bottom-28 z-[120] mt-6 flex justify-end">
           <button
             onClick={handleOptimizeClick}
-            disabled={!has_changed || !teamId}
+            disabled={!canOptimize}
             className="green-ring inline-flex items-center justify-center gap-2 font-semibold px-4 py-3 rounded-2xl transition-all"
             style={{
-              border: `1px solid ${has_changed && teamId ? PALETTE.gold : PALETTE.border}`,
-              background: has_changed && teamId
+              border: `1px solid ${canOptimize ? PALETTE.gold : PALETTE.border}`,
+              background: canOptimize
                 ? `linear-gradient(135deg, ${PALETTE.gold}, ${PALETTE.goldSoft})`
                 : "rgba(248,250,252,0.95)",
-              color: has_changed && teamId ? "#0f172a" : PALETTE.muted,
-              cursor: has_changed && teamId ? "pointer" : "not-allowed",
-              boxShadow: has_changed && teamId ? "0 12px 24px rgba(15,23,42,0.18)" : "none",
+              color: canOptimize ? "#0f172a" : PALETTE.muted,
+              cursor: canOptimize ? "pointer" : "not-allowed",
+              boxShadow: canOptimize ? "0 12px 24px rgba(15,23,42,0.18)" : "none",
             }}
           >
             <Wand2 size={17} className="lucide-icon" />

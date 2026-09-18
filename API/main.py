@@ -13,7 +13,7 @@ from fastapi.responses import PlainTextResponse
 from Generate_Optimize_Pyrobi_test import optimize_my_team
 from Generate_Fetch_Myteam import build_team_dataframe
 from typing import List, Optional, Literal, Dict, Any
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from fastapi.responses import JSONResponse
 from GenerateConfig import fixtures_config,Player_picture_url,current_season
 from queue import Queue
@@ -39,6 +39,11 @@ class PlayerInput(BaseModel):
     value: float
     Points: float   # from PlayerAdjustmentsPage computed Points
 
+class ForcedTransferInput(BaseModel):
+    gw: int
+    out_name: str
+    in_name: str
+
 class OptimizeRequest(BaseModel):
     team_id: int
 
@@ -58,6 +63,7 @@ class OptimizeRequest(BaseModel):
 
     # optional: passed only when model_type == "statistical"
     players: Optional[List[PlayerInput]] = None
+    forced_transfers: List[ForcedTransferInput] = Field(default_factory=list)
     guest_id: Optional[str] = None
 
 
@@ -1380,6 +1386,7 @@ def _build_optimize_kwargs(
     risk: float = 0.0,
     transval: float = 0.5,
     players_df: Optional[pd.DataFrame] = None,
+    forced_transfers: Optional[List[Dict[str, Any]]] = None,
     on_solution=None,
 ):
     return dict(
@@ -1394,6 +1401,7 @@ def _build_optimize_kwargs(
         n_hits=n_hits,
         current_player_path=f"{RAW_DATA_DIR}/current_players.csv",
         players_override=players_df,
+        forced_transfers=forced_transfers or [],
         risk_factor=risk,
         transval=transval,
         n_solutions=OPTIMIZER_N_SOLUTIONS,
@@ -1556,6 +1564,7 @@ def post_my_team_optimize(req: OptimizeRequest, request: Request):
                 "banned_list": req.banned_list or [],
                 "force_in_list": req.force_in_list or [],
                 "players_count": len(req.players or []),
+                "forced_transfers_count": len(req.forced_transfers or []),
             },
         )
     except Exception as e:
@@ -1572,6 +1581,7 @@ def post_my_team_optimize(req: OptimizeRequest, request: Request):
         risk=req.risk,
         transval=req.transval,
         players_df=players_df,
+        forced_transfers=[move.dict() for move in (req.forced_transfers or [])],
     )
 
     _acquire_optimization_slot()
