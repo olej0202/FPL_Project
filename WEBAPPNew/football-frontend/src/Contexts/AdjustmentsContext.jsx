@@ -45,13 +45,25 @@ const normalizeOptions01 = (options01) => {
 
   if (cleaned.length === 0) return null;
 
-  const sum = cleaned.reduce((a, o) => a + (Number.isFinite(o.p) ? o.p : 0), 0);
+  // A fixture represents exactly one match. Collapse repeated GW options and
+  // normalize the total probability mass so editing its schedule can only
+  // redistribute that match, never create a second copy of it.
+  const probabilityByGw = new Map();
+  for (const option of cleaned) {
+    probabilityByGw.set(
+      option.gw,
+      (probabilityByGw.get(option.gw) || 0) + Math.max(0, option.p)
+    );
+  }
+  const grouped = Array.from(probabilityByGw, ([gw, p]) => ({ gw, p }));
+
+  const sum = grouped.reduce((a, o) => a + (Number.isFinite(o.p) ? o.p : 0), 0);
 
   if (sum <= 0) {
-    return cleaned.map((o, i) => ({ ...o, p: i === 0 ? 1 : 0 }));
+    return grouped.map((o, i) => ({ ...o, p: i === 0 ? 1 : 0 }));
   }
 
-  return cleaned.map((o) => ({ ...o, p: o.p / sum }));
+  return grouped.map((o) => ({ ...o, p: o.p / sum }));
 };
 
 const firstFinite = (...vals) => {
@@ -338,9 +350,10 @@ const buildProjectedTeamLookup = (teamRows, fixtures) => {
   const optionsById = new Map();
 
   for (const fx of fixtures || []) {
+    const normalized = normalizeOptions01(fx.options) || [];
     optionsById.set(
       fx.id,
-      (fx.options || []).map((o) => ({ gw: Number(o.gw), p: Number(o.p) }))
+      normalized.map((o) => ({ gw: Number(o.gw), p: Number(o.p) }))
     );
   }
 
@@ -815,7 +828,11 @@ export function AdjustmentDataProvider({ children }) {
     const idx = prev.findIndex((fixture) => fixture.id === fixtureId);
     if (idx === -1) return;
     const clone = [...prev];
-    clone[idx] = typeof updater === "function" ? updater(clone[idx]) : updater;
+    const updatedFixture = typeof updater === "function" ? updater(clone[idx]) : updater;
+    clone[idx] = {
+      ...updatedFixture,
+      options: normalizeOptions01(updatedFixture?.options) || [],
+    };
     FixturesRef.current = clone;
     persistFixtureOverrides(clone);
     PlayerRef.current = buildStablePlayerCalcs(PlayerRef.current || [], TeamRef.current || [], clone);

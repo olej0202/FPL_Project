@@ -607,11 +607,19 @@ export default function MyTeamOptimize() {
     if (!hasStatisticalData) return [];
     const arr = selectedScenarioPlayers;
     if (!Array.isArray(arr) || arr.length === 0) return [];
-    return arr.map((p) => ({
-      ...p,
-      calc_points: Number.isFinite(Number(p.calc_points)) ? Number(p.calc_points) : 0,
-      Points: Number.isFinite(Number(p.calc_points)) ? Number(p.calc_points) : 0,
-    }));
+    const uniqueByPlayerGw = new Map();
+    arr.forEach((p) => {
+      const gw = Number(p?.GW);
+      const name = String(p?.name ?? p?.Name ?? "").trim();
+      if (!name || !Number.isFinite(gw)) return;
+      const points = Number.isFinite(Number(p.calc_points)) ? Number(p.calc_points) : 0;
+      uniqueByPlayerGw.set(`${name}__${gw}`, {
+        ...p,
+        calc_points: points,
+        Points: points,
+      });
+    });
+    return Array.from(uniqueByPlayerGw.values());
   }, [selectedScenarioPlayers, hasStatisticalData, adjustmentDataVersion]);
 
   const aiProjectionRows = useMemo(() => {
@@ -1302,12 +1310,20 @@ export default function MyTeamOptimize() {
       );
       const statusOverrides = manualPlan[String(targetGw)]?.statusOverrides || {};
 
-      return [
-        ...baseRows.filter(
-          (row) => !removedNames.has(normalizeLoosePlayerKey(getPlayerCanonicalName(row)))
-        ),
-        ...manualIncomingRows,
-      ].map((row) => {
+      const retainedBaseRows = baseRows.filter(
+        (row) => !removedNames.has(normalizeLoosePlayerKey(getPlayerCanonicalName(row)))
+      );
+      const existingNames = new Set(
+        retainedBaseRows.map((row) => normalizeLoosePlayerKey(getPlayerCanonicalName(row)))
+      );
+      const uniqueManualIncomingRows = manualIncomingRows.filter((row) => {
+        const key = normalizeLoosePlayerKey(getPlayerCanonicalName(row));
+        if (!key || existingNames.has(key)) return false;
+        existingNames.add(key);
+        return true;
+      });
+
+      return [...retainedBaseRows, ...uniqueManualIncomingRows].map((row) => {
         const name = getPlayerCanonicalName(row);
         const override = statusOverrides[name];
         return override ? { ...row, status: override } : row;
@@ -1597,9 +1613,20 @@ export default function MyTeamOptimize() {
         return status === "playing" || (Number(bbRound) === targetGw && status === "benched");
       });
 
+      // Manual planner state used to be layered over a fresh optimization and
+      // could leave the same player in the display twice. A player/GW may only
+      // contribute once to the solver total.
+      const uniqueScoringRows = Array.from(
+        scoringRows.reduce((map, row) => {
+          const key = normalizeLoosePlayerKey(getPlayerCanonicalName(row));
+          if (key && !map.has(key)) map.set(key, row);
+          return map;
+        }, new Map()).values()
+      );
+
       let sum = 0;
       let count = 0;
-      scoringRows.forEach((row) => {
+      uniqueScoringRows.forEach((row) => {
         const projection = getProjectionRowForPlayer(row, targetGw) || row;
         const value = getRowMeasureValue(projection, teamMeasure);
         if (Number.isFinite(value)) {
@@ -1872,6 +1899,12 @@ export default function MyTeamOptimize() {
     const useStatistical = modelType === "statistical" && hasStatisticalData;
     const playersPayload = useStatistical ? statisticalPlayersPayload : null;
     setSelectedSolution(1);
+    // A new solver result must not inherit manual transfers/status changes
+    // from an older run; those overlays can duplicate players in later GWs.
+    setManualPlan({});
+    setHiddenModelTransferKeys([]);
+    setTransferOutName("");
+    setTransferInKey("");
 
     fetchTeam({
       useStatisticalModel: useStatistical,
@@ -2466,6 +2499,8 @@ export default function MyTeamOptimize() {
                           <button
                             type="button"
                             onClick={() => {
+                              setManualPlan({});
+                              setHiddenModelTransferKeys([]);
                               loadOptimization(opt.id);
                               const savedParams = opt?.snapshot?.params || {};
                               const savedModel = savedParams.modelType === "statistical" ? "statistical" : "ai";

@@ -41,7 +41,10 @@ def apply_points_override_from_long(
 
     pivot = (
         df_long
-        .pivot_table(index="name", columns="GW", values="Points", aggfunc="sum")
+        # A player has one prediction per GW. Never add duplicate transport
+        # rows together: that turns one prediction into double points. Keeping
+        # the latest value also makes the API robust to repeated payload rows.
+        .pivot_table(index="name", columns="GW", values="Points", aggfunc="last")
         .fillna(0.0)
     )
 
