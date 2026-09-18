@@ -155,6 +155,8 @@ UNDERSTAT_FIXED_PER90_CAPS = {
     "xA_p_90": 1.5,
     "npg_p_90": 2.0,
     "assists_p_90": 2.0,
+    "key_passes_p_90":5.0,
+    "Shots_p_90":7.0
 }
 
 

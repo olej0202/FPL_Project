@@ -847,6 +847,18 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
     missing_player = []
     Players_without_history=[]
 
+    def _risk_from_rolling_team_minutes(player_df: pd.DataFrame) -> float:
+        """Understat weight based on accumulated team minutes for the player."""
+        if player_df.empty or "Rolling_Team_Minutes" not in player_df.columns:
+            rolling_team_minutes = 0.0
+        else:
+            value = pd.to_numeric(
+                pd.Series([player_df["Rolling_Team_Minutes"].iloc[0]]),
+                errors="coerce",
+            ).iloc[0]
+            rolling_team_minutes = 0.0 if pd.isna(value) else max(0.0, float(value))
+        return 1.0 - min(0.6, rolling_team_minutes / 2000.0)
+
     for name in names:
         player_risiko = 0.4
         print(name)
@@ -1027,6 +1039,7 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
         pd.DataFrame(missing_player).to_csv("MIssing_players.csv", index=False)
 
         player_row["CBI"] = 0
+        player_row["Average_Reference_Players"] = ""
 
 
         # Upcomming
@@ -1037,7 +1050,10 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
         # -----------------------------
         # rest of your logic (mostly unchanged)
         # -----------------------------
-        exclude_columns = ["kickoff_time", "season", "position", "Team", "name", "gamepos", "CBI"]
+        exclude_columns = [
+            "kickoff_time", "season", "position", "Team", "name", "gamepos", "CBI",
+            "Average_Reference_Players",
+        ]
         overscore = goal_conv
         overassist = player_row["Average_OverAssist"].values[0]
         columns_to_average = [col for col in player_row.columns if col not in exclude_columns]
@@ -1060,59 +1076,102 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
 
         defcon_rows = filtered["defcon_avg"].notna().sum()
         positive_defcon_rows = int((filtered["defcon_avg_numeric"].fillna(0.0) > 0).sum())
-        defcon_columns = [
-            "defcon_avg",
-            "defcon_avg_hit_rate",
-            "defcon_avg_hit_rate_T0",
-            "defcon_avg_hit_rate_T1",
-            "defcon_avg_hit_rate_T2",
-            "defcon_avg_hit_rate_T3",
-            "Share_of_Defcon",
-            "Share_of_Defcon_Short",
-        ]
-        own_defcon_means = filtered[defcon_columns].apply(pd.to_numeric, errors="coerce").mean()
         sum_minutes = filtered["minutes"].sum()
-        own_data_weight = min(1.0, sum_minutes / (90 * 7))
+        own_data_weight = min(1.0, sum_minutes / (90 * 10))
 
-        if sum_minutes < (90 * 7):
+        if sum_minutes < (90 * 10):
             if team_code in NEW_TEAMS:
                 reference_team_codes = [13, 90, 102, 40, 49, 2, 20, 39, 56, 11, 54] 
                 select_players=10
             else:
                 reference_team_codes = [team_code]
-                select_players=5
+                select_players=4
 
 
             position_values = ["GK", "GKP"] if position in ["GK", "GKP"] else [position]
             candidate_rows = history_data[
                 (history_data["Team"].isin(reference_team_codes)) &
-                (history_data["position"].isin(position_values)) 
+                (history_data["position"].isin(position_values)) &
+                (history_data["name"].astype(str).str.lower() != str(name).lower())
             ].copy()
             candidate_rows["minutes"] = pd.to_numeric(candidate_rows["minutes"], errors="coerce").fillna(0.0)
-            candidate_rows = candidate_rows.sort_values("kickoff_time_parsed", ascending=False)
-            latest_candidate_rows = candidate_rows.drop_duplicates(subset=["name"], keep="first")
-            eligible_names = (
-                latest_candidate_rows
-                .sort_values(["minutes", "kickoff_time_parsed"], ascending=[False, False])
-                .head(select_players)["name"]
-                .tolist()
+            candidate_rows = candidate_rows.dropna(subset=["name", "kickoff_time_parsed"])
+
+            # Rank candidates by newest available row first, then by total
+            # minutes in each candidate's latest seven historical rows. The
+            # current player is always excluded.
+            recent_candidate_rows = (
+                candidate_rows
+                .sort_values(["name", "kickoff_time_parsed"], ascending=[True, False])
+                .groupby("name", group_keys=False, sort=False)
+                .head(7)
             )
+            candidate_ranking = (
+                recent_candidate_rows
+                .groupby("name", as_index=False)
+                .agg(
+                    reference_minutes=("minutes", "sum"),
+                    latest_reference_match=("kickoff_time_parsed", "max"),
+                )
+                .sort_values(
+                    ["latest_reference_match", "reference_minutes", "name"],
+                    ascending=[False, False, True],
+                )
+            )
+            eligible_names = candidate_ranking.head(select_players)["name"].tolist()
 
             if eligible_names:
-                defcon_source = history_data[
+                reference_source = history_data[
                     (history_data["name"].isin(eligible_names))
+                ].copy()
+
+                # Average every numeric model column shared by the historical
+                # source and the current player profile. Identity/context keys
+                # and the two sample-size controls must remain player-specific.
+                protected_numeric_columns = {
+                    "element",
+                    "fixture",
+                    "opponent_team",
+                    "opponent_code",
+                    "season",
+                    "Team",
+                    "Rolling_Team_Rows",
+                    "Rolling_Team_Minutes",
+                }
+                shared_columns = [
+                    col for col in player_row.columns
+                    if col in filtered.columns
+                    and col in reference_source.columns
+                    and col not in protected_numeric_columns
                 ]
-                defcon_means = defcon_source[defcon_columns].apply(pd.to_numeric, errors="coerce").mean()
-                if sum_minutes < (90 * 7):
-                    blended_defcon = (
-                        own_data_weight * own_defcon_means.reindex(defcon_columns) +
-                        (1 - own_data_weight) * defcon_means.reindex(defcon_columns)
+
+                numeric_columns = []
+                own_numeric = {}
+                reference_numeric = {}
+                for col in shared_columns:
+                    own_values = pd.to_numeric(filtered[col], errors="coerce")
+                    reference_values = pd.to_numeric(reference_source[col], errors="coerce")
+                    if own_values.notna().any() or reference_values.notna().any():
+                        numeric_columns.append(col)
+                        own_numeric[col] = own_values.mean()
+                        reference_numeric[col] = reference_values.mean()
+
+                if numeric_columns:
+                    own_means = pd.Series(own_numeric).reindex(numeric_columns)
+                    reference_means = pd.Series(reference_numeric).reindex(numeric_columns)
+                    blended_means = (
+                        own_data_weight * own_means
+                        + (1.0 - own_data_weight) * reference_means
                     )
-                    fill_values = defcon_means.reindex(defcon_columns)
-                    blended_defcon = blended_defcon.where(blended_defcon.notna(), fill_values)
-                    player_row[defcon_columns] = blended_defcon.values
-                else:
-                    player_row[defcon_columns] = own_defcon_means.reindex(defcon_columns).values
+                    blended_means = blended_means.where(
+                        blended_means.notna(),
+                        reference_means,
+                    )
+                    player_row[numeric_columns] = blended_means.values
+
+                player_row["Average_Reference_Players"] = "; ".join(
+                    str(reference_name) for reference_name in eligible_names
+                )
                  
 
         if name in new_team_cluster:
@@ -1144,7 +1203,9 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
         else:
             rolling_cards = player_row["Rolling_cards"].values[0]
             
-        player_risiko=1-min(0.65,len(history_player)/25)
+            
+            
+        player_risiko = _risk_from_rolling_team_minutes(player_row)
 
         if name in Manual_Player_Risk:
             player_risiko = Manual_Player_Risk[name]
@@ -1229,7 +1290,10 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
         player_team_pen_data=player[8]
         
         
-        exclude_columns = ["kickoff_time", "season", "position", "Team", "name", "gamepos", "GW","Understat_pos"]
+        exclude_columns = [
+            "kickoff_time", "season", "position", "Team", "name", "gamepos", "GW",
+            "Understat_pos", "Average_Reference_Players",
+        ]
         
         player_cluster = _select_no_history_profile_cluster(
             no_history_profile_source,
@@ -1289,6 +1353,7 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
         player_row["name"] = name
         player_row["Team"] = team_code
         player_row["position"] = position
+        player_row["Average_Reference_Players"] = ""
         player_row["gamepos"] = main_pos if pd.notna(main_pos) and str(main_pos).strip() else position
         player_row["Average_Overscore"] = 1
         player_row["Average_OverAssist"] = 1
@@ -1303,7 +1368,7 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
         )
         player_row["Team_Pen_Data"] = player_team_pen_data
         player_row["Pen_Number"] = pen_number
-        player_risiko=0.8
+        player_risiko = _risk_from_rolling_team_minutes(player_row)
         if name in Manual_Player_Risk:
             player_risiko = Manual_Player_Risk[name]
         player_row["player_risiko"] = player_risiko
@@ -1402,6 +1467,10 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
     add_team_share_per90()
     
     df = pd.read_csv("Player_Prediction_set.csv")
+    if "Average_Reference_Players" not in df.columns:
+        df["Average_Reference_Players"] = ""
+    else:
+        df["Average_Reference_Players"] = df["Average_Reference_Players"].fillna("")
     required_zero_cols = [
         "Understat_XG",
         "Understat_XA",
@@ -1437,6 +1506,21 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
         if col not in df.columns:
             df[col] = 0.0
         df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0.0)
+
+    # Reassert the risk from the final dataframe so later profile/cluster
+    # blending cannot alter it. Manual per-player overrides still take priority.
+    if "Rolling_Team_Minutes" not in df.columns:
+        df["Rolling_Team_Minutes"] = 0.0
+    rolling_team_minutes = (
+        pd.to_numeric(df["Rolling_Team_Minutes"], errors="coerce")
+        .fillna(0.0)
+        .clip(lower=0.0)
+    )
+    df["player_risiko"] = 1.0 - np.minimum(0.6, rolling_team_minutes / 2000.0)
+    if Manual_Player_Risk and "name" in df.columns:
+        manual_risk = df["name"].map(Manual_Player_Risk)
+        df.loc[manual_risk.notna(), "player_risiko"] = manual_risk[manual_risk.notna()]
+
     df["Goal_Index"] = df["Understat_XG"] * df["player_risiko"] + (1 - df["player_risiko"]) * (df["Goal_Statistics"]*0.4+df["Rolling_adjusted_XG"]*0.2+0.4*df['Goal_Statistics_Index_dec'])
     df["Assist_Index"] = df["Understat_XA"] * df["player_risiko"] + (1 - df["player_risiko"]) * (df["Assist_Statistics"]*0.4+df["Rolling_adjusted_XA"]*0.2+0.4*df['Assist_Statistics_Index_dec'])
     df["Goal_Index_Share"] = df["Understat_Goal_Index_Share"] * df["player_risiko"] + (1 - df["player_risiko"]) * (df["xg_share_index_dec"]*0.5+df["Share_of_XG"]*0.35+0.15*df['Share_of_XG_Short']+0*df['Rolling_adjusted_Threat_per90_share'])

@@ -728,7 +728,7 @@ def Player_adjustements(current_player_path):
     from scipy.stats import t
 
     DF = 5.445239499991924
-    BIAS = -0.022988589029028356
+    BIAS = -0.122988589029028356
     SCALE = 2.3387548983231
 
     def probability(mu, threshold):
@@ -749,11 +749,11 @@ def Player_adjustements(current_player_path):
 
     # Linear scale from 0.9 -> 1.1
     df["Opp_defcon_scale"] = (
-        0.9
+        0.95
         + (
             (df["Opp_defcon"] - opp_min)
             / (opp_max - opp_min)
-        ) * 0.2
+        ) * 0.15
     )
 
     # Scale Defcon_Index / mu
