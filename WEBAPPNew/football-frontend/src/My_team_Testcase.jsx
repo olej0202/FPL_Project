@@ -62,7 +62,8 @@ const isValidGW = (gw) =>
   Number.isInteger(gw) && gw >= 1 && gw <= 38;
 
 const DEFAULT_TREE_NODES = [
-  { id: "gw6", label: "GW6", gw: 6, parentId: null, probability: 100, chip: "none", scenarioId: BASE_SCENARIO_ID },
+  { id: "tree_start", label: "GW5 complete", gw: 5, parentId: null, probability: 100, chip: "none", scenarioId: BASE_SCENARIO_ID, isAnchor: true },
+  { id: "gw6", label: "GW6", gw: 6, parentId: "tree_start", probability: 100, chip: "none", scenarioId: "inherit" },
   { id: "gw7", label: "GW7", gw: 7, parentId: "gw6", probability: 100, chip: "none", scenarioId: "inherit" },
   { id: "gw8", label: "GW8", gw: 8, parentId: "gw7", probability: 100, chip: "none", scenarioId: "inherit" },
 ];
@@ -86,6 +87,56 @@ const getTreeLeafIds = (nodeId, childrenByParent) => {
   const children = childrenByParent.get(nodeId) || [];
   if (!children.length) return [nodeId];
   return children.flatMap((child) => getTreeLeafIds(child.id, childrenByParent));
+};
+
+const ensureTreeStartAnchor = (nodes) => {
+  if (!Array.isArray(nodes) || nodes.length === 0) return DEFAULT_TREE_NODES.map((node) => ({ ...node }));
+  if (nodes.some((node) => node?.isAnchor)) return nodes.map((node) => ({ ...node }));
+  const roots = nodes.filter((node) => !node.parentId);
+  if (roots.length !== 1 || Number(roots[0].gw) <= 1) return nodes.map((node) => ({ ...node }));
+  const root = roots[0];
+  const anchorId = `tree_start_${root.gw - 1}`;
+  return [
+    {
+      id: anchorId,
+      label: `GW${Number(root.gw) - 1} complete`,
+      gw: Number(root.gw) - 1,
+      parentId: null,
+      probability: 100,
+      chip: "none",
+      scenarioId: BASE_SCENARIO_ID,
+      isAnchor: true,
+    },
+    ...nodes.map((node) =>
+      node.id === root.id
+        ? { ...node, parentId: anchorId, scenarioId: node.scenarioId === BASE_SCENARIO_ID ? "inherit" : node.scenarioId }
+        : { ...node }
+    ),
+  ];
+};
+
+const TREE_WORKSPACE_STORAGE_KEY = "fpl_optimizer_tree_workspace_v1";
+const readStoredTreeWorkspace = () => {
+  const fallback = {
+    enabled: false,
+    controlsOpen: false,
+    nodes: DEFAULT_TREE_NODES.map((node) => ({ ...node })),
+    positions: {},
+  };
+  if (typeof window === "undefined") return fallback;
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem(TREE_WORKSPACE_STORAGE_KEY) || "null");
+    if (!parsed || typeof parsed !== "object") return fallback;
+    const nodes = ensureTreeStartAnchor(parsed.nodes);
+    return {
+      enabled: Boolean(parsed.enabled),
+      controlsOpen: Boolean(parsed.controlsOpen || parsed.enabled),
+      nodes,
+      positions: parsed.positions && typeof parsed.positions === "object" ? parsed.positions : {},
+    };
+  } catch {
+    return fallback;
+  }
 };
 
 const syncTreeMasses = (nodes) => {
@@ -290,6 +341,20 @@ const isUnknownOpponent = (value) => {
   return /^(n\/?a|na|none|null|unknown|-)$/i.test(s);
 };
 const cleanOpponentValue = (value) => (isUnknownOpponent(value) ? null : value);
+const getFixtureVenue = (row) => {
+  const raw =
+    row?.Home ??
+    row?.home ??
+    row?.venue ??
+    row?.was_home ??
+    row?.is_home;
+  if (raw === true || raw === 1) return "H";
+  if (raw === false || raw === 0) return "A";
+  const value = String(raw ?? "").trim().toUpperCase();
+  if (["H", "HOME", "TRUE", "1"].includes(value)) return "H";
+  if (["A", "AWAY", "FALSE", "0"].includes(value)) return "A";
+  return null;
+};
 const getRowPredictedPoints = (row) =>
   toFiniteNumber(
     row?.Points_prediction,
@@ -679,6 +744,10 @@ export default function MyTeamOptimize() {
   const { fetchIfNeeded: fetchStatsIfNeeded, TeamData, PlayersData, dataVersion: statsDataVersion } = useStatsData();
   const navigate = useNavigate();
   const location = useLocation();
+  const initialTreeWorkspaceRef = useRef(null);
+  if (!initialTreeWorkspaceRef.current) {
+    initialTreeWorkspaceRef.current = readStoredTreeWorkspace();
+  }
 
   const [modelType, setModelType] = useState("ai");
   const [solverScenarioId, setSolverScenarioId] = useState(BASE_SCENARIO_ID);
@@ -693,14 +762,14 @@ export default function MyTeamOptimize() {
   const [chipsOpen, setChipsOpen] = useState(false);
   const [loadingPhase, setLoadingPhase] = useState("idle");
   const [progress, setProgress] = useState(0);
-  const [controlsOpen, setControlsOpen] = useState(false);
+  const [controlsOpen, setControlsOpen] = useState(initialTreeWorkspaceRef.current.controlsOpen);
   const [savedOpen, setSavedOpen] = useState(false);
   const [chipPanelOpen, setChipPanelOpen] = useState(false);
   const [selectedGW, setSelectedGW] = useState(null);
   const [selectedSolution, setSelectedSolution] = useState(1);
-  const [treeMode, setTreeMode] = useState(false);
-  const [treeNodes, setTreeNodes] = useState(() => DEFAULT_TREE_NODES.map((node) => ({ ...node })));
-  const [treeNodePositions, setTreeNodePositions] = useState({});
+  const [treeMode, setTreeMode] = useState(initialTreeWorkspaceRef.current.enabled);
+  const [treeNodes, setTreeNodes] = useState(initialTreeWorkspaceRef.current.nodes);
+  const [treeNodePositions, setTreeNodePositions] = useState(initialTreeWorkspaceRef.current.positions);
   const [draggingTreeNode, setDraggingTreeNode] = useState(null);
   const [selectedTreeBranchId, setSelectedTreeBranchId] = useState("");
   const [manualPlan, setManualPlan] = useState({});
@@ -717,9 +786,29 @@ export default function MyTeamOptimize() {
   const pitchSectionRef = useRef(null);
   const treeCanvasRef = useRef(null);
   const pendingTreePositionsRef = useRef(null);
+  const restoredTreePositionsRef = useRef(
+    Object.keys(initialTreeWorkspaceRef.current.positions || {}).length > 0
+  );
   const preferredModelAppliedRef = useRef(false);
   const loadedPlanStorageKeyRef = useRef(null);
   const pendingSavedManualPlanRef = useRef(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(
+        TREE_WORKSPACE_STORAGE_KEY,
+        JSON.stringify({
+          enabled: treeMode,
+          controlsOpen,
+          nodes: treeNodes,
+          positions: treeNodePositions,
+        })
+      );
+    } catch (error) {
+      console.warn("Could not persist optimizer tree workspace:", error);
+    }
+  }, [controlsOpen, treeMode, treeNodePositions, treeNodes]);
 
   useEffect(() => {
     fetchStatsIfNeeded();
@@ -873,11 +962,13 @@ export default function MyTeamOptimize() {
         if (!opp) return;
 
         const parts = splitOpponentParts(opp);
+        const venue = getFixtureVenue(r);
         playerKeys.forEach((playerName) => {
           const key = playerGwKey(playerName, gw);
-          const bucket = map.get(key) || new Set();
-          if (parts.length) parts.forEach((p) => bucket.add(p));
-          else bucket.add(String(opp));
+          const bucket = map.get(key) || { opponents: new Set(), venues: new Set() };
+          if (parts.length) parts.forEach((p) => bucket.opponents.add(p));
+          else bucket.opponents.add(String(opp));
+          if (venue) bucket.venues.add(venue);
           map.set(key, bucket);
         });
       });
@@ -888,9 +979,15 @@ export default function MyTeamOptimize() {
     addRows(data);
 
     const out = new Map();
-    map.forEach((set, key) => {
-      const values = Array.from(set).filter(Boolean);
-      if (values.length) out.set(key, values.join(" / "));
+    map.forEach((bucket, key) => {
+      const values = Array.from(bucket.opponents).filter(Boolean);
+      const venues = Array.from(bucket.venues).filter(Boolean);
+      if (values.length) {
+        out.set(key, {
+          opponent: values.join(" / "),
+          venue: venues.length ? venues.join("/") : null,
+        });
+      }
     });
 
     return out;
@@ -919,8 +1016,9 @@ export default function MyTeamOptimize() {
         }
         if (teamCode != null) candidates.push(String(teamCode));
 
+        const venue = getFixtureVenue(r);
         candidates.forEach((cand) => {
-          out.set(teamGwKey(cand, gw), String(opp));
+          out.set(teamGwKey(cand, gw), { opponent: String(opp), venue });
         });
       });
     };
@@ -955,10 +1053,12 @@ export default function MyTeamOptimize() {
         .map((v) => String(v));
 
       let fallbackFromPlayerGw = null;
+      let venueFromPlayerGw = null;
       for (const playerCand of playerCandidates) {
         const hit = opponentByPlayerGw.get(playerGwKey(playerCand, row?.GW));
         if (hit) {
-          fallbackFromPlayerGw = hit;
+          fallbackFromPlayerGw = hit.opponent;
+          venueFromPlayerGw = hit.venue;
           break;
         }
       }
@@ -975,15 +1075,18 @@ export default function MyTeamOptimize() {
       if (shortTeam) teamCandidates.push(shortTeam);
 
       let fallbackFromTeamGw = null;
+      let venueFromTeamGw = null;
       for (const teamCand of teamCandidates) {
         const hit = opponentByTeamGw.get(teamGwKey(teamCand, row?.GW));
         if (hit) {
-          fallbackFromTeamGw = hit;
+          fallbackFromTeamGw = hit.opponent;
+          venueFromTeamGw = hit.venue;
           break;
         }
       }
 
       const rawOpponent = rawFromRow || fallbackFromPlayerGw || fallbackFromTeamGw || "N/A";
+      const venue = getFixtureVenue(row) || venueFromPlayerGw || venueFromTeamGw;
       const formatted = formatOpponent(rawOpponent);
       const display = formatted.display || "N/A";
       const full = Array.isArray(rawOpponent)
@@ -998,6 +1101,7 @@ export default function MyTeamOptimize() {
       return {
         display,
         full: full || display,
+        venue,
         tone: opponentStrengthTone(strength),
       };
     },
@@ -1233,6 +1337,29 @@ export default function MyTeamOptimize() {
     ).sort((a, b) => a - b);
   }, [pitchSourceData]);
 
+  useEffect(() => {
+    const firstFutureGw = Number(availableGWs[0]);
+    if (!isValidGW(firstFutureGw) || firstFutureGw <= 1) return;
+    setTreeNodes((previous) => {
+      const anchor = previous.find((node) => node?.isAnchor);
+      if (!anchor) return previous;
+      const firstChildren = previous.filter((node) => node.parentId === anchor.id);
+      if (!firstChildren.length) return previous;
+      const currentFirstGw = Math.min(...firstChildren.map((node) => Number(node.gw)));
+      const offset = firstFutureGw - currentFirstGw;
+      if (!Number.isFinite(offset) || offset === 0) return previous;
+      if (previous.some((node) => Number(node.gw) + offset < 1 || Number(node.gw) + offset > 38)) {
+        return previous;
+      }
+      return previous.map((node) => {
+        const gw = Number(node.gw) + offset;
+        return node.isAnchor
+          ? { ...node, gw, label: `GW${gw} complete` }
+          : { ...node, gw };
+      });
+    });
+  }, [availableGWs]);
+
   const projectionSourceBuckets = useMemo(() => {
     return modelType === "statistical"
       ? [statisticalPlayersPayload]
@@ -1418,6 +1545,10 @@ export default function MyTeamOptimize() {
     if (pendingTreePositionsRef.current) {
       setTreeNodePositions(pendingTreePositionsRef.current);
       pendingTreePositionsRef.current = null;
+      return;
+    }
+    if (restoredTreePositionsRef.current) {
+      restoredTreePositionsRef.current = false;
       return;
     }
     setTreeNodePositions(treeAutoLayout.positions);
@@ -2628,12 +2759,10 @@ export default function MyTeamOptimize() {
     }
   }, [loading, data]);
 
-  if (loading) {
-    return (
+  const loadingOverlay = loading ? (
       <div
-        className="min-h-screen flex items-center justify-center p-6"
+        className="fixed inset-0 z-[300] flex items-center justify-center bg-slate-100/55 p-6 backdrop-blur-sm"
         style={{
-          background: `radial-gradient(circle at top, ${PALETTE.red}, ${PALETTE.black})`,
           color: PALETTE.beige,
           fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
         }}
@@ -2685,8 +2814,7 @@ export default function MyTeamOptimize() {
           </div>
         </div>
       </div>
-    );
-  }
+  ) : null;
 
   return (
     <div
@@ -2697,6 +2825,7 @@ export default function MyTeamOptimize() {
         fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
       }}
     >
+      {loadingOverlay}
       <style>{`
         .lucide-icon {
           stroke: currentColor !important;
@@ -2938,7 +3067,7 @@ export default function MyTeamOptimize() {
                 <div className="mt-4">
                   <div className="flex items-center justify-between gap-3">
                     <p className="text-[11px]" style={{ color: PALETTE.muted }}>
-                      Every leaf has its own total probability. Splitting a leaf divides that leaf's probability 50/50 by default.
+                      The circle is the completed GW. Split its connection to create alternatives for the first future GW.
                     </p>
                     <button
                       type="button"
@@ -2980,11 +3109,12 @@ export default function MyTeamOptimize() {
                     >
                       <svg className="absolute inset-0 h-full w-full overflow-visible" style={{ pointerEvents: "none" }}>
                         {treeNodes.filter((node) => node.parentId).map((node) => {
+                          const parentNode = treeNodes.find((candidate) => candidate.id === node.parentId);
                           const parentPosition = treeNodePositions[node.parentId] || treeAutoLayout.positions[node.parentId];
                           const nodePosition = treeNodePositions[node.id] || treeAutoLayout.positions[node.id];
                           if (!parentPosition || !nodePosition) return null;
                           const startX = parentPosition.x + TREE_NODE_WIDTH / 2;
-                          const startY = parentPosition.y + TREE_NODE_HEIGHT;
+                          const startY = parentPosition.y + (parentNode?.isAnchor ? 80 : TREE_NODE_HEIGHT);
                           const endX = nodePosition.x + TREE_NODE_WIDTH / 2;
                           const endY = nodePosition.y;
                           const controlY = (startY + endY) / 2;
@@ -3001,11 +3131,13 @@ export default function MyTeamOptimize() {
                       </svg>
 
                       {treeNodes.filter((node) => node.parentId).map((node) => {
+                        const parentNode = treeNodes.find((candidate) => candidate.id === node.parentId);
                         const parentPosition = treeNodePositions[node.parentId] || treeAutoLayout.positions[node.parentId];
                         const nodePosition = treeNodePositions[node.id] || treeAutoLayout.positions[node.id];
                         if (!parentPosition || !nodePosition) return null;
                         const x = (parentPosition.x + nodePosition.x) / 2 + TREE_NODE_WIDTH / 2;
-                        const y = (parentPosition.y + TREE_NODE_HEIGHT + nodePosition.y) / 2;
+                        const parentBottom = parentPosition.y + (parentNode?.isAnchor ? 80 : TREE_NODE_HEIGHT);
+                        const y = (parentBottom + nodePosition.y) / 2;
                         return (
                           <button
                             key={`split-${node.parentId}-${node.id}`}
@@ -3033,6 +3165,26 @@ export default function MyTeamOptimize() {
                         const isDragging = draggingTreeNode?.nodeId === node.id;
                         const effectiveScenarioId = treeEffectiveScenarioById.get(node.id) || BASE_SCENARIO_ID;
                         const scenarioDiagnostics = treeScenarioDiagnosticsByNodeId.get(node.id);
+                        if (node.isAnchor) {
+                          return (
+                            <div
+                              key={node.id}
+                              className="absolute z-10 flex h-20 w-20 touch-none cursor-grab flex-col items-center justify-center rounded-full text-center shadow-lg active:cursor-grabbing"
+                              style={{
+                                left: position.x + TREE_NODE_WIDTH / 2 - 40,
+                                top: position.y,
+                                border: `2px solid ${PALETTE.gold}`,
+                                background: "linear-gradient(145deg, rgba(15,23,42,0.96), rgba(30,41,59,0.92))",
+                                color: "#fff",
+                              }}
+                              onPointerDown={(event) => startTreeNodeDrag(event, node.id)}
+                              title="Last completed gameweek"
+                            >
+                              <span className="text-sm font-black">GW{node.gw}</span>
+                              <span className="text-[9px] uppercase tracking-wide text-slate-300">complete</span>
+                            </div>
+                          );
+                        }
                         return (
                           <div
                             key={node.id}
@@ -3067,7 +3219,8 @@ export default function MyTeamOptimize() {
                                   style={{ borderColor: PALETTE.border }}
                                   aria-label={`Name for GW${node.gw} node`}
                                 />
-                                {node.parentId && (
+                                {node.parentId &&
+                                  (!(treeNodes.find((candidate) => candidate.id === node.parentId)?.isAnchor) || siblingNodes.length > 1) && (
                                   <button
                                     type="button"
                                     onClick={() => removeTreeBranch(node.id)}
@@ -3454,7 +3607,7 @@ export default function MyTeamOptimize() {
                               setTreeMode(Boolean(savedParams.treeMode));
                               setTreeNodes(
                                 Array.isArray(savedParams.treeNodes) && savedParams.treeNodes.length > 0
-                                  ? savedParams.treeNodes
+                                  ? ensureTreeStartAnchor(savedParams.treeNodes)
                                   : DEFAULT_TREE_NODES.map((node) => ({ ...node }))
                               );
                               const savedTreePositions =
@@ -4958,7 +5111,7 @@ function PlayerRow({
           const oppMeta =
             typeof getOpponentMeta === "function"
               ? getOpponentMeta(p)
-              : { display: "N/A", full: "N/A", tone: opponentStrengthTone(null) };
+              : { display: "N/A", full: "N/A", venue: null, tone: opponentStrengthTone(null) };
           const projectionRow =
             typeof getProjectionRowForPlayer === "function" && Number.isFinite(Number(activeGW))
               ? getProjectionRowForPlayer(p, Number(activeGW))
@@ -5101,9 +5254,11 @@ function PlayerRow({
                   borderColor: oppMeta.tone.badgeBorder,
                   color: oppMeta.tone.badgeText,
                 }}
-                title={`${oppMeta.full}${hasSelectedPercent ? ` | Selected ${selectedPercent.toFixed(1)}%` : ""}`}
+                title={`${oppMeta.full}${oppMeta.venue ? ` (${oppMeta.venue})` : ""}${hasSelectedPercent ? ` | Selected ${selectedPercent.toFixed(1)}%` : ""}`}
               >
-                <span className="min-w-0 flex-1 truncate text-center">{oppMeta.display}</span>
+                <span className="min-w-0 flex-1 truncate text-center">
+                  {oppMeta.display}{oppMeta.venue ? ` (${oppMeta.venue})` : ""}
+                </span>
                 {hasSelectedPercent && (
                   <span
                     className="shrink-0 rounded-full px-1.5 py-[1px] tabular-nums"
