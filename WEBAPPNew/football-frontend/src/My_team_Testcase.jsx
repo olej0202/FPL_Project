@@ -27,6 +27,8 @@ import {
   Zap,
   Lock,
   GitBranch,
+  ZoomIn,
+  ZoomOut,
 } from "lucide-react";
 import {
   CartesianGrid,
@@ -40,7 +42,9 @@ import {
 import pitch from "./assets/Pitch4.png";
 import { useMyteamData } from "./Contexts/MyTeamContext";
 import { BASE_SCENARIO_ID, useAdjustmentData } from "./Contexts/AdjustmentsContext";
+import { useOptimizationModel } from "./Contexts/OptimizationModelContext";
 import { useStatsData } from "./Contexts/StatsContext";
+import ScenarioSelect, { ScenarioColorDot } from "./components/ScenarioSelect";
 import teamShort from "./utils/team_short";
 
 const PALETTE = {
@@ -67,8 +71,42 @@ const DEFAULT_TREE_NODES = [
   { id: "gw7", label: "GW7", gw: 7, parentId: "gw6", probability: 100, chip: "none", scenarioId: "inherit" },
   { id: "gw8", label: "GW8", gw: 8, parentId: "gw7", probability: 100, chip: "none", scenarioId: "inherit" },
 ];
+const buildNewTreeNodes = (treeKey, firstFutureGw = 6) => {
+  const safeFirstGw = Math.min(38, Math.max(2, Number(firstFutureGw) || 6));
+  const anchorId = `${treeKey}_start`;
+  const nodes = [{
+    id: anchorId,
+    label: `GW${safeFirstGw - 1} complete`,
+    gw: safeFirstGw - 1,
+    parentId: null,
+    probability: 100,
+    chip: "none",
+    scenarioId: BASE_SCENARIO_ID,
+    isAnchor: true,
+  }];
+  let parentId = anchorId;
+  for (let gw = safeFirstGw; gw <= Math.min(38, safeFirstGw + 2); gw += 1) {
+    const id = `${treeKey}_gw${gw}`;
+    nodes.push({
+      id,
+      label: `GW${gw}`,
+      gw,
+      parentId,
+      probability: 100,
+      chip: "none",
+      scenarioId: "inherit",
+    });
+    parentId = id;
+  }
+  return nodes;
+};
 const TREE_NODE_WIDTH = 224;
 const TREE_NODE_HEIGHT = 325;
+const TREE_COMPACT_NODE_HEIGHT = 128;
+const TREE_ZOOM_MIN = 0.4;
+const TREE_ZOOM_MAX = 1.3;
+const TREE_ZOOM_STEP = 0.1;
+const TREE_COMPACT_ZOOM = 0.85;
 
 const buildTreeChildrenMap = (nodes) => {
   const children = new Map();
@@ -122,17 +160,27 @@ const readStoredTreeWorkspace = () => {
     controlsOpen: false,
     nodes: DEFAULT_TREE_NODES.map((node) => ({ ...node })),
     positions: {},
+    zoom: 1,
+    activeTreeRootId: DEFAULT_TREE_NODES[0].id,
   };
   if (typeof window === "undefined") return fallback;
   try {
     const parsed = JSON.parse(window.localStorage.getItem(TREE_WORKSPACE_STORAGE_KEY) || "null");
     if (!parsed || typeof parsed !== "object") return fallback;
     const nodes = ensureTreeStartAnchor(parsed.nodes);
+    const rootIds = nodes.filter((node) => !node.parentId).map((node) => node.id);
     return {
       enabled: Boolean(parsed.enabled),
       controlsOpen: Boolean(parsed.controlsOpen || parsed.enabled),
       nodes,
       positions: parsed.positions && typeof parsed.positions === "object" ? parsed.positions : {},
+      zoom: Math.min(
+        TREE_ZOOM_MAX,
+        Math.max(TREE_ZOOM_MIN, Number(parsed.zoom) || 1)
+      ),
+      activeTreeRootId: rootIds.includes(parsed.activeTreeRootId)
+        ? parsed.activeTreeRootId
+        : rootIds[0] || DEFAULT_TREE_NODES[0].id,
     };
   } catch {
     return fallback;
@@ -749,7 +797,7 @@ export default function MyTeamOptimize() {
     initialTreeWorkspaceRef.current = readStoredTreeWorkspace();
   }
 
-  const [modelType, setModelType] = useState("ai");
+  const { modelType, setModelType } = useOptimizationModel();
   const [solverScenarioId, setSolverScenarioId] = useState(BASE_SCENARIO_ID);
   const [optParamsOpen, setOptParamsOpen] = useState(false);
   const [saveName, setSaveName] = useState("");
@@ -770,8 +818,14 @@ export default function MyTeamOptimize() {
   const [treeMode, setTreeMode] = useState(initialTreeWorkspaceRef.current.enabled);
   const [treeNodes, setTreeNodes] = useState(initialTreeWorkspaceRef.current.nodes);
   const [treeNodePositions, setTreeNodePositions] = useState(initialTreeWorkspaceRef.current.positions);
+  const [treeZoom, setTreeZoom] = useState(initialTreeWorkspaceRef.current.zoom);
+  const [activeTreeRootId, setActiveTreeRootId] = useState(
+    initialTreeWorkspaceRef.current.activeTreeRootId
+  );
   const [draggingTreeNode, setDraggingTreeNode] = useState(null);
   const [selectedTreeBranchId, setSelectedTreeBranchId] = useState("");
+  const [treeOptimizationResults, setTreeOptimizationResults] = useState({});
+  const [optimizingTreeRootId, setOptimizingTreeRootId] = useState("");
   const [manualPlan, setManualPlan] = useState({});
   const [transferOutName, setTransferOutName] = useState("");
   const [transferInKey, setTransferInKey] = useState("");
@@ -803,12 +857,14 @@ export default function MyTeamOptimize() {
           controlsOpen,
           nodes: treeNodes,
           positions: treeNodePositions,
+          zoom: treeZoom,
+          activeTreeRootId,
         })
       );
     } catch (error) {
       console.warn("Could not persist optimizer tree workspace:", error);
     }
-  }, [controlsOpen, treeMode, treeNodePositions, treeNodes]);
+  }, [activeTreeRootId, controlsOpen, treeMode, treeNodePositions, treeNodes, treeZoom]);
 
   useEffect(() => {
     fetchStatsIfNeeded();
@@ -1123,12 +1179,6 @@ export default function MyTeamOptimize() {
   };
 
   useEffect(() => {
-    if (modelType === "statistical" && !hasStatisticalData) {
-      setModelType("ai");
-    }
-  }, [modelType, hasStatisticalData]);
-
-  useEffect(() => {
     const shouldPreferStat = location.state?.preferModel === "statistical";
     if (!shouldPreferStat || preferredModelAppliedRef.current) return;
 
@@ -1136,12 +1186,12 @@ export default function MyTeamOptimize() {
       setModelType("statistical");
       preferredModelAppliedRef.current = true;
     }
-  }, [location.state, hasStatisticalData]);
+  }, [location.state, hasStatisticalData, setModelType]);
 
   useEffect(() => {
     sethas_changed(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [teamId, bbRound, wildRound, bannedList, freehitROund, n_hits, modelType, solverScenarioId, risk, valtrans, treeMode, treeNodes]);
+  }, [teamId, bbRound, wildRound, bannedList, freehitROund, n_hits, modelType, solverScenarioId, risk, valtrans, treeMode, treeNodes, activeTreeRootId]);
 
   useEffect(() => {
     if (loading) {
@@ -1185,10 +1235,26 @@ export default function MyTeamOptimize() {
     return () => clearTimeout(t);
   }, [loading]);
 
+  const optimizationDisplayData = useMemo(() => {
+    if (!treeMode) return Array.isArray(data) ? data : [];
+    if (optimizingTreeRootId === activeTreeRootId && optimizationProgress?.streaming) {
+      return Array.isArray(data) ? data : [];
+    }
+    const cachedRows = treeOptimizationResults[activeTreeRootId]?.rows;
+    return Array.isArray(cachedRows) ? cachedRows : [];
+  }, [
+    activeTreeRootId,
+    data,
+    optimizationProgress?.streaming,
+    optimizingTreeRootId,
+    treeMode,
+    treeOptimizationResults,
+  ]);
+
   const treeBranches = useMemo(() => {
-    if (!Array.isArray(data) || data.length === 0) return [];
+    if (!Array.isArray(optimizationDisplayData) || optimizationDisplayData.length === 0) return [];
     const byId = new Map();
-    data.forEach((row) => {
+    optimizationDisplayData.forEach((row) => {
       const id = String(row?.tree_branch_id || "").trim();
       if (!id || byId.has(id)) return;
       byId.set(id, {
@@ -1208,10 +1274,53 @@ export default function MyTeamOptimize() {
         projectionSignedDiff: Number(row?.tree_projection_signed_diff),
         projectionAbsoluteDiff: Number(row?.tree_projection_absolute_diff),
         projectionMaxAbsDiff: Number(row?.tree_projection_max_abs_diff),
+        pathNodeIds: String(row?.tree_path_node_ids || "")
+          .split(">")
+          .map((nodeId) => nodeId.trim())
+          .filter(Boolean),
       });
     });
     return Array.from(byId.values());
-  }, [data]);
+  }, [optimizationDisplayData]);
+
+  const optimizedPointsByTreeNode = useMemo(() => {
+    const totals = new Map();
+    const rowsByTree = { ...treeOptimizationResults };
+    if (optimizingTreeRootId && optimizationProgress?.streaming) {
+      rowsByTree[optimizingTreeRootId] = { rows: Array.isArray(data) ? data : [] };
+    }
+    Object.entries(rowsByTree).forEach(([treeRootId, result]) => {
+      const seenBranches = new Set();
+      (Array.isArray(result?.rows) ? result.rows : []).forEach((row) => {
+        const branchId = String(row?.tree_branch_id || "").trim();
+        const branchKey = `${treeRootId}:${branchId}`;
+        if (!branchId || seenBranches.has(branchKey)) return;
+        seenBranches.add(branchKey);
+        const points = Number(row?.tree_branch_expected_points);
+        if (!Number.isFinite(points)) return;
+        const rawProbability = Number(row?.tree_branch_probability);
+        const probability = Number.isFinite(rawProbability) && rawProbability > 0
+          ? rawProbability
+          : 1;
+        String(row?.tree_path_node_ids || "")
+          .split(">")
+          .map((nodeId) => nodeId.trim())
+          .filter(Boolean)
+          .forEach((nodeId) => {
+            const current = totals.get(nodeId) || { weightedPoints: 0, probability: 0 };
+            current.weightedPoints += probability * points;
+            current.probability += probability;
+            totals.set(nodeId, current);
+          });
+      });
+    });
+    return new Map(
+      Array.from(totals.entries()).map(([nodeId, total]) => [
+        nodeId,
+        total.probability > 0 ? total.weightedPoints / total.probability : null,
+      ])
+    );
+  }, [data, optimizationProgress?.streaming, optimizingTreeRootId, treeOptimizationResults]);
 
   useEffect(() => {
     if (!treeBranches.length) {
@@ -1226,13 +1335,13 @@ export default function MyTeamOptimize() {
   }, [treeBranches]);
 
   const branchScopedData = useMemo(() => {
-    if (!Array.isArray(data) || data.length === 0) return [];
-    if (!treeBranches.length) return data;
+    if (!Array.isArray(optimizationDisplayData) || optimizationDisplayData.length === 0) return [];
+    if (!treeBranches.length) return optimizationDisplayData;
     const branchId = treeBranches.some((branch) => branch.id === selectedTreeBranchId)
       ? selectedTreeBranchId
       : treeBranches[0].id;
-    return data.filter((row) => String(row?.tree_branch_id || "") === branchId);
-  }, [data, selectedTreeBranchId, treeBranches]);
+    return optimizationDisplayData.filter((row) => String(row?.tree_branch_id || "") === branchId);
+  }, [optimizationDisplayData, selectedTreeBranchId, treeBranches]);
 
   const activeTreeBranch = treeBranches.find(
     (branch) => branch.id === selectedTreeBranchId
@@ -1486,13 +1595,36 @@ export default function MyTeamOptimize() {
   );
   const treeChildrenByParent = useMemo(() => buildTreeChildrenMap(treeNodes), [treeNodes]);
   const syncedTreeNodes = useMemo(() => syncTreeMasses(treeNodes), [treeNodes]);
+  const treeRootByNodeId = useMemo(() => {
+    const nodeById = new Map(treeNodes.map((node) => [node.id, node]));
+    const roots = new Map();
+    const resolveRoot = (node) => {
+      if (!node) return null;
+      if (roots.has(node.id)) return roots.get(node.id);
+      const rootId = node.parentId ? resolveRoot(nodeById.get(node.parentId)) : node.id;
+      roots.set(node.id, rootId);
+      return rootId;
+    };
+    treeNodes.forEach(resolveRoot);
+    return roots;
+  }, [treeNodes]);
+  const syncedActiveTreeNodes = useMemo(
+    () => syncedTreeNodes.filter((node) => treeRootByNodeId.get(node.id) === activeTreeRootId),
+    [activeTreeRootId, syncedTreeNodes, treeRootByNodeId]
+  );
+  useEffect(() => {
+    const rootIds = treeNodes.filter((node) => !node.parentId).map((node) => node.id);
+    if (!rootIds.includes(activeTreeRootId) && rootIds.length > 0) {
+      setActiveTreeRootId(rootIds[0]);
+    }
+  }, [activeTreeRootId, treeNodes]);
   const treeMassById = useMemo(
     () => new Map(syncedTreeNodes.map((node) => [node.id, Number(node.probability) || 0])),
     [syncedTreeNodes]
   );
   const treeLeafNodes = useMemo(
-    () => syncedTreeNodes.filter((node) => (treeChildrenByParent.get(node.id) || []).length === 0),
-    [syncedTreeNodes, treeChildrenByParent]
+    () => syncedActiveTreeNodes.filter((node) => (treeChildrenByParent.get(node.id) || []).length === 0),
+    [syncedActiveTreeNodes, treeChildrenByParent]
   );
   const treeLeafProbabilityTotal = treeLeafNodes.reduce(
     (sum, node) => sum + Number(node.probability || 0),
@@ -1557,8 +1689,8 @@ export default function MyTeamOptimize() {
   const treeConfigValid = Boolean(
     !treeMode ||
       (
-        treeNodes.filter((node) => !node.parentId).length === 1 &&
-        treeNodes.every((node) => {
+        syncedActiveTreeNodes.filter((node) => !node.parentId).length === 1 &&
+        syncedActiveTreeNodes.every((node) => {
           const parent = node.parentId
             ? treeNodes.find((candidate) => candidate.id === node.parentId)
             : null;
@@ -1703,6 +1835,52 @@ export default function MyTeamOptimize() {
     });
   };
 
+  const addNewTree = () => {
+    const activeAnchor = treeNodes.find((node) => node.id === activeTreeRootId);
+    const activeFirstGw = Math.min(
+      ...treeNodes
+        .filter((node) => node.parentId === activeAnchor?.id)
+        .map((node) => Number(node.gw))
+        .filter(isValidGW)
+    );
+    const availableFirstGw = Number(availableGWs[0]);
+    const firstFutureGw = isValidGW(availableFirstGw)
+      ? availableFirstGw
+      : isValidGW(activeFirstGw)
+        ? activeFirstGw
+        : 6;
+    const treeKey = `tree_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+    const additions = buildNewTreeNodes(treeKey, firstFutureGw);
+    setTreeNodes((previous) => [...previous, ...additions]);
+    setActiveTreeRootId(additions[0].id);
+  };
+
+  const resetActiveTree = () => {
+    const resetRootId = activeTreeRootId;
+    const activeAnchor = treeNodes.find((node) => node.id === activeTreeRootId);
+    const firstFutureGw = Math.min(
+      ...treeNodes
+        .filter((node) => node.parentId === activeAnchor?.id)
+        .map((node) => Number(node.gw))
+        .filter(isValidGW)
+    );
+    const treeKey = `tree_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+    const replacement = buildNewTreeNodes(
+      treeKey,
+      isValidGW(firstFutureGw) ? firstFutureGw : Number(availableGWs[0]) || 6
+    );
+    setTreeNodes((previous) => [
+      ...previous.filter((node) => treeRootByNodeId.get(node.id) !== resetRootId),
+      ...replacement,
+    ]);
+    setTreeOptimizationResults((previous) => {
+      const next = { ...previous };
+      delete next[resetRootId];
+      return next;
+    });
+    setActiveTreeRootId(replacement[0].id);
+  };
+
   const startTreeNodeDrag = (event, nodeId) => {
     if (event.button !== 0) return;
     const position = treeNodePositions[nodeId] || treeAutoLayout.positions[nodeId] || { x: 0, y: 0 };
@@ -1719,8 +1897,14 @@ export default function MyTeamOptimize() {
 
   const moveTreeNode = (event) => {
     if (!draggingTreeNode || event.pointerId !== draggingTreeNode.pointerId) return;
-    const x = Math.max(10, draggingTreeNode.originX + event.clientX - draggingTreeNode.startX);
-    const y = Math.max(10, draggingTreeNode.originY + event.clientY - draggingTreeNode.startY);
+    const x = Math.max(
+      10,
+      draggingTreeNode.originX + (event.clientX - draggingTreeNode.startX) / treeZoom
+    );
+    const y = Math.max(
+      10,
+      draggingTreeNode.originY + (event.clientY - draggingTreeNode.startY) / treeZoom
+    );
     setTreeNodePositions((previous) => ({
       ...previous,
       [draggingTreeNode.nodeId]: { x, y },
@@ -1733,12 +1917,27 @@ export default function MyTeamOptimize() {
   };
   const treeCanvasWidth = Math.max(
     treeAutoLayout.width,
-    ...Object.values(treeNodePositions).map((position) => Number(position.x) + 320)
+    ...Object.values(treeNodePositions).map((position) => Number(position.x) + 440)
   );
   const treeCanvasHeight = Math.max(
     treeAutoLayout.height,
     ...Object.values(treeNodePositions).map((position) => Number(position.y) + 300)
   );
+  const treeCompactView = treeZoom < TREE_COMPACT_ZOOM;
+  const renderedTreeNodeHeight = treeCompactView
+    ? TREE_COMPACT_NODE_HEIGHT
+    : TREE_NODE_HEIGHT;
+  const changeTreeZoom = (delta) => {
+    setTreeZoom((current) => {
+      const next = Math.round((current + delta) * 10) / 10;
+      return Math.min(TREE_ZOOM_MAX, Math.max(TREE_ZOOM_MIN, next));
+    });
+  };
+  const handleTreeZoomWheel = (event) => {
+    if (!event.ctrlKey && !event.metaKey) return;
+    event.preventDefault();
+    changeTreeZoom(event.deltaY > 0 ? -TREE_ZOOM_STEP : TREE_ZOOM_STEP);
+  };
   const canOptimize = Boolean(
     teamId &&
       !optimizationProgress?.streaming &&
@@ -2516,10 +2715,14 @@ export default function MyTeamOptimize() {
   }, [activeSolutionData, visibleTransfersWithFH]);
 
   const handleOptimizeClick = async () => {
-    const useStatistical = modelType === "statistical" && hasStatisticalData;
+    if (modelType === "statistical" && !hasStatisticalData) {
+      alert("Statistical model data is still loading or unavailable. Please try again when it is ready.");
+      return;
+    }
+    const useStatistical = modelType === "statistical";
     const playersPayload = useStatistical ? statisticalPlayersPayload : null;
     if (useStatistical && treeMode) {
-      const ineffectiveScenarioNodes = syncedTreeNodes.filter((node) => {
+      const ineffectiveScenarioNodes = syncedActiveTreeNodes.filter((node) => {
         const selectedScenarioId = String(node.scenarioId || "inherit");
         if (!node.parentId || selectedScenarioId === "inherit" || selectedScenarioId === BASE_SCENARIO_ID) {
           return false;
@@ -2555,6 +2758,8 @@ export default function MyTeamOptimize() {
     setHiddenModelTransferKeys([]);
     setTransferOutName("");
     setTransferInKey("");
+    const treeRootForRun = treeMode ? activeTreeRootId : "";
+    if (treeRootForRun) setOptimizingTreeRootId(treeRootForRun);
 
     const optimizationResult = await fetchTeam({
       useStatisticalModel: useStatistical,
@@ -2564,7 +2769,7 @@ export default function MyTeamOptimize() {
       scenarioTree: treeMode
         ? {
             max_prefix_candidates: 2,
-            nodes: syncedTreeNodes.map((node) => {
+            nodes: syncedActiveTreeNodes.map((node) => {
               const parentMass = node.parentId ? treeMassById.get(node.parentId) : 100;
               return {
               id: node.id,
@@ -2584,8 +2789,23 @@ export default function MyTeamOptimize() {
         : null,
     });
     const optimized = optimizationResult === true || optimizationResult?.ok === true;
-    const resultRows = Array.isArray(optimizationResult?.rows)
-      ? optimizationResult.rows.filter((row) => Number(row?.solution || 1) === 1)
+    const allResultRows = Array.isArray(optimizationResult?.rows)
+      ? optimizationResult.rows
+      : [];
+    if (optimized && treeRootForRun && allResultRows.length > 0) {
+      setTreeOptimizationResults((previous) => ({
+        ...previous,
+        [treeRootForRun]: {
+          rows: allResultRows,
+          optimizedAt: Date.now(),
+        },
+      }));
+    }
+    if (treeRootForRun) {
+      setOptimizingTreeRootId((current) => current === treeRootForRun ? "" : current);
+    }
+    const resultRows = allResultRows.length > 0
+      ? allResultRows.filter((row) => Number(row?.solution || 1) === 1)
       : [];
     const confirmedTransferIds = new Set();
 
@@ -2667,7 +2887,7 @@ export default function MyTeamOptimize() {
     setSaveHint("Team loaded. Run Optimize when you want to apply a solver plan.");
   }, [fetchMyTeam]);
 
-  const canSave = !!data && Array.isArray(data) && data.length > 0 && typeof saveOptimization === "function";
+  const canSave = Array.isArray(optimizationDisplayData) && optimizationDisplayData.length > 0 && typeof saveOptimization === "function";
 
   const normalizeName = (s) =>
     (s || "")
@@ -2711,10 +2931,11 @@ export default function MyTeamOptimize() {
           treeMode,
           treeNodes: syncedTreeNodes,
           treeNodePositions,
+          activeTreeRootId,
           selectedTreeBranchId,
         },
         result: {
-          data,
+          data: optimizationDisplayData,
           bannedPlayersData: Array.isArray(bannedPlayersData) ? bannedPlayersData : [],
           manualPlan,
         },
@@ -2751,13 +2972,13 @@ export default function MyTeamOptimize() {
   const totalTransfers = plannerPayload.length;
 
   useEffect(() => {
-    if (!loading && Array.isArray(data) && data.length > 0 && typeof window !== "undefined" && window.innerWidth < 640) {
+    if (!loading && Array.isArray(optimizationDisplayData) && optimizationDisplayData.length > 0 && typeof window !== "undefined" && window.innerWidth < 640) {
       const t = setTimeout(() => {
         pitchSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 180);
       return () => clearTimeout(t);
     }
-  }, [loading, data]);
+  }, [loading, optimizationDisplayData]);
 
   const loadingOverlay = loading ? (
       <div
@@ -2989,17 +3210,13 @@ export default function MyTeamOptimize() {
                         <label htmlFor="solver-scenario" className="mb-1 block text-[11px] font-semibold uppercase tracking-wide" style={{ color: PALETTE.muted }}>
                           Prediction scenario
                         </label>
-                        <select
-                          id="solver-scenario"
+                        <ScenarioSelect
+                          inputId="solver-scenario"
                           value={solverScenarioId}
-                          onChange={(event) => setSolverScenarioId(event.target.value)}
-                          className="h-10 w-full rounded-xl border bg-white px-3 text-sm font-semibold outline-none"
-                          style={{ borderColor: PALETTE.border, color: PALETTE.text }}
-                        >
-                          {adjustmentScenarios.map((scenario) => (
-                            <option key={scenario.id} value={scenario.id}>{scenario.name}</option>
-                          ))}
-                        </select>
+                          onChange={setSolverScenarioId}
+                          scenarios={adjustmentScenarios}
+                          ariaLabel="Prediction scenario"
+                        />
                         <p className="mt-1 text-[11px]" style={{ color: PALETTE.muted }}>
                           Independent of the scenario currently open in Adjustment Analytics.
                         </p>
@@ -3039,7 +3256,12 @@ export default function MyTeamOptimize() {
               className="mt-4 rounded-[24px] p-4"
               style={{ border: `1px solid ${treeMode ? PALETTE.gold : PALETTE.border}`, background: "rgba(248,250,252,0.88)" }}
             >
-              <div className="flex flex-wrap items-center justify-between gap-3">
+              <button
+                type="button"
+                onClick={() => setTreeMode((enabled) => !enabled)}
+                aria-expanded={treeMode}
+                className="gold-ring flex w-full flex-wrap items-center justify-between gap-3 rounded-2xl p-2 text-left transition"
+              >
                 <div>
                   <div className="inline-flex items-center gap-2 text-sm font-semibold" style={{ color: PALETTE.gold }}>
                     <GitBranch size={16} className="lucide-icon" />
@@ -3049,10 +3271,8 @@ export default function MyTeamOptimize() {
                     Build GW nodes, split any path, and attach chips to individual nodes.
                   </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setTreeMode((enabled) => !enabled)}
-                  className="gold-ring rounded-full px-3 py-1.5 text-xs font-semibold transition"
+                <span
+                  className="rounded-full px-3 py-1.5 text-xs font-semibold transition"
                   style={{
                     border: `1px solid ${treeMode ? PALETTE.gold : PALETTE.border}`,
                     background: treeMode ? `linear-gradient(135deg, ${PALETTE.gold}, ${PALETTE.goldSoft})` : "white",
@@ -3060,49 +3280,96 @@ export default function MyTeamOptimize() {
                   }}
                 >
                   {treeMode ? "Tree enabled" : "Enable tree"}
-                </button>
-              </div>
+                </span>
+              </button>
 
               {treeMode && (
                 <div className="mt-4">
                   <div className="flex items-center justify-between gap-3">
                     <p className="text-[11px]" style={{ color: PALETTE.muted }}>
-                      The circle is the completed GW. Split its connection to create alternatives for the first future GW.
+                      Click a top circle to select the tree used by the optimizer. Use the large + on the right to add another tree.
                     </p>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const resetNodes = DEFAULT_TREE_NODES.map((node) => ({ ...node }));
-                        setTreeNodes(resetNodes);
-                        setTreeNodePositions(buildVerticalTreeLayout(resetNodes).positions);
-                      }}
+                      <button
+                        type="button"
+                        onClick={resetActiveTree}
                       className="gold-ring shrink-0 rounded-full border bg-white px-3 py-1.5 text-[11px] font-semibold"
                       style={{ borderColor: PALETTE.border, color: PALETTE.gold }}
                     >
-                      Reset tree
+                      Reset selected tree
                     </button>
                   </div>
 
                   <div className="mt-3 flex items-center justify-between gap-3 text-[11px]" style={{ color: PALETTE.muted }}>
-                    <span>Drag nodes to arrange the canvas. Use + on a connection to branch that next GW.</span>
-                    <button
-                      type="button"
-                      onClick={() => setTreeNodePositions(treeAutoLayout.positions)}
-                      className="gold-ring shrink-0 rounded-full border bg-white px-3 py-1.5 font-semibold"
-                      style={{ borderColor: PALETTE.border, color: PALETTE.gold }}
-                    >
-                      Auto layout
-                    </button>
+                    <span>
+                      {treeCompactView
+                        ? "Compact view shows only GW, name, scenario, and active chip. Zoom in to edit nodes."
+                        : "Drag nodes to arrange the canvas. Use + on a connection to branch that next GW."}
+                    </span>
+                    <div className="flex shrink-0 items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => changeTreeZoom(-TREE_ZOOM_STEP)}
+                        disabled={treeZoom <= TREE_ZOOM_MIN}
+                        className="gold-ring flex h-8 w-8 items-center justify-center rounded-full border bg-white disabled:cursor-not-allowed disabled:opacity-40"
+                        style={{ borderColor: PALETTE.border, color: PALETTE.gold }}
+                        aria-label="Zoom tree out"
+                        title="Zoom out"
+                      >
+                        <ZoomOut size={14} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setTreeZoom(1)}
+                        className="gold-ring min-w-12 rounded-full border bg-white px-2 py-1.5 font-semibold"
+                        style={{ borderColor: PALETTE.border, color: PALETTE.gold }}
+                        title="Reset zoom"
+                      >
+                        {Math.round(treeZoom * 100)}%
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => changeTreeZoom(TREE_ZOOM_STEP)}
+                        disabled={treeZoom >= TREE_ZOOM_MAX}
+                        className="gold-ring flex h-8 w-8 items-center justify-center rounded-full border bg-white disabled:cursor-not-allowed disabled:opacity-40"
+                        style={{ borderColor: PALETTE.border, color: PALETTE.gold }}
+                        aria-label="Zoom tree in"
+                        title="Zoom in"
+                      >
+                        <ZoomIn size={14} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setTreeNodePositions(treeAutoLayout.positions)}
+                        className="gold-ring ml-1 rounded-full border bg-white px-3 py-1.5 font-semibold"
+                        style={{ borderColor: PALETTE.border, color: PALETTE.gold }}
+                      >
+                        Auto layout
+                      </button>
+                    </div>
                   </div>
 
-                  <div
-                    ref={treeCanvasRef}
-                    className="mt-3 max-h-[760px] overflow-auto rounded-2xl border"
-                    style={{ borderColor: PALETTE.border, background: "radial-gradient(circle, rgba(148,163,184,0.32) 1px, transparent 1px)", backgroundSize: "20px 20px" }}
-                  >
+                  <div className="relative mt-3">
+                    <div
+                      ref={treeCanvasRef}
+                      onWheel={handleTreeZoomWheel}
+                      className="max-h-[760px] overflow-auto rounded-2xl border"
+                      style={{ borderColor: PALETTE.border, background: "radial-gradient(circle, rgba(148,163,184,0.32) 1px, transparent 1px)", backgroundSize: "20px 20px" }}
+                    >
+                    <div
+                      style={{
+                        width: treeCanvasWidth * treeZoom,
+                        height: treeCanvasHeight * treeZoom,
+                        minWidth: "100%",
+                      }}
+                    >
                     <div
                       className="relative select-none"
-                      style={{ width: treeCanvasWidth, height: treeCanvasHeight, minWidth: "100%" }}
+                      style={{
+                        width: treeCanvasWidth,
+                        height: treeCanvasHeight,
+                        transform: `scale(${treeZoom})`,
+                        transformOrigin: "top left",
+                      }}
                       onPointerMove={moveTreeNode}
                       onPointerUp={stopTreeNodeDrag}
                       onPointerCancel={stopTreeNodeDrag}
@@ -3114,29 +3381,32 @@ export default function MyTeamOptimize() {
                           const nodePosition = treeNodePositions[node.id] || treeAutoLayout.positions[node.id];
                           if (!parentPosition || !nodePosition) return null;
                           const startX = parentPosition.x + TREE_NODE_WIDTH / 2;
-                          const startY = parentPosition.y + (parentNode?.isAnchor ? 80 : TREE_NODE_HEIGHT);
+                           const startY = parentPosition.y + (parentNode?.isAnchor ? 80 : renderedTreeNodeHeight);
                           const endX = nodePosition.x + TREE_NODE_WIDTH / 2;
                           const endY = nodePosition.y;
                           const controlY = (startY + endY) / 2;
+                          const isActiveConnection = treeRootByNodeId.get(node.id) === activeTreeRootId;
                           return (
                             <path
                               key={`${node.parentId}-${node.id}`}
                               d={`M ${startX} ${startY} C ${startX} ${controlY}, ${endX} ${controlY}, ${endX} ${endY}`}
                               fill="none"
-                              stroke="rgba(95,143,123,0.78)"
-                              strokeWidth="2.5"
+                              stroke={isActiveConnection ? "rgba(95,143,123,0.9)" : "rgba(148,163,184,0.45)"}
+                              strokeWidth={isActiveConnection ? "3" : "2"}
                             />
                           );
                         })}
                       </svg>
 
-                      {treeNodes.filter((node) => node.parentId).map((node) => {
+                      {treeNodes.filter(
+                        (node) => node.parentId && treeRootByNodeId.get(node.id) === activeTreeRootId
+                      ).map((node) => {
                         const parentNode = treeNodes.find((candidate) => candidate.id === node.parentId);
                         const parentPosition = treeNodePositions[node.parentId] || treeAutoLayout.positions[node.parentId];
                         const nodePosition = treeNodePositions[node.id] || treeAutoLayout.positions[node.id];
                         if (!parentPosition || !nodePosition) return null;
                         const x = (parentPosition.x + nodePosition.x) / 2 + TREE_NODE_WIDTH / 2;
-                        const parentBottom = parentPosition.y + (parentNode?.isAnchor ? 80 : TREE_NODE_HEIGHT);
+                         const parentBottom = parentPosition.y + (parentNode?.isAnchor ? 80 : renderedTreeNodeHeight);
                         const y = (parentBottom + nodePosition.y) / 2;
                         return (
                           <button
@@ -3164,38 +3434,101 @@ export default function MyTeamOptimize() {
                         const hasSplitProbability = siblingNodes.length > 1;
                         const isDragging = draggingTreeNode?.nodeId === node.id;
                         const effectiveScenarioId = treeEffectiveScenarioById.get(node.id) || BASE_SCENARIO_ID;
+                        const effectiveScenario = adjustmentScenarios.find(
+                          (scenario) => scenario.id === effectiveScenarioId
+                        );
+                        const inheritedScenarioId = node.parentId
+                          ? treeEffectiveScenarioById.get(node.parentId) || BASE_SCENARIO_ID
+                          : BASE_SCENARIO_ID;
+                        const inheritedScenario = adjustmentScenarios.find(
+                          (scenario) => scenario.id === inheritedScenarioId
+                        );
                         const scenarioDiagnostics = treeScenarioDiagnosticsByNodeId.get(node.id);
+                        const nodeTreeRootId = treeRootByNodeId.get(node.id);
+                        const isActiveTree = nodeTreeRootId === activeTreeRootId;
+                        const nodePredictedPoints = optimizedPointsByTreeNode.get(node.id);
+                        const predictedPointsBadge = Number.isFinite(nodePredictedPoints) ? (
+                          <div
+                            className="pointer-events-none absolute z-30 -translate-x-1/2 rounded-full px-2.5 py-1 text-[10px] font-black tabular-nums shadow-md"
+                            style={{
+                              left: position.x + TREE_NODE_WIDTH / 2 - (node.isAnchor && isActiveTree ? 54 : 0),
+                              top: position.y - (node.isAnchor && isActiveTree ? 36 : 28),
+                              background: `linear-gradient(135deg, ${PALETTE.gold}, ${PALETTE.goldSoft})`,
+                              color: "#0f172a",
+                            }}
+                          >
+                            {nodePredictedPoints.toFixed(2)} pts total
+                          </div>
+                        ) : null;
                         if (node.isAnchor) {
                           return (
+                            <React.Fragment key={node.id}>
+                            {predictedPointsBadge}
+                            {isActiveTree && (
+                              <button
+                                type="button"
+                                onPointerDown={(event) => event.stopPropagation()}
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  handleOptimizeClick();
+                                }}
+                                disabled={!canOptimize}
+                                className="green-ring absolute z-40 inline-flex h-7 items-center justify-center gap-1 rounded-full border px-3 text-[10px] font-black shadow-md transition disabled:cursor-not-allowed disabled:opacity-50"
+                                style={{
+                                  left: position.x + TREE_NODE_WIDTH / 2 + (Number.isFinite(nodePredictedPoints) ? 8 : 0),
+                                  top: position.y - 36,
+                                  transform: Number.isFinite(nodePredictedPoints) ? "none" : "translateX(-50%)",
+                                  borderColor: canOptimize ? PALETTE.gold : PALETTE.border,
+                                  background: canOptimize
+                                    ? `linear-gradient(135deg, ${PALETTE.gold}, ${PALETTE.goldSoft})`
+                                    : "rgba(248,250,252,0.96)",
+                                  color: canOptimize ? "#0f172a" : PALETTE.muted,
+                                }}
+                                title="Optimize the selected decision tree"
+                              >
+                                <Wand2 size={11} />
+                                {optimizingTreeRootId === node.id && optimizationProgress?.streaming
+                                  ? "Optimizing..."
+                                  : "Optimize"}
+                              </button>
+                            )}
                             <div
-                              key={node.id}
-                              className="absolute z-10 flex h-20 w-20 touch-none cursor-grab flex-col items-center justify-center rounded-full text-center shadow-lg active:cursor-grabbing"
+                              className="absolute z-20 flex h-20 w-20 touch-none cursor-pointer flex-col items-center justify-center rounded-full text-center shadow-lg transition active:cursor-grabbing"
                               style={{
                                 left: position.x + TREE_NODE_WIDTH / 2 - 40,
                                 top: position.y,
-                                border: `2px solid ${PALETTE.gold}`,
+                                border: `${isActiveTree ? 4 : 2}px solid ${isActiveTree ? PALETTE.gold : "#94a3b8"}`,
                                 background: "linear-gradient(145deg, rgba(15,23,42,0.96), rgba(30,41,59,0.92))",
                                 color: "#fff",
+                                opacity: isActiveTree ? 1 : 0.68,
+                                transform: isActiveTree ? "scale(1.06)" : "scale(1)",
                               }}
                               onPointerDown={(event) => startTreeNodeDrag(event, node.id)}
-                              title="Last completed gameweek"
+                              onClick={() => setActiveTreeRootId(node.id)}
+                              title={isActiveTree ? "Selected decision tree" : "Click to select this decision tree"}
                             >
                               <span className="text-sm font-black">GW{node.gw}</span>
-                              <span className="text-[9px] uppercase tracking-wide text-slate-300">complete</span>
+                              <span className="text-[9px] uppercase tracking-wide text-slate-300">
+                                {isActiveTree ? "selected" : "select"}
+                              </span>
                             </div>
+                            </React.Fragment>
                           );
                         }
                         return (
+                          <React.Fragment key={node.id}>
+                          {predictedPointsBadge}
                           <div
-                            key={node.id}
                             className="absolute z-10 w-56 overflow-hidden rounded-2xl border bg-white shadow-lg"
                             style={{
                               left: position.x,
                               top: position.y,
-                              height: TREE_NODE_HEIGHT,
+                              height: renderedTreeNodeHeight,
                               borderColor: node.chip !== "none" ? PALETTE.gold : PALETTE.border,
                               boxShadow: isDragging ? "0 20px 40px rgba(15,23,42,0.24)" : "0 10px 24px rgba(15,23,42,0.12)",
                               transition: isDragging ? "none" : "box-shadow 160ms ease, border-color 160ms ease",
+                              opacity: isActiveTree ? 1 : 0.56,
+                              pointerEvents: isActiveTree ? "auto" : "none",
                             }}
                           >
                             <div
@@ -3206,10 +3539,37 @@ export default function MyTeamOptimize() {
                               <span className="inline-flex items-center gap-1.5 text-xs font-black" style={{ color: PALETTE.gold }}>
                                 <GripVertical size={13} /> GW{node.gw}
                               </span>
-                              <span className="text-[10px] font-semibold" style={{ color: PALETTE.muted }}>
-                                {Number(node.probability || 0).toFixed(1)}% subtree
-                              </span>
+                              {!treeCompactView && (
+                                <span className="text-[10px] font-semibold" style={{ color: PALETTE.muted }}>
+                                  {Number(node.probability || 0).toFixed(1)}% subtree
+                                </span>
+                              )}
                             </div>
+                            {treeCompactView ? (
+                              <div className="space-y-2 px-3 py-2.5">
+                                <div className="truncate text-sm font-bold" style={{ color: PALETTE.text }} title={node.label}>
+                                  {node.label}
+                                </div>
+                                {modelType === "statistical" && (
+                                  <div className="flex min-w-0 items-center gap-2 text-[11px] font-semibold" style={{ color: PALETTE.muted }}>
+                                    <ScenarioColorDot color={effectiveScenario?.color} />
+                                    <span className="truncate">{effectiveScenario?.name || "Base scenario"}</span>
+                                  </div>
+                                )}
+                                {node.chip !== "none" && (
+                                  <div
+                                    className="inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold"
+                                    style={{ background: "rgba(95,143,123,0.16)", color: PALETTE.gold }}
+                                  >
+                                    {{
+                                      wildcard: "Wildcard",
+                                      freehit: "Free Hit",
+                                      bench_boost: "Bench Boost",
+                                    }[node.chip] || node.chip}
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
                             <div className="p-3">
                               <div className="flex items-center gap-2">
                                 <input
@@ -3281,28 +3641,29 @@ export default function MyTeamOptimize() {
 
                               {modelType === "statistical" && (
                                 <div className="mt-2">
-                                  <label className="block text-[10px] font-semibold" style={{ color: PALETTE.muted }}>
+                                  <div className="block text-[10px] font-semibold" style={{ color: PALETTE.muted }}>
                                     Statistical scenario
                                     {node.parentId ? (
-                                      <select
+                                      <ScenarioSelect
                                         value={String(node.scenarioId || "inherit")}
-                                        onChange={(event) => updateTreeNode(node.id, { scenarioId: event.target.value })}
-                                        className="mt-1 h-8 w-full rounded-lg border bg-white px-2 text-xs outline-none"
-                                        style={{ borderColor: PALETTE.border }}
-                                      >
-                                        <option value="inherit">
-                                          Inherit ({adjustmentScenarios.find((scenario) => scenario.id === treeEffectiveScenarioById.get(node.parentId))?.name || "Base scenario"})
-                                        </option>
-                                        {adjustmentScenarios.map((scenario) => (
-                                          <option key={scenario.id} value={scenario.id}>{scenario.name}</option>
-                                        ))}
-                                      </select>
+                                        onChange={(scenarioId) => updateTreeNode(node.id, { scenarioId })}
+                                        scenarios={adjustmentScenarios}
+                                        extraOptions={[{
+                                          value: "inherit",
+                                          label: `Inherit (${inheritedScenario?.name || "Base scenario"})`,
+                                          color: inheritedScenario?.color,
+                                        }]}
+                                        compact
+                                        className="mt-1"
+                                        ariaLabel={`Statistical scenario for ${node.label}`}
+                                      />
                                     ) : (
-                                      <div className="mt-1 flex h-8 items-center rounded-lg border bg-slate-50 px-2 text-xs" style={{ borderColor: PALETTE.border }}>
-                                        Base scenario
+                                      <div className="mt-1 flex h-8 items-center gap-2 rounded-lg border bg-slate-50 px-2 text-xs" style={{ borderColor: PALETTE.border }}>
+                                        <ScenarioColorDot color={effectiveScenario?.color} />
+                                        {effectiveScenario?.name || "Base scenario"}
                                       </div>
                                     )}
-                                  </label>
+                                  </div>
                                   {node.parentId && effectiveScenarioId !== BASE_SCENARIO_ID && scenarioDiagnostics && (
                                     <p
                                       className="mt-1 text-[9px] font-semibold leading-tight"
@@ -3327,10 +3688,24 @@ export default function MyTeamOptimize() {
                                 </button>
                               )}
                             </div>
+                            )}
                           </div>
+                          </React.Fragment>
                         );
                       })}
+                      </div>
                     </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={addNewTree}
+                      className="gold-ring absolute right-6 top-1/2 z-40 flex h-16 w-16 -translate-y-1/2 items-center justify-center rounded-full border-2 bg-white text-4xl font-light shadow-xl transition hover:shadow-2xl"
+                      style={{ borderColor: PALETTE.gold, color: PALETTE.gold }}
+                      aria-label="Add a new decision tree"
+                      title="Add a new decision tree"
+                    >
+                      +
+                    </button>
                   </div>
                   {!treeConfigValid && (
                     <p className="mt-2 text-xs text-rose-600">
@@ -3605,11 +3980,32 @@ export default function MyTeamOptimize() {
                                 );
                               }
                               setTreeMode(Boolean(savedParams.treeMode));
-                              setTreeNodes(
+                              const restoredTreeNodes =
                                 Array.isArray(savedParams.treeNodes) && savedParams.treeNodes.length > 0
                                   ? ensureTreeStartAnchor(savedParams.treeNodes)
-                                  : DEFAULT_TREE_NODES.map((node) => ({ ...node }))
-                              );
+                                  : DEFAULT_TREE_NODES.map((node) => ({ ...node }));
+                              const restoredRootIds = restoredTreeNodes
+                                .filter((node) => !node.parentId)
+                                .map((node) => node.id);
+                              const restoredActiveRootId = restoredRootIds.includes(savedParams.activeTreeRootId)
+                                ? savedParams.activeTreeRootId
+                                : restoredRootIds[0];
+                              setTreeNodes(restoredTreeNodes);
+                              setActiveTreeRootId(restoredActiveRootId);
+                              const restoredOptimizationRows = opt?.snapshot?.result?.data;
+                              if (
+                                savedParams.treeMode &&
+                                restoredActiveRootId &&
+                                Array.isArray(restoredOptimizationRows)
+                              ) {
+                                setTreeOptimizationResults((previous) => ({
+                                  ...previous,
+                                  [restoredActiveRootId]: {
+                                    rows: restoredOptimizationRows,
+                                    optimizedAt: Number(opt?.createdAt) || Date.now(),
+                                  },
+                                }));
+                              }
                               const savedTreePositions =
                                 savedParams.treeNodePositions && typeof savedParams.treeNodePositions === "object"
                                   ? savedParams.treeNodePositions
@@ -3803,13 +4199,19 @@ export default function MyTeamOptimize() {
                               {Number.isFinite(branch.hits) && branch.hits > 0 ? ` · ${branch.hits.toFixed(0)} hit` : ""}
                             </span>
                             {modelType === "statistical" && (
-                              <span className="mt-0.5 block text-[9px] opacity-70">
+                              <span className="mt-0.5 flex items-center gap-1.5 text-[9px] opacity-70">
+                                <ScenarioColorDot
+                                  color={adjustmentScenarios.find((scenario) => scenario.id === branch.scenarioId)?.color}
+                                  size={7}
+                                />
+                                <span>
                                 {adjustmentScenarios.find((scenario) => scenario.id === branch.scenarioId)?.name || "Base scenario"}
                                 {branch.scenarioId !== BASE_SCENARIO_ID && Number.isFinite(branch.projectionChangedRows)
                                   ? branch.projectionChangedRows > 0
                                     ? ` · ${branch.projectionChangedRows} changed predictions · max ${branch.projectionMaxAbsDiff.toFixed(2)} pts`
                                     : " · no prediction differences from Base"
                                   : ""}
+                                </span>
                               </span>
                             )}
                           </button>

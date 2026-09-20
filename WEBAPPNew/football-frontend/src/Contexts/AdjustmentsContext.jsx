@@ -470,6 +470,23 @@ const buildStablePlayerCalcs = (playerRows, teamRows, fixtures) => {
 
 const SCENARIO_STORAGE_KEY = "fpl_adjustment_scenarios_v1";
 export const BASE_SCENARIO_ID = "base";
+export const DEFAULT_SCENARIO_COLOR = "#64748b";
+export const SCENARIO_COLOR_PALETTE = [
+  "#64748b",
+  "#2563eb",
+  "#dc2626",
+  "#16a34a",
+  "#d97706",
+  "#7c3aed",
+  "#db2777",
+  "#0891b2",
+];
+const normalizeScenarioColor = (color, fallback = DEFAULT_SCENARIO_COLOR) => {
+  const value = String(color || "").trim();
+  return /^#[0-9a-f]{6}$/i.test(value) ? value.toLowerCase() : fallback;
+};
+const scenarioColorForIndex = (index) =>
+  SCENARIO_COLOR_PALETTE[Math.abs(Number(index) || 0) % SCENARIO_COLOR_PALETTE.length];
 const PLAYER_OVERRIDE_FIELDS = [
   "Goal_share",
   "Assist_share",
@@ -490,6 +507,7 @@ const TEAM_OVERRIDE_FIELDS = [
 const emptyBaseScenario = () => ({
   id: BASE_SCENARIO_ID,
   name: "Base scenario",
+  color: DEFAULT_SCENARIO_COLOR,
   createdAt: 0,
   updatedAt: Date.now(),
   playerOverrides: {},
@@ -555,8 +573,17 @@ const readScenarioStore = () => {
     const incoming = Array.isArray(parsed?.scenarios) ? parsed.scenarios : [];
     const base = incoming.find((scenario) => scenario?.id === BASE_SCENARIO_ID);
     const scenarios = [
-      { ...emptyBaseScenario(), ...(base || {}) },
-      ...incoming.filter((scenario) => scenario?.id && scenario.id !== BASE_SCENARIO_ID),
+      {
+        ...emptyBaseScenario(),
+        ...(base || {}),
+        color: normalizeScenarioColor(base?.color, DEFAULT_SCENARIO_COLOR),
+      },
+      ...incoming
+        .filter((scenario) => scenario?.id && scenario.id !== BASE_SCENARIO_ID)
+        .map((scenario, index) => ({
+          ...scenario,
+          color: normalizeScenarioColor(scenario.color, scenarioColorForIndex(index + 1)),
+        })),
     ];
     const activeScenarioId = scenarios.some((scenario) => scenario.id === parsed?.activeScenarioId)
       ? parsed.activeScenarioId
@@ -786,13 +813,14 @@ export function AdjustmentDataProvider({ children }) {
     return true;
   }, [applyMaterializedScenario, materializeScenario, persistScenarioStore]);
 
-  const createScenario = useCallback((name) => {
+  const createScenario = useCallback((name, color) => {
     const id = `scenario_${Date.now()}_${Math.random().toString(16).slice(2)}`;
     const base = scenarioById(BASE_SCENARIO_ID) || emptyBaseScenario();
     const nextScenario = {
       ...cloneJson(base),
       id,
       name: String(name || "").trim().slice(0, 60) || `Scenario ${scenariosRef.current.length}`,
+      color: normalizeScenarioColor(color, scenarioColorForIndex(scenariosRef.current.length)),
       createdAt: Date.now(),
       updatedAt: Date.now(),
     };
@@ -806,6 +834,12 @@ export function AdjustmentDataProvider({ children }) {
     const cleanName = String(name || "").trim().slice(0, 60);
     if (!cleanName || id === BASE_SCENARIO_ID) return false;
     replaceScenario(id, { name: cleanName });
+    return true;
+  }, [replaceScenario]);
+
+  const setScenarioColor = useCallback((id, color) => {
+    if (!scenariosRef.current.some((scenario) => scenario.id === id)) return false;
+    replaceScenario(id, { color: normalizeScenarioColor(color) });
     return true;
   }, [replaceScenario]);
 
@@ -885,6 +919,7 @@ export function AdjustmentDataProvider({ children }) {
         switchScenario,
         createScenario,
         renameScenario,
+        setScenarioColor,
         deleteScenario,
         resetActiveScenario,
         getScenarioPlayerData,

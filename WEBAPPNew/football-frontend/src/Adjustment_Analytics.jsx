@@ -1,7 +1,13 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import { CalendarDays, Check, CopyPlus, PlayCircle, Trash2, User, Users } from "lucide-react";
-import { BASE_SCENARIO_ID, useAdjustmentData } from "./Contexts/AdjustmentsContext";
+import {
+  BASE_SCENARIO_ID,
+  DEFAULT_SCENARIO_COLOR,
+  SCENARIO_COLOR_PALETTE,
+  useAdjustmentData,
+} from "./Contexts/AdjustmentsContext";
+import ScenarioSelect from "./components/ScenarioSelect";
 
 const tabClass = ({ isActive }) =>
   [
@@ -18,6 +24,7 @@ export default function AdjustmentAnalytics() {
     switchScenario,
     createScenario,
     renameScenario,
+    setScenarioColor,
     deleteScenario,
   } = useAdjustmentData();
   const activeScenario = useMemo(
@@ -25,6 +32,9 @@ export default function AdjustmentAnalytics() {
     [activeScenarioId, scenarios]
   );
   const [newName, setNewName] = useState("");
+  const [newColor, setNewColor] = useState(
+    SCENARIO_COLOR_PALETTE[scenarios.length % SCENARIO_COLOR_PALETTE.length]
+  );
   const [renameValue, setRenameValue] = useState(activeScenario?.name || "");
 
   useEffect(() => {
@@ -32,8 +42,11 @@ export default function AdjustmentAnalytics() {
   }, [activeScenario?.id, activeScenario?.name]);
 
   const handleCreate = () => {
-    createScenario(newName);
+    createScenario(newName, newColor);
     setNewName("");
+    setNewColor(
+      SCENARIO_COLOR_PALETTE[(scenarios.length + 1) % SCENARIO_COLOR_PALETTE.length]
+    );
   };
 
   const handleRename = () => {
@@ -56,16 +69,26 @@ export default function AdjustmentAnalytics() {
               Active statistical scenario
             </div>
             <div className="flex flex-col gap-2 sm:flex-row">
-              <select
+              <ScenarioSelect
+                scenarios={scenarios}
                 value={activeScenarioId}
-                onChange={(event) => switchScenario(event.target.value)}
-                className="h-10 min-w-[190px] rounded-xl border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-sky-400"
-                aria-label="Active adjustment scenario"
+                onChange={switchScenario}
+                className="min-w-[190px]"
+                ariaLabel="Active adjustment scenario"
+              />
+
+              <label
+                className="flex h-10 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-slate-300 bg-slate-50"
+                title="Choose scenario color"
               >
-                {scenarios.map((scenario) => (
-                  <option key={scenario.id} value={scenario.id}>{scenario.name}</option>
-                ))}
-              </select>
+                <input
+                  type="color"
+                  value={activeScenario?.color || DEFAULT_SCENARIO_COLOR}
+                  onChange={(event) => setScenarioColor(activeScenarioId, event.target.value)}
+                  className="h-7 w-7 cursor-pointer border-0 bg-transparent p-0"
+                  aria-label="Scenario color"
+                />
+              </label>
 
               {activeScenarioId !== BASE_SCENARIO_ID && (
                 <div className="flex min-w-0 flex-1 gap-2">
@@ -106,6 +129,18 @@ export default function AdjustmentAnalytics() {
               New scenario
             </label>
             <div className="flex gap-2">
+              <label
+                className="flex h-10 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-slate-300 bg-slate-50"
+                title="Choose new scenario color"
+              >
+                <input
+                  type="color"
+                  value={newColor}
+                  onChange={(event) => setNewColor(event.target.value)}
+                  className="h-7 w-7 cursor-pointer border-0 bg-transparent p-0"
+                  aria-label="New scenario color"
+                />
+              </label>
               <input
                 id="new-scenario-name"
                 value={newName}

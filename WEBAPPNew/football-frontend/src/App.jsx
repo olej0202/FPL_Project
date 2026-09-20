@@ -245,18 +245,18 @@ export default function App() {
 
   const desktopLinkClass = ({ isActive }) =>
     [
-      "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold transition-all",
+      "inline-flex min-h-9 items-center gap-2 px-3 py-2 text-xs font-semibold transition-colors",
       isActive
-        ? "border-sky-200 bg-sky-50 text-sky-800 shadow-sm"
-        : "border-slate-300 text-slate-600 hover:border-sky-200 hover:text-sky-700 hover:bg-sky-50",
+        ? "bg-emerald-50 text-emerald-800 shadow-[inset_0_-3px_0_0_rgb(5_150_105)]"
+        : "text-slate-600 hover:bg-emerald-50 hover:text-emerald-700",
     ].join(" ");
 
   const mobileLinkClass = ({ isActive }) =>
     [
-      "flex items-center gap-3 rounded-xl border px-3 py-3 text-sm font-semibold transition-colors",
+      "flex items-center gap-3 px-3 py-3 text-sm font-semibold transition-colors",
       isActive
-        ? "border-sky-200 bg-sky-50 text-sky-800"
-        : "border-slate-300 text-slate-700 hover:bg-sky-50 hover:border-sky-200 hover:text-sky-700",
+        ? "bg-emerald-50 text-emerald-800 shadow-[inset_3px_0_0_0_rgb(5_150_105)]"
+        : "text-slate-700 hover:bg-emerald-50 hover:text-emerald-700",
     ].join(" ");
 
   const routeElement = (siteKey, element, title) =>
@@ -271,7 +271,7 @@ export default function App() {
               <img
                 src={logo}
                 alt="FPL Analytics"
-                className="h-10 w-10 rounded-full border border-sky-300/40 object-contain shadow-sm"
+                className="h-10 w-10 rounded-full border border-emerald-300/40 object-contain shadow-sm"
               />
               <div className="hidden sm:block">
                 <p className="text-sm font-semibold text-slate-900">FPL Analytics</p>
@@ -282,7 +282,7 @@ export default function App() {
             </div>
 
             <div className="hidden md:flex flex-1 justify-center">
-              <div className="flex items-center gap-2">
+              <div className="flex items-stretch divide-x divide-slate-300 border border-slate-300 bg-white shadow-sm">
                 {navItems.map((item) => {
                   if (item.type === "group") {
                     const Icon = item.icon;
@@ -293,10 +293,10 @@ export default function App() {
                           type="button"
                           onClick={() => setAnalysisOpenDesktop((prev) => !prev)}
                           className={[
-                            "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold transition-all",
+                            "inline-flex min-h-9 items-center gap-2 px-3 py-2 text-xs font-semibold transition-colors",
                             analysisActive
-                              ? "border-sky-200 bg-sky-50 text-sky-800 shadow-sm"
-                              : "border-slate-300 text-slate-600 hover:border-sky-200 hover:text-sky-700 hover:bg-sky-50",
+                              ? "bg-emerald-50 text-emerald-800 shadow-[inset_0_-3px_0_0_rgb(5_150_105)]"
+                              : "text-slate-600 hover:bg-emerald-50 hover:text-emerald-700",
                           ].join(" ")}
                         >
                           <Icon size={16} />
@@ -324,8 +324,8 @@ export default function App() {
                                 [
                                   "block rounded-lg border px-3 py-2 text-sm font-medium transition-colors",
                                   isActive
-                                    ? "border-sky-200 bg-sky-50 text-sky-800"
-                                    : "border-transparent text-slate-700 hover:bg-sky-50 hover:text-sky-700",
+                                    ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                                    : "border-transparent text-slate-700 hover:bg-emerald-50 hover:text-emerald-700",
                                 ].join(" ")
                               }
                             >
@@ -353,7 +353,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => setSettingsOpen((prev) => !prev)}
-                  className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:border-sky-200 hover:text-sky-700"
+                  className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:border-emerald-200 hover:text-emerald-700"
                 >
                   <Settings size={16} />
                   <span className="hidden sm:inline">Settings</span>
@@ -371,7 +371,7 @@ export default function App() {
                   ].join(" ")}
                 >
                   <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
-                    <UserCircle2 size={18} className="text-sky-700" />
+                    <UserCircle2 size={18} className="text-emerald-700" />
                     <div className="min-w-0">
                       <p className="truncate text-sm font-semibold text-slate-900">
                         {user?.name || "Session"}
@@ -395,7 +395,7 @@ export default function App() {
                             key={id}
                             type="button"
                             onClick={() => applyRecentTeamId(id)}
-                            className="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-left text-xs font-semibold text-slate-700 transition hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700"
+                            className="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-left text-xs font-semibold text-slate-700 transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700"
                           >
                             Team ID {id}
                           </button>
@@ -423,7 +423,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => setMenuOpen(true)}
-                  className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-white px-3 py-1.5 text-xs font-semibold text-sky-700 shadow-sm"
+                  className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-white px-3 py-1.5 text-xs font-semibold text-emerald-700 shadow-sm"
                 >
                   <LayoutDashboard size={16} />
                   <span>Navigation</span>
@@ -447,7 +447,7 @@ export default function App() {
                   <img
                     src={logo}
                     alt="FPL Analytics"
-                    className="h-8 w-8 rounded-full border border-sky-300/40"
+                    className="h-8 w-8 rounded-full border border-emerald-300/40"
                   />
                   <div className="leading-tight">
                     <span className="block text-sm font-semibold text-slate-900">FPL Analytics</span>
@@ -463,21 +463,21 @@ export default function App() {
                 </button>
               </div>
 
-              <nav className="space-y-2 overflow-auto px-3 py-3">
+              <nav className="mx-3 my-3 divide-y divide-slate-300 overflow-auto border border-slate-300 bg-white">
                 {navItems.map((item) => {
                   if (item.type === "group") {
                     const Icon = item.icon;
 
                     return (
-                      <div key={item.label} className="space-y-2">
+                      <div key={item.label}>
                         <button
                           type="button"
                           onClick={() => setAnalysisOpenMobile((prev) => !prev)}
                           className={[
-                            "flex w-full items-center justify-between rounded-xl border px-3 py-3 text-sm font-semibold",
+                            "flex w-full items-center justify-between px-3 py-3 text-sm font-semibold transition-colors",
                             analysisActive
-                              ? "border-sky-200 bg-sky-50 text-sky-800"
-                              : "border-slate-300 text-slate-700 hover:bg-sky-50 hover:border-sky-200 hover:text-sky-700",
+                              ? "bg-emerald-50 text-emerald-800 shadow-[inset_3px_0_0_0_rgb(5_150_105)]"
+                              : "text-slate-700 hover:bg-emerald-50 hover:text-emerald-700",
                           ].join(" ")}
                         >
                           <span className="flex items-center gap-3">
@@ -496,17 +496,17 @@ export default function App() {
                             analysisOpenMobile ? "max-h-[460px] opacity-100" : "max-h-0 opacity-0",
                           ].join(" ")}
                         >
-                          <div className="space-y-2 pl-3">
+                          <div className="divide-y divide-slate-200 border-t border-slate-200 bg-slate-50 pl-3">
                             {item.children.map((child) => (
                               <NavLink
                                 key={child.to}
                                 to={child.to}
                                 className={({ isActive }) =>
                                   [
-                                    "block rounded-lg border px-3 py-2 text-sm",
+                                    "block px-3 py-2 text-sm transition-colors",
                                     isActive
-                                      ? "border-sky-200 bg-sky-50 text-sky-800"
-                                      : "border-slate-200 text-slate-600 hover:bg-sky-50 hover:text-sky-700",
+                                      ? "bg-emerald-100 text-emerald-800 shadow-[inset_3px_0_0_0_rgb(5_150_105)]"
+                                      : "text-slate-600 hover:bg-emerald-50 hover:text-emerald-700",
                                   ].join(" ")
                                 }
                               >

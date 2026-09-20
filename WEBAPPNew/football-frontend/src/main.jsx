@@ -8,6 +8,7 @@ import {OtherDataProvider} from "./Contexts/OtherContext";
 import {StatsDataProvider} from "./Contexts/StatsContext";
 import {MyTeamDataContextProvider} from "./Contexts/MyTeamContext";
 import {AdjustmentDataProvider} from "./Contexts/AdjustmentsContext";
+import { OptimizationModelProvider } from "./Contexts/OptimizationModelContext";
 import { UserDataProvider } from "./Contexts/UserContext";
 import ScrollToTop from "./components/ScrollTop";
 
@@ -15,6 +16,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   <HashRouter >
     <ScrollToTop />
     <UserDataProvider>
+    <OptimizationModelProvider>
     <AdjustmentDataProvider>
   <MyTeamDataContextProvider>
   <StatsDataProvider>
@@ -26,6 +28,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   </StatsDataProvider>
   </MyTeamDataContextProvider>
   </AdjustmentDataProvider>
+  </OptimizationModelProvider>
   </UserDataProvider>
   
   </HashRouter >
