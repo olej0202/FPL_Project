@@ -273,8 +273,9 @@ def Data_Predictions(
    
 def Data_Generation(ownership,budget,GW_list_wildcard,GW_list_freehit,current_player_path,current_team_path,current_season_path ):
     GenerateOptimizeSet(current_player_path)
-    generate_optimizers(ownership=ownership,budget=budget,GW_list_wildcard=GW_list_wildcard,GW_list_freehit=GW_list_freehit,current_player_path=current_player_path )
     Generate_ALL_datasets(current_team_path,current_player_path,current_season_path)
+
+    generate_optimizers(ownership=ownership,budget=budget,GW_list_wildcard=GW_list_wildcard,GW_list_freehit=GW_list_freehit,current_player_path=current_player_path )
     #main_GPT_News()
     
 def Specials(ownership,budget,GW_list_wildcard,current_player_path ):
@@ -336,6 +337,7 @@ def Main_Orchestration():
     #Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos,Understat_path,Understat_shots_path)
     
     #Predict data
+    """
     Data_Predictions(
         fixtures_expanded_path_25,
         current_player_path,
@@ -348,7 +350,7 @@ def Main_Orchestration():
         player_history_path_25,
         full_simulator_team_output_path_25,
         full_simulator_player_output_path_25,
-    )
+    )"""
     
     Data_Generation(ownership,budget,GW_list_wildcard,GW_list_freehit,current_player_path,current_team_path,current_season_path )
     

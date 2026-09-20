@@ -753,33 +753,52 @@ def Player_adjustements(current_player_path):
 
     # Linear scale from 0.9 -> 1.1
     df["Opp_defcon_scale"] = (
-        0.95
+        0.9
         + (
             (df["Opp_defcon"] - opp_min)
             / (opp_max - opp_min)
-        ) * 0.15
+        ) * 0.2
+    )
+    z_10 = (
+        -15.4073332515
+        - 0.1227501995 * df["defcon_avg"]
+        - 0.0090310829 * df["Rolling_Defcon_For"]
+        + 0.0652039989 * df["Opp_defcon"]
+        + 0.3253282501 * df["Defcon_Statistics_Index_dec"]
+        + 0.2079206563 * df["Defcon_Index"]
+        + 0.0787717055 * df["average_minutes"]
     )
 
-    # Scale Defcon_Index / mu
-    df["Defcon_Index_scaled"] = (
-        df["Defcon_Index"]
-        * df["Opp_defcon_scale"]
+    prob_10 = (
+        1 / (1 + np.exp(-z_10))
     )
 
-    # --------------------------------------------------
-    # Position-specific threshold
-    # --------------------------------------------------
 
-    threshold = np.where(
+    # =========================================================
+    # DEFCON >= 12 LOGISTIC PROBABILITY
+    # =========================================================
+
+    z_12 = (
+        -17.6679365199
+        - 0.0592567229 * df["defcon_avg"]
+        - 0.0112785038 * df["Rolling_Defcon_For"]
+        + 0.0698286895 * df["Opp_defcon"]
+        + 0.3299405195 * df["Defcon_Statistics_Index_dec"]
+        + 0.1585468438 * df["Defcon_Index"]
+        + 0.0893258202 * df["average_minutes"]
+    )
+
+    prob_12 = (
+        1 / (1 + np.exp(-z_12))
+    )
+
+
+    df["CBI_Percent"] = np.where(
         df["position"].isin(["DEF", "GKP"]),
-        10.0,
-        12.0
-    )
-
+        prob_10,
+        prob_12
+    )*df["Opp_defcon_scale"]
     # Probability
-    df["CBI_Percent"] = probability(
-        df["Defcon_Index_scaled"].to_numpy(float),
-        threshold)
 
     bps_scaled = np.maximum(1, df["Rolling_adjusted_BPS"]*0.4+df["Rolling_adjusted_BPS_2"]*0.6) 
     df["BPS"]=bps_scaled
