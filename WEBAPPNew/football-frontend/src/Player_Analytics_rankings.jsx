@@ -912,16 +912,16 @@ function MeasureBarCell({ value, text, range }) {
   const alpha = 0.015 + boostedIntensity * 0.52;
 
   return (
-    <div className="relative overflow-hidden rounded-lg px-2 py-1">
+    <>
       <div
-        className="absolute inset-0 rounded-lg"
+        className="pointer-events-none absolute inset-0"
         style={{
           background: `rgba(22, 163, 74, ${alpha})`,
           transition: "background-color 180ms ease",
         }}
       />
-      <span className="relative z-[1]">{text}</span>
-    </div>
+      <span className="relative z-[1] block px-4 py-3">{text}</span>
+    </>
   );
 }
 
@@ -1002,7 +1002,11 @@ const PlayerRow = React.memo(function PlayerRow({
       {displayedGWs.map((gw) => {
         const cell = row.gwMeasures[gw]?.[selectedMeasure] ?? 0;
         return (
-          <td key={gw} className="px-4 py-3 text-right" style={{ borderBottom: "1px solid #e2e8f0" }}>
+          <td
+            key={gw}
+            className={showPredictionShading ? "relative p-0 text-right" : "px-4 py-3 text-right"}
+            style={{ borderBottom: "1px solid #e2e8f0", borderLeft: "1px solid #e2e8f0" }}
+          >
             {showPredictionShading ? (
               <MeasureBarCell
                 value={cell}
@@ -1037,6 +1041,7 @@ export default function Player_analytics_rankings() {
   const [selectedPositions, setSelectedPositions] = useState([]);
   const [playerNameFilter, setPlayerNameFilter] = useState("");
   const [valueRange, setValueRange] = useState([0, 15.5]);
+  const valueRangeInitializedRef = useRef(false);
   const [selectedRange, setSelectedRange] = useState([0, 100]);
   const [selectedGwStart, setSelectedGwStart] = useState(null);
   const [selectedGwEnd, setSelectedGwEnd] = useState(null);
@@ -1271,8 +1276,14 @@ export default function Player_analytics_rankings() {
   }, [allGWs]);
 
   useEffect(() => {
+    if (!playerTableRowsBase.length) return;
+    if (!valueRangeInitializedRef.current) {
+      valueRangeInitializedRef.current = true;
+      setValueRange([globalMinValue, globalMaxValue]);
+      return;
+    }
     setValueRange((prev) => clampRange(prev, globalMinValue, globalMaxValue));
-  }, [globalMinValue, globalMaxValue]);
+  }, [globalMinValue, globalMaxValue, playerTableRowsBase.length]);
 
   useEffect(() => {
     setSelectedRange((prev) => clampRange(prev, globalMinSelected, globalMaxSelected));

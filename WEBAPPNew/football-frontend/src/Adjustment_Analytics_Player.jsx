@@ -62,7 +62,7 @@ const PALETTE = {
   danger: "#f87171",
 };
 
-const FILTERS_STORAGE_KEY = "player_adjustments_filters_v7";
+const FILTERS_STORAGE_KEY = "player_adjustments_filters_v8";
 const MIN_MINUTES = 0;
 const MAX_MINUTES = 90;
 
@@ -530,16 +530,16 @@ function MeasureBarCell({ value, text, range }) {
   const alpha = 0.015 + boostedIntensity * 0.52;
 
   return (
-    <div className="relative overflow-hidden rounded-lg px-2 py-1">
+    <>
       <div
-        className="absolute inset-0 rounded-lg"
+        className="pointer-events-none absolute inset-0"
         style={{
           background: `rgba(22, 163, 74, ${alpha})`,
           transition: "background-color 180ms ease",
         }}
       />
-      <span className="relative z-[1]">{text}</span>
-    </div>
+      <span className="relative z-[1] block px-4 py-3">{text}</span>
+    </>
   );
 }
 
@@ -622,7 +622,11 @@ const PlayerRow = React.memo(function PlayerRow({
         const cell = row.gwMeasures[gw];
         const displayValue = cell ? cell[selectedMeasure] : 0;
         return (
-          <td key={gw} className="px-4 py-3 text-right" style={{ borderBottom: "1px solid #e2e8f0" }}>
+          <td
+            key={gw}
+            className="relative p-0 text-right"
+            style={{ borderBottom: "1px solid #e2e8f0", borderLeft: "1px solid #e2e8f0" }}
+          >
             <MeasureBarCell
               value={displayValue}
               text={
@@ -1291,11 +1295,16 @@ const computeMeasures = useCallback(calculatePlayerProjection, []);
   }, [comparisonChartDataPoints, modalChartMetric]);
 
   useEffect(() => {
-    if (globalMinValue != null && globalMaxValue != null && valueThreshold === null) {
+    if (
+      playerTableRowsBase.length > 0 &&
+      Number.isFinite(globalMinValue) &&
+      Number.isFinite(globalMaxValue) &&
+      valueThreshold === null
+    ) {
       setValueThreshold(globalMaxValue);
       setValueThresholdDraft(globalMaxValue);
     }
-  }, [globalMinValue, globalMaxValue, valueThreshold]);
+  }, [globalMinValue, globalMaxValue, playerTableRowsBase.length, valueThreshold]);
 
   useEffect(() => {
     if (valueThreshold == null) return;
