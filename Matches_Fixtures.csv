@@ -39,16 +39,16 @@ Fix_ID,GW,kickoff_time,started,finished,team_h_score,team_a_score,HomeTeam,AwayT
 2645232,4,2026-09-13T15:30:00Z,True,True,0.0,1.0,Man Utd,Man City,1,43,MUN,MCI
 2645233,4,2026-09-12T19:00:00Z,True,True,0.0,2.0,Sunderland,Arsenal,56,3,SUN,ARS
 2645234,4,2026-09-12T16:30:00Z,True,True,0.0,0.0,Spurs,Everton,6,11,TOT,EVE
-2645235,5,2026-09-20T13:00:00Z,False,False,,,Bournemouth,Liverpool,91,14,BOU,LIV
-2645236,5,2026-09-18T19:00:00Z,False,False,,,Brentford,Chelsea,94,8,BRE,CHE
-2645237,5,2026-09-19T14:00:00Z,False,False,,,Brighton,Arsenal,36,3,BHA,ARS
-2645238,5,2026-09-19T14:00:00Z,False,False,,,Everton,Ipswich Town,11,40,EVE,IPS
-2645239,5,2026-09-20T15:30:00Z,False,False,,,Fulham,Man Utd,54,1,FUL,MUN
-2645240,5,2026-09-20T13:00:00Z,False,False,,,Leeds,Crystal Palace,2,31,LEE,CRY
-2645241,5,2026-09-20T13:00:00Z,False,False,,,Man City,Sunderland,43,56,MCI,SUN
-2645242,5,2026-09-19T14:00:00Z,False,False,,,Newcastle,Hull City,4,88,NEW,HUL
-2645243,5,2026-09-19T16:30:00Z,False,False,,,Nott'm Forest,Coventry City,17,9,NFO,COV
-2645244,5,2026-09-19T11:30:00Z,False,False,,,Spurs,Aston Villa,6,7,TOT,AVL
+2645235,5,2026-09-20T13:00:00Z,True,False,0.0,1.0,Bournemouth,Liverpool,91,14,BOU,LIV
+2645236,5,2026-09-18T19:00:00Z,True,False,3.0,0.0,Brentford,Chelsea,94,8,BRE,CHE
+2645237,5,2026-09-19T14:00:00Z,True,False,3.0,0.0,Brighton,Arsenal,36,3,BHA,ARS
+2645238,5,2026-09-19T14:00:00Z,True,False,1.0,0.0,Everton,Ipswich Town,11,40,EVE,IPS
+2645239,5,2026-09-20T15:30:00Z,True,False,1.0,1.0,Fulham,Man Utd,54,1,FUL,MUN
+2645240,5,2026-09-20T13:00:00Z,True,False,0.0,0.0,Leeds,Crystal Palace,2,31,LEE,CRY
+2645241,5,2026-09-20T13:00:00Z,True,False,5.0,3.0,Man City,Sunderland,43,56,MCI,SUN
+2645242,5,2026-09-19T14:00:00Z,True,False,2.0,1.0,Newcastle,Hull City,4,88,NEW,HUL
+2645243,5,2026-09-19T16:30:00Z,True,False,0.0,1.0,Nott'm Forest,Coventry City,17,9,NFO,COV
+2645244,5,2026-09-19T11:30:00Z,True,False,2.0,3.0,Spurs,Aston Villa,6,7,TOT,AVL
 2645245,6,2026-10-10T11:30:00Z,False,False,,,Arsenal,Leeds,3,2,ARS,LEE
 2645246,6,2026-10-10T14:00:00Z,False,False,,,Aston Villa,Brentford,7,94,AVL,BRE
 2645247,6,2026-10-10T14:00:00Z,False,False,,,Chelsea,Bournemouth,8,91,CHE,BOU
