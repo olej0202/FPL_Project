@@ -1157,9 +1157,26 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
                     (history_data["name"].isin(eligible_names))
                 ].copy()
 
+                # The current player's profile already contains the latest
+                # rolling values from Player_future.csv.  Keep those as the
+                # player's side of the blend, and use one (latest) historical
+                # profile per reference player on the other side.  Averaging
+                # all historical snapshots here would count old rolling
+                # values repeatedly and can heavily inflate short histories.
+                latest_reference_source = (
+                    reference_source
+                    .dropna(subset=["name", "kickoff_time_parsed"])
+                    .sort_values(
+                        ["name", "kickoff_time_parsed"],
+                        ascending=[True, False],
+                    )
+                    .drop_duplicates(subset=["name"], keep="first")
+                )
+
                 # Average every numeric model column shared by the historical
-                # source and the current player profile. Identity/context keys
-                # and the two sample-size controls must remain player-specific.
+                # reference profiles, then blend that average with the current
+                # value from Player_future.csv. Identity/context keys and the
+                # two sample-size controls must remain player-specific.
                 protected_numeric_columns = {
                     "element",
                     "fixture",
@@ -1172,8 +1189,7 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
                 }
                 shared_columns = [
                     col for col in player_row.columns
-                    if col in filtered.columns
-                    and col in reference_source.columns
+                    if col in latest_reference_source.columns
                     and col not in protected_numeric_columns
                 ]
 
@@ -1181,23 +1197,28 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
                 own_numeric = {}
                 reference_numeric = {}
                 for col in shared_columns:
-                    own_values = pd.to_numeric(filtered[col], errors="coerce")
-                    reference_values = pd.to_numeric(reference_source[col], errors="coerce")
+                    own_values = pd.to_numeric(player_row[col], errors="coerce")
+                    reference_values = pd.to_numeric(
+                        latest_reference_source[col],
+                        errors="coerce",
+                    )
                     if own_values.notna().any() or reference_values.notna().any():
                         numeric_columns.append(col)
-                        own_numeric[col] = own_values.mean()
+                        own_numeric[col] = (
+                            own_values.dropna().iloc[0]
+                            if own_values.notna().any()
+                            else np.nan
+                        )
                         reference_numeric[col] = reference_values.mean()
 
                 if numeric_columns:
                     own_means = pd.Series(own_numeric).reindex(numeric_columns)
                     reference_means = pd.Series(reference_numeric).reindex(numeric_columns)
+                    own_for_blend = own_means.fillna(reference_means)
+                    reference_for_blend = reference_means.fillna(own_means)
                     blended_means = (
-                        own_data_weight * own_means
-                        + (1.0 - own_data_weight) * reference_means
-                    )
-                    blended_means = blended_means.where(
-                        blended_means.notna(),
-                        reference_means,
+                        own_data_weight * own_for_blend
+                        + (1.0 - own_data_weight) * reference_for_blend
                     )
                     player_row[numeric_columns] = blended_means.values
 
