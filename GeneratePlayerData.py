@@ -772,13 +772,29 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
                 ).sum() / wsum
             )
 
-        # The supplied historical per-position model is now the primary
-        # source. Keep the legacy indices as a compatibility fallback for
-        # previously generated Team_Positions files.
-        posxg = wavg("Understat_XG") if "Understat_XG" in team_pos.columns else wavg("XGIndex")
-        posxa = wavg("Understat_XA") if "Understat_XA" in team_pos.columns else wavg("XAIndex")
+        # Blend the historical Understat position foundation with the
+        # existing team-position model after applying the player's position
+        # weights. Keep single-column fallbacks for older generated files.
+        if {"Understat_XG", "XGIndex"}.issubset(team_pos.columns):
+            posxg = 0.6 * wavg("Understat_XG") + 0.4 * wavg("XGIndex")
+        elif "Understat_XG" in team_pos.columns:
+            posxg = wavg("Understat_XG")
+        else:
+            posxg = wavg("XGIndex")
 
-        if "Understat_Goal_Index_Share" in team_pos.columns:
+        if {"Understat_XA", "XAIndex"}.issubset(team_pos.columns):
+            posxa = 0.6 * wavg("Understat_XA") + 0.4 * wavg("XAIndex")
+        elif "Understat_XA" in team_pos.columns:
+            posxa = wavg("Understat_XA")
+        else:
+            posxa = wavg("XAIndex")
+
+        if {"Understat_Goal_Index_Share", "Goal_Position_Share"}.issubset(team_pos.columns):
+            posxg_share = (
+                0.5 * wavg("Understat_Goal_Index_Share")
+                + 0.5 * wavg("Goal_Position_Share")
+            )
+        elif "Understat_Goal_Index_Share" in team_pos.columns:
             posxg_share = wavg("Understat_Goal_Index_Share")
         elif "Goal_Position_Share" in team_pos.columns:
             posxg_share = wavg("Goal_Position_Share")
@@ -796,7 +812,12 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
                 ).sum() / wsum
             )
 
-        if "Understat_Assist_Index_Share" in team_pos.columns:
+        if {"Assist_Position_Share", "Understat_Assist_Index_Share"}.issubset(team_pos.columns):
+            posxa_share = (
+                0.5 * wavg("Assist_Position_Share")
+                + 0.5 * wavg("Understat_Assist_Index_Share")
+            )
+        elif "Understat_Assist_Index_Share" in team_pos.columns:
             posxa_share = wavg("Understat_Assist_Index_Share")
         elif "Assist_Position_Share" in team_pos.columns:
             posxa_share = wavg("Assist_Position_Share")
@@ -857,7 +878,7 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
                 errors="coerce",
             ).iloc[0]
             rolling_team_minutes = 0.0 if pd.isna(value) else max(0.0, float(value))
-        return 1.0 - min(0.6, rolling_team_minutes / 2000.0)
+        return 1.0 - min(0.6, rolling_team_minutes / 1300.0)
 
     for name in names:
         player_risiko = 0.4
@@ -1088,7 +1109,7 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
         defcon_rows = filtered["defcon_avg"].notna().sum()
         positive_defcon_rows = int((filtered["defcon_avg_numeric"].fillna(0.0) > 0).sum())
         sum_minutes = filtered["minutes"].sum()
-        own_data_weight = min(1.0, sum_minutes / (90 * 10))
+        own_data_weight = min(1.0, sum_minutes / (90 * 8))
 
         if sum_minutes < (90 * 10):
             if team_code in NEW_TEAMS:

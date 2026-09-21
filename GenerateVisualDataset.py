@@ -766,7 +766,7 @@ def Player_adjustements(current_player_path):
         + 0.0652039989 * df["Opp_defcon"]
         + 0.3253282501 * df["Defcon_Statistics_Index_dec"]
         + 0.2079206563 * df["Defcon_Index"]
-        + 0.0787717055 * df["average_minutes"]
+        + 0.0787717055 * 90
     )
 
     prob_10 = (
@@ -785,7 +785,7 @@ def Player_adjustements(current_player_path):
         + 0.0698286895 * df["Opp_defcon"]
         + 0.3299405195 * df["Defcon_Statistics_Index_dec"]
         + 0.1585468438 * df["Defcon_Index"]
-        + 0.0893258202 * df["average_minutes"]
+        + 0.0893258202 * 90
     )
 
     prob_12 = (
