@@ -822,6 +822,7 @@ export default function MyTeamOptimize() {
   const [activeTreeRootId, setActiveTreeRootId] = useState(
     initialTreeWorkspaceRef.current.activeTreeRootId
   );
+  const [expandedCompactTreeNodeId, setExpandedCompactTreeNodeId] = useState("");
   const [draggingTreeNode, setDraggingTreeNode] = useState(null);
   const [selectedTreeBranchId, setSelectedTreeBranchId] = useState("");
   const [treeOptimizationResults, setTreeOptimizationResults] = useState({});
@@ -1608,16 +1609,20 @@ export default function MyTeamOptimize() {
     treeNodes.forEach(resolveRoot);
     return roots;
   }, [treeNodes]);
+  const treeRootIds = useMemo(
+    () => treeNodes.filter((node) => !node.parentId).map((node) => node.id),
+    [treeNodes]
+  );
+  const latestTreeRootId = treeRootIds[treeRootIds.length - 1] || "";
   const syncedActiveTreeNodes = useMemo(
     () => syncedTreeNodes.filter((node) => treeRootByNodeId.get(node.id) === activeTreeRootId),
     [activeTreeRootId, syncedTreeNodes, treeRootByNodeId]
   );
   useEffect(() => {
-    const rootIds = treeNodes.filter((node) => !node.parentId).map((node) => node.id);
-    if (!rootIds.includes(activeTreeRootId) && rootIds.length > 0) {
-      setActiveTreeRootId(rootIds[0]);
+    if (!treeRootIds.includes(activeTreeRootId) && treeRootIds.length > 0) {
+      setActiveTreeRootId(treeRootIds[0]);
     }
-  }, [activeTreeRootId, treeNodes]);
+  }, [activeTreeRootId, treeRootIds]);
   const treeMassById = useMemo(
     () => new Map(syncedTreeNodes.map((node) => [node.id, Number(node.probability) || 0])),
     [syncedTreeNodes]
@@ -1672,6 +1677,14 @@ export default function MyTeamOptimize() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [treeTopologyKey]
   );
+  const newTreeRootPosition = useMemo(() => {
+    const previewNodes = buildNewTreeNodes(
+      "__new_tree_preview__",
+      Number(availableGWs[0]) || 6
+    );
+    const previewLayout = buildVerticalTreeLayout([...treeNodes, ...previewNodes]);
+    return previewLayout.positions[previewNodes[0].id] || null;
+  }, [availableGWs, treeNodes]);
 
   useEffect(() => {
     if (pendingTreePositionsRef.current) {
@@ -1836,7 +1849,8 @@ export default function MyTeamOptimize() {
   };
 
   const addNewTree = () => {
-    const activeAnchor = treeNodes.find((node) => node.id === activeTreeRootId);
+    const sourceRootId = latestTreeRootId || activeTreeRootId;
+    const activeAnchor = treeNodes.find((node) => node.id === sourceRootId);
     const activeFirstGw = Math.min(
       ...treeNodes
         .filter((node) => node.parentId === activeAnchor?.id)
@@ -1869,16 +1883,67 @@ export default function MyTeamOptimize() {
       treeKey,
       isValidGW(firstFutureGw) ? firstFutureGw : Number(availableGWs[0]) || 6
     );
-    setTreeNodes((previous) => [
-      ...previous.filter((node) => treeRootByNodeId.get(node.id) !== resetRootId),
-      ...replacement,
-    ]);
+    const removedIds = new Set(
+      treeNodes
+        .filter((node) => treeRootByNodeId.get(node.id) === resetRootId)
+        .map((node) => node.id)
+    );
+    setTreeNodes((previous) => {
+      const insertionIndex = previous.findIndex((node) => removedIds.has(node.id));
+      const kept = previous.filter((node) => !removedIds.has(node.id));
+      kept.splice(Math.max(0, insertionIndex), 0, ...replacement);
+      return kept;
+    });
+    setTreeNodePositions((previous) =>
+      Object.fromEntries(
+        Object.entries(previous).filter(([nodeId]) => !removedIds.has(nodeId))
+      )
+    );
     setTreeOptimizationResults((previous) => {
       const next = { ...previous };
       delete next[resetRootId];
       return next;
     });
+    setSelectedTreeBranchId("");
+    setExpandedCompactTreeNodeId("");
+    setOptimizingTreeRootId((current) => current === resetRootId ? "" : current);
     setActiveTreeRootId(replacement[0].id);
+  };
+
+  const deleteSelectedTree = () => {
+    const selectedRootIndex = treeRootIds.indexOf(activeTreeRootId);
+    if (selectedRootIndex < 0) return;
+
+    // The first tree is the permanent base slot. Deleting it restores a
+    // fresh default tree instead of leaving the workspace without a base.
+    if (selectedRootIndex === 0) {
+      resetActiveTree();
+      return;
+    }
+
+    const removedRootId = activeTreeRootId;
+    const removedIds = new Set(
+      treeNodes
+        .filter((node) => treeRootByNodeId.get(node.id) === removedRootId)
+        .map((node) => node.id)
+    );
+    const nextActiveRootId = treeRootIds[selectedRootIndex - 1] || treeRootIds[0];
+
+    setTreeNodes((previous) => previous.filter((node) => !removedIds.has(node.id)));
+    setTreeNodePositions((previous) =>
+      Object.fromEntries(
+        Object.entries(previous).filter(([nodeId]) => !removedIds.has(nodeId))
+      )
+    );
+    setTreeOptimizationResults((previous) => {
+      const next = { ...previous };
+      delete next[removedRootId];
+      return next;
+    });
+    setSelectedTreeBranchId("");
+    setExpandedCompactTreeNodeId("");
+    setOptimizingTreeRootId((current) => current === removedRootId ? "" : current);
+    setActiveTreeRootId(nextActiveRootId);
   };
 
   const startTreeNodeDrag = (event, nodeId) => {
@@ -1924,9 +1989,10 @@ export default function MyTeamOptimize() {
     ...Object.values(treeNodePositions).map((position) => Number(position.y) + 300)
   );
   const treeCompactView = treeZoom < TREE_COMPACT_ZOOM;
-  const renderedTreeNodeHeight = treeCompactView
-    ? TREE_COMPACT_NODE_HEIGHT
-    : TREE_NODE_HEIGHT;
+  const getRenderedTreeNodeHeight = (nodeId) =>
+    treeCompactView && expandedCompactTreeNodeId !== nodeId
+      ? TREE_COMPACT_NODE_HEIGHT
+      : TREE_NODE_HEIGHT;
   const changeTreeZoom = (delta) => {
     setTreeZoom((current) => {
       const next = Math.round((current + delta) * 10) / 10;
@@ -3287,7 +3353,7 @@ export default function MyTeamOptimize() {
                 <div className="mt-4">
                   <div className="flex items-center justify-between gap-3">
                     <p className="text-[11px]" style={{ color: PALETTE.muted }}>
-                      Click a top circle to select the tree used by the optimizer. Use the large + on the right to add another tree.
+                      Click a top circle to select the tree used by the optimizer. The grey + marks where the next root will be added; use × on the selected root to delete it.
                     </p>
                       <button
                         type="button"
@@ -3381,7 +3447,9 @@ export default function MyTeamOptimize() {
                           const nodePosition = treeNodePositions[node.id] || treeAutoLayout.positions[node.id];
                           if (!parentPosition || !nodePosition) return null;
                           const startX = parentPosition.x + TREE_NODE_WIDTH / 2;
-                           const startY = parentPosition.y + (parentNode?.isAnchor ? 80 : renderedTreeNodeHeight);
+                           const startY = parentPosition.y + (
+                             parentNode?.isAnchor ? 80 : getRenderedTreeNodeHeight(parentNode?.id)
+                           );
                           const endX = nodePosition.x + TREE_NODE_WIDTH / 2;
                           const endY = nodePosition.y;
                           const controlY = (startY + endY) / 2;
@@ -3398,6 +3466,26 @@ export default function MyTeamOptimize() {
                         })}
                       </svg>
 
+                      {newTreeRootPosition && (
+                        <button
+                          type="button"
+                          onPointerDown={(event) => event.stopPropagation()}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            addNewTree();
+                          }}
+                          className="gold-ring absolute z-40 flex h-20 w-20 items-center justify-center rounded-full border-2 border-slate-300 bg-slate-100 text-4xl font-light text-slate-400 shadow-lg transition-colors hover:border-emerald-500 hover:bg-emerald-50 hover:text-emerald-700"
+                          style={{
+                            left: newTreeRootPosition.x + TREE_NODE_WIDTH / 2 - 40,
+                            top: newTreeRootPosition.y,
+                          }}
+                          aria-label="Add a new decision tree"
+                          title="Add a new decision tree"
+                        >
+                          +
+                        </button>
+                      )}
+
                       {treeNodes.filter(
                         (node) => node.parentId && treeRootByNodeId.get(node.id) === activeTreeRootId
                       ).map((node) => {
@@ -3406,7 +3494,9 @@ export default function MyTeamOptimize() {
                         const nodePosition = treeNodePositions[node.id] || treeAutoLayout.positions[node.id];
                         if (!parentPosition || !nodePosition) return null;
                         const x = (parentPosition.x + nodePosition.x) / 2 + TREE_NODE_WIDTH / 2;
-                         const parentBottom = parentPosition.y + (parentNode?.isAnchor ? 80 : renderedTreeNodeHeight);
+                         const parentBottom = parentPosition.y + (
+                           parentNode?.isAnchor ? 80 : getRenderedTreeNodeHeight(parentNode?.id)
+                         );
                         const y = (parentBottom + nodePosition.y) / 2;
                         return (
                           <button
@@ -3446,6 +3536,8 @@ export default function MyTeamOptimize() {
                         const scenarioDiagnostics = treeScenarioDiagnosticsByNodeId.get(node.id);
                         const nodeTreeRootId = treeRootByNodeId.get(node.id);
                         const isActiveTree = nodeTreeRootId === activeTreeRootId;
+                        const isExpandedCompactNode = treeCompactView && expandedCompactTreeNodeId === node.id;
+                        const useCompactNode = treeCompactView && !isExpandedCompactNode;
                         const nodePredictedPoints = optimizedPointsByTreeNode.get(node.id);
                         const predictedPointsBadge = Number.isFinite(nodePredictedPoints) ? (
                           <div
@@ -3464,6 +3556,28 @@ export default function MyTeamOptimize() {
                           return (
                             <React.Fragment key={node.id}>
                             {predictedPointsBadge}
+                            {isActiveTree && (
+                              <button
+                                type="button"
+                                onPointerDown={(event) => event.stopPropagation()}
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  deleteSelectedTree();
+                                }}
+                                disabled={optimizingTreeRootId === node.id && optimizationProgress?.streaming}
+                                className="gold-ring absolute z-50 flex h-7 w-7 items-center justify-center rounded-full border bg-white shadow-md transition hover:scale-105 disabled:cursor-not-allowed disabled:opacity-50"
+                                style={{
+                                  left: position.x + TREE_NODE_WIDTH / 2 + 24,
+                                  top: position.y - 8,
+                                  borderColor: "rgba(248,113,113,0.65)",
+                                  color: PALETTE.danger,
+                                }}
+                                aria-label="Delete selected decision tree"
+                                title={treeRootIds[0] === node.id ? "Restore the default tree" : "Delete selected decision tree"}
+                              >
+                                <X size={14} />
+                              </button>
+                            )}
                             {isActiveTree && (
                               <button
                                 type="button"
@@ -3504,7 +3618,10 @@ export default function MyTeamOptimize() {
                                 transform: isActiveTree ? "scale(1.06)" : "scale(1)",
                               }}
                               onPointerDown={(event) => startTreeNodeDrag(event, node.id)}
-                              onClick={() => setActiveTreeRootId(node.id)}
+                              onClick={() => {
+                                setExpandedCompactTreeNodeId("");
+                                setActiveTreeRootId(node.id);
+                              }}
                               title={isActiveTree ? "Selected decision tree" : "Click to select this decision tree"}
                             >
                               <span className="text-sm font-black">GW{node.gw}</span>
@@ -3519,16 +3636,21 @@ export default function MyTeamOptimize() {
                           <React.Fragment key={node.id}>
                           {predictedPointsBadge}
                           <div
-                            className="absolute z-10 w-56 overflow-hidden rounded-2xl border bg-white shadow-lg"
+                            className={`absolute z-10 w-56 overflow-hidden rounded-2xl border bg-white shadow-lg ${useCompactNode ? "cursor-pointer" : ""}`}
                             style={{
                               left: position.x,
                               top: position.y,
-                              height: renderedTreeNodeHeight,
+                              height: useCompactNode ? TREE_COMPACT_NODE_HEIGHT : TREE_NODE_HEIGHT,
                               borderColor: node.chip !== "none" ? PALETTE.gold : PALETTE.border,
                               boxShadow: isDragging ? "0 20px 40px rgba(15,23,42,0.24)" : "0 10px 24px rgba(15,23,42,0.12)",
                               transition: isDragging ? "none" : "box-shadow 160ms ease, border-color 160ms ease",
                               opacity: isActiveTree ? 1 : 0.56,
                               pointerEvents: isActiveTree ? "auto" : "none",
+                            }}
+                            onClick={(event) => {
+                              if (!treeCompactView || !isActiveTree) return;
+                              if (event.target.closest("button, input, select, [role='button']")) return;
+                              setExpandedCompactTreeNodeId((current) => current === node.id ? "" : node.id);
                             }}
                           >
                             <div
@@ -3539,13 +3661,13 @@ export default function MyTeamOptimize() {
                               <span className="inline-flex items-center gap-1.5 text-xs font-black" style={{ color: PALETTE.gold }}>
                                 <GripVertical size={13} /> GW{node.gw}
                               </span>
-                              {!treeCompactView && (
+                              {!useCompactNode && (
                                 <span className="text-[10px] font-semibold" style={{ color: PALETTE.muted }}>
                                   {Number(node.probability || 0).toFixed(1)}% subtree
                                 </span>
                               )}
                             </div>
-                            {treeCompactView ? (
+                            {useCompactNode ? (
                               <div className="space-y-2 px-3 py-2.5">
                                 <div className="truncate text-sm font-bold" style={{ color: PALETTE.text }} title={node.label}>
                                   {node.label}
@@ -3568,6 +3690,9 @@ export default function MyTeamOptimize() {
                                     }[node.chip] || node.chip}
                                   </div>
                                 )}
+                                <div className="text-[9px] font-semibold uppercase tracking-wide" style={{ color: PALETTE.gold }}>
+                                  Click to expand
+                                </div>
                               </div>
                             ) : (
                             <div className="p-3">
@@ -3696,16 +3821,6 @@ export default function MyTeamOptimize() {
                       </div>
                     </div>
                     </div>
-                    <button
-                      type="button"
-                      onClick={addNewTree}
-                      className="gold-ring absolute right-6 top-1/2 z-40 flex h-16 w-16 -translate-y-1/2 items-center justify-center rounded-full border-2 bg-white text-4xl font-light shadow-xl transition hover:shadow-2xl"
-                      style={{ borderColor: PALETTE.gold, color: PALETTE.gold }}
-                      aria-label="Add a new decision tree"
-                      title="Add a new decision tree"
-                    >
-                      +
-                    </button>
                   </div>
                   {!treeConfigValid && (
                     <p className="mt-2 text-xs text-rose-600">
