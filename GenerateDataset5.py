@@ -2521,7 +2521,7 @@ def main_Transform():
 
             player_df["Rolling_adjusted_XA_per90"] = (
                 player_df["Adjusted_XA"]
-                    .clip(upper=1.7)
+                    .clip(upper=1.4)
                     .rolling(window=30, min_periods=1)
                     .sum()
                 /
@@ -2532,7 +2532,7 @@ def main_Transform():
             ) * 90
             player_df["Rolling_adjusted_XG_per90"] = (
                 player_df["Adjusted_XG"]
-                    .clip(upper=1.7)
+                    .clip(upper=1.5)
                     .rolling(window=30, min_periods=1)
                     .sum()
                 /
@@ -2544,7 +2544,7 @@ def main_Transform():
             
             player_df["Rolling_adjusted_XG_per90_short"] = (
                 player_df["Adjusted_XG"]
-                    .clip(upper=1.7)
+                    .clip(upper=1.5)
                     .rolling(window=10, min_periods=1)
                     .sum()
                 /
@@ -2556,7 +2556,7 @@ def main_Transform():
             
             player_df["Rolling_adjusted_XA_per90_short"] = (
                 player_df["Adjusted_XA"]
-                    .clip(upper=1.7)
+                    .clip(upper=1.4)
                     .rolling(window=10, min_periods=1)
                     .sum()
                 /
@@ -2571,7 +2571,7 @@ def main_Transform():
                
             player_df["Rolling_adjusted_Threat_per90"] = (
                 player_df["Adjusted_Threat"]
-                    .clip(upper=170)
+                    .clip(upper=150)
                     .rolling(window=30, min_periods=1)
                     .sum()
                 /
@@ -2582,7 +2582,7 @@ def main_Transform():
             ) * 90     
             player_df["Rolling_adjusted_creativity_per90"] = (
                 player_df["Adjusted_Creativity"]
-                    .clip(upper=170)
+                    .clip(upper=150)
                     .rolling(window=30, min_periods=1)
                     .sum()
                 /
@@ -2594,7 +2594,7 @@ def main_Transform():
             
             player_df["Rolling_adjusted_Threat_per90_Short"] = (
                 player_df["Adjusted_Threat"]
-                    .clip(upper=170)
+                    .clip(upper=150)
                     .rolling(window=10, min_periods=1)
                     .sum()
                 /
@@ -2605,7 +2605,7 @@ def main_Transform():
             ) * 90     
             player_df["Rolling_adjusted_creativity_per90_Short"] = (
                 player_df["Adjusted_Creativity"]
-                    .clip(upper=170)
+                    .clip(upper=150)
                     .rolling(window=10, min_periods=1)
                     .sum()
                 /
@@ -2614,9 +2614,75 @@ def main_Transform():
                     .rolling(window=10, min_periods=1)
                     .sum()
             ) * 90   
+
+            # Median-based alternatives to the existing weighted per-90
+            # averages. Calculate each match on a per-90 basis first, then
+            # take the rolling median so a single extreme match has less
+            # influence on the resulting statistics.
+            adjusted_xg_per90 = (
+                player_df["Adjusted_XG"].clip(upper=1.5)
+                / player_df["minutes"].clip(lower=10)
+            ) * 90
+            adjusted_xa_per90 = (
+                player_df["Adjusted_XA"].clip(upper=1.4)
+                / player_df["minutes"].clip(lower=10)
+            ) * 90
+            adjusted_threat_per90 = (
+                player_df["Adjusted_Threat"].clip(upper=150)
+                / player_df["minutes"].clip(lower=10)
+            ) * 90
+            adjusted_creativity_per90 = (
+                player_df["Adjusted_Creativity"].clip(upper=150)
+                / player_df["minutes"].clip(lower=10)
+            ) * 90
+
+            rolling_adjusted_xg_per90_median = (
+                adjusted_xg_per90.rolling(window=30, min_periods=1).median()
+            )
+            rolling_adjusted_xg_per90_short_median = (
+                adjusted_xg_per90.rolling(window=10, min_periods=1).median()
+            )
+            rolling_adjusted_xa_per90_median = (
+                adjusted_xa_per90.rolling(window=30, min_periods=1).median()
+            )
+            rolling_adjusted_xa_per90_short_median = (
+                adjusted_xa_per90.rolling(window=10, min_periods=1).median()
+            )
+            rolling_adjusted_threat_per90_median = (
+                adjusted_threat_per90.rolling(window=30, min_periods=1).median()
+            )
+            rolling_adjusted_threat_per90_short_median = (
+                adjusted_threat_per90.rolling(window=10, min_periods=1).median()
+            )
+            rolling_adjusted_creativity_per90_median = (
+                adjusted_creativity_per90.rolling(window=30, min_periods=1).median()
+            )
+            rolling_adjusted_creativity_per90_short_median = (
+                adjusted_creativity_per90.rolling(window=10, min_periods=1).median()
+            )
             
             player_df["Goal_Statistics"]=player_df["Rolling_adjusted_XG_per90_both"]*0.65+0.0035*(player_df["Rolling_adjusted_Threat_per90"]*0.7+0.3*player_df["Rolling_adjusted_Threat_per90_Short"])
             player_df["Assist_Statistics"]=player_df["Rolling_adjusted_XA_per90_both"]*0.8+0.002*(player_df["Rolling_adjusted_creativity_per90"]*0.7+0.3*player_df["Rolling_adjusted_creativity_per90_Short"])
+            player_df["Goal_Statistics2"] = (
+                0.65 * (
+                    0.7 * rolling_adjusted_xg_per90_median
+                    + 0.3 * rolling_adjusted_xg_per90_short_median
+                )
+                + 0.0035 * (
+                    0.7 * rolling_adjusted_threat_per90_median
+                    + 0.3 * rolling_adjusted_threat_per90_short_median
+                )
+            )
+            player_df["Assist_Statistics2"] = (
+                0.8 * (
+                    0.7 * rolling_adjusted_xa_per90_median
+                    + 0.3 * rolling_adjusted_xa_per90_short_median
+                )
+                + 0.002 * (
+                    0.7 * rolling_adjusted_creativity_per90_median
+                    + 0.3 * rolling_adjusted_creativity_per90_short_median
+                )
+            )
                
             
             
@@ -2721,11 +2787,11 @@ def main_Transform():
 
             player_df["Share_of_XG"] = (
                     ((player_df["expected_goals"] / player_df["minutes"].clip(lower=10) * 90)/(player_df["Team_XG"]))
-                    .clip(upper=0.5).rolling(window=window_size, min_periods=1).mean())
+                    .clip(upper=0.6).rolling(window=window_size, min_periods=1).mean())
             
             player_df["Share_of_XA"] = (
                     ((player_df["expected_assists"] / player_df["minutes"].clip(lower=10) * 90)/(player_df["Team_XA"]))
-                    .clip(upper=0.5).rolling(window=window_size, min_periods=1).mean())
+                    .clip(upper=0.6).rolling(window=window_size, min_periods=1).mean())
             
             player_df["Share_of_XG_Measure"] = ((player_df["expected_goals"] / player_df["minutes"].clip(lower=10) * 90)/(player_df["Team_XG"])).clip(upper=0.5)
             player_df["Share_of_XA_Measure"] = ((player_df["expected_assists"] / player_df["minutes"].clip(lower=10) * 90)/(player_df["Team_XA"])).clip(upper=0.5)
@@ -2740,6 +2806,13 @@ def main_Transform():
                     ((player_df["expected_assists"] / player_df["minutes"].clip(lower=10) * 90)/(player_df["Team_XA"]))
                     .clip(upper=0.5).rolling(window=short_size, min_periods=1).mean())
             
+            player_df["Share_of_XG_overall"] = (
+                    ((player_df["expected_goals"] / player_df["minutes"].clip(lower=10) * 90)/(player_df["Team_XG"]))
+                    .clip(upper=0.6).rolling(window=window_size, min_periods=1).median())
+            
+            player_df["Share_of_XA_overall"] =  (
+                    ((player_df["expected_assists"] / player_df["minutes"].clip(lower=10) * 90)/(player_df["Team_XA"]))
+                    .clip(upper=0.6).rolling(window=window_size, min_periods=1).median())
             
             player_df['defcon_adjusted'] = np.where(player_df['position'].eq('DEF'),player_df['defcon'].clip(upper=14),player_df['defcon'].clip(upper=16))
             player_df["defcon_adjusted_min"] = (player_df["defcon_adjusted"] / player_df["minutes"].clip(lower=10)) * 90

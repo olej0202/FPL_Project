@@ -169,8 +169,10 @@ def build_understat_position_indices(
 
     This follows the supplied model: summed player per-90 values per position,
     fixed position-independent caps for npxG/90, xA/90, non-penalty goals/90,
-    and assists/90, a previous-25-match mean, a logistic time-weighted mean,
-    and a 50/50 blend of the histories.
+    and assists/90. The historical mean profile is the existing 50/50 blend
+    of the previous-25-match mean and the logistic time-weighted mean. The
+    final profile blends that mean profile 60/40 with the previous-25-match
+    median.
     The current match is excluded from every historical measure.
 
     ``entity_col='player_team'`` creates attacking position profiles.
@@ -235,9 +237,15 @@ def build_understat_position_indices(
         grouped[f"{col}_rolling25"] = grouped.groupby(history_group)[
             f"{col}_clipped"
         ].transform(lambda s: s.shift(1).rolling(window=25, min_periods=1).mean())
+        grouped[f"{col}_rolling25_median"] = grouped.groupby(history_group)[
+            f"{col}_clipped"
+        ].transform(lambda s: s.shift(1).rolling(window=25, min_periods=1).median())
 
     grouped["N_players_rolling25"] = grouped.groupby(history_group)["N_players"].transform(
         lambda s: s.shift(1).rolling(window=25, min_periods=1).mean()
+    )
+    grouped["N_players_rolling25_median"] = grouped.groupby(history_group)["N_players"].transform(
+        lambda s: s.shift(1).rolling(window=25, min_periods=1).median()
     )
 
     def logistic_history(group: pd.DataFrame, value_col: str) -> np.ndarray:
@@ -267,9 +275,13 @@ def build_understat_position_indices(
         grouped.loc[group.index, "N_players_timeweighted"] = logistic_history(group, "N_players")
 
     for col in UNDERSTAT_POSITION_METRICS + ["N_players"]:
-        grouped[f"{col}_avg"] = (
+        mean_profile = (
             0.5 * grouped[f"{col}_timeweighted"]
             + 0.5 * grouped[f"{col}_rolling25"]
+        )
+        grouped[f"{col}_avg"] = (
+            0.6 * mean_profile
+            + 0.4 * grouped[f"{col}_rolling25_median"]
         )
 
     grouped["Understat_Goal_Index"] = (

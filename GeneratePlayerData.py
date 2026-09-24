@@ -1574,10 +1574,10 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
         manual_risk = df["name"].map(Manual_Player_Risk)
         df.loc[manual_risk.notna(), "player_risiko"] = manual_risk[manual_risk.notna()]
 
-    df["Goal_Index"] = df["Understat_XG"] * df["player_risiko"] + (1 - df["player_risiko"]) * (df["Goal_Statistics"]*0.4+df["Rolling_adjusted_XG"]*0.2+0.4*df['Goal_Statistics_Index_dec'])
-    df["Assist_Index"] = df["Understat_XA"] * df["player_risiko"] + (1 - df["player_risiko"]) * (df["Assist_Statistics"]*0.4+df["Rolling_adjusted_XA"]*0.2+0.4*df['Assist_Statistics_Index_dec'])
-    df["Goal_Index_Share"] = df["Understat_Goal_Index_Share"] * df["player_risiko"] + (1 - df["player_risiko"]) * (df["xg_share_index_dec"]*0.5+df["Share_of_XG"]*0.35+0.15*df['Share_of_XG_Short']+0*df['Rolling_adjusted_Threat_per90_share'])
-    df["Assist_Index_Share"] = df["Understat_Assist_Index_Share"] * df["player_risiko"] + (1 - df["player_risiko"]) * (df["xa_share_index_dec"]*0.5+df["Share_of_XA"]*0.35+0.15*df['Share_of_XA_Short']+0*df['Rolling_adjusted_creativity_per90_share'])
+    df["Goal_Index"] = df["Understat_XG"] * df["player_risiko"] + (1 - df["player_risiko"]) * (df["Goal_Statistics"]*0.3+df["Goal_Statistics2"]*0.3+df["Rolling_adjusted_XG"]*0.1+0.3*df['Goal_Statistics_Index_dec'])
+    df["Assist_Index"] = df["Understat_XA"] * df["player_risiko"] + (1 - df["player_risiko"]) * (df["Assist_Statistics"]*0.3+df["Assist_Statistics2"]*0.3+df["Rolling_adjusted_XA"]*0.1+0.3*df['Assist_Statistics_Index_dec'])
+    df["Goal_Index_Share"] = df["Understat_Goal_Index_Share"] * df["player_risiko"] + (1 - df["player_risiko"]) * (df["xg_share_index_dec"]*0.4+df["Share_of_XG_overall"]*0.25+df["Share_of_XG"]*0.25+0.1*df['Share_of_XG_Short']+0*df['Rolling_adjusted_Threat_per90_share'])
+    df["Assist_Index_Share"] = df["Understat_Assist_Index_Share"] * df["player_risiko"] + (1 - df["player_risiko"]) * (df["xa_share_index_dec"]*0.4+df["Share_of_XA_overall"]*0.25+df["Share_of_XA"]*0.25+0.1*df['Share_of_XA_Short']+0*df['Rolling_adjusted_creativity_per90_share'])
     df["Defcon_Index"] = (
         df["defcon_avg"] * 0.333
         + 0.333 * (
