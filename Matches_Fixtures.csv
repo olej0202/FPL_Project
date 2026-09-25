@@ -39,16 +39,16 @@ Fix_ID,GW,kickoff_time,started,finished,team_h_score,team_a_score,HomeTeam,AwayT
 2645232,4,2026-09-13T15:30:00Z,True,True,0.0,1.0,Man Utd,Man City,1,43,MUN,MCI
 2645233,4,2026-09-12T19:00:00Z,True,True,0.0,2.0,Sunderland,Arsenal,56,3,SUN,ARS
 2645234,4,2026-09-12T16:30:00Z,True,True,0.0,0.0,Spurs,Everton,6,11,TOT,EVE
-2645235,5,2026-09-20T13:00:00Z,True,False,0.0,1.0,Bournemouth,Liverpool,91,14,BOU,LIV
-2645236,5,2026-09-18T19:00:00Z,True,False,3.0,0.0,Brentford,Chelsea,94,8,BRE,CHE
-2645237,5,2026-09-19T14:00:00Z,True,False,3.0,0.0,Brighton,Arsenal,36,3,BHA,ARS
-2645238,5,2026-09-19T14:00:00Z,True,False,1.0,0.0,Everton,Ipswich Town,11,40,EVE,IPS
-2645239,5,2026-09-20T15:30:00Z,True,False,1.0,1.0,Fulham,Man Utd,54,1,FUL,MUN
-2645240,5,2026-09-20T13:00:00Z,True,False,0.0,0.0,Leeds,Crystal Palace,2,31,LEE,CRY
-2645241,5,2026-09-20T13:00:00Z,True,False,5.0,3.0,Man City,Sunderland,43,56,MCI,SUN
-2645242,5,2026-09-19T14:00:00Z,True,False,2.0,1.0,Newcastle,Hull City,4,88,NEW,HUL
-2645243,5,2026-09-19T16:30:00Z,True,False,0.0,1.0,Nott'm Forest,Coventry City,17,9,NFO,COV
-2645244,5,2026-09-19T11:30:00Z,True,False,2.0,3.0,Spurs,Aston Villa,6,7,TOT,AVL
+2645235,5,2026-09-20T13:00:00Z,True,True,0.0,1.0,Bournemouth,Liverpool,91,14,BOU,LIV
+2645236,5,2026-09-18T19:00:00Z,True,True,3.0,0.0,Brentford,Chelsea,94,8,BRE,CHE
+2645237,5,2026-09-19T14:00:00Z,True,True,3.0,0.0,Brighton,Arsenal,36,3,BHA,ARS
+2645238,5,2026-09-19T14:00:00Z,True,True,1.0,0.0,Everton,Ipswich Town,11,40,EVE,IPS
+2645239,5,2026-09-20T15:30:00Z,True,True,1.0,1.0,Fulham,Man Utd,54,1,FUL,MUN
+2645240,5,2026-09-20T13:00:00Z,True,True,0.0,0.0,Leeds,Crystal Palace,2,31,LEE,CRY
+2645241,5,2026-09-20T13:00:00Z,True,True,5.0,3.0,Man City,Sunderland,43,56,MCI,SUN
+2645242,5,2026-09-19T14:00:00Z,True,True,2.0,1.0,Newcastle,Hull City,4,88,NEW,HUL
+2645243,5,2026-09-19T16:30:00Z,True,True,0.0,1.0,Nott'm Forest,Coventry City,17,9,NFO,COV
+2645244,5,2026-09-19T11:30:00Z,True,True,2.0,3.0,Spurs,Aston Villa,6,7,TOT,AVL
 2645245,6,2026-10-10T11:30:00Z,False,False,,,Arsenal,Leeds,3,2,ARS,LEE
 2645246,6,2026-10-10T14:00:00Z,False,False,,,Aston Villa,Brentford,7,94,AVL,BRE
 2645247,6,2026-10-10T14:00:00Z,False,False,,,Chelsea,Bournemouth,8,91,CHE,BOU
@@ -90,35 +90,35 @@ Fix_ID,GW,kickoff_time,started,finished,team_h_score,team_a_score,HomeTeam,AwayT
 2645283,9,2026-11-02T20:00:00Z,False,False,,,Newcastle,Everton,4,11,NEW,EVE
 2645284,9,2026-10-31T17:30:00Z,False,False,,,Spurs,Crystal Palace,6,31,TOT,CRY
 2645285,10,2026-11-07T15:00:00Z,False,False,,,Arsenal,Hull City,3,88,ARS,HUL
-2645286,10,2026-11-07T15:00:00Z,False,False,,,Brighton,Brentford,36,94,BHA,BRE
-2645287,10,2026-11-07T15:00:00Z,False,False,,,Crystal Palace,Liverpool,31,14,CRY,LIV
-2645288,10,2026-11-07T15:00:00Z,False,False,,,Everton,Coventry City,11,9,EVE,COV
+2645286,10,2026-11-08T14:00:00Z,False,False,,,Brighton,Brentford,36,94,BHA,BRE
+2645287,10,2026-11-08T14:00:00Z,False,False,,,Crystal Palace,Liverpool,31,14,CRY,LIV
+2645288,10,2026-11-06T20:00:00Z,False,False,,,Everton,Coventry City,11,9,EVE,COV
 2645289,10,2026-11-07T15:00:00Z,False,False,,,Fulham,Newcastle,54,4,FUL,NEW
-2645290,10,2026-11-07T15:00:00Z,False,False,,,Ipswich Town,Bournemouth,40,91,IPS,BOU
-2645291,10,2026-11-07T15:00:00Z,False,False,,,Leeds,Spurs,2,6,LEE,TOT
-2645292,10,2026-11-07T15:00:00Z,False,False,,,Man Utd,Aston Villa,1,7,MUN,AVL
-2645293,10,2026-11-07T15:00:00Z,False,False,,,Nott'm Forest,Man City,17,43,NFO,MCI
-2645294,10,2026-11-07T15:00:00Z,False,False,,,Sunderland,Chelsea,56,8,SUN,CHE
+2645290,10,2026-11-08T14:00:00Z,False,False,,,Ipswich Town,Bournemouth,40,91,IPS,BOU
+2645291,10,2026-11-07T12:30:00Z,False,False,,,Leeds,Spurs,2,6,LEE,TOT
+2645292,10,2026-11-08T16:30:00Z,False,False,,,Man Utd,Aston Villa,1,7,MUN,AVL
+2645293,10,2026-11-07T17:30:00Z,False,False,,,Nott'm Forest,Man City,17,43,NFO,MCI
+2645294,10,2026-11-08T14:00:00Z,False,False,,,Sunderland,Chelsea,56,8,SUN,CHE
 2645295,11,2026-11-21T15:00:00Z,False,False,,,Bournemouth,Nott'm Forest,91,17,BOU,NFO
 2645296,11,2026-11-21T15:00:00Z,False,False,,,Aston Villa,Sunderland,7,56,AVL,SUN
-2645297,11,2026-11-21T15:00:00Z,False,False,,,Brentford,Everton,94,11,BRE,EVE
+2645297,11,2026-11-23T20:00:00Z,False,False,,,Brentford,Everton,94,11,BRE,EVE
 2645298,11,2026-11-21T15:00:00Z,False,False,,,Chelsea,Leeds,8,2,CHE,LEE
 2645299,11,2026-11-21T15:00:00Z,False,False,,,Coventry City,Crystal Palace,9,31,COV,CRY
-2645300,11,2026-11-21T15:00:00Z,False,False,,,Hull City,Brighton,88,36,HUL,BHA
-2645301,11,2026-11-21T15:00:00Z,False,False,,,Liverpool,Man Utd,14,1,LIV,MUN
-2645302,11,2026-11-21T15:00:00Z,False,False,,,Man City,Fulham,43,54,MCI,FUL
-2645303,11,2026-11-21T15:00:00Z,False,False,,,Newcastle,Arsenal,4,3,NEW,ARS
+2645300,11,2026-11-22T14:00:00Z,False,False,,,Hull City,Brighton,88,36,HUL,BHA
+2645301,11,2026-11-22T16:30:00Z,False,False,,,Liverpool,Man Utd,14,1,LIV,MUN
+2645302,11,2026-11-21T12:30:00Z,False,False,,,Man City,Fulham,43,54,MCI,FUL
+2645303,11,2026-11-21T17:30:00Z,False,False,,,Newcastle,Arsenal,4,3,NEW,ARS
 2645304,11,2026-11-21T15:00:00Z,False,False,,,Spurs,Ipswich Town,6,40,TOT,IPS
-2645305,12,2026-11-28T15:00:00Z,False,False,,,Arsenal,Man City,3,43,ARS,MCI
-2645306,12,2026-11-28T15:00:00Z,False,False,,,Brighton,Newcastle,36,4,BHA,NEW
-2645307,12,2026-11-28T15:00:00Z,False,False,,,Crystal Palace,Hull City,31,88,CRY,HUL
-2645308,12,2026-11-28T15:00:00Z,False,False,,,Everton,Liverpool,11,14,EVE,LIV
-2645309,12,2026-11-28T15:00:00Z,False,False,,,Fulham,Bournemouth,54,91,FUL,BOU
-2645310,12,2026-11-28T15:00:00Z,False,False,,,Ipswich Town,Aston Villa,40,7,IPS,AVL
+2645305,12,2026-11-29T16:30:00Z,False,False,,,Arsenal,Man City,3,43,ARS,MCI
+2645306,12,2026-11-29T14:05:00Z,False,False,,,Brighton,Newcastle,36,4,BHA,NEW
+2645307,12,2026-11-29T14:05:00Z,False,False,,,Crystal Palace,Hull City,31,88,CRY,HUL
+2645308,12,2026-11-29T12:00:00Z,False,False,,,Everton,Liverpool,11,14,EVE,LIV
+2645309,12,2026-11-29T14:05:00Z,False,False,,,Fulham,Bournemouth,54,91,FUL,BOU
+2645310,12,2026-11-28T17:30:00Z,False,False,,,Ipswich Town,Aston Villa,40,7,IPS,AVL
 2645311,12,2026-11-28T15:00:00Z,False,False,,,Leeds,Coventry City,2,9,LEE,COV
 2645312,12,2026-11-28T15:00:00Z,False,False,,,Man Utd,Brentford,1,94,MUN,BRE
-2645313,12,2026-11-28T15:00:00Z,False,False,,,Nott'm Forest,Chelsea,17,8,NFO,CHE
-2645314,12,2026-11-28T15:00:00Z,False,False,,,Sunderland,Spurs,56,6,SUN,TOT
+2645313,12,2026-11-27T20:00:00Z,False,False,,,Nott'm Forest,Chelsea,17,8,NFO,CHE
+2645314,12,2026-11-29T14:05:00Z,False,False,,,Sunderland,Spurs,56,6,SUN,TOT
 2645315,13,2026-12-02T20:00:00Z,False,False,,,Bournemouth,Brighton,91,36,BOU,BHA
 2645316,13,2026-12-02T20:00:00Z,False,False,,,Aston Villa,Everton,7,11,AVL,EVE
 2645317,13,2026-12-02T20:00:00Z,False,False,,,Brentford,Arsenal,94,3,BRE,ARS
