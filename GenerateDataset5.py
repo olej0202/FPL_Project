@@ -2742,13 +2742,25 @@ def main_Transform():
             player_df.loc[
                 player_df["minutes"] > 60,
                 "Adjusted_BPS"
-            ] -= 5
+            ] -= 6
             
             player_df["Adjusted_BPS"] = player_df["Adjusted_BPS"].clip(lower=-2)
 
             player_df["Rolling_adjusted_BPS"]=(player_df['Adjusted_BPS'].clip(upper=18).rolling(window=15, min_periods=1).sum()/player_df["minutes"].clip(lower=15).rolling(window=15, min_periods=1).sum()) * 90    
             player_df["rolling_bps_historic"] = player_df['Adjusted_BPS'].clip(upper=18).rolling(window=30, min_periods=1).mean()
             player_df["Rolling_adjusted_BPS_2"]=(player_df['Adjusted_BPS'].clip(upper=18).rolling(window=30, min_periods=1).sum()/player_df["minutes"].clip(lower=15).rolling(window=30, min_periods=1).sum()) * 90    
+            player_df["Rolling_adjusted_BPS_Median"] = (
+                    (player_df["Adjusted_BPS"].clip(upper=18) /
+                    player_df["minutes"].clip(lower=15) * 90)
+                    .rolling(window=15, min_periods=1)
+                    .median()
+                )*0.3+0.7*(
+                    (player_df["Adjusted_BPS"].clip(upper=18) /
+                    player_df["minutes"].clip(lower=15) * 90)
+                    .rolling(window=30, min_periods=1)
+                    .median()
+                )
+            
             #player_df["Rolling_adjusted_BPS"]=adjust_measure(player_df, 'bps')
             player_df["Adjusted_Fantasy"] = np.where(
                     player_df["was_home"] == 1,  # Condition: if was_home is 1
@@ -2823,6 +2835,7 @@ def main_Transform():
             player_df['defcon_hit_rate_T2'] = player_df['defcon_adjusted_min'].ge(12).astype(int)
             player_df['defcon_hit_rate_T3'] = player_df['defcon_adjusted_min'].ge(14).astype(int)
             player_df['defcon_avg'] = player_df['defcon_adjusted'].where(player_df['defcon'] > 0).rolling(30, min_periods=1).mean()
+            player_df['defcon_avg_median'] = player_df['defcon_adjusted'].where(player_df['defcon'] > 0).rolling(30, min_periods=1).median()
             player_df['defcon_avg_min'] = player_df['defcon_adjusted_min'].where(player_df['defcon'] > 0).rolling(30, min_periods=1).mean()
             player_df['defcon_avg_hit_rate'] = player_df['defcon_hit_rate'].where(player_df['defcon'] > 0).rolling(30, min_periods=1).mean()
             player_df['defcon_avg_hit_rate_T1'] = player_df['defcon_hit_rate_T1'].where(player_df['defcon'] > 0).rolling(30, min_periods=1).mean()*0.5+0.5*player_df['defcon_hit_rate_T1'].where(player_df['defcon'] > 0).rolling(10, min_periods=1).mean()
