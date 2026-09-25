@@ -242,9 +242,19 @@ def Generate_season_data(current_player_path, current_season_path):
 
     df["Full_Name"] = df["Full_Name"].apply(lambda n: name_map.get(n, n))
     merged = df.merge(players_current, left_on='Full_Name',right_on='name', how='left')
-    columns=["expected_goals_x","total_points","position", "Full_Name", "web_name","round","goals_scored","minutes_x","assists","clean_sheets","goals_conceded","yellow_cards","saves","bonus","defensive_contribution_x","expected_assists","expected_goal_involvements","expected_goals_conceded","value","team_name"]
+    # Use the per-match BPS from the season history. If current_players ever also
+    # gains a bps column, pandas suffixes the historical value as bps_x.
+    if "bps_x" in merged.columns:
+        merged["match_bps"] = pd.to_numeric(merged["bps_x"], errors="coerce")
+    elif "bps" in merged.columns:
+        merged["match_bps"] = pd.to_numeric(merged["bps"], errors="coerce")
+    else:
+        merged["match_bps"] = 0.0
+
+    columns=["expected_goals_x","total_points","position", "Full_Name", "web_name","round","goals_scored","minutes_x","assists","clean_sheets","goals_conceded","yellow_cards","saves","bonus","match_bps","defensive_contribution_x","expected_assists","expected_goal_involvements","expected_goals_conceded","value","team_name"]
     merged=merged[columns]
     merged = merged.rename(columns=lambda c: c[:-2] if c.endswith("_x") else c)
+    merged = merged.rename(columns={"match_bps": "bps"})
     merged=merged[merged["minutes"]>0]
     merged["GW"]=merged["round"].astype(int)
     merged["GOALS-XG"]=merged["goals_scored"]-merged["expected_goals"]

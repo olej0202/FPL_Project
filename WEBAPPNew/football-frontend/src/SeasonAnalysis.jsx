@@ -14,11 +14,6 @@ export default function SeasonAnalytics() {
   return (
     <div className="space-y-4 px-2 py-2 text-slate-800 sm:px-3">
       <div className="flex flex-wrap justify-center gap-2 border-b border-slate-200 pb-3">
-        <NavLink to="Season_Matches" className={tabClass}>
-          <CalendarRange size={16} />
-          Matches
-        </NavLink>
-
         <NavLink to="Season_Players" end className={tabClass}>
           <User size={16} />
           Players
@@ -27,6 +22,11 @@ export default function SeasonAnalytics() {
         <NavLink to="Season_Teams" className={tabClass}>
           <Users size={16} />
           Teams
+        </NavLink>
+
+        <NavLink to="Season_Matches" className={tabClass}>
+          <CalendarRange size={16} />
+          Matches
         </NavLink>
       </div>
 

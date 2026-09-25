@@ -23,6 +23,7 @@ import { API_BASE_URL } from "./config/apiBase";
 
 const MEASURE_OPTIONS = [
   { key: "total_points", label: "Total Points" },
+  { key: "bps", label: "BPS" },
   { key: "minutes", label: "Minutes" },
   { key: "expected_goals", label: "Expected Goals" },
   { key: "goals_scored", label: "Goals Scored" },

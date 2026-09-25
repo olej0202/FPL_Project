@@ -993,10 +993,12 @@ def get_data():
     return df.to_dict(orient="records")
 
 @app.get("/Season_Analysis")
-def get_data():
+def get_season_analysis():
     df = load_and_transform("Season_Analysis")
-    
-    return df.to_dict(orient="records")
+    if "bps" not in df.columns:
+        df["bps"] = 0.0
+    df["bps"] = pd.to_numeric(df["bps"], errors="coerce").fillna(0.0)
+    return _json_safe_records(df)
 
 @app.get("/fixtures_config")
 def get_fixtures_config():

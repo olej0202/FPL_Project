@@ -1241,9 +1241,11 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
                 errors="coerce",
             ).iloc[0]
             if position == "DEF" and pd.notna(current_defcon_avg):
-                player_row["defcon_avg"] = min(float(current_defcon_avg), 10.0)
+                player_row["defcon_avg"] = min(float(current_defcon_avg), 10.5)
+                player_row["defcon_avg_median"] = min(float(current_defcon_avg), 10.5)
             elif position == "MID" and pd.notna(current_defcon_avg):
-                player_row["defcon_avg"] = min(float(current_defcon_avg), 12.0)
+                player_row["defcon_avg"] = min(float(current_defcon_avg), 12.5)
+                player_row["defcon_avg_median"] = min(float(current_defcon_avg), 12.5)
 
         rolling_cards = 0.1
         if len(history_player) <= 6:

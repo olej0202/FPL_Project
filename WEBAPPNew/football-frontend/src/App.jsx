@@ -669,7 +669,7 @@ export default function App() {
               path="/Season_Analysis"
               element={routeElement("seasonAnalyticsShell", <SeasonAnalytics />, "Season Analysis")}
             >
-              <Route index element={<Navigate to="Season_Matches" replace />} />
+              <Route index element={<Navigate to="Season_Players" replace />} />
               <Route
                 path="Season_Matches"
                 element={routeElement(
