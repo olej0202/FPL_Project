@@ -53,6 +53,7 @@ class TreeNodeInput(BaseModel):
     probability: float
     chip: Literal["none", "wildcard", "freehit", "bench_boost"] = "none"
     scenario_id: str = "inherit"
+    forced_transfers: List[ForcedTransferInput] = Field(default_factory=list)
 
 class ScenarioTreeInput(BaseModel):
     nodes: List[TreeNodeInput]
@@ -69,7 +70,7 @@ class OptimizeRequest(BaseModel):
     freehit_round: int = 40
     n_hits: int = 0
     risk:float=0.0
-    transval:float=0.5
+    transval: float = Field(0.5, ge=0, le=1, description="Normalized transfer penalty; 0.5 means 1.2 points per ordinary transfer before end-of-season weighting.")
     stream: bool = False
 
     # which engine to use
@@ -1667,7 +1668,7 @@ def get_my_team_optimize(
     freehit_round: Optional[int]           = Query(40, title="freehit round"),
     n_hits:Optional[int]                   = Query(0, title="n_hits"),
     risk:Optional[float]                   = Query(0.0, title="risk"),
-    transval:Optional[float]                   = Query(0.5, title="transval"),
+    transval: float                           = Query(0.5, ge=0, le=1, title="Transfer penalty weight (0.5 = 1.2 points)"),
     guest_id: Optional[str]                = Query(None, title="Guest id for analytics"),
     stream: bool = Query(False, title="Stream optimization results"),
 ):

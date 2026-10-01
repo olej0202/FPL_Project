@@ -424,6 +424,21 @@ def optimize_scenario_tree(
     root_id, nodes, children, leaf_probabilities = _validate_tree(scenario_tree)
     max_candidates = max(1, min(4, int(scenario_tree.get("max_prefix_candidates", 2))))
     base_forced = list(base_kwargs.get("forced_transfers") or [])
+    node_forced = {}
+    for index, raw_node in enumerate(scenario_tree["nodes"]):
+        node_id = str(raw_node.get("id") or f"node_{index + 1}").strip()
+        moves = raw_node.get("forced_transfers") or []
+        for move in moves:
+            if int(move.get("gw", 0)) != nodes[node_id].gw:
+                raise ValueError(f"Forced transfers for '{node_id}' must use its gameweek.")
+        node_forced[node_id] = moves
+
+    def forced_for_leaf(leaf_id: str) -> list[dict[str, Any]]:
+        return _merge_moves(base_forced, [
+            move
+            for node in _path_to_root(leaf_id, nodes)
+            for move in node_forced.get(node.node_id, [])
+        ])
     scenario_players_by_id = scenario_players_by_id or {}
     leaf_players_cache: dict[str, Optional[pd.DataFrame]] = {}
 
@@ -445,7 +460,7 @@ def optimize_scenario_tree(
         kwargs = dict(base_kwargs)
         kwargs.update(
             **_chip_kwargs(leaf_id, nodes),
-            forced_transfers=_merge_moves(base_forced, forced_moves),
+            forced_transfers=_merge_moves(forced_for_leaf(leaf_id), forced_moves),
             locked_transfer_counts_by_gw=dict(locked_counts),
             players_override=players_for_leaf(leaf_id),
             n_solutions=1,
@@ -470,7 +485,7 @@ def optimize_scenario_tree(
             kwargs = dict(base_kwargs)
             kwargs.update(
                 **_chip_kwargs(leaf_id, nodes),
-                forced_transfers=_merge_moves(base_forced, forced_moves),
+                forced_transfers=_merge_moves(forced_for_leaf(leaf_id), forced_moves),
                 locked_transfer_counts_by_gw=dict(locked_counts),
                 players_override=players_for_leaf(leaf_id),
                 n_solutions=1,

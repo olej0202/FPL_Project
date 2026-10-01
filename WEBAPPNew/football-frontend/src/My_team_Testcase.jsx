@@ -39,13 +39,16 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import pitch from "./assets/Pitch4.png";
 import { useMyteamData } from "./Contexts/MyTeamContext";
 import { BASE_SCENARIO_ID, useAdjustmentData } from "./Contexts/AdjustmentsContext";
 import { useOptimizationModel } from "./Contexts/OptimizationModelContext";
 import { useStatsData } from "./Contexts/StatsContext";
 import ScenarioSelect, { ScenarioColorDot } from "./components/ScenarioSelect";
 import teamShort from "./utils/team_short";
+import { DEFAULT_TREE_SETTINGS, getNodePath, resolvePlanningPath, plansForPath, migrateNodePlans, completeTreeHorizons, alignTreeResultPaths, extendTreeToResultHorizon } from "./utils/treeWorkspace";
+import useCanvasPan from "./hooks/useCanvasPan";
+import TreeNodePitch from "./components/TreeNodePitch";
+import { accountTransfers, transferPenaltyPoints } from "./utils/transferAccounting";
 
 const PALETTE = {
   red: "#f8fafc",
@@ -101,8 +104,8 @@ const buildNewTreeNodes = (treeKey, firstFutureGw = 6) => {
   return nodes;
 };
 const TREE_NODE_WIDTH = 224;
-const TREE_NODE_HEIGHT = 325;
-const TREE_COMPACT_NODE_HEIGHT = 128;
+const TREE_NODE_HEIGHT = 420;
+const TREE_COMPACT_NODE_HEIGHT = 158;
 const TREE_ZOOM_MIN = 0.4;
 const TREE_ZOOM_MAX = 1.3;
 const TREE_ZOOM_STEP = 0.1;
@@ -157,7 +160,7 @@ const TREE_WORKSPACE_STORAGE_KEY = "fpl_optimizer_tree_workspace_v1";
 const readStoredTreeWorkspace = () => {
   const fallback = {
     enabled: false,
-    controlsOpen: false,
+    treeEditorOpen: true,
     nodes: DEFAULT_TREE_NODES.map((node) => ({ ...node })),
     positions: {},
     zoom: 1,
@@ -171,7 +174,7 @@ const readStoredTreeWorkspace = () => {
     const rootIds = nodes.filter((node) => !node.parentId).map((node) => node.id);
     return {
       enabled: Boolean(parsed.enabled),
-      controlsOpen: Boolean(parsed.controlsOpen || parsed.enabled),
+      treeEditorOpen: parsed.treeEditorOpen !== false,
       nodes,
       positions: parsed.positions && typeof parsed.positions === "object" ? parsed.positions : {},
       zoom: Math.min(
@@ -210,14 +213,16 @@ const buildVerticalTreeLayout = (nodes) => {
   const roots = nodes.filter((node) => !node.parentId);
   const positions = {};
   let leafIndex = 0;
+  let treeOffset = 0;
   const horizontalGap = 290;
-  const verticalGap = 375;
+  const treeGap = 160;
+  const verticalGap = 475;
 
   const place = (node, depth) => {
     const children = childrenByParent.get(node.id) || [];
     let centerX;
     if (!children.length) {
-      centerX = 150 + leafIndex * horizontalGap;
+      centerX = 150 + leafIndex * horizontalGap + treeOffset;
       leafIndex += 1;
     } else {
       const childCenters = children.map((child) => place(child, depth + 1));
@@ -227,10 +232,13 @@ const buildVerticalTreeLayout = (nodes) => {
     return centerX;
   };
 
-  roots.forEach((root) => place(root, 0));
+  roots.forEach((root, index) => {
+    if (index > 0) treeOffset += treeGap;
+    place(root, 0);
+  });
   return {
     positions,
-    width: Math.max(900, 300 + Math.max(1, leafIndex) * horizontalGap),
+    width: Math.max(900, 300 + Math.max(1, leafIndex) * horizontalGap + treeOffset),
     height: Math.max(620, 170 + Math.max(1, ...Object.values(positions).map((position) => position.y)) + 180),
   };
 };
@@ -748,13 +756,7 @@ export default function MyTeamOptimize() {
   const {
     teamId,
     setTeamId,
-    bbRound,
-    setBbRound,
-    wildRound,
-    setWildRound,
     bannedList,
-    freehitROund,
-    setfreehitROund,
     data,
     loading,
     optimizationProgress,
@@ -764,12 +766,6 @@ export default function MyTeamOptimize() {
     has_changed,
     sethas_changed,
     bannedPlayersData,
-    n_hits,
-    setn_hits,
-    risk,
-    setRisk,
-    valtrans,
-    setValtrans,
     savedOptimizations = [],
     saveOptimization,
     deleteOptimization,
@@ -797,26 +793,28 @@ export default function MyTeamOptimize() {
     initialTreeWorkspaceRef.current = readStoredTreeWorkspace();
   }
 
-  const { modelType, setModelType } = useOptimizationModel();
+  const { modelType: initialModelType } = useOptimizationModel();
   const [solverScenarioId, setSolverScenarioId] = useState(BASE_SCENARIO_ID);
   const [optParamsOpen, setOptParamsOpen] = useState(false);
   const [saveName, setSaveName] = useState("");
   const [saveError, setSaveError] = useState("");
   const [saveHint, setSaveHint] = useState("");
   const [activeSavedId, setActiveSavedId] = useState(null);
-  const [showBbInput, setShowBbInput] = useState(!!bbRound);
-  const [showWildInput, setShowWildInput] = useState(!!wildRound);
-  const [showfreehitInput, setshowfreehitInput] = useState(!!freehitROund);
-  const [chipsOpen, setChipsOpen] = useState(false);
   const [loadingPhase, setLoadingPhase] = useState("idle");
   const [progress, setProgress] = useState(0);
-  const [controlsOpen, setControlsOpen] = useState(initialTreeWorkspaceRef.current.controlsOpen);
+  const [treeEditorOpen, setTreeEditorOpen] = useState(initialTreeWorkspaceRef.current.treeEditorOpen);
+  const treeCanvasPan = useCanvasPan();
   const [savedOpen, setSavedOpen] = useState(false);
-  const [chipPanelOpen, setChipPanelOpen] = useState(false);
-  const [selectedGW, setSelectedGW] = useState(null);
-  const [selectedSolution, setSelectedSolution] = useState(1);
-  const [treeMode, setTreeMode] = useState(initialTreeWorkspaceRef.current.enabled);
-  const [treeNodes, setTreeNodes] = useState(initialTreeWorkspaceRef.current.nodes);
+  const treeMode = true;
+  const [treeNodes, setRawTreeNodes] = useState(() => completeTreeHorizons(initialTreeWorkspaceRef.current.nodes.map((node, index) => node.parentId ? node : {
+    ...node,
+    treeName: node.treeName ?? `Tree ${initialTreeWorkspaceRef.current.nodes.slice(0, index + 1).filter((candidate) => !candidate.parentId).length}`,
+    optimization: { ...DEFAULT_TREE_SETTINGS, modelType: initialModelType, ...node.optimization },
+  })));
+  const setTreeNodes = useCallback((updater) => setRawTreeNodes((previous) => {
+    const next = typeof updater === "function" ? updater(previous) : updater;
+    return completeTreeHorizons(next);
+  }), []);
   const [treeNodePositions, setTreeNodePositions] = useState(initialTreeWorkspaceRef.current.positions);
   const [treeZoom, setTreeZoom] = useState(initialTreeWorkspaceRef.current.zoom);
   const [activeTreeRootId, setActiveTreeRootId] = useState(
@@ -827,7 +825,45 @@ export default function MyTeamOptimize() {
   const [selectedTreeBranchId, setSelectedTreeBranchId] = useState("");
   const [treeOptimizationResults, setTreeOptimizationResults] = useState({});
   const [optimizingTreeRootId, setOptimizingTreeRootId] = useState("");
-  const [manualPlan, setManualPlan] = useState({});
+  const [nodePlans, setNodePlans] = useState({});
+  const [selectedTreeNodeId, setSelectedTreeNodeId] = useState("");
+  const activeRoot = treeNodes.find((node) => node.id === activeTreeRootId);
+  const treeName = activeRoot?.treeName ?? `Tree ${treeNodes.filter((node) => !node.parentId).findIndex((node) => node.id === activeTreeRootId) + 1}`;
+  const settings = { ...DEFAULT_TREE_SETTINGS, modelType: initialModelType, ...activeRoot?.optimization };
+  const { modelType, risk, valtrans, n_hits } = settings;
+  const updateTreeSettings = useCallback((patch) => {
+    setTreeNodes((previous) => previous.map((node) => node.id === activeTreeRootId
+      ? { ...node, optimization: { ...DEFAULT_TREE_SETTINGS, modelType: initialModelType, ...node.optimization, ...patch } } : node));
+  }, [activeTreeRootId, initialModelType, setTreeNodes]);
+  const setModelType = useCallback((value) => updateTreeSettings({ modelType: value }), [updateTreeSettings]);
+  const setRisk = (value) => updateTreeSettings({ risk: value });
+  const setValtrans = (value) => updateTreeSettings({ valtrans: value });
+  const planningPath = useMemo(() => resolvePlanningPath(treeNodes, activeTreeRootId, selectedTreeNodeId, selectedTreeBranchId), [treeNodes, activeTreeRootId, selectedTreeNodeId, selectedTreeBranchId]);
+  const activeTreeNode = planningPath.find((node) => node.id === selectedTreeNodeId) || planningPath[0];
+  const selectedGW = activeTreeNode?.gw ?? null;
+  const manualPlan = useMemo(() => plansForPath(nodePlans, planningPath), [nodePlans, planningPath]);
+  const setManualPlan = useCallback((updater) => {
+    setNodePlans((previous) => {
+      const scoped = plansForPath(previous, planningPath);
+      const next = typeof updater === "function" ? updater(scoped) : updater;
+      const result = { ...previous };
+      planningPath.forEach((node) => {
+        if (next[String(node.gw)]) result[node.id] = next[String(node.gw)];
+        else delete result[node.id];
+      });
+      return result;
+    });
+  }, [planningPath]);
+  useEffect(() => {
+    setNodePlans((previous) => {
+      const ids = new Set(treeNodes.map((node) => node.id));
+      return Object.keys(previous).some((id) => !ids.has(id))
+        ? Object.fromEntries(Object.entries(previous).filter(([id]) => ids.has(id))) : previous;
+    });
+  }, [treeNodes]);
+  const bbRound = planningPath.find((node) => node.chip === "bench_boost")?.gw;
+  const wildRound = planningPath.find((node) => node.chip === "wildcard")?.gw;
+  const freehitROund = planningPath.find((node) => node.chip === "freehit")?.gw;
   const [transferOutName, setTransferOutName] = useState("");
   const [transferInKey, setTransferInKey] = useState("");
   const [teamMeasure, setTeamMeasure] = useState("points");
@@ -837,8 +873,8 @@ export default function MyTeamOptimize() {
   const [transferPickerOpen, setTransferPickerOpen] = useState(false);
   const [hiddenModelTransferKeys, setHiddenModelTransferKeys] = useState([]);
   const [planStorageReady, setPlanStorageReady] = useState(false);
-  const [draggedPlayerName, setDraggedPlayerName] = useState("");
   const pitchSectionRef = useRef(null);
+  const transferEditorRef = useRef(null);
   const treeCanvasRef = useRef(null);
   const pendingTreePositionsRef = useRef(null);
   const restoredTreePositionsRef = useRef(
@@ -855,8 +891,8 @@ export default function MyTeamOptimize() {
         TREE_WORKSPACE_STORAGE_KEY,
         JSON.stringify({
           enabled: treeMode,
-          controlsOpen,
-          nodes: treeNodes,
+          treeEditorOpen,
+          nodes: treeNodes.map((node) => node.parentId ? node : { ...node, optimization: { ...DEFAULT_TREE_SETTINGS, modelType: initialModelType, ...node.optimization } }),
           positions: treeNodePositions,
           zoom: treeZoom,
           activeTreeRootId,
@@ -865,7 +901,7 @@ export default function MyTeamOptimize() {
     } catch (error) {
       console.warn("Could not persist optimizer tree workspace:", error);
     }
-  }, [activeTreeRootId, controlsOpen, treeMode, treeNodePositions, treeNodes, treeZoom]);
+  }, [activeTreeRootId, treeEditorOpen, treeMode, treeNodePositions, treeNodes, treeZoom, initialModelType]);
 
   useEffect(() => {
     fetchStatsIfNeeded();
@@ -944,23 +980,25 @@ export default function MyTeamOptimize() {
 
     try {
       if (pendingSavedManualPlanRef.current !== null) {
-        setManualPlan(pendingSavedManualPlanRef.current);
+        setNodePlans(pendingSavedManualPlanRef.current);
         pendingSavedManualPlanRef.current = null;
         setHiddenModelTransferKeys([]);
       } else {
         const raw = window.localStorage.getItem(manualPlanStorageKey);
         const parsed = raw ? JSON.parse(raw) : null;
-        setManualPlan(parsed?.manualPlan && typeof parsed.manualPlan === "object" ? parsed.manualPlan : {});
+        setNodePlans(migrateNodePlans(parsed?.nodePlans || parsed?.manualPlan || {}, treeNodes, activeTreeRootId));
         setHiddenModelTransferKeys(Array.isArray(parsed?.hiddenModelTransferKeys) ? parsed.hiddenModelTransferKeys : []);
       }
     } catch (err) {
       console.warn("Failed loading optimize lab plan:", err);
-      setManualPlan({});
+      setNodePlans({});
       setHiddenModelTransferKeys([]);
     } finally {
       loadedPlanStorageKeyRef.current = manualPlanStorageKey;
       setPlanStorageReady(true);
     }
+    // Hydrate only when the team changes; node edits are persisted by the next effect.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [manualPlanStorageKey]);
 
   useEffect(() => {
@@ -969,12 +1007,12 @@ export default function MyTeamOptimize() {
     try {
       window.localStorage.setItem(
         manualPlanStorageKey,
-        JSON.stringify({ manualPlan, hiddenModelTransferKeys })
+        JSON.stringify({ nodePlans, hiddenModelTransferKeys })
       );
     } catch (err) {
       console.warn("Failed saving optimize lab plan:", err);
     }
-  }, [hiddenModelTransferKeys, manualPlan, manualPlanStorageKey, planStorageReady]);
+  }, [hiddenModelTransferKeys, nodePlans, manualPlanStorageKey, planStorageReady]);
 
   const clampRisk = (v) => Math.max(-1, Math.min(1, v));
   const clampValTrans = (v) => Math.max(0, Math.min(1, v));
@@ -1239,10 +1277,10 @@ export default function MyTeamOptimize() {
   const optimizationDisplayData = useMemo(() => {
     if (!treeMode) return Array.isArray(data) ? data : [];
     if (optimizingTreeRootId === activeTreeRootId && optimizationProgress?.streaming) {
-      return Array.isArray(data) ? data : [];
+      return alignTreeResultPaths(Array.isArray(data) ? data : [], treeNodes);
     }
     const cachedRows = treeOptimizationResults[activeTreeRootId]?.rows;
-    return Array.isArray(cachedRows) ? cachedRows : [];
+    return alignTreeResultPaths(Array.isArray(cachedRows) ? cachedRows : [], treeNodes);
   }, [
     activeTreeRootId,
     data,
@@ -1250,7 +1288,21 @@ export default function MyTeamOptimize() {
     optimizingTreeRootId,
     treeMode,
     treeOptimizationResults,
+    treeNodes,
   ]);
+
+  useEffect(() => {
+    setTreeNodes((previous) => {
+      let next = previous;
+      Object.entries(treeOptimizationResults).forEach(([rootId, result]) => {
+        next = extendTreeToResultHorizon(next, rootId, result.rows);
+      });
+      if (optimizingTreeRootId && data?.some((row) => String(row.tree_path_node_ids || "").split(">").includes(optimizingTreeRootId))) {
+        next = extendTreeToResultHorizon(next, optimizingTreeRootId, data);
+      }
+      return next;
+    });
+  }, [treeOptimizationResults, optimizingTreeRootId, data, setTreeNodes]);
 
   const treeBranches = useMemo(() => {
     if (!Array.isArray(optimizationDisplayData) || optimizationDisplayData.length === 0) return [];
@@ -1323,71 +1375,19 @@ export default function MyTeamOptimize() {
     );
   }, [data, optimizationProgress?.streaming, optimizingTreeRootId, treeOptimizationResults]);
 
-  useEffect(() => {
-    if (!treeBranches.length) {
-      setSelectedTreeBranchId("");
-      return;
-    }
-    setSelectedTreeBranchId((previous) =>
-      treeBranches.some((branch) => branch.id === previous)
-        ? previous
-        : treeBranches[0].id
-    );
-  }, [treeBranches]);
-
   const branchScopedData = useMemo(() => {
     if (!Array.isArray(optimizationDisplayData) || optimizationDisplayData.length === 0) return [];
     if (!treeBranches.length) return optimizationDisplayData;
-    const branchId = treeBranches.some((branch) => branch.id === selectedTreeBranchId)
+    const branchId = treeBranches.some((branch) => branch.id === selectedTreeBranchId && branch.pathNodeIds.includes(activeTreeNode?.id))
       ? selectedTreeBranchId
-      : treeBranches[0].id;
+      : treeBranches.find((branch) => branch.id === planningPath.at(-1)?.id)?.id;
     return optimizationDisplayData.filter((row) => String(row?.tree_branch_id || "") === branchId);
-  }, [optimizationDisplayData, selectedTreeBranchId, treeBranches]);
-
-  const activeTreeBranch = treeBranches.find(
-    (branch) => branch.id === selectedTreeBranchId
-  ) || treeBranches[0] || null;
-
-  const solutionNumbers = useMemo(() => {
-    if (!branchScopedData.length) return [];
-    return Array.from(
-      new Set(
-        branchScopedData
-          .map((row) => Number(row?.solution || 1))
-          .filter((n) => Number.isFinite(n))
-      )
-    ).sort((a, b) => a - b);
-  }, [branchScopedData]);
-
-  useEffect(() => {
-    if (!solutionNumbers.length) {
-      setSelectedSolution(1);
-      return;
-    }
-    setSelectedSolution((prev) =>
-      solutionNumbers.includes(prev) ? prev : solutionNumbers[0]
-    );
-  }, [solutionNumbers]);
-
-  const expectedSolutions = Math.max(
-    1,
-    Number(optimizationProgress?.expectedSolutions) || 3
-  );
-  const solutionSlots = useMemo(
-    () => Array.from({ length: expectedSolutions }, (_, idx) => idx + 1),
-    [expectedSolutions]
-  );
+  }, [optimizationDisplayData, selectedTreeBranchId, treeBranches, activeTreeNode?.id, planningPath]);
 
   const activeSolutionData = useMemo(() => {
-    if (!branchScopedData.length) return [];
-    const fallbackSolution = Number(branchScopedData?.[0]?.solution || 1);
-    const targetSolution = solutionNumbers.includes(selectedSolution)
-      ? selectedSolution
-      : solutionNumbers[0] ?? fallbackSolution;
-    return branchScopedData.filter(
-      (row) => Number(row?.solution || 1) === Number(targetSolution)
-    );
-  }, [branchScopedData, selectedSolution, solutionNumbers]);
+    const solution = Number(branchScopedData[0]?.solution || 1);
+    return branchScopedData.filter((row) => Number(row?.solution || 1) === solution);
+  }, [branchScopedData]);
 
   const loadedTeamPitchRows = useMemo(() => {
     if (!Array.isArray(teamData) || teamData.length === 0) return [];
@@ -1433,22 +1433,10 @@ export default function MyTeamOptimize() {
     ? activeSolutionData
     : loadedTeamPitchRows;
 
-  const availableGWs = useMemo(() => {
-    if (!Array.isArray(pitchSourceData) || pitchSourceData.length === 0) {
-      return [];
-    }
-
-    return Array.from(
-      new Set(
-        pitchSourceData
-          .map((p) => Number(p.GW))
-          .filter((n) => isValidGW(n))
-      )
-    ).sort((a, b) => a - b);
-  }, [pitchSourceData]);
+  const availableGWs = useMemo(() => planningPath.map((node) => Number(node.gw)), [planningPath]);
 
   useEffect(() => {
-    const firstFutureGw = Number(availableGWs[0]);
+    const firstFutureGw = Number(teamData?.[0]?.gw ?? teamData?.[0]?.GW);
     if (!isValidGW(firstFutureGw) || firstFutureGw <= 1) return;
     setTreeNodes((previous) => {
       const anchor = previous.find((node) => node?.isAnchor);
@@ -1468,13 +1456,38 @@ export default function MyTeamOptimize() {
           : { ...node, gw };
       });
     });
-  }, [availableGWs]);
+  }, [teamData, setTreeNodes]);
+
+  const treeEffectiveScenarioById = useMemo(() => {
+    const nodeById = new Map(treeNodes.map((node) => [node.id, node]));
+    const availableIds = new Set(adjustmentScenarios.map((scenario) => scenario.id));
+    const effective = new Map();
+    const resolve = (node) => {
+      if (effective.has(node.id)) return effective.get(node.id);
+      if (!node.parentId) {
+        effective.set(node.id, BASE_SCENARIO_ID);
+        return BASE_SCENARIO_ID;
+      }
+      const selected = String(node.scenarioId || "inherit");
+      const scenarioId = selected !== "inherit" && availableIds.has(selected)
+        ? selected
+        : resolve(nodeById.get(node.parentId));
+      effective.set(node.id, scenarioId);
+      return scenarioId;
+    };
+    treeNodes.forEach(resolve);
+    return effective;
+  }, [adjustmentScenarios, treeNodes]);
+  const pathStatisticalPlayers = useMemo(() => planningPath.flatMap((node) =>
+    buildStatisticalPlayerPayload(getScenarioPlayerData(treeEffectiveScenarioById.get(node.id) || BASE_SCENARIO_ID))
+      .filter((row) => Number(row.GW) === Number(node.gw))
+  ), [planningPath, treeEffectiveScenarioById, getScenarioPlayerData]);
 
   const projectionSourceBuckets = useMemo(() => {
     return modelType === "statistical"
-      ? [statisticalPlayersPayload]
+      ? [pathStatisticalPlayers]
       : [aiProjectionRows];
-  }, [modelType, statisticalPlayersPayload, aiProjectionRows]);
+  }, [modelType, pathStatisticalPlayers, aiProjectionRows]);
 
   const projectionRowLookup = useMemo(() => {
     const map = new Map();
@@ -1563,25 +1576,11 @@ export default function MyTeamOptimize() {
     [availableGWs, getOpponentMeta, getProjectionRowForPlayer]
   );
 
-  useEffect(() => {
-    if (!availableGWs.length) {
-      setSelectedGW(null);
-      return;
-    }
-
-    setSelectedGW((prev) => {
-      if (Number.isFinite(prev) && availableGWs.includes(prev)) return prev;
-      return availableGWs[0];
-    });
-  }, [availableGWs]);
 
   const activeGW =
     Number.isFinite(selectedGW) && availableGWs.includes(selectedGW)
       ? selectedGW
       : availableGWs[0] ?? null;
-  const activeGWIndex = availableGWs.indexOf(activeGW);
-  const canGoPrevGW = activeGWIndex > 0;
-  const canGoNextGW = activeGWIndex >= 0 && activeGWIndex < availableGWs.length - 1;
   const activePlanKey = Number.isFinite(Number(activeGW)) ? String(Number(activeGW)) : "";
   const activeManualPlan = activePlanKey ? manualPlan[activePlanKey] || {} : {};
   const manualTransfers = Array.isArray(activeManualPlan.transfers)
@@ -1589,10 +1588,10 @@ export default function MyTeamOptimize() {
     : [];
   const hasPendingManualTransfers = useMemo(
     () =>
-      Object.values(manualPlan || {})
-        .flatMap((plan) => (Array.isArray(plan?.transfers) ? plan.transfers : []))
+      treeNodes.filter((node) => getNodePath(treeNodes, node.id)[0]?.id === activeTreeRootId)
+        .flatMap((node) => nodePlans[node.id]?.transfers || [])
         .some((transfer) => !transfer?.isLocked),
-    [manualPlan]
+    [treeNodes, nodePlans, activeTreeRootId]
   );
   const treeChildrenByParent = useMemo(() => buildTreeChildrenMap(treeNodes), [treeNodes]);
   const syncedTreeNodes = useMemo(() => syncTreeMasses(treeNodes), [treeNodes]);
@@ -1631,30 +1630,15 @@ export default function MyTeamOptimize() {
     () => syncedActiveTreeNodes.filter((node) => (treeChildrenByParent.get(node.id) || []).length === 0),
     [syncedActiveTreeNodes, treeChildrenByParent]
   );
+  const activeTreePaths = useMemo(() => treeLeafNodes.map((leaf) => ({
+    id: leaf.id,
+    probability: Number(leaf.probability),
+    nodes: getNodePath(treeNodes, leaf.id).filter((node) => !node.isAnchor),
+  })), [treeLeafNodes, treeNodes]);
   const treeLeafProbabilityTotal = treeLeafNodes.reduce(
     (sum, node) => sum + Number(node.probability || 0),
     0
   );
-  const treeEffectiveScenarioById = useMemo(() => {
-    const nodeById = new Map(treeNodes.map((node) => [node.id, node]));
-    const availableIds = new Set(adjustmentScenarios.map((scenario) => scenario.id));
-    const effective = new Map();
-    const resolve = (node) => {
-      if (effective.has(node.id)) return effective.get(node.id);
-      if (!node.parentId) {
-        effective.set(node.id, BASE_SCENARIO_ID);
-        return BASE_SCENARIO_ID;
-      }
-      const selected = String(node.scenarioId || "inherit");
-      const scenarioId = selected !== "inherit" && availableIds.has(selected)
-        ? selected
-        : resolve(nodeById.get(node.parentId));
-      effective.set(node.id, scenarioId);
-      return scenarioId;
-    };
-    treeNodes.forEach(resolve);
-    return effective;
-  }, [adjustmentScenarios, treeNodes]);
   const treeScenarioDiagnosticsByNodeId = useMemo(() => {
     const diagnostics = new Map();
     const baseRows = statisticalScenarioPlayerSets?.[BASE_SCENARIO_ID] || [];
@@ -1707,7 +1691,9 @@ export default function MyTeamOptimize() {
           const parent = node.parentId
             ? treeNodes.find((candidate) => candidate.id === node.parentId)
             : null;
+          const pathChips = getNodePath(treeNodes, node.id).map((ancestor) => ancestor.chip).filter((chip) => chip && chip !== "none");
           return (
+            new Set(pathChips).size === pathChips.length &&
             isValidGW(Number(node.gw)) &&
             Number(node.probability) > 0 &&
             (!node.parentId || (parent && Number(node.gw) === Number(parent.gw) + 1))
@@ -1865,7 +1851,10 @@ export default function MyTeamOptimize() {
         : 6;
     const treeKey = `tree_${Date.now()}_${Math.random().toString(16).slice(2)}`;
     const additions = buildNewTreeNodes(treeKey, firstFutureGw);
+    additions[0].treeName = `Tree ${treeRootIds.length + 1}`;
+    additions[0].optimization = { ...DEFAULT_TREE_SETTINGS };
     setTreeNodes((previous) => [...previous, ...additions]);
+    setSelectedTreeNodeId(additions[1]?.id || "");
     setActiveTreeRootId(additions[0].id);
   };
 
@@ -1883,6 +1872,8 @@ export default function MyTeamOptimize() {
       treeKey,
       isValidGW(firstFutureGw) ? firstFutureGw : Number(availableGWs[0]) || 6
     );
+    replacement[0].treeName = treeName;
+    replacement[0].optimization = { ...settings };
     const removedIds = new Set(
       treeNodes
         .filter((node) => treeRootByNodeId.get(node.id) === resetRootId)
@@ -1948,6 +1939,7 @@ export default function MyTeamOptimize() {
 
   const startTreeNodeDrag = (event, nodeId) => {
     if (event.button !== 0) return;
+    event.stopPropagation();
     const position = treeNodePositions[nodeId] || treeAutoLayout.positions[nodeId] || { x: 0, y: 0 };
     event.currentTarget.setPointerCapture?.(event.pointerId);
     setDraggingTreeNode({
@@ -1986,7 +1978,7 @@ export default function MyTeamOptimize() {
   );
   const treeCanvasHeight = Math.max(
     treeAutoLayout.height,
-    ...Object.values(treeNodePositions).map((position) => Number(position.y) + 300)
+    ...Object.values(treeNodePositions).map((position) => Number(position.y) + TREE_NODE_HEIGHT + 50)
   );
   const treeCompactView = treeZoom < TREE_COMPACT_ZOOM;
   const getRenderedTreeNodeHeight = (nodeId) =>
@@ -2011,6 +2003,8 @@ export default function MyTeamOptimize() {
       (has_changed || hasPendingManualTransfers)
   );
   const manualStatusOverrides = activeManualPlan.statusOverrides || {};
+  const nodeTransferPrefix = useCallback((gw) => `${planningPath.find((node) => Number(node.gw) === Number(gw))?.id || "unknown"}:`, [planningPath]);
+  const nodeTransferPairKey = useCallback((gw, outP, inP) => `${nodeTransferPrefix(gw)}${transferPairKey(gw, outP, inP)}`, [nodeTransferPrefix]);
   const hiddenModelTransferSet = useMemo(
     () => new Set(hiddenModelTransferKeys),
     [hiddenModelTransferKeys]
@@ -2035,11 +2029,11 @@ export default function MyTeamOptimize() {
     if (!Number.isFinite(Number(activeGW))) return [];
     return optimizerTransferGroups.flatMap((grp) =>
       buildTransferPairs(grp)
-        .filter(({ outP, inP }) => hiddenModelTransferSet.has(transferPairKey(grp.GW, outP, inP)))
+        .filter(({ outP, inP }) => hiddenModelTransferSet.has(nodeTransferPairKey(grp.GW, outP, inP)))
         .filter(() => Number(grp.GW) <= Number(activeGW))
         .map((pair) => ({ ...pair, gw: Number(grp.GW) }))
     );
-  }, [activeGW, hiddenModelTransferSet, optimizerTransferGroups]);
+  }, [activeGW, hiddenModelTransferSet, optimizerTransferGroups, nodeTransferPairKey]);
   const appliedManualTransfers = useMemo(() => {
     if (!Number.isFinite(Number(activeGW))) return [];
     return Object.values(manualPlan || {})
@@ -2066,7 +2060,7 @@ export default function MyTeamOptimize() {
         },
       };
     });
-  }, []);
+  }, [setManualPlan]);
 
   const makeManualPlayerFromRow = useCallback((row, gw) => {
     const name = getPlayerCanonicalName(row) || getPlayerDisplayName(row);
@@ -2108,9 +2102,12 @@ export default function MyTeamOptimize() {
       if (!Number.isFinite(targetGw)) return [];
 
       let baseRows = [...getSolutionPlayerRowsForGw(targetGw)];
+      if (!baseRows.length && loadedTeamPitchRows.length) {
+        baseRows = loadedTeamPitchRows.filter((row) => Number(row.GW) === Number(loadedTeamPitchRows[0].GW)).map((row) => ({ ...row, GW: targetGw }));
+      }
       const canceledPairsForGw = optimizerTransferGroups.flatMap((grp) =>
         buildTransferPairs(grp)
-          .filter(({ outP, inP }) => hiddenModelTransferSet.has(transferPairKey(grp.GW, outP, inP)))
+          .filter(({ outP, inP }) => hiddenModelTransferSet.has(nodeTransferPairKey(grp.GW, outP, inP)))
           .filter(() => Number(grp.GW) <= targetGw)
           .map((pair) => ({ ...pair, gw: Number(grp.GW) }))
       );
@@ -2155,41 +2152,31 @@ export default function MyTeamOptimize() {
         })
         .sort((a, b) => Number(a?.gw) - Number(b?.gw));
 
-      const removedNames = new Set(
-        appliedTransfersForGw.map((tr) => normalizeLoosePlayerKey(tr?.outName))
-      );
-      const manualIncomingRows = appliedTransfersForGw.map((tr) =>
-        makeManualPlayerFromRow(tr.inPlayer, targetGw)
-      );
-      const statusOverrides = manualPlan[String(targetGw)]?.statusOverrides || {};
-
-      const retainedBaseRows = baseRows.filter(
-        (row) => !removedNames.has(normalizeLoosePlayerKey(getPlayerCanonicalName(row)))
-      );
-      const existingNames = new Set(
-        retainedBaseRows.map((row) => normalizeLoosePlayerKey(getPlayerCanonicalName(row)))
-      );
-      const uniqueManualIncomingRows = manualIncomingRows.filter((row) => {
-        const key = normalizeLoosePlayerKey(getPlayerCanonicalName(row));
-        if (!key || existingNames.has(key)) return false;
-        existingNames.add(key);
-        return true;
+      appliedTransfersForGw.forEach((transfer) => {
+        const outKey = normalizeLoosePlayerKey(transfer.outName);
+        const inKey = normalizeLoosePlayerKey(transfer.inName);
+        const outgoing = baseRows.find((row) => normalizeLoosePlayerKey(getPlayerCanonicalName(row)) === outKey);
+        baseRows = baseRows.filter((row) => normalizeLoosePlayerKey(getPlayerCanonicalName(row)) !== outKey);
+        if (!baseRows.some((row) => normalizeLoosePlayerKey(getPlayerCanonicalName(row)) === inKey)) {
+          baseRows.push({ ...makeManualPlayerFromRow(transfer.inPlayer, targetGw), status: outgoing?.status || "benched" });
+        }
       });
-
-      return [...retainedBaseRows, ...uniqueManualIncomingRows].map((row) => {
-        const name = getPlayerCanonicalName(row);
-        const override = statusOverrides[name];
+      const statusOverrides = manualPlan[String(targetGw)]?.statusOverrides || {};
+      return baseRows.map((row) => {
+        const override = statusOverrides[getPlayerCanonicalName(row)];
         return override ? { ...row, status: override } : row;
       });
     },
     [
       activeSolutionData.length,
       freehitROund,
+      loadedTeamPitchRows,
       getSolutionPlayerRowsForGw,
       hiddenModelTransferSet,
       makeManualPlayerFromRow,
       manualPlan,
       optimizerTransferGroups,
+      nodeTransferPairKey,
     ]
   );
 
@@ -2214,7 +2201,7 @@ export default function MyTeamOptimize() {
   }, [manualDisplayRowsForActiveGw]);
 
   const transferCandidateRows = useMemo(() => {
-    const rows = modelType === "statistical" ? statisticalPlayersPayload : aiProjectionRows;
+    const rows = modelType === "statistical" ? pathStatisticalPlayers : aiProjectionRows;
     if (!Array.isArray(rows) || !Number.isFinite(Number(activeGW))) return [];
 
     const byName = new Map();
@@ -2260,7 +2247,7 @@ export default function MyTeamOptimize() {
     aiProjectionRows,
     currentSquadNames,
     modelType,
-    statisticalPlayersPayload,
+    pathStatisticalPlayers,
     teamMeasure,
   ]);
 
@@ -2275,7 +2262,7 @@ export default function MyTeamOptimize() {
           position: normalizePosition(row?.position),
           points: getRowPredictedPoints(projection),
           measure: getRowMeasureValue(projection, teamMeasure),
-          price: getRowPrice(projection) ?? getRowPrice(row),
+          price: toFiniteNumber(row?.selling_price_m, getRowPrice(row), getRowPrice(projection)),
           team: projection?.Team ?? projection?.team_name ?? projection?.team ?? row?.Team ?? row?.team_name ?? row?.team ?? "",
         };
       })
@@ -2338,10 +2325,12 @@ export default function MyTeamOptimize() {
         {
           id: `${Date.now()}_${Math.random().toString(16).slice(2)}`,
           gw: Number(activeGW),
+          nodeId: activeTreeNode?.id,
           outName: selectedTransferOut.name,
           outDisplay: selectedTransferOut.display,
           outPosition: selectedTransferOut.position,
           outPrice: selectedTransferOut.price,
+          outPlayer: selectedTransferOut.row,
           inName: candidate.name,
           inDisplay: candidate.display,
           inPosition: candidate.position,
@@ -2359,6 +2348,7 @@ export default function MyTeamOptimize() {
     setTransferPickerOpen(false);
   }, [
     activeGW,
+    activeTreeNode?.id,
     selectedTransferOut,
     transferCandidateRows,
     transferInKey,
@@ -2367,99 +2357,20 @@ export default function MyTeamOptimize() {
     updateManualPlanForGw,
   ]);
 
-  const removeManualTransfer = useCallback(
-    (transferOrId, transferGw = activeGW) => {
-      const transferId = typeof transferOrId === "object" ? transferOrId?.id : transferOrId;
-      const storedTransfer =
-        typeof transferOrId === "object"
-          ? transferOrId
-          : manualPlan[String(transferGw)]?.transfers?.find((tr) => tr.id === transferId);
-
-      if (storedTransfer?.isLocked) {
-        const key = transferPairKey(
-          transferGw,
-          { Name: storedTransfer.outName },
-          { Name: storedTransfer.inName }
-        );
-        setHiddenModelTransferKeys((prev) => (prev.includes(key) ? prev : [...prev, key]));
-      }
-
-      updateManualPlanForGw(transferGw, (prev) => ({
-        ...prev,
-        transfers: (prev.transfers || []).filter((tr) => tr.id !== transferId),
-        statusOverrides: prev.statusOverrides || {},
-      }));
-      sethas_changed(true);
-    },
-    [activeGW, manualPlan, sethas_changed, updateManualPlanForGw]
-  );
-
-  const switchManualPlayers = useCallback(
-    (sourceName, targetName) => {
-      if (!sourceName || !targetName || !Number.isFinite(Number(activeGW))) return;
-      if (!canSwitchPlayerRows(manualDisplayRowsForActiveGw, sourceName, targetName)) return;
-
-      const source = manualDisplayRowsForActiveGw.find(
-        (row) => normalizeLoosePlayerKey(getPlayerCanonicalName(row)) === normalizeLoosePlayerKey(sourceName)
-      );
-      const target = manualDisplayRowsForActiveGw.find(
-        (row) => normalizeLoosePlayerKey(getPlayerCanonicalName(row)) === normalizeLoosePlayerKey(targetName)
-      );
-      const sourceStatus = getPlayerStatus(source);
-      const targetStatus = getPlayerStatus(target);
-      if (!sourceStatus || !targetStatus) return;
-
-      updateManualPlanForGw(activeGW, (prev) => ({
-        ...prev,
-        transfers: prev.transfers || [],
-        statusOverrides: {
-          ...(prev.statusOverrides || {}),
-          [getPlayerCanonicalName(source)]: targetStatus,
-          [getPlayerCanonicalName(target)]: sourceStatus,
-        },
-      }));
-    },
-    [activeGW, manualDisplayRowsForActiveGw, updateManualPlanForGw]
-  );
-
-  const autoSwitchPlayerStatus = useCallback(
-    (playerName, nextStatus) => {
-      const source = manualDisplayRowsForActiveGw.find(
-        (row) => normalizeLoosePlayerKey(getPlayerCanonicalName(row)) === normalizeLoosePlayerKey(playerName)
-      );
-      if (!source || getPlayerStatus(source) === nextStatus) return;
-
-      const candidates = manualDisplayRowsForActiveGw
-        .filter((row) => getPlayerStatus(row) === nextStatus)
-        .filter((row) => canSwitchPlayerRows(manualDisplayRowsForActiveGw, playerName, getPlayerCanonicalName(row)))
-        .sort((a, b) => {
-          const aPts = getRowPredictedPoints(getProjectionRowForPlayer(a, activeGW) || a) ?? 0;
-          const bPts = getRowPredictedPoints(getProjectionRowForPlayer(b, activeGW) || b) ?? 0;
-          return nextStatus === "playing" ? aPts - bPts : bPts - aPts;
-        });
-
-      const target = candidates[0];
-      if (target) switchManualPlayers(playerName, getPlayerCanonicalName(target));
-    },
-    [activeGW, getProjectionRowForPlayer, manualDisplayRowsForActiveGw, switchManualPlayers]
-  );
-
-  const switchableTargetNames = useMemo(() => {
-    if (!draggedPlayerName) return new Set();
-    return new Set(
-      manualDisplayRowsForActiveGw
-        .filter((row) => canSwitchPlayerRows(manualDisplayRowsForActiveGw, draggedPlayerName, getPlayerCanonicalName(row)))
-        .map((row) => normalizeLoosePlayerKey(getPlayerCanonicalName(row)))
-    );
-  }, [draggedPlayerName, manualDisplayRowsForActiveGw]);
-
-  const handlePlayerDropOnPlayer = useCallback(
-    (sourceName, targetName) => {
-      switchManualPlayers(sourceName, targetName);
-      setDraggedPlayerName("");
-    },
-    [switchManualPlayers]
-  );
+  const removeManualTransfer = useCallback((transferOrId, transferGw = activeGW) => {
+    const transferId = typeof transferOrId === "object" ? transferOrId.id : transferOrId;
+    const nodeId = transferOrId?.nodeId || planningPath.find((node) => Number(node.gw) === Number(transferGw))?.id;
+    if (!nodeId) return;
+    const storedTransfer = nodePlans[nodeId]?.transfers?.find((move) => move.id === transferId);
+    if (storedTransfer?.isLocked) {
+      const key = `${nodeId}:${transferPairKey(transferGw, { Name: storedTransfer.outName }, { Name: storedTransfer.inName })}`;
+      setHiddenModelTransferKeys((previous) => previous.includes(key) ? previous : [...previous, key]);
+    }
+    setNodePlans((previous) => ({ ...previous, [nodeId]: {
+      ...previous[nodeId], transfers: (previous[nodeId]?.transfers || []).filter((move) => move.id !== transferId),
+    } }));
+    sethas_changed(true);
+  }, [activeGW, planningPath, nodePlans, sethas_changed]);
 
   useEffect(() => {
     if (!transferInKey) return;
@@ -2536,8 +2447,6 @@ export default function MyTeamOptimize() {
 
   let minGW = 1;
   let maxGW = 38;
-  let starters = [];
-  let bench = [];
   let transfers = [];
   let gwData = [];
 
@@ -2548,8 +2457,6 @@ export default function MyTeamOptimize() {
     }
 
     gwData = pitchSourceData.filter((p) => Number(p.GW) === activeGW);
-    starters = gwData.filter((p) => p.status === "playing");
-    bench = gwData.filter((p) => p.status === "benched");
 
     transfers = optimizerTransferGroups;
   }
@@ -2560,8 +2467,6 @@ export default function MyTeamOptimize() {
       ...manualDisplayRowsForActiveGw,
     ];
 
-    starters = gwData.filter((p) => p.status === "playing");
-    bench = gwData.filter((p) => p.status === "benched");
   }
 
   let totalPredPoints = null;
@@ -2616,7 +2521,7 @@ export default function MyTeamOptimize() {
     return transfersWithFH
       .map((grp) => {
         const visiblePairs = buildTransferPairs(grp).filter(
-          ({ outP, inP }) => !hiddenModelTransferSet.has(transferPairKey(grp.GW, outP, inP))
+          ({ outP, inP }) => !hiddenModelTransferSet.has(nodeTransferPairKey(grp.GW, outP, inP))
         );
         return {
           ...grp,
@@ -2626,17 +2531,7 @@ export default function MyTeamOptimize() {
         };
       })
       .filter((grp) => grp.freehit || grp.pairs.length > 0);
-  }, [hiddenModelTransferSet, transfersWithFH]);
-
-  const hideModelTransfer = useCallback((gw, outP, inP) => {
-    const key = transferPairKey(gw, outP, inP);
-    setHiddenModelTransferKeys((prev) => (prev.includes(key) ? prev : [...prev, key]));
-  }, []);
-
-  const restoreModelTransfersForGw = useCallback((gw) => {
-    const prefix = `${Number(gw)}__`;
-    setHiddenModelTransferKeys((prev) => prev.filter((key) => !key.startsWith(prefix)));
-  }, []);
+  }, [hiddenModelTransferSet, transfersWithFH, nodeTransferPairKey]);
 
   const teamInfo = Array.isArray(teamData) ? teamData[0] || {} : {};
   const baseBank = toFiniteNumber(teamInfo?.money_in_bank_m, teamInfo?.bank_m, teamInfo?.bank) ?? 0;
@@ -2654,8 +2549,8 @@ export default function MyTeamOptimize() {
       const inP = transferLike?.inP ?? transferLike?.inPlayer;
       const outProjection = outP ? getProjectionRowForPlayer(outP, gw) || outP : null;
       const inProjection = inP ? getProjectionRowForPlayer(inP, gw) || inP : null;
-      const outPrice = toFiniteNumber(transferLike?.outPrice, getRowPrice(outProjection), getRowPrice(outP));
-      const inPrice = toFiniteNumber(transferLike?.inPrice, getRowPrice(inProjection), getRowPrice(inP));
+      const outPrice = toFiniteNumber(transferLike?.outPrice, outP?.selling_price_m, getRowPrice(outProjection), getRowPrice(outP));
+      const inPrice = toFiniteNumber(transferLike?.inPrice, getRowPrice(inP), getRowPrice(inProjection));
       if (!Number.isFinite(outPrice) || !Number.isFinite(inPrice)) return 0;
       return Number(inPrice) - Number(outPrice);
     },
@@ -2663,11 +2558,7 @@ export default function MyTeamOptimize() {
   );
 
   const transferAccountingByGw = useMemo(() => {
-    const out = {};
-    let availableAtStart = Math.max(1, Math.min(5, Number(baseFreeTransfers) || 1));
-    let runningBank = Number(baseBank) || 0;
-
-    availableGWs.forEach((gw) => {
+    const weeks = availableGWs.map((gw) => {
       const modelGroup = visibleTransfersWithFH.find((grp) => Number(grp?.GW) === Number(gw));
       const manualPairs = Array.isArray(manualPlan[String(gw)]?.transfers)
         ? manualPlan[String(gw)].transfers.map((tr) => ({ ...tr, gw, source: "manual" }))
@@ -2677,36 +2568,23 @@ export default function MyTeamOptimize() {
         .map((pair) => ({ ...pair, gw, source: "model" }));
       const isWildcardGw = Number(wildRound) === Number(gw);
       const isFreeHitGw = Number(freehitROund) === Number(gw);
-      const isChipTransferGw = isWildcardGw || isFreeHitGw;
-      const used = isChipTransferGw ? 0 : modelPairs.length + manualPairs.length;
-      const spend = isFreeHitGw
-        ? 0
-        : [...modelPairs, ...manualPairs].reduce((sum, tr) => sum + getTransferSpend(tr), 0);
-      const freeEnd = isChipTransferGw
-        ? Math.max(0, availableAtStart - 1)
-        : Math.max(0, availableAtStart - used);
-
-      runningBank -= spend;
-      out[String(gw)] = {
-        available: availableAtStart,
-        used,
-        bank: runningBank,
-        after: freeEnd,
+      return {
+        gw,
+        chip: isFreeHitGw ? "freehit" : isWildcardGw ? "wildcard" : "none",
+        count: modelPairs.length + manualPairs.length,
+        spend: [...modelPairs, ...manualPairs].reduce((sum, tr) => sum + getTransferSpend(tr), 0),
       };
-
-      availableAtStart = Math.min(5, freeEnd + 1);
     });
-
-    return out;
+    return accountTransfers(weeks, baseFreeTransfers, baseBank);
   }, [
     availableGWs,
     baseBank,
     baseFreeTransfers,
     freehitROund,
+    wildRound,
     getTransferSpend,
     manualPlan,
     visibleTransfersWithFH,
-    wildRound,
   ]);
 
   const activeTransferAccounting = transferAccountingByGw[String(activeGW)] || {
@@ -2719,37 +2597,75 @@ export default function MyTeamOptimize() {
   const activeBankLabel = `${activeTransferAccounting.bank >= 0 ? "" : "-"}£${Math.abs(activeTransferAccounting.bank).toFixed(1)}`;
   const manualFtLeft = activeTransferAccounting.after;
   const manualBank = activeTransferAccounting.bank;
-  const manualHits = 0;
+  const manualHits = activeTransferAccounting.hits || 0;
 
-  const getGwNodeSummary = (gw) => {
-    const optimizerGroup = visibleTransfersWithFH.find((grp) => Number(grp?.GW) === Number(gw));
-    const manualPairs = Array.isArray(manualPlan[String(gw)]?.transfers)
-      ? manualPlan[String(gw)].transfers
-      : [];
-    const optimizerPairs = buildTransferPairs(optimizerGroup).filter(
-      (pair) => !manualPairs.some((manual) => manualTransferMatchesPair(manual, pair))
-    );
-    const optimizerMoves = optimizerPairs.length;
-    const localMoves = manualPairs.length;
-    const firstManual = manualPairs[0];
-    const firstOptimizer = optimizerPairs[0];
-
-    return {
-      count: optimizerMoves + localMoves,
-      label: firstManual
-        ? `${firstManual.outDisplay || firstManual.outName} -> ${firstManual.inDisplay || firstManual.inName}`
-        : firstOptimizer
-        ? `${getPlayerDisplayName(firstOptimizer.outP)} -> ${getPlayerDisplayName(firstOptimizer.inP)}`
-        : "No moves",
-      hasManual: localMoves > 0,
-      hasFreeHit: Boolean(optimizerGroup?.freehit),
-      hasWildcard: Number(wildRound) === Number(gw),
-      hasBenchBoost: Number(bbRound) === Number(gw),
-      isChipTransferGw: Number(wildRound) === Number(gw) || Number(freehitROund) === Number(gw),
-      optimizerPairs,
-      manualPairs,
-    };
+  const getTreeNodeSummary = (node, leafId) => {
+    const rows = optimizationDisplayData.filter((row) => String(row.tree_branch_id) === leafId && Number(row.GW) === Number(node.gw) && Number(row.solution || 1) === 1);
+    const manualPairs = nodePlans[node.id]?.transfers || [];
+    const optimizerPairs = buildTransferPairs({
+      in: rows.filter((row) => row.status === "transferred_in"),
+      out: rows.filter((row) => row.status === "transferred_out"),
+    }).filter((pair) => !manualPairs.some((manual) => manualTransferMatchesPair(manual, pair))
+      && !hiddenModelTransferSet.has(`${node.id}:${transferPairKey(node.gw, pair.outP, pair.inP)}`));
+    const branchRows = optimizationDisplayData.filter((row) => String(row.tree_branch_id) === leafId && Number(row.solution || 1) === 1);
+    let squad = rows.filter((row) => row.status === "playing" || row.status === "benched");
+    if (!squad.length && loadedTeamPitchRows.length) squad = loadedTeamPitchRows.filter((row) => Number(row.GW) === Number(loadedTeamPitchRows[0].GW)).map((row) => ({ ...row, GW: Number(node.gw) }));
+    squad = Array.from(new Map(squad.map((row) => [normalizeLoosePlayerKey(getPlayerCanonicalName(row)), row])).values());
+    const path = getNodePath(treeNodes, node.id).filter((ancestor) => !ancestor.isAnchor);
+    path.forEach((ancestor) => {
+      if (ancestor.chip === "freehit" && Number(ancestor.gw) < Number(node.gw)) return;
+      const movesAtGw = branchRows.filter((row) => Number(row.GW) === Number(ancestor.gw));
+      const canceled = buildTransferPairs({ in: movesAtGw.filter((row) => row.status === "transferred_in"), out: movesAtGw.filter((row) => row.status === "transferred_out") })
+        .filter(({ outP, inP }) => hiddenModelTransferSet.has(`${ancestor.id}:${transferPairKey(ancestor.gw, outP, inP)}`));
+      const replacements = [
+        ...canceled.map(({ outP, inP }) => ({ outName: getPlayerCanonicalName(inP), inPlayer: outP })),
+        ...(nodePlans[ancestor.id]?.transfers || []).filter((move) => !(move.isLocked && rows.length)).map((move) => ({ outName: move.outName, inPlayer: move.inPlayer })),
+      ];
+      replacements.forEach(({ outName, inPlayer }) => {
+        const outgoingKey = normalizeLoosePlayerKey(outName);
+        const outgoing = squad.find((row) => normalizeLoosePlayerKey(getPlayerCanonicalName(row)) === outgoingKey);
+        squad = squad.filter((row) => normalizeLoosePlayerKey(getPlayerCanonicalName(row)) !== outgoingKey);
+        const incomingKey = normalizeLoosePlayerKey(getPlayerCanonicalName(inPlayer));
+        if (!squad.some((row) => normalizeLoosePlayerKey(getPlayerCanonicalName(row)) === incomingKey)) {
+          squad.push({ ...makeManualPlayerFromRow(inPlayer, node.gw), status: outgoing?.status || "benched" });
+        }
+      });
+    });
+    const predictionRows = (modelType === "statistical" ? statisticalScenarioPlayerSets[treeEffectiveScenarioById.get(node.id)] || [] : aiProjectionRows).filter((row) => Number(row.GW) === Number(node.gw));
+    const predictionByName = new Map(predictionRows.map((row) => [normalizeLoosePlayerKey(getPlayerCanonicalName(row)), row]));
+    squad = squad.map((row) => {
+      const name = getPlayerCanonicalName(row);
+      const prediction = predictionByName.get(normalizeLoosePlayerKey(name));
+      return { ...row, ...(prediction || {}), Name: name, web_name: getPlayerDisplayName(row), GW: Number(node.gw),
+        Points_prediction: getRowPredictedPoints(prediction || row),
+        position: normalizePosition(row.position), status: nodePlans[node.id]?.statusOverrides?.[name] || row.status,
+        Is_captain: row.Is_captain, photo: getPlayerPhoto(row),
+      };
+    });
+    const scoringRows = squad.filter((row) => row.status === "playing" || (node.chip === "bench_boost" && row.status === "benched"));
+    const measuredRows = scoringRows.map((row) => {
+      const value = getRowMeasureValue(row, teamMeasure);
+      return Number.isFinite(value) ? value * (teamMeasure === "points" && row.Is_captain ? 2 : 1) : null;
+    }).filter((value) => value !== null);
+    const measure = measuredRows.length ? measuredRows.reduce((sum, value) => sum + value, 0) : null;
+    return { manualPairs, optimizerPairs, measure, squad };
   };
+
+  const selectedPitchCard = activeTreeNode ? {
+    node: activeTreeNode,
+    summary: getTreeNodeSummary(activeTreeNode, planningPath.at(-1)?.id),
+  } : null;
+  const isSquadResetChip = ["wildcard", "freehit"].includes(activeTreeNode?.chip);
+  const pitchNodeIndex = planningPath.findIndex((node) => node.id === activeTreeNode?.id);
+  const selectPitchNode = (nodeId) => {
+    if (!nodeId) return;
+    setSelectedTreeNodeId(nodeId);
+    setTransferOutName("");
+    setTransferInKey("");
+  };
+  const resolveTransferPlayer = (name, storedPlayer) => storedPlayer ||
+    [...loadedTeamPitchRows, ...aiProjectionRows, ...statisticalPlayersPayload].find((row) => normalizeLoosePlayerKey(getPlayerCanonicalName(row)) === normalizeLoosePlayerKey(name))
+    || { Name: name, web_name: name };
 
   const plannerPayload = useMemo(() => {
     if (!activeSolutionData.length || visibleTransfersWithFH.length === 0) return [];
@@ -2804,23 +2720,14 @@ export default function MyTeamOptimize() {
         return;
       }
     }
-    const submittedTransfers = Object.values(manualPlan || {})
-      .flatMap((plan) => (Array.isArray(plan?.transfers) ? plan.transfers : []));
-    const forcedTransfers = submittedTransfers
-      .map((transfer) => ({
-        gw: Number(transfer?.gw),
-        out_name: String(transfer?.outName || "").trim(),
-        in_name: String(transfer?.inName || "").trim(),
-      }))
-      .filter(
-        (transfer) =>
-          isValidGW(transfer.gw) && transfer.out_name && transfer.in_name
-      );
+    const submittedTransfers = syncedActiveTreeNodes.flatMap((node) =>
+      (nodePlans[node.id]?.transfers || []).map((transfer) => ({ ...transfer, nodeId: node.id, gw: Number(node.gw) }))
+    );
     const submittedTransferIds = new Set(
       submittedTransfers.map((transfer) => transfer?.id).filter(Boolean)
     );
-    setSelectedSolution(1);
     setSelectedTreeBranchId("");
+    setSelectedTreeNodeId(syncedActiveTreeNodes.find((node) => !node.isAnchor)?.id || "");
     setHiddenModelTransferKeys([]);
     setTransferOutName("");
     setTransferInKey("");
@@ -2830,7 +2737,7 @@ export default function MyTeamOptimize() {
     const optimizationResult = await fetchTeam({
       useStatisticalModel: useStatistical,
       playersData: playersPayload,
-      forcedTransfers,
+      optimizationSettings: settings,
       scenarioPlayerSets: useStatistical && treeMode ? statisticalScenarioPlayerSets : null,
       scenarioTree: treeMode
         ? {
@@ -2846,6 +2753,9 @@ export default function MyTeamOptimize() {
                 ? Number(node.probability) / Number(parentMass)
                 : 1,
               chip: node.chip || "none",
+              forced_transfers: submittedTransfers.filter((move) => move.nodeId === node.id).map((move) => ({
+                gw: Number(node.gw), out_name: move.outName, in_name: move.inName,
+              })),
               scenario_id: !node.parentId
                 ? BASE_SCENARIO_ID
                 : String(node.scenarioId || "inherit"),
@@ -2884,6 +2794,7 @@ export default function MyTeamOptimize() {
           resultRows.find(
             (row) =>
               Number(row?.GW) === gw &&
+              String(row?.tree_path_node_ids || "").split(">").includes(transfer.nodeId) &&
               row?.status === status &&
               Boolean(row?.Is_forced_transfer) &&
               normalizeLoosePlayerKey(getPlayerCanonicalName(row)) === playerKey
@@ -2902,7 +2813,7 @@ export default function MyTeamOptimize() {
     }
 
     if (optimized) {
-      setManualPlan((prev) =>
+      setNodePlans((prev) =>
         Object.fromEntries(
           Object.entries(prev || {}).map(([gw, plan]) => [
             gw,
@@ -2914,7 +2825,7 @@ export default function MyTeamOptimize() {
                   ? { ...transfer, isLocked: false }
                   : transfer
               ),
-              statusOverrides: {},
+              statusOverrides: plan.statusOverrides || {},
             },
           ])
         )
@@ -2943,11 +2854,11 @@ export default function MyTeamOptimize() {
 
     // A freshly loaded FPL squad is the untouched baseline. Remove all local
     // planner overlays so only a later Optimize action can alter the team.
-    setManualPlan({});
+    setNodePlans({});
+    setTreeOptimizationResults({});
     setHiddenModelTransferKeys([]);
     setTransferOutName("");
     setTransferInKey("");
-    setSelectedSolution(1);
     setActiveSavedId(null);
     setSaveError("");
     setSaveHint("Team loaded. Run Optimize when you want to apply a solver plan.");
@@ -2989,11 +2900,11 @@ export default function MyTeamOptimize() {
           bannedList: Array.isArray(bannedList) ? bannedList : [],
           n_hits: Number(n_hits || 0),
           risk: Number(risk || 0),
-          valtrans: Number(valtrans || 0.5),
+          valtrans: Number(valtrans ?? 0.5),
           modelType,
           scenarioId: modelType === "statistical" ? solverScenarioId : null,
           scenarioName: modelType === "statistical" ? selectedSolverScenario?.name || "Base scenario" : null,
-          selectedSolution: Number(selectedSolution || 1),
+          selectedSolution: 1,
           treeMode,
           treeNodes: syncedTreeNodes,
           treeNodePositions,
@@ -3003,7 +2914,7 @@ export default function MyTeamOptimize() {
         result: {
           data: optimizationDisplayData,
           bannedPlayersData: Array.isArray(bannedPlayersData) ? bannedPlayersData : [],
-          manualPlan,
+          nodePlans,
         },
       },
     };
@@ -3034,7 +2945,6 @@ export default function MyTeamOptimize() {
     return `${mt}${ts ? ` · ${ts}` : ""}`;
   };
 
-  const activeChipsCount = (bbRound ? 1 : 0) + (wildRound ? 1 : 0) + (freehitROund ? 1 : 0);
   const totalTransfers = plannerPayload.length;
 
   useEffect(() => {
@@ -3227,30 +3137,7 @@ export default function MyTeamOptimize() {
 
         <section className="mb-6 grid grid-cols-1 gap-6">
           <div className="glass-card rounded-[28px] p-4 sm:p-6">
-            <button
-              type="button"
-              onClick={() => setControlsOpen((v) => !v)}
-              className="gold-ring w-full flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between text-left rounded-2xl px-3 py-3" style={{ background: "rgba(248,250,252,0.9)", border: `1px solid ${PALETTE.border}` }}
-            >
-              <div>
-                <div className="flex items-center gap-2 text-sm font-semibold" style={{ color: PALETTE.gold }}>
-                  <SlidersHorizontal size={16} className="lucide-icon" />
-                  Optimization controls
-                </div>
-                <p className="text-xs mt-1" style={{ color: PALETTE.muted }}>
-                  Tune your team ID, chips, model, and optimization profile.
-                </p>
-              </div>
-
-              <div className="inline-flex items-center gap-2 self-start sm:self-center" style={{ color: PALETTE.muted }}>
-                <span className="text-xs">{controlsOpen ? "Minimize" : "Expand"}</span>
-                {controlsOpen ? <ChevronDown size={18} className="lucide-icon" /> : <ChevronRight size={18} className="lucide-icon" />}
-              </div>
-            </button>
-
-            {controlsOpen && (
-              <>
-            <div className="mt-5 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-12 gap-3 items-start">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-12 gap-3 items-start">
               <FieldShell label="Model" icon={Brain} className="min-w-0 md:col-span-2 xl:col-span-10">
                 <div className="grid grid-cols-2 gap-2">
                   <ModelButton active={modelType === "ai"} onClick={() => setModelType("ai")} icon={Sparkles}>
@@ -3302,30 +3189,15 @@ export default function MyTeamOptimize() {
                 </button>
               </FieldShell>
             </div>
-            {false && (
-              <FieldShell label="Force Hits" icon={Shield} className="min-w-0 md:col-span-1 xl:col-span-2 mt-3">
-                <div
-                  className="h-12 min-w-0 rounded-2xl flex items-center justify-between px-2 gap-2"
-                  style={{ backgroundColor: "rgba(248,250,252,0.95)", border: `1px solid ${PALETTE.border}` }}
-                >
-                  <IconButton ariaLabel="Decrease hits" onClick={() => setn_hits(Math.max(0, Number(n_hits || 0) - 1))} label="−" />
-                  <div className="flex flex-col items-center leading-none select-none">
-                    <span className="text-[10px] uppercase tracking-wide" style={{ color: PALETTE.muted }}>Count</span>
-                    <span className="text-sm font-semibold">{Number(n_hits || 0)}</span>
-                  </div>
-                  <IconButton ariaLabel="Increase hits" onClick={() => setn_hits(Number(n_hits || 0) + 1)} label="+" />
-                </div>
-              </FieldShell>
-            )}
-
+            <label className="mt-4 block text-xs font-semibold">Tree name
+              <input aria-label="Tree name" className="gold-ring mt-1 block w-full rounded-xl border p-2" value={treeName}
+                onChange={(event) => updateTreeNode(activeTreeRootId, { treeName: event.target.value })} />
+            </label>
             <div
               className="mt-4 rounded-[24px] p-4"
               style={{ border: `1px solid ${treeMode ? PALETTE.gold : PALETTE.border}`, background: "rgba(248,250,252,0.88)" }}
             >
-              <button
-                type="button"
-                onClick={() => setTreeMode((enabled) => !enabled)}
-                aria-expanded={treeMode}
+              <button type="button" onClick={() => setTreeEditorOpen((open) => !open)} aria-expanded={treeEditorOpen} aria-controls="tree-editor-canvas"
                 className="gold-ring flex w-full flex-wrap items-center justify-between gap-3 rounded-2xl p-2 text-left transition"
               >
                 <div>
@@ -3345,12 +3217,12 @@ export default function MyTeamOptimize() {
                     color: treeMode ? "#0f172a" : PALETTE.muted,
                   }}
                 >
-                  {treeMode ? "Tree enabled" : "Enable tree"}
+                  {treeName} · {treeEditorOpen ? "Minimize" : "Expand"}
                 </span>
               </button>
 
-              {treeMode && (
-                <div className="mt-4">
+              {treeEditorOpen && (
+                <div id="tree-editor-canvas" className="mt-4">
                   <div className="flex items-center justify-between gap-3">
                     <p className="text-[11px]" style={{ color: PALETTE.muted }}>
                       Click a top circle to select the tree used by the optimizer. The grey + marks where the next root will be added; use × on the selected root to delete it.
@@ -3369,7 +3241,7 @@ export default function MyTeamOptimize() {
                     <span>
                       {treeCompactView
                         ? "Compact view shows only GW, name, scenario, and active chip. Zoom in to edit nodes."
-                        : "Drag nodes to arrange the canvas. Use + on a connection to branch that next GW."}
+                        : "Drag the background to pan. Drag a node header to rearrange it. Use + to split a path."}
                     </span>
                     <div className="flex shrink-0 items-center gap-1.5">
                       <button
@@ -3417,9 +3289,10 @@ export default function MyTeamOptimize() {
                   <div className="relative mt-3">
                     <div
                       ref={treeCanvasRef}
+                      {...treeCanvasPan.handlers}
                       onWheel={handleTreeZoomWheel}
                       className="max-h-[760px] overflow-auto rounded-2xl border"
-                      style={{ borderColor: PALETTE.border, background: "radial-gradient(circle, rgba(148,163,184,0.32) 1px, transparent 1px)", backgroundSize: "20px 20px" }}
+                      style={{ borderColor: PALETTE.border, background: "radial-gradient(circle, rgba(148,163,184,0.32) 1px, transparent 1px)", backgroundSize: "20px 20px", touchAction: "none", cursor: treeCanvasPan.panning ? "grabbing" : "grab" }}
                     >
                     <div
                       style={{
@@ -3535,6 +3408,7 @@ export default function MyTeamOptimize() {
                         );
                         const scenarioDiagnostics = treeScenarioDiagnosticsByNodeId.get(node.id);
                         const nodeTreeRootId = treeRootByNodeId.get(node.id);
+                        const nodeModelType = treeNodes.find((root) => root.id === nodeTreeRootId)?.optimization?.modelType || "ai";
                         const isActiveTree = nodeTreeRootId === activeTreeRootId;
                         const isExpandedCompactNode = treeCompactView && expandedCompactTreeNodeId === node.id;
                         const useCompactNode = treeCompactView && !isExpandedCompactNode;
@@ -3621,12 +3495,13 @@ export default function MyTeamOptimize() {
                               onClick={() => {
                                 setExpandedCompactTreeNodeId("");
                                 setActiveTreeRootId(node.id);
+                                setSelectedTreeNodeId("");
                               }}
                               title={isActiveTree ? "Selected decision tree" : "Click to select this decision tree"}
                             >
                               <span className="text-sm font-black">GW{node.gw}</span>
                               <span className="text-[9px] uppercase tracking-wide text-slate-300">
-                                {isActiveTree ? "selected" : "select"}
+                                {node.treeName || `Tree ${treeRootIds.indexOf(node.id) + 1}`}
                               </span>
                             </div>
                             </React.Fragment>
@@ -3636,6 +3511,7 @@ export default function MyTeamOptimize() {
                           <React.Fragment key={node.id}>
                           {predictedPointsBadge}
                           <div
+                            data-tree-node={node.id}
                             className={`absolute z-10 w-56 overflow-hidden rounded-2xl border bg-white shadow-lg ${useCompactNode ? "cursor-pointer" : ""}`}
                             style={{
                               left: position.x,
@@ -3645,14 +3521,19 @@ export default function MyTeamOptimize() {
                               boxShadow: isDragging ? "0 20px 40px rgba(15,23,42,0.24)" : "0 10px 24px rgba(15,23,42,0.12)",
                               transition: isDragging ? "none" : "box-shadow 160ms ease, border-color 160ms ease",
                               opacity: isActiveTree ? 1 : 0.56,
-                              pointerEvents: isActiveTree ? "auto" : "none",
+                              outline: activeTreeNode?.id === node.id ? `3px solid ${PALETTE.gold}` : "none",
                             }}
                             onClick={(event) => {
-                              if (!treeCompactView || !isActiveTree) return;
                               if (event.target.closest("button, input, select, [role='button']")) return;
-                              setExpandedCompactTreeNodeId((current) => current === node.id ? "" : node.id);
+                              setActiveTreeRootId(nodeTreeRootId);
+                              setSelectedTreeNodeId(node.id);
+                              if (treeCompactView) setExpandedCompactTreeNodeId((current) => current === node.id ? "" : node.id);
                             }}
                           >
+                            <button type="button" className="w-full px-2 py-1 text-[10px] font-bold text-emerald-800"
+                              onClick={() => { setActiveTreeRootId(nodeTreeRootId); setSelectedTreeNodeId(node.id); pitchSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }); }}>
+                              {activeTreeNode?.id === node.id ? "Viewing squad" : "View squad"} · {nodePlans[node.id]?.transfers?.length || 0} forced moves
+                            </button>
                             <div
                               className="flex h-9 touch-none cursor-grab items-center justify-between px-3 active:cursor-grabbing"
                               style={{ background: node.chip !== "none" ? "rgba(95,143,123,0.14)" : "rgba(241,245,249,0.92)" }}
@@ -3672,7 +3553,7 @@ export default function MyTeamOptimize() {
                                 <div className="truncate text-sm font-bold" style={{ color: PALETTE.text }} title={node.label}>
                                   {node.label}
                                 </div>
-                                {modelType === "statistical" && (
+                                {nodeModelType === "statistical" && (
                                   <div className="flex min-w-0 items-center gap-2 text-[11px] font-semibold" style={{ color: PALETTE.muted }}>
                                     <ScenarioColorDot color={effectiveScenario?.color} />
                                     <span className="truncate">{effectiveScenario?.name || "Base scenario"}</span>
@@ -3764,8 +3645,8 @@ export default function MyTeamOptimize() {
                                 </select>
                               </label>
 
-                              {modelType === "statistical" && (
-                                <div className="mt-2">
+                              {nodeModelType === "statistical" && (
+                                <div className="mt-2" onPointerDown={(event) => event.stopPropagation()} onClick={(event) => event.stopPropagation()}>
                                   <div className="block text-[10px] font-semibold" style={{ color: PALETTE.muted }}>
                                     Statistical scenario
                                     {node.parentId ? (
@@ -3824,94 +3705,17 @@ export default function MyTeamOptimize() {
                   </div>
                   {!treeConfigValid && (
                     <p className="mt-2 text-xs text-rose-600">
-                      The tree needs one connected root, consecutive GWs, and valid split probabilities.
+                      The tree needs one connected root, consecutive GWs, valid split probabilities, and each chip used at most once per path.
                     </p>
                   )}
                   <p className="mt-2 text-[11px]" style={{ color: PALETTE.muted }}>
-                    The optimizer locks all transfers shared before each split, then optimizes every child path using its probability. Standard chip controls below are ignored while tree mode is enabled.
+                    The optimizer locks all transfers shared before each split, then optimizes every child path using its probability. Select a node to edit its squad, forced transfers, chip, and scenario.
                   </p>
                 </div>
               )}
             </div>
 
             <div className="mt-4 grid grid-cols-1 gap-4">
-              <details
-                open={chipsOpen}
-                onToggle={(e) => setChipsOpen(e.currentTarget.open)}
-                className="rounded-[24px] overflow-hidden min-w-0"
-                style={{ border: `1px solid ${PALETTE.border}`, backgroundColor: "rgba(248,250,252,0.88)" }}
-              >
-                <summary className="cursor-pointer select-none list-none flex items-center justify-between px-4 h-14">
-                  <div className="flex items-center gap-2" style={{ color: PALETTE.gold }}>
-                    <CalendarRange size={16} className="lucide-icon" />
-                    <span className="font-semibold">Chip strategy</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-[11px]" style={{ color: PALETTE.muted }}>
-                    <span>{activeChipsCount} active</span>
-                    {chipsOpen ? <ChevronDown size={14} className="lucide-icon" /> : <ChevronRight size={14} className="lucide-icon" />}
-                  </div>
-                </summary>
-
-                <div className="px-4 pb-4 grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-3">
-                  <ChipSelect
-                    label="Bench Boost GW"
-                    show={showBbInput}
-                    onShow={() => {
-                      setShowBbInput(true);
-                      if (minGW != null) setBbRound(minGW);
-                    }}
-                    onHide={() => {
-                      setShowBbInput(false);
-                      setBbRound("");
-                    }}
-                    value={bbRound}
-                    onChange={(v) => setBbRound(Number(v))}
-                    minGW={minGW}
-                    maxGW={maxGW}
-                    addLabel="Add Bench Boost"
-                    icon={Shield}
-                  />
-
-                  <ChipSelect
-                    label="Wildcard GW"
-                    show={showWildInput}
-                    onShow={() => {
-                      setShowWildInput(true);
-                      if (minGW != null) setWildRound(minGW);
-                    }}
-                    onHide={() => {
-                      setShowWildInput(false);
-                      setWildRound("");
-                    }}
-                    value={wildRound}
-                    onChange={(v) => setWildRound(Number(v))}
-                    minGW={minGW}
-                    maxGW={maxGW}
-                    addLabel="Add Wildcard"
-                    icon={RefreshCw}
-                  />
-
-                  <ChipSelect
-                    label="Free Hit GW"
-                    show={showfreehitInput}
-                    onShow={() => {
-                      setshowfreehitInput(true);
-                      if (minGW != null) setfreehitROund(minGW);
-                    }}
-                    onHide={() => {
-                      setshowfreehitInput(false);
-                      setfreehitROund("");
-                    }}
-                    value={freehitROund}
-                    onChange={(v) => setfreehitROund(Number(v))}
-                    minGW={minGW}
-                    maxGW={maxGW}
-                    addLabel="Add Free Hit"
-                    icon={Zap}
-                  />
-                </div>
-              </details>
-
               <details
                 open={optParamsOpen}
                 onToggle={(e) => setOptParamsOpen(e.currentTarget.open)}
@@ -3921,7 +3725,7 @@ export default function MyTeamOptimize() {
                 <summary className="cursor-pointer select-none list-none flex items-center justify-between px-4 h-14">
                   <div className="flex items-center gap-2" style={{ color: PALETTE.gold }}>
                     <SlidersHorizontal size={16} className="lucide-icon" />
-                    <span className="font-semibold">Optimization settings</span>
+                    <span className="font-semibold">Optimization settings · {treeName}</span>
                   </div>
     
                 </summary>
@@ -3959,14 +3763,12 @@ export default function MyTeamOptimize() {
                       { label: "Neutral", value: 0.5 },
                       { label: "High", value: 1 },
                     ]}
-                    description="Higher value preserves transfers more."
+                    description={`${transferPenaltyPoints(valtrans).toFixed(2)} points per ordinary transfer, including free transfers. No penalty on Wildcard or Free Hit; reduced near season end.`}
                     fillPercent={Number(valtrans) * 100}
                   />
                 </div>
               </details>
             </div>
-            </>
-            )}
           </div>
 
           <div className="glass-card rounded-[28px] p-4 sm:p-6">
@@ -4072,7 +3874,7 @@ export default function MyTeamOptimize() {
                             type="button"
                             onClick={() => {
                               const savedParams = opt?.snapshot?.params || {};
-                              const savedManualPlan = opt?.snapshot?.result?.manualPlan;
+                              const savedManualPlan = opt?.snapshot?.result?.nodePlans || opt?.snapshot?.result?.manualPlan;
                               const restoredManualPlan =
                                 savedManualPlan && typeof savedManualPlan === "object"
                                   ? savedManualPlan
@@ -4081,11 +3883,10 @@ export default function MyTeamOptimize() {
                                 String(savedParams.teamId ?? "") !== String(teamId ?? "")
                                   ? restoredManualPlan
                                   : null;
-                              setManualPlan(restoredManualPlan);
+
                               setHiddenModelTransferKeys([]);
                               loadOptimization(opt.id);
                               const savedModel = savedParams.modelType === "statistical" ? "statistical" : "ai";
-                              setModelType(savedModel);
                               if (savedModel === "statistical") {
                                 const scenarioExists = adjustmentScenarios.some(
                                   (scenario) => scenario.id === savedParams.scenarioId
@@ -4094,7 +3895,6 @@ export default function MyTeamOptimize() {
                                   scenarioExists ? savedParams.scenarioId : BASE_SCENARIO_ID
                                 );
                               }
-                              setTreeMode(Boolean(savedParams.treeMode));
                               const restoredTreeNodes =
                                 Array.isArray(savedParams.treeNodes) && savedParams.treeNodes.length > 0
                                   ? ensureTreeStartAnchor(savedParams.treeNodes)
@@ -4105,7 +3905,12 @@ export default function MyTeamOptimize() {
                               const restoredActiveRootId = restoredRootIds.includes(savedParams.activeTreeRootId)
                                 ? savedParams.activeTreeRootId
                                 : restoredRootIds[0];
-                              setTreeNodes(restoredTreeNodes);
+                              const restoredPlans = migrateNodePlans(restoredManualPlan, restoredTreeNodes, restoredActiveRootId);
+                              setNodePlans(restoredPlans);
+                              pendingSavedManualPlanRef.current = String(savedParams.teamId ?? "") !== String(teamId ?? "") ? restoredPlans : null;
+                              setSelectedTreeNodeId("");
+                              setTreeNodes(restoredTreeNodes.map((node) => node.id === restoredActiveRootId && !node.optimization
+                                ? { ...node, optimization: { modelType: savedModel, risk: savedParams.risk ?? 0, valtrans: savedParams.valtrans ?? 0.5, n_hits: savedParams.n_hits ?? 0 } } : node));
                               setActiveTreeRootId(restoredActiveRootId);
                               const restoredOptimizationRows = opt?.snapshot?.result?.data;
                               if (
@@ -4217,7 +4022,6 @@ export default function MyTeamOptimize() {
           </section>
         )}
 
-        {pitchSourceData.length > 0 && (
           <section ref={pitchSectionRef} className="mb-6 grid grid-cols-1 gap-6 items-start">
             <div className="glass-card flex flex-col rounded-[28px] p-4 sm:p-5">
               <div className="flex items-center justify-between mb-4">
@@ -4225,13 +4029,13 @@ export default function MyTeamOptimize() {
                   <div className="text-sm font-semibold inline-flex items-center gap-2" style={{ color: PALETTE.gold }}>
                     <Trophy size={16} className="lucide-icon" />
                     {activeSolutionData.length > 0
-                      ? `Optimized XI - Solution ${selectedSolution}`
-                      : "Loaded FPL team"}
+                      ? `Optimized squad · ${activeTreeNode?.label || treeName}`
+                      : teamData?.length ? "Squad preview" : "Tree squad"}
                   </div>
                   <div className="text-xs mt-1" style={{ color: PALETTE.muted }}>
                     {activeSolutionData.length > 0
-                      ? "Tap a player to open analytics. Use X to ban or add a manual transfer for a specific GW."
-                      : "This is the untouched squad from the Team ID. Run Optimize to apply a solver plan."}
+                      ? "Select a node below to edit its squad, transfers, and chip. Tap a player to open analytics."
+                      : "Every branch shows its full gameweek path. Load your team to plan transfers at any node."}
                   </div>
                 </div>
                 <div
@@ -4243,7 +4047,7 @@ export default function MyTeamOptimize() {
                   }}
                 >
                   <div className="text-[9px] uppercase tracking-wide" style={{ color: "#cbd5e1" }}>
-                    Total {selectedMeasureMeta.short}
+                    Selected path {selectedMeasureMeta.short}
                   </div>
                   <div className="text-lg leading-tight">
                     {formatMeasureValue(overallMeasureTotal, teamMeasure)}
@@ -4276,431 +4080,105 @@ export default function MyTeamOptimize() {
                 })}
               </div>
 
-              {treeBranches.length > 0 && (
-                <div className="mb-4 rounded-2xl p-3" style={{ border: `1px solid ${PALETTE.gold}`, background: "rgba(95,143,123,0.08)" }}>
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div>
-                      <div className="inline-flex items-center gap-2 text-xs font-semibold" style={{ color: PALETTE.gold }}>
-                        <GitBranch size={14} className="lucide-icon" />
-                        {treeBranches.length > 1
-                          ? `Optimized tree paths · first split after GW${activeTreeBranch?.splitGw}`
-                          : "Optimized tree path"}
+                {selectedPitchCard && (
+                  <div className="mt-4" aria-label="Selected branch squad">
+                    <div className="rounded-2xl border p-3" style={{ borderColor: PALETTE.border, background: "rgba(248,250,252,0.95)" }}>
+                      <label className="block text-xs font-semibold">Branch to follow
+                        <select aria-label="Branch to follow" value={planningPath.at(-1)?.id || ""} className="gold-ring mt-1 w-full rounded-xl border bg-white p-2 text-sm"
+                          onChange={(event) => {
+                            const path = activeTreePaths.find((candidate) => candidate.id === event.target.value);
+                            if (!path) return;
+                            setSelectedTreeBranchId(path.id);
+                            setSelectedTreeNodeId((path.nodes.find((node) => Number(node.gw) === Number(activeGW)) || path.nodes[0]).id);
+                            setTransferOutName(""); setTransferInKey("");
+                          }}>
+                          {activeTreePaths.map((path, index) => <option key={path.id} value={path.id}>
+                            {activeTreePaths.length === 1 ? "Main path" : `Branch ${index + 1}`} · {path.probability.toFixed(0)}% · {path.nodes.filter((node) => (treeChildrenByParent.get(node.parentId) || []).length > 1).map((node) => node.label).join(" → ") || `GW${path.nodes[0]?.gw}–${path.nodes.at(-1)?.gw}`}
+                          </option>)}
+                        </select>
+                      </label>
+                      <div className="mt-3 flex items-center justify-between gap-3">
+                        <button type="button" disabled={pitchNodeIndex <= 0} className="gold-ring flex items-center gap-1 rounded-full border px-3 py-2 text-xs font-semibold disabled:opacity-40"
+                          onClick={() => selectPitchNode(planningPath[pitchNodeIndex - 1]?.id)}><ChevronLeft size={15} />Previous GW</button>
+                        <span className="text-center text-sm font-bold">GW {activeGW} · {activeTreeNode?.label}</span>
+                        <button type="button" disabled={pitchNodeIndex >= planningPath.length - 1} className="gold-ring flex items-center gap-1 rounded-full border px-3 py-2 text-xs font-semibold disabled:opacity-40"
+                          onClick={() => selectPitchNode(planningPath[pitchNodeIndex + 1]?.id)}>Next GW<ChevronRight size={15} /></button>
                       </div>
-                      <div className="mt-1 text-[11px]" style={{ color: PALETTE.muted }}>
-                        Expected points: {Number.isFinite(activeTreeBranch?.expectedPoints) ? activeTreeBranch.expectedPoints.toFixed(2) : "-"}
-                        {Number.isFinite(activeTreeBranch?.expectedHits) ? ` · expected hits ${activeTreeBranch.expectedHits.toFixed(2)}` : ""}
-                        {Number.isFinite(activeTreeBranch?.expectedObjective) ? ` · penalized objective ${activeTreeBranch.expectedObjective.toFixed(2)}` : ""}
+                      <div className="mt-3 flex flex-wrap justify-center gap-2" aria-label="Gameweeks in selected branch">
+                        {planningPath.map((node) => <button key={node.id} type="button" aria-pressed={node.id === activeTreeNode?.id} onClick={() => selectPitchNode(node.id)}
+                          className="gold-ring rounded-full border px-3 py-1.5 text-xs font-semibold" style={{ background: node.id === activeTreeNode?.id ? PALETTE.gold : "white", color: node.id === activeTreeNode?.id ? "white" : PALETTE.text }}>GW{node.gw}</button>)}
                       </div>
                     </div>
-                    <div className="flex flex-wrap gap-2">
-                      {treeBranches.map((branch) => {
-                        const active = branch.id === activeTreeBranch?.id;
-                        return (
-                          <button
-                            key={branch.id}
-                            type="button"
-                            onClick={() => setSelectedTreeBranchId(branch.id)}
-                            className="gold-ring rounded-xl px-3 py-2 text-left text-xs transition"
-                            style={{
-                              border: `1px solid ${active ? PALETTE.gold : PALETTE.border}`,
-                              background: active ? `linear-gradient(135deg, ${PALETTE.gold}, ${PALETTE.goldSoft})` : "white",
-                              color: active ? "#0f172a" : PALETTE.text,
-                            }}
-                          >
-                            <span className="block font-semibold">{branch.label}</span>
-                            <span className="block text-[10px] opacity-75">
-                              {Number.isFinite(branch.probability) ? `${Math.round(branch.probability * 100)}%` : "-"}
-                              {Number.isFinite(branch.points) ? ` · ${branch.points.toFixed(2)} pts` : ""}
-                              {Number.isFinite(branch.hits) && branch.hits > 0 ? ` · ${branch.hits.toFixed(0)} hit` : ""}
-                            </span>
-                            {modelType === "statistical" && (
-                              <span className="mt-0.5 flex items-center gap-1.5 text-[9px] opacity-70">
-                                <ScenarioColorDot
-                                  color={adjustmentScenarios.find((scenario) => scenario.id === branch.scenarioId)?.color}
-                                  size={7}
-                                />
-                                <span>
-                                {adjustmentScenarios.find((scenario) => scenario.id === branch.scenarioId)?.name || "Base scenario"}
-                                {branch.scenarioId !== BASE_SCENARIO_ID && Number.isFinite(branch.projectionChangedRows)
-                                  ? branch.projectionChangedRows > 0
-                                    ? ` · ${branch.projectionChangedRows} changed predictions · max ${branch.projectionMaxAbsDiff.toFixed(2)} pts`
-                                    : " · no prediction differences from Base"
-                                  : ""}
-                                </span>
-                              </span>
-                            )}
-                          </button>
-                        );
-                      })}
+                    {modelType === "statistical" && (
+                      <div className="mt-3 rounded-2xl border p-3" style={{ borderColor: PALETTE.border }}>
+                        <div className="mb-1 text-xs font-semibold">Scenario from GW{activeGW}</div>
+                        <ScenarioSelect
+                          value={String(activeTreeNode.scenarioId || "inherit")}
+                          onChange={(scenarioId) => updateTreeNode(activeTreeNode.id, { scenarioId })}
+                          scenarios={adjustmentScenarios}
+                          extraOptions={[{
+                            value: "inherit",
+                            label: `Inherit (${adjustmentScenarios.find((scenario) => scenario.id === treeEffectiveScenarioById.get(activeTreeNode.parentId))?.name || "Base scenario"})`,
+                            color: adjustmentScenarios.find((scenario) => scenario.id === treeEffectiveScenarioById.get(activeTreeNode.parentId))?.color,
+                          }]}
+                          ariaLabel="Scenario for selected branch node"
+                        />
+                        <p className="mt-1 text-xs" style={{ color: PALETTE.muted }}>Applies from this node onward until a later node selects another scenario.</p>
+                      </div>
+                    )}
+                    <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs font-semibold">
+                      <span>Transfers {activeTransferUsageLabel} · Bank {activeBankLabel}</span>
+                      <select aria-label="Chip for selected gameweek" value={activeTreeNode.chip || "none"} className="rounded-lg border p-2" onChange={(event) => updateTreeNode(activeTreeNode.id, { chip: event.target.value })}>
+                        <option value="none">No chip</option><option value="wildcard">Wildcard</option><option value="freehit">Free Hit</option><option value="bench_boost">Bench Boost</option>
+                      </select>
                     </div>
-                  </div>
-                </div>
-              )}
-
-              {(activeSolutionData.length > 0 || optimizationProgress?.streaming) && (
-              <div className="mb-4 rounded-2xl p-3" style={{ border: `1px solid ${PALETTE.border}`, background: "rgba(248,250,252,0.82)" }}>
-                <div className="flex flex-col items-center justify-center gap-1 text-center">
-                  <div className="text-xs font-semibold" style={{ color: PALETTE.gold }}>
-                    Solution set
-                  </div>
-                  <div className="text-[11px]" style={{ color: PALETTE.muted }}>
-                    {optimizationProgress?.streaming
-                      ? `Loading ${solutionNumbers.length}/${expectedSolutions}`
-                      : `${solutionNumbers.length}/${expectedSolutions} ready`}
-                  </div>
-                </div>
-                <div className="mt-2 flex justify-center gap-2 overflow-x-auto pb-1">
-                  {solutionSlots.map((sol) => {
-                    const ready = solutionNumbers.includes(sol);
-                    const active = selectedSolution === sol;
-                    return (
-                      <button
-                        key={sol}
-                        type="button"
-                        onClick={() => ready && setSelectedSolution(sol)}
-                        disabled={!ready}
-                        className="gold-ring shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-300"
-                        style={{
-                          border: `1px solid ${active ? PALETTE.gold : PALETTE.border}`,
-                          background: active
-                            ? `linear-gradient(135deg, ${PALETTE.gold}, ${PALETTE.goldSoft})`
-                            : ready
-                            ? "rgba(248,250,252,0.92)"
-                            : "rgba(226,232,240,0.65)",
-                          color: active ? "#0f172a" : ready ? PALETTE.beige : PALETTE.muted,
-                          cursor: ready ? "pointer" : "not-allowed",
-                          transform: ready ? "translateY(0)" : "translateY(1px)",
-                          opacity: ready ? 1 : 0.7,
-                        }}
-                      >
-                        Solution {sol}{ready ? "" : " ..."}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-              )}
-
-              {availableGWs.length > 0 && (
-                <div className="mb-4">
-                  <div className="flex items-center justify-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => canGoPrevGW && setSelectedGW(availableGWs[activeGWIndex - 1])}
-                      disabled={!canGoPrevGW}
-                      className="gold-ring inline-flex items-center justify-center w-8 h-8 rounded-full"
-                      style={{
-                        border: `1px solid ${canGoPrevGW ? PALETTE.gold : PALETTE.border}`,
-                        backgroundColor: canGoPrevGW ? "rgba(118,175,160,0.14)" : "rgba(248,250,252,0.75)",
-                        color: canGoPrevGW ? PALETTE.gold : PALETTE.muted,
-                        cursor: canGoPrevGW ? "pointer" : "not-allowed",
-                      }}
-                      aria-label="Previous gameweek"
-                    >
-                      <ChevronLeft size={15} className="lucide-icon" />
-                    </button>
-
-                    <div
-                      className="text-xs font-semibold px-3 py-1 rounded-full"
-                      style={{ border: `1px solid ${PALETTE.border}`, color: PALETTE.beige, background: "rgba(248,250,252,0.75)" }}
-                    >
-                      GW {activeGW ?? minGW}
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => canGoNextGW && setSelectedGW(availableGWs[activeGWIndex + 1])}
-                      disabled={!canGoNextGW}
-                      className="gold-ring inline-flex items-center justify-center w-8 h-8 rounded-full"
-                      style={{
-                        border: `1px solid ${canGoNextGW ? PALETTE.gold : PALETTE.border}`,
-                        backgroundColor: canGoNextGW ? "rgba(118,175,160,0.14)" : "rgba(248,250,252,0.75)",
-                        color: canGoNextGW ? PALETTE.gold : PALETTE.muted,
-                        cursor: canGoNextGW ? "pointer" : "not-allowed",
-                      }}
-                      aria-label="Next gameweek"
-                    >
-                      <ChevronRight size={15} className="lucide-icon" />
-                    </button>
-                  </div>
-
-                  <div className="mt-3 flex justify-start sm:justify-center gap-3 overflow-x-auto pb-2 px-1">
-                    {availableGWs.map((gw) => {
-                      const isActive = gw === activeGW;
-                      const nodeSummary = getGwNodeSummary(gw);
-                      const nodeChips = [
-                        nodeSummary.hasBenchBoost ? { key: "bb", label: "BB", icon: Shield } : null,
-                        nodeSummary.hasWildcard ? { key: "wc", label: "WC", icon: RefreshCw } : null,
-                        nodeSummary.hasFreeHit ? { key: "fh", label: "FH", icon: Zap } : null,
-                      ].filter(Boolean);
-                      const transferChipLabel = nodeSummary.hasWildcard
-                        ? "WC"
-                        : nodeSummary.hasFreeHit
-                        ? "FH"
-                        : `${nodeSummary.count} moves`;
-                      const nodeMeasureTotal = gwMeasureTotals[String(gw)];
-                      return (
-                        <div
-                          key={gw}
-                          onClick={() => {
-                            setSelectedGW(gw);
-                            if (gw !== activeGW) setChipPanelOpen(false);
-                          }}
-                          role="button"
-                          tabIndex={0}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" || e.key === " ") {
-                              setSelectedGW(gw);
-                              if (gw !== activeGW) setChipPanelOpen(false);
-                            }
-                          }}
-                          className="gold-ring relative mt-5 shrink-0 min-w-[170px] max-w-[220px] rounded-[22px] px-3 py-3 text-left text-xs font-semibold transition hover:-translate-y-0.5"
-                          style={{
-                            border: `1px solid ${isActive ? PALETTE.gold : PALETTE.border}`,
-                            background: isActive
-                              ? `linear-gradient(135deg, ${PALETTE.gold}, ${PALETTE.goldSoft})`
-                              : nodeSummary.hasManual
-                              ? "linear-gradient(135deg, rgba(95,143,123,0.16), rgba(248,250,252,0.9))"
-                              : "rgba(248,250,252,0.82)",
-                            color: isActive ? "#0f172a" : PALETTE.beige,
-                            boxShadow: isActive
-                              ? "0 14px 26px rgba(95,143,123,0.28)"
-                              : "0 10px 20px rgba(15,23,42,0.08)",
-                          }}
-                          >
-                          <div
-                            className="absolute right-2 top-0 z-10 -translate-y-1/2 rounded-full px-2 py-1 text-[10px] font-black tabular-nums shadow"
-                            style={{
-                              border: `1px solid ${isActive ? "rgba(15,23,42,0.18)" : PALETTE.border}`,
-                              background: isActive ? "rgba(15,23,42,0.92)" : "rgba(255,255,255,0.98)",
-                              color: isActive ? "#fff" : PALETTE.gold,
-                            }}
-                            title={`${selectedMeasureMeta.label} GW ${gw}`}
-                          >
-                            {selectedMeasureMeta.short} {formatMeasureValue(nodeMeasureTotal, teamMeasure)}
-                          </div>
-                          {isActive && (
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setChipPanelOpen(true);
-                              }}
-                              className="gold-ring absolute left-1/2 top-0 z-20 inline-flex -translate-x-1/2 -translate-y-1/2 items-center gap-1 rounded-full px-3 py-1 text-[10px] font-black shadow-lg"
-                              style={{
-                                border: `1px solid ${PALETTE.gold}`,
-                                background: "rgba(248,250,252,0.98)",
-                                color: PALETTE.gold,
-                              }}
-                            >
-                              <span className="text-sm leading-none">+</span>
-                              Add chip
-                            </button>
-                          )}
-                          {nodeChips.length > 0 && (
-                            <div className="-mt-1 mb-2 flex flex-wrap gap-1">
-                              {nodeChips.map((chip) => {
-                                const ChipIcon = chip.icon;
-                                return (
-                                  <span
-                                    key={chip.key}
-                                    className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-black"
-                                    style={{ background: "rgba(15,23,42,0.88)", color: "#fff" }}
-                                  >
-                                    <ChipIcon size={10} className="lucide-icon" />
-                                    {chip.label}
-                                  </span>
-                                );
-                              })}
-                            </div>
-                          )}
-                          <span className="flex items-center justify-between gap-2">
-                            <span>GW {gw}</span>
-                            <span
-                              className="rounded-full px-2 py-0.5 text-[10px]"
-                              style={{
-                                background: isActive ? "rgba(15,23,42,0.12)" : "rgba(15,23,42,0.08)",
-                                color: isActive ? "#0f172a" : PALETTE.gold,
-                              }}
-                            >
-                              {transferChipLabel}
-                            </span>
-                          </span>
-                          <div className="mt-2 space-y-1">
-                            {nodeSummary.isChipTransferGw ? (
-                              <div
-                                className="flex items-center justify-center gap-1 rounded-full px-2 py-1 text-[10px] font-black"
-                                style={{ background: "rgba(15,23,42,0.1)" }}
-                              >
-                                {nodeSummary.hasWildcard ? (
-                                  <>
-                                    <RefreshCw size={12} className="lucide-icon" />
-                                    Wildcard active
-                                  </>
-                                ) : (
-                                  <>
-                                    <Zap size={12} className="lucide-icon" />
-                                    Free Hit active
-                                  </>
-                                )}
-                              </div>
-                            ) : nodeSummary.optimizerPairs.length === 0 && nodeSummary.manualPairs.length === 0 ? (
-                              <span className="block truncate text-[10px] font-medium opacity-70">No moves</span>
-                            ) : null}
-                            {!nodeSummary.isChipTransferGw && nodeSummary.optimizerPairs.map(({ outP, inP }) => (
-                              <div
-                                key={transferPairKey(gw, outP, inP)}
-                                className="flex items-center gap-1 rounded-full px-1.5 py-1 text-[9px]"
-                                style={{ background: "rgba(15,23,42,0.08)" }}
-                              >
-                                <img src={getPlayerPhoto(outP)} alt="" className="h-5 w-5 rounded-full object-cover" />
-                                <span className="min-w-0 flex-1 truncate">
-                                  {getPlayerDisplayName(outP)}{" -> "}{getPlayerDisplayName(inP)}
-                                </span>
-                                <img src={getPlayerPhoto(inP)} alt="" className="h-5 w-5 rounded-full object-cover" />
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    hideModelTransfer(gw, outP, inP);
-                                  }}
-                                  className="rounded-full p-0.5"
-                                  style={{ color: PALETTE.danger, background: "rgba(255,255,255,0.65)" }}
-                                  aria-label="Cancel suggested transfer"
-                                  title="Cancel suggested transfer"
-                                >
-                                  <X size={10} className="lucide-icon" />
-                                </button>
-                              </div>
-                            ))}
-                            {nodeSummary.manualPairs.map((tr) => (
-                              <div
-                                key={tr.id}
-                                className="flex items-center gap-1 rounded-full px-1.5 py-1 text-[9px]"
-                                style={{ background: "rgba(22,163,74,0.12)", color: isActive ? "#0f172a" : PALETTE.gold }}
-                              >
-                                <Lock size={10} className="lucide-icon shrink-0" />
-                                <span className="min-w-0 flex-1 truncate">
-                                  {tr.isLocked ? "Locked" : "Pending lock"}: {tr.outDisplay || tr.outName}{" -> "}{tr.inDisplay || tr.inName}
-                                </span>
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    removeManualTransfer(tr, gw);
-                                  }}
-                                  className="rounded-full p-0.5"
-                                  style={{ color: PALETTE.danger, background: "rgba(255,255,255,0.65)" }}
-                                  aria-label="Remove locked transfer"
-                                  title="Remove locked transfer"
-                                >
-                                  <X size={10} className="lucide-icon" />
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-                          {!nodeSummary.isChipTransferGw && hiddenModelTransferKeys.some((key) => key.startsWith(`${Number(gw)}__`)) && (
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                restoreModelTransfersForGw(gw);
-                              }}
-                              className="mt-2 rounded-full px-2 py-1 text-[9px] font-bold"
-                              style={{ border: "1px solid rgba(15,23,42,0.12)", background: "rgba(255,255,255,0.62)" }}
-                            >
-                              Restore model moves
-                            </button>
-                          )}
+                    <div className="my-3 rounded-2xl border p-3" aria-label="Selected node transfers" style={{ borderColor: PALETTE.border }}>
+                      {isSquadResetChip ? (
+                        <div className="text-center text-sm font-semibold" style={{ color: PALETTE.gold }}>
+                          {activeTreeNode.chip === "wildcard" ? "Wildcard" : "Free Hit"}
                         </div>
-                      );
-                    })}
-                  </div>
-
-                  {chipPanelOpen && (
-                    <div
-                      className="mx-auto mt-3 w-full max-w-[680px] rounded-[22px] p-3"
-                      style={{
-                        border: `1px solid ${PALETTE.border}`,
-                        background: "linear-gradient(145deg, rgba(255,255,255,0.98), rgba(248,250,252,0.95))",
-                        boxShadow: "0 18px 38px rgba(15,23,42,0.14)",
-                      }}
-                    >
-                      <div className="mb-2 flex items-center justify-between gap-2">
-                        <div className="inline-flex items-center gap-2 text-xs font-bold" style={{ color: PALETTE.gold }}>
-                          <CalendarRange size={14} className="lucide-icon" />
-                          Select chip for GW {activeGW ?? "-"}
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => setChipPanelOpen(false)}
-                          className="gold-ring rounded-full p-1"
-                          style={{ border: `1px solid ${PALETTE.border}`, background: "rgba(248,250,252,0.92)", color: PALETTE.muted }}
-                          aria-label="Close chip picker"
-                        >
-                          <X size={13} className="lucide-icon" />
-                        </button>
-                      </div>
-                      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                        <ChipSelect
-                          label="Bench Boost GW"
-                          show={showBbInput}
-                          onShow={() => {
-                            setShowBbInput(true);
-                            if (activeGW != null) setBbRound(activeGW);
-                          }}
-                          onHide={() => {
-                            setShowBbInput(false);
-                            setBbRound("");
-                          }}
-                          value={bbRound}
-                          onChange={(v) => setBbRound(Number(v))}
-                          minGW={minGW}
-                          maxGW={maxGW}
-                          addLabel="Bench Boost"
-                          icon={Shield}
-                        />
-                        <ChipSelect
-                          label="Wildcard GW"
-                          show={showWildInput}
-                          onShow={() => {
-                            setShowWildInput(true);
-                            if (activeGW != null) setWildRound(activeGW);
-                          }}
-                          onHide={() => {
-                            setShowWildInput(false);
-                            setWildRound("");
-                          }}
-                          value={wildRound}
-                          onChange={(v) => setWildRound(Number(v))}
-                          minGW={minGW}
-                          maxGW={maxGW}
-                          addLabel="Wildcard"
-                          icon={RefreshCw}
-                        />
-                        <ChipSelect
-                          label="Free Hit GW"
-                          show={showfreehitInput}
-                          onShow={() => {
-                            setshowfreehitInput(true);
-                            if (activeGW != null) setfreehitROund(activeGW);
-                          }}
-                          onHide={() => {
-                            setshowfreehitInput(false);
-                            setfreehitROund("");
-                          }}
-                          value={freehitROund}
-                          onChange={(v) => setfreehitROund(Number(v))}
-                          minGW={minGW}
-                          maxGW={maxGW}
-                          addLabel="Free Hit"
-                          icon={Zap}
-                        />
-                      </div>
+                      ) : (
+                        <>
+                          <div className="text-center text-xs font-semibold">Transfers · GW{activeGW}</div>
+                          {selectedPitchCard.summary.manualPairs.length === 0 && selectedPitchCard.summary.optimizerPairs.length === 0 && <p className="mt-1 text-center text-xs" style={{ color: PALETTE.muted }}>No transfers</p>}
+                          {selectedPitchCard.summary.manualPairs.map((move) => (
+                            <TreeTransferRow key={move.id}
+                              outPlayer={resolveTransferPlayer(move.outName, move.outPlayer)}
+                              inPlayer={resolveTransferPlayer(move.inName, move.inPlayer)}
+                              caption={move.isLocked ? "Locked transfer" : "Forced transfer"}
+                              onRemove={() => removeManualTransfer({ ...move, nodeId: activeTreeNode.id }, activeGW)} />
+                          ))}
+                          {selectedPitchCard.summary.optimizerPairs.map(({ outP, inP }) => (
+                            <TreeTransferRow key={transferPairKey(activeGW, outP, inP)} outPlayer={outP} inPlayer={inP} caption="Optimized transfer"
+                              onRemove={() => {
+                                const key = `${activeTreeNode.id}:${transferPairKey(activeGW, outP, inP)}`;
+                                setHiddenModelTransferKeys((previous) => previous.includes(key) ? previous : [...previous, key]);
+                              }} />
+                          ))}
+                          {hiddenModelTransferKeys.some((key) => key.startsWith(`${activeTreeNode.id}:`)) && <button type="button" className="mt-2 text-xs underline"
+                            onClick={() => setHiddenModelTransferKeys((previous) => previous.filter((key) => !key.startsWith(`${activeTreeNode.id}:`)))}>Restore model moves</button>}
+                        </>
+                      )}
                     </div>
-                  )}
-                </div>
-              )}
+                    <TreeNodePitch expanded key={activeTreeNode.id} rows={selectedPitchCard.summary.squad} gw={activeGW} onSelect={() => {}}
+                      onLoadTeam={handleLoadTeam} teamLoading={teamLoading} teamError={teamError} hasTeamId={Boolean(String(teamId || "").trim())}
+                      getPhoto={getPlayerPhoto} getName={getPlayerCanonicalName} getDisplayName={getPlayerDisplayName}
+                      getValue={(player) => getRowMeasureValue(player, teamMeasure)} formatValue={(value) => formatMeasureValue(value, teamMeasure)} getOpponent={getOpponentMeta}
+                      onPlayerDetails={(player) => navigate("/Player_Analytics/Individual", { state: { selectedPlayer: getPlayerCanonicalName(player) } })}
+                      onBan={toggleBan} bannedList={bannedList} canSwap={canSwitchPlayerRows}
+                      onTransfer={(player) => { setTransferOutName(getPlayerCanonicalName(player)); transferEditorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }); }}
+                      onSwap={(sourceName, targetName) => {
+                        const squad = selectedPitchCard.summary.squad;
+                        if (!canSwitchPlayerRows(squad, sourceName, targetName)) return;
+                        const source = squad.find((player) => getPlayerCanonicalName(player) === sourceName);
+                        const target = squad.find((player) => getPlayerCanonicalName(player) === targetName);
+                        const nodeId = activeTreeNode.id;
+                        setNodePlans((previous) => ({ ...previous, [nodeId]: { ...previous[nodeId], statusOverrides: {
+                          ...(previous[nodeId]?.statusOverrides || {}), [sourceName]: target.status, [targetName]: source.status,
+                        } } }));
+                      }} />
+                  </div>
+                )}
 
               <div className="hidden">
                 <TopStat icon={Target} label={pitchPredictedLabel} value={pitchPredictedValue} />
@@ -4874,7 +4352,7 @@ export default function MyTeamOptimize() {
                   </button>
                 </div>
 
-                {manualTransfers.length > 0 && (
+                {!isSquadResetChip && manualTransfers.length > 0 && (
                   <div className="mt-3 flex flex-wrap gap-2">
                     {manualTransfers.map((tr) => (
                       <div
@@ -4900,138 +4378,7 @@ export default function MyTeamOptimize() {
                 )}
               </div>
 
-      <div
-  className="mt-4 w-full max-w-none mx-auto bg-no-repeat bg-[length:100%_100%] bg-center rounded-[24px] px-1 sm:px-2 py-1 relative overflow-hidden min-h-[760px] sm:min-h-[900px] lg:min-h-[calc(100vh-7rem)]"
-  style={{
-    order: 2,
-    backgroundImage: `url(${pitch})`,
-    border: `1px solid ${PALETTE.border}`,
-    boxShadow: "0 18px 40px rgba(15,23,42,0.12)",
-  }}
->
-  <div className="absolute inset-0 bg-gradient-to-b from-slate-100/40 via-transparent to-slate-200/50 pointer-events-none" />
-  <div className="absolute left-3 top-3 z-20 rounded-2xl px-3 py-2 shadow-lg backdrop-blur"
-    style={{ border: `1px solid ${PALETTE.gold}`, background: "rgba(15,23,42,0.88)", color: "#fff" }}
-  >
-    <div className="text-[9px] uppercase tracking-wide opacity-70">Transfers</div>
-    <div className="text-sm font-black tabular-nums">{activeTransferUsageLabel}</div>
-  </div>
-  <div className="absolute right-3 top-3 z-20 rounded-2xl px-3 py-2 text-right shadow-lg backdrop-blur"
-    style={{ border: `1px solid ${PALETTE.gold}`, background: "rgba(15,23,42,0.88)", color: "#fff" }}
-  >
-    <div className="text-[9px] uppercase tracking-wide opacity-70">Bank</div>
-    <div className="text-sm font-black tabular-nums">{teamLoading ? "..." : activeBankLabel}</div>
-  </div>
-
-  <div className="relative h-full min-h-[740px] sm:min-h-[880px] lg:min-h-[940px] w-full px-1 sm:px-2 pt-2 pb-2">
-    <div
-      className="grid h-full"
-      style={{
-        gridTemplateRows: bench.length > 0 ? "1fr auto" : "1fr",
-        rowGap: "clamp(10px, 2vh, 20px)",
-      }}
-    >
-      <div
-        className="grid content-between"
-        style={{
-          gridTemplateRows: "repeat(4, minmax(0, 1fr))",
-          rowGap: "clamp(18px, 3vh, 34px)",
-        }}
-      >
-        <div className="flex items-center justify-center min-h-[112px] sm:min-h-[132px]">
-          <PlayerRow
-            players={starters.filter((p) => p.position === "GKP")}
-            toggleBan={toggleBan}
-            bannedList={bannedList}
-            navigate={navigate}
-            getOpponentMeta={getOpponentMeta}
-            activeGW={activeGW}
-            getProjectionRowForPlayer={getProjectionRowForPlayer}
-            teamMeasure={teamMeasure}
-            selectedMeasureMeta={selectedMeasureMeta}
-            draggedPlayerName={draggedPlayerName}
-            switchableTargetNames={switchableTargetNames}
-            onDropOnPlayer={handlePlayerDropOnPlayer}
-            onDragStateChange={setDraggedPlayerName}
-          />
-        </div>
-        <div className="flex items-center justify-center min-h-[112px] sm:min-h-[132px]">
-          <PlayerRow
-            players={starters.filter((p) => p.position === "DEF")}
-            toggleBan={toggleBan}
-            bannedList={bannedList}
-            navigate={navigate}
-            getOpponentMeta={getOpponentMeta}
-            activeGW={activeGW}
-            getProjectionRowForPlayer={getProjectionRowForPlayer}
-            teamMeasure={teamMeasure}
-            selectedMeasureMeta={selectedMeasureMeta}
-            draggedPlayerName={draggedPlayerName}
-            switchableTargetNames={switchableTargetNames}
-            onDropOnPlayer={handlePlayerDropOnPlayer}
-            onDragStateChange={setDraggedPlayerName}
-          />
-        </div>
-        <div className="flex items-center justify-center min-h-[112px] sm:min-h-[132px]">
-          <PlayerRow
-            players={starters.filter((p) => p.position === "MID")}
-            toggleBan={toggleBan}
-            bannedList={bannedList}
-            navigate={navigate}
-            getOpponentMeta={getOpponentMeta}
-            activeGW={activeGW}
-            getProjectionRowForPlayer={getProjectionRowForPlayer}
-            teamMeasure={teamMeasure}
-            selectedMeasureMeta={selectedMeasureMeta}
-            draggedPlayerName={draggedPlayerName}
-            switchableTargetNames={switchableTargetNames}
-            onDropOnPlayer={handlePlayerDropOnPlayer}
-            onDragStateChange={setDraggedPlayerName}
-          />
-        </div>
-        <div className="flex items-center justify-center min-h-[112px] sm:min-h-[132px]">
-          <PlayerRow
-            players={starters.filter((p) => p.position === "FWD")}
-            toggleBan={toggleBan}
-            bannedList={bannedList}
-            navigate={navigate}
-            getOpponentMeta={getOpponentMeta}
-            activeGW={activeGW}
-            getProjectionRowForPlayer={getProjectionRowForPlayer}
-            teamMeasure={teamMeasure}
-            selectedMeasureMeta={selectedMeasureMeta}
-            draggedPlayerName={draggedPlayerName}
-            switchableTargetNames={switchableTargetNames}
-            onDropOnPlayer={handlePlayerDropOnPlayer}
-            onDragStateChange={setDraggedPlayerName}
-          />
-        </div>
-      </div>
-
-      {bench.length > 0 && (
-        <div className="border-t border-slate-300/20 pt-20 pb-1 min-h-[100px] sm:min-h-[146px] bg-white/1 rounded-xl mt-20">
-          <PlayerRow
-            players={bench}
-            isBench
-            toggleBan={toggleBan}
-            bannedList={bannedList}
-            navigate={navigate}
-            getOpponentMeta={getOpponentMeta}
-            activeGW={activeGW}
-            getProjectionRowForPlayer={getProjectionRowForPlayer}
-            teamMeasure={teamMeasure}
-            selectedMeasureMeta={selectedMeasureMeta}
-            draggedPlayerName={draggedPlayerName}
-            switchableTargetNames={switchableTargetNames}
-            onDropOnPlayer={handlePlayerDropOnPlayer}
-            onDragStateChange={setDraggedPlayerName}
-          />
-        </div>
-      )}
-    </div>
-  </div>
-</div>
-              <div
+              <div ref={transferEditorRef}
                 className="mt-4 rounded-[26px] p-3 sm:p-4"
                 style={{
                   order: 1,
@@ -5252,7 +4599,7 @@ export default function MyTeamOptimize() {
                   </button>
                 </div>
 
-                {manualTransfers.length > 0 && (
+                {!isSquadResetChip && manualTransfers.length > 0 && (
                   <div className="mt-3 flex flex-wrap gap-2">
                     {manualTransfers.map((tr) => (
                       <div
@@ -5373,7 +4720,6 @@ export default function MyTeamOptimize() {
               )}
             </div>
           </section>
-        )}
 
         {pitchSourceData.length === 0 && (
           <section className="glass-card rounded-[28px] p-8 text-center">
@@ -5453,6 +4799,22 @@ function ModelButton({ active, disabled, onClick, icon: Icon, children }) {
       <Icon size={15} className="lucide-icon" />
       {children}
     </button>
+  );
+}
+
+function TreeTransferRow({ outPlayer, inPlayer, caption, onRemove }) {
+  return (
+    <div className="mx-auto mt-2 w-fit max-w-full rounded-xl bg-slate-50 px-2 py-1.5" aria-label={caption}>
+      <div className="mb-1 text-center text-[9px] font-semibold text-slate-500">{caption}</div>
+      <div className="flex items-center justify-center gap-1.5">
+        <img src={getPlayerPhoto(outPlayer)} alt={getPlayerDisplayName(outPlayer)} className="h-8 w-8 shrink-0 rounded-full object-cover" />
+        <span className="min-w-0 max-w-24 truncate text-[10px]" title={getPlayerDisplayName(outPlayer)}>{getPlayerDisplayName(outPlayer)}</span>
+        <ArrowRight size={12} className="shrink-0 text-slate-400" />
+        <span className="min-w-0 max-w-24 truncate text-[10px]" title={getPlayerDisplayName(inPlayer)}>{getPlayerDisplayName(inPlayer)}</span>
+        <img src={getPlayerPhoto(inPlayer)} alt={getPlayerDisplayName(inPlayer)} className="h-8 w-8 shrink-0 rounded-full object-cover" />
+        <button type="button" onClick={onRemove} className="shrink-0 rounded-full p-0.5 text-red-500" aria-label={`Remove ${getPlayerDisplayName(outPlayer)} to ${getPlayerDisplayName(inPlayer)}`}><X size={12} /></button>
+      </div>
+    </div>
   );
 }
 
@@ -6057,8 +5419,3 @@ function TransferChartTooltip({ active, payload, label }) {
     </div>
   );
 }
-
-
-
-
-

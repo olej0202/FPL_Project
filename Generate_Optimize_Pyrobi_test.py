@@ -7,6 +7,7 @@ import pyomo.environ as pyo
 
 from Generate_Fetch_Myteam import build_team_dataframe
 from GenerateConfig import Player_picture_url,current_season
+from optimizer_transfer_rules import MAX_FREE_TRANSFERS, MAX_HITS, TRANSFER_PENALTY_SCALE, add_transfer_rules
 
 
 # ============================================================
@@ -610,11 +611,12 @@ def optimize_my_team(
     w_own, w_std = 0.7, 0.3
     risk_score = w_own * ownership_risk + w_std * (points_std_scaled * 0.3 + 0.7 * points_risk)
 
-    transfervalue = transval * 2
-    risk_transfer_offset = 1.0
+    transfer_penalty = TRANSFER_PENALTY_SCALE * float(transval)
+    if not np.isfinite(transfer_penalty) or not 0 <= float(transval) <= 1:
+        raise ValueError("transval must be a finite number between 0 and 1.")
 
     HIT_PENALTY = 3.25
-    HIT_MAX = 2
+    HIT_MAX = MAX_HITS
 
     abs_gw_num = {t: (int(GW_list[t]) if str(GW_list[t]).isdigit() else None) for t in gameweeks}
     discount_t = {}
@@ -690,8 +692,10 @@ def optimize_my_team(
     # saved_transfers stores extra free transfers beyond the base 1.
     # It can be -1 at t=0 when the manager has already used the base FT
     # before the optimizer runs mid-GW.
-    m.saved_transfers = pyo.Var(m.T, domain=pyo.Integers, bounds=(-1, 5))
-    m.transfers_used = pyo.Var(m.T, domain=pyo.NonNegativeIntegers, bounds=(0, 5))
+    m.saved_transfers = pyo.Var(m.T, domain=pyo.Integers, bounds=(-1, MAX_FREE_TRANSFERS - 1))
+    # Preserve the legacy n_hits allowance at t=0; future FT storage is capped at four extras.
+    m.saved_transfers[0].setub(MAX_FREE_TRANSFERS)
+    m.transfers_used = pyo.Var(m.T, domain=pyo.NonNegativeIntegers, bounds=(0, MAX_FREE_TRANSFERS + HIT_MAX))
     m.money_in_bank = pyo.Var(m.T, domain=pyo.NonNegativeReals)
 
     if use_freehit:
@@ -737,7 +741,7 @@ def optimize_my_team(
             risk_expr += sum(m.y[i, t] * m.risk[i] for i in I)
 
     transfer_penalty_expr = sum(
-        m.discount[t] * (-1.5 * transfervalue * risk_transfer_offset) * m.transfers_used[t]
+        -m.discount[t] * transfer_penalty * m.transfers_used[t]
         for t in T
     )
 
@@ -903,42 +907,7 @@ def optimize_my_team(
             m.team_cap_con.add(sum(m.x[i, t] for i in indices) <= 3)
 
     # ---------------- Transfers ----------------
-    m.transfer_con = pyo.ConstraintList()
-
-    for t in T[1:]:
-        if t in freehit_week_rels:
-            m.transfer_con.add(m.transfers_used[t] == 0)
-            m.transfer_con.add(m.hit[t] == 0)
-            for i in I:
-                m.transfer_con.add(m.x[i, t] == m.x[i, t - 1])
-                m.transfer_con.add(m.transfer_in[i, t] == 0)
-                m.transfer_con.add(m.transfer_out[i, t] == 0)
-            continue
-
-        if t in wildcard_week_rels:
-            for i in I:
-                m.transfer_con.add(m.x[i, t] >= m.x[i, t - 1] - m.transfer_out[i, t])
-                m.transfer_con.add(m.x[i, t] <= m.x[i, t - 1] + m.transfer_in[i, t])
-            m.transfer_con.add(m.transfers_used[t] == 0)
-            m.transfer_con.add(m.hit[t] == 0)
-        else:
-            for i in I:
-                m.transfer_con.add(m.transfer_in[i, t] >= m.x[i, t] - m.x[i, t - 1])
-                m.transfer_con.add(m.transfer_out[i, t] >= m.x[i, t - 1] - m.x[i, t])
-
-            m.transfer_con.add(
-                sum(m.transfer_in[i, t] for i in I) <= 1 + m.saved_transfers[t - 1] + m.hit[t]
-            )
-            m.transfer_con.add(
-                m.transfers_used[t] == sum(m.transfer_in[i, t] for i in I)
-            )
-
-    m.transfer_con.add(m.transfers_used[0] == 0)
-    m.transfer_con.add(m.hit[0] == 0)
-    # Ensure t=0 transfer binaries are fixed and initialized.
-    for i in I:
-        m.transfer_con.add(m.transfer_in[i, 0] == 0)
-        m.transfer_con.add(m.transfer_out[i, 0] == 0)
+    add_transfer_rules(m, wildcard_week_rels, freehit_week_rels, initial_saved)
 
     # ---------------- Forced transfer-ins ----------------
     if forced_transfer_indices:
@@ -1000,25 +969,6 @@ def optimize_my_team(
                 m.locked_transfer_count_con.add(sum(m.fh_in[i, t] for i in I) == count)
             else:
                 m.locked_transfer_count_con.add(sum(m.transfer_in[i, t] for i in I) == count)
-
-    # ---------------- Saved transfers ----------------
-    m.saved_con = pyo.ConstraintList()
-
-    for t in T[1:]:
-        if t in wildcard_week_rels:
-            m.saved_con.add(m.saved_transfers[t] == m.saved_transfers[t - 1])
-        else:
-            if t in freehit_week_rels:
-                m.saved_con.add(m.saved_transfers[t] == m.saved_transfers[t - 1])
-            else:
-                if abs_gw_num.get(t) == 40:
-                    m.saved_con.add(m.saved_transfers[t] == 5)
-                else:
-                    m.saved_con.add(
-                        m.saved_transfers[t]
-                        == m.saved_transfers[t - 1] + 1 - m.transfers_used[t] + m.hit[t]
-                    )
-        m.saved_con.add(m.saved_transfers[t] <= 5)
 
     m.init_state_con = pyo.ConstraintList()
     m.init_state_con.add(m.saved_transfers[0] == initial_saved)
@@ -1432,6 +1382,10 @@ def optimize_my_team(
         })
 
         for row in solution_rows:
+            player_idx = name_to_player_idx.get(normalize_player_key(row.get("Name", "")))
+            if player_idx is not None:
+                row["value"] = cost_dict[player_idx]
+                row["selling_price_m"] = sell_dict[player_idx]
             row.setdefault("Is_forced_transfer", False)
             row.setdefault("Forced_transfer_id", None)
             row["solution"] = solution_no

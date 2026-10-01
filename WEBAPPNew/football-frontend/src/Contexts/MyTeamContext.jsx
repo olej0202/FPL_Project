@@ -352,6 +352,7 @@ export function MyTeamDataContextProvider({ children }) {
       forcedTransfers = [],
       scenarioTree = null,
       scenarioPlayerSets = null,
+      optimizationSettings = null,
     } = options;
     const normalizedForcedTransfers = (Array.isArray(forcedTransfers) ? forcedTransfers : [])
       .map((move) => ({
@@ -581,14 +582,15 @@ export function MyTeamDataContextProvider({ children }) {
         bb_round: bbRound ? Number(bbRound) : 40,
         wildcard_round: wildRound ? Number(wildRound) : 40,
         freehit_round: freehitROund ? Number(freehitROund) : 40,
-        n_hits: n_hits ? Number(n_hits) : 0,
+        n_hits: Number(optimizationSettings?.n_hits ?? n_hits) || 0,
         model_type: useStatisticalModel ? "statistical" : "ai",
         players: slimPlayers,
         forced_transfers: normalizedForcedTransfers,
         scenario_tree: normalizedScenarioTree,
         scenario_players: slimScenarioPlayers,
-        risk: Number(risk) || 0,
-        transval: Number(valtrans) || 0.5,
+        risk: Number(optimizationSettings?.risk ?? risk) || 0,
+        transval: Number.isFinite(Number(optimizationSettings?.valtrans ?? valtrans))
+          ? Number(optimizationSettings?.valtrans ?? valtrans) : 0.5,
         stream: true,
         guest_id: guestTrackingId || undefined,
       };

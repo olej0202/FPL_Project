@@ -40,6 +40,7 @@ import { useMyteamData } from "./Contexts/MyTeamContext";
 import { useAdjustmentData } from "./Contexts/AdjustmentsContext";
 import { useStatsData } from "./Contexts/StatsContext";
 import teamShort from "./utils/team_short";
+import { transferPenaltyPoints } from "./utils/transferAccounting";
 
 const PALETTE = {
   red: "#f8fafc",
@@ -1481,7 +1482,7 @@ export default function MyTeamOptimize() {
                       { label: "Neutral", value: 0.5 },
                       { label: "High", value: 1 },
                     ]}
-                    description="Higher value preserves transfers more."
+                    description={`${transferPenaltyPoints(valtrans).toFixed(2)} points per ordinary transfer, including free transfers. No penalty on Wildcard or Free Hit; reduced near season end.`}
                     fillPercent={Number(valtrans) * 100}
                   />
                 </div>
