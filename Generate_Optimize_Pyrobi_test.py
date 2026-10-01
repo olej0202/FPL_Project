@@ -7,7 +7,76 @@ import pyomo.environ as pyo
 
 from Generate_Fetch_Myteam import build_team_dataframe
 from GenerateConfig import Player_picture_url,current_season
-from optimizer_transfer_rules import MAX_FREE_TRANSFERS, MAX_HITS, TRANSFER_PENALTY_SCALE, add_transfer_rules
+
+
+MAX_FREE_TRANSFERS = 5
+MAX_HITS = 2
+# The public/UI setting remains normalized: 0.5 now means 1.2 points.
+TRANSFER_PENALTY_SCALE = 2.4
+
+
+def add_transfer_rules(model, wildcard_weeks, freehit_weeks, initial_saved):
+    future = list(model.T)[1:]
+    ordinary = [t for t in future if t not in wildcard_weeks and t not in freehit_weeks]
+    big_m = MAX_FREE_TRANSFERS + MAX_HITS + 1
+    model.paid_transfer_week = pyo.Var(ordinary, domain=pyo.Binary)
+    model.transfer_con = pyo.ConstraintList()
+    for t in future:
+        if t in freehit_weeks:
+            model.transfer_con.add(model.transfers_used[t] == 0)
+            model.transfer_con.add(model.hit[t] == 0)
+            for i in model.I:
+                model.transfer_con.add(model.x[i, t] == model.x[i, t - 1])
+                model.transfer_con.add(model.transfer_in[i, t] == 0)
+                model.transfer_con.add(model.transfer_out[i, t] == 0)
+            continue
+
+        for i in model.I:
+            # Exact ownership changes prevent phantom sales, purchases and
+            # selling/rebuying the same player to alter the bank.
+            model.transfer_con.add(
+                model.x[i, t] - model.x[i, t - 1]
+                == model.transfer_in[i, t] - model.transfer_out[i, t]
+            )
+            model.transfer_con.add(model.transfer_in[i, t] + model.transfer_out[i, t] <= 1)
+        if t in wildcard_weeks:
+            model.transfer_con.add(model.transfers_used[t] == 0)
+            model.transfer_con.add(model.hit[t] == 0)
+        else:
+            model.transfer_con.add(
+                model.transfers_used[t] == sum(model.transfer_in[i, t] for i in model.I)
+            )
+            model.transfer_con.add(
+                model.transfers_used[t] <= 1 + model.saved_transfers[t - 1] + model.hit[t]
+            )
+            # A hit must pay for a real excess transfer, never create FTs to bank.
+            model.transfer_con.add(model.hit[t] <= MAX_HITS * model.paid_transfer_week[t])
+            model.transfer_con.add(
+                model.hit[t] <= model.transfers_used[t] - (1 + model.saved_transfers[t - 1])
+                + big_m * (1 - model.paid_transfer_week[t])
+            )
+
+    model.transfer_con.add(model.transfers_used[0] == 0)
+    model.transfer_con.add(model.hit[0] == 0)
+    for i in model.I:
+        model.transfer_con.add(model.transfer_in[i, 0] == 0)
+        model.transfer_con.add(model.transfer_out[i, 0] == 0)
+
+    model.saved_con = pyo.ConstraintList()
+    model.ft_capped = pyo.Var(ordinary, domain=pyo.Binary)
+    cap = MAX_FREE_TRANSFERS - 1  # stored value excludes next GW's base FT
+    for t in future:
+        model.saved_transfers[t].setlb(0)
+        if t in wildcard_weeks or t in freehit_weeks:
+            carried = min(cap, max(0, initial_saved)) if t == future[0] else model.saved_transfers[t - 1]
+            model.saved_con.add(model.saved_transfers[t] == carried)
+            continue
+        remaining = model.saved_transfers[t - 1] + 1 - model.transfers_used[t] + model.hit[t]
+        # Exact min(cap, remaining), allowing unused FTs to expire at the cap.
+        model.saved_con.add(model.saved_transfers[t] <= remaining)
+        model.saved_con.add(model.saved_transfers[t] <= cap)
+        model.saved_con.add(model.saved_transfers[t] >= remaining - big_m * model.ft_capped[t])
+        model.saved_con.add(model.saved_transfers[t] >= cap - big_m * (1 - model.ft_capped[t]))
 
 
 # ============================================================
