@@ -1,5 +1,21 @@
 export const DEFAULT_TREE_SETTINGS = { modelType: "ai", risk: 0, valtrans: 0.5, n_hits: 0 };
 
+// Sibling outcomes are unknown at their shared deadline. Editing the decision
+// on one outcome therefore edits its peers, but never subsequent gameweeks.
+export function shareDecisionPlanEdits(previous, next, nodes) {
+  if (previous === next) return previous;
+  const result = { ...next };
+  nodes.forEach((node) => {
+    if (!node.parentId || next[node.id] === previous[node.id] || !next[node.id]) return;
+    const plan = next[node.id];
+    if (!previous[node.id] && !plan.transfers?.length && !Object.keys(plan.statusOverrides || {}).length) return;
+    nodes.filter((peer) => peer.parentId === node.parentId && peer.gw === node.gw).forEach((peer) => {
+      result[peer.id] = { ...plan, transfers: (plan.transfers || []).map((move) => ({ ...move, nodeId: peer.id, gw: peer.gw })) };
+    });
+  });
+  return result;
+}
+
 export function getNodePath(nodes, nodeId) {
   const byId = new Map(nodes.map((node) => [node.id, node]));
   const path = [];

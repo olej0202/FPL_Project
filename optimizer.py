@@ -1,12 +1,7 @@
-"""Experimental probability-tree optimizer.
+"""Probability-tree optimization with outcomes revealed after each deadline.
 
-The normal linear optimizer remains the production fallback. This module is
-only called when the API receives a GW-node tree containing a real split.
-
-Each node is a decision point for one gameweek. Children are possible next
-states with conditional probabilities. Transfers are locked through every
-shared ancestor, so two paths cannot make different decisions before their
-branch becomes known.
+Split paths are solved jointly. Transfers, lineups and captains cannot depend
+on the current gameweek's unknown outcome. A single path uses the linear solver.
 """
 
 from __future__ import annotations
@@ -15,6 +10,7 @@ from dataclasses import dataclass
 from typing import Any, Callable, Optional
 
 import pandas as pd
+import pyomo.environ as pyo
 
 from Generate_Optimize_Pyrobi_test import optimize_my_team
 
@@ -283,95 +279,6 @@ def _projection_diagnostics(
     }
 
 
-def _descendant_leaves(node_id: str, children: dict[str, list[str]]) -> list[str]:
-    if not children[node_id]:
-        return [node_id]
-    leaves: list[str] = []
-    for child_id in children[node_id]:
-        leaves.extend(_descendant_leaves(child_id, children))
-    return leaves
-
-
-def _segment_endpoint(start_id: str, children: dict[str, list[str]]) -> str:
-    current = start_id
-    while len(children[current]) == 1:
-        current = children[current][0]
-    return current
-
-
-def _player_name(row: dict[str, Any]) -> str:
-    return str(row.get("Name") or row.get("name") or "").strip()
-
-
-def _pair_transfer_rows(group: pd.DataFrame) -> list[dict[str, Any]]:
-    outs = group[group["status"] == "transferred_out"].to_dict("records")
-    ins = group[group["status"] == "transferred_in"].to_dict("records")
-    pairs: list[dict[str, Any]] = []
-
-    for out_row in list(outs):
-        forced_id = out_row.get("Forced_transfer_id")
-        if not forced_id or pd.isna(forced_id):
-            continue
-        match_index = next(
-            (index for index, in_row in enumerate(ins) if in_row.get("Forced_transfer_id") == forced_id),
-            None,
-        )
-        if match_index is None:
-            continue
-        in_row = ins.pop(match_index)
-        outs.remove(out_row)
-        pairs.append({"out_name": _player_name(out_row), "in_name": _player_name(in_row)})
-
-    for out_row in outs:
-        position = str(out_row.get("position") or "")
-        match_index = next(
-            (index for index, in_row in enumerate(ins) if str(in_row.get("position") or "") == position),
-            None,
-        )
-        if match_index is None:
-            continue
-        in_row = ins.pop(match_index)
-        pairs.append({"out_name": _player_name(out_row), "in_name": _player_name(in_row)})
-    return pairs
-
-
-def _extract_prefix(
-    solution_df: pd.DataFrame, through_gw: int
-) -> tuple[list[dict[str, Any]], dict[int, int]]:
-    transfer_rows = solution_df[
-        solution_df["status"].isin(["transferred_in", "transferred_out"])
-    ].copy()
-    transfer_rows["GW_num"] = pd.to_numeric(transfer_rows["GW"], errors="coerce")
-    transfer_rows = transfer_rows[transfer_rows["GW_num"].between(1, through_gw)]
-    moves: list[dict[str, Any]] = []
-    counts: dict[int, int] = {}
-    for gw, group in transfer_rows.groupby("GW_num", sort=True):
-        pairs = _pair_transfer_rows(group)
-        counts[int(gw)] = len(pairs)
-        moves.extend({"gw": int(gw), **pair} for pair in pairs)
-
-    numeric_gws = pd.to_numeric(solution_df.get("GW"), errors="coerce").dropna()
-    for gw in sorted({int(value) for value in numeric_gws if 1 <= int(value) <= through_gw}):
-        counts.setdefault(gw, 0)
-    return moves, counts
-
-
-def _prefix_key(
-    moves: list[dict[str, Any]], counts: dict[int, int]
-) -> tuple[Any, ...]:
-    normalized_moves = tuple(
-        sorted(
-            (
-                int(move["gw"]),
-                str(move["out_name"]).strip().lower(),
-                str(move["in_name"]).strip().lower(),
-            )
-            for move in moves
-        )
-    )
-    return normalized_moves, tuple(sorted((int(gw), int(count)) for gw, count in counts.items()))
-
-
 def _merge_moves(*move_groups: list[dict[str, Any]]) -> list[dict[str, Any]]:
     merged: list[dict[str, Any]] = []
     seen: set[tuple[int, str, str]] = set()
@@ -412,6 +319,37 @@ def _result_metric(result: pd.DataFrame, column: str, default: float = 0.0) -> f
     return float(values.iloc[0]) if not values.empty else float(default)
 
 
+def add_shared_deadline_constraints(joint, prepared, paths):
+    """Only information from strictly earlier GWs may change a decision."""
+    joint.shared_deadline = pyo.ConstraintList()
+    representatives = {}
+    for leaf_id, item in prepared.items():
+        model = item.model
+        for gw, t in item.gameweeks.items():
+            known = tuple(node.node_id for node in paths[leaf_id] if node.gw < gw)
+            group = (gw, known)
+            if group not in representatives:
+                representatives[group] = (item, t)
+                continue
+            reference, ref_t = representatives[group]
+            other = reference.model
+            # Physical team, XI, captain, bench order and transfer accounting
+            # all belong to the same pre-deadline decision.
+            for name, i in item.player_indices.items():
+                j = reference.player_indices[name]
+                for attr in ("x", "y", "c", "bench", "transfer_in", "transfer_out"):
+                    joint.shared_deadline.add(getattr(model, attr)[i, t] == getattr(other, attr)[j, ref_t])
+                for slot in model.BS:
+                    joint.shared_deadline.add(model.bench_slot[i, t, slot] == other.bench_slot[j, ref_t, slot])
+                if hasattr(model, "FH_T") and t in model.FH_T:
+                    for attr in ("fh_x", "fh_y", "fh_c", "fh_bench", "fh_in", "fh_out"):
+                        joint.shared_deadline.add(getattr(model, attr)[i, t] == getattr(other, attr)[j, ref_t])
+                    for slot in model.BS:
+                        joint.shared_deadline.add(model.fh_bench_slot[i, t, slot] == other.fh_bench_slot[j, ref_t, slot])
+            for attr in ("hit", "transfers_used", "saved_transfers", "money_in_bank"):
+                joint.shared_deadline.add(getattr(model, attr)[t] == getattr(other, attr)[ref_t])
+
+
 def optimize_scenario_tree(
     *,
     scenario_tree: dict[str, Any],
@@ -422,7 +360,6 @@ def optimize_scenario_tree(
     """Optimize all leaf paths while enforcing shared decisions at every split."""
 
     root_id, nodes, children, leaf_probabilities = _validate_tree(scenario_tree)
-    max_candidates = max(1, min(4, int(scenario_tree.get("max_prefix_candidates", 2))))
     base_forced = list(base_kwargs.get("forced_transfers") or [])
     node_forced = {}
     for index, raw_node in enumerate(scenario_tree["nodes"]):
@@ -452,108 +389,85 @@ def optimize_scenario_tree(
             )
         return leaf_players_cache[leaf_id]
 
-    def solve_leaf(
-        leaf_id: str,
-        forced_moves: list[dict[str, Any]],
-        locked_counts: dict[int, int],
-    ) -> LeafResult:
+    leaf_ids = list(leaf_probabilities)
+    paths = {leaf_id: _path_to_root(leaf_id, nodes) for leaf_id in leaf_ids}
+    # A split is revealed after that GW's deadline. Its children must therefore
+    # share all decisions in that GW, including chips chosen by the user.
+    for child_ids in children.values():
+        if len({nodes[node_id].chip for node_id in child_ids}) > 1:
+            raise ValueError("All outcomes at a split must use the same chip in the split gameweek. The outcome is not known before the deadline.")
+
+    if len(leaf_ids) == 1:
+        leaf_id = leaf_ids[0]
         kwargs = dict(base_kwargs)
-        kwargs.update(
-            **_chip_kwargs(leaf_id, nodes),
-            forced_transfers=_merge_moves(forced_for_leaf(leaf_id), forced_moves),
-            locked_transfer_counts_by_gw=dict(locked_counts),
-            players_override=players_for_leaf(leaf_id),
-            n_solutions=1,
-            on_solution=None,
-        )
+        kwargs.update(**_chip_kwargs(leaf_id, nodes), forced_transfers=forced_for_leaf(leaf_id),
+                      players_override=players_for_leaf(leaf_id), n_solutions=1, on_solution=None)
         result = optimize_my_team(**kwargs)
-        return LeafResult(leaf_id, result, _objective_value(result))
+        leaf_results = [LeafResult(leaf_id, result, _objective_value(result))]
+        expected_objective = leaf_results[0].objective
+        solver_status = "linear"
+    else:
+        prepared = {}
+        snapshot = base_kwargs.get("_team_snapshot")
 
-    def candidate_prefixes(
-        endpoint_id: str,
-        forced_moves: list[dict[str, Any]],
-        locked_counts: dict[int, int],
-    ) -> list[tuple[list[dict[str, Any]], dict[int, int]]]:
-        leaves = sorted(
-            _descendant_leaves(endpoint_id, children),
-            key=lambda leaf_id: leaf_probabilities[leaf_id],
-            reverse=True,
-        )
-        candidates: list[tuple[list[dict[str, Any]], dict[int, int]]] = []
-        seen: set[tuple[Any, ...]] = set()
-        for leaf_id in leaves:
+        def prepare(leaf_id, candidate_names=None):
             kwargs = dict(base_kwargs)
-            kwargs.update(
-                **_chip_kwargs(leaf_id, nodes),
-                forced_transfers=_merge_moves(forced_for_leaf(leaf_id), forced_moves),
-                locked_transfer_counts_by_gw=dict(locked_counts),
-                players_override=players_for_leaf(leaf_id),
-                n_solutions=1,
-                on_solution=None,
-            )
-            result = optimize_my_team(**kwargs)
-            if result.empty or "solution" not in result.columns:
-                continue
-            moves, counts = _extract_prefix(result, nodes[endpoint_id].gw)
-            key = _prefix_key(moves, counts)
-            if key in seen:
-                continue
-            seen.add(key)
-            candidates.append((moves, counts))
-            if len(candidates) >= max_candidates:
-                break
-        if not candidates:
-            raise ValueError(
-                f"No feasible shared transfer plan was found through GW{nodes[endpoint_id].gw}."
-            )
-        return candidates
+            kwargs.update(**_chip_kwargs(leaf_id, nodes), forced_transfers=forced_for_leaf(leaf_id),
+                          players_override=players_for_leaf(leaf_id), n_solutions=1, on_solution=None,
+                          _prepare_for_tree=True, _tree_candidate_names=candidate_names, _team_snapshot=snapshot)
+            return optimize_my_team(**kwargs)
 
-    def solve_subtree(
-        start_id: str,
-        inherited_moves: list[dict[str, Any]],
-        inherited_counts: dict[int, int],
-    ) -> tuple[float, list[LeafResult], list[dict[str, Any]], dict[int, int]]:
-        endpoint_id = _segment_endpoint(start_id, children)
-        endpoint_children = children[endpoint_id]
-        if not endpoint_children:
-            leaf = solve_leaf(endpoint_id, inherited_moves, inherited_counts)
-            return leaf.objective, [leaf], inherited_moves, inherited_counts
+        for leaf_id in leaf_ids:
+            prepared[leaf_id] = prepare(leaf_id)
+            snapshot = prepared[leaf_id].team_snapshot
+        # Scenario filtering must not remove a player who is useful in another
+        # outcome: all blocks need the same candidate pool for a fair compromise.
+        candidates = set().union(*(set(item.player_indices) for item in prepared.values()))
+        for leaf_id in leaf_ids:
+            if set(prepared[leaf_id].player_indices) != candidates:
+                prepared[leaf_id] = prepare(leaf_id, sorted(candidates))
+        if any(set(item.player_indices) != candidates for item in prepared.values()):
+            raise ValueError("Scenario player pools could not be aligned.")
 
-        best_expected: Optional[float] = None
-        best_results: Optional[list[LeafResult]] = None
-        best_moves: Optional[list[dict[str, Any]]] = None
-        best_counts: Optional[dict[int, int]] = None
-        for prefix_moves, prefix_counts in candidate_prefixes(
-            endpoint_id, inherited_moves, inherited_counts
-        ):
-            combined_moves = _merge_moves(inherited_moves, prefix_moves)
-            combined_counts = {**inherited_counts, **prefix_counts}
-            expected = 0.0
-            results: list[LeafResult] = []
-            feasible = True
-            for child_id in endpoint_children:
-                try:
-                    child_expected, child_results, _, _ = solve_subtree(
-                        child_id, combined_moves, combined_counts
-                    )
-                except ValueError:
-                    feasible = False
-                    break
-                expected += nodes[child_id].probability * child_expected
-                results.extend(child_results)
-            if feasible and (best_expected is None or expected > best_expected):
-                best_expected = expected
-                best_results = results
-                best_moves = combined_moves
-                best_counts = combined_counts
+        joint = pyo.ConcreteModel()
+        for index, leaf_id in enumerate(leaf_ids):
+            model = prepared[leaf_id].model
+            model.obj_base.deactivate()
+            model.obj_risk.deactivate()
+            model.obj_floor_con.deactivate()
+            joint.add_component(f"path_{index}", model)
+        add_shared_deadline_constraints(joint, prepared, paths)
+        joint.expected_base = pyo.Expression(expr=sum(
+            leaf_probabilities[leaf_id] * prepared[leaf_id].model.base_obj_expr for leaf_id in leaf_ids
+        ))
+        joint.objective = pyo.Objective(expr=joint.expected_base, sense=pyo.maximize)
+        solver = pyo.SolverFactory("highs")
+        if base_kwargs.get("time_limit", 120) is not None:
+            solver.options["time_limit"] = base_kwargs.get("time_limit", 120)
+        solver.options["mip_rel_gap"] = base_kwargs.get("mip_gap", 0.01)
 
-        if best_expected is None or best_results is None:
-            raise ValueError(
-                f"No feasible policy was found for the split after GW{nodes[endpoint_id].gw}."
-            )
-        return best_expected, best_results, best_moves or [], best_counts or {}
+        def solve_joint():
+            result = solver.solve(joint, tee=bool(base_kwargs.get("solver_tee", False)), load_solutions=False)
+            if not len(result.solution):
+                raise ValueError("No feasible shared plan was found before the scenario becomes known. Check conflicting forced transfers across split outcomes, chips and budget.")
+            joint.solutions.load_from(result)
+            return str(result.solver.termination_condition)
 
-    expected_objective, leaf_results, _, _ = solve_subtree(root_id, [], {})
+        solver_status = solve_joint()
+        risk = float(base_kwargs.get("risk_factor", 0) or 0)
+        if risk:
+            best_base = pyo.value(joint.expected_base)
+            joint.risk_floor = pyo.Constraint(expr=joint.expected_base >= best_base - abs(risk) * 0.1 * best_base)
+            joint.objective.deactivate()
+            joint.risk_objective = pyo.Objective(expr=sum(
+                leaf_probabilities[leaf_id] * prepared[leaf_id].model.risk_obj_expr for leaf_id in leaf_ids
+            ), sense=pyo.minimize if risk < 0 else pyo.maximize)
+            solver_status = solve_joint()
+        expected_objective = float(pyo.value(joint.expected_base))
+        leaf_results = []
+        for leaf_id in leaf_ids:
+            result = prepared[leaf_id].export_solution()
+            leaf_results.append(LeafResult(leaf_id, result, _objective_value(result)))
     expected_points = sum(
         leaf_probabilities[leaf_result.leaf_id]
         * _result_metric(leaf_result.frame, "solution_TotalExpectedPoints")
@@ -575,6 +489,8 @@ def optimize_scenario_tree(
         leaf_df["tree_branch_probability"] = leaf_probabilities[leaf_result.leaf_id]
         leaf_df["tree_branch_objective"] = leaf_result.objective
         leaf_df["tree_expected_objective"] = expected_objective
+        leaf_df["tree_information_timing"] = "after_deadline"
+        leaf_df["tree_solver_status"] = solver_status
         leaf_df["tree_branch_expected_points"] = _result_metric(
             leaf_result.frame, "solution_TotalExpectedPoints"
         )

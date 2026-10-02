@@ -36,6 +36,10 @@ try {
   }) } };
   const html = renderToStaticMarkup(React.createElement(MemoryRouter, {}, React.createElement(Page)));
   assert.ok(html.includes('Decision tree'));
+  assert.ok(html.includes('aria-label="Transfers for Shared, GW6"'));
+  assert.ok(!html.includes('Click a top circle'));
+  assert.ok(!html.includes('Compact view shows only'));
+  assert.ok(html.includes('aria-label="Reset selected tree"'));
   assert.ok(!html.includes('Horizontal transfer tree'));
   assert.ok(!html.includes('Optimization controls'));
   assert.ok(html.indexOf('AI model') < html.indexOf('Decision tree'));

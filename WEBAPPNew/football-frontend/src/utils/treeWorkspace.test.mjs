@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { getPlanningPath, resolvePlanningPath, plansForPath, migrateNodePlans, completeTreeHorizons, alignTreeResultPaths, extendTreeToResultHorizon } from './treeWorkspace.js';
+import { shareDecisionPlanEdits, getPlanningPath, resolvePlanningPath, plansForPath, migrateNodePlans, completeTreeHorizons, alignTreeResultPaths, extendTreeToResultHorizon } from './treeWorkspace.js';
 
 const nodes = [
   { id: 'root', gw: 5, isAnchor: true },
@@ -11,6 +11,25 @@ const nodes = [
   { id: 'other-root', gw: 5, isAnchor: true },
   { id: 'other', parentId: 'other-root', gw: 6 },
 ];
+
+test('editing a split decision shares transfers and lineup with siblings only', () => {
+  const previous = { 'right-next': { transfers: [{ id: 'later' }] }, other: { transfers: [{ id: 'other' }] } };
+  const next = { ...previous, left: { transfers: [{ id: 'shared-move', nodeId: 'left' }], statusOverrides: { A: 'benched' } } };
+  const result = shareDecisionPlanEdits(previous, next, nodes);
+  assert.equal(result.right.transfers[0].nodeId, 'right');
+  assert.equal(result.right.transfers[0].id, 'shared-move');
+  assert.equal(result.right.transfers[0].gw, 7);
+  assert.deepEqual(result.right.statusOverrides, { A: 'benched' });
+  assert.equal(result['right-next'], previous['right-next']);
+  assert.equal(result.other, previous.other);
+});
+
+test('removing the last forced move clears all outcomes at that deadline', () => {
+  const previous = { left: { transfers: [{ id: 'move' }] }, right: { transfers: [{ id: 'move' }] } };
+  const result = shareDecisionPlanEdits(previous, { ...previous, right: { transfers: [] } }, nodes);
+  assert.deepEqual(result.left.transfers, []);
+  assert.deepEqual(result.right.transfers, []);
+});
 
 test('sibling paths inherit shared plans without leaking sibling or other-tree moves', () => {
   const plans = { shared: { transfers: ['shared'] }, left: { transfers: ['left'] }, right: { transfers: ['right'] }, other: { transfers: ['other'] } };

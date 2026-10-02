@@ -45,7 +45,7 @@ import { useOptimizationModel } from "./Contexts/OptimizationModelContext";
 import { useStatsData } from "./Contexts/StatsContext";
 import ScenarioSelect, { ScenarioColorDot } from "./components/ScenarioSelect";
 import teamShort from "./utils/team_short";
-import { DEFAULT_TREE_SETTINGS, getNodePath, resolvePlanningPath, plansForPath, migrateNodePlans, completeTreeHorizons, alignTreeResultPaths, extendTreeToResultHorizon } from "./utils/treeWorkspace";
+import { DEFAULT_TREE_SETTINGS, shareDecisionPlanEdits, getNodePath, resolvePlanningPath, plansForPath, migrateNodePlans, completeTreeHorizons, alignTreeResultPaths, extendTreeToResultHorizon } from "./utils/treeWorkspace";
 import useCanvasPan from "./hooks/useCanvasPan";
 import TreeNodePitch from "./components/TreeNodePitch";
 import { accountTransfers, transferPenaltyPoints } from "./utils/transferAccounting";
@@ -208,7 +208,7 @@ const syncTreeMasses = (nodes) => {
   }));
 };
 
-const buildVerticalTreeLayout = (nodes) => {
+const buildVerticalTreeLayout = (nodes, heights = {}) => {
   const childrenByParent = buildTreeChildrenMap(nodes);
   const roots = nodes.filter((node) => !node.parentId);
   const positions = {};
@@ -216,7 +216,13 @@ const buildVerticalTreeLayout = (nodes) => {
   let treeOffset = 0;
   const horizontalGap = 290;
   const treeGap = 160;
-  const verticalGap = 475;
+  const maxDepth = Math.max(0, ...nodes.map((node) => getNodePath(nodes, node.id).length - 1));
+  const levelY = [50];
+  for (let depth = 0; depth < maxDepth; depth += 1) {
+    const levelHeight = Math.max(80, ...nodes.filter((node) => getNodePath(nodes, node.id).length - 1 === depth)
+      .map((node) => node.isAnchor ? 80 : heights[node.id] || TREE_NODE_HEIGHT));
+    levelY.push(levelY[depth] + levelHeight + 55);
+  }
 
   const place = (node, depth) => {
     const children = childrenByParent.get(node.id) || [];
@@ -228,7 +234,7 @@ const buildVerticalTreeLayout = (nodes) => {
       const childCenters = children.map((child) => place(child, depth + 1));
       centerX = childCenters.reduce((sum, value) => sum + value, 0) / childCenters.length;
     }
-    positions[node.id] = { x: centerX - TREE_NODE_WIDTH / 2, y: 50 + depth * verticalGap };
+    positions[node.id] = { x: centerX - TREE_NODE_WIDTH / 2, y: levelY[depth] };
     return centerX;
   };
 
@@ -239,7 +245,7 @@ const buildVerticalTreeLayout = (nodes) => {
   return {
     positions,
     width: Math.max(900, 300 + Math.max(1, leafIndex) * horizontalGap + treeOffset),
-    height: Math.max(620, 170 + Math.max(1, ...Object.values(positions).map((position) => position.y)) + 180),
+    height: Math.max(620, ...nodes.map((node) => positions[node.id].y + (heights[node.id] || TREE_NODE_HEIGHT) + 80)),
   };
 };
 
@@ -825,7 +831,11 @@ export default function MyTeamOptimize() {
   const [selectedTreeBranchId, setSelectedTreeBranchId] = useState("");
   const [treeOptimizationResults, setTreeOptimizationResults] = useState({});
   const [optimizingTreeRootId, setOptimizingTreeRootId] = useState("");
-  const [nodePlans, setNodePlans] = useState({});
+  const [nodePlans, setRawNodePlans] = useState({});
+  const setNodePlans = useCallback((updater) => setRawNodePlans((previous) => {
+    if (typeof updater !== "function") return updater;
+    return shareDecisionPlanEdits(previous, updater(previous), treeNodes);
+  }), [treeNodes]);
   const [selectedTreeNodeId, setSelectedTreeNodeId] = useState("");
   const activeRoot = treeNodes.find((node) => node.id === activeTreeRootId);
   const treeName = activeRoot?.treeName ?? `Tree ${treeNodes.filter((node) => !node.parentId).findIndex((node) => node.id === activeTreeRootId) + 1}`;
@@ -853,14 +863,20 @@ export default function MyTeamOptimize() {
       });
       return result;
     });
-  }, [planningPath]);
+  }, [planningPath, setNodePlans]);
   useEffect(() => {
     setNodePlans((previous) => {
       const ids = new Set(treeNodes.map((node) => node.id));
-      return Object.keys(previous).some((id) => !ids.has(id))
-        ? Object.fromEntries(Object.entries(previous).filter(([id]) => ids.has(id))) : previous;
+      const result = Object.fromEntries(Object.entries(previous).filter(([id]) => ids.has(id)));
+      let changed = Object.keys(result).length !== Object.keys(previous).length;
+      treeNodes.forEach((node) => {
+        if (!node.parentId || result[node.id]) return;
+        const peer = treeNodes.find((other) => other.parentId === node.parentId && previous[other.id]);
+        if (peer) { result[node.id] = previous[peer.id]; changed = true; }
+      });
+      return changed ? result : previous;
     });
-  }, [treeNodes]);
+  }, [treeNodes, setNodePlans]);
   const bbRound = planningPath.find((node) => node.chip === "bench_boost")?.gw;
   const wildRound = planningPath.find((node) => node.chip === "wildcard")?.gw;
   const freehitROund = planningPath.find((node) => node.chip === "freehit")?.gw;
@@ -1652,23 +1668,44 @@ export default function MyTeamOptimize() {
     });
     return diagnostics;
   }, [statisticalScenarioPlayerSets, treeEffectiveScenarioById, treeNodes]);
+  const treeTransferSummaries = useMemo(() => {
+    const summaries = new Map();
+    const hidden = new Set(hiddenModelTransferKeys);
+    treeNodes.filter((node) => !node.isAnchor).forEach((node) => {
+      const rootId = treeRootByNodeId.get(node.id);
+      const source = rootId === activeTreeRootId ? optimizationDisplayData
+        : alignTreeResultPaths(treeOptimizationResults[rootId]?.rows || [], treeNodes);
+      const rows = source.filter((row) => Number(row.GW) === Number(node.gw) && Number(row.solution || 1) === 1
+        && String(row.tree_path_node_ids || "").split(">").includes(node.id));
+      const branchRows = rows.filter((row) => row.tree_branch_id === rows[0]?.tree_branch_id);
+      const manualPairs = nodePlans[node.id]?.transfers || [];
+      const optimizerPairs = buildTransferPairs({ in: branchRows.filter((row) => row.status === "transferred_in"), out: branchRows.filter((row) => row.status === "transferred_out") })
+        .filter((pair) => !manualPairs.some((move) => manualTransferMatchesPair(move, pair)))
+        .filter(({ outP, inP }) => !hidden.has(`${node.id}:${transferPairKey(node.gw, outP, inP)}`));
+      summaries.set(node.id, { manualPairs, optimizerPairs });
+    });
+    return summaries;
+  }, [treeNodes, treeRootByNodeId, activeTreeRootId, optimizationDisplayData, treeOptimizationResults, nodePlans, hiddenModelTransferKeys]);
+  const treeExpandedNodeHeights = useMemo(() => Object.fromEntries([...treeTransferSummaries].map(([id, summary]) =>
+    [id, TREE_NODE_HEIGHT + 40 + 64 * (summary.manualPairs.length + summary.optimizerPairs.length)])), [treeTransferSummaries]);
+  const treeHeightKey = JSON.stringify(treeExpandedNodeHeights);
   const treeTopologyKey = treeNodes
     .map((node) => `${node.id}:${node.parentId || "root"}:${node.gw}`)
     .sort()
     .join("|");
   const treeAutoLayout = useMemo(
-    () => buildVerticalTreeLayout(treeNodes),
+    () => buildVerticalTreeLayout(treeNodes, treeExpandedNodeHeights),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [treeTopologyKey]
+    [treeTopologyKey, treeHeightKey]
   );
   const newTreeRootPosition = useMemo(() => {
     const previewNodes = buildNewTreeNodes(
       "__new_tree_preview__",
       Number(availableGWs[0]) || 6
     );
-    const previewLayout = buildVerticalTreeLayout([...treeNodes, ...previewNodes]);
+    const previewLayout = buildVerticalTreeLayout([...treeNodes, ...previewNodes], treeExpandedNodeHeights);
     return previewLayout.positions[previewNodes[0].id] || null;
-  }, [availableGWs, treeNodes]);
+  }, [availableGWs, treeNodes, treeExpandedNodeHeights]);
 
   useEffect(() => {
     if (pendingTreePositionsRef.current) {
@@ -1704,9 +1741,12 @@ export default function MyTeamOptimize() {
   );
 
   const updateTreeNode = (nodeId, patch) => {
-    setTreeNodes((previous) =>
-      previous.map((node) => (node.id === nodeId ? { ...node, ...patch } : node))
-    );
+    setTreeNodes((previous) => {
+      const selected = previous.find((node) => node.id === nodeId);
+      return previous.map((node) => node.id === nodeId ? { ...node, ...patch }
+        : patch.chip !== undefined && selected?.parentId && node.parentId === selected.parentId && node.gw === selected.gw
+          ? { ...node, chip: patch.chip } : node);
+    });
   };
 
   const updateTreeSplitProbability = (nodeId, rawProbability) => {
@@ -1791,7 +1831,7 @@ export default function MyTeamOptimize() {
         gw: Number(parent.gw) + 1,
         parentId,
         probability: targetMass,
-        chip: "none",
+        chip: existing[0]?.chip || "none",
         scenarioId: "inherit",
       }));
       return syncTreeMasses([...rebalanced, ...additions]);
@@ -1978,13 +2018,13 @@ export default function MyTeamOptimize() {
   );
   const treeCanvasHeight = Math.max(
     treeAutoLayout.height,
-    ...Object.values(treeNodePositions).map((position) => Number(position.y) + TREE_NODE_HEIGHT + 50)
+    ...Object.entries(treeNodePositions).map(([id, position]) => Number(position.y) + (treeExpandedNodeHeights[id] || TREE_NODE_HEIGHT) + 50)
   );
   const treeCompactView = treeZoom < TREE_COMPACT_ZOOM;
   const getRenderedTreeNodeHeight = (nodeId) =>
     treeCompactView && expandedCompactTreeNodeId !== nodeId
       ? TREE_COMPACT_NODE_HEIGHT
-      : TREE_NODE_HEIGHT;
+      : treeExpandedNodeHeights[nodeId] || TREE_NODE_HEIGHT;
   const changeTreeZoom = (delta) => {
     setTreeZoom((current) => {
       const next = Math.round((current + delta) * 10) / 10;
@@ -2370,7 +2410,7 @@ export default function MyTeamOptimize() {
       ...previous[nodeId], transfers: (previous[nodeId]?.transfers || []).filter((move) => move.id !== transferId),
     } }));
     sethas_changed(true);
-  }, [activeGW, planningPath, nodePlans, sethas_changed]);
+  }, [activeGW, planningPath, nodePlans, sethas_changed, setNodePlans]);
 
   useEffect(() => {
     if (!transferInKey) return;
@@ -2862,7 +2902,7 @@ export default function MyTeamOptimize() {
     setActiveSavedId(null);
     setSaveError("");
     setSaveHint("Team loaded. Run Optimize when you want to apply a solver plan.");
-  }, [fetchMyTeam]);
+  }, [fetchMyTeam, setNodePlans]);
 
   const canSave = Array.isArray(optimizationDisplayData) && optimizationDisplayData.length > 0 && typeof saveOptimization === "function";
 
@@ -3223,27 +3263,12 @@ export default function MyTeamOptimize() {
 
               {treeEditorOpen && (
                 <div id="tree-editor-canvas" className="mt-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="text-[11px]" style={{ color: PALETTE.muted }}>
-                      Click a top circle to select the tree used by the optimizer. The grey + marks where the next root will be added; use × on the selected root to delete it.
-                    </p>
-                      <button
-                        type="button"
-                        onClick={resetActiveTree}
-                      className="gold-ring shrink-0 rounded-full border bg-white px-3 py-1.5 text-[11px] font-semibold"
-                      style={{ borderColor: PALETTE.border, color: PALETTE.gold }}
-                    >
-                      Reset selected tree
-                    </button>
-                  </div>
-
-                  <div className="mt-3 flex items-center justify-between gap-3 text-[11px]" style={{ color: PALETTE.muted }}>
-                    <span>
-                      {treeCompactView
-                        ? "Compact view shows only GW, name, scenario, and active chip. Zoom in to edit nodes."
-                        : "Drag the background to pan. Drag a node header to rearrange it. Use + to split a path."}
-                    </span>
+                  <div className="flex items-center justify-end gap-3 text-[11px]" style={{ color: PALETTE.muted }}>
                     <div className="flex shrink-0 items-center gap-1.5">
+                      <button type="button" onClick={resetActiveTree} aria-label="Reset selected tree" title="Reset selected tree"
+                        className="gold-ring flex h-8 w-8 items-center justify-center rounded-full border bg-white" style={{ borderColor: PALETTE.border, color: PALETTE.gold }}>
+                        <RefreshCw size={14} />
+                      </button>
                       <button
                         type="button"
                         onClick={() => changeTreeZoom(-TREE_ZOOM_STEP)}
@@ -3412,6 +3437,7 @@ export default function MyTeamOptimize() {
                         const isActiveTree = nodeTreeRootId === activeTreeRootId;
                         const isExpandedCompactNode = treeCompactView && expandedCompactTreeNodeId === node.id;
                         const useCompactNode = treeCompactView && !isExpandedCompactNode;
+                        const nodeTransfers = treeTransferSummaries.get(node.id) || { manualPairs: [], optimizerPairs: [] };
                         const nodePredictedPoints = optimizedPointsByTreeNode.get(node.id);
                         const predictedPointsBadge = Number.isFinite(nodePredictedPoints) ? (
                           <div
@@ -3516,7 +3542,7 @@ export default function MyTeamOptimize() {
                             style={{
                               left: position.x,
                               top: position.y,
-                              height: useCompactNode ? TREE_COMPACT_NODE_HEIGHT : TREE_NODE_HEIGHT,
+                              height: getRenderedTreeNodeHeight(node.id),
                               borderColor: node.chip !== "none" ? PALETTE.gold : PALETTE.border,
                               boxShadow: isDragging ? "0 20px 40px rgba(15,23,42,0.24)" : "0 10px 24px rgba(15,23,42,0.12)",
                               transition: isDragging ? "none" : "box-shadow 160ms ease, border-color 160ms ease",
@@ -3682,6 +3708,16 @@ export default function MyTeamOptimize() {
                                   )}
                                 </div>
                               )}
+
+                              <div className="mt-3 border-t pt-2" aria-label={`Transfers for ${node.label}, GW${node.gw}`}>
+                                <div className="text-[10px] font-bold text-slate-500">Transfers</div>
+                                {!nodeTransfers.manualPairs.length && !nodeTransfers.optimizerPairs.length && <div className="mt-1 text-[10px] text-slate-500">No transfers</div>}
+                                {nodeTransfers.manualPairs.map((move) => <TreeTransferRow key={move.id}
+                                  outPlayer={resolveTransferPlayer(move.outName, move.outPlayer)} inPlayer={resolveTransferPlayer(move.inName, move.inPlayer)}
+                                  caption={move.isLocked ? "Locked transfer" : "Forced transfer"} />)}
+                                {nodeTransfers.optimizerPairs.map(({ outP, inP }) => <TreeTransferRow key={transferPairKey(node.gw, outP, inP)}
+                                  outPlayer={outP} inPlayer={inP} caption="Optimized transfer" />)}
+                              </div>
 
                               {isLeaf && Number(node.gw) < 38 && (
                                 <button
@@ -4812,7 +4848,7 @@ function TreeTransferRow({ outPlayer, inPlayer, caption, onRemove }) {
         <ArrowRight size={12} className="shrink-0 text-slate-400" />
         <span className="min-w-0 max-w-24 truncate text-[10px]" title={getPlayerDisplayName(inPlayer)}>{getPlayerDisplayName(inPlayer)}</span>
         <img src={getPlayerPhoto(inPlayer)} alt={getPlayerDisplayName(inPlayer)} className="h-8 w-8 shrink-0 rounded-full object-cover" />
-        <button type="button" onClick={onRemove} className="shrink-0 rounded-full p-0.5 text-red-500" aria-label={`Remove ${getPlayerDisplayName(outPlayer)} to ${getPlayerDisplayName(inPlayer)}`}><X size={12} /></button>
+        {onRemove && <button type="button" onClick={onRemove} className="shrink-0 rounded-full p-0.5 text-red-500" aria-label={`Remove ${getPlayerDisplayName(outPlayer)} to ${getPlayerDisplayName(inPlayer)}`}><X size={12} /></button>}
       </div>
     </div>
   );

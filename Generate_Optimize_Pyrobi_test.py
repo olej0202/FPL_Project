@@ -1,4 +1,5 @@
 from typing import Optional, Dict, Any, Callable
+from dataclasses import dataclass
 import re
 import unicodedata
 import numpy as np
@@ -13,6 +14,15 @@ MAX_FREE_TRANSFERS = 5
 MAX_HITS = 2
 # The public/UI setting remains normalized: 0.5 now means 1.2 points.
 TRANSFER_PENALTY_SCALE = 2.4
+
+
+@dataclass
+class PreparedTeamModel:
+    model: Any
+    player_indices: dict[str, int]
+    gameweeks: dict[int, int]
+    team_snapshot: pd.DataFrame
+    export_solution: Callable[[], pd.DataFrame]
 
 
 def add_transfer_rules(model, wildcard_weeks, freehit_weeks, initial_saved):
@@ -312,7 +322,10 @@ def optimize_my_team(
     forced_transfers: Optional[list[dict[str, Any]]] = None,
     locked_transfer_counts_by_gw: Optional[dict[int, int]] = None,
     on_solution: Optional[Callable[[int, list[dict[str, Any]]], None]] = None,
-) -> pd.DataFrame:
+    _prepare_for_tree: bool = False,
+    _tree_candidate_names: Optional[list[str]] = None,
+    _team_snapshot: Optional[pd.DataFrame] = None,
+) -> pd.DataFrame | PreparedTeamModel:
 
     if banned_list is None:
         banned_list = []
@@ -496,7 +509,7 @@ def optimize_my_team(
             )
         money_in_bank_init = max(0.0, round(money_in_bank_init, 4))
     else:
-        team_df = build_team_dataframe(team_id)
+        team_df = _team_snapshot.copy() if _team_snapshot is not None else build_team_dataframe(team_id)
         initial_saved = int(team_df["saved_transfers"].values[0])
         money_in_bank_init = float(team_df["money_in_bank_m"].values[0])
     data = prefilter_players_by_horizon_points(
@@ -504,7 +517,7 @@ def optimize_my_team(
         team_df=team_df,
         gw_list=GW_list,
         min_points_per_gw=1.0,
-        forced_keep_names=force_in_list + [
+        forced_keep_names=force_in_list + (_tree_candidate_names or []) + [
             move["in_name"] for move in normalized_forced_transfers
         ],
     )
@@ -1501,6 +1514,20 @@ def optimize_my_team(
         return term in {"optimal", "feasible"}
 
     last_incumbent: Optional[Dict[str, Dict[Any, int]]] = None
+
+    if _prepare_for_tree:
+        def export_tree_solution():
+            all_records.clear()
+            append_solution_records(1)
+            return pd.DataFrame(all_records)
+
+        return PreparedTeamModel(
+            model=m,
+            player_indices=name_to_player_idx,
+            gameweeks={int(GW_list[t]): t for t in T if t > 0},
+            team_snapshot=team_df.copy(),
+            export_solution=export_tree_solution,
+        )
 
     for solution_no in range(1, n_solutions + 1):
         print(f"\n{'=' * 70}")
