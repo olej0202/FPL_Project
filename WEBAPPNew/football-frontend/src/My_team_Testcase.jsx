@@ -809,7 +809,6 @@ export default function MyTeamOptimize() {
   const [loadingPhase, setLoadingPhase] = useState("idle");
   const [progress, setProgress] = useState(0);
   const [treeEditorOpen, setTreeEditorOpen] = useState(initialTreeWorkspaceRef.current.treeEditorOpen);
-  const treeCanvasPan = useCanvasPan();
   const [savedOpen, setSavedOpen] = useState(false);
   const treeMode = true;
   const [treeNodes, setRawTreeNodes] = useState(() => completeTreeHorizons(initialTreeWorkspaceRef.current.nodes.map((node, index) => node.parentId ? node : {
@@ -892,6 +891,8 @@ export default function MyTeamOptimize() {
   const pitchSectionRef = useRef(null);
   const transferEditorRef = useRef(null);
   const treeCanvasRef = useRef(null);
+  const centeredMobileTreeRef = useRef("");
+  const treeCanvasPan = useCanvasPan({ viewportRef: treeCanvasRef, zoom: treeZoom, onZoom: setTreeZoom, minZoom: TREE_ZOOM_MIN, maxZoom: TREE_ZOOM_MAX });
   const pendingTreePositionsRef = useRef(null);
   const restoredTreePositionsRef = useRef(
     Object.keys(initialTreeWorkspaceRef.current.positions || {}).length > 0
@@ -1978,7 +1979,7 @@ export default function MyTeamOptimize() {
   };
 
   const startTreeNodeDrag = (event, nodeId) => {
-    if (event.button !== 0) return;
+    if (event.button !== 0 || event.pointerType === "touch") return;
     event.stopPropagation();
     const position = treeNodePositions[nodeId] || treeAutoLayout.positions[nodeId] || { x: 0, y: 0 };
     event.currentTarget.setPointerCapture?.(event.pointerId);
@@ -2020,16 +2021,23 @@ export default function MyTeamOptimize() {
     treeAutoLayout.height,
     ...Object.entries(treeNodePositions).map(([id, position]) => Number(position.y) + (treeExpandedNodeHeights[id] || TREE_NODE_HEIGHT) + 50)
   );
+  useEffect(() => {
+    if (!treeEditorOpen) { centeredMobileTreeRef.current = ""; return; }
+    if (!window.matchMedia('(max-width: 639px)').matches || centeredMobileTreeRef.current === activeTreeRootId) return;
+    const pane = treeCanvasRef.current;
+    const position = treeNodePositions[activeTreeRootId] || treeAutoLayout.positions[activeTreeRootId];
+    if (!pane || !position) return;
+    pane.scrollLeft = (position.x + TREE_NODE_WIDTH / 2) * treeZoom - pane.clientWidth / 2;
+    pane.scrollTop = Math.max(0, position.y * treeZoom - 24);
+    centeredMobileTreeRef.current = activeTreeRootId;
+  }, [activeTreeRootId, treeEditorOpen, treeNodePositions, treeAutoLayout.positions, treeZoom]);
   const treeCompactView = treeZoom < TREE_COMPACT_ZOOM;
   const getRenderedTreeNodeHeight = (nodeId) =>
     treeCompactView && expandedCompactTreeNodeId !== nodeId
       ? TREE_COMPACT_NODE_HEIGHT
       : treeExpandedNodeHeights[nodeId] || TREE_NODE_HEIGHT;
   const changeTreeZoom = (delta) => {
-    setTreeZoom((current) => {
-      const next = Math.round((current + delta) * 10) / 10;
-      return Math.min(TREE_ZOOM_MAX, Math.max(TREE_ZOOM_MIN, next));
-    });
+    treeCanvasPan.zoomTo(Math.round((treeZoom + delta) * 10) / 10);
   };
   const handleTreeZoomWheel = (event) => {
     if (!event.ctrlKey && !event.metaKey) return;
@@ -3055,7 +3063,7 @@ export default function MyTeamOptimize() {
 
   return (
     <div
-      className="min-h-screen"
+      className="team-workspace min-h-screen"
       style={{
         background: `radial-gradient(circle at top, ${PALETTE.red} 0, ${PALETTE.black} 52%, #cbd5e1 100%)`,
         color: PALETTE.beige,
@@ -3070,10 +3078,21 @@ export default function MyTeamOptimize() {
           display: block;
           flex-shrink: 0;
         }
-        @media (max-width: 640px) {
-          input, select, textarea {
+        @media (max-width: 639px) {
+          .team-workspace input, .team-workspace select, .team-workspace textarea {
             font-size: 16px !important;
           }
+          .team-workspace { overflow-x: clip; }
+          .team-workspace .glass-card { min-width: 0; }
+          .team-workspace button:not([data-tree-node] button):not(.tree-node-pitch button),
+          .team-workspace summary { min-height: 44px; touch-action: manipulation; }
+          .team-workspace .tree-toolbar button { min-width: 44px; }
+          .team-workspace .tree-viewport { height: min(62svh, 560px); overscroll-behavior: contain; }
+          .team-workspace .gw-navigation { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+          .team-workspace .gw-navigation > span { grid-column: 1 / -1; grid-row: 1; }
+          .team-workspace .gw-navigation > button { justify-content: center; }
+          .team-workspace .gw-list { flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; padding-bottom: 4px; }
+          .team-workspace .gw-list > button { flex-shrink: 0; }
         }
         summary::-webkit-details-marker { display: none; }
         .glass-card {
@@ -3113,7 +3132,7 @@ export default function MyTeamOptimize() {
         }
       `}</style>
 
-      <div className="mx-auto max-w-7xl px-4 py-6 sm:py-8 lg:py-10">
+      <div className="mx-auto max-w-7xl px-2 py-4 sm:px-4 sm:py-8 lg:py-10">
         <header className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <div
@@ -3234,7 +3253,7 @@ export default function MyTeamOptimize() {
                 onChange={(event) => updateTreeNode(activeTreeRootId, { treeName: event.target.value })} />
             </label>
             <div
-              className="mt-4 rounded-[24px] p-4"
+              className="mt-4 rounded-[24px] p-2 sm:p-4"
               style={{ border: `1px solid ${treeMode ? PALETTE.gold : PALETTE.border}`, background: "rgba(248,250,252,0.88)" }}
             >
               <button type="button" onClick={() => setTreeEditorOpen((open) => !open)} aria-expanded={treeEditorOpen} aria-controls="tree-editor-canvas"
@@ -3263,8 +3282,8 @@ export default function MyTeamOptimize() {
 
               {treeEditorOpen && (
                 <div id="tree-editor-canvas" className="mt-4">
-                  <div className="flex items-center justify-end gap-3 text-[11px]" style={{ color: PALETTE.muted }}>
-                    <div className="flex shrink-0 items-center gap-1.5">
+                  <div className="tree-toolbar flex flex-wrap items-center justify-end gap-3 text-[11px]" style={{ color: PALETTE.muted }}>
+                    <div className="flex flex-wrap items-center justify-end gap-1.5">
                       <button type="button" onClick={resetActiveTree} aria-label="Reset selected tree" title="Reset selected tree"
                         className="gold-ring flex h-8 w-8 items-center justify-center rounded-full border bg-white" style={{ borderColor: PALETTE.border, color: PALETTE.gold }}>
                         <RefreshCw size={14} />
@@ -3282,7 +3301,7 @@ export default function MyTeamOptimize() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => setTreeZoom(1)}
+                        onClick={() => treeCanvasPan.zoomTo(1)}
                         className="gold-ring min-w-12 rounded-full border bg-white px-2 py-1.5 font-semibold"
                         style={{ borderColor: PALETTE.border, color: PALETTE.gold }}
                         title="Reset zoom"
@@ -3303,10 +3322,12 @@ export default function MyTeamOptimize() {
                       <button
                         type="button"
                         onClick={() => setTreeNodePositions(treeAutoLayout.positions)}
-                        className="gold-ring ml-1 rounded-full border bg-white px-3 py-1.5 font-semibold"
+                        className="gold-ring ml-1 inline-flex items-center justify-center rounded-full border bg-white px-3 py-1.5 font-semibold"
                         style={{ borderColor: PALETTE.border, color: PALETTE.gold }}
+                        aria-label="Auto layout"
+                        title="Auto layout"
                       >
-                        Auto layout
+                        <Wand2 size={14} className="sm:hidden" /><span className="hidden sm:inline">Auto layout</span>
                       </button>
                     </div>
                   </div>
@@ -3316,7 +3337,7 @@ export default function MyTeamOptimize() {
                       ref={treeCanvasRef}
                       {...treeCanvasPan.handlers}
                       onWheel={handleTreeZoomWheel}
-                      className="max-h-[760px] overflow-auto rounded-2xl border"
+                      className="tree-viewport max-h-[760px] overflow-auto rounded-2xl border"
                       style={{ borderColor: PALETTE.border, background: "radial-gradient(circle, rgba(148,163,184,0.32) 1px, transparent 1px)", backgroundSize: "20px 20px", touchAction: "none", cursor: treeCanvasPan.panning ? "grabbing" : "grab" }}
                     >
                     <div
@@ -4059,8 +4080,8 @@ export default function MyTeamOptimize() {
         )}
 
           <section ref={pitchSectionRef} className="mb-6 grid grid-cols-1 gap-6 items-start">
-            <div className="glass-card flex flex-col rounded-[28px] p-4 sm:p-5">
-              <div className="flex items-center justify-between mb-4">
+            <div className="glass-card flex min-w-0 flex-col rounded-[28px] p-2 sm:p-5">
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-3 sm:flex-nowrap sm:gap-0">
                 <div>
                   <div className="text-sm font-semibold inline-flex items-center gap-2" style={{ color: PALETTE.gold }}>
                     <Trophy size={16} className="lucide-icon" />
@@ -4133,18 +4154,45 @@ export default function MyTeamOptimize() {
                           </option>)}
                         </select>
                       </label>
-                      <div className="mt-3 flex items-center justify-between gap-3">
+                      <div className="gw-navigation mt-3 flex items-center justify-between gap-3">
                         <button type="button" disabled={pitchNodeIndex <= 0} className="gold-ring flex items-center gap-1 rounded-full border px-3 py-2 text-xs font-semibold disabled:opacity-40"
                           onClick={() => selectPitchNode(planningPath[pitchNodeIndex - 1]?.id)}><ChevronLeft size={15} />Previous GW</button>
                         <span className="text-center text-sm font-bold">GW {activeGW} · {activeTreeNode?.label}</span>
                         <button type="button" disabled={pitchNodeIndex >= planningPath.length - 1} className="gold-ring flex items-center gap-1 rounded-full border px-3 py-2 text-xs font-semibold disabled:opacity-40"
                           onClick={() => selectPitchNode(planningPath[pitchNodeIndex + 1]?.id)}>Next GW<ChevronRight size={15} /></button>
                       </div>
-                      <div className="mt-3 flex flex-wrap justify-center gap-2" aria-label="Gameweeks in selected branch">
+                      <div className="gw-list mt-3 flex flex-wrap justify-center gap-2" aria-label="Gameweeks in selected branch">
                         {planningPath.map((node) => <button key={node.id} type="button" aria-pressed={node.id === activeTreeNode?.id} onClick={() => selectPitchNode(node.id)}
                           className="gold-ring rounded-full border px-3 py-1.5 text-xs font-semibold" style={{ background: node.id === activeTreeNode?.id ? PALETTE.gold : "white", color: node.id === activeTreeNode?.id ? "white" : PALETTE.text }}>GW{node.gw}</button>)}
                       </div>
                     </div>
+                    <details open className="group mt-3 rounded-2xl border p-3" aria-label="All transfers" style={{ borderColor: PALETTE.border }}>
+                      <summary className="gold-ring flex cursor-pointer list-none items-center justify-between rounded-lg text-sm font-semibold [&::-webkit-details-marker]:hidden">
+                        All transfers
+                        <ChevronDown size={16} className="transition-transform group-open:rotate-180" />
+                      </summary>
+                      <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                        {planningPath.map((node) => {
+                          const summary = treeTransferSummaries.get(node.id) || { manualPairs: [], optimizerPairs: [] };
+                          const chipLabel = { wildcard: "Wildcard", freehit: "Free Hit", bench_boost: "Bench Boost" }[node.chip];
+                          const hideMoves = node.chip === "wildcard" || node.chip === "freehit";
+                          return (
+                            <div key={node.id} className="min-w-0 rounded-xl border p-2 text-center" style={{ borderColor: node.id === activeTreeNode.id ? PALETTE.gold : PALETTE.border }}>
+                              <button type="button" className="gold-ring rounded-full px-3 py-1 text-xs font-bold" onClick={() => selectPitchNode(node.id)}>GW{node.gw}</button>
+                              {chipLabel && <div className="mt-1 text-xs font-semibold" style={{ color: PALETTE.gold }}>{chipLabel}</div>}
+                              {!hideMoves && <>
+                                {!summary.manualPairs.length && !summary.optimizerPairs.length && <p className="mt-2 text-xs" style={{ color: PALETTE.muted }}>No transfers</p>}
+                                {summary.manualPairs.map((move) => <TreeTransferRow key={move.id}
+                                  outPlayer={resolveTransferPlayer(move.outName, move.outPlayer)} inPlayer={resolveTransferPlayer(move.inName, move.inPlayer)}
+                                  caption={move.isLocked ? "Locked transfer" : "Forced transfer"} />)}
+                                {summary.optimizerPairs.map(({ outP, inP }) => <TreeTransferRow key={transferPairKey(node.gw, outP, inP)}
+                                  outPlayer={outP} inPlayer={inP} caption="Optimized transfer" />)}
+                              </>}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </details>
                     {modelType === "statistical" && (
                       <div className="mt-3 rounded-2xl border p-3" style={{ borderColor: PALETTE.border }}>
                         <div className="mb-1 text-xs font-semibold">Scenario from GW{activeGW}</div>
