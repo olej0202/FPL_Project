@@ -13,6 +13,7 @@ from GenerateDataset_Understat import Generate_Understat_dataset
 from chatgpt import main_GPT_News
 from Generate_Optimize_wildcardshocks import wildcard_optimize_team_shocks
 from GenerateXmins import GetXmins
+from GenerateXmins2 import GetXmins as GetXmins2
 from GenerateConfig import Manual_min
 from GenerateDataset_Understat_Shots import Generate_Shots_data
 from GenerateSimulater import run_simulator as RunCoreSimulator
@@ -117,6 +118,8 @@ def Data_Transformation(n_points_in_future, current_fixture_path,current_player_
     Generate_Shots_data(Understat_path,Understat_shots_path,current_player_path,current_team_path)
     team_data(current_team_path)
     #GetXmins(current_player_path, time_list, scenarios=Manual_min)
+    GetXmins2(current_player_path, time_list, scenarios=Manual_min,
+              config_path=Path(__file__).with_name("GenerateXmins2.config.json"))
     GeneratePlayerData(time_list, current_fixture_path,current_player_path,current_team_path)
 
     
@@ -335,6 +338,7 @@ def Main_Orchestration():
     Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos,Understat_path,Understat_shots_path)
     
     #Predict data
+    """
     Data_Predictions(
         fixtures_expanded_path_25,
         current_player_path,
@@ -347,9 +351,9 @@ def Main_Orchestration():
         player_history_path_25,
         full_simulator_team_output_path_25,
         full_simulator_player_output_path_25,
-    )
+    )"""
     
-    Data_Generation(ownership,budget,GW_list_wildcard,GW_list_freehit,current_player_path,current_team_path,current_season_path )
+    #Data_Generation(ownership,budget,GW_list_wildcard,GW_list_freehit,current_player_path,current_team_path,current_season_path )
     
     #Specials(ownership,budget,GW_list_wildcard,current_player_path )
     
