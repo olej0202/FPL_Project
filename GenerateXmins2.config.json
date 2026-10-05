@@ -3,7 +3,7 @@
   "history_path": "Fantasy_Merged.csv",
   "current_players_path": "Raw_Data_26/current_players.csv",
   "fixtures_path": "Raw_Data_26/Fantasy_season_2026_Fixtures.csv",
-  "output_path": "GenerateXmins3.csv",
+  "output_path": "GenerateXmins2.csv",
   "test_output_path": null,
   "gameweeks": null,
   "n_future": 8,

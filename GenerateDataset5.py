@@ -12,6 +12,7 @@ from sklearn.svm import SVR
 import joblib
 from GenerateConfig import normalize_player_name
 from GenerateConfig import Understat_Team_MAP
+from GenerateTeamRatings import team_transformed3
 
 
 def add_consecutive_team_totals(
@@ -2319,6 +2320,7 @@ def main_Transform():
     kmeans=make_Kmeans()
     Generate_team_data()
     team_transformed2()
+    team_transformed3()
     Understat_teams()
     df_27=pd.read_csv("Raw_Data_26/Fantasy_season_2026_data.csv").iloc[:,1:]
     df_27["name"]=df_27["first_name"]+" "+df_27["second_name"]

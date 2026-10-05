@@ -113,7 +113,7 @@ def Data_Extraction(season,is_new_season,has_been_error):
 
 
 def Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos,Understat_path,Understat_shots_path):
-    #main_Transform()
+    main_Transform()
     Generate_Understat_dataset(current_player_path,run_player_pos)
     Generate_Shots_data(Understat_path,Understat_shots_path,current_player_path,current_team_path)
     team_data(current_team_path)
@@ -338,7 +338,6 @@ def Main_Orchestration():
     Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos,Understat_path,Understat_shots_path)
     
     #Predict data
-    """
     Data_Predictions(
         fixtures_expanded_path_25,
         current_player_path,
@@ -351,9 +350,9 @@ def Main_Orchestration():
         player_history_path_25,
         full_simulator_team_output_path_25,
         full_simulator_player_output_path_25,
-    )"""
+    )
     
-    #Data_Generation(ownership,budget,GW_list_wildcard,GW_list_freehit,current_player_path,current_team_path,current_season_path )
+    Data_Generation(ownership,budget,GW_list_wildcard,GW_list_freehit,current_player_path,current_team_path,current_season_path )
     
     #Specials(ownership,budget,GW_list_wildcard,current_player_path )
     

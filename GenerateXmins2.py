@@ -2,7 +2,7 @@
 
 Run with the project's environment::
 
-    venv\\Scripts\\python.exe GenerateXmins2.py --gws 6 7 8 --output GenerateXmins3.csv
+    venv\\Scripts\\python.exe GenerateXmins2.py --gws 6 7 8 --output GenerateXmins2.csv
     venv\\Scripts\\python.exe GenerateXmins2.py --write-config xmins_config.json
     venv\\Scripts\\python.exe GenerateXmins2.py --config xmins_config.json
 
@@ -41,7 +41,7 @@ class Config:
     history_path: str = "Fantasy_Merged.csv"
     current_players_path: str = "Raw_Data_26/current_players.csv"
     fixtures_path: str = "Raw_Data_26/Fantasy_season_2026_Fixtures.csv"
-    output_path: str = "GenerateXmins3.csv"
+    output_path: str = "GenerateXmins2.csv"
     test_output_path: str | None = None
     gameweeks: tuple[int, ...] | None = None
     n_future: int = 8
