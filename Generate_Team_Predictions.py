@@ -22,9 +22,6 @@ import joblib
 from sklearn.utils.class_weight import compute_class_weight
 from GenerateConfig import date_filter as config_date_filter
 
-REPRESENTATIVE_TEAM_CODES = [13, 90, 102, 40, 49, 2, 20, 39, 56, 11, 54]
-
-
 def _split_latest_and_previous_month(model_pred, min_train_date="2022-12-31"):
     model_pred = model_pred.copy()
     model_pred["kickoff_time"] = pd.to_datetime(model_pred["kickoff_time"], errors="coerce")
@@ -75,12 +72,14 @@ def _latest_team_rows(df):
 def _build_upcoming_team_feature_table(
     current_team_path,
     feature_cols,
-    historical_team_path="Team_data_transformed2.csv",
     newest_team_path="Team_data_newest3.csv",
     primary_df=None,
-    fallback_df=None,
-    history_counts=None,
 ):
+    """Use finalized newest-team values without another history/average blend.
+
+    primary_df supplies model-specific derived columns absent from the newest
+    CSV. Columns present in the CSV always use its values unchanged.
+    """
     current_teams = pd.read_csv(current_team_path)[["name", "code", "id"]].copy()
     current_teams["code"] = pd.to_numeric(current_teams["code"], errors="coerce")
     current_teams["id"] = pd.to_numeric(current_teams["id"], errors="coerce")
@@ -89,69 +88,44 @@ def _build_upcoming_team_feature_table(
     current_teams["id"] = current_teams["id"].astype(int)
     current_teams = current_teams.drop_duplicates(subset=["code"], keep="last")
 
-    if primary_df is None:
-        primary_df = pd.read_csv(newest_team_path)
-    primary_latest = _latest_team_rows(primary_df)
-
-    if fallback_df is None and historical_team_path is not None:
-        fallback_df = pd.read_csv(historical_team_path)
-    fallback_latest = _latest_team_rows(fallback_df) if fallback_df is not None else None
-
-    if history_counts is None:
-        if historical_team_path is not None:
-            hist_codes = pd.read_csv(historical_team_path, usecols=["code"]).copy()
-            hist_codes["code"] = pd.to_numeric(hist_codes["code"], errors="coerce")
-            history_counts = hist_codes["code"].dropna().astype(int).value_counts().to_dict()
-        else:
-            history_counts = {}
-
-    merged = current_teams.copy()
-
-    primary_keep = ["code"] + [c for c in feature_cols if c in primary_latest.columns]
-    merged = merged.merge(primary_latest[primary_keep], on="code", how="left")
-
-    if fallback_latest is not None:
-        fallback_keep = ["code"] + [c for c in feature_cols if c in fallback_latest.columns]
-        merged = merged.merge(
-            fallback_latest[fallback_keep],
-            on="code",
-            how="left",
-            suffixes=("", "_fallback"),
-        )
-        for col in feature_cols:
-            fallback_col = f"{col}_fallback"
-            if fallback_col in merged.columns:
-                if col in merged.columns:
-                    merged[col] = merged[col].combine_first(merged[fallback_col])
-                else:
-                    merged[col] = merged[fallback_col]
-                merged = merged.drop(columns=[fallback_col])
-
-    for col in feature_cols:
-        if col not in merged.columns:
-            merged[col] = np.nan
-        merged[col] = pd.to_numeric(merged[col], errors="coerce")
-
-    rep_source = merged[merged["code"].isin(REPRESENTATIVE_TEAM_CODES)][feature_cols]
-    rep_means = rep_source.mean(numeric_only=True)
-    if rep_means.isna().all():
-        rep_means = merged[feature_cols].mean(numeric_only=True)
-    rep_means = rep_means.reindex(feature_cols).fillna(0.0)
-
-    history_weight = (
-        merged["code"]
-        .map(history_counts)
-        .fillna(0)
-        .astype(float)
-        .clip(lower=0.0, upper=15.0)
-        / 15.0
-    )
-
-    for col in feature_cols:
-        own_values = merged[col].fillna(rep_means[col]).astype(float)
-        merged[col] = history_weight * own_values + (1.0 - history_weight) * float(rep_means[col])
-
+    newest = _latest_team_rows(pd.read_csv(newest_team_path))
+    newest_cols = [c for c in feature_cols if c in newest.columns]
+    merged = current_teams.merge(newest[["code"] + newest_cols], on="code", how="left")
+    derived_cols = [c for c in feature_cols if c not in newest.columns]
+    if derived_cols and primary_df is not None:
+        derived = _latest_team_rows(primary_df)
+        available = [c for c in derived_cols if c in derived.columns]
+        merged = merged.merge(derived[["code"] + available], on="code", how="left")
+    missing = [c for c in feature_cols if c not in merged.columns]
+    if missing:
+        raise ValueError(f"Missing upcoming team features: {missing}")
+    merged[feature_cols] = merged[feature_cols].apply(pd.to_numeric, errors="coerce")
+    invalid = ~np.isfinite(merged[feature_cols].to_numpy(dtype=float)).all(axis=1)
+    if invalid.any():
+        raise ValueError(f"Missing or invalid newest team features for: {merged.loc[invalid, 'name'].tolist()}")
     return merged[["name", "code", "id"] + feature_cols].copy()
+
+
+def _attach_opposition_fixture_ratings(frame, newest_team_path="Team_data_newest3.csv"):
+    """Fixture difficulty uses the opponent's finalized rating at its venue."""
+    newest = _latest_team_rows(pd.read_csv(newest_team_path)).set_index("name")
+    if not newest.index.is_unique:
+        raise ValueError("Newest team names must be unique for fixture matching.")
+    if not frame["Home"].isin(["H", "A"]).all():
+        raise ValueError("Fixture Home values must be H or A.")
+    out = frame.copy()
+    home = out["Home"].eq("H")
+    for output, opponent_away, opponent_home in [
+        ("Opposition_XG", "XGA", "XGH"),
+        ("Opposition_XGC", "XGCA", "XGCH"),
+    ]:
+        out[output] = np.where(
+            home, out["Opponent_team"].map(newest[opponent_away]),
+            out["Opponent_team"].map(newest[opponent_home]),
+        )
+        if not np.isfinite(out[output].to_numpy(dtype=float)).all():
+            raise ValueError(f"Missing newest opponent ratings for {output}.")
+    return out
 
 
 def _debug_slug(name: str) -> str:
@@ -408,7 +382,6 @@ def GenerateTeamPredictions1(fixture_path, current_team_path,horizon):
     team_data = _build_upcoming_team_feature_table(
         current_team_path=current_team_path,
         feature_cols=team_feature_cols,
-        historical_team_path="Team_data_transformed2.csv",
         newest_team_path="Team_data_newest3.csv",
     )
     team_data["Cluster"]=kmeans.predict(team_data[["XG_avg","XGC_avg"]].values)
@@ -1120,14 +1093,11 @@ def run_fixture_xg_cs_model(
             latest_team_features = latest_team_features.drop(columns=[newest_col])
 
     latest_feature_cols = [c for c in latest_team_features.columns if c not in ["name", "code"]]
-    history_counts = team_df["code"].astype(int).value_counts().to_dict()
     latest_team_features = _build_upcoming_team_feature_table(
         current_team_path=current_team_path,
         feature_cols=latest_feature_cols,
-        historical_team_path=historical_team_path,
+        newest_team_path=newest_team_path,
         primary_df=latest_team_features,
-        fallback_df=None,
-        history_counts=history_counts,
     )
 
     fixture_data = (
@@ -1773,7 +1743,6 @@ def GenerateTeamPredictions2(fixture_path, current_team_path,horizon):
     team_data = _build_upcoming_team_feature_table(
         current_team_path=current_team_path,
         feature_cols=team_feature_cols,
-        historical_team_path="Team_data_transformed2.csv",
         newest_team_path="Team_data_newest3.csv",
     )
     team_data["Cluster"]=kmeans.predict(team_data[["XG_avg","XGC_avg"]].values)
@@ -2434,7 +2403,6 @@ def GenerateTeamPredictions_Results(fixture_path, current_team_path, horizon):
     team_data = _build_upcoming_team_feature_table(
         current_team_path=current_team_path,
         feature_cols=team_feature_cols,
-        historical_team_path="Team_data_transformed2.csv",
         newest_team_path="Team_data_newest3.csv",
     )
 
@@ -3183,6 +3151,7 @@ def GenerateTeamPredictions(
             print("[GenerateTeamPredictions] Missing fixture_code/team_code in Team_prediction.csv blend, skipping MinutesSimulator team merge.")
 
     
+    team_pred1 = _attach_opposition_fixture_ratings(team_pred1)
     team_pred1.to_csv("Team_prediction.csv")
     
     team_pred_visual1=pd.read_csv("Team_prediction_visual1.csv")

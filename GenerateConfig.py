@@ -80,7 +80,7 @@ def normalize_player_name(name):
 
 Manual_team_offensive_adjustments = { 
         #example 90:1.1 bedre off,  90:0.95 dårligere off
-        8:1.1,88:0.95,7:0.9
+        8:1.1,88:0.95
 }
     
     
