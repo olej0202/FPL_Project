@@ -113,11 +113,11 @@ def Data_Extraction(season,is_new_season,has_been_error):
 
 
 def Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos,Understat_path,Understat_shots_path):
-    main_Transform()
+    #main_Transform()
     Generate_Understat_dataset(current_player_path,run_player_pos)
     Generate_Shots_data(Understat_path,Understat_shots_path,current_player_path,current_team_path)
     team_data(current_team_path)
-    GetXmins2(current_player_path, time_list, scenarios=Manual_min,config_path=Path(__file__).with_name("GenerateXmins2.config.json"))
+    #GetXmins2(current_player_path, time_list, scenarios=Manual_min,config_path=Path(__file__).with_name("GenerateXmins2.config.json"))
     GeneratePlayerData(time_list, current_fixture_path,current_player_path,current_team_path)
 
     
@@ -329,7 +329,7 @@ def Main_Orchestration():
     
     
     #EXTARCT DATA
-    Data_Extraction(season,is_new_season,has_been_error)
+    #Data_Extraction(season,is_new_season,has_been_error)
     
     
     #Transform data
