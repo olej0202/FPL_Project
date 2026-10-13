@@ -77,16 +77,16 @@
 75,Chelsea,Pedro Neto,DR,5,5,100.0
 76,Chelsea,Pep Chavarría,DL,2,5,40.0
 77,Coventry City,Bobby Thomas,CB,5,5,100.0
-78,Coventry City,Brandon Thomas-Asante,FW,2,5,40.0
-79,Coventry City,Caleb Yirenkyi,DR,3,5,60.0
+78,Coventry City,Brandon Thomas-Asante,RW,2,5,40.0
+79,Coventry City,Caleb Yirenkyi,DM,3,5,60.0
 80,Coventry City,Carl Rushworth,GK,5,5,100.0
-81,Coventry City,Ephron Mason-Clark,AMC,4,5,80.0
-82,Coventry City,Ethan Pinnock,CB,3,5,60.0
-83,Coventry City,Frank Onyeka,MC,4,5,80.0
-84,Coventry City,Jack Rudoni,AMC,4,5,80.0
-85,Coventry City,Jay Dasilva,DL,5,5,100.0
-86,Coventry City,Matt Grimes,MC,5,5,100.0
-87,Coventry City,Stephen Mfuni,CB,1,5,20.0
+81,Coventry City,Ephron Mason-Clark,LW,5,5,100.0
+82,Coventry City,Ethan Pinnock,CB,4,5,80.0
+83,Coventry City,Jack Rudoni,AMC,5,5,100.0
+84,Coventry City,Jay Dasilva,DL,5,5,100.0
+85,Coventry City,Matt Grimes,DM,5,5,100.0
+86,Coventry City,Milan van Ewijk,DR,4,5,80.0
+87,Coventry City,Sidiki Chérif,FW,1,5,20.0
 88,Crystal Palace,Adam Wharton,MC,5,5,100.0
 89,Crystal Palace,Anan Khalaili,DR,5,5,100.0
 90,Crystal Palace,Chris Richards,CB,5,5,100.0
@@ -210,16 +210,16 @@
 208,Man Utd,Senne Lammens,GK,5,5,100.0
 209,Man Utd,Youri Tielemans,DM,5,5,100.0
 210,Newcastle,Harvey Barnes,LW,5,5,100.0
-211,Newcastle,Jacob Murphy,RW,2,5,40.0
-212,Newcastle,Joe Willock,DM,3,5,60.0
+211,Newcastle,Jacob Murphy,RW,3,5,60.0
+212,Newcastle,Joe Willock,DM,4,5,80.0
 213,Newcastle,Lewis Hall,DL,5,5,100.0
 214,Newcastle,Lewis Miley,DR,5,5,100.0
 215,Newcastle,Lukás Hornícek,GK,5,5,100.0
 216,Newcastle,Malick Thiaw,CB,5,5,100.0
-217,Newcastle,Matias Fernandez-Pardo,AMC,2,5,40.0
-218,Newcastle,Sean Steur,DM,2,5,40.0
+217,Newcastle,Matias Fernandez-Pardo,FW,3,5,60.0
+218,Newcastle,Nico González,DM,4,5,80.0
 219,Newcastle,Sven Botman,CB,5,5,100.0
-220,Newcastle,Yoane Wissa,FW,5,5,100.0
+220,Newcastle,Yoane Wissa,AMC,5,5,100.0
 221,Nott'm Forest,Dan Ndoye,AMC,5,5,100.0
 222,Nott'm Forest,James McAtee,MC,5,5,100.0
 223,Nott'm Forest,Liam Delap,FW,4,5,80.0

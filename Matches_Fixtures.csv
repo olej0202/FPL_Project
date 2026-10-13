@@ -49,16 +49,16 @@ Fix_ID,GW,kickoff_time,started,finished,team_h_score,team_a_score,HomeTeam,AwayT
 2645242,5,2026-09-19T14:00:00Z,True,True,2.0,1.0,Newcastle,Hull City,4,88,NEW,HUL
 2645243,5,2026-09-19T16:30:00Z,True,True,0.0,1.0,Nott'm Forest,Coventry City,17,9,NFO,COV
 2645244,5,2026-09-19T11:30:00Z,True,True,2.0,3.0,Spurs,Aston Villa,6,7,TOT,AVL
-2645245,6,2026-10-10T11:30:00Z,True,False,2.0,1.0,Arsenal,Leeds,3,2,ARS,LEE
-2645246,6,2026-10-10T14:00:00Z,True,False,2.0,2.0,Aston Villa,Brentford,7,94,AVL,BRE
-2645247,6,2026-10-10T14:00:00Z,True,False,5.0,1.0,Chelsea,Bournemouth,8,91,CHE,BOU
-2645248,6,2026-10-12T19:00:00Z,False,False,,,Coventry City,Newcastle,9,4,COV,NEW
-2645249,6,2026-10-11T13:00:00Z,True,False,3.0,1.0,Crystal Palace,Nott'm Forest,31,17,CRY,NFO
-2645250,6,2026-10-11T13:00:00Z,True,False,2.0,2.0,Hull City,Everton,88,11,HUL,EVE
-2645251,6,2026-10-10T14:00:00Z,True,False,2.0,1.0,Ipswich Town,Fulham,40,54,IPS,FUL
-2645252,6,2026-10-11T15:30:00Z,True,False,0.0,3.0,Liverpool,Man City,14,43,LIV,MCI
-2645253,6,2026-10-10T16:30:00Z,True,False,1.0,1.0,Man Utd,Spurs,1,6,MUN,TOT
-2645254,6,2026-10-10T14:00:00Z,True,False,0.0,2.0,Sunderland,Brighton,56,36,SUN,BHA
+2645245,6,2026-10-10T11:30:00Z,True,True,2.0,1.0,Arsenal,Leeds,3,2,ARS,LEE
+2645246,6,2026-10-10T14:00:00Z,True,True,2.0,2.0,Aston Villa,Brentford,7,94,AVL,BRE
+2645247,6,2026-10-10T14:00:00Z,True,True,5.0,1.0,Chelsea,Bournemouth,8,91,CHE,BOU
+2645248,6,2026-10-12T19:00:00Z,True,True,4.0,1.0,Coventry City,Newcastle,9,4,COV,NEW
+2645249,6,2026-10-11T13:00:00Z,True,True,3.0,1.0,Crystal Palace,Nott'm Forest,31,17,CRY,NFO
+2645250,6,2026-10-11T13:00:00Z,True,True,2.0,2.0,Hull City,Everton,88,11,HUL,EVE
+2645251,6,2026-10-10T14:00:00Z,True,True,2.0,1.0,Ipswich Town,Fulham,40,54,IPS,FUL
+2645252,6,2026-10-11T15:30:00Z,True,True,0.0,3.0,Liverpool,Man City,14,43,LIV,MCI
+2645253,6,2026-10-10T16:30:00Z,True,True,1.0,1.0,Man Utd,Spurs,1,6,MUN,TOT
+2645254,6,2026-10-10T14:00:00Z,True,True,0.0,2.0,Sunderland,Brighton,56,36,SUN,BHA
 2645255,7,2026-10-18T13:00:00Z,False,False,,,Bournemouth,Sunderland,91,56,BOU,SUN
 2645256,7,2026-10-17T14:00:00Z,False,False,,,Brentford,Liverpool,94,14,BRE,LIV
 2645257,7,2026-10-18T13:00:00Z,False,False,,,Brighton,Crystal Palace,36,31,BHA,CRY
