@@ -49,6 +49,8 @@ import { DEFAULT_TREE_SETTINGS, shareDecisionPlanEdits, getNodePath, resolvePlan
 import useCanvasPan from "./hooks/useCanvasPan";
 import TreeNodePitch from "./components/TreeNodePitch";
 import { accountTransfers, transferPenaltyPoints } from "./utils/transferAccounting";
+import { API_BASE_URL } from "./config/apiBase";
+import { nextPlanningGameweek, buildPlanningTree, advancePlanningTrees } from "./utils/planningGameweeks";
 
 const PALETTE = {
   red: "#f8fafc",
@@ -68,41 +70,7 @@ const PALETTE = {
 const isValidGW = (gw) =>
   Number.isInteger(gw) && gw >= 1 && gw <= 38;
 
-const DEFAULT_TREE_NODES = [
-  { id: "tree_start", label: "GW5 complete", gw: 5, parentId: null, probability: 100, chip: "none", scenarioId: BASE_SCENARIO_ID, isAnchor: true },
-  { id: "gw6", label: "GW6", gw: 6, parentId: "tree_start", probability: 100, chip: "none", scenarioId: "inherit" },
-  { id: "gw7", label: "GW7", gw: 7, parentId: "gw6", probability: 100, chip: "none", scenarioId: "inherit" },
-  { id: "gw8", label: "GW8", gw: 8, parentId: "gw7", probability: 100, chip: "none", scenarioId: "inherit" },
-];
-const buildNewTreeNodes = (treeKey, firstFutureGw = 6) => {
-  const safeFirstGw = Math.min(38, Math.max(2, Number(firstFutureGw) || 6));
-  const anchorId = `${treeKey}_start`;
-  const nodes = [{
-    id: anchorId,
-    label: `GW${safeFirstGw - 1} complete`,
-    gw: safeFirstGw - 1,
-    parentId: null,
-    probability: 100,
-    chip: "none",
-    scenarioId: BASE_SCENARIO_ID,
-    isAnchor: true,
-  }];
-  let parentId = anchorId;
-  for (let gw = safeFirstGw; gw <= Math.min(38, safeFirstGw + 2); gw += 1) {
-    const id = `${treeKey}_gw${gw}`;
-    nodes.push({
-      id,
-      label: `GW${gw}`,
-      gw,
-      parentId,
-      probability: 100,
-      chip: "none",
-      scenarioId: "inherit",
-    });
-    parentId = id;
-  }
-  return nodes;
-};
+const buildNewTreeNodes = buildPlanningTree;
 const TREE_NODE_WIDTH = 224;
 const TREE_NODE_HEIGHT = 420;
 const TREE_COMPACT_NODE_HEIGHT = 158;
@@ -131,7 +99,7 @@ const getTreeLeafIds = (nodeId, childrenByParent) => {
 };
 
 const ensureTreeStartAnchor = (nodes) => {
-  if (!Array.isArray(nodes) || nodes.length === 0) return DEFAULT_TREE_NODES.map((node) => ({ ...node }));
+  if (!Array.isArray(nodes) || nodes.length === 0) return [];
   if (nodes.some((node) => node?.isAnchor)) return nodes.map((node) => ({ ...node }));
   const roots = nodes.filter((node) => !node.parentId);
   if (roots.length !== 1 || Number(roots[0].gw) <= 1) return nodes.map((node) => ({ ...node }));
@@ -157,20 +125,22 @@ const ensureTreeStartAnchor = (nodes) => {
 };
 
 const TREE_WORKSPACE_STORAGE_KEY = "fpl_optimizer_tree_workspace_v1";
-const readStoredTreeWorkspace = () => {
+const readStoredTreeWorkspace = (firstFutureGw) => {
+  const defaultNodes = buildNewTreeNodes("tree", firstFutureGw);
   const fallback = {
     enabled: false,
     treeEditorOpen: true,
-    nodes: DEFAULT_TREE_NODES.map((node) => ({ ...node })),
+    nodes: defaultNodes,
     positions: {},
     zoom: 1,
-    activeTreeRootId: DEFAULT_TREE_NODES[0].id,
+    activeTreeRootId: defaultNodes[0]?.id || "",
   };
   if (typeof window === "undefined") return fallback;
   try {
     const parsed = JSON.parse(window.localStorage.getItem(TREE_WORKSPACE_STORAGE_KEY) || "null");
     if (!parsed || typeof parsed !== "object") return fallback;
     const nodes = ensureTreeStartAnchor(parsed.nodes);
+    if (!nodes.length) return fallback;
     const rootIds = nodes.filter((node) => !node.parentId).map((node) => node.id);
     return {
       enabled: Boolean(parsed.enabled),
@@ -183,7 +153,7 @@ const readStoredTreeWorkspace = () => {
       ),
       activeTreeRootId: rootIds.includes(parsed.activeTreeRootId)
         ? parsed.activeTreeRootId
-        : rootIds[0] || DEFAULT_TREE_NODES[0].id,
+        : rootIds[0] || fallback.activeTreeRootId,
     };
   } catch {
     return fallback;
@@ -794,9 +764,40 @@ export default function MyTeamOptimize() {
   const { fetchIfNeeded: fetchStatsIfNeeded, TeamData, PlayersData, dataVersion: statsDataVersion } = useStatsData();
   const navigate = useNavigate();
   const location = useLocation();
+  const [planningEvents, setPlanningEvents] = useState(null);
+  const [planningError, setPlanningError] = useState("");
+  const loadedTeamGw = Number(teamData?.[0]?.gw ?? teamData?.[0]?.GW);
+  const firstPlanningGw = planningEvents !== null
+    ? nextPlanningGameweek(planningEvents)
+    : isValidGW(loadedTeamGw) ? loadedTeamGw : null;
+  useEffect(() => {
+    const controller = new AbortController();
+    const refresh = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/Planning_Events`, { signal: controller.signal });
+        if (!response.ok) throw new Error("Could not load current gameweeks.");
+        const events = await response.json();
+        if (!Array.isArray(events)) throw new Error("Invalid gameweek data.");
+        if (!controller.signal.aborted) {
+          setPlanningEvents(events);
+          setPlanningError("");
+        }
+      } catch (error) {
+        if (!controller.signal.aborted) setPlanningError(error.message);
+      }
+    };
+    refresh();
+    const timer = window.setInterval(refresh, 5 * 60 * 1000);
+    window.addEventListener("focus", refresh);
+    return () => {
+      controller.abort();
+      window.clearInterval(timer);
+      window.removeEventListener("focus", refresh);
+    };
+  }, []);
   const initialTreeWorkspaceRef = useRef(null);
   if (!initialTreeWorkspaceRef.current) {
-    initialTreeWorkspaceRef.current = readStoredTreeWorkspace();
+    initialTreeWorkspaceRef.current = readStoredTreeWorkspace(firstPlanningGw);
   }
 
   const { modelType: initialModelType } = useOptimizationModel();
@@ -1409,7 +1410,7 @@ export default function MyTeamOptimize() {
   const loadedTeamPitchRows = useMemo(() => {
     if (!Array.isArray(teamData) || teamData.length === 0) return [];
 
-    const startGw = Number(teamData[0]?.gw ?? teamData[0]?.GW);
+    const startGw = firstPlanningGw;
     if (!isValidGW(startGw)) return [];
 
     const loadedGws = Array.from(
@@ -1444,7 +1445,7 @@ export default function MyTeamOptimize() {
         };
       })
     ).filter((row) => row.Name);
-  }, [teamData]);
+  }, [teamData, firstPlanningGw]);
 
   const pitchSourceData = activeSolutionData.length > 0
     ? activeSolutionData
@@ -1453,27 +1454,12 @@ export default function MyTeamOptimize() {
   const availableGWs = useMemo(() => planningPath.map((node) => Number(node.gw)), [planningPath]);
 
   useEffect(() => {
-    const firstFutureGw = Number(teamData?.[0]?.gw ?? teamData?.[0]?.GW);
-    if (!isValidGW(firstFutureGw) || firstFutureGw <= 1) return;
+    if (!isValidGW(firstPlanningGw)) return;
     setTreeNodes((previous) => {
-      const anchor = previous.find((node) => node?.isAnchor);
-      if (!anchor) return previous;
-      const firstChildren = previous.filter((node) => node.parentId === anchor.id);
-      if (!firstChildren.length) return previous;
-      const currentFirstGw = Math.min(...firstChildren.map((node) => Number(node.gw)));
-      const offset = firstFutureGw - currentFirstGw;
-      if (!Number.isFinite(offset) || offset === 0) return previous;
-      if (previous.some((node) => Number(node.gw) + offset < 1 || Number(node.gw) + offset > 38)) {
-        return previous;
-      }
-      return previous.map((node) => {
-        const gw = Number(node.gw) + offset;
-        return node.isAnchor
-          ? { ...node, gw, label: `GW${gw} complete` }
-          : { ...node, gw };
-      });
+      if (!previous.length) return buildNewTreeNodes("tree", firstPlanningGw);
+      return advancePlanningTrees(previous, firstPlanningGw);
     });
-  }, [teamData, setTreeNodes]);
+  }, [firstPlanningGw, treeNodes, setTreeNodes]);
 
   const treeEffectiveScenarioById = useMemo(() => {
     const nodeById = new Map(treeNodes.map((node) => [node.id, node]));
@@ -1611,6 +1597,9 @@ export default function MyTeamOptimize() {
     [treeNodes, nodePlans, activeTreeRootId]
   );
   const treeChildrenByParent = useMemo(() => buildTreeChildrenMap(treeNodes), [treeNodes]);
+  const selectedBranchStart = [...planningPath].reverse().find(
+    (node) => (treeChildrenByParent.get(node.parentId) || []).length > 1
+  );
   const syncedTreeNodes = useMemo(() => syncTreeMasses(treeNodes), [treeNodes]);
   const treeRootByNodeId = useMemo(() => {
     const nodeById = new Map(treeNodes.map((node) => [node.id, node]));
@@ -1629,7 +1618,6 @@ export default function MyTeamOptimize() {
     () => treeNodes.filter((node) => !node.parentId).map((node) => node.id),
     [treeNodes]
   );
-  const latestTreeRootId = treeRootIds[treeRootIds.length - 1] || "";
   const syncedActiveTreeNodes = useMemo(
     () => syncedTreeNodes.filter((node) => treeRootByNodeId.get(node.id) === activeTreeRootId),
     [activeTreeRootId, syncedTreeNodes, treeRootByNodeId]
@@ -1700,13 +1688,14 @@ export default function MyTeamOptimize() {
     [treeTopologyKey, treeHeightKey]
   );
   const newTreeRootPosition = useMemo(() => {
+    if (!isValidGW(firstPlanningGw)) return null;
     const previewNodes = buildNewTreeNodes(
       "__new_tree_preview__",
-      Number(availableGWs[0]) || 6
+      firstPlanningGw
     );
     const previewLayout = buildVerticalTreeLayout([...treeNodes, ...previewNodes], treeExpandedNodeHeights);
     return previewLayout.positions[previewNodes[0].id] || null;
-  }, [availableGWs, treeNodes, treeExpandedNodeHeights]);
+  }, [firstPlanningGw, treeNodes, treeExpandedNodeHeights]);
 
   useEffect(() => {
     if (pendingTreePositionsRef.current) {
@@ -1732,7 +1721,7 @@ export default function MyTeamOptimize() {
           const pathChips = getNodePath(treeNodes, node.id).map((ancestor) => ancestor.chip).filter((chip) => chip && chip !== "none");
           return (
             new Set(pathChips).size === pathChips.length &&
-            isValidGW(Number(node.gw)) &&
+            (node.isAnchor ? Number.isInteger(Number(node.gw)) && Number(node.gw) >= 0 && Number(node.gw) < 38 : isValidGW(Number(node.gw))) &&
             Number(node.probability) > 0 &&
             (!node.parentId || (parent && Number(node.gw) === Number(parent.gw) + 1))
           );
@@ -1876,22 +1865,9 @@ export default function MyTeamOptimize() {
   };
 
   const addNewTree = () => {
-    const sourceRootId = latestTreeRootId || activeTreeRootId;
-    const activeAnchor = treeNodes.find((node) => node.id === sourceRootId);
-    const activeFirstGw = Math.min(
-      ...treeNodes
-        .filter((node) => node.parentId === activeAnchor?.id)
-        .map((node) => Number(node.gw))
-        .filter(isValidGW)
-    );
-    const availableFirstGw = Number(availableGWs[0]);
-    const firstFutureGw = isValidGW(availableFirstGw)
-      ? availableFirstGw
-      : isValidGW(activeFirstGw)
-        ? activeFirstGw
-        : 6;
+    if (!isValidGW(firstPlanningGw)) return;
     const treeKey = `tree_${Date.now()}_${Math.random().toString(16).slice(2)}`;
-    const additions = buildNewTreeNodes(treeKey, firstFutureGw);
+    const additions = buildNewTreeNodes(treeKey, firstPlanningGw);
     additions[0].treeName = `Tree ${treeRootIds.length + 1}`;
     additions[0].optimization = { ...DEFAULT_TREE_SETTINGS };
     setTreeNodes((previous) => [...previous, ...additions]);
@@ -1900,18 +1876,12 @@ export default function MyTeamOptimize() {
   };
 
   const resetActiveTree = () => {
+    if (!isValidGW(firstPlanningGw)) return;
     const resetRootId = activeTreeRootId;
-    const activeAnchor = treeNodes.find((node) => node.id === activeTreeRootId);
-    const firstFutureGw = Math.min(
-      ...treeNodes
-        .filter((node) => node.parentId === activeAnchor?.id)
-        .map((node) => Number(node.gw))
-        .filter(isValidGW)
-    );
     const treeKey = `tree_${Date.now()}_${Math.random().toString(16).slice(2)}`;
     const replacement = buildNewTreeNodes(
       treeKey,
-      isValidGW(firstFutureGw) ? firstFutureGw : Number(availableGWs[0]) || 6
+      firstPlanningGw
     );
     replacement[0].treeName = treeName;
     replacement[0].optimization = { ...settings };
@@ -2046,6 +2016,8 @@ export default function MyTeamOptimize() {
   };
   const canOptimize = Boolean(
     teamId &&
+      isValidGW(firstPlanningGw) &&
+      availableGWs.length > 0 && availableGWs[0] >= firstPlanningGw &&
       !optimizationProgress?.streaming &&
       treeConfigValid &&
       (has_changed || hasPendingManualTransfers)
@@ -2493,17 +2465,12 @@ export default function MyTeamOptimize() {
     return values.reduce((sum, value) => sum + Number(value), 0);
   }, [gwMeasureTotals]);
 
-  let minGW = 1;
-  let maxGW = 38;
+  const minGW = availableGWs[0] ?? firstPlanningGw ?? "–";
+  const maxGW = availableGWs.at(-1) ?? (isValidGW(firstPlanningGw) ? Math.min(38, firstPlanningGw + 5) : "–");
   let transfers = [];
   let gwData = [];
 
   if (pitchSourceData.length) {
-    if (availableGWs.length) {
-      minGW = availableGWs[0];
-      maxGW = availableGWs[availableGWs.length - 1];
-    }
-
     gwData = pitchSourceData.filter((p) => Number(p.GW) === activeGW);
 
     transfers = optimizerTransferGroups;
@@ -2745,6 +2712,7 @@ export default function MyTeamOptimize() {
   }, [activeSolutionData, visibleTransfersWithFH]);
 
   const handleOptimizeClick = async () => {
+    if (!canOptimize) return;
     if (modelType === "statistical" && !hasStatisticalData) {
       alert("Statistical model data is still loading or unavailable. Please try again when it is ready.");
       return;
@@ -3267,6 +3235,11 @@ export default function MyTeamOptimize() {
                   <p className="mt-1 text-[11px]" style={{ color: PALETTE.muted }}>
                     Build GW nodes, split any path, and attach chips to individual nodes.
                   </p>
+                  {!isValidGW(firstPlanningGw) && (
+                    <p role="status" className="mt-2 text-xs" style={{ color: PALETTE.muted }}>
+                      {planningError || (planningEvents === null ? "Loading current gameweeks…" : "No upcoming gameweeks this season.")}
+                    </p>
+                  )}
                 </div>
                 <span
                   className="rounded-full px-3 py-1.5 text-xs font-semibold transition"
@@ -3589,11 +3562,29 @@ export default function MyTeamOptimize() {
                               <span className="inline-flex items-center gap-1.5 text-xs font-black" style={{ color: PALETTE.gold }}>
                                 <GripVertical size={13} /> GW{node.gw}
                               </span>
+                              <div className="flex items-center gap-1.5">
                               {!useCompactNode && (
                                 <span className="text-[10px] font-semibold" style={{ color: PALETTE.muted }}>
                                   {Number(node.probability || 0).toFixed(1)}% subtree
                                 </span>
                               )}
+                              {hasSplitProbability && (
+                                <button
+                                  type="button"
+                                  onPointerDown={(event) => event.stopPropagation()}
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    removeTreeBranch(node.id);
+                                  }}
+                                  disabled={optimizingTreeRootId === nodeTreeRootId && optimizationProgress?.streaming}
+                                  className="gold-ring flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-rose-200 bg-rose-50 text-rose-600 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50"
+                                  aria-label={`Remove branch ${node.label} from GW${node.gw}`}
+                                  title={`Remove ${node.label} and all following nodes`}
+                                >
+                                  <X size={17} />
+                                </button>
+                              )}
+                              </div>
                             </div>
                             {useCompactNode ? (
                               <div className="space-y-2 px-3 py-2.5">
@@ -3632,18 +3623,6 @@ export default function MyTeamOptimize() {
                                   style={{ borderColor: PALETTE.border }}
                                   aria-label={`Name for GW${node.gw} node`}
                                 />
-                                {node.parentId &&
-                                  (!(treeNodes.find((candidate) => candidate.id === node.parentId)?.isAnchor) || siblingNodes.length > 1) && (
-                                  <button
-                                    type="button"
-                                    onClick={() => removeTreeBranch(node.id)}
-                                    className="gold-ring rounded-full p-1"
-                                    style={{ color: PALETTE.danger }}
-                                    title="Remove this branch and all nodes after it"
-                                  >
-                                    <X size={13} />
-                                  </button>
-                                )}
                               </div>
 
                               {hasSplitProbability && (
@@ -3955,7 +3934,7 @@ export default function MyTeamOptimize() {
                               const restoredTreeNodes =
                                 Array.isArray(savedParams.treeNodes) && savedParams.treeNodes.length > 0
                                   ? ensureTreeStartAnchor(savedParams.treeNodes)
-                                  : DEFAULT_TREE_NODES.map((node) => ({ ...node }));
+                                  : buildNewTreeNodes("tree", firstPlanningGw);
                               const restoredRootIds = restoredTreeNodes
                                 .filter((node) => !node.parentId)
                                 .map((node) => node.id);
@@ -4140,7 +4119,8 @@ export default function MyTeamOptimize() {
                 {selectedPitchCard && (
                   <div className="mt-4" aria-label="Selected branch squad">
                     <div className="rounded-2xl border p-3" style={{ borderColor: PALETTE.border, background: "rgba(248,250,252,0.95)" }}>
-                      <label className="block text-xs font-semibold">Branch to follow
+                      <div className="flex items-end gap-2">
+                      <label className="block min-w-0 flex-1 text-xs font-semibold">Branch to follow
                         <select aria-label="Branch to follow" value={planningPath.at(-1)?.id || ""} className="gold-ring mt-1 w-full rounded-xl border bg-white p-2 text-sm"
                           onChange={(event) => {
                             const path = activeTreePaths.find((candidate) => candidate.id === event.target.value);
@@ -4154,6 +4134,17 @@ export default function MyTeamOptimize() {
                           </option>)}
                         </select>
                       </label>
+                      {selectedBranchStart && (
+                        <button type="button"
+                          onClick={() => removeTreeBranch(selectedBranchStart.id)}
+                          disabled={optimizingTreeRootId === activeTreeRootId && optimizationProgress?.streaming}
+                          className="gold-ring flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-rose-200 bg-rose-50 text-rose-600 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50"
+                          aria-label="Remove selected branch"
+                          title={`Remove ${selectedBranchStart.label} and all following nodes`}>
+                          <X size={19} />
+                        </button>
+                      )}
+                      </div>
                       <div className="gw-navigation mt-3 flex items-center justify-between gap-3">
                         <button type="button" disabled={pitchNodeIndex <= 0} className="gold-ring flex items-center gap-1 rounded-full border px-3 py-2 text-xs font-semibold disabled:opacity-40"
                           onClick={() => selectPitchNode(planningPath[pitchNodeIndex - 1]?.id)}><ChevronLeft size={15} />Previous GW</button>

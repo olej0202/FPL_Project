@@ -15,6 +15,7 @@ const mocks = {
 const result = await build({
   entryPoints: ['src/My_team_Testcase.jsx'], bundle: true, write: false, platform: 'node', format: 'esm', packages: 'external',
   loader: { '.png': 'dataurl' },
+  define: { 'import.meta.env': '{}' },
   plugins: [{ name: 'context-fixtures', setup(builder) {
     builder.onResolve({ filter: /Contexts\/(MyTeamContext|OptimizationModelContext|StatsContext|AdjustmentsContext)$/ }, (args) => ({ path: args.path.split('/').at(-1), namespace: 'fixture' }));
     builder.onLoad({ filter: /.*/, namespace: 'fixture' }, (args) => ({ contents: mocks[args.path], loader: 'js' }));
@@ -78,7 +79,17 @@ try {
   assert.ok(scenarioHtml.includes('aria-label="Scenario for selected branch node"'));
   assert.ok(scenarioHtml.includes('Alternate scenario'));
   assert.ok(scenarioHtml.indexOf('aria-label="Scenario for selected branch node"') < scenarioHtml.indexOf('aria-label="Pitch GW6"'));
-  console.log('Render check passed: persistent model selection, branch navigation and scenario selection above one pitch, transfer photos area, chip-only Wildcard/Free Hit display, and a collapsible tree editor.');
+  globalThis.__renderTeam = [];
+  globalThis.window.localStorage.getItem = () => null;
+  const waiting = renderToStaticMarkup(React.createElement(MemoryRouter, {}, React.createElement(Page)));
+  assert.ok(waiting.includes('Loading current gameweeks'));
+  assert.ok(!waiting.includes('GW6'));
+  globalThis.__renderTeam = [{ name: 'Player 1', gw: 37, position: 'GKP' }];
+  const lateSeason = renderToStaticMarkup(React.createElement(MemoryRouter, {}, React.createElement(Page)));
+  assert.ok(lateSeason.includes('GW37'));
+  assert.ok(lateSeason.includes('GW38'));
+  assert.ok(!lateSeason.includes('GW39'));
+  console.log('Render check passed, including dynamic late-season defaults and loading without hardcoded GW6.');
 } finally {
   delete globalThis.window;
   delete globalThis.__renderTeam;

@@ -12,7 +12,7 @@ from fastapi import HTTPException
 from fastapi.responses import PlainTextResponse
 from Generate_Optimize_Pyrobi_test import optimize_my_team
 from optimizer import optimize_scenario_tree
-from Generate_Fetch_Myteam import build_team_dataframe
+from Generate_Fetch_Myteam import build_team_dataframe, get_bootstrap
 from typing import List, Optional, Literal, Dict, Any
 from pydantic import BaseModel, Field
 from fastapi.responses import JSONResponse
@@ -1749,6 +1749,19 @@ def get_my_team_optimize(
     except Exception as e:
         print(f"[analytics] failed to update optimization points (GET): {e}")
     return rows
+
+
+@app.get("/Planning_Events")
+def get_planning_events():
+    """Current FPL deadlines, available before a manager loads their team."""
+    try:
+        events = get_bootstrap()["events"]
+        return [
+            {key: event.get(key) for key in ("id", "deadline_time", "finished")}
+            for event in events
+        ]
+    except (requests.RequestException, ValueError, KeyError, TypeError) as exc:
+        raise HTTPException(status_code=503, detail="Could not load current FPL gameweeks.") from exc
 
 
 @app.get("/Get_My_Team")
