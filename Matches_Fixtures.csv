@@ -59,15 +59,15 @@ Fix_ID,GW,kickoff_time,started,finished,team_h_score,team_a_score,HomeTeam,AwayT
 2645252,6,2026-10-11T15:30:00Z,True,True,0.0,3.0,Liverpool,Man City,14,43,LIV,MCI
 2645253,6,2026-10-10T16:30:00Z,True,True,1.0,1.0,Man Utd,Spurs,1,6,MUN,TOT
 2645254,6,2026-10-10T14:00:00Z,True,True,0.0,2.0,Sunderland,Brighton,56,36,SUN,BHA
-2645255,7,2026-10-18T13:00:00Z,False,False,,,Bournemouth,Sunderland,91,56,BOU,SUN
-2645256,7,2026-10-17T14:00:00Z,False,False,,,Brentford,Liverpool,94,14,BRE,LIV
-2645257,7,2026-10-18T13:00:00Z,False,False,,,Brighton,Crystal Palace,36,31,BHA,CRY
-2645258,7,2026-10-17T11:30:00Z,False,False,,,Everton,Chelsea,11,8,EVE,CHE
-2645259,7,2026-10-17T14:00:00Z,False,False,,,Fulham,Hull City,54,88,FUL,HUL
-2645260,7,2026-10-18T13:00:00Z,False,False,,,Leeds,Man Utd,2,1,LEE,MUN
-2645261,7,2026-10-17T14:00:00Z,False,False,,,Man City,Ipswich Town,43,40,MCI,IPS
-2645262,7,2026-10-17T16:30:00Z,False,False,,,Newcastle,Aston Villa,4,7,NEW,AVL
-2645263,7,2026-10-18T15:30:00Z,False,False,,,Nott'm Forest,Arsenal,17,3,NFO,ARS
+2645255,7,2026-10-18T13:00:00Z,True,False,2.0,0.0,Bournemouth,Sunderland,91,56,BOU,SUN
+2645256,7,2026-10-17T14:00:00Z,True,False,1.0,2.0,Brentford,Liverpool,94,14,BRE,LIV
+2645257,7,2026-10-18T13:00:00Z,True,False,5.0,0.0,Brighton,Crystal Palace,36,31,BHA,CRY
+2645258,7,2026-10-17T11:30:00Z,True,False,0.0,2.0,Everton,Chelsea,11,8,EVE,CHE
+2645259,7,2026-10-17T14:00:00Z,True,False,1.0,0.0,Fulham,Hull City,54,88,FUL,HUL
+2645260,7,2026-10-18T13:00:00Z,True,False,1.0,1.0,Leeds,Man Utd,2,1,LEE,MUN
+2645261,7,2026-10-17T14:00:00Z,True,False,3.0,2.0,Man City,Ipswich Town,43,40,MCI,IPS
+2645262,7,2026-10-17T16:30:00Z,True,False,0.0,1.0,Newcastle,Aston Villa,4,7,NEW,AVL
+2645263,7,2026-10-18T15:30:00Z,True,False,0.0,1.0,Nott'm Forest,Arsenal,17,3,NFO,ARS
 2645264,7,2026-10-19T19:00:00Z,False,False,,,Spurs,Coventry City,6,9,TOT,COV
 2645265,8,2026-10-24T14:00:00Z,False,False,,,Arsenal,Everton,3,11,ARS,EVE
 2645266,8,2026-10-24T11:30:00Z,False,False,,,Aston Villa,Man City,7,43,AVL,MCI
