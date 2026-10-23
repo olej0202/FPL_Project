@@ -77,16 +77,16 @@
 75,Chelsea,Morgan Rogers,LW,5,5,100.0
 76,Chelsea,Pedro Neto,RW,5,5,100.0
 77,Coventry City,Bobby Thomas,CB,5,5,100.0
-78,Coventry City,Brandon Thomas-Asante,RW,2,5,40.0
+78,Coventry City,Brandon Thomas-Asante,LW,3,5,60.0
 79,Coventry City,Caleb Yirenkyi,DM,3,5,60.0
 80,Coventry City,Carl Rushworth,GK,5,5,100.0
-81,Coventry City,Ephron Mason-Clark,LW,5,5,100.0
-82,Coventry City,Ethan Pinnock,CB,4,5,80.0
-83,Coventry City,Jack Rudoni,AMC,5,5,100.0
-84,Coventry City,Jay Dasilva,DL,5,5,100.0
-85,Coventry City,Matt Grimes,DM,5,5,100.0
-86,Coventry City,Milan van Ewijk,DR,4,5,80.0
-87,Coventry City,Sidiki Chérif,FW,1,5,20.0
+81,Coventry City,Ethan Pinnock,CB,5,5,100.0
+82,Coventry City,Jack Rudoni,AMC,5,5,100.0
+83,Coventry City,Jay Dasilva,DL,5,5,100.0
+84,Coventry City,Matt Grimes,DM,5,5,100.0
+85,Coventry City,Milan van Ewijk,DR,4,5,80.0
+86,Coventry City,Sidiki Chérif,FW,2,5,40.0
+87,Coventry City,Tatsuhiro Sakamoto,RW,1,5,20.0
 88,Crystal Palace,Adam Wharton,MC,5,5,100.0
 89,Crystal Palace,Anan Khalaili,DR,5,5,100.0
 90,Crystal Palace,Chris Richards,CB,5,5,100.0
@@ -252,17 +252,17 @@
 250,Southampton,Ross Stewart,FW,3,5,60.0
 251,Southampton,Welington,DL,3,5,60.0
 252,Southampton,Yukinari Sugawara,DR,1,5,20.0
-253,Spurs,Antonín Kinsky,GK,5,5,100.0
-254,Spurs,Archie Gray,DR,3,5,60.0
-255,Spurs,Conor Gallagher,AMC,2,5,40.0
-256,Spurs,Dominic Solanke,FW,3,5,60.0
-257,Spurs,Iyenoma Destiny Udogie,DL,2,5,40.0
+253,Spurs,Andrew Robertson,LW,3,5,60.0
+254,Spurs,Antonín Kinsky,GK,5,5,100.0
+255,Spurs,Archie Gray,MC,3,5,60.0
+256,Spurs,Dominic Solanke,FW,4,5,80.0
+257,Spurs,James Maddison,MC,1,5,20.0
 258,Spurs,Jan Paul van Hecke,CB,5,5,100.0
-259,Spurs,Lucas Bergvall,DM,1,5,20.0
-260,Spurs,Marcos Senesi,CB,1,5,20.0
-261,Spurs,Mohammed Kudus,RW,1,5,20.0
+259,Spurs,Micky van de Ven,CB,4,5,80.0
+260,Spurs,Mohammed Kudus,RW,2,5,40.0
+261,Spurs,Omar Marmoush,FW,4,5,80.0
 262,Spurs,Sandro Tonali,DM,5,5,100.0
-263,Spurs,Sávio,LW,4,5,80.0
+263,Spurs,Tosin Adarabioyo,CB,1,5,20.0
 264,Sunderland,Chris Rigg,AMC,1,5,20.0
 265,Sunderland,Enzo Le Fée,LW,5,5,100.0
 266,Sunderland,Granit Xhaka,DM,5,5,100.0
