@@ -1,0 +1,61 @@
+.optimizer-test-workspace { min-width: 0; padding-block: .5rem; }
+.optimizer-test-workspace > header { margin-bottom: 1rem; }
+.optimizer-test-workspace__mobile-switch { display: none; }
+.optimizer-test-workspace__grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; min-height: 0; }
+.optimizer-test-workspace__team, .optimizer-test-workspace__tools { min-width: 0; min-height: 0; }
+.optimizer-test-workspace__tools { display: flex; flex-direction: column; border: 1px solid var(--color-border); border-radius: 1.25rem; background: var(--color-surface); }
+.optimizer-test-workspace__tabs { display: flex; flex-shrink: 0; gap: .5rem; padding: .5rem; border-bottom: 1px solid var(--color-border); }
+.optimizer-test-workspace__tabs [role='tab'] { display: flex; flex: 1 1 0; align-items: center; justify-content: center; gap: .5rem; min-height: 3rem; padding: .6rem .75rem; border: 1px solid transparent; border-radius: .8rem; color: var(--color-muted); font-size: .8rem; font-weight: 700; }
+.optimizer-test-workspace__tabs [aria-selected='true'] { border-color: #cbe0d3; background: var(--color-brand-soft); color: var(--color-brand); }
+.optimizer-test-workspace__tabs [role='tab']:hover { background: var(--color-brand-soft); }
+.optimizer-test-workspace__panel { min-height: 0; flex: 1; }
+.optimizer-test-workspace__panel:not([hidden]) { display: flex; flex-direction: column; }
+.optimizer-test-workspace__scroll { min-width: 0; min-height: 0; padding: .75rem; }
+.optimizer-test-workspace__scroll > section { margin-bottom: 0; }
+.optimizer-test-workspace__action { flex-shrink: 0; border-top: 1px solid var(--color-border); padding: .75rem; }
+.optimizer-test-workspace__action > div { position: static; margin: 0; }
+.optimizer-test-workspace__action button { width: 100%; min-height: 3rem; }
+.optimizer-test-workspace .ai-predictions-embedded { min-width: 0; }
+.optimizer-test-workspace .ai-predictions-embedded > header { flex-direction: column; align-items: stretch; gap: 1rem; }
+.optimizer-test-workspace .ai-predictions-embedded > header h2 { font-size: 1.35rem; }
+.optimizer-test-workspace .ai-predictions-embedded > header button { width: 100%; }
+.optimizer-test-workspace .ai-predictions-embedded details > div > .grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); }
+.optimizer-test-workspace .pitch-squad-header { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: .75rem; }
+.optimizer-test-workspace .pitch-squad-header > div:first-child { min-width: 0; }
+.optimizer-test-workspace .pitch-squad-header label { margin-top: .5rem; }
+.optimizer-test-workspace .pitch-squad-header select { min-height: 2.75rem; }
+.optimizer-test-workspace .pitch-squad-description { display: none; }
+.pitch-view__settings { display: flex; flex-direction: column; gap: .5rem; padding: .5rem .75rem; border: 1px solid var(--color-border); border-radius: .8rem; background: var(--color-brand-soft); }
+.pitch-view__settings > div { margin-top: 0; }
+.pitch-view__settings select { min-height: 2.75rem; background: #fff; }
+.pitch-gw-navigation { display: flex; justify-content: space-between; align-items: center; gap: .75rem; margin-bottom: .5rem; }
+.pitch-gw-navigation button { display: grid; place-items: center; width: 3rem; height: 3rem; flex-shrink: 0; border: 1px solid var(--color-border); border-radius: 50%; background: #fff; color: var(--color-brand); box-shadow: 0 2px 8px rgb(24 60 52 / 10%); }
+.pitch-gw-navigation button:hover:enabled { background: var(--color-brand-soft); }
+.pitch-gw-navigation button:disabled { opacity: .4; }
+.pitch-gw-navigation > span { padding: .4rem 1rem; border-radius: 2rem; background: rgb(255 255 255 / 95%); color: var(--color-ink); font-weight: 800; font-size: .85rem; }
+.optimizer-test-workspace__team .tree-node-pitch.pitch-with-navigation { height: clamp(710px, calc(80vw + 60px), 960px) !important; }
+.optimizer-test-workspace__team .tree-node-pitch.pitch-with-navigation .pitch-starters { height: calc(100% - 240px) !important; }
+.optimizer-test-workspace [aria-label='All transfers'] > summary { min-height: 2.75rem; }
+
+@media (min-width: 1024px) {
+  .optimizer-test-workspace { display: flex; flex-direction: column; height: calc(100dvh - var(--header-height) - 8.5rem); min-height: 44rem; }
+  .optimizer-test-workspace__grid { flex: 1; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; }
+  .optimizer-test-workspace__team { overflow: auto; scrollbar-width: thin; padding: .25rem; }
+  .optimizer-test-workspace__scroll { flex: 1; overflow: auto; scrollbar-width: thin; }
+  .optimizer-test-workspace > header > div:first-child { min-width: 0; flex: 1; }
+  .optimizer-test-workspace > header > div:last-child { flex-shrink: 0; }
+  .optimizer-test-workspace__team .tree-node-pitch.pitch-with-navigation { height: clamp(820px, calc(100dvh - 11rem), 1020px) !important; }
+}
+
+@media (max-width: 639px) {
+  .optimizer-test-workspace__team .tree-node-pitch.pitch-with-navigation { height: clamp(530px, calc(130vw + 60px), 680px) !important; }
+  .optimizer-test-workspace__team .tree-node-pitch.pitch-with-navigation .pitch-starters { height: clamp(350px, 100vw, 470px) !important; }
+}
+
+@media (max-width: 1023px) {
+  .optimizer-test-workspace__mobile-switch { position: sticky; top: var(--header-height); z-index: 30; display: flex; gap: .5rem; margin-bottom: 1rem; padding: .5rem; border: 1px solid var(--color-border); border-radius: 1rem; background: rgb(255 255 255 / 97%); backdrop-filter: blur(12px); }
+  .optimizer-test-workspace__mobile-switch button { display: flex; flex: 1 1 0; justify-content: center; align-items: center; gap: .5rem; min-height: 3rem; padding: .6rem; border: 1px solid transparent; border-radius: .75rem; font-size: .8rem; font-weight: 700; color: var(--color-muted); }
+  .optimizer-test-workspace__mobile-switch [aria-pressed='true'] { background: var(--color-brand-soft); border-color: #cbe0d3; color: var(--color-brand); }
+  .optimizer-test-workspace[data-mobile-view='pitch'] .optimizer-test-workspace__tools,
+  .optimizer-test-workspace[data-mobile-view='optimization'] .optimizer-test-workspace__team { display: none; }
+}

@@ -28,7 +28,8 @@ import {
 import { TeamColorDot, PlayerRow } from '../components/PlayerRankingComponents.jsx';
 import { GlassCard, FilterCard, PillButton, SearchableMultiSelect } from '../../../components/filters/FilterControls';
 
-export default function Player_analytics_rankings() {
+export default function Player_analytics_rankings({ embedded = false }) {
+  const Heading = embedded ? 'h2' : 'h1';
   const { fetchIfNeeded, loading, PlayersData, TeamData, PriceChangesData, dataVersion } = useStatsData();
   const { fetchIfNeeded: fetchOtherIfNeeded, FixtureData, dataVersion: otherVersion } = useOtherData();
 
@@ -589,13 +590,13 @@ export default function Player_analytics_rankings() {
   if (!isDataReady && loading) {
     return (
       <div
-        className="min-h-screen p-6"
+        className={embedded ? 'p-3' : 'min-h-screen p-6'}
         style={{
-          background: `radial-gradient(circle at top, ${PALETTE.red}, ${PALETTE.black})`,
+          background: embedded ? 'transparent' : `radial-gradient(circle at top, ${PALETTE.red}, ${PALETTE.black})`,
           color: PALETTE.beige,
         }}
       >
-        <div className="mx-auto flex min-h-[70vh] max-w-md items-center justify-center">
+        <div className={`mx-auto flex ${embedded ? 'min-h-64' : 'min-h-[70vh]'} max-w-md items-center justify-center`}>
           <GlassCard className="w-full p-6 text-center">
             <div
               className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl"
@@ -618,14 +619,14 @@ export default function Player_analytics_rankings() {
 
   return (
     <div
-      className="min-h-screen"
+      className={embedded ? 'min-w-0' : 'min-h-screen'}
       style={{
-        background: `radial-gradient(circle at top, ${PALETTE.red} 0, ${PALETTE.black} 45%, #e2e8f0 100%)`,
+        background: embedded ? 'transparent' : `radial-gradient(circle at top, ${PALETTE.red} 0, ${PALETTE.black} 45%, #e2e8f0 100%)`,
         color: PALETTE.beige,
         fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
       }}
     >
-      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-5 sm:py-8 lg:px-6 lg:py-10">
+      <div className={embedded ? 'ai-predictions-embedded' : 'mx-auto max-w-7xl px-4 py-6 sm:px-5 sm:py-8 lg:px-6 lg:py-10'}>
         <header className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <div
@@ -639,9 +640,9 @@ export default function Player_analytics_rankings() {
               <Sparkles size={14} />
               AI Model
             </div>
-            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-              AI Model
-            </h1>
+            <Heading className="text-3xl font-bold tracking-tight sm:text-4xl">
+              {embedded ? 'AI player predictions' : 'AI Model'}
+            </Heading>
             <p className="mt-2 max-w-2xl text-sm" style={{ color: "#64748b" }}>
               Compare player projections from the AI model.
             </p>

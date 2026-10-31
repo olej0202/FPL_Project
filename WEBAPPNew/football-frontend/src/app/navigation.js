@@ -10,7 +10,7 @@ export const analysisNavigation = [
 ];
 
 export const mainNavigation = [
-  { to: '/My_Team', icon: Brain, label: 'Optimize', activePaths: ['/Chip_Team', '/Team_Overview'] },
+  { to: '/My_Team', icon: Brain, label: 'Optimize', activePaths: ['/My_Team_Test', '/Chip_Team', '/Team_Overview'] },
   { to: '/AI_Model', icon: LayoutDashboard, label: 'AI Model' },
   { to: '/Adjustment_Analysis', icon: BarChart2, label: 'Statistical Model' },
   { icon: Search, label: 'Analysis', children: analysisNavigation },

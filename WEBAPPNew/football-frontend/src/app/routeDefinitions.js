@@ -51,7 +51,8 @@ export const routeDefinitions = [
     redirect('Wildcard_Team', '/Chip_Team?mode=wildcard'),
     page('Team_Overview', 'Overview', 'aiTeamsOverview', 'Team Overview'),
     page('Chip_Team', 'ChipTeam', 'aiTeamsChip', 'AI Teams'),
-    page('My_Team', 'Optimize', 'aiTeamsOptimize', 'Optimize'),
+    { ...page('My_Team', 'Optimize', 'aiTeamsOptimize', 'Optimize'), fullWidth: true },
+    redirect('My_Team_Test', '/My_Team'),
     redirect('My_Team_Testcase', '/My_Team'),
   ]),
   page('/AI_Model', 'AIModel', 'playerAnalyticsRankings', 'AI Model', [

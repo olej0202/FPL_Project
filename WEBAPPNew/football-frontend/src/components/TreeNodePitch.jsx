@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { ArrowRightLeft, X } from 'lucide-react';
 import pitch from '../assets/Pitch4.png';
 
-export default function TreeNodePitch({ rows, gw, expanded = false, onSelect, onTransfer, onSwap, onPlayerDetails, onBan, bannedList, getPhoto, getName, getDisplayName, getValue, getOpponent, formatValue, canSwap, onLoadTeam, teamLoading = false, teamError, hasTeamId = false }) {
+export default function TreeNodePitch({ rows, gw, expanded = false, onSelect, onTransfer, onSwap, onPlayerDetails, onBan, bannedList, getPhoto, getName, getDisplayName, getValue, getOpponent, formatValue, canSwap, onLoadTeam, teamLoading = false, teamError, hasTeamId = false, navigation = null }) {
   const [draggedName, setDraggedName] = useState('');
   const [actionPlayer, setActionPlayer] = useState(null);
   const [swapName, setSwapName] = useState('');
@@ -62,7 +62,7 @@ export default function TreeNodePitch({ rows, gw, expanded = false, onSelect, on
     </div>
   );
   return (
-    <div className={`tree-node-pitch relative mt-3 min-w-0 rounded-xl border border-slate-200 bg-cover bg-center p-2 ${expanded ? 'pitch-expanded' : ''}`} style={{ backgroundImage: `url(${pitch})`, backgroundSize: '100% 100%', height: expanded ? 'clamp(650px,80vw,900px)' : 550 }} aria-label={`Pitch GW${gw}`}>
+    <div className={`tree-node-pitch relative mt-3 min-w-0 rounded-xl border border-slate-200 bg-cover bg-center p-2 ${expanded ? 'pitch-expanded' : ''} ${navigation ? 'pitch-with-navigation' : ''}`} style={{ backgroundImage: `url(${pitch})`, backgroundSize: '100% 100%', height: expanded ? 'clamp(650px,80vw,900px)' : 550 }} aria-label={`Pitch GW${gw}`}>
       <style>{`
         @media (max-width: 639px) {
           .tree-node-pitch.pitch-expanded { height: clamp(470px, 130vw, 620px) !important; padding: 6px; }
@@ -74,6 +74,7 @@ export default function TreeNodePitch({ rows, gw, expanded = false, onSelect, on
           .pitch-player-actions button { min-height: 44px; touch-action: manipulation; }
         }
       `}</style>
+      {navigation}
       {swapName && <div className="absolute inset-x-2 top-1 z-20 flex items-center justify-between gap-2 rounded-xl bg-white/95 px-3 text-xs shadow sm:hidden">
         <span>Tap a highlighted player to swap</span><button type="button" className="min-h-11 px-2 font-semibold" onClick={() => setSwapName('')}>Cancel</button>
       </div>}

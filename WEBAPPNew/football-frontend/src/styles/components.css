@@ -32,6 +32,8 @@
 .app-nav__sublink { display: block; padding: .8rem; border-radius: .65rem; color: #52645e; font-size: .8rem; font-weight: 600; }
 .app-nav__sublink.is-active { background: var(--color-brand-soft); color: var(--color-brand); }
 .app-content { width: 100%; max-width: 1536px; margin: 0 auto; padding: 1.5rem; outline: none; }
+.app-content--full-width { max-width: none; padding: clamp(.5rem, 1vw, 1.25rem); }
+.app-content--full-width .app-content__surface { padding: clamp(.5rem, 1vw, 1rem); }
 .app-content__surface { min-width: 0; border: 1px solid var(--color-border); border-radius: var(--radius-panel); background: var(--color-surface); padding: clamp(.5rem, 1.5vw, 1.5rem); box-shadow: var(--shadow-panel); }
 .app-content :where(img, svg) { flex-shrink: 0; }
 .skip-link { position: fixed; z-index: 100; top: .75rem; left: 1rem; padding: .75rem 1rem; border-radius: .75rem; background: var(--color-brand); color: #fff; transform: translateY(-200%); font-weight: 700; }
@@ -73,16 +75,17 @@
 .filter-popover :where(button, label, input[type='text']) { min-height: 44px; }
 
 .section-layout { min-width: 0; display: flex; flex-direction: column; gap: 1.25rem; }
-.section-layout--docked { padding-bottom: 5.5rem; }
+.section-layout--docked { padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px)); }
+html:has(.section-tabs--docked) { scroll-padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px)); }
 .section-tabs { min-width: 0; max-width: 100%; border-bottom: 1px solid var(--color-border); padding-bottom: .75rem; }
 .section-tabs__items { display: flex; gap: .5rem; flex-wrap: wrap; }
 .section-tabs__link { display: inline-flex; min-height: 2.75rem; align-items: center; justify-content: center; gap: .5rem; padding: .65rem 1rem; font-size: .8rem; font-weight: 700; border: 1px solid transparent; border-radius: .8rem; color: #596b63; transition: background-color 150ms, color 150ms; }
 .section-tabs__link:hover { background: #f5f8f6; color: var(--color-brand); }
 .section-tabs__link.is-active { border-color: #cbe0d3; background: var(--color-brand-soft); color: #235e4e; }
 .section-tabs__compact-label { display: none; }
-.section-tabs--docked { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; max-width: none; border-top: 1px solid var(--color-border); border-bottom: 0; background: rgb(255 255 255 / 97%); backdrop-filter: blur(16px); box-shadow: 0 -5px 20px rgb(24 60 52 / 5%); padding: .5rem .65rem max(.5rem, env(safe-area-inset-bottom)); }
-.section-tabs--docked .section-tabs__items { max-width: 45rem; margin: 0 auto; flex-wrap: nowrap; }
-.section-tabs--docked .section-tabs__link { flex: 1; flex-direction: column; gap: .25rem; padding: .4rem; min-width: 0; font-size: .68rem; min-height: 3rem; }
+.section-tabs--docked { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; max-width: none; border-top: 1px solid var(--color-border); border-bottom: 0; background: rgb(255 255 255 / 97%); backdrop-filter: blur(16px); box-shadow: 0 -5px 20px rgb(24 60 52 / 5%); padding: .5rem max(.65rem, env(safe-area-inset-right)) max(.5rem, env(safe-area-inset-bottom)) max(.65rem, env(safe-area-inset-left)); }
+.section-tabs--docked .section-tabs__items { width: 100%; flex-wrap: nowrap; }
+.section-tabs--docked .section-tabs__link { flex: 1 1 0; flex-direction: column; gap: .25rem; padding: .4rem; min-width: 0; font-size: .68rem; min-height: 3rem; overflow-wrap: anywhere; text-align: center; }
 .section-tabs--docked .section-tabs__full-label { display: none; }
 .section-tabs--docked .section-tabs__compact-label { display: inline; }
 
@@ -106,10 +109,7 @@
 .app-nav--mobile .app-nav__sublink { padding: .8rem 1rem .8rem 2.7rem; }
 
 @media (min-width: 1024px) {
-  .section-layout--docked { padding-bottom: 0; }
-  .section-tabs--docked { position: sticky; inset: auto; top: var(--header-height); z-index: 25; border: 1px solid var(--color-border); border-radius: 1rem; padding: .4rem; box-shadow: none; }
-  .section-tabs--docked .section-tabs__items { max-width: none; margin: 0; }
-  .section-tabs--docked .section-tabs__link { flex: 0 1 auto; flex-direction: row; gap: .5rem; padding: .65rem 1rem; font-size: .8rem; min-height: 2.75rem; }
+  .section-tabs--docked .section-tabs__link { flex-direction: row; gap: .5rem; padding: .65rem 1rem; font-size: .8rem; min-height: 3rem; }
   .section-tabs--docked .section-tabs__full-label { display: inline; }
   .section-tabs--docked .section-tabs__compact-label { display: none; }
 }

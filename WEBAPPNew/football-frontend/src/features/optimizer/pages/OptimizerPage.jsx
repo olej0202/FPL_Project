@@ -17,8 +17,10 @@ import { isValidGW, buildNewTreeNodes, TREE_NODE_WIDTH, TREE_NODE_HEIGHT, TREE_C
 import { TopStat, FieldShell, ModelButton, PreferenceSlider } from '../components/OptimizerControls.jsx';
 import { TreeTransferRow, TransferRow } from '../components/SquadPresentation.jsx';
 import '../optimizer.css';
+import OptimizerWorkspaceLayout, { SquadPitchLayout } from '../components/OptimizerWorkspaceLayout';
+import PitchGameweekNavigation from '../components/PitchGameweekNavigation';
 
-export default function MyTeamOptimize() {
+export default function MyTeamOptimize({ splitView = true }) {
   const {
     teamId,
     setTeamId,
@@ -1232,13 +1234,19 @@ export default function MyTeamOptimize() {
   );
   useEffect(() => {
     if (!treeEditorOpen) { centeredMobileTreeRef.current = ""; return; }
-    if (!window.matchMedia('(max-width: 639px)').matches || centeredMobileTreeRef.current === activeTreeRootId) return;
     const pane = treeCanvasRef.current;
     const position = treeNodePositions[activeTreeRootId] || treeAutoLayout.positions[activeTreeRootId];
     if (!pane || !position) return;
-    pane.scrollLeft = (position.x + TREE_NODE_WIDTH / 2) * treeZoom - pane.clientWidth / 2;
-    pane.scrollTop = Math.max(0, position.y * treeZoom - 24);
-    centeredMobileTreeRef.current = activeTreeRootId;
+    const centerTree = () => {
+      if (!pane.clientWidth || !window.matchMedia('(max-width: 1023px)').matches || centeredMobileTreeRef.current === activeTreeRootId) return;
+      pane.scrollLeft = (position.x + TREE_NODE_WIDTH / 2) * treeZoom - pane.clientWidth / 2;
+      pane.scrollTop = Math.max(0, position.y * treeZoom - 24);
+      centeredMobileTreeRef.current = activeTreeRootId;
+    };
+    centerTree();
+    const observer = new ResizeObserver(centerTree);
+    observer.observe(pane);
+    return () => observer.disconnect();
   }, [activeTreeRootId, treeEditorOpen, treeNodePositions, treeAutoLayout.positions, treeZoom]);
   const treeCompactView = treeZoom < TREE_COMPACT_ZOOM;
   const getRenderedTreeNodeHeight = (nodeId) =>
@@ -2208,6 +2216,35 @@ export default function MyTeamOptimize() {
       </div>
   ) : null;
 
+  const branchSelector = (
+                      <div className="flex items-end gap-2">
+                      <label className="block min-w-0 flex-1 text-xs font-semibold">Branch to follow
+                        <select aria-label="Branch to follow" value={planningPath.at(-1)?.id || ""} className="gold-ring mt-1 w-full rounded-xl border bg-white p-2 text-sm"
+                          onChange={(event) => {
+                            const path = activeTreePaths.find((candidate) => candidate.id === event.target.value);
+                            if (!path) return;
+                            setSelectedTreeBranchId(path.id);
+                            setSelectedTreeNodeId((path.nodes.find((node) => Number(node.gw) === Number(activeGW)) || path.nodes[0]).id);
+                            setTransferOutName(""); setTransferInKey("");
+                          }}>
+                          {activeTreePaths.map((path, index) => <option key={path.id} value={path.id}>
+                            {activeTreePaths.length === 1 ? "Main path" : `Branch ${index + 1}`} · {path.probability.toFixed(0)}% · {path.nodes.filter((node) => (treeChildrenByParent.get(node.parentId) || []).length > 1).map((node) => node.label).join(" → ") || `GW${path.nodes[0]?.gw}–${path.nodes.at(-1)?.gw}`}
+                          </option>)}
+                        </select>
+                      </label>
+                      {selectedBranchStart && (
+                        <button type="button"
+                          onClick={() => removeTreeBranch(selectedBranchStart.id)}
+                          disabled={optimizingTreeRootId === activeTreeRootId && optimizationProgress?.streaming}
+                          className="gold-ring flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-rose-200 bg-rose-50 text-rose-600 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50"
+                          aria-label="Remove selected branch"
+                          title={`Remove ${selectedBranchStart.label} and all following nodes`}>
+                          <X size={19} />
+                        </button>
+                      )}
+                      </div>
+  );
+
   return (
     <div
       className="team-workspace"
@@ -2220,8 +2257,8 @@ export default function MyTeamOptimize() {
       {loadingOverlay}
       
 
-      <div className="mx-auto max-w-7xl px-1 py-3 sm:px-2 sm:py-5">
-        <header className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+      <OptimizerWorkspaceLayout splitView={splitView}
+        header={(<header className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <div
               className="inline-flex items-center gap-2 rounded-full px-3 py-1 mb-3 text-[11px] uppercase tracking-[0.18em]"
@@ -2280,9 +2317,8 @@ export default function MyTeamOptimize() {
               ) : null}
             </FieldShell>
           </div>
-        </header>
-
-        <section className="mb-6 grid grid-cols-1 gap-6">
+        </header>)}
+        optimization={(<section className="mb-6 grid grid-cols-1 gap-6">
           <div className="glass-card rounded-[28px] p-4 sm:p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-12 gap-3 items-start">
               <FieldShell label="Model" icon={Brain} className="min-w-0 md:col-span-2 xl:col-span-10">
@@ -3128,8 +3164,8 @@ export default function MyTeamOptimize() {
             </>
             )}
           </div>
-        </section>
-
+        </section>)}
+        squad={(<>
         {bannedPlayersData.length > 0 && (
           <section className="mb-6 glass-card rounded-[28px] p-4 sm:p-5">
             <div className="flex items-center justify-between mb-3 gap-3">
@@ -3180,7 +3216,7 @@ export default function MyTeamOptimize() {
 
           <section ref={pitchSectionRef} className="mb-6 grid grid-cols-1 gap-6 items-start">
             <div className="glass-card flex min-w-0 flex-col rounded-[28px] p-2 sm:p-5">
-              <div className="mb-4 flex flex-wrap items-center justify-between gap-3 sm:flex-nowrap sm:gap-0">
+              <div className="pitch-squad-header mb-4 flex flex-wrap items-center justify-between gap-3 sm:flex-nowrap sm:gap-0">
                 <div>
                   <div className="text-sm font-semibold inline-flex items-center gap-2" style={{ color: PALETTE.gold }}>
                     <Trophy size={16} className="lucide-icon" />
@@ -3188,11 +3224,12 @@ export default function MyTeamOptimize() {
                       ? `Optimized squad · ${activeTreeNode?.label || treeName}`
                       : teamData?.length ? "Squad preview" : "Tree squad"}
                   </div>
-                  <div className="text-xs mt-1" style={{ color: PALETTE.muted }}>
+                  <div className="pitch-squad-description text-xs mt-1" style={{ color: PALETTE.muted }}>
                     {activeSolutionData.length > 0
                       ? "Select a node below to edit its squad, transfers, and chip. Tap a player to open analytics."
                       : "Every branch shows its full gameweek path. Load your team to plan transfers at any node."}
                   </div>
+                  {splitView && branchSelector}
                 </div>
                 <div
                   className="shrink-0 rounded-2xl px-3 py-2 text-right text-xs font-black tabular-nums"
@@ -3237,34 +3274,10 @@ export default function MyTeamOptimize() {
               </div>
 
                 {selectedPitchCard && (
-                  <div className="mt-4" aria-label="Selected branch squad">
-                    <div className="rounded-2xl border p-3" style={{ borderColor: PALETTE.border, background: "rgba(248,250,252,0.95)" }}>
-                      <div className="flex items-end gap-2">
-                      <label className="block min-w-0 flex-1 text-xs font-semibold">Branch to follow
-                        <select aria-label="Branch to follow" value={planningPath.at(-1)?.id || ""} className="gold-ring mt-1 w-full rounded-xl border bg-white p-2 text-sm"
-                          onChange={(event) => {
-                            const path = activeTreePaths.find((candidate) => candidate.id === event.target.value);
-                            if (!path) return;
-                            setSelectedTreeBranchId(path.id);
-                            setSelectedTreeNodeId((path.nodes.find((node) => Number(node.gw) === Number(activeGW)) || path.nodes[0]).id);
-                            setTransferOutName(""); setTransferInKey("");
-                          }}>
-                          {activeTreePaths.map((path, index) => <option key={path.id} value={path.id}>
-                            {activeTreePaths.length === 1 ? "Main path" : `Branch ${index + 1}`} · {path.probability.toFixed(0)}% · {path.nodes.filter((node) => (treeChildrenByParent.get(node.parentId) || []).length > 1).map((node) => node.label).join(" → ") || `GW${path.nodes[0]?.gw}–${path.nodes.at(-1)?.gw}`}
-                          </option>)}
-                        </select>
-                      </label>
-                      {selectedBranchStart && (
-                        <button type="button"
-                          onClick={() => removeTreeBranch(selectedBranchStart.id)}
-                          disabled={optimizingTreeRootId === activeTreeRootId && optimizationProgress?.streaming}
-                          className="gold-ring flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-rose-200 bg-rose-50 text-rose-600 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50"
-                          aria-label="Remove selected branch"
-                          title={`Remove ${selectedBranchStart.label} and all following nodes`}>
-                          <X size={19} />
-                        </button>
-                      )}
-                      </div>
+                  <div className={splitView ? "pitch-view" : "mt-4"} aria-label="Selected branch squad">
+                    <SquadPitchLayout splitView={splitView}
+                      navigation={(<div className="pitch-navigation rounded-2xl border p-3" style={{ borderColor: PALETTE.border, background: "rgba(248,250,252,0.95)" }}>
+                      {branchSelector}
                       <div className="gw-navigation mt-3 flex items-center justify-between gap-3">
                         <button type="button" disabled={pitchNodeIndex <= 0} className="gold-ring flex items-center gap-1 rounded-full border px-3 py-2 text-xs font-semibold disabled:opacity-40"
                           onClick={() => selectPitchNode(planningPath[pitchNodeIndex - 1]?.id)}><ChevronLeft size={15} />Previous GW</button>
@@ -3276,8 +3289,8 @@ export default function MyTeamOptimize() {
                         {planningPath.map((node) => <button key={node.id} type="button" aria-pressed={node.id === activeTreeNode?.id} onClick={() => selectPitchNode(node.id)}
                           className="gold-ring rounded-full border px-3 py-1.5 text-xs font-semibold" style={{ background: node.id === activeTreeNode?.id ? PALETTE.gold : "white", color: node.id === activeTreeNode?.id ? "white" : PALETTE.text }}>GW{node.gw}</button>)}
                       </div>
-                    </div>
-                    <details open className="group mt-3 rounded-2xl border p-3" aria-label="All transfers" style={{ borderColor: PALETTE.border }}>
+                    </div>)}
+                      allTransfers={(<details open={!splitView} className="group mt-3 rounded-2xl border p-3" aria-label="All transfers" style={{ borderColor: PALETTE.border }}>
                       <summary className="gold-ring flex cursor-pointer list-none items-center justify-between rounded-lg text-sm font-semibold [&::-webkit-details-marker]:hidden">
                         All transfers
                         <ChevronDown size={16} className="transition-transform group-open:rotate-180" />
@@ -3303,8 +3316,8 @@ export default function MyTeamOptimize() {
                           );
                         })}
                       </div>
-                    </details>
-                    {modelType === "statistical" && (
+                    </details>)}
+                      settings={(<>{modelType === "statistical" && (
                       <div className="mt-3 rounded-2xl border p-3" style={{ borderColor: PALETTE.border }}>
                         <div className="mb-1 text-xs font-semibold">Scenario from GW{activeGW}</div>
                         <ScenarioSelect
@@ -3326,8 +3339,8 @@ export default function MyTeamOptimize() {
                       <select aria-label="Chip for selected gameweek" value={activeTreeNode.chip || "none"} className="rounded-lg border p-2" onChange={(event) => updateTreeNode(activeTreeNode.id, { chip: event.target.value })}>
                         <option value="none">No chip</option><option value="wildcard">Wildcard</option><option value="freehit">Free Hit</option><option value="bench_boost">Bench Boost</option>
                       </select>
-                    </div>
-                    <div className="my-3 rounded-2xl border p-3" aria-label="Selected node transfers" style={{ borderColor: PALETTE.border }}>
+                    </div></>)}
+                      selectedTransfers={(<div className="my-3 rounded-2xl border p-3" aria-label="Selected node transfers" style={{ borderColor: PALETTE.border }}>
                       {isSquadResetChip ? (
                         <div className="text-center text-sm font-semibold" style={{ color: PALETTE.gold }}>
                           {activeTreeNode.chip === "wildcard" ? "Wildcard" : "Free Hit"}
@@ -3354,8 +3367,11 @@ export default function MyTeamOptimize() {
                             onClick={() => setHiddenModelTransferKeys((previous) => previous.filter((key) => !key.startsWith(`${activeTreeNode.id}:`)))}>Restore model moves</button>}
                         </>
                       )}
-                    </div>
-                    <TreeNodePitch expanded key={activeTreeNode.id} rows={selectedPitchCard.summary.squad} gw={activeGW} onSelect={() => {}}
+                    </div>)}
+                      pitch={(<TreeNodePitch navigation={splitView ? <PitchGameweekNavigation gameweek={activeGW}
+                      previousDisabled={pitchNodeIndex <= 0} nextDisabled={pitchNodeIndex >= planningPath.length - 1}
+                      onPrevious={() => selectPitchNode(planningPath[pitchNodeIndex - 1]?.id)}
+                      onNext={() => selectPitchNode(planningPath[pitchNodeIndex + 1]?.id)} /> : null} expanded key={activeTreeNode.id} rows={selectedPitchCard.summary.squad} gw={activeGW} onSelect={() => {}}
                       onLoadTeam={handleLoadTeam} teamLoading={teamLoading} teamError={teamError} hasTeamId={Boolean(String(teamId || "").trim())}
                       getPhoto={getPlayerPhoto} getName={getPlayerCanonicalName} getDisplayName={getPlayerDisplayName}
                       getValue={(player) => getRowMeasureValue(player, teamMeasure)} formatValue={(value) => formatMeasureValue(value, teamMeasure)} getOpponent={getOpponentMeta}
@@ -3371,7 +3387,8 @@ export default function MyTeamOptimize() {
                         setNodePlans((previous) => ({ ...previous, [nodeId]: { ...previous[nodeId], statusOverrides: {
                           ...(previous[nodeId]?.statusOverrides || {}), [sourceName]: target.status, [targetName]: source.status,
                         } } }));
-                      }} />
+                      }} />)}
+                    />
                   </div>
                 )}
 
@@ -3926,7 +3943,8 @@ export default function MyTeamOptimize() {
           </section>
         )}
 
-        <div className="sticky bottom-24 sm:bottom-28 z-[120] mt-6 flex justify-end">
+        </>)}
+        action={(<div className="sticky bottom-24 sm:bottom-28 z-[120] mt-6 flex justify-end">
           <button
             onClick={handleOptimizeClick}
             disabled={!canOptimize}
@@ -3944,8 +3962,8 @@ export default function MyTeamOptimize() {
             <Wand2 size={17} className="lucide-icon" />
             Optimize now
           </button>
-        </div>
-      </div>
+        </div>)}
+      />
     </div>
   );
 }

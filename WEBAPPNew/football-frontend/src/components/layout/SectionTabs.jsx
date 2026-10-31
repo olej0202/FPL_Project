@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import { classNames } from '../ui/classNames';
 
-export default function SectionTabs({ items, label, docked = false }) {
+export default function SectionTabs({ items, label, docked = true }) {
   return (
     <nav aria-label={label} className={classNames('section-tabs', docked && 'section-tabs--docked')}>
       <div className="section-tabs__items">

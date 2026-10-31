@@ -37,5 +37,16 @@ test('navigation matches complete path segments and highlights optimizer subpage
   const optimize = mainNavigation.find(item => item.to === '/My_Team');
   assert.ok(isNavigationActive(optimize, '/Chip_Team'));
   assert.ok(isNavigationActive(optimize, '/Team_Overview'));
+  assert.ok(isNavigationActive(optimize, '/My_Team_Test'));
   assert.ok(!isNavigationActive(optimize, '/Price_Changes'));
+});
+
+test('the main optimizer uses full width and the test URL redirects to it', () => {
+  const routes = routesAt(routeDefinitions);
+  const preview = routes.find(route => route.fullPath === '/My_Team_Test');
+  const standard = routes.find(route => route.fullPath === '/My_Team');
+  assert.ok(standard?.component);
+  assert.equal(standard.fullWidth, true);
+  assert.equal(preview.redirect, '/My_Team');
+  assert.equal(standard.siteKey, 'aiTeamsOptimize');
 });

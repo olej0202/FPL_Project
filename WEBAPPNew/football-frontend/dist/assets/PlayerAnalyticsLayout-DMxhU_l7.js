@@ -1,1 +1,0 @@
-import{j as i}from"./index-DZxWq4wc.js";import{S as r}from"./SectionLayout-DLXUmp64.js";import{U as t}from"./user-CsjNpasF.js";const a=[{to:"Individual",label:"Individual Player",icon:t,end:!0}];function l(){return i.jsx(r,{tabs:a,title:"Player Analytics",description:"Explore individual players and their performance.",icon:t})}export{l as default};

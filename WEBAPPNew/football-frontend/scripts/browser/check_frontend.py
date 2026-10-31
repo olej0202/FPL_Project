@@ -112,6 +112,30 @@ with tempfile.TemporaryDirectory(prefix='frontend-rebuild-browser-') as profile:
         def screenshot(name):
             (output / name).write_bytes(base64.b64decode(command('Page.captureScreenshot', {'format': 'png'})['data']))
 
+        def check_split_layout(width):
+            layout = js('''(() => {
+                const team = document.querySelector('.optimizer-test-workspace__team').getBoundingClientRect();
+                const tools = document.querySelector('.optimizer-test-workspace__tools').getBoundingClientRect();
+                const main = document.querySelector('main').getBoundingClientRect();
+                return {teamWidth:team.width, toolsWidth:tools.width, teamTop:team.top,
+                    toolsTop:tools.top, teamBottom:team.bottom, mainWidth:main.width,
+                    layoutWidth:document.documentElement.getBoundingClientRect().width,
+                    teamVisible:document.querySelector('.optimizer-test-workspace__team').checkVisibility(),
+                    toolsVisible:document.querySelector('.optimizer-test-workspace__tools').checkVisibility()};
+            })()''')
+            assert abs(layout['mainWidth'] - layout['layoutWidth']) < 1, (width, layout)
+            if width >= 1024:
+                assert layout['teamVisible'] and layout['toolsVisible'], (width, layout)
+                assert abs(layout['teamWidth'] - layout['toolsWidth']) < 1, (width, layout)
+                assert abs(layout['teamTop'] - layout['toolsTop']) < 1, (width, layout)
+            else:
+                assert layout['teamVisible'] and not layout['toolsVisible'], (width, layout)
+            report.setdefault('split_layouts', []).append({'width': width, **layout})
+
+        def select_optimizer_view(view):
+            js("(()=>{const group=document.querySelector('[aria-label=\"Optimizer view\"]');if(group?.checkVisibility())Array.from(group.querySelectorAll('button')).find(el=>el.textContent.trim()===" + json.dumps(view) + ").click();})()")
+            settle()
+
         command('Runtime.enable')
         command('Page.enable')
         command('Fetch.enable', {'patterns': [{'urlPattern': 'http*', 'requestStage': 'Request'}]})
@@ -134,10 +158,90 @@ with tempfile.TemporaryDirectory(prefix='frontend-rebuild-browser-') as profile:
                     screenshot('overflow.png')
                     offenders = js('Array.from(document.querySelectorAll("main *")).filter(el=>el.getBoundingClientRect().right>document.documentElement.clientWidth+1).slice(0,12).map(el=>({tag:el.tagName,class:el.className,right:el.getBoundingClientRect().right}))')
                     raise AssertionError(f'Horizontal overflow {path}, {width}px: {dimensions}; {offenders}')
+                navigation = js('''(() => {
+                    const nav = document.querySelector('.section-tabs');
+                    if (!nav) return null;
+                    const rect = nav.getBoundingClientRect();
+                    const items = nav.querySelector('.section-tabs__items').getBoundingClientRect();
+                    const buttons = Array.from(nav.querySelectorAll('a')).map(el => {
+                        const r = el.getBoundingClientRect();
+                        return {left:r.left, right:r.right, width:r.width, height:r.height};
+                    });
+                    return {position:getComputedStyle(nav).position, left:rect.left, right:rect.right,
+                        bottom:rect.bottom, viewportHeight:innerHeight, layoutWidth:document.documentElement.getBoundingClientRect().width,
+                        itemsLeft:items.left, itemsRight:items.right, buttons};
+                })()''')
+                if navigation:
+                    report['routes'][-1]['bottom_navigation'] = navigation
+                    assert navigation['position'] == 'fixed', (path, width, navigation)
+                    # The root's stable scrollbar gutter can remain reserved even
+                    # when a page hides the native scrollbar.
+                    assert abs(navigation['left']) < 1 and abs(navigation['right'] - navigation['layoutWidth']) < 1, (path, width, navigation)
+                    assert abs(navigation['bottom'] - navigation['viewportHeight']) < 1, (path, width, navigation)
+                    buttons = navigation['buttons']
+                    assert max(b['width'] for b in buttons) - min(b['width'] for b in buttons) < 1, (path, width, navigation)
+                    assert abs(buttons[0]['left'] - navigation['itemsLeft']) < 1 and abs(buttons[-1]['right'] - navigation['itemsRight']) < 1, (path, width, navigation)
+                    assert all(b['height'] >= 44 for b in buttons), (path, width, navigation)
                 assert not report['exceptions'], {'route': path, 'errors': report['exceptions']}
+                if path == '/My_Team':
+                    check_split_layout(width)
                 if path in ('/My_Team', '/AI_Model/Players', '/Price_Changes') and width in (390, 1440):
                     screenshot(f'{path.strip("/").replace("/", "-")}-{width}.png')
             print(f'All {len(routes)} pages rendered at {width}px without overflow or JS exceptions.', flush=True)
+
+        for width in (1920, 2560):
+            command('Emulation.setDeviceMetricsOverride', {'width': width, 'height': 1080, 'deviceScaleFactor': 1, 'mobile': False})
+            navigate('/My_Team')
+            check_split_layout(width)
+        report['interactions'].append('Main optimizer fills wide screens and shows one view at a time on small screens')
+
+        for width in (390, 1440):
+            command('Emulation.setDeviceMetricsOverride', {'width': width, 'height': 1000, 'deviceScaleFactor': 1, 'mobile': width < 640})
+            navigate('/My_Team')
+            js("window.__splitTeamElement = document.querySelector('.optimizer-test-workspace__team'); true")
+            pitch_before = js("document.querySelector('.optimizer-test-workspace__team .tree-node-pitch').getAttribute('aria-label')")
+            select_optimizer_view('Optimization')
+            assert js("document.querySelector('.optimizer-test-workspace__tools').checkVisibility()")
+            if width < 1024:
+                assert not js("document.querySelector('.optimizer-test-workspace__team').checkVisibility()")
+            tree_name = js("document.querySelector('input[aria-label=\"Tree name\"]').value")
+            js("document.querySelectorAll('[role=tablist][aria-label=\"Workspace panel\"] [role=tab]')[1].click()")
+            until('!!document.querySelector(".ai-predictions-embedded input[placeholder=\\\"Type player name...\\\"]")', 'embedded predictions loaded')
+            player_name = js("document.querySelector('.ai-predictions-embedded tbody tr[role=button] td:first-child').textContent.trim()")
+            js("(()=>{const el=document.querySelector('.ai-predictions-embedded input[placeholder=\"Type player name...\"]');Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(el," + json.dumps(player_name) + ");el.dispatchEvent(new Event('input',{bubbles:true}));})()")
+            settle()
+            assert js('document.querySelector(".ai-predictions-embedded tbody").textContent.includes(' + json.dumps(player_name) + ')')
+            assert js('document.querySelector(".optimizer-test-workspace__team") === window.__splitTeamElement')
+            screenshot(f'optimizer-test-predictions-{width}.png')
+            select_optimizer_view('Pitch')
+            assert js("document.querySelector('.optimizer-test-workspace__team').checkVisibility()")
+            assert js("document.querySelector('.optimizer-test-workspace__team .tree-node-pitch').getAttribute('aria-label')") == pitch_before
+            if width < 1024:
+                assert not js("document.querySelector('.optimizer-test-workspace__tools').checkVisibility()")
+                screenshot(f'optimizer-mobile-pitch-{width}.png')
+            select_optimizer_view('Optimization')
+            assert js("document.querySelector('.ai-predictions-embedded input[placeholder=\"Type player name...\"]').value") == player_name
+            assert js('document.querySelector(".optimizer-test-workspace__team") === window.__splitTeamElement')
+            js("document.querySelectorAll('[role=tablist][aria-label=\"Workspace panel\"] [role=tab]')[0].click()")
+            assert js("document.querySelector('input[aria-label=\"Tree name\"]').value") == tree_name
+            js("document.querySelectorAll('[role=tablist][aria-label=\"Workspace panel\"] [role=tab]')[1].click()")
+            assert js("document.querySelector('.ai-predictions-embedded input[placeholder=\"Type player name...\"]').value") == player_name
+            assert js('document.querySelector(".optimizer-test-workspace__team") === window.__splitTeamElement')
+            # Exercise keyboard navigation back to the optimization controls.
+            js("document.querySelectorAll('[role=tablist][aria-label=\"Workspace panel\"] [role=tab]')[1].focus()")
+            command('Input.dispatchKeyEvent', {'type': 'keyDown', 'key': 'ArrowLeft', 'code': 'ArrowLeft', 'windowsVirtualKeyCode': 37})
+            command('Input.dispatchKeyEvent', {'type': 'keyUp', 'key': 'ArrowLeft', 'code': 'ArrowLeft', 'windowsVirtualKeyCode': 37})
+            assert js("document.activeElement.textContent.includes('Optimization') && document.activeElement.getAttribute('aria-selected') === 'true'")
+        report['interactions'].append('Mobile Pitch/Optimization and embedded AI toggles preserve pitch selection, filters, team DOM and tree state; keyboard tabs work')
+
+        js("document.querySelector('.optimizer-test-workspace__action button').click()")
+        until('Object.values(window.__frontend.myTeam.treeOptimizationResults).some(result => result.rows?.length > 0) && !window.__frontend.myTeam.loading', 'main page optimization finished')
+        cached_roots = js('Object.keys(window.__frontend.myTeam.treeOptimizationResults)')
+        navigate('/Price_Changes')
+        navigate('/My_Team')
+        assert js('Object.keys(window.__frontend.myTeam.treeOptimizationResults)') == cached_roots
+        assert js('document.querySelector(".optimizer-test-workspace__team").textContent.includes("Optimized squad")')
+        report['interactions'].append('Optimization runs from the main page and keeps results after leaving and returning')
 
         command('Emulation.setDeviceMetricsOverride', {'width': 390, 'height': 900, 'deviceScaleFactor': 1, 'mobile': True})
         navigate('/My_Team')
@@ -192,7 +296,7 @@ with tempfile.TemporaryDirectory(prefix='frontend-rebuild-browser-') as profile:
         assert js('window.__frontend.adjustments.scenarios.length === 2')
         report['interactions'].append('Statistical scenarios can be created and survive navigation')
 
-        for source, destination in [('/My_Team_Testcase', '/My_Team'), ('/Wildcard_Team', '/Chip_Team'),
+        for source, destination in [('/My_Team_Test', '/My_Team'), ('/My_Team_Testcase', '/My_Team'), ('/Wildcard_Team', '/Chip_Team'),
                                     ('/FreeHitTeam', '/Chip_Team'), ('/Matches', '/Season_Analysis/Season_Matches'),
                                     ('/AI_Model/Teams', '/AI_Model/Fixtures'), ('/Player_Analytics/Rankings', '/AI_Model/Players')]:
             navigate(source)

@@ -39,8 +39,17 @@ demand; a page error leaves navigation available and shows a recovery action.
 
 ## UI conventions
 
-- Use `SectionLayout`/`SectionTabs` for section navigation. Docked tabs sit at the
-  bottom on mobile and above the content on desktop.
+`/My_Team` uses the full-width pitch and optimization layout through
+`OptimizerWorkspaceLayout`. On desktop, equal-width columns show the squad and
+a panel that switches between optimization and embedded AI player predictions.
+Below 1024px, a Pitch/Optimization toggle shows one view at a time. Views stay
+mounted while switching, preserving filters, gameweek selection and tree settings.
+The old `/My_Team_Test` URL redirects to `/My_Team`. Route metadata controls the
+full-width application shell.
+
+- Use `SectionLayout`/`SectionTabs` for section navigation. Tabs are docked at the
+  bottom by default on mobile and desktop. Buttons share the full available screen
+  width equally; the layout reserves space for the bar and the device safe area.
 - Use `Button`, `Panel`, `PageHeader`, `LoadingState`, `EmptyState` and `TableScroll`
   for new shared UI. Give icon-only buttons an accessible name.
 - Use `FilterControls` for shared projection filters. Popovers render into the

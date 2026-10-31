@@ -1,0 +1,1 @@
+import{j as t}from"./index-DgsyFoL5.js";import{S as e}from"./SectionLayout-DxXLb_Bi.js";import{T as o}from"./target-D8JNJ1uU.js";import{S as a}from"./sparkles-9G8QLAxc.js";const r=[{to:"My_Team",label:"Optimize",icon:o,end:!0},{to:"Chip_Team",label:"AI Chip Team",icon:a,end:!0,compactLabel:"Chip"}];function n(){return t.jsx(e,{tabs:r,docked:!0})}export{n as default};
