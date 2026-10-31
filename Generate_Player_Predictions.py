@@ -548,219 +548,32 @@ def train_defcon_ensemble_model(
         df_train
     )
 def Generate_Saves_Models(
-    training_file="Team_data_transformed2.csv",
     team_data_path="Team_data_newest3.csv",
     fixture_path="Fantasy_season_Fixtures_EXPANDED.csv",
     current_team_path=r"Raw_Data_26\current_teams.csv",
     output_file="Saves_preds.csv"
 ):
+
+    # ==========================================
+    # 1. FIXED POISSON FORMULA
+    # ==========================================
+
+    INTERCEPT = -0.549094
+    B_OWN_SAVES = 0.264615
+    B_OPP_SAVES_AGAINST = 0.289977
+    B_OPP_XG = -0.048749
+
     features = [
         "own_Rolling_Saves",
         "opponent_Rolling_Saves_Against",
-        "own_XG_avg",
-        "own_XGC_avg",
-        "opponent_XG_avg",
-        "opponent_XGC_avg"
+        "opponent_XG_avg"
     ]
 
-    target = "saves"
+    # ==========================================
+    # 2. LOAD UPCOMING FIXTURES
+    # ==========================================
 
-    # ---------------------------------------------------------
-    # Historical data + opponent stats
-    # ---------------------------------------------------------
-    df = pd.read_csv(training_file)
-
-    df["kickoff_time"] = pd.to_datetime(
-        df["kickoff_time"],
-        errors="coerce",
-        utc=True
-    )
-
-    df = df[
-        df["kickoff_time"] > pd.Timestamp("2025-09-30", tz="UTC")
-    ].copy()
-
-    df[["code", "opponent"]] = df[
-        ["code", "opponent"]
-    ].apply(pd.to_numeric, errors="coerce")
-
-    df = df.dropna(subset=["code", "opponent"])
-
-    df[["code", "opponent"]] = df[
-        ["code", "opponent"]
-    ].astype(int)
-
-    df["_date"] = df["kickoff_time"].dt.normalize()
-
-    # Build opponent-side features
-    opp = df[
-        [
-            "_date",
-            "code",
-            "Rolling_Saves_Against",
-            "XG_avg",
-            "XGC_avg"
-        ]
-    ].rename(
-        columns={
-            "code": "opponent",
-            "Rolling_Saves_Against": "opponent_Rolling_Saves_Against",
-            "XG_avg": "opponent_XG_avg",
-            "XGC_avg": "opponent_XGC_avg"
-        }
-    ).drop_duplicates(
-        ["_date", "opponent"],
-        keep="last"
-    )
-
-    df = df.merge(
-        opp,
-        on=["_date", "opponent"],
-        how="left"
-    ).rename(
-        columns={
-            "Rolling_Saves": "own_Rolling_Saves",
-            "XG_avg": "own_XG_avg",
-            "XGC_avg": "own_XGC_avg"
-        }
-    )
-
-    df[features + [target]] = df[
-        features + [target]
-    ].apply(
-        pd.to_numeric,
-        errors="coerce"
-    )
-
-    df = df.dropna(
-        subset=[
-            target,
-            "opponent_Rolling_Saves_Against"
-        ]
-    ).sort_values("kickoff_time")
-
-    # ---------------------------------------------------------
-    # Time-ordered train/test split
-    # ---------------------------------------------------------
-    split = max(
-        1,
-        min(
-            int(len(df) * 0.8),
-            len(df) - 1
-        )
-    )
-
-    train = df.iloc[:split]
-    test = df.iloc[split:]
-
-    imputer = SimpleImputer(strategy="median")
-
-    X_train = imputer.fit_transform(
-        train[features]
-    )
-
-    X_test = imputer.transform(
-        test[features]
-    )
-
-    model = XGBRegressor(
-        objective="reg:squarederror",
-        n_estimators=300,
-        learning_rate=0.03,
-        max_depth=3,
-        min_child_weight=5,
-        subsample=0.8,
-        colsample_bytree=0.8,
-        reg_alpha=0.1,
-        reg_lambda=1,
-        random_state=42,
-        n_jobs=-1
-    )
-
-    model.fit(
-        X_train,
-        train[target]
-    )
-
-    # ---------------------------------------------------------
-    # Evaluation
-    # ---------------------------------------------------------
-    train_pred = model.predict(X_train)
-    test_pred = model.predict(X_test)
-
-    # ---------------------------------------------------------
-    # Save residuals
-    # ---------------------------------------------------------
-    team_residual_base_cols = [
-        col
-        for col in [
-            "kickoff_time",
-            "name",
-            "code",
-            "opponent",
-            target
-        ]
-        if col in df.columns
-    ]
-
-    train_residuals = train[
-        team_residual_base_cols + features
-    ].copy()
-
-    train_residuals["dataset_split"] = "train"
-    train_residuals["prediction"] = train_pred
-    train_residuals["residual"] = (
-        train_residuals[target]
-        - train_residuals["prediction"]
-    )
-
-    test_residuals = test[
-        team_residual_base_cols + features
-    ].copy()
-
-    test_residuals["dataset_split"] = "test"
-    test_residuals["prediction"] = test_pred
-    test_residuals["residual"] = (
-        test_residuals[target]
-        - test_residuals["prediction"]
-    )
-
-    residual_file = "Saves_Teams_residuals.csv"
-
-    pd.concat(
-        [
-            train_residuals,
-            test_residuals
-        ],
-        ignore_index=True
-    ).to_csv(
-        residual_file,
-        index=False
-    )
-
-
-
-    # ---------------------------------------------------------
-    # Refit model using all historical data
-    # ---------------------------------------------------------
-    X_all = imputer.fit_transform(
-        df[features]
-    )
-
-    model.fit(
-        X_all,
-        df[target]
-    )
-
-
-
-
-    # ---------------------------------------------------------
-    # Upcoming fixtures
-    # ---------------------------------------------------------
-    fixtures = pd.read_csv(
-        fixture_path
-    )[
+    fixtures = pd.read_csv(fixture_path)[
         [
             "code",
             "event",
@@ -768,30 +581,42 @@ def Generate_Saves_Models(
             "team_h",
             "finished"
         ]
-    ]
+    ].copy()
 
-    fixtures = fixtures[
-        ~fixtures["finished"]
-        .fillna(False)
-        .astype(bool)
-    ].rename(
-        columns={
-            "code": "fix_id"
-        }
+    # Handle boolean values and CSV strings
+    finished = (
+        fixtures["finished"]
+        .astype(str)
+        .str.strip()
+        .str.lower()
+        .isin(["true", "1", "yes"])
     )
 
-    # ---------------------------------------------------------
-    # Team mapping
-    # ---------------------------------------------------------
-    teams = pd.read_csv(
-        current_team_path
-    )[
-        [
-            "id",
-            "code",
-            "name"
-        ]
-    ]
+    fixtures = fixtures[
+        ~finished
+    ].copy()
+
+    fixtures = fixtures.rename(
+        columns={"code": "fix_id"}
+    )
+
+    for col in ["team_a", "team_h"]:
+        fixtures[col] = pd.to_numeric(
+            fixtures[col],
+            errors="coerce"
+        )
+
+    fixtures = fixtures.dropna(
+        subset=["team_a", "team_h"]
+    )
+
+    # ==========================================
+    # 3. TEAM ID -> TEAM CODE MAPPING
+    # ==========================================
+
+    teams = pd.read_csv(current_team_path)[
+        ["id", "code", "name"]
+    ].copy()
 
     teams[["id", "code"]] = teams[
         ["id", "code"]
@@ -800,24 +625,36 @@ def Generate_Saves_Models(
         errors="coerce"
     )
 
+    teams = teams.dropna(
+        subset=["id", "code"]
+    ).drop_duplicates(
+        subset=["id"],
+        keep="last"
+    )
+
+    # Attach away team
     f = fixtures.merge(
         teams.add_suffix("_away"),
         left_on="team_a",
         right_on="id_away",
-        how="left"
-    ).merge(
+        how="left",
+        validate="many_to_one"
+    )
+
+    # Attach home team
+    f = f.merge(
         teams.add_suffix("_home"),
         left_on="team_h",
         right_on="id_home",
-        how="left"
+        how="left",
+        validate="many_to_one"
     )
 
-    # ---------------------------------------------------------
-    # Latest team stats
-    # ---------------------------------------------------------
-    stats = pd.read_csv(
-        team_data_path
-    )
+    # ==========================================
+    # 4. LOAD LATEST TEAM STATISTICS
+    # ==========================================
+
+    stats = pd.read_csv(team_data_path)
 
     stats["code"] = pd.to_numeric(
         stats["code"],
@@ -825,6 +662,7 @@ def Generate_Saves_Models(
     )
 
     if "kickoff_time" in stats.columns:
+
         stats["kickoff_time"] = pd.to_datetime(
             stats["kickoff_time"],
             errors="coerce",
@@ -835,117 +673,190 @@ def Generate_Saves_Models(
             "kickoff_time"
         )
 
+    # Latest row per team
     stats = stats.drop_duplicates(
-        "code",
+        subset=["code"],
         keep="last"
     )
 
-    s = stats[
-        [
-            "code",
-            "Rolling_Saves",
-            "Rolling_Saves_Against",
-            "XG_avg",
-            "XGC_avg"
-        ]
+    stat_columns = [
+        "code",
+        "Rolling_Saves",
+        "Rolling_Saves_Against",
+        "XG_avg",
+        "XGC_avg"
     ]
 
-    # Add away-team stats
+    s = stats[stat_columns].copy()
+
+    for col in stat_columns:
+        s[col] = pd.to_numeric(
+            s[col],
+            errors="coerce"
+        )
+
+    # ==========================================
+    # 5. MERGE AWAY AND HOME STATISTICS
+    # ==========================================
+
     f = f.merge(
         s.add_suffix("_away"),
-        left_on="code_away",
-        right_on="code_away",
-        how="left"
+        on="code_away",
+        how="left",
+        validate="many_to_one"
     )
 
-    # Add home-team stats
     f = f.merge(
         s.add_suffix("_home"),
-        left_on="code_home",
-        right_on="code_home",
-        how="left"
+        on="code_home",
+        how="left",
+        validate="many_to_one"
     )
 
-    # ---------------------------------------------------------
-    # One row per team per fixture
-    # ---------------------------------------------------------
-    def rows(side, opp_side, ha):
-        return pd.DataFrame(
-            {
-                "fix_id": f["fix_id"],
-                "event": f["event"],
+    # ==========================================
+    # 6. ONE ROW PER TEAM PER FIXTURE
+    # ==========================================
 
-                "team_code": f[f"code_{side}"],
-                "team_name": f[f"name_{side}"],
+    def make_rows(side, opponent_side, home_away):
 
-                "opponent_code": f[f"code_{opp_side}"],
-                "opponent_name": f[f"name_{opp_side}"],
+        return pd.DataFrame({
 
-                "home_away": ha,
+            "fix_id": f["fix_id"],
+            "event": f["event"],
 
-                # SAVES FEATURES
-                "own_Rolling_Saves":
-                    f[f"Rolling_Saves_{side}"],
+            "team_code": f[f"code_{side}"],
+            "team_name": f[f"name_{side}"],
 
-                "opponent_Rolling_Saves_Against":
-                    f[f"Rolling_Saves_Against_{opp_side}"],
+            "opponent_code":
+                f[f"code_{opponent_side}"],
 
-                "own_XG_avg":
-                    f[f"XG_avg_{side}"],
+            "opponent_name":
+                f[f"name_{opponent_side}"],
 
-                "own_XGC_avg":
-                    f[f"XGC_avg_{side}"],
+            "home_away": home_away,
 
-                "opponent_XG_avg":
-                    f[f"XG_avg_{opp_side}"],
+            # Main prediction features
+            "own_Rolling_Saves":
+                f[f"Rolling_Saves_{side}"],
 
-                "opponent_XGC_avg":
-                    f[f"XGC_avg_{opp_side}"]
-            }
-        )
+            "opponent_Rolling_Saves_Against":
+                f[
+                    f"Rolling_Saves_Against_{opponent_side}"
+                ],
+
+            "opponent_XG_avg":
+                f[f"XG_avg_{opponent_side}"],
+
+            # Additional informational features
+            "own_XG_avg":
+                f[f"XG_avg_{side}"],
+
+            "own_XGC_avg":
+                f[f"XGC_avg_{side}"],
+
+            "opponent_XGC_avg":
+                f[f"XGC_avg_{opponent_side}"]
+
+        })
 
     pred = pd.concat(
         [
-            rows("away", "home", "A"),
-            rows("home", "away", "H")
+            make_rows("away", "home", "A"),
+            make_rows("home", "away", "H")
         ],
         ignore_index=True
     )
 
-    # ---------------------------------------------------------
-    # Ensure model features are numeric
-    # ---------------------------------------------------------
-    pred[features] = pred[
-        features
+    # ==========================================
+    # 7. CONVERT FEATURES TO NUMERIC
+    # ==========================================
+
+    numeric_columns = [
+        "own_Rolling_Saves",
+        "opponent_Rolling_Saves_Against",
+        "opponent_XG_avg",
+        "own_XG_avg",
+        "own_XGC_avg",
+        "opponent_XGC_avg"
+    ]
+
+    pred[numeric_columns] = pred[
+        numeric_columns
     ].apply(
         pd.to_numeric,
         errors="coerce"
     )
 
-    # Require own rolling saves to exist.
-    # Other missing features can be handled by the imputer.
-    valid = pred[
-        "own_Rolling_Saves"
-    ].notna()
+    # All three formula inputs are required.
+    # Do not silently replace missing values.
+    valid = pred[features].notna().all(axis=1)
 
-    # ---------------------------------------------------------
-    # Predict saves
-    # ---------------------------------------------------------
+    pred["prediction_status"] = np.where(
+        valid,
+        "OK",
+        "MISSING_FEATURES"
+    )
+
+    # ==========================================
+    # 8. PREDICT EXPECTED SAVES
+    # ==========================================
+
     pred["saves_prediction"] = np.nan
+
+    linear_score = (
+        INTERCEPT
+        + B_OWN_SAVES
+        * pred.loc[valid, "own_Rolling_Saves"]
+
+        + B_OPP_SAVES_AGAINST
+        * pred.loc[
+            valid,
+            "opponent_Rolling_Saves_Against"
+        ]
+
+        + B_OPP_XG
+        * pred.loc[valid, "opponent_XG_avg"]
+    )
 
     pred.loc[
         valid,
         "saves_prediction"
-    ] = model.predict(
-        imputer.transform(
-            pred.loc[
-                valid,
-                features
-            ]
-        )
+    ] = np.exp(linear_score)
+
+    # ==========================================
+    # 9. POISSON PROBABILITIES
+    # ==========================================
+
+    pred["prob_saves_3_plus"] = np.nan
+    pred["prob_saves_6_plus"] = np.nan
+
+    lam = pred.loc[valid, "saves_prediction"]
+
+    # P(S >= 3)
+    pred.loc[
+        valid,
+        "prob_saves_3_plus"
+    ] = poisson.sf(2, lam)
+
+    # P(S >= 6)
+    pred.loc[
+        valid,
+        "prob_saves_6_plus"
+    ] = poisson.sf(5, lam)
+
+    # Percentages
+    pred["prob_saves_3_plus_pct"] = (
+        pred["prob_saves_3_plus"] * 100
     )
 
-    # Predicted saves relative to recent saves baseline
+    pred["prob_saves_6_plus_pct"] = (
+        pred["prob_saves_6_plus"] * 100
+    )
+
+    # ==========================================
+    # 10. PREDICTION RATIO
+    # ==========================================
+
     pred["saves_prediction_ratio"] = (
         pred["saves_prediction"]
         /
@@ -955,25 +866,29 @@ def Generate_Saves_Models(
         )
     )
 
-    # ---------------------------------------------------------
-    # Sort + round
-    # ---------------------------------------------------------
+    # ==========================================
+    # 11. SORT AND ROUND
+    # ==========================================
+
     pred = pred.sort_values(
         [
             "event",
             "fix_id",
             "home_away",
             "team_name"
-        ]
-    ).reset_index(
-        drop=True
-    )
+        ],
+        na_position="last"
+    ).reset_index(drop=True)
 
     output_numeric_cols = (
-        features
+        numeric_columns
         + [
             "saves_prediction",
-            "saves_prediction_ratio"
+            "saves_prediction_ratio",
+            "prob_saves_3_plus",
+            "prob_saves_6_plus",
+            "prob_saves_3_plus_pct",
+            "prob_saves_6_plus_pct"
         ]
     )
 
@@ -981,15 +896,40 @@ def Generate_Saves_Models(
         output_numeric_cols
     ].round(6)
 
-    # ---------------------------------------------------------
-    # Save predictions
-    # ---------------------------------------------------------
+    # ==========================================
+    # 12. SAVE OUTPUT
+    # ==========================================
+
     pred.to_csv(
         output_file,
         index=False
     )
 
-    return model, df, pred
+    print("\n========== FUTURE SAVES PREDICTIONS ==========")
+
+    display_columns = [
+        "event",
+        "team_name",
+        "opponent_name",
+        "home_away",
+        "saves_prediction",
+        "prob_saves_3_plus_pct",
+        "prob_saves_6_plus_pct",
+        "prediction_status"
+    ]
+
+    print(
+        pred[display_columns].to_string(
+            index=False
+        )
+    )
+
+    print(f"\nFixtures: {len(fixtures)}")
+    print(f"Team predictions: {len(pred)}")
+    print(f"Valid predictions: {valid.sum()}")
+    print(f"Saved to: {output_file}")
+
+    return pred
 def Generate_Defensive_Contribution_Models(
     training_file="Team_data_transformed2.csv",
     team_data_path="Team_data_newest3.csv",

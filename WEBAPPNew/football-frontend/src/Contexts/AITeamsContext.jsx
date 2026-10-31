@@ -1,3 +1,4 @@
+import { fetchJson } from "../lib/apiClient.js";
 import React, { createContext, useCallback, useContext, useRef, useState } from "react";
 
 const AITeamDataContext = createContext();
@@ -20,8 +21,8 @@ export function AITeamDataProvider({ children }) {
       setLoading(true);
       try {
         const [freeHitRes, wildcardRes] = await Promise.all([
-          fetch("https://fpl-project-t5e9.onrender.com/free-hit").then((res) => res.json()),
-          fetch("https://fpl-project-t5e9.onrender.com/wildcard").then((res) => res.json()),
+          fetchJson("/free-hit"),
+          fetchJson("/wildcard"),
         ]);
         freeHitRef.current = freeHitRes;
         wildcardRef.current = wildcardRes;

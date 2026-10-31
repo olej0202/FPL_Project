@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import Select from "react-select";
-import { DEFAULT_SCENARIO_COLOR } from "../Contexts/AdjustmentsContext";
+import { DEFAULT_SCENARIO_COLOR } from "../Contexts/AdjustmentsContext.jsx";
 
 export function ScenarioColorDot({ color, size = 9, className = "" }) {
   return (

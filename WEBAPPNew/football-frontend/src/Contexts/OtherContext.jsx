@@ -1,3 +1,4 @@
+import { fetchJson } from "../lib/apiClient.js";
 import React, { createContext, useCallback, useContext, useRef, useState } from "react";
 
 const OtherDataContext = createContext();
@@ -23,11 +24,11 @@ export function OtherDataProvider({ children }) {
       setLoading(true);
       try {
         const [NewsRes, ScorePredRes, FixtureRes, SeasonRes, TableRes] = await Promise.all([
-          fetch("https://fpl-project-t5e9.onrender.com/News").then((res) => res.json()),
-          fetch("https://fpl-project-t5e9.onrender.com/Team_Predictions").then((res) => res.json()),
-          fetch("https://fpl-project-t5e9.onrender.com/Team_Predictions_Future").then((res) => res.json()),
-          fetch("https://fpl-project-t5e9.onrender.com/Season_Analysis").then((res) => res.json()),
-          fetch("https://fpl-project-t5e9.onrender.com/Table_Prediction").then((res) => res.json()),
+          fetchJson("/News"),
+          fetchJson("/Team_Predictions"),
+          fetchJson("/Team_Predictions_Future"),
+          fetchJson("/Season_Analysis"),
+          fetchJson("/Table_Prediction"),
         ]);
         newsRef.current = NewsRes;
         ScorePredRef.current = ScorePredRes;

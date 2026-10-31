@@ -1,7 +1,8 @@
 """Probability-tree optimization with outcomes revealed after each deadline.
 
 Split paths are solved jointly. Transfers, lineups and captains cannot depend
-on the current gameweek's unknown outcome. A single path uses the linear solver.
+on the current gameweek's unknown outcome. Explicitly different chips define
+alternative plans at that deadline. A single path uses the linear solver.
 """
 
 from __future__ import annotations
@@ -320,14 +321,18 @@ def _result_metric(result: pd.DataFrame, column: str, default: float = 0.0) -> f
 
 
 def add_shared_deadline_constraints(joint, prepared, paths):
-    """Only information from strictly earlier GWs may change a decision."""
+    """Share decisions until an earlier outcome or explicit chip choice differs."""
     joint.shared_deadline = pyo.ConstraintList()
     representatives = {}
     for leaf_id, item in prepared.items():
         model = item.model
         for gw, t in item.gameweeks.items():
             known = tuple(node.node_id for node in paths[leaf_id] if node.gw < gw)
-            group = (gw, known)
+            # Different user-selected chips are alternative strategies, not
+            # unknown outcomes of the same deadline decision. Their squads,
+            # transfers and chip-specific accounting must be allowed to differ.
+            chip = next((node.chip for node in paths[leaf_id] if node.gw == gw), "none")
+            group = (gw, known, chip)
             if group not in representatives:
                 representatives[group] = (item, t)
                 continue
@@ -357,7 +362,7 @@ def optimize_scenario_tree(
     on_solution: Optional[Callable[[int, list[dict[str, Any]]], None]] = None,
     **base_kwargs: Any,
 ) -> pd.DataFrame:
-    """Optimize all leaf paths while enforcing shared decisions at every split."""
+    """Optimize leaf paths, sharing deadlines with the same history and chip."""
 
     root_id, nodes, children, leaf_probabilities = _validate_tree(scenario_tree)
     base_forced = list(base_kwargs.get("forced_transfers") or [])
@@ -391,12 +396,6 @@ def optimize_scenario_tree(
 
     leaf_ids = list(leaf_probabilities)
     paths = {leaf_id: _path_to_root(leaf_id, nodes) for leaf_id in leaf_ids}
-    # A split is revealed after that GW's deadline. Its children must therefore
-    # share all decisions in that GW, including chips chosen by the user.
-    for child_ids in children.values():
-        if len({nodes[node_id].chip for node_id in child_ids}) > 1:
-            raise ValueError("All outcomes at a split must use the same chip in the split gameweek. The outcome is not known before the deadline.")
-
     if len(leaf_ids) == 1:
         leaf_id = leaf_ids[0]
         kwargs = dict(base_kwargs)

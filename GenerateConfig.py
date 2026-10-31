@@ -80,14 +80,14 @@ def normalize_player_name(name):
 
 Manual_team_offensive_adjustments = { 
         #example 90:1.1 bedre off,  90:0.95 dårligere off
-        8:1.1,88:0.95
+        88:0.95
 }
     
     
     
 Manual_team_defensive_adjustments = {
         #example 90:1.1 dårligere def,  90:0.95 bedre def
-        88:1.1
+        88:1.05
 }
 
 
@@ -96,13 +96,7 @@ Manual_NewPlayer_Adjustments={
     }
 
 Manual_Player_Adjustments={
-    #exemple Alexander_Isak:["Tammy_Abraham","Yoane_Wissa" ]
-    "Milan_van Ewijk":["Lucas_Digne"],
-    "Tarik_Muharemović":["Jaydee_Canvot"],
-    "Gonzalo_García": ["Rodrigo_Muniz Carvalho"],
-    "Mamadou_Sangaré":["Elliot_Anderson"],    
-    
-        
+
 }
 
 

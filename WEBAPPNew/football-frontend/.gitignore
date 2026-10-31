@@ -25,3 +25,6 @@ dist-ssr
 .env
 .env.*
 !.env.example
+.mobile-check/
+.tree-build-check/
+.tree-render-check.mjs

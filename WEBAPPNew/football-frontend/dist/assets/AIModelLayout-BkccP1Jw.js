@@ -1,0 +1,1 @@
+import{j as t}from"./index-DZxWq4wc.js";import{S as o}from"./SectionLayout-DLXUmp64.js";import{U as r}from"./user-CsjNpasF.js";import{C as e}from"./calendar-days-y1dHPf7d.js";const a=[{to:"Players",label:"Players",icon:r,end:!0},{to:"Fixtures",label:"Fixtures",icon:e,end:!0}];function l(){return t.jsx(o,{tabs:a,docked:!0})}export{l as default};

@@ -5,10 +5,11 @@ import React, {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
-import { API_BASE_URL } from "../config/apiBase";
-import { useUserData } from "./UserContext";
+import { API_BASE_URL } from "../config/apiBase.js";
+import { useUserData } from "./UserContext.jsx";
 
 const MyTeamDataContext = createContext();
 export const useMyteamData = () => useContext(MyTeamDataContext);
@@ -84,6 +85,25 @@ export function MyTeamDataContextProvider({ children }) {
   const [lockedPlayersData, setLockedPlayersData] = useState([]);
 
   const [data, setData] = useState(null);
+  const [treeOptimizationResults, setTreeOptimizationResults] = useState({});
+  const [optimizingTreeRootId, setOptimizingTreeRootId] = useState("");
+  const treeOptimizationRuns = useRef(new Map());
+  const clearTreeOptimization = useCallback((rootId) => {
+    if (!rootId) {
+      treeOptimizationRuns.current.clear();
+      setTreeOptimizationResults({});
+      setOptimizingTreeRootId("");
+      return;
+    }
+    treeOptimizationRuns.current.delete(rootId);
+    setTreeOptimizationResults((previous) => {
+      if (!Object.hasOwn(previous, rootId)) return previous;
+      const next = { ...previous };
+      delete next[rootId];
+      return next;
+    });
+    setOptimizingTreeRootId((current) => current === rootId ? "" : current);
+  }, []);
   const [teamData, setTeamData] = useState(null);
   const [teamError, setTeamError] = useState("");
 
@@ -322,6 +342,7 @@ export function MyTeamDataContextProvider({ children }) {
       // Loading a Team ID is a clean baseline action. Do not keep an older
       // optimizer solution on top of the newly loaded real squad.
       setData(null);
+      clearTreeOptimization();
       sethas_changed(false);
       await recordRecentTeamId(cleanTeamId);
       return true;
@@ -377,6 +398,20 @@ export function MyTeamDataContextProvider({ children }) {
       alert("Team ID is required");
       return false;
     }
+    const treeRootId = normalizedScenarioTree?.nodes.find((node) => !node.parent_id)?.id;
+    const treeRun = treeRootId ? Symbol(treeRootId) : null;
+    if (treeRootId) {
+      clearTreeOptimization(treeRootId);
+      treeOptimizationRuns.current.set(treeRootId, treeRun);
+      setOptimizingTreeRootId(treeRootId);
+    }
+    const cacheTreeRows = (rows) => {
+      if (!treeRootId || treeOptimizationRuns.current.get(treeRootId) !== treeRun || !rows.length) return;
+      setTreeOptimizationResults((previous) => ({
+        ...previous,
+        [treeRootId]: { rows, optimizedAt: Date.now() },
+      }));
+    };
     setLoading(true);
     setData(null);
     setOptimizationProgress({
@@ -392,6 +427,7 @@ export function MyTeamDataContextProvider({ children }) {
           const fallbackJson = await resp.json();
           receivedRows = Array.isArray(fallbackJson) ? fallbackJson : [];
           setData(fallbackJson);
+          cacheTreeRows(receivedRows);
 
           const derivedBanned = derivePlayersFromRows(fallbackJson, bannedList);
           setBannedPlayersData((prev) => mergePlayersData(prev, derivedBanned));
@@ -455,6 +491,7 @@ export function MyTeamDataContextProvider({ children }) {
 
             receivedRows = mergeRowsBySolution(receivedRows, rows);
             setData((prev) => mergeRowsBySolution(prev, rows));
+            cacheTreeRows(receivedRows);
 
             const derivedBanned = derivePlayersFromRows(rows, bannedList);
             if (derivedBanned.length) {
@@ -611,9 +648,16 @@ export function MyTeamDataContextProvider({ children }) {
     } catch (err) {
       console.error(err);
       alert("Error: " + err.message);
+      if (treeRootId && treeOptimizationRuns.current.get(treeRootId) === treeRun) {
+        clearTreeOptimization(treeRootId);
+      }
       setOptimizationProgress((prev) => ({ ...prev, streaming: false }));
       return { ok: false, rows: [] };
     } finally {
+      if (treeRootId && treeOptimizationRuns.current.get(treeRootId) === treeRun) {
+        treeOptimizationRuns.current.delete(treeRootId);
+        setOptimizingTreeRootId((current) => current === treeRootId ? "" : current);
+      }
       setLoading(false);
       setOptimizationProgress((prev) => ({ ...prev, streaming: false }));
     }
@@ -746,6 +790,10 @@ export function MyTeamDataContextProvider({ children }) {
         lockedPlayersData,
 
         data,
+        treeOptimizationResults,
+        setTreeOptimizationResults,
+        optimizingTreeRootId,
+        clearTreeOptimization,
         teamData,
         teamError,
 

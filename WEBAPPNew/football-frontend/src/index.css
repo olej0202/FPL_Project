@@ -59,11 +59,14 @@ button {
   font-family: inherit;
 }
 
-button:focus,
-button:focus-visible {
-  outline: 2px solid rgba(118, 175, 160, 0.45);
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 3px solid #76afa0;
   outline-offset: 2px;
 }
+
+button, input, select, textarea { font-family: inherit; }
+button:disabled { cursor: not-allowed; }
+html { scrollbar-gutter: stable; scroll-padding-top: 6rem; }
 
 .recharts-bar-rectangle:focus {
   outline: none;

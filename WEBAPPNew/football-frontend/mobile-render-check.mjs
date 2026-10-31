@@ -9,8 +9,8 @@ const mocks = {
   StatsContext: `const value = { fetchIfNeeded: () => {}, TeamData: { current: [] }, PlayersData: { current: [] } }; export const useStatsData = () => value;`,
   AdjustmentsContext: `export const BASE_SCENARIO_ID = 'base'; export const DEFAULT_SCENARIO_COLOR = '#888'; const empty = []; const value = { fetchIfNeeded: () => {}, scenarios: [{ id: 'base', name: 'Base scenario' }], getScenarioPlayerData: () => empty, Playerdata: { current: [] }, Teamdata: { current: [] } }; export const useAdjustmentData = () => value;`,
 };
-await build({
-  stdin: { contents: `import React from 'react'; import { createRoot } from 'react-dom/client'; import { MemoryRouter } from 'react-router-dom'; import Page from './src/My_team_Testcase.jsx';
+await build({ jsx: 'automatic',
+  stdin: { contents: `import React from 'react'; import { createRoot } from 'react-dom/client'; import { MemoryRouter } from 'react-router-dom'; import Page from './src/features/optimizer/pages/OptimizerPage.jsx';
     globalThis.__renderTeam = ['GKP','DEF','DEF','DEF','MID','MID','MID','MID','MID','FWD','FWD','GKP','DEF','MID','FWD'].map((position,index)=>({name:'Player '+(index+1),web_name:'Player '+(index+1),position,gw:6,squad_position:index+1,Points:5}));
     localStorage.setItem('fpl_optimizer_tree_workspace_v1', JSON.stringify({ zoom: 1, activeTreeRootId:'start', nodes:[
       {id:'start',gw:5,label:'GW5 complete',isAnchor:true,probability:100,chip:'none',treeName:'Mobile check'},
@@ -20,11 +20,11 @@ await build({
     createRoot(document.getElementById('root')).render(React.createElement(MemoryRouter, {}, React.createElement(Page)));`, resolveDir: process.cwd(), loader: 'jsx' },
   bundle: true, outfile: `${output}/fixture.js`, platform: 'browser', format: 'esm', loader: { '.png': 'dataurl' },
   plugins: [{ name: 'contexts', setup(builder) {
-    builder.onResolve({ filter: /Contexts\/(MyTeamContext|OptimizationModelContext|StatsContext|AdjustmentsContext)$/ }, args => ({ path: args.path.split('/').at(-1), namespace: 'fixture' }));
+    builder.onResolve({ filter: /Contexts\/(MyTeamContext|OptimizationModelContext|StatsContext|AdjustmentsContext)(?:\.jsx)?$/ }, args => ({ path: args.path.split('/').at(-1).replace(/\.jsx$/, ''), namespace: 'fixture' }));
     builder.onLoad({ filter: /.*/, namespace: 'fixture' }, args => ({ contents: mocks[args.path], loader: 'js' }));
   } }],
 });
-const css = (await readdir('.tree-build-check/assets')).find(name => name.endsWith('.css'));
-await writeFile(`${output}/style.css`, await readFile(`.tree-build-check/assets/${css}`));
-await writeFile(`${output}/index.html`, '<!doctype html><html><head><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="style.css"></head><body><div id="root"></div><script type="module" src="fixture.js"></script></body></html>');
+const css = (await readdir('dist/assets')).find(name => name.startsWith('index-') && name.endsWith('.css'));
+await writeFile(`${output}/style.css`, await readFile(`dist/assets/${css}`));
+await writeFile(`${output}/index.html`, '<!doctype html><html><head><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="fixture.css"></head><body><div id="root"></div><script type="module" src="fixture.js"></script></body></html>');
 console.log('Mobile browser fixture built.');

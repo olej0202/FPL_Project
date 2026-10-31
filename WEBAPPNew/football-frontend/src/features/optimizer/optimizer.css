@@ -1,0 +1,58 @@
+.team-workspace .lucide-icon {
+          stroke: currentColor !important;
+          fill: none !important;
+          display: block;
+          flex-shrink: 0;
+        }
+        @media (max-width: 639px) {
+          .team-workspace input, .team-workspace select, .team-workspace textarea {
+            font-size: 16px !important;
+          }
+          .team-workspace { overflow-x: clip; }
+          .team-workspace .glass-card { min-width: 0; }
+          .team-workspace button:not([data-tree-node] button):not(.tree-node-pitch button),
+          .team-workspace summary { min-height: 44px; touch-action: manipulation; }
+          .team-workspace .tree-toolbar button { min-width: 44px; }
+          .team-workspace .tree-viewport { height: min(62svh, 560px); overscroll-behavior: contain; }
+          .team-workspace .gw-navigation { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+          .team-workspace .gw-navigation > span { grid-column: 1 / -1; grid-row: 1; }
+          .team-workspace .gw-navigation > button { justify-content: center; }
+          .team-workspace .gw-list { flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; padding-bottom: 4px; }
+          .team-workspace .gw-list > button { flex-shrink: 0; }
+        }
+        .team-workspace summary::-webkit-details-marker { display: none; }
+        .team-workspace .glass-card {
+          border: 1px solid rgba(148,163,184,0.35);
+          background: linear-gradient(145deg, rgba(255,255,255,0.98), rgba(241,245,249,0.95));
+          box-shadow: 0 18px 40px rgba(15,23,42,0.1);
+          backdrop-filter: blur(12px);
+        }
+        .team-workspace .gold-ring:focus-visible {
+          outline: 2px solid #5f8f7b;
+          outline-offset: 2px;
+        }
+        .team-workspace .opt-range::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          appearance: none;
+          width: 20px;
+          height: 20px;
+          border-radius: 999px;
+          background: #5f8f7b;
+          border: 2px solid #e2e8f0;
+          box-shadow: 0 0 0 2px rgba(95,143,123,0.35);
+          transition: transform .15s ease;
+        }
+        .team-workspace .opt-range::-webkit-slider-thumb:hover { transform: scale(1.08); }
+        .team-workspace .opt-range::-moz-range-thumb {
+          width: 20px;
+          height: 20px;
+          border-radius: 999px;
+          background: #5f8f7b;
+          border: 2px solid #e2e8f0;
+          box-shadow: 0 0 0 2px rgba(95,143,123,0.35);
+        }
+        .team-workspace .opt-range::-moz-range-track {
+          height: 6px;
+          background: #cbd5e1;
+          border-radius: 999px;
+        }

@@ -1,38 +1,14 @@
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import App from './App'
-import { BrowserRouter,HashRouter  } from 'react-router-dom'
-import './index.css'; // or './tailwind.css' or similar
-import { AITeamDataProvider } from "./Contexts/AITeamsContext";
-import {OtherDataProvider} from "./Contexts/OtherContext";
-import {StatsDataProvider} from "./Contexts/StatsContext";
-import {MyTeamDataContextProvider} from "./Contexts/MyTeamContext";
-import {AdjustmentDataProvider} from "./Contexts/AdjustmentsContext";
-import { OptimizationModelProvider } from "./Contexts/OptimizationModelContext";
-import { UserDataProvider } from "./Contexts/UserContext";
-import ScrollToTop from "./components/ScrollTop";
+import ReactDOM from 'react-dom/client';
+import { HashRouter } from 'react-router-dom';
+import App from './App';
+import AppProviders from './app/AppProviders';
+import ScrollToTop from './components/ScrollTop';
+import './index.css';
+import './styles/components.css';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <HashRouter >
+  <HashRouter>
     <ScrollToTop />
-    <UserDataProvider>
-    <OptimizationModelProvider>
-    <AdjustmentDataProvider>
-  <MyTeamDataContextProvider>
-  <StatsDataProvider>
-    <AITeamDataProvider>
-      <OtherDataProvider>
-        <App />
-      </OtherDataProvider>
-    </AITeamDataProvider>
-  </StatsDataProvider>
-  </MyTeamDataContextProvider>
-  </AdjustmentDataProvider>
-  </OptimizationModelProvider>
-  </UserDataProvider>
-  
-  </HashRouter >
-  
-)
-
-
+    <AppProviders><App /></AppProviders>
+  </HashRouter>,
+);

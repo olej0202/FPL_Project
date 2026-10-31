@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { ArrowRight, Lock, ShieldCheck } from "lucide-react";
-import { GOOGLE_CLIENT_ID } from "../config/apiBase";
+import { GOOGLE_CLIENT_ID } from "../config/apiBase.js";
 import logo from "../assets/FPL_analytics_logo.png";
 
 export default function LoginGate({

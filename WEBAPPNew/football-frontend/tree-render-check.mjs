@@ -12,12 +12,12 @@ const mocks = {
   StatsContext: `export const useStatsData = () => ({ TeamData: { current: [] }, PlayersData: { current: [] } });`,
   AdjustmentsContext: `export const BASE_SCENARIO_ID = 'base'; export const DEFAULT_SCENARIO_COLOR = '#888'; export const useAdjustmentData = () => ({ scenarios: [{ id: 'base', name: 'Base scenario' }, { id: 'alternate', name: 'Alternate scenario' }], getScenarioPlayerData: () => [], Playerdata: { current: [] }, Teamdata: { current: [] } });`,
 };
-const result = await build({
-  entryPoints: ['src/My_team_Testcase.jsx'], bundle: true, write: false, platform: 'node', format: 'esm', packages: 'external',
-  loader: { '.png': 'dataurl' },
+const result = await build({ jsx: 'automatic',
+  entryPoints: ['src/features/optimizer/pages/OptimizerPage.jsx'], bundle: true, write: false, platform: 'node', format: 'esm', packages: 'external',
+  loader: { '.png': 'dataurl', '.css': 'empty' },
   define: { 'import.meta.env': '{}' },
   plugins: [{ name: 'context-fixtures', setup(builder) {
-    builder.onResolve({ filter: /Contexts\/(MyTeamContext|OptimizationModelContext|StatsContext|AdjustmentsContext)$/ }, (args) => ({ path: args.path.split('/').at(-1), namespace: 'fixture' }));
+    builder.onResolve({ filter: /Contexts\/(MyTeamContext|OptimizationModelContext|StatsContext|AdjustmentsContext)(?:\.jsx)?$/ }, (args) => ({ path: args.path.split('/').at(-1).replace(/\.jsx$/, ''), namespace: 'fixture' }));
     builder.onLoad({ filter: /.*/, namespace: 'fixture' }, (args) => ({ contents: mocks[args.path], loader: 'js' }));
   } }],
 });

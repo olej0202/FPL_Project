@@ -7,9 +7,9 @@ import React, {
   useCallback,
   useEffect,
 } from "react";
-import { API_BASE_URL } from "../config/apiBase";
-import { useUserData } from "./UserContext";
-import { calculatePlayerProjection } from "../utils/playerProjection";
+import { API_BASE_URL } from "../config/apiBase.js";
+import { useUserData } from "./UserContext.jsx";
+import { calculatePlayerProjection } from "../utils/playerProjection.js";
 
 const AdjustmentContext = createContext(null);
 
@@ -67,13 +67,6 @@ const normalizeOptions01 = (options01) => {
   return grouped.map((o) => ({ ...o, p: o.p / sum }));
 };
 
-const firstFinite = (...vals) => {
-  for (const v of vals) {
-    const n = Number(v);
-    if (Number.isFinite(n)) return n;
-  }
-  return null;
-};
 const parseOptional01 = (value) => {
   if (value == null) return null;
   if (typeof value === "string" && value.trim() === "") return null;
@@ -88,193 +81,14 @@ const scaleRawCbiByAdjustedMean = (raw01, sourceMean01, adjustedMean01) => {
   return adjustedMean;
 };
 
-const teamGwKey = (teamCode, gw) => `${normalizeName(teamCode)}__${toNum(gw, -1)}`;
 
-const buildTeamLookup = (teamRows) => {
-  const map = new Map();
 
-  for (const row of teamRows || []) {
-    const gw = toNum(row?.GW, null);
-    if (!Number.isFinite(gw)) continue;
 
-    const teamCandidates = [
-      row?.team,
-      row?.Team,
-      row?.team_code,
-      row?.code,
-      row?.team_name,
-    ];
 
-    const teamContext = {
-      XG: firstFinite(row?.XG, row?.xg, 0) ?? 0,
-      CS: firstFinite(row?.CS, row?.cs, 0) ?? 0,
-      Matches: Math.max(0, firstFinite(row?.Matches, row?.matches, 0) ?? 0),
-    };
 
-    for (const teamCode of teamCandidates) {
-      if (teamCode == null || String(teamCode).trim() === "") continue;
-      map.set(teamGwKey(teamCode, gw), teamContext);
-    }
-  }
 
-  return map;
-};
 
-const resolveTeamContext = (playerRow, teamLookup) => {
-  const gw = toNum(playerRow?.GW, null);
-  if (!Number.isFinite(gw)) return null;
 
-  const teamCandidates = [
-    playerRow?.Team,
-    playerRow?.team,
-    playerRow?.team_code,
-    playerRow?.team_name,
-  ];
-
-  for (const teamCode of teamCandidates) {
-    if (teamCode == null || String(teamCode).trim() === "") continue;
-    const found = teamLookup.get(teamGwKey(teamCode, gw));
-    if (found) return found;
-  }
-
-  return null;
-};
-
-const computeMeasuresForBootstrap = (playerRow, teamRow) => {
-  const matchCount = Math.max(
-    0,
-    firstFinite(teamRow?.Matches, playerRow?.Matches, playerRow?.matches, 0) ?? 0
-  );
-
-  const avgMinRaw = firstFinite(
-    playerRow?.average_minutes,
-    playerRow?.Avg_Minutes,
-    0
-  ) ?? 0;
-  const avgMin = Math.max(0, Math.min(90, avgMinRaw));
-
-  const goalShare = firstFinite(playerRow?.Goal_share, 0) ?? 0;
-  const assistShare = firstFinite(playerRow?.Assist_share, 0) ?? 0;
-  const savePredRaw = firstFinite(playerRow?.Save_Pred, 0) ?? 0;
-
-  const penData = firstFinite(playerRow?.Pen_data, 0) ?? 0;
-  const oppGoalThreat = firstFinite(playerRow?.Pos_Goal_Threat, 0) ?? 0;
-  const oppAssistThreat = firstFinite(playerRow?.Pos_Assist_Threat, 0) ?? 0;
-
-  const bps = firstFinite(playerRow?.BPS, 0) ?? 0;
-  const defaultPoints = firstFinite(
-    playerRow?.default_points,
-    playerRow?.Points_prediction,
-    playerRow?.Points,
-    playerRow?.points,
-    0
-  ) ?? 0;
-
-  const goalFactor = firstFinite(playerRow?.Goal_factor, 0) ?? 0;
-  const assistFactor = firstFinite(playerRow?.Assist_factor, 0) ?? 0;
-  const csFactor = firstFinite(playerRow?.CS_factor, 0) ?? 0;
-
-  const xg = firstFinite(teamRow?.XG, 0) ?? 0;
-  const cs = firstFinite(teamRow?.CS, 0) ?? 0;
-
-  const minutesAdj = avgMin ? Math.min(1, avgMin / 80) : 0;
-  const csPerMatch = matchCount > 0 ? cs / matchCount : 0;
-  const csNonlinear =
-    csFactor > 1 ? ((30 - Math.min(30, csPerMatch * 100)) / -15) * matchCount : 0;
-
-  const goalScored =
-    ((goalShare * 0.9 + 0.1 * oppGoalThreat) * xg + penData * 0.5 * matchCount) *
-    minutesAdj;
-  const assists = ((assistShare * 0.9 + 0.1 * oppAssistThreat) * xg) * minutesAdj;
-
-  const rawCbi01 = clamp01(firstFinite(playerRow?.CBI_Predictions, playerRow?.CBI_Percent, 0) ?? 0);
-  const cbi01 = rawCbi01 * minutesAdj;
-  const defconPointsTerm = cbi01 * minutesAdj * matchCount * 2;
-  const savePred = savePredRaw * minutesAdj * matchCount;
-
-  const basePoints =
-    (defaultPoints + bps) * minutesAdj * matchCount + defconPointsTerm;
-
-  const points = Math.max(
-    0,
-    basePoints +
-      goalScored * goalFactor +
-      assists * assistFactor +
-      cs * csFactor * minutesAdj +
-      csNonlinear +
-      savePred / 3
-  );
-
-  return {
-    Points: points,
-    Goal_Scored: goalScored,
-    Assists: assists,
-    Save_Pred: savePred,
-    Avg_Minutes: avgMin * matchCount,
-    CBI_Predictions: cbi01,
-  };
-};
-
-const bootstrapPlayerCalcs = (rows, teamRows) => {
-  if (!Array.isArray(rows)) return [];
-  const teamLookup = buildTeamLookup(teamRows);
-
-  return rows.map((row) => {
-    const teamRow = resolveTeamContext(row, teamLookup);
-    const measures = computeMeasuresForBootstrap(row, teamRow);
-
-    const calc_points = firstFinite(
-      row?.calc_points,
-      measures.Points,
-      row?.Points_prediction,
-      row?.default_points,
-      row?.Points,
-      row?.points,
-      0
-    );
-    const calc_goals = firstFinite(
-      row?.calc_goals,
-      measures.Goal_Scored,
-      row?.Goal_pred,
-      row?.Goal_Scored,
-      0
-    );
-    const calc_assists = firstFinite(
-      row?.calc_assists,
-      measures.Assists,
-      row?.Assist_pred,
-      row?.Assists,
-      0
-    );
-    const calc_saves = firstFinite(
-      row?.calc_saves,
-      measures.Save_Pred,
-      row?.Save_Pred,
-      0
-    );
-    const calc_minutes = firstFinite(row?.calc_minutes, measures.Avg_Minutes, 0);
-    const cbiRaw = firstFinite(row?.CBI_Predictions, row?.CBI_Percent, 0);
-    const calc_cbi = firstFinite(
-      row?.calc_cbi,
-      measures.CBI_Predictions,
-      row?.CBI_Predictions,
-      cbiRaw,
-      0
-    );
-    const defcon_adjust_01 = parseOptional01(row?.defcon_adjust_01);
-
-    return {
-      ...row,
-      calc_points,
-      calc_goals,
-      calc_assists,
-      calc_saves,
-      calc_minutes,
-      calc_cbi,
-      defcon_adjust_01,
-    };
-  });
-};
 
 // fixturesConfig format: { [fixture_code: string]: [{gw, probability}] }
 const optionsFromConfig = (fixturesConfig, fixtureCode) => {

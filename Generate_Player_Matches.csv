@@ -48,7 +48,7 @@ Samuel_Iling-Junior,Iling Jr,Unknown for understat,,no-match,,['SUB'],[1.0],1
 Bradley_Burrowes,Burrowes,Bradley Burrowes,100.0,name-strict,Bradley Burrowes,['SUB'],[1.0],1
 George_Hemmings,George Hemmings,George Hemmings,100.0,name-strict,George Hemmings,['LW'],[1.0],1
 Alysson_Edward Franco da Rocha dos Santos,Alysson,Alysson Edward,90.0,name-relaxed,Alysson Edward,['SUB'],[1.0],1
-Johan_Manzambi,Manzambi,Unknown for understat,,no-match,,['MC'],[1.0],1
+Johan_Manzambi,Manzambi,Unknown for understat,,no-match,,"['AMC','LW']","[0.75, 0.25]",1
 Joao_Gomes,Gomes,João Gomes,100.0,name-strict,João Gomes,"['MC', 'DM']","[0.8, 0.2]",1
 Ollie_Watkins,Watkins,Ollie Watkins,100.0,name-strict,Ollie Watkins,['FW'],[1.0],1
 Tammy_Abraham,Abraham,Tammy Abraham,100.0,name-strict,Tammy Abraham,['FW'],[1.0],1
