@@ -1,1 +1,671 @@
-""
+,0
+0,David_Raya Martín
+1,Kepa_Arrizabalaga Revuelta
+2,Illan_Meslier
+3,Gabriel_dos Santos Magalhães
+4,Jurriën_Timber
+5,William_Saliba
+6,Myles_Lewis-Skelly
+7,Riccardo_Calafiori
+8,Piero_Hincapié
+9,Benjamin_White
+10,Cristhian_Mosquera
+11,Bukayo_Saka
+12,Declan_Rice
+13,Eberechi_Eze
+14,Martin_Ødegaard
+15,Noni_Madueke
+16,Mikel_Merino Zazón
+17,Gabriel_Martinelli Silva
+18,Martín_Zubimendi Ibáñez
+19,Max_Dowman
+20,Ethan_Nwaneri
+21,Fábio_Ferreira Vieira
+22,Reiss_Nelson
+23,Viktor_Gyökeres
+24,Kai_Havertz
+25,Gabriel_Fernando de Jesus
+26,Ezri_Konsa Ngoyo
+27,Bruno_Guimarães Rodriguez Moura
+28,Christos_Tzolis
+29,Marco_Bizot
+30,Lucas_Digne
+31,Matty_Cash
+32,Tyrone_Mings
+33,Pau_Torres
+34,Lamare_Bogarde
+35,Ian_Maatsen
+36,Victor_Lindelöf
+37,Andrés_García
+38,Kosta_Nedeljkovic
+39,Emiliano_Buendía Stati
+40,Leon_Bailey
+41,John_McGinn
+42,Ross_Barkley
+43,Boubacar_Kamara
+44,Amadou_Onana
+45,Samuel_Iling-Junior
+46,Bradley_Burrowes
+47,George_Hemmings
+48,Alysson Edward Franco_da Rocha dos Santos
+49,Johan_Manzambi
+50,Joao_Gomes
+51,Ollie_Watkins
+52,Tammy_Abraham
+53,Alejandro_Garnacho Ferreyra
+54,Nicolas_Jackson
+55,Brian_Madjo
+56,Matteo_Ruggeri
+57,Zion_Suzuki
+58,Triston_Rowe
+59,Luka_Lynch
+60,Aaron_Wan-Bissaka
+61,Leon_Goretzka
+62,Taylor_Harwood-Bellis
+63,Ibrahim_Mbaye
+64,James_Wright
+65,Đorđe_Petrović
+66,Fraser_Forster
+67,Will_Dennis
+68,James_Hill
+69,Adrien_Truffert
+70,Bafodé_Diakité
+71,Veljko_Milosavljevic
+72,Adam_Smith
+73,Julián_Araujo Zúñiga
+74,Julio_Soler Barreto
+75,Rayan Vitor_Simplício Rocha
+76,Marcus_Tavernier
+77,Alex_Scott
+78,Justin_Kluivert
+79,Lewis_Cook
+80,Ben_Gannon-Doak
+81,Tyler_Adams
+82,David_Brooks
+83,Ryan_Christie
+84,Alex_Tóth
+85,Amine_Adli
+86,Junior_Kroupi
+87,Francisco Evanilson_de Lima Barbosa
+88,Enes_Ünal
+89,Álvaro_Rodríguez
+90,António João_Pereira de Albuquerque Tavares da Silva
+91,Juanlu_Sánchez
+92,Daniel_Jebbison
+93,Michele_Di Gregorio
+94,Caoimhín_Kelleher
+95,Hákon Rafn_Valdimarsson
+96,Nathan_Collins
+97,Sepp_van den Berg
+98,Keane_Lewis-Potter
+99,Kristoffer_Ajer
+100,Michael_Kayode
+101,Rico_Henry
+102,Aaron_Hickey
+103,Kim_Ji-soo
+104,Jannik_Schuster
+105,Kevin_Schade
+106,Dango_Ouattara
+107,Mikkel_Damsgaard
+108,Mathias_Jensen
+109,Vitaly_Janelt
+110,Antoni_Milambo
+111,Fábio_Freitas Gouveia Carvalho
+112,Yehor_Yarmoliuk
+113,Josh_Dasilva
+114,Jaidon_Anthony
+115,Igor Thiago_Nascimento Rodrigues
+116,Kaye_Furo
+117,Callum_Wilson
+118,Mamadou_Sangaré
+119,El Hadji Malick_Diouf
+120,Gustavo_Nunes Fernandes Gomes
+121,Benjamin_Fredrick
+122,Ellery_Balcombe
+123,Bart_Verbruggen
+124,Jason_Steele
+125,Ferdi_Kadıoğlu
+126,Olivier_Boscagli
+127,Maxim_De Cuyper
+128,Lewis_Dunk
+129,Diego_Coppola
+130,Igor Julio_dos Santos de Paulo
+131,João Pedro_Loureiro da Costa
+132,Michael_Svoboda
+133,Mitoma_Kaoru
+134,Yankuba_Minteh
+135,Jack_Hinshelwood
+136,Pascal_Groß
+137,Georginio_Rutter
+138,Matt_O'Riley
+139,Diego_Gómez Amarilla
+140,Facundo_Buonanotte
+141,Yasin_Ayari
+142,Mats_Wieffer
+143,Harry_Howell
+144,Tom_Watson
+145,Nehemiah_Oriola
+146,Zadok_Yohanna
+147,Stefanos_Tzimas
+148,Charalampos_Kostoulas
+149,Evan_Ferguson
+150,Pascal_Struijk
+151,Luka_Vušković
+152,Promise_David
+153,Ibrahim_Osman
+154,Malick_Yalcouyé
+155,Jaouen_Hadjam
+156,Amario_Cozier-Duberry
+157,José María_Andrés Baixauli
+158,Femi_Azeez
+159,Younes_Ibrahim
+160,Emiliano_Martínez Romero
+161,Morgan_Rogers
+162,Jordan_Henderson
+163,Danny_Welbeck
+164,Robert_Lynch Sánchez
+165,Filip_Jörgensen
+166,Reece_James
+167,Trevoh_Chalobah
+168,Malo_Gusto
+169,Wesley_Fofana
+170,Benoît_Badiashile Mukinayi
+171,Jorrel_Hato
+172,Levi_Samuels Colwill
+173,Mamadou_Sarr
+174,Josh_Acheampong
+175,Marco_Palestra
+176,Cole_Palmer
+177,Pedro_Lomba Neto
+178,Estêvão_Almeida de Oliveira Gonçalves
+179,Jamie_Bynoe-Gittens
+180,Moisés_Caicedo Corozo
+181,Roméo_Lavia
+182,Dário_Luís Essugo
+183,Geovany_Quenda
+184,João Pedro_Junqueira de Jesus
+185,Marc_Guiu Paz
+186,Shumaira_Mheuka
+187,Emmanuel_Emegha
+188,Maxence_Lacroix
+189,Mike_Penders
+190,Aaron_Anselmino
+191,Valentín_Barco
+192,Pep_Chavarría
+193,Mahdi_Nicoll-Jazuli
+194,Teddy_Sharman-Lowe
+195,Olutayo_Subuloye
+196,Ethan_Pinnock
+197,Frank_Onyeka
+198,Carl_Rushworth
+199,Oliver_Dovin
+200,Ben_Wilson
+201,Bobby_Thomas
+202,Liam_Kitching
+203,Milan_van Ewijk
+204,Jay_Dasilva
+205,Kaine_Kesler-Hayden
+206,Jake_Bidwell
+207,Joel_Latibeaudiere
+208,Luke_Woolfenden
+209,Miguel_Brau
+210,Aurèle_Amenda
+211,Jack_Rudoni
+212,Matt_Grimes
+213,Tatsuhiro_Sakamoto
+214,Ephron_Mason-Clark
+215,Josh_Eccles
+216,Victor_Torp
+217,George_Shepherd
+218,Loum_Tchaouna
+219,Raphael_Borges Rodrigues
+220,Kaine_Andrews
+221,Haji_Wright
+222,Brandon_Thomas-Asante
+223,Ellis_Simms
+224,Jahnoah_Markelo
+225,Norman_Bassette
+226,Taiwo_Awoniyi
+227,Caleb_Yirenkyi
+228,Gustavo_Hamer
+229,Sidiki_Cherif
+230,Dan_Bentley
+231,Yann_Gboho
+232,Stephen_Mfuni
+233,Evann_Guessand
+234,Axel_Disasi
+235,Dean_Henderson
+236,Walter_Benítez
+237,Chris_Richards
+238,Jaydee_Canvot
+239,Tyrick_Mitchell
+240,Borna_Sosa
+241,Chadi_Riad Dnanou
+242,Oscar_Mingueza
+243,Ismaïla_Sarr
+244,Adam_Wharton
+245,Yéremy_Pino Santos
+246,Will_Hughes
+247,Jefferson_Lerma Solís
+248,Daichi_Kamada
+249,Justin_Devenny
+250,Romain_Esse
+251,Matheus_França de Oliveira
+252,Cheick_Doucouré
+253,Jesurun_Rak-Sakyi
+254,Rio_Cardines
+255,Joél_Drakes-Thomas
+256,Jørgen_Strand Larsen
+257,Jean-Philippe_Mateta
+258,Eddie_Nketiah
+259,Christantus_Uche
+260,Dwight_McNeil
+261,Remi_Matthews
+262,Takehiro_Tomiyasu
+263,Anan_Khalaili
+264,Zavier_Gozo
+265,Honest_Ahanor
+266,Ben_Chilwell
+267,Quinten_Timber
+268,Darío_Osorio
+269,Christian_Nørgaard
+270,Brennan_Johnson
+271,Jordan_Pickford
+272,Mark_Travers
+273,Tom_King
+274,James_Tarkowski
+275,Jarrad_Branthwaite
+276,Michael_Keane
+277,Jake_O'Brien
+278,Vitalii_Mykolenko
+279,Nathan_Patterson
+280,Adam_Aznou
+281,Kiernan_Dewsbury-Hall
+282,Jack_Grealish
+283,James_Garner
+284,Tyrique_George
+285,Carlos_Alcaraz Durán
+286,Harrison_Armstrong
+287,Tyler_Dibling
+288,Merlin_Röhl
+289,Hayden_Hackney
+290,Norberto Bercique_Gomes Betuncal
+291,Thierno_Barry
+292,Ainsley_Maitland-Niles
+293,Braiden_Graham
+294,Bernd_Leno
+295,Benjamin_Lecomte
+296,Alfie_McNally
+297,Joachim_Andersen
+298,Antonee_Robinson
+299,Jorge_Cuenca Barreno
+300,Kenny_Tete
+301,Calvin_Bassey
+302,Timothy_Castagne
+303,Alex_Iwobi
+304,Emile_Smith Rowe
+305,Kevin_Santos Lopes de Macedo
+306,Oscar_Bobb
+307,Sander_Berge
+308,Tom_Cairney
+309,Josh_King
+310,Ryan_Sessegnon
+311,Harrison_Reed
+312,Rodrigo_Muniz Carvalho
+313,Jonah_Kusi-Asare
+314,Gonzalo_García
+315,César_Palacios
+316,Shea_Charles
+317,Luc_De Fougerolles
+318,Macauley_Zepa
+319,Hugo_Larsson
+320,Manuel Ángel_Morán Ibáñez
+321,David_Affengruber
+322,Tim_Iroegbunam
+323,Dillon_Phillips
+324,Jack_Butland
+325,Harvey_Cartwright
+326,Thimothée_Lo-Tutala
+327,John_Egan
+328,Charlie_Hughes
+329,Semi_Ajayi
+330,Lewie_Coyle
+331,Cody_Drameh
+332,Ryan_Giles
+333,Matty_Jacob
+334,Cathal_McCarthy
+335,Paddy_McNair
+336,Mohamed_Belloumi
+337,Liam_Millar
+338,Kieran_Dowell
+339,Matt_Crooks
+340,Regan_Slater
+341,Eliot_Matazo
+342,Abdülkadir_Ömür
+343,Abu_Kamara
+344,Óscar_Zambrano
+345,Oli_McBurnie
+346,David_Akintola
+347,Darko_Gyabi
+348,Enis_Destan
+349,Mason_Burstow
+350,Joe_Gelhardt
+351,Matt_Targett
+352,Hidemasa_Morita
+353,Konstantinos_Tzolakis
+354,Jens_Hjertø-Dahl
+355,Elliot_Stroud
+356,Lucas_Herrington
+357,Nobel_Mendy
+358,Lucas_Gourna-Douath
+359,Mohamed-Ali_Cho
+360,Ilyas_Ansah
+361,Robinio_Vaz
+362,Brooke_Norton-Cuffy
+363,Sorba_Thomas
+364,Christos_Mouzakitis
+365,Issa_Diop
+366,Saša_Lukić
+367,Christian_Walton
+368,Alex_Palmer
+369,David_Button
+370,Cédric_Kipré
+371,Dara_O'Shea
+372,Leif_Davis
+373,Jacob_Greaves
+374,Ben_Johnson
+375,Darnell_Furlong
+376,Marcelino_Núñez
+377,Azor_Matusiwa
+378,Wes_Burns
+379,Jack_Taylor
+380,Jack_Clarke
+381,Chiedozie_Ogbene
+382,Abdul_Fatawu
+383,Emersonn_Correia da Silva
+384,George_Hirst
+385,Jaden_Philogene
+386,Sam_Szmodics
+387,Chuba_Akpom
+388,Sindre_Walle Egeli
+389,Ali_Al-Hamadi
+390,Kasey_McAteer
+391,Anis_Mehmeti
+392,Kayne_van Oevelen
+393,Daizen_Maeda
+394,Kjell_Scherpen
+395,Florentino Ibrain_Morris Luís
+396,Julio_Enciso
+397,Abdoul_Ouattara
+398,Cameron_Humphreys
+399,Exequiel_Palacios
+400,Zian_Flemming
+401,Harry_Wilson
+402,Lucas Estella_Perri
+403,Jaka_Bijol
+404,Joe_Rodon
+405,Jayden_Bogle
+406,Gabriel_Gudmundsson
+407,James_Justin
+408,Sebastiaan_Bornauw
+409,Tarik_Muharemović
+410,Anton_Stach
+411,Noah_Okafor
+412,Brenden_Aaronson
+413,Ethan_Ampadu
+414,Sean_Longstaff
+415,Wilfried_Gnonto
+416,Jack_Harrison
+417,Daniel_James
+418,Ilia_Gruev
+419,Tanaka_Ao
+420,Dominic_Calvert-Lewin
+421,Lukas_Nmecha
+422,Joël_Piroe
+423,Mateo_Joseph Fernández-Regatillo
+424,James_Trafford
+425,Nico_Elvedi
+426,Jayden_Lienou
+427,Alfie_Cresswell
+428,Alex_Cairns
+429,Michael_Zetterer
+430,Melvin_Bard
+431,Jean-Mattéo_Bahoya
+432,Alisson_Becker
+433,Giorgi_Mamardashvili
+434,Freddie_Woodman
+435,Armin_Pecsi
+436,Vitezslav_Jaros
+437,Harvey_Davies
+438,Virgil_van Dijk
+439,Jeremie_Frimpong
+440,Milos_Kerkez
+441,Joe_Gomez
+442,Conor_Bradley
+443,Wellity_Lucky
+444,Jeremy_Jacquet
+445,Giovanni_Leoni
+446,Kostas_Tsimikas
+447,Calvin_Ramsay
+448,Florian_Wirtz
+449,Cody_Gakpo
+450,Dominik_Szoboszlai
+451,Rio_Ngumoha
+452,Federico_Chiesa
+453,Ryan_Gravenberch
+454,Alexis_Mac Allister
+455,Curtis_Jones
+456,Endo_Wataru
+457,Trey_Nyoni
+458,Stefan_Bajčetić Maquieira
+459,Victor_Munoz
+460,James_McConnell
+461,Alexander_Isak
+462,Hugo_Ekitiké
+463,Lewis_Koumas
+464,Jayden_Danns
+465,Harvey_Elliott
+466,Ronald_Araujo
+467,Bradley_Barcola
+468,Enzo_Fernández
+469,Iliman_Ndiaye
+470,Gianluigi_Donnarumma
+471,Marcus_Bettinelli
+472,Nico_O'Reilly
+473,Marc_Guéhi
+474,Matheus_Nunes
+475,Rúben_dos Santos Gato Alves Dias
+476,Joško_Gvardiol
+477,Rayan_Aït-Nouri
+478,Abdukodir_Khusanov
+479,Max_Alleyne
+480,Rico_Lewis
+481,Vitor_de Oliveira Nunes dos Reis
+482,Antoine_Semenyo
+483,Phil_Foden
+484,Rayan_Cherki
+485,Jérémy_Doku
+486,Rodrigo 'Rodri'_Hernandez Cascante
+487,Tijjani_Reijnders
+488,Mateo_Kovačić
+489,Claudio_Echeverri
+490,Kalvin_Phillips
+491,Divine_Mukasa
+492,Jeremy_Monga
+493,Erling_Haaland
+494,Elliot_Anderson
+495,Gerónimo_Rulli
+496,Ayyoub_Bouaddi
+497,Ryan_McAidoo
+498,Kaden_Braithwaite
+499,Allan_Andrade Elias
+500,Floyd_Samba
+501,Youri_Tielemans
+502,Carlos_Baleba
+503,Andrey_Nascimento dos Santos
+504,Karl_Darlow
+505,Senne_Lammens
+506,Altay_Bayındır
+507,Tom_Heaton
+508,Patrick_Dorgu
+509,Matthijs_de Ligt
+510,Diogo_Dalot Teixeira
+511,Harry_Maguire
+512,Lisandro_Martínez
+513,Leny_Yoro
+514,Ayden_Heaven
+515,Noussair_Mazraoui
+516,Luke_Shaw
+517,Harry_Amass
+518,Tyler_Fredricson
+519,Bruno_Borges Fernandes
+520,Bryan_Mbeumo
+521,Matheus_Santos Carneiro da Cunha
+522,Marcus_Rashford
+523,Mason_Mount
+524,Amad_Diallo
+525,Kobbie_Mainoo
+526,Manuel_Ugarte Ribeiro
+527,Jack_Fletcher
+528,Shea_Lacey
+529,Toby_Collyer
+530,Bendito_Mantato
+531,Tyler_Fletcher
+532,Benjamin_Sesko
+533,Joshua_Zirkzee
+534,Chido_Obi
+535,Nico_González Iglesias
+536,Nick_Pope
+537,Mark_Gillespie
+538,Ewen_Jaouen
+539,Malick_Thiaw
+540,Fabian_Schär
+541,Sven_Botman
+542,Dan_Burn
+543,Lewis_Hall
+544,Tino_Livramento
+545,Alex_Murphy
+546,Harvey_Barnes
+547,Anthony_Elanga
+548,Jacob_Ramsey
+549,Jacob_Murphy
+550,Joelinton Cássio_Apolinário de Lira
+551,Lewis_Miley
+552,Joe_Willock
+553,Bazoumana_Touré
+554,Sean_Steur
+555,Nick_Woltemade
+556,Yoane_Wissa
+557,William_Osula
+558,Sean_Neave
+559,Aladji_Bamba
+560,Lukás_Hornícek
+561,Amar_Dedic
+562,Leo_Shahar
+563,Matias_Fernandez-Pardo
+564,Mason_Miley
+565,Miodrag_Pivas
+566,Vakhtang_Salia
+567,Michael_Mills
+568,Kyran_Thompson
+569,Liam_Delap
+570,Daniel_Muñoz Mejía
+571,Matz_Sels
+572,John Victor_Maciel Furtado
+573,Neco_Williams
+574,Felipe_Rodrigues da Silva
+575,Nikola_Milenković
+576,Murillo_Costa dos Santos
+577,Ola_Aina
+578,Jair_Paula da Cunha Filho
+579,Nicolò_Savona
+580,Omar_Richards
+581,Zach_Abbott
+582,Luca_Netz
+583,Tyler_Bindon
+584,Morgan_Gibbs-White
+585,Callum_Hudson-Odoi
+586,Dan_Ndoye
+587,Omari_Hutchinson
+588,Dilane_Bakwa
+589,James_McAtee
+590,Nicolás_Domínguez
+591,Ibrahim_Sangaré
+592,Ryan_Yates
+593,Chris_Wood
+594,Igor Jesus_Maciel da Cruz
+595,Arnaud_Kalimuendo
+596,Xaver_Schlager
+597,Ousmane_Diomande
+598,Steven_Benda
+599,Jan Paul_van Hecke
+600,Tosin_Adarabioyo
+601,Omar_Marmoush
+602,Sávio_Moreira de Oliveira
+603,Sandro_Tonali
+604,Guglielmo_Vicario
+605,Brandon_Austin
+606,Antonín_Kinský
+607,Martin_Dubravka
+608,Marcos_Senesi Barón
+609,Pedro_Porro Sauceda
+610,Cristian_Romero
+611,Andrew_Robertson
+612,Micky_van de Ven
+613,Djed_Spence
+614,Destiny_Udogie
+615,Ashley_Phillips
+616,Ben_Davies
+617,Jun'ai_Byfield
+618,James_Rowswell
+619,João Victor_de Souza Menezes
+620,Mohammed_Kudus
+621,Xavi_Simons
+622,Mathys_Tel
+623,James_Maddison
+624,Rodrigo_Bentancur
+625,Wilson_Odobert
+626,Pape Matar_Sarr
+627,Conor_Gallagher
+628,Lucas_Bergvall
+629,Dejan_Kulusevski
+630,Archie_Gray
+631,Mikey_Moore
+632,Callum_Olusesi
+633,Mateus_Fernandes
+634,Dominic_Solanke-Mitchell
+635,Richarlison_de Andrade
+636,Dane_Scarlett
+637,Mykhailo_Mudryk
+638,Luca_Williams-Barnett
+639,Kevin_Danso
+640,Robin_Roefs
+641,Anthony_Patterson
+642,Melker_Ellborg
+643,Daniel_Ballard
+644,Nordi_Mukiele
+645,Trai_Hume
+646,Omar_Alderete
+647,Reinildo_Mandava
+648,Jenson_Seelt
+649,Leo Fuhr_Hjelde
+650,Luke_O'Nien
+651,Arthur_Masuaku
+652,Thomas_Meunier
+653,Enzo_Le Fée
+654,Habib_Diarra
+655,Granit_Xhaka
+656,Noah_Sadiki
+657,Simon_Adingra
+658,Romaine_Mundle
+659,Chris_Rigg
+660,Chemsdine_Talbi
+661,Djiamgone Jocelin Ta_Bi
+662,Nilson_Angulo
+663,Brian_Brobbey
+664,Wilson_Isidor
+665,Dayann_Méthalie
+666,Jules_Ahoka
+667,Malick_Fofana
+668,Juan_Angulo
+669,Tymur_Tutierov
