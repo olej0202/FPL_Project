@@ -178,7 +178,6 @@ def Data_Predictions(
         optimization_best_output_path=sim_output_dir / "simtest_parameter_best.csv",
         write_outputs=True,
     )
-    """
     
     
     print("Running full simulator parameter optimization...")
@@ -264,7 +263,7 @@ def Data_Predictions(
         len(gw_list),
         time_list=gw_list,
         standings_fixture_path=str(fixture_path),
-    )"""
+    )
     
     Make_Predictions()
     Generate_point_predictions(time_list)
@@ -334,7 +333,7 @@ def Main_Orchestration():
     
     
     #Transform data
-    Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos,Understat_path,Understat_shots_path)
+    #Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos,Understat_path,Understat_shots_path)
     #Predict data
     Data_Predictions(
         fixtures_expanded_path_25,

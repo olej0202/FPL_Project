@@ -927,8 +927,11 @@ def _load_team_snapshot(
     latest_path: str,
     cluster_model: KMeans,
 ) -> pd.DataFrame:
+    """Prefer finalized latest-team ratings even when their match date is older."""
     hist = _drop_unnamed(pd.read_csv(history_path))
     latest = _drop_unnamed(pd.read_csv(latest_path))
+    hist["_snapshot_priority"] = 0
+    latest["_snapshot_priority"] = 1
     base = pd.concat([hist, latest], ignore_index=True, sort=False)
     base["kickoff_time"] = pd.to_datetime(base.get("kickoff_time"), errors="coerce")
     base = base.dropna(subset=["code"]).copy()
@@ -948,10 +951,10 @@ def _load_team_snapshot(
             cluster_model.predict(xs.values),
         )
 
-    base = base.sort_values("kickoff_time")
+    base = base.sort_values(["_snapshot_priority", "kickoff_time"], kind="stable")
     snap = base.groupby("code", as_index=False).tail(1).copy()
     snap["code"] = snap["code"].astype(int)
-    return snap
+    return snap.drop(columns="_snapshot_priority")
 
 
 def _load_upcoming_fixtures(
