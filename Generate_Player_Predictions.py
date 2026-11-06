@@ -20,7 +20,8 @@ from torch.utils.data import TensorDataset, DataLoader
 import joblib
 from GenerateConfig import date_filter as config_date_filter
 from GenerateConfig import MAX_PENALTY_TAKER_SHARE, MAX_TEAM_PENALTY_RATE, POSITION_EVENT_BONUS,POINTS_RULES
-from GenerateStatSimulator import run_fpl_simulation_from_csv
+from pathlib import Path
+from StatFullSimualtor import run as run_stat_full_simulation
 from scipy.stats import poisson
 from sklearn.impute import SimpleImputer
 
@@ -2404,6 +2405,94 @@ def normalize_player_gws(
 
 
 
+def load_stat_simulation_predictions(players, simulation_dir=None):
+    """Map StatFullSimualtor outputs to the existing prediction/blend columns.
+
+    Use the saved sample STD, not a standard deviation across player averages.
+    Total_goals includes penalties; Bonus is awarded points, not raw BPS.
+    GC_penalty already includes the recipe's minute weighting.
+    """
+    simulation_dir = Path(simulation_dir) if simulation_dir is not None else Path(__file__).resolve().parent
+    averages = pd.read_csv(simulation_dir / "Stat_simulator_Players_Avg2.csv")
+    keys = ["name", "team_code", "fix_id"]
+    renamed = {
+        "Total_goals": "goals", "Assist": "assists", "Defcon": "defcon",
+        "defcon hit": "defcon_prob", "Bonus": "calculated_BPS",
+        "Fantasy_poeng": "Fantasy_points", "Clean Sheet": "Clean_sheets",
+        "saves": "Saves", "save_points": "Save_Points",
+        "Defcon_GE10": "defcon_ge_10_rate", "Defcon_GE12": "defcon_ge_12_rate",
+    }
+    required = keys + ["GW", "position", "average_minutes", "Goal_scored", "Penalty Scored",
+                       "GC_penalty", "STD_Fantasy_points", "n_simulations", *renamed]
+    missing = sorted(set(required) - set(averages.columns))
+    if missing:
+        raise ValueError(f"New simulator player summary is missing columns: {missing}")
+    if averages.empty or averages[keys].isna().any().any() or averages.duplicated(keys).any():
+        raise ValueError("New simulator player summary has empty, missing or duplicate player/fixture keys")
+    numeric = [c for c in required if c not in ["name", "position"]]
+    averages[numeric] = averages[numeric].apply(pd.to_numeric, errors="coerce")
+    if not np.isfinite(averages[numeric].to_numpy(float)).all():
+        raise ValueError("New simulator player summary contains missing/non-finite statistics")
+    rates = ["Defcon_GE10", "Defcon_GE12", "defcon hit", "Clean Sheet"]
+    if not averages[rates].apply(lambda x: x.between(0, 1)).all().all():
+        raise ValueError("Simulator probabilities must be proportions between zero and one")
+    if (averages.Defcon_GE12 > averages.Defcon_GE10 + 1e-12).any():
+        raise ValueError("DEFCON >=12 probability cannot exceed DEFCON >=10")
+    if (averages.STD_Fantasy_points < 0).any() or (averages.n_simulations < 2).any():
+        raise ValueError("Invalid simulator sample standard deviation or simulation count")
+    if not np.allclose(averages.Total_goals, averages.Goal_scored + averages["Penalty Scored"], atol=1e-12):
+        raise ValueError("Simulator total goals do not equal open-play plus penalty goals")
+    positions = averages.position.replace({"GK": "GKP"})
+    if not positions.isin(POINTS_RULES).all():
+        raise ValueError("Unknown simulator player position")
+    expected_hit = np.select(
+        [positions.eq("DEF"), positions.isin(["MID", "FWD"])],
+        [averages.Defcon_GE10, averages.Defcon_GE12], default=0.0)
+    if not np.allclose(averages["defcon hit"], expected_hit, atol=1e-12):
+        raise ValueError("Simulator DEFCON hit rates disagree with position thresholds")
+
+    # Reject stale or mismatched outputs rather than silently replacing predictions with zeros.
+    expected = players.rename(columns={"Team": "team_code"})[keys + ["GW", "position", "average_minutes"]].copy()
+    expected["position"] = expected.position.replace({"GK": "GKP"})
+    if expected[keys].isna().any().any() or expected.duplicated(keys).any():
+        raise ValueError("Player predictions contain missing or duplicate player/fixture keys")
+    coverage = expected.merge(averages[keys + ["GW", "position", "average_minutes"]],
+                              on=keys, how="outer", validate="one_to_one", suffixes=("_input", "_sim"))
+    if coverage.GW_sim.isna().any() or not np.array_equal(coverage.GW_input, coverage.GW_sim):
+        raise ValueError("New simulation does not cover the current player fixtures/GWs; run StatFullSimualtor.py")
+    if not coverage.position_input.eq(coverage.position_sim.replace({"GK": "GKP"})).all() or not np.allclose(
+            coverage.average_minutes_input.fillna(0), coverage.average_minutes_sim, atol=1e-8):
+        raise ValueError("Simulator player positions/minutes differ from current predictions; rerun simulator")
+
+    # These are team event probabilities, not thresholds applied to mean goals conceded.
+    team_columns = ["fix_id", "GW", "simulering", "Team_A_code", "Team_B_code", "A_goals", "B_goals"]
+    teams = pd.read_csv(simulation_dir / "Stat_simulator_Teams2.csv", usecols=team_columns)
+    if teams.empty or teams.duplicated(["fix_id", "simulering"]).any() or not np.isfinite(teams.to_numpy(float)).all():
+        raise ValueError("Invalid or duplicate team simulation outcomes")
+    team_rates = []
+    for side, opponent in [("A", "B"), ("B", "A")]:
+        conceded = teams[f"{opponent}_goals"]
+        events = teams[["fix_id", "GW", f"Team_{side}_code"]].rename(columns={f"Team_{side}_code": "team_code"})
+        events["_team_cs"] = conceded.eq(0).astype(float)
+        events["Over_2"] = conceded.ge(2).astype(float)
+        events["Over_4"] = conceded.ge(4).astype(float)
+        events["_team_n"] = 1
+        team_rates.append(events)
+    team_rates = pd.concat(team_rates).groupby(["fix_id", "GW", "team_code"], as_index=False).agg(
+        _team_cs=("_team_cs", "mean"), Over_2=("Over_2", "mean"),
+        Over_4=("Over_4", "mean"), _team_n=("_team_n", "sum"))
+    averages = averages.merge(team_rates, on=["fix_id", "GW", "team_code"], how="left", validate="many_to_one")
+    if not np.array_equal(averages.n_simulations, averages._team_n) or not np.allclose(
+            averages["Clean Sheet"], averages._team_cs, atol=1e-12):
+        raise ValueError("Player and team simulator outputs disagree on sample counts/clean sheets")
+    result = averages.rename(columns=renamed)[keys + ["GW", *renamed.values(),
+        "GC_penalty", "STD_Fantasy_points", "Over_2", "Over_4"]].copy()
+    std_min, std_max = result.STD_Fantasy_points.min(), result.STD_Fantasy_points.max()
+    result["STD_MINMAX"] = ((result.STD_Fantasy_points - std_min) / (std_max - std_min)
+                            if std_max > std_min else 0.0)
+    return result.sort_values(["fix_id", "name"]).reset_index(drop=True)
+
+
 def Generate_point_predictions(GW_list):
     players=pd.read_csv("Player_prediction_set.csv").iloc[:,1:]
     unique_players=players["name"].unique()
@@ -2428,74 +2517,11 @@ def Generate_point_predictions(GW_list):
     stat_saves=Get_rows("STAT", "Saves")
     
     
-    simulation=pd.read_csv("SImulator\simtest_player_outcomes_upcoming.csv").sort_values(by=["event", "fixture_code"])
-    simulation2=pd.read_csv("SImulator\Full_simulator_player.csv").sort_values(by=["gameweek", "fixture_code"])
-    minutes_simulation=pd.read_csv("SImulator\MinutesSimulator_player_predictions.csv").sort_values(by=["event", "fix_id"])
+    simulation=pd.read_csv("SImulator/simtest_player_outcomes_upcoming.csv").sort_values(by=["event", "fixture_code"])
+    simulation2=pd.read_csv("SImulator/Full_simulator_player.csv").sort_values(by=["gameweek", "fixture_code"])
+    minutes_simulation=pd.read_csv("SImulator/MinutesSimulator_player_predictions.csv").sort_values(by=["event", "fix_id"])
     
-    stat_simulation = pd.read_csv("Stat_simulator_Players.csv")
-
-
-    stat_simulation = (
-        stat_simulation
-        .groupby(
-            ["name", "team_code", "fixture_code"],
-            as_index=False
-        )
-        .agg(
-            goals=("goals", "mean"),
-            assists=("assists", "mean"),
-            defcon=("defcon", "mean"),
-            defcon_prob=("defcon_prob", "mean"),
-            calculated_BPS=("calculated_BPS", "mean"),
-            GC_penalty=("GC_penalty", "mean"),
-            Fantasy_points=("Fantasy_points", "mean"),
-            STD_Fantasy_points=("Fantasy_points", "std"),
-            Clean_sheets=("CS", "mean"),
-            Over_2=("GC_2", "mean"),
-            Over_4=("GC_4", "mean"),
-            Saves=("saves", "mean"),
-            Save_Points=("save_points", "mean"),
-            defcon_ge_10_rate=("defcon", lambda values: values.ge(10).mean()),
-            defcon_ge_12_rate=("defcon", lambda values: values.ge(12).mean())
-        )
-    
-        .rename(columns={"fixture_code": "fix_id"})
-        .sort_values(
-            by=["fix_id", "name"]
-        )
-    )
-    
-
-    fixture_gw_map = (
-        players[["GW", "fix_id"]]
-        .copy()
-        .assign(
-            GW=lambda df: pd.to_numeric(
-                df["GW"],
-                errors="coerce"
-            ),
-            fix_id=lambda df: pd.to_numeric(
-                df["fix_id"],
-                errors="coerce"
-            ),
-        )
-        .dropna(subset=["GW", "fix_id"])
-        .drop_duplicates(subset=["fix_id"], keep="last")
-    )
-
-    stat_simulation = stat_simulation.merge(
-        fixture_gw_map,
-        on="fix_id",
-        how="left",
-    )
-    
-    std_min = stat_simulation["STD_Fantasy_points"].min()
-    std_max = stat_simulation["STD_Fantasy_points"].max()
-
-    stat_simulation["STD_MINMAX"] = (
-        (stat_simulation["STD_Fantasy_points"] - std_min)
-        / (std_max - std_min)
-    )
+    stat_simulation = load_stat_simulation_predictions(players)
 
     stat_simulation.to_csv(
         "Stat_simulator_Players_Agg.csv",
@@ -2862,7 +2888,7 @@ def Generate_point_predictions(GW_list):
                 )
             summary_dataset["Points_prediction"]=((1*likelihood_of_60+1*likelihood_of_0)
                                                   +summary_dataset["Save_pred"]
-                                                  -summary_dataset["GC_Penalty"]*0.8*likelihood_of_60
+                                                  -summary_dataset["GC_Penalty"]
                                                   +summary_dataset["GC_pred"]*POINTS_RULES[position]["cs"]*likelihood_of_60
                                                   +summary_dataset["Bonus_pred"] )
 
@@ -2886,7 +2912,7 @@ def Generate_point_predictions(GW_list):
                                                   +summary_dataset["Assist_pred"]*POINTS_RULES[position]["assist"]
                                                   +summary_dataset["Bonus_pred"]
                                                   +summary_dataset["GC_pred"]*POINTS_RULES[position]["cs"]*likelihood_of_60
-                                                  -summary_dataset["GC_Penalty"]*0.8*likelihood_of_60
+                                                  -summary_dataset["GC_Penalty"]
                                                   -summary_dataset["Card_pred"])+summary_dataset["CBI_pred"]*2
             summary_dataset["Risk_share"]=(summary_dataset["STD_Index"])
      
@@ -2941,7 +2967,9 @@ def Make_Predictions ():
         XGB_pred=pd.DataFrame()
         position_filter=positions[y]
         Stat_preds(is_pred, position_filter,column_list,predlength)
-    run_fpl_simulation_from_csv()
+    simulation_dir = Path(__file__).resolve().parent
+    run_stat_full_simulation(input_dir=simulation_dir, output_dir=simulation_dir,
+                             n_sims=600, seed=20261106)
 
         #pred2=XGB(position_filter,"FWD",column_list,predlength)        
         #Generate_LSTM_preds(position_filter,column_list,predlength)
