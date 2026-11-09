@@ -109,7 +109,7 @@ def Data_Extraction(season,is_new_season,has_been_error):
     current_players(season)
     current_teams(season)
     fixtures(season)
-    main_Extract_Understat(season)
+    #main_Extract_Understat(season)
 
 
 def Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos,Understat_path,Understat_shots_path):
@@ -329,11 +329,11 @@ def Main_Orchestration():
     
     
     #EXTARCT DATA
-    #Data_Extraction(season,is_new_season,has_been_error)
+    Data_Extraction(season,is_new_season,has_been_error)
     
     
     #Transform data
-    #Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos,Understat_path,Understat_shots_path)
+    Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos,Understat_path,Understat_shots_path)
     #Predict data
     Data_Predictions(
         fixtures_expanded_path_25,

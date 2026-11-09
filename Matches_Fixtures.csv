@@ -89,16 +89,16 @@ Fix_ID,GW,kickoff_time,started,finished,team_h_score,team_a_score,HomeTeam,AwayT
 2645282,9,2026-10-31T15:00:00Z,True,True,0.0,1.0,Man City,Brighton,43,36,MCI,BHA
 2645283,9,2026-11-02T20:00:00Z,True,True,0.0,1.0,Newcastle,Everton,4,11,NEW,EVE
 2645284,9,2026-10-31T17:30:00Z,True,True,2.0,0.0,Spurs,Crystal Palace,6,31,TOT,CRY
-2645285,10,2026-11-07T15:00:00Z,False,False,,,Arsenal,Hull City,3,88,ARS,HUL
-2645286,10,2026-11-08T14:00:00Z,False,False,,,Brighton,Brentford,36,94,BHA,BRE
-2645287,10,2026-11-08T14:00:00Z,False,False,,,Crystal Palace,Liverpool,31,14,CRY,LIV
-2645288,10,2026-11-06T20:00:00Z,False,False,,,Everton,Coventry City,11,9,EVE,COV
-2645289,10,2026-11-07T15:00:00Z,False,False,,,Fulham,Newcastle,54,4,FUL,NEW
-2645290,10,2026-11-08T14:00:00Z,False,False,,,Ipswich Town,Bournemouth,40,91,IPS,BOU
-2645291,10,2026-11-07T12:30:00Z,False,False,,,Leeds,Spurs,2,6,LEE,TOT
-2645292,10,2026-11-08T16:30:00Z,False,False,,,Man Utd,Aston Villa,1,7,MUN,AVL
-2645293,10,2026-11-07T17:30:00Z,False,False,,,Nott'm Forest,Man City,17,43,NFO,MCI
-2645294,10,2026-11-08T14:00:00Z,False,False,,,Sunderland,Chelsea,56,8,SUN,CHE
+2645285,10,2026-11-07T15:00:00Z,True,True,1.0,0.0,Arsenal,Hull City,3,88,ARS,HUL
+2645286,10,2026-11-08T14:00:00Z,True,True,2.0,0.0,Brighton,Brentford,36,94,BHA,BRE
+2645287,10,2026-11-08T14:00:00Z,True,True,1.0,3.0,Crystal Palace,Liverpool,31,14,CRY,LIV
+2645288,10,2026-11-06T20:00:00Z,True,True,3.0,1.0,Everton,Coventry City,11,9,EVE,COV
+2645289,10,2026-11-07T15:00:00Z,True,True,1.0,1.0,Fulham,Newcastle,54,4,FUL,NEW
+2645290,10,2026-11-08T14:00:00Z,True,True,1.0,2.0,Ipswich Town,Bournemouth,40,91,IPS,BOU
+2645291,10,2026-11-07T12:30:00Z,True,True,1.0,0.0,Leeds,Spurs,2,6,LEE,TOT
+2645292,10,2026-11-08T16:30:00Z,True,True,4.0,4.0,Man Utd,Aston Villa,1,7,MUN,AVL
+2645293,10,2026-11-07T17:30:00Z,True,True,3.0,1.0,Nott'm Forest,Man City,17,43,NFO,MCI
+2645294,10,2026-11-08T14:00:00Z,True,True,1.0,0.0,Sunderland,Chelsea,56,8,SUN,CHE
 2645295,11,2026-11-21T15:00:00Z,False,False,,,Bournemouth,Nott'm Forest,91,17,BOU,NFO
 2645296,11,2026-11-21T15:00:00Z,False,False,,,Aston Villa,Sunderland,7,56,AVL,SUN
 2645297,11,2026-11-23T20:00:00Z,False,False,,,Brentford,Everton,94,11,BRE,EVE

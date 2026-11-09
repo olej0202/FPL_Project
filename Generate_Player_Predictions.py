@@ -21,7 +21,7 @@ import joblib
 from GenerateConfig import date_filter as config_date_filter
 from GenerateConfig import MAX_PENALTY_TAKER_SHARE, MAX_TEAM_PENALTY_RATE, POSITION_EVENT_BONUS,POINTS_RULES
 from pathlib import Path
-from StatFullSimualtor import run as run_stat_full_simulation
+from Generate_StatFullSimulator import run as run_stat_full_simulation
 from scipy.stats import poisson
 from sklearn.impute import SimpleImputer
 
@@ -2406,7 +2406,7 @@ def normalize_player_gws(
 
 
 def load_stat_simulation_predictions(players, simulation_dir=None):
-    """Map StatFullSimualtor outputs to the existing prediction/blend columns.
+    """Map Generate_StatFullSimulator outputs to the existing prediction/blend columns.
 
     Use the saved sample STD, not a standard deviation across player averages.
     Total_goals includes penalties; Bonus is awarded points, not raw BPS.
@@ -2459,7 +2459,7 @@ def load_stat_simulation_predictions(players, simulation_dir=None):
     coverage = expected.merge(averages[keys + ["GW", "position", "average_minutes"]],
                               on=keys, how="outer", validate="one_to_one", suffixes=("_input", "_sim"))
     if coverage.GW_sim.isna().any() or not np.array_equal(coverage.GW_input, coverage.GW_sim):
-        raise ValueError("New simulation does not cover the current player fixtures/GWs; run StatFullSimualtor.py")
+        raise ValueError("New simulation does not cover the current player fixtures/GWs; run Generate_StatFullSimulator.py")
     if not coverage.position_input.eq(coverage.position_sim.replace({"GK": "GKP"})).all() or not np.allclose(
             coverage.average_minutes_input.fillna(0), coverage.average_minutes_sim, atol=1e-8):
         raise ValueError("Simulator player positions/minutes differ from current predictions; rerun simulator")
