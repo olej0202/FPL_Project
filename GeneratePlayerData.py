@@ -878,10 +878,10 @@ def GeneratePlayerData(time_list, fixture_path, current_player_path, current_tea
                 errors="coerce",
             ).iloc[0]
             rolling_team_minutes = 0.0 if pd.isna(value) else max(0.0, float(value))
-        return 1.0 - min(0.6, rolling_team_minutes / 1300.0)
+        return 1.0 - min(0.75, rolling_team_minutes / 1300.0)
 
     for name in names:
-        player_risiko = 0.4
+        player_risiko = 0.25
         print(name)
         
         
