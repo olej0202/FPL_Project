@@ -34,7 +34,7 @@ from GenerateConfig import POINTS_RULES, POSITION_EVENT_BONUS
 
 
 # FORMULAS AND PARAMETERS -- all tunable calculations are collected here.
-ASSIST_PROBABILITY = 0.8
+ASSIST_PROBABILITY = 0.95
 PENALTY_TAKER_PROBABILITY = 0.8
 DEFCON_DF, DEFCON_LOCATION, DEFCON_SCALE = 5.44524, -0.02299, 2.33875
 OUTPUTS = (
@@ -45,7 +45,7 @@ PLAYER_FEATURES = (
     "average_minutes", "Goal_Weight_Share", "Opp_Goal_Threat_Pos",
     "Assist_Weight_Share", "Opp_Assist_Threat_Pos", "Defcon_Weight_Share",
     "Share_of_Defcon", "Share_of_Defcon_Short", "Rolling_adjusted_BPS_2",
-    "Rolling_adjusted_BPS", "Pen_Number", "Rolling_cards", "Defcon_Index",
+    "Rolling_adjusted_BPS", "Adjusted_BPS_STD", "Pen_Number", "Rolling_cards", "Defcon_Index",
 )
 
 
@@ -192,7 +192,7 @@ def load_inputs(input_dir: Path):
         finite_column(players, c, "players", minimum=0)
     for c in PLAYER_FEATURES:
         players[c] = pd.to_numeric(players[c], errors="coerce").fillna(0)
-        finite_column(players, c, "players")
+        finite_column(players, c, "players", minimum=0 if c == "Adjusted_BPS_STD" else None)
     if not players.average_minutes.between(0, 90).all():
         raise ValueError("Player average_minutes must be between 0 and 90")
     coverage = teams[["fix_id", "team_code", "GW"]].merge(
@@ -291,7 +291,7 @@ def simulate_players(g, team, opponent, draws, label, rng, diagnostics):
     defcon = np.maximum(0, np.floor(f["defcon_mean"] + DEFCON_LOCATION
         + DEFCON_SCALE * rng.standard_t(DEFCON_DF, (n, p)) + 0.5)).astype(np.int32)
     cards = (rng.random((n, p)) < f["card_probability"]).astype(np.int8)
-    ground = f["ground_bps"] + rng.uniform(-1.5, 1.5, (n, p))
+    ground = rng.normal(f["ground_bps"], g["Adjusted_BPS_STD"].to_numpy(float), (n, p))
     keeper_fraction = (g.position.to_numpy() == "GKP") * (f["minutes"] / 90).clip(0, 1)
     saves = repeat(draws[f"{label}_saves"]) * keeper_fraction
     save_points = repeat(np.floor(draws[f"{label}_saves"].to_numpy() / 3)) * keeper_fraction

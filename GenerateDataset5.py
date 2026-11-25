@@ -2864,6 +2864,13 @@ def main_Transform():
             player_df["defcon_avg"] = (defcon_mean / minutes_mean) * 90
             
             player_df['TP_std_20'] = (player_df['Adjusted_Fantasy'].rolling(window=25, min_periods=1).std())
+            for source, output in {
+                "expected_goals": "expected_goals_STD",
+                "expected_assists": "expected_assists_STD",
+                "Adjusted_BPS": "Adjusted_BPS_STD",
+                "defcon": "DEFCON_STD",
+            }.items():
+                player_df[output] = player_df[source].rolling(window=25, min_periods=1).std()
 
 
             if(namelist[0]=="Mohamed_Salah"):

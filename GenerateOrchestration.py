@@ -22,6 +22,7 @@ from Generate_Full_Simulator import (
     SimulationControlConfig as FullSimulatorControlConfig,
     run_simulator_control as run_simulator_control,
 )
+from Generate_LoadStrikerAPI import main as Striker_API_fetch
 from Generate_Full_SImulator2 import (
     DataPaths as FullSimulator2DataPaths,
     write_upcoming_prediction_files as write_full_simulator2_outputs,
@@ -110,6 +111,8 @@ def Data_Extraction(season,is_new_season,has_been_error):
     current_teams(season)
     fixtures(season)
     #main_Extract_Understat(season)
+    Striker_API_fetch(load_type="delta",current_season=2026,seasons=(2026, 2025, 2024, 2023, 2022))
+
 
 
 def Data_Transformation(n_points_in_future, current_fixture_path,current_player_path,current_team_path,time_list,run_player_pos,Understat_path,Understat_shots_path):
@@ -329,7 +332,7 @@ def Main_Orchestration():
     
     
     #EXTARCT DATA
-    Data_Extraction(season,is_new_season,has_been_error)
+    #Data_Extraction(season,is_new_season,has_been_error)
     
     
     #Transform data
